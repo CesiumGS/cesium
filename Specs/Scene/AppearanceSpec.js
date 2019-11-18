@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/Appearance',
-        'Core/WebGLConstants',
-        'Scene/BlendingState',
-        'Scene/Material'
-    ], function(
-        Appearance,
-        WebGLConstants,
-        BlendingState,
-        Material) {
-    'use strict';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { BlendingState } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+
+describe('Scene/Appearance', function() {
 
     it('constructor', function() {
         var material = Material.fromType('Color');

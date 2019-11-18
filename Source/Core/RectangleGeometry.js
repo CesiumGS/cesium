@@ -1,62 +1,31 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryInstance',
-        './GeometryOffsetAttribute',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix2',
-        './Matrix3',
-        './PolygonPipeline',
-        './PrimitiveType',
-        './Quaternion',
-        './Rectangle',
-        './RectangleGeometryLibrary',
-        './VertexFormat'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        PolygonPipeline,
-        PrimitiveType,
-        Quaternion,
-        Rectangle,
-        RectangleGeometryLibrary,
-        VertexFormat) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryInstance from './GeometryInstance.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix2 from './Matrix2.js';
+import Matrix3 from './Matrix3.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import RectangleGeometryLibrary from './RectangleGeometryLibrary.js';
+import VertexFormat from './VertexFormat.js';
 
     var positionScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
@@ -830,7 +799,7 @@ define([
      *
      * @see RectangleGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      *
      * @example
      * // 1. create a rectangle
@@ -1228,6 +1197,4 @@ define([
             }
         }
     });
-
-    return RectangleGeometry;
-});
+export default RectangleGeometry;

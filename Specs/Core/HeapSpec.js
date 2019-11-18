@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Heap'
-    ], function(
-        Heap) {
-    'use strict';
+import { Heap } from '../../Source/Cesium.js';
+
+describe('Core/Heap', function() {
 
     var length = 100;
 

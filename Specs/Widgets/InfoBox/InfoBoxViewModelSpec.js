@@ -1,8 +1,6 @@
-defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel'
-    ], function(
-        InfoBoxViewModel) {
-    'use strict';
+import { InfoBoxViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/InfoBox/InfoBoxViewModel', function() {
 
     it('constructor sets expected values', function() {
         var viewModel = new InfoBoxViewModel();

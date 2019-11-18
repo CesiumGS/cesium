@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * Constants for time conversions like those done by {@link JulianDate}.
@@ -86,6 +82,4 @@ define([
          */
         MODIFIED_JULIAN_DATE_DIFFERENCE : 2400000.5
     };
-
-    return freezeObject(TimeConstants);
-});
+export default freezeObject(TimeConstants);

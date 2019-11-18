@@ -1,20 +1,10 @@
-defineSuite([
-        'Core/IonGeocoderService',
-        'Core/Ion',
-        'Core/GeocodeType',
-        'Core/Rectangle',
-        'Core/Resource',
-        'ThirdParty/when',
-        'Specs/createScene'
-    ], function(
-        IonGeocoderService,
-        Ion,
-        GeocodeType,
-        Rectangle,
-        Resource,
-        when,
-        createScene) {
-    'use strict';
+import { GeocodeType } from '../../Source/Cesium.js';
+import { Ion } from '../../Source/Cesium.js';
+import { IonGeocoderService } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/IonGeocoderService', function() {
 
     var scene;
     beforeEach(function() {

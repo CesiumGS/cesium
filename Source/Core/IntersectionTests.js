@@ -1,28 +1,14 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Interval',
-        './Math',
-        './Matrix3',
-        './QuadraticRealPolynomial',
-        './QuarticRealPolynomial',
-        './Ray'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Interval,
-        CesiumMath,
-        Matrix3,
-        QuadraticRealPolynomial,
-        QuarticRealPolynomial,
-        Ray) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Interval from './Interval.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import QuadraticRealPolynomial from './QuadraticRealPolynomial.js';
+import QuarticRealPolynomial from './QuarticRealPolynomial.js';
+import Ray from './Ray.js';
 
     /**
      * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
@@ -903,6 +889,4 @@ define([
         // otherwise, it is completely in front (numBehind is 0).
         return undefined;
     };
-
-    return IntersectionTests;
-});
+export default IntersectionTests;

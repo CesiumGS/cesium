@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes an ellipse defined by a center point and semi-major and semi-minor axes.
@@ -30,9 +20,9 @@ define([
      * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
      * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
@@ -47,7 +37,7 @@ define([
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
     function EllipseGraphics(options) {
         this._definitionChanged = new Event();
@@ -335,6 +325,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return EllipseGraphics;
-});
+export default EllipseGraphics;

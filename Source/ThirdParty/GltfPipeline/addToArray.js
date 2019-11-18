@@ -1,8 +1,4 @@
-define([
-        '../../Core/defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js'
 
     /**
      * Adds an element to an array and returns the element's index.
@@ -26,5 +22,4 @@ define([
         return array.length - 1;
     }
 
-    return addToArray;
-});
+    export default addToArray;

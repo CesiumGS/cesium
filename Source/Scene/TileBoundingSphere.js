@@ -1,26 +1,14 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defineProperties',
-        '../Core/GeometryInstance',
-        '../Core/Matrix4',
-        '../Core/SphereOutlineGeometry',
-        './PerInstanceColorAppearance',
-        './Primitive'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defineProperties,
-        GeometryInstance,
-        Matrix4,
-        SphereOutlineGeometry,
-        PerInstanceColorAppearance,
-        Primitive) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defineProperties from '../Core/defineProperties.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import SphereOutlineGeometry from '../Core/SphereOutlineGeometry.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
 
     /**
      * A tile bounding volume specified as a sphere.
@@ -33,6 +21,9 @@ define([
      * @private
      */
     function TileBoundingSphere(center, radius) {
+        if (radius === 0) {
+            radius = CesiumMath.EPSILON7;
+        }
         this._boundingSphere = new BoundingSphere(center, radius);
     }
 
@@ -167,6 +158,4 @@ define([
             asynchronous : false
         });
     };
-
-    return TileBoundingSphere;
-});
+export default TileBoundingSphere;

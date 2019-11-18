@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * The interface for interpolation algorithms.
@@ -64,6 +60,4 @@ define([
      * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     InterpolationAlgorithm.interpolate = DeveloperError.throwInstantiationError;
-
-    return InterpolationAlgorithm;
-});
+export default InterpolationAlgorithm;

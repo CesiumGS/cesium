@@ -1,16 +1,10 @@
-defineSuite([
-        'Widgets/Animation/Animation',
-        'Core/defined',
-        'Specs/pollToPromise',
-        'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel'
-    ], function(
-        Animation,
-        defined,
-        pollToPromise,
-        AnimationViewModel,
-        ClockViewModel) {
-    'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
+import { Animation } from '../../../Source/Cesium.js';
+import { AnimationViewModel } from '../../../Source/Cesium.js';
+import { ClockViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/Animation/Animation', function() {
 
     var container;
     var animation;

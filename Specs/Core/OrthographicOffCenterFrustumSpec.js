@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/OrthographicOffCenterFrustum',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4'
-    ], function(
-        OrthographicOffCenterFrustum,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+
+describe('Core/OrthographicOffCenterFrustum', function() {
 
     var frustum, planes;
 
@@ -148,32 +141,50 @@ defineSuite([
 
     it('get pixel dimensions throws without canvas height', function() {
        expect(function() {
-            return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(1.0, undefined, 0.0, 1.0, new Cartesian2());
        }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws without canvas width', function() {
         expect(function() {
-            return frustum.getPixelDimensions(undefined, 1.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(undefined, 1.0, 0.0, 1.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws with canvas width less than or equal to zero', function() {
         expect(function() {
-            return frustum.getPixelDimensions(0.0, 1.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(0.0, 1.0, 0.0, 1.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws with canvas height less than or equal to zero', function() {
         expect(function() {
-            return frustum.getPixelDimensions(1.0, 0.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(1.0, 0.0, 0.0, 1.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws without pixel ratio', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, 1.0, 0.0, undefined, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws with pixel ratio less than or equal to zero', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, 1.0, 0.0, 0.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions', function() {
-        var pixelSize = frustum.getPixelDimensions(1.0, 1.0, 0.0, new Cartesian2());
+        var pixelSize = frustum.getPixelDimensions(1.0, 1.0, 0.0, 1.0, new Cartesian2());
         expect(pixelSize.x).toEqual(2.0);
         expect(pixelSize.y).toEqual(2.0);
+    });
+
+    it('get pixel dimensions with pixel ratio', function() {
+        var pixelSize = frustum.getPixelDimensions(1.0, 1.0, 0.0, 2.0, new Cartesian2());
+        expect(pixelSize.x).toEqual(4.0);
+        expect(pixelSize.y).toEqual(4.0);
     });
 
     it('equals', function() {

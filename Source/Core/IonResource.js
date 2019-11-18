@@ -1,26 +1,13 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './Check',
-        './Credit',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ion',
-        './Resource',
-        './RuntimeError'
-    ], function(
-        Uri,
-        when,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ion,
-        Resource,
-        RuntimeError) {
-'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Ion from './Ion.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
 
     /**
      * A {@link Resource} instance that encapsulates Cesium ion asset access.
@@ -264,6 +251,4 @@ define([
             return true;
         });
     }
-
-    return IonResource;
-});
+export default IonResource;

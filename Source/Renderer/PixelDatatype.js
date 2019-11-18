@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * @private
@@ -56,6 +51,4 @@ define([
                     (pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5));
         }
     };
-
-    return freezeObject(PixelDatatype);
-});
+export default freezeObject(PixelDatatype);

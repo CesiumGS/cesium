@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -39,7 +34,11 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
+if (!viewer.scene.specularEnvironmentMapsSupported) {
+    window.alert('This browser does not support specular environment maps.');
+}
+
+var environmentMapURL = 'https://cesium.com/assets/kiara_6_afternoon_2k_ibl.ktx';
 var modelURL = '../../SampleData/models/Pawns/Pawns.glb';
 
 // This environment map was processed using Google's Filament project. To process your own:
@@ -107,7 +106,7 @@ model.readyPromise.then(function(model) {
 
     subscribeParameter('luminanceAtZenith');
 
-    Sandcastle.addToggleButton('Use procedural image', false, function(checked) {
+    Sandcastle.addToggleButton('Use procedural environment lighting', false, function(checked) {
         if (!checked) {
             model.sphericalHarmonicCoefficients = coefficients;
             model.specularEnvironmentMaps = environmentMapURL;
@@ -123,9 +122,8 @@ model.readyPromise.then(function(model) {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

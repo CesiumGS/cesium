@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/HeadingPitchRange'
-    ], function(
-        HeadingPitchRange) {
-    'use strict';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+
+describe('Core/HeadingPitchRange', function() {
 
     it('construct with default values', function() {
         var hpr = new HeadingPitchRange();

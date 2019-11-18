@@ -1,41 +1,19 @@
-/*global define*/
-define([
-    './arrayRemoveDuplicates',
-    './BoundingSphere',
-    './Cartesian3',
-    './Check',
-    './ComponentDatatype',
-    './CoplanarPolygonGeometryLibrary',
-    './defaultValue',
-    './defined',
-    './Geometry',
-    './GeometryAttribute',
-    './GeometryAttributes',
-    './GeometryInstance',
-    './GeometryPipeline',
-    './IndexDatatype',
-    './PolygonGeometryLibrary',
-    './PolygonPipeline',
-    './PrimitiveType'
-], function(
-    arrayRemoveDuplicates,
-    BoundingSphere,
-    Cartesian3,
-    Check,
-    ComponentDatatype,
-    CoplanarPolygonGeometryLibrary,
-    defaultValue,
-    defined,
-    Geometry,
-    GeometryAttribute,
-    GeometryAttributes,
-    GeometryInstance,
-    GeometryPipeline,
-    IndexDatatype,
-    PolygonGeometryLibrary,
-    PolygonPipeline,
-    PrimitiveType) {
-    'use strict';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import CoplanarPolygonGeometryLibrary from './CoplanarPolygonGeometryLibrary.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryInstance from './GeometryInstance.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import PolygonGeometryLibrary from './PolygonGeometryLibrary.js';
+import PrimitiveType from './PrimitiveType.js';
 
     function createGeometryFromPositions(positions){
         var length = positions.length;
@@ -232,6 +210,4 @@ define([
             boundingSphere : boundingSphere
         });
     };
-
-    return CoplanarPolygonOutlineGeometry;
-});
+export default CoplanarPolygonOutlineGeometry;

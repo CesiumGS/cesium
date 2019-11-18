@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './NodeTransformationProperty',
-        './PropertyBag'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createPropertyDescriptor,
-        NodeTransformationProperty,
-        PropertyBag) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import NodeTransformationProperty from './NodeTransformationProperty.js';
+import PropertyBag from './PropertyBag.js';
 
     function createNodeTransformationProperty(value) {
         return new NodeTransformationProperty(value);
@@ -64,8 +53,8 @@ define([
      * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
-     * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+     * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
     function ModelGraphics(options) {
         this._definitionChanged = new Event();
@@ -388,6 +377,4 @@ define([
             }
         }
     };
-
-    return ModelGraphics;
-});
+export default ModelGraphics;

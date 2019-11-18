@@ -1,10 +1,7 @@
-defineSuite([
-        'Scene/Cesium3DTileFeatureTable',
-        'Core/ComponentDatatype'
-    ], function(
-        Cesium3DTileFeatureTable,
-        ComponentDatatype) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Cesium3DTileFeatureTable } from '../../Source/Cesium.js';
+
+describe('Scene/Cesium3DTileFeatureTable', function() {
 
     it('loads from JSON', function() {
         var featureTable = new Cesium3DTileFeatureTable({

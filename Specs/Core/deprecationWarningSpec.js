@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/deprecationWarning'
-    ], function(
-        deprecationWarning) {
-    'use strict';
+import { deprecationWarning } from '../../Source/Cesium.js';
+
+describe('Core/deprecationWarning', function() {
 
     it('logs a warning', function() {
         spyOn(console, 'warn');

@@ -14,12 +14,27 @@
 
     <script src="../ThirdParty/jasmine-2.2.0/jasmine.js"></script>
     <script src="../ThirdParty/jasmine-2.2.0/jasmine-html.js"></script>
-
-    <script type="text/javascript" src="SpecList.js"></script>
-    <script type="text/javascript" data-main="spec-main" src="../ThirdParty/requirejs-2.1.20/require.js"></script>
 </head>
-
 <body>
     <span style="font-family: 'Open Sans'; position: absolute; visibility: hidden;">&nbsp;</span>
+    <script>
+        if (window.location.search.indexOf('built') !== -1) {
+            if (window.location.search.indexOf('release') !== -1) {
+                document.write('<script src="../Build/Cesium/Cesium.js"><\/script>');
+            } else {
+                document.write('<script src="../Build/CesiumUnminified/Cesium.js"><\/script>');
+            }
+            document.write('<script src="../Build/Specs/spec-main.js"><\/script>');
+            document.write('<script src="../Build/Specs/Specs.js"><\/script>');
+        } else {
+            window.CESIUM_BASE_URL = '../Source/';
+            document.write('<script type="module" src="spec-main.js"><\/script>');
+        }
+    </script>
+    <script>
+        if (window.location.search.indexOf('built') !== -1) {
+            jasmine.getEnv().execute();
+        }
+    </script>
 </body>
 </html>

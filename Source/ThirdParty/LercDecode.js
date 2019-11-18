@@ -26,6 +26,8 @@ Contributors:  Johannes Schmid, (LERC v1)
 
 /* Copyright 2015-2018 Esri. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 @preserve */
 
+var tmp = {};
+
 /**
  * a module for decoding LERC blobs
  * @module Lerc
@@ -2095,19 +2097,7 @@ Contributors:  Johannes Schmid, (LERC v1)
     }
   };
 
-  if (typeof define === "function" && define.amd) {/* jshint ignore:line */
-    //amd loaders such as dojo and requireJS
-    //http://wiki.commonjs.org/wiki/Modules/AsynchronousDefinition
-    define([], function() { return Lerc; });/* jshint ignore:line */
-  }
-  else if (typeof module !== "undefined" && module.exports) {/* jshint ignore:line */
-    //commonJS module 1.0/1.1/1.1.1 systems, such as nodeJS
-    //http://wiki.commonjs.org/wiki/Modules
-    module.exports = Lerc;/* jshint ignore:line */
-  }
-  else {
-    //assign to this, most likely window
-    this.Lerc = Lerc;
-  }
-
+  tmp.Lerc = Lerc;
 })();
+
+export default tmp.Lerc;

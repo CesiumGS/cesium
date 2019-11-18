@@ -1,26 +1,13 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/isArray',
-        '../Core/PolygonHierarchy',
-        './ConstantProperty',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        isArray,
-        PolygonHierarchy,
-        ConstantProperty,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import isArray from '../Core/isArray.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import ConstantProperty from './ConstantProperty.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     function createPolygonHierarchyProperty(value) {
         if (isArray(value)) {
@@ -42,9 +29,9 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
@@ -62,7 +49,7 @@ define([
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
     function PolygonGraphics(options) {
         this._definitionChanged = new Event();
@@ -363,6 +350,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return PolygonGraphics;
-});
+export default PolygonGraphics;

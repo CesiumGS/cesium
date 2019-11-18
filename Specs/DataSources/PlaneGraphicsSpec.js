@@ -1,28 +1,16 @@
-defineSuite([
-        'DataSources/PlaneGraphics',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/Plane',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        PlaneGraphics,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        Plane,
-        ColorMaterialProperty,
-        ConstantProperty,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PlaneGraphics } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
+
+describe('DataSources/PlaneGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

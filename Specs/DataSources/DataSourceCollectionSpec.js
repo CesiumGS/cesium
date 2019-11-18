@@ -1,12 +1,8 @@
-defineSuite([
-        'DataSources/DataSourceCollection',
-        'Specs/MockDataSource',
-        'ThirdParty/when'
-    ], function(
-        DataSourceCollection,
-        MockDataSource,
-        when) {
-    'use strict';
+import { DataSourceCollection } from '../../Source/Cesium.js';
+import MockDataSource from '../MockDataSource.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/DataSourceCollection', function() {
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();

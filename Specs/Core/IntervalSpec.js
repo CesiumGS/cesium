@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Interval'
-    ], function(
-        Interval) {
-    'use strict';
+import { Interval } from '../../Source/Cesium.js';
+
+describe('Core/Interval', function() {
 
     it('constructs without arguments', function() {
         var interval = new Interval();

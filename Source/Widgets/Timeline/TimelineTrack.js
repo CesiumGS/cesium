@@ -1,12 +1,6 @@
-define([
-        '../../Core/Color',
-        '../../Core/defined',
-        '../../Core/JulianDate'
-    ], function(
-        Color,
-        defined,
-        JulianDate) {
-    'use strict';
+import Color from '../../Core/Color.js';
+import defined from '../../Core/defined.js';
+import JulianDate from '../../Core/JulianDate.js';
 
     /**
      * @private
@@ -54,6 +48,4 @@ define([
             }
         }
     };
-
-    return TimelineTrack;
-});
+export default TimelineTrack;

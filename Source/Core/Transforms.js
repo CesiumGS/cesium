@@ -1,48 +1,24 @@
-define([
-        '../ThirdParty/when',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        './Ellipsoid',
-        './HeadingPitchRoll',
-        './Iau2006XysData',
-        './Iau2006XysSample',
-        './JulianDate',
-        './Math',
-        './Matrix3',
-        './Matrix4',
-        './Quaternion',
-        './TimeConstants'
-    ], function(
-        when,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        Ellipsoid,
-        HeadingPitchRoll,
-        Iau2006XysData,
-        Iau2006XysSample,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        TimeConstants) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import EarthOrientationParameters from './EarthOrientationParameters.js';
+import EarthOrientationParametersSample from './EarthOrientationParametersSample.js';
+import Ellipsoid from './Ellipsoid.js';
+import HeadingPitchRoll from './HeadingPitchRoll.js';
+import Iau2006XysData from './Iau2006XysData.js';
+import Iau2006XysSample from './Iau2006XysSample.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import Quaternion from './Quaternion.js';
+import TimeConstants from './TimeConstants.js';
 
     /**
      * Contains functions for transforming positions to various reference frames.
@@ -376,7 +352,7 @@ define([
         //>>includeEnd('debug');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
+        var rotation = Matrix4.getMatrix3(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
 
@@ -421,7 +397,7 @@ define([
         transformCopy = Matrix4.setTranslation(transformCopy, Cartesian3.ZERO, transformCopy);
 
         toFixedFrame = Matrix4.multiply(toFixedFrame, transformCopy, toFixedFrame);
-        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getRotation(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
+        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getMatrix3(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
         quaternionRotation = Quaternion.normalize(quaternionRotation, quaternionRotation);
 
         return HeadingPitchRoll.fromQuaternion(quaternionRotation, result);
@@ -878,7 +854,7 @@ define([
         // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
         var fromENU = Transforms.eastNorthUpToFixedFrame(rtcCenter, ellipsoid, scratchFromENU);
         var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
-        var rotation = Matrix4.getRotation(matrix, scratchRotation);
+        var rotation = Matrix4.getMatrix3(matrix, scratchRotation);
         var local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
         Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
         Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center
@@ -917,6 +893,4 @@ define([
 
         return result;
     };
-
-    return Transforms;
-});
+export default Transforms;

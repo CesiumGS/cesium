@@ -1,22 +1,9 @@
-defineSuite([
-    'DataSources/GroundGeometryUpdater',
-    'Core/ApproximateTerrainHeights',
-    'Core/Event',
-    'Core/GeometryOffsetAttribute',
-    'Core/JulianDate',
-    'Core/Rectangle',
-    'Scene/HeightReference',
-    'DataSources/ConstantProperty'
-], function(
-    GroundGeometryUpdater,
-    ApproximateTerrainHeights,
-    Event,
-    GeometryOffsetAttribute,
-    JulianDate,
-    Rectangle,
-    HeightReference,
-    ConstantProperty) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { GroundGeometryUpdater } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+
+describe('DataSources/GroundGeometryUpdater', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();

@@ -1,70 +1,35 @@
-define([
-    './BillboardGraphics',
-    './CompositePositionProperty',
-    './ModelGraphics',
-    './SampledPositionProperty',
-    './SampledProperty',
-    './ScaledPositionProperty',
-    './RectangleGraphics',
-    '../Core/Cartesian2',
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/Color',
-    '../Core/createGuid',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Ellipsoid',
-    '../Core/isArray',
-    '../Core/Iso8601',
-    '../Core/JulianDate',
-    '../Core/Math',
-    '../Core/Rectangle',
-    '../Core/ReferenceFrame',
-    '../Core/Resource',
-    '../Core/RuntimeError',
-    '../Core/TimeInterval',
-    '../Core/TimeIntervalCollection',
-    '../Scene/HeightReference',
-    '../Scene/HorizontalOrigin',
-    '../Scene/VerticalOrigin',
-    '../ThirdParty/when',
-    '../ThirdParty/zip'
-], function(
-    BillboardGraphics,
-    CompositePositionProperty,
-    ModelGraphics,
-    SampledPositionProperty,
-    SampledProperty,
-    ScaledPositionProperty,
-    RectangleGraphics,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    Color,
-    createGuid,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Ellipsoid,
-    isArray,
-    Iso8601,
-    JulianDate,
-    CesiumMath,
-    Rectangle,
-    ReferenceFrame,
-    Resource,
-    RuntimeError,
-    TimeInterval,
-    TimeIntervalCollection,
-    HeightReference,
-    HorizontalOrigin,
-    VerticalOrigin,
-    when,
-    zip) {
-        'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import isArray from '../Core/isArray.js';
+import Iso8601 from '../Core/Iso8601.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TimeInterval from '../Core/TimeInterval.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import HeightReference from '../Scene/HeightReference.js';
+import HorizontalOrigin from '../Scene/HorizontalOrigin.js';
+import VerticalOrigin from '../Scene/VerticalOrigin.js';
+import when from '../ThirdParty/when.js';
+import zip from '../ThirdParty/zip.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import CompositePositionProperty from './CompositePositionProperty.js';
+import ModelGraphics from './ModelGraphics.js';
+import RectangleGraphics from './RectangleGraphics.js';
+import SampledPositionProperty from './SampledPositionProperty.js';
+import SampledProperty from './SampledProperty.js';
+import ScaledPositionProperty from './ScaledPositionProperty.js';
 
         var BILLBOARD_SIZE = 32;
         var kmlNamespace = 'http://www.opengis.net/kml/2.2';
@@ -278,7 +243,7 @@ define([
          * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
          *
          * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
          * @example
          * Cesium.exportKml({
          *      entities: entityCollection
@@ -1298,6 +1263,4 @@ define([
          * @param {Object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.
          * @returns {String} The URL to use for the href in the KML document.
          */
-
-        return exportKml;
-    });
+export default exportKml;

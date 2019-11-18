@@ -1,8 +1,4 @@
-define([
-        '../../Core/ComponentDatatype'
-    ], function(
-        ComponentDatatype) {
-    'use strict';
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
 
     /**
      * Returns a function to read and convert data from a DataView into an array.
@@ -76,5 +72,4 @@ define([
      * @param {Number} result An array storing the components that are read.
      */
 
-    return getComponentReader;
-});
+    export default getComponentReader;

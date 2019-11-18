@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Queue'
-    ], function(
-        Queue) {
-    'use strict';
+import { Queue } from '../../Source/Cesium.js';
+
+describe('Core/Queue', function() {
 
     var queue;
     beforeEach(function() {

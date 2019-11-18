@@ -1,16 +1,8 @@
-define([
-    '../Core/defined',
-    '../Core/Rectangle',
-    '../Core/sampleTerrainMostDetailed',
-    './SceneMode',
-    '../ThirdParty/when'
-], function(
-    defined,
-    Rectangle,
-    sampleTerrainMostDetailed,
-    SceneMode,
-    when) {
-'use strict';
+import defined from '../Core/defined.js';
+import Rectangle from '../Core/Rectangle.js';
+import sampleTerrainMostDetailed from '../Core/sampleTerrainMostDetailed.js';
+import when from '../ThirdParty/when.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * Computes the final camera location to view a rectangle adjusted for the current terrain.
@@ -70,6 +62,4 @@ define([
 
     //Exposed for testing.
     computeFlyToLocationForRectangle._sampleTerrainMostDetailed = sampleTerrainMostDetailed;
-
-    return computeFlyToLocationForRectangle;
-});
+export default computeFlyToLocationForRectangle;

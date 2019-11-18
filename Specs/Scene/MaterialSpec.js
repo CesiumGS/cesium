@@ -1,36 +1,20 @@
-defineSuite([
-        'Scene/Material',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/Resource',
-        'Scene/MaterialAppearance',
-        'Scene/PolylineCollection',
-        'Scene/Primitive',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Material,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        Resource,
-        MaterialAppearance,
-        PolylineCollection,
-        Primitive,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PolylineCollection } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Material', function() {
 
     var scene;
 

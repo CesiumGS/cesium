@@ -1,36 +1,18 @@
-define([
-        '../Core/combine',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/freezeObject',
-        '../Core/isArray',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './ImageryProvider',
-        './TimeDynamicImagery'
-    ], function(
-        combine,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        freezeObject,
-        isArray,
-        Rectangle,
-        Resource,
-        WebMercatorTilingScheme,
-        when,
-        ImageryProvider,
-        TimeDynamicImagery) {
-    'use strict';
+import combine from '../Core/combine.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import freezeObject from '../Core/freezeObject.js';
+import isArray from '../Core/isArray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import ImageryProvider from './ImageryProvider.js';
+import TimeDynamicImagery from './TimeDynamicImagery.js';
 
     var defaultParameters = freezeObject({
         service : 'WMTS',
@@ -67,7 +49,7 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -122,9 +104,9 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
@@ -599,6 +581,4 @@ define([
     WebMapTileServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    return WebMapTileServiceImageryProvider;
-});
+export default WebMapTileServiceImageryProvider;

@@ -1,32 +1,18 @@
-defineSuite([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defaultValue',
-        'Core/Matrix4',
-        'Core/OrthographicFrustum',
-        'Core/OrthographicOffCenterFrustum',
-        'Renderer/Pass',
-        'Renderer/Texture',
-        'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState'
-    ], 'Renderer/AutomaticUniforms', function(
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        Pass,
-        Texture,
-        SceneMode,
-        createCamera,
-        createContext,
-        createFrameState) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import createContext from '../createContext.js';
+import createFrameState from '../createFrameState.js';
+
+describe('Renderer/AutomaticUniforms', function() {
 
     var context;
 

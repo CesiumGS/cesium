@@ -1,82 +1,44 @@
-defineSuite([
-        'DataSources/KmlDataSource',
-        'Core/ArcType',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/combine',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/RequestErrorEvent',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ImageMaterialProperty',
-        'DataSources/KmlCamera',
-        'DataSources/KmlLookAt',
-        'DataSources/KmlTour',
-        'DataSources/KmlTourFlyTo',
-        'DataSources/KmlTourWait',
-        'Scene/Camera',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        KmlDataSource,
-        ArcType,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        ClockRange,
-        ClockStep,
-        Color,
-        combine,
-        Ellipsoid,
-        Event,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        NearFarScalar,
-        PerspectiveFrustum,
-        Rectangle,
-        RequestErrorEvent,
-        Resource,
-        RuntimeError,
-        ColorMaterialProperty,
-        EntityCollection,
-        ImageMaterialProperty,
-        KmlCamera,
-        KmlLookAt,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait,
-        Camera,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SceneMode,
-        createCamera,
-        pollToPromise,
-        when) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ImageMaterialProperty } from '../../Source/Cesium.js';
+import { KmlCamera } from '../../Source/Cesium.js';
+import { KmlDataSource } from '../../Source/Cesium.js';
+import { KmlLookAt } from '../../Source/Cesium.js';
+import { KmlTour } from '../../Source/Cesium.js';
+import { KmlTourFlyTo } from '../../Source/Cesium.js';
+import { KmlTourWait } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -149,7 +111,8 @@ defineSuite([
         canvas : {
             clientWidth : 512,
             clientHeight : 512
-        }
+        },
+        credit: 'This is my credit'
     };
     options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
     options.camera.frustum.aspectRatio = 1.0;
@@ -170,6 +133,7 @@ defineSuite([
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
         expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeInstanceOf(Credit);
     });
 
     it('setting name raises changed event', function() {
@@ -271,6 +235,52 @@ defineSuite([
         return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load does deferred loading', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark id="Bob">\
+            </Placemark>\
+            <Placemark id="Bob2">\
+            </Placemark>\
+        </Document>';
+
+        jasmine.clock().install();
+        jasmine.clock().mockDate(new Date());
+
+        // Jasmine doesn't mock performance.now(), so force Date.now()
+        spyOn(KmlDataSource, '_getTimestamp').and.callFake(function() {
+            return Date.now();
+        });
+
+        var OrigDeferredLoading = KmlDataSource._DeferredLoading;
+        var deferredLoading;
+        spyOn(KmlDataSource, '_DeferredLoading').and.callFake(function(datasource) {
+            deferredLoading = new OrigDeferredLoading(datasource);
+
+            var process = deferredLoading._process.bind(deferredLoading);
+            spyOn(deferredLoading, '_process').and.callFake(function(isFirst) {
+                jasmine.clock().tick(1001); // Step over a second everytime, so we only process 1 feature
+                return process(isFirst);
+            });
+
+            var giveUpTime = deferredLoading._giveUpTime.bind(deferredLoading);
+            spyOn(deferredLoading, '_giveUpTime').and.callFake(function() {
+                giveUpTime();
+                jasmine.clock().tick(1); // Fire the setTimeout callback
+            });
+
+            return deferredLoading;
+        });
+
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(source) {
+            expect(deferredLoading._process.calls.count()).toEqual(3); // Document and 2 placemarks
+
+            jasmine.clock().uninstall();
         });
     });
 

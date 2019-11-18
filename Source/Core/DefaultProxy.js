@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * A simple proxy that appends the desired resource as the sole query parameter
@@ -24,6 +22,4 @@ define(function() {
         var prefix = this.proxy.indexOf('?') === -1 ? '?' : '';
         return this.proxy + prefix + encodeURIComponent(resource);
     };
-
-    return DefaultProxy;
-});
+export default DefaultProxy;

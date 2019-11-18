@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * A structure containing the orientation data computed at a particular time. The data
@@ -49,6 +47,4 @@ define(function() {
          */
         this.rotationRate = rotationRate;
     }
-
-    return IauOrientationParameters;
-});
+export default IauOrientationParameters;

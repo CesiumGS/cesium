@@ -1,10 +1,5 @@
-define([
-    'Core/defaultValue',
-    'ThirdParty/when'
-], function(
-    defaultValue,
-    when) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { when } from '../Source/Cesium.js';
 
     function runLater(functionToRunLater, milliseconds) {
         milliseconds = defaultValue(milliseconds, 0);
@@ -19,6 +14,4 @@ define([
         }, milliseconds);
         return deferred.promise;
     }
-
-     return runLater;
- });
+export default runLater;

@@ -1,62 +1,26 @@
-defineSuite([
-        'DataSources/StaticGroundGeometryPerMaterialBatch',
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Scene/MaterialAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/PolylineMaterialAppearance',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticGroundGeometryPerMaterialBatch,
-        ApproximateTerrainHeights,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGeometryUpdater,
-        EllipseGraphics,
-        Entity,
-        GridMaterialProperty,
-        PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        GroundPrimitive,
-        MaterialAppearance,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { StaticGroundGeometryPerMaterialBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticGroundGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;

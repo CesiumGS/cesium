@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/GeometryInstance',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/ComponentDatatype',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryInstanceAttribute',
-        'Core/Matrix4',
-        'Core/PrimitiveType'
-    ], function(
-        GeometryInstance,
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstanceAttribute,
-        Matrix4,
-        PrimitiveType) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { GeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+
+describe('Core/GeometryInstance', function() {
 
     it('constructor', function() {
         var geometry = new Geometry({

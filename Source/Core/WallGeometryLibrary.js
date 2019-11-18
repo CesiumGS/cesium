@@ -1,20 +1,10 @@
-define([
-        './Cartographic',
-        './defined',
-        './EllipsoidTangentPlane',
-        './Math',
-        './PolygonPipeline',
-        './PolylinePipeline',
-        './WindingOrder'
-    ], function(
-        Cartographic,
-        defined,
-        EllipsoidTangentPlane,
-        CesiumMath,
-        PolygonPipeline,
-        PolylinePipeline,
-        WindingOrder) {
-    'use strict';
+import Cartographic from './Cartographic.js';
+import defined from './defined.js';
+import EllipsoidTangentPlane from './EllipsoidTangentPlane.js';
+import CesiumMath from './Math.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PolylinePipeline from './PolylinePipeline.js';
+import WindingOrder from './WindingOrder.js';
 
     /**
      * private
@@ -195,6 +185,4 @@ define([
             numCorners: numCorners
         };
     };
-
-    return WallGeometryLibrary;
-});
+export default WallGeometryLibrary;

@@ -1,12 +1,6 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined'
-    ], function(
-        Check,
-        defaultValue,
-        defined) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * A set of curvilinear 3-dimensional coordinates.
@@ -183,6 +177,4 @@ define([
     Spherical.prototype.toString = function() {
         return '(' + this.clock + ', ' + this.cone + ', ' + this.magnitude + ')';
     };
-
-    return Spherical;
-});
+export default Spherical;

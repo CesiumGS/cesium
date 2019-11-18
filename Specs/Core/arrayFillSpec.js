@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/arrayFill'
-    ], function(
-        arrayFill) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+
+describe('Core/arrayFill', function() {
 
     var array;
 

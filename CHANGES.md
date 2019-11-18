@@ -1,6 +1,76 @@
 Change Log
 ==========
 
+### 1.63.1 - 2019-11-06
+
+##### Fixes :wrench:
+* Fixed regression in 1.63 where ground atmosphere and labels rendered incorrectly on displays with `window.devicePixelRatio` greater than 1.0. [#8351](https://github.com/AnalyticalGraphicsInc/cesium/pull/8351)
+* Fixed regression in 1.63 where some primitives would show through the globe when log depth is disabled. [#8368](https://github.com/AnalyticalGraphicsInc/cesium/pull/8368)
+
+### 1.63 - 2019-11-01
+
+##### Major Announcements :loudspeaker:
+* Cesium has migrated to ES6 modules. This may or may not be a breaking change for your application depending on how you use Cesium.  See our [blog post](https://cesium.com/blog/2019/10/31/cesiumjs-es6/) for the full details.
+* We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com.  Here’s where you can now find:
+  * [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
+  * [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
+  * [Downloads](https://cesium.com/downloads/) - `https://cesium.com/downloads/`
+  * Hosted releases can be found at `https://cesium.com/downloads/cesiumjs/releases/<CesiumJS Version Number>/Build/Cesium/Cesium.js`
+  * See our [blog post](https://cesium.com/blog/2019/10/15/cesiumjs-migration/) for more information.
+
+##### Additions :tada:
+* Decreased Web Workers bundle size by a factor of 10, from 8384KB (2624KB gzipped) to 863KB (225KB gzipped). This makes Cesium load faster, especially on low-end devices and slower network connections.
+* Added full UTF-8 support to labels, greatly improving support for non-latin alphabets and emoji. [#7280](https://github.com/AnalyticalGraphicsInc/cesium/pull/7280)
+* Added `"type": "module"` to package.json to take advantage of native ES6 module support in newer versions of Node.js. This also enables module-based front-end development for tooling that relies on Node.js module resolution.
+* The combined `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js` have been upgraded from IIFE to UMD modules that support IIFE, AMD, and commonjs.
+* Added `pixelRatio` parameter to `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions`. Pass in `scene.pixelRatio` for dimensions in CSS pixel units or `1.0` for dimensions in native device pixel units. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
+##### Fixes :wrench:
+* Fixed css pixel usage for polylines, point clouds, models, primitives, and post-processing. [#8113](https://github.com/AnalyticalGraphicsInc/cesium/issues/8113)
+* Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
+* Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
+* Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
+* Fixed rendering billboard collections containing more than 65536 billboards. [#8325](https://github.com/AnalyticalGraphicsInc/cesium/pull/8325)
+
+##### Deprecated :hourglass_flowing_sand:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now take a `pixelRatio` argument before the `result` argument. The previous function definition will no longer work in 1.65. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
+
+### 1.62 - 2019-10-01
+
+##### Deprecated :hourglass_flowing_sand:
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.65.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
+* The function `Matrix4.getRotation` has been deprecated and renamed to `Matrix4.getMatrix3`. `Matrix4.getRotation` will be removed in version 1.65.
+
+##### Additions :tada:
+* Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone`, and `maximumCone`. This affects both `EllipsoidGeometry` and `EllipsoidOutlineGeometry`. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Partial%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
+* Added `useBrowserRecommendedResolution` flag to `Viewer` and `CesiumWidget`. When true, Cesium renders at CSS pixel resolution instead of native device resolution. This replaces the workaround in the 1.61 change list. [8215](https://github.com/AnalyticalGraphicsInc/cesium/issues/8215)
+* Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
+* Added `credit` parameter to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource` and `Model`. [#8173](https://github.com/AnalyticalGraphicsInc/cesium/pull/8173)
+* Added `Matrix3.getRotation` to get the rotational component of a matrix with scaling removed. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
+
+##### Fixes :wrench:
+
+* Fixed labels not showing for individual entities in data sources when clustering is enabled. [#6087](https://github.com/AnalyticalGraphicsInc/cesium/issues/6087)
+* Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
+* Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
+* Spread out KMl loading across multiple frames to prevent freezing. [#8195](https://github.com/AnalyticalGraphicsInc/cesium/pull/8195)
+* Fixed a bug where extruded polygons would sometimes be missing segments. [#8035](https://github.com/AnalyticalGraphicsInc/cesium/pull/8035)
+* Made pixel sizes consistent for polylines and point clouds when rendering at different pixel ratios. [#8113](https://github.com/AnalyticalGraphicsInc/cesium/issues/8113)
+* `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
+* Fixed 3D tiles style coloring when multiple tilesets are in the scene [#8051](https://github.com/AnalyticalGraphicsInc/cesium/pull/8051)
+* 3D Tiles geometric error now correctly scales with transform. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
+* Fixed per-feature post processing from sometimes selecting the wrong feature. [#7929](https://github.com/AnalyticalGraphicsInc/cesium/pull/7929)
+* Fixed a bug where dynamic polylines did not use the given arcType. [#8191](https://github.com/AnalyticalGraphicsInc/cesium/issues/8191)
+* Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
+* Fixed brightness levels for procedural Image Based Lighting. [#7803](https://github.com/AnalyticalGraphicsInc/cesium/issues/7803)
+* Fixed alpha equation for `BlendingState.ALPHA_BLEND` and `BlendingState.ADDITIVE_BLEND`. [#8202](https://github.com/AnalyticalGraphicsInc/cesium/pull/8202)
+* Improved display of tile coordinates for `TileCoordinatesImageryProvider` [#8131](https://github.com/AnalyticalGraphicsInc/cesium/pull/8131)
+* Reduced size of approximateTerrainHeights.json [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
+* Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)
+* Fixed a crash for 3D Tiles that have zero volume. [#7945](https://github.com/AnalyticalGraphicsInc/cesium/pull/7945)
+* Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:

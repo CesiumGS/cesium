@@ -1,52 +1,28 @@
-defineSuite([
-        'Scene/Camera',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Cartographic',
-        'Core/defaultValue',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/OrthographicFrustum',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/Transforms',
-        'Core/WebMercatorProjection',
-        'Scene/CameraFlightPath',
-        'Scene/MapMode2D',
-        'Scene/SceneMode',
-        'Scene/TweenCollection'
-    ], function(
-        Camera,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defaultValue,
-        Ellipsoid,
-        GeographicProjection,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Rectangle,
-        Transforms,
-        WebMercatorProjection,
-        CameraFlightPath,
-        MapMode2D,
-        SceneMode,
-        TweenCollection) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { CameraFlightPath } from '../../Source/Cesium.js';
+import { MapMode2D } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { TweenCollection } from '../../Source/Cesium.js';
+
+describe('Scene/Camera', function() {
 
     var scene;
     var camera;
@@ -206,7 +182,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
@@ -475,7 +451,7 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
@@ -2791,6 +2767,9 @@ defineSuite([
     it('getPixelSize', function() {
         scene.mode = SceneMode.SCENE3D;
 
+        var oldPixelRatio = scene.pixelRatio;
+        scene.pixelRatio = 1.0;
+
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var context = scene.context;
         var drawingBufferWidth = context.drawingBufferWidth;
@@ -2798,11 +2777,13 @@ defineSuite([
 
         // Compute expected pixel size
         var distance = camera.distanceToBoundingSphere(sphere);
-        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cartesian2());
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scene.pixelRatio, new Cartesian2());
         var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
 
         var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);
         expect(pixelSize).toEqual(expectedPixelSize);
+
+        scene.pixelRatio = oldPixelRatio;
     });
 
     it('getPixelSize throws when there is no bounding sphere', function() {

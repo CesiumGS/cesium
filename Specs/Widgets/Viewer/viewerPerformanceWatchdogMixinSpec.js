@@ -1,12 +1,8 @@
-defineSuite([
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
-        'Specs/createViewer',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
-    ], function(
-        viewerPerformanceWatchdogMixin,
-        createViewer,
-        PerformanceWatchdog) {
-    'use strict';
+import createViewer from '../../createViewer.js';
+import { PerformanceWatchdog } from '../../../Source/Cesium.js';
+import { viewerPerformanceWatchdogMixin } from '../../../Source/Cesium.js';
+
+describe('Widgets/Viewer/viewerPerformanceWatchdogMixin', function() {
 
     var container;
     var viewer;

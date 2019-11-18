@@ -1,72 +1,38 @@
-defineSuite([
-        'Scene/Primitive',
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian3',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/ComponentDatatype',
-        'Core/CylinderGeometry',
-        'Core/defined',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/Ellipsoid',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryInstance',
-        'Core/GeometryInstanceAttribute',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PolygonGeometry',
-        'Core/PrimitiveType',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/Transforms',
-        'Scene/Camera',
-        'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/SceneMode',
-        'Specs/BadGeometry',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Primitive,
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian3,
-        ColorGeometryInstanceAttribute,
-        ComponentDatatype,
-        CylinderGeometry,
-        defined,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        GeometryInstanceAttribute,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        PolygonGeometry,
-        PrimitiveType,
-        Rectangle,
-        RectangleGeometry,
-        ShowGeometryInstanceAttribute,
-        Transforms,
-        Camera,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        SceneMode,
-        BadGeometry,
-        createContext,
-        createFrameState,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { CylinderGeometry } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { GeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import BadGeometry from '../BadGeometry.js';
+import createContext from '../createContext.js';
+import createFrameState from '../createFrameState.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Primitive', function() {
 
     var scene;
     var context;

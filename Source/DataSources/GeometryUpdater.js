@@ -1,40 +1,20 @@
-define([
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Event',
-        '../Core/Iso8601',
-        '../Core/oneTimeWarning',
-        '../Scene/ClassificationType',
-        '../Scene/ShadowMode',
-        './ColorMaterialProperty',
-        './ConstantProperty',
-        './Entity',
-        './Property'
-    ], function(
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Event,
-        Iso8601,
-        oneTimeWarning,
-        ClassificationType,
-        ShadowMode,
-        ColorMaterialProperty,
-        ConstantProperty,
-        Entity,
-        Property) {
-    'use strict';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Event from '../Core/Event.js';
+import Iso8601 from '../Core/Iso8601.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import Entity from './Entity.js';
+import Property from './Property.js';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
@@ -46,7 +26,7 @@ define([
     var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
-     * An abstract class for updating geometry entites.
+     * An abstract class for updating geometry entities.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -246,7 +226,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * If true, all visualization is delegated to a DynamicGeometryUpdater
          * returned by GeometryUpdater#createDynamicUpdater.
          * @memberof GeometryUpdater.prototype
          *
@@ -512,6 +492,4 @@ define([
 
         return new this.constructor.DynamicGeometryUpdater(this, primitives, groundPrimitives);
     };
-
-    return GeometryUpdater;
-});
+export default GeometryUpdater;

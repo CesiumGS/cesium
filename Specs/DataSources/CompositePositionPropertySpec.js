@@ -1,22 +1,13 @@
-defineSuite([
-        'DataSources/CompositePositionProperty',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/PositionProperty'
-    ], function(
-        CompositePositionProperty,
-        Cartesian3,
-        JulianDate,
-        ReferenceFrame,
-        TimeInterval,
-        TimeIntervalCollection,
-        ConstantPositionProperty,
-        PositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/CompositePositionProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositePositionProperty();

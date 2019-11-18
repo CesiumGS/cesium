@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/EllipsoidRhumbLine',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeodesic',
-        'Core/Math'
-    ], function(
-        EllipsoidRhumbLine,
-        Cartographic,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        CesiumMath) {
-    'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeodesic } from '../../Source/Cesium.js';
+import { EllipsoidRhumbLine } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/EllipsoidRhumbLine', function() {
 
     var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
     var fifteenDegrees = Math.PI / 12;

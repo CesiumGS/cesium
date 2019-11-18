@@ -1,72 +1,38 @@
-defineSuite([
-        'DataSources/PolylineGeometryUpdater',
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/GroundPolylineGeometry',
-        'Core/JulianDate',
-        'Core/PolylinePipeline',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoundingSphereState',
-        'DataSources/CallbackProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineGraphics',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/Globe',
-        'Scene/GroundPolylinePrimitive',
-        'Scene/ShadowMode',
-        'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        PolylineGeometryUpdater,
-        ApproximateTerrainHeights,
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        GroundPolylineGeometry,
-        JulianDate,
-        PolylinePipeline,
-        ShowGeometryInstanceAttribute,
-        TimeInterval,
-        TimeIntervalCollection,
-        BoundingSphereState,
-        CallbackProperty,
-        ColorMaterialProperty,
-        ConstantProperty,
-        Entity,
-        GridMaterialProperty,
-        PolylineGraphics,
-        PropertyArray,
-        SampledPositionProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty,
-        Globe,
-        GroundPolylinePrimitive,
-        ShadowMode,
-        createDynamicProperty,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GroundPolylineGeometry } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { PolylinePipeline } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/PolylineGeometryUpdater', function() {
 
     var scene;
     beforeAll(function(){
@@ -822,6 +788,23 @@ defineSuite([
             dynamicUpdater.getBoundingSphere(undefined);
         }).toThrowDeveloperError();
 
+        dynamicUpdater.destroy();
+        updater.destroy();
+
+        expect(scene.primitives.length).toBe(0);
+        expect(scene.groundPrimitives.length).toBe(0);
+    });
+
+    it('calls generateCartesianRhumbArc for RHUMB arcType', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        entity.polyline.arcType = ArcType.RHUMB;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
+        spyOn(PolylinePipeline, 'generateCartesianRhumbArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianRhumbArc).toHaveBeenCalled();
         dynamicUpdater.destroy();
         updater.destroy();
 

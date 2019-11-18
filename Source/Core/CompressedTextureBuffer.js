@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     /**
      * Describes a compressed texture and contains a compressed texture buffer.
@@ -92,6 +87,4 @@ define([
     CompressedTextureBuffer.prototype.clone = function() {
         return CompressedTextureBuffer.clone(this);
     };
-
-    return CompressedTextureBuffer;
-});
+export default CompressedTextureBuffer;

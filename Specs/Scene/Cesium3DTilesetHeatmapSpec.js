@@ -1,26 +1,12 @@
-defineSuite([
-        'Scene/Cesium3DTilesetHeatmap',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileset',
-        'Core/clone',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix4',
-        'Scene/Cesium3DTileContentState',
-        'Specs/createScene'
-    ], function(
-        Cesium3DTilesetHeatmap,
-        Cesium3DTile,
-        Cesium3DTileset,
-        clone,
-        Color,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        Cesium3DTileContentState,
-        createScene) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTileContentState } from '../../Source/Cesium.js';
+import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Cesium3DTilesetHeatmap', function() {
 
     var tileWithBoundingSphere = {
         geometricError : 1,

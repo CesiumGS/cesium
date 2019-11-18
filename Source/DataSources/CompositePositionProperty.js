@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './CompositeProperty',
-        './Property'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        CompositeProperty,
-        Property) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import CompositeProperty from './CompositeProperty.js';
+import Property from './Property.js';
 
     /**
      * A {@link CompositeProperty} which is also a {@link PositionProperty}.
@@ -147,6 +136,4 @@ define([
     CompositePositionProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return CompositePositionProperty;
-});
+export default CompositePositionProperty;

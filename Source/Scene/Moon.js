@@ -1,34 +1,17 @@
-define([
-        '../Core/buildModuleUrl',
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/IauOrientationAxes',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Simon1994PlanetaryPositions',
-        '../Core/Transforms',
-        './EllipsoidPrimitive',
-        './Material'
-    ], function(
-        buildModuleUrl,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Ellipsoid,
-        IauOrientationAxes,
-        Matrix3,
-        Matrix4,
-        Simon1994PlanetaryPositions,
-        Transforms,
-        EllipsoidPrimitive,
-        Material) {
-    'use strict';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import IauOrientationAxes from '../Core/IauOrientationAxes.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Simon1994PlanetaryPositions from '../Core/Simon1994PlanetaryPositions.js';
+import Transforms from '../Core/Transforms.js';
+import EllipsoidPrimitive from './EllipsoidPrimitive.js';
+import Material from './Material.js';
 
     /**
      * Draws the Moon in 3D.
@@ -181,6 +164,4 @@ define([
         this._ellipsoidPrimitive = this._ellipsoidPrimitive && this._ellipsoidPrimitive.destroy();
         return destroyObject(this);
     };
-
-    return Moon;
-});
+export default Moon;

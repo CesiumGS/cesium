@@ -1,36 +1,19 @@
-defineSuite([
-        'Core/GoogleEarthEnterpriseTerrainProvider',
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/GoogleEarthEnterpriseTerrainData',
-        'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/Math',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/TerrainProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        GoogleEarthEnterpriseTerrainProvider,
-        DefaultProxy,
-        defaultValue,
-        Ellipsoid,
-        GeographicTilingScheme,
-        GoogleEarthEnterpriseMetadata,
-        GoogleEarthEnterpriseTerrainData,
-        GoogleEarthEnterpriseTileInformation,
-        CesiumMath,
-        Request,
-        RequestScheduler,
-        Resource,
-        TerrainProvider,
-        pollToPromise,
-        when) {
-    'use strict';
+import { defaultValue } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMetadata } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTerrainData } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTerrainProvider } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TerrainProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
 
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
