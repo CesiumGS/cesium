@@ -31,7 +31,7 @@ import FullscreenButtonViewModel from './FullscreenButtonViewModel.js';
 
         container = getElement(container);
 
-        var viewModel = new FullscreenButtonViewModel(container, fullscreenElement);
+        var viewModel = new FullscreenButtonViewModel(fullscreenElement, container);
 
         viewModel._exitFullScreenPath = exitFullScreenPath;
         viewModel._enterFullScreenPath = enterFullScreenPath;
