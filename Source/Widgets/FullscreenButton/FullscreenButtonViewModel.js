@@ -1,3 +1,4 @@
+import defined from '../../Core/defined.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
@@ -12,13 +13,21 @@ import getElement from '../getElement.js';
      * @alias FullscreenButtonViewModel
      * @constructor
      *
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      */
-    function FullscreenButtonViewModel(fullscreenElement) {
+    function FullscreenButtonViewModel(fullscreenElement, container) {
+        if (!defined(container)) {
+            container = document.body;
+        }
+
+        container = getElement(container);
+
         var that = this;
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
         var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
+        var ownerDocument = container.ownerDocument;
 
         /**
          * Gets whether or not fullscreen mode is active.  This property is observable.
@@ -69,12 +78,12 @@ import getElement from '../getElement.js';
             }
         }, knockout.getObservable(this, 'isFullscreenEnabled'));
 
-        this._fullscreenElement = defaultValue(getElement(fullscreenElement), document.body);
+        this._fullscreenElement = defaultValue(getElement(fullscreenElement), ownerDocument.body);
 
         this._callback = function() {
             tmpIsFullscreen(Fullscreen.fullscreen);
         };
-        document.addEventListener(Fullscreen.changeEventName, this._callback);
+        ownerDocument.addEventListener(Fullscreen.changeEventName, this._callback);
     }
 
     defineProperties(FullscreenButtonViewModel.prototype, {
