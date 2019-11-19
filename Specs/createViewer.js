@@ -1,12 +1,6 @@
-define([
-        'Core/defaultValue',
-        'Specs/getWebGLStub',
-        'Widgets/Viewer/Viewer'
-    ], function(
-        defaultValue,
-        getWebGLStub,
-        Viewer) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import getWebGLStub from './getWebGLStub.js';
+import { Viewer } from '../Source/Cesium.js';
 
     function createViewer(container, options) {
         options = defaultValue(options, {});
@@ -18,6 +12,4 @@ define([
 
         return new Viewer(container, options);
     }
-
-    return createViewer;
-});
+export default createViewer;

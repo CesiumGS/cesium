@@ -1,16 +1,8 @@
-define([
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties'
-    ], function(
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties) {
-    'use strict';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     /**
      * Value and type information for per-instance geometry attribute that determines the geometry instance offset
@@ -132,6 +124,4 @@ define([
         result[2] = offset.z;
         return result;
     };
-
-    return OffsetGeometryInstanceAttribute;
-});
+export default OffsetGeometryInstanceAttribute;

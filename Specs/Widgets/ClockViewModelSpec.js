@@ -1,16 +1,8 @@
-define([
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/JulianDate',
-        'Widgets/ClockViewModel'
-    ], function(
-        Clock,
-        ClockRange,
-        ClockStep,
-        JulianDate,
-        ClockViewModel) {
-        'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ClockViewModel } from '../../Source/Cesium.js';
 
 describe('Widgets/ClockViewModel', function() {
 
@@ -88,5 +80,4 @@ describe('Widgets/ClockViewModel', function() {
         expect(clockViewModel.clockRange).toEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate).toEqual(clock.shouldAnimate);
     });
-});
 });

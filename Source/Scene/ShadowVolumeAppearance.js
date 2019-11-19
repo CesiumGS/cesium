@@ -1,47 +1,20 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/EncodedCartesian3',
-        '../Core/GeometryInstanceAttribute',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Rectangle',
-        '../Core/Transforms',
-        '../Renderer/ShaderSource',
-        '../Scene/PerInstanceColorAppearance',
-        '../Shaders/ShadowVolumeAppearanceFS'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        EncodedCartesian3,
-        GeometryInstanceAttribute,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        Transforms,
-        ShaderSource,
-        PerInstanceColorAppearance,
-        ShadowVolumeAppearanceFS) {
-    'use strict';
-
-    var projectionExtentDefines = {
-        eastMostYhighDefine : '',
-        eastMostYlowDefine : '',
-        westMostYhighDefine : '',
-        westMostYlowDefine : ''
-    };
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Rectangle from '../Core/Rectangle.js';
+import Transforms from '../Core/Transforms.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
 
     /**
      * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
@@ -59,6 +32,13 @@ define([
         Check.typeOf.object('appearance', appearance);
         Check.typeOf.bool('useFloatBatchTable', useFloatBatchTable);
         //>>includeEnd('debug');
+
+        this._projectionExtentDefines = {
+            eastMostYhighDefine : '',
+            eastMostYlowDefine : '',
+            westMostYhighDefine : '',
+            westMostYlowDefine : ''
+        };
 
         this._useFloatBatchTable = useFloatBatchTable;
 
@@ -204,7 +184,7 @@ define([
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection, this._useFloatBatchTable);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection, this._useFloatBatchTable, this._projectionExtentDefines);
     };
 
     /**
@@ -223,7 +203,7 @@ define([
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection, this._useFloatBatchTable);
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection, this._useFloatBatchTable, this._projectionExtentDefines);
     };
 
     var longitudeExtentsCartesianScratch = new Cartesian3();
@@ -232,7 +212,7 @@ define([
         high : 0.0,
         low : 0.0
     };
-    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection, useFloatBatchTable) {
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection, useFloatBatchTable, projectionExtentDefines) {
         var allDefines = defines.slice();
 
         if (projectionExtentDefines.eastMostYhighDefine === '') {
@@ -919,6 +899,4 @@ define([
      * @private
      */
     ShadowVolumeAppearance.MAX_WIDTH_FOR_PLANAR_EXTENTS = CesiumMath.toRadians(1.0);
-
-    return ShadowVolumeAppearance;
-});
+export default ShadowVolumeAppearance;

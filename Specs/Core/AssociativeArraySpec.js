@@ -1,8 +1,4 @@
-define([
-        'Core/AssociativeArray'
-    ], function(
-        AssociativeArray) {
-        'use strict';
+import { AssociativeArray } from '../../Source/Cesium.js';
 
 describe('Core/AssociativeArray', function() {
 
@@ -77,5 +73,4 @@ describe('Core/AssociativeArray', function() {
         var associativeArray = new AssociativeArray();
         expect(associativeArray.remove(undefined)).toBe(false);
     });
-});
 });

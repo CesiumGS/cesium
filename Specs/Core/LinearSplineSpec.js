@@ -1,10 +1,5 @@
-define([
-        'Core/Cartesian3',
-        'Core/LinearSpline'
-    ], function(
-        Cartesian3,
-        LinearSpline) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { LinearSpline } from '../../Source/Cesium.js';
 
 describe('Core/LinearSpline', function() {
 
@@ -90,5 +85,4 @@ describe('Core/LinearSpline', function() {
         expect(point).toBe(result);
         expect(result).toEqual(points[0]);
     });
-});
 });

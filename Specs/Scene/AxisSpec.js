@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4',
-        'Scene/Axis'
-    ], function(
-        Cartesian4,
-        CesiumMath,
-        Matrix4,
-        Axis) {
-        'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Axis } from '../../Source/Cesium.js';
 
 describe('Scene/Axis', function() {
 
@@ -41,5 +34,4 @@ describe('Scene/Axis', function() {
     it('Convert x-up to z-up', function() {
         convertUpAxis(Cartesian4.UNIT_X, Axis.X_UP_TO_Z_UP, Cartesian4.UNIT_Z);
     });
-});
 });

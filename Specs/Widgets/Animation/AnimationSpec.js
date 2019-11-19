@@ -1,16 +1,8 @@
-define([
-        'Core/defined',
-        'Specs/pollToPromise',
-        'Widgets/Animation/Animation',
-        'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel'
-    ], function(
-        defined,
-        pollToPromise,
-        Animation,
-        AnimationViewModel,
-        ClockViewModel) {
-        'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
+import { Animation } from '../../../Source/Cesium.js';
+import { AnimationViewModel } from '../../../Source/Cesium.js';
+import { ClockViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/Animation/Animation', function() {
 
@@ -54,5 +46,4 @@ describe('Widgets/Animation/Animation', function() {
         var animationViewModel = new AnimationViewModel(clockViewModel);
         animation = new Animation(container, animationViewModel);
     });
-});
 });

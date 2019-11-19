@@ -1,10 +1,5 @@
-define([
-        'Core/JulianDate',
-        'Core/TimeInterval'
-    ], function(
-        JulianDate,
-        TimeInterval) {
-        'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
 
 describe('Core/TimeInterval', function() {
 
@@ -470,5 +465,4 @@ describe('Core/TimeInterval', function() {
             TimeInterval.contains(timeInterval, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties'
-    ], function(
-        Color,
-        defined,
-        defineProperties) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * A feature of a {@link Cesium3DTileset}.
@@ -273,6 +267,4 @@ define([
     Cesium3DTileFeature.prototype.getExactClassName = function() {
         return this._content.batchTable.getExactClassName(this._batchId);
     };
-
-    return Cesium3DTileFeature;
-});
+export default Cesium3DTileFeature;

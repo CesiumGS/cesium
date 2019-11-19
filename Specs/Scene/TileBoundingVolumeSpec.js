@@ -1,8 +1,4 @@
-define([
-        'Scene/TileBoundingVolume'
-    ], function(
-        TileBoundingVolume) {
-        'use strict';
+import { TileBoundingVolume } from '../../Source/Cesium.js';
 
 describe('Scene/TileBoundingVolume', function() {
 
@@ -18,5 +14,4 @@ describe('Scene/TileBoundingVolume', function() {
             boundingVolume.intersectPlane();
         }).toThrowDeveloperError();
     });
-});
 });

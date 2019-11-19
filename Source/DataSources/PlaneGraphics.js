@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a plane. The center position and orientation are determined by the containing {@link Entity}.
@@ -34,7 +24,7 @@ define([
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the plane casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this plane will be displayed.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
      */
     function PlaneGraphics(options) {
         this._definitionChanged = new Event();
@@ -203,6 +193,4 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return PlaneGraphics;
-});
+export default PlaneGraphics;

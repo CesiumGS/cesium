@@ -1,8 +1,4 @@
-define([
-        'Core/Heap'
-    ], function(
-        Heap) {
-        'use strict';
+import { Heap } from '../../Source/Cesium.js';
 
 describe('Core/Heap', function() {
 
@@ -173,5 +169,4 @@ describe('Core/Heap', function() {
             currentId = element.id;
         }
     });
-});
 });

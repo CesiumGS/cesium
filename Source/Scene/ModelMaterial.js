@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A model's material with modifiable parameters.  A glTF material
@@ -120,6 +114,4 @@ define([
 
         return v.value;
     };
-
-    return ModelMaterial;
-});
+export default ModelMaterial;

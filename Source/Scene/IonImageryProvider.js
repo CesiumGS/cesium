@@ -1,42 +1,21 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/IonResource',
-        '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './ArcGisMapServerImageryProvider',
-        './BingMapsImageryProvider',
-        './TileMapServiceImageryProvider',
-        './GoogleEarthEnterpriseMapsProvider',
-        './MapboxImageryProvider',
-        './SingleTileImageryProvider',
-        './UrlTemplateImageryProvider',
-        './WebMapServiceImageryProvider',
-        './WebMapTileServiceImageryProvider'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        IonResource,
-        RuntimeError,
-        when,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        TileMapServiceImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import IonResource from '../Core/IonResource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import ArcGisMapServerImageryProvider from './ArcGisMapServerImageryProvider.js';
+import BingMapsImageryProvider from './BingMapsImageryProvider.js';
+import TileMapServiceImageryProvider from './TileMapServiceImageryProvider.js';
+import GoogleEarthEnterpriseMapsProvider from './GoogleEarthEnterpriseMapsProvider.js';
+import MapboxImageryProvider from './MapboxImageryProvider.js';
+import SingleTileImageryProvider from './SingleTileImageryProvider.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
+import WebMapServiceImageryProvider from './WebMapServiceImageryProvider.js';
+import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider.js';
 
     function createFactory(Type) {
         return function(options) {
@@ -497,6 +476,4 @@ define([
 
     //exposed for testing
     IonImageryProvider._endpointCache = {};
-
-    return IonImageryProvider;
-});
+export default IonImageryProvider;

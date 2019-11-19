@@ -1,44 +1,22 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian3',
-        './Cartographic',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './Math',
-        './PolygonPipeline',
-        './PrimitiveType',
-        './Rectangle',
-        './RectangleGeometryLibrary'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        IndexDatatype,
-        CesiumMath,
-        PolygonPipeline,
-        PrimitiveType,
-        Rectangle,
-        RectangleGeometryLibrary) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PrimitiveType from './PrimitiveType.js';
+import Rectangle from './Rectangle.js';
+import RectangleGeometryLibrary from './RectangleGeometryLibrary.js';
 
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
@@ -452,6 +430,4 @@ define([
             offsetAttribute : rectangleGeometry._offsetAttribute
         });
     };
-
-    return RectangleOutlineGeometry;
-});
+export default RectangleOutlineGeometry;

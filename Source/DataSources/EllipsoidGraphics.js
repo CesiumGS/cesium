@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
@@ -23,15 +13,13 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
      * @param {Property} [options.minimumClock=0.0] A Property specifying the minimum clock angle of the ellipsoid.
      * @param {Property} [options.maximumClock=2*PI] A Property specifying the maximum clock angle of the ellipsoid.
      * @param {Property} [options.minimumCone=0.0] A Property specifying the minimum cone angle of the ellipsoid.
      * @param {Property} [options.maximumCone=PI] A Property specifying the maximum cone angle of the ellipsoid.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
-     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
@@ -44,7 +32,7 @@ define([
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
     function EllipsoidGraphics(options) {
         this._definitionChanged = new Event();
@@ -53,10 +41,15 @@ define([
         this._radii = undefined;
         this._radiiSubscription = undefined;
         this._innerRadii = undefined;
+        this._innerRadiiSubscription = undefined;
         this._minimumClock = undefined;
+        this._minimumClockSubscription = undefined;
         this._maximumClock = undefined;
+        this._maximumClockSubscription = undefined;
         this._minimumCone = undefined;
+        this._minimumConeSubscription = undefined;
         this._maximumCone = undefined;
+        this._maximumConeSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
         this._fill = undefined;
@@ -304,6 +297,4 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return EllipsoidGraphics;
-});
+export default EllipsoidGraphics;

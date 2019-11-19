@@ -1,22 +1,11 @@
-define([
-        'Core/ComponentDatatype',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
-        'Specs/createContext'
-    ], function(
-        ComponentDatatype,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray,
-        createContext) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/VertexArray', function() {
 
@@ -839,4 +828,3 @@ describe('Renderer/VertexArray', function() {
         }
     });
 }, 'WebGL');
-});

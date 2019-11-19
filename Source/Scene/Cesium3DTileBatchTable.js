@@ -1,76 +1,38 @@
-define([
-        '../Core/arrayFill',
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/RuntimeError',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        './AttributeType',
-        './BlendingState',
-        './Cesium3DTileColorBlendMode',
-        './CullFace',
-        './getBinaryAccessor',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        arrayFill,
-        Cartesian2,
-        Cartesian4,
-        Check,
-        clone,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        RuntimeError,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        AttributeType,
-        BlendingState,
-        Cesium3DTileColorBlendMode,
-        CullFace,
-        getBinaryAccessor,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import arrayFill from '../Core/arrayFill.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import AttributeType from './AttributeType.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileColorBlendMode from './Cesium3DTileColorBlendMode.js';
+import CullFace from './CullFace.js';
+import getBinaryAccessor from './getBinaryAccessor.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     var DEFAULT_COLOR_VALUE = Color.WHITE;
     var DEFAULT_SHOW_VALUE = true;
@@ -1560,6 +1522,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Cesium3DTileBatchTable;
-});
+export default Cesium3DTileBatchTable;

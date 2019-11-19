@@ -1,8 +1,4 @@
-define([
-        'Core/Interval'
-    ], function(
-        Interval) {
-        'use strict';
+import { Interval } from '../../Source/Cesium.js';
 
 describe('Core/Interval', function() {
 
@@ -19,5 +15,4 @@ describe('Core/Interval', function() {
         expect(interval.start).toEqual(start);
         expect(interval.stop).toEqual(stop);
     });
-});
 });

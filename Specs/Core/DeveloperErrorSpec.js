@@ -1,8 +1,4 @@
-define([
-        'Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-        'use strict';
+import { DeveloperError } from '../../Source/Cesium.js';
 
 describe('Core/DeveloperError', function() {
 
@@ -23,14 +19,22 @@ describe('Core/DeveloperError', function() {
     });
 
     it('has a stack property', function() {
-        expect(e.stack).toContain('DeveloperErrorSpec.js');
+        if (window.specsUsingRelease) {
+            expect(e.stack).toContain('Specs.js');
+        } else {
+            expect(e.stack).toContain('DeveloperErrorSpec.js');
+        }
     });
 
     it('has a working toString', function() {
         var str = new DeveloperError(testMessage).toString();
 
         expect(str).toContain(name + ': ' + testMessage);
-        expect(str).toContain('Core/DeveloperErrorSpec.js');
+
+        if (window.specsUsingRelease) {
+            expect(str).toContain('Specs.js');
+        } else {
+            expect(str).toContain('Core/DeveloperErrorSpec.js');
+        }
     });
-});
 });

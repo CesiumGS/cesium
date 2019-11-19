@@ -1,10 +1,5 @@
-define([
-        'Core/JulianDate',
-        'Core/LeapSecond'
-    ], function(
-        JulianDate,
-        LeapSecond) {
-        'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LeapSecond } from '../../Source/Cesium.js';
 
 describe('Core/LeapSecond', function() {
 
@@ -21,5 +16,4 @@ describe('Core/LeapSecond', function() {
         expect(leapSecond.julianDate).toEqual(date);
         expect(leapSecond.offset).toEqual(offset);
     });
-});
 });

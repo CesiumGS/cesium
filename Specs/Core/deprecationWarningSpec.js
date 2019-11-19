@@ -1,8 +1,4 @@
-define([
-        'Core/deprecationWarning'
-    ], function(
-        deprecationWarning) {
-        'use strict';
+import { deprecationWarning } from '../../Source/Cesium.js';
 
 describe('Core/deprecationWarning', function() {
 
@@ -29,5 +25,4 @@ describe('Core/deprecationWarning', function() {
             deprecationWarning('identifier');
         }).toThrowDeveloperError();
     });
-});
 });

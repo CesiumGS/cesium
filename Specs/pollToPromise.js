@@ -1,12 +1,6 @@
-define([
-        'Core/defaultValue',
-        'Core/getTimestamp',
-        'ThirdParty/when'
-    ], function(
-        defaultValue,
-        getTimestamp,
-        when) {
-       'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { getTimestamp } from '../Source/Cesium.js';
+import { when } from '../Source/Cesium.js';
 
     function pollToPromise(f, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -42,6 +36,4 @@ define([
 
         return deferred.promise;
     }
-
-    return pollToPromise;
-});
+export default pollToPromise;

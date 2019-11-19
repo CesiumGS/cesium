@@ -1,147 +1,71 @@
-define([
-        '../Core/ArcType',
-        '../Core/AssociativeArray',
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/ClockRange',
-        '../Core/ClockStep',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/getExtensionFromUri',
-        '../Core/getFilenameFromUri',
-        '../Core/getTimestamp',
-        '../Core/HeadingPitchRange',
-        '../Core/HeadingPitchRoll',
-        '../Core/Iso8601',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/NearFarScalar',
-        '../Core/objectToQuery',
-        '../Core/oneTimeWarning',
-        '../Core/PinBuilder',
-        '../Core/PolygonHierarchy',
-        '../Core/queryToObject',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
-        '../Scene/LabelStyle',
-        '../Scene/SceneMode',
-        '../ThirdParty/Autolinker',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        '../ThirdParty/zip',
-        './BillboardGraphics',
-        './CompositePositionProperty',
-        './DataSource',
-        './DataSourceClock',
-        './Entity',
-        './EntityCluster',
-        './EntityCollection',
-        './KmlCamera',
-        './KmlLookAt',
-        './KmlTour',
-        './KmlTourFlyTo',
-        './KmlTourWait',
-        './LabelGraphics',
-        './PathGraphics',
-        './PolygonGraphics',
-        './PolylineGraphics',
-        './PositionPropertyArray',
-        './RectangleGraphics',
-        './ReferenceProperty',
-        './SampledPositionProperty',
-        './ScaledPositionProperty',
-        './TimeIntervalCollectionProperty',
-        './WallGraphics'
-    ], function(
-        ArcType,
-        AssociativeArray,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ClockRange,
-        ClockStep,
-        clone,
-        Color,
-        createGuid,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Event,
-        getExtensionFromUri,
-        getFilenameFromUri,
-        getTimestamp,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        NearFarScalar,
-        objectToQuery,
-        oneTimeWarning,
-        PinBuilder,
-        PolygonHierarchy,
-        queryToObject,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TimeInterval,
-        TimeIntervalCollection,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SceneMode,
-        Autolinker,
-        Uri,
-        when,
-        zip,
-        BillboardGraphics,
-        CompositePositionProperty,
-        DataSource,
-        DataSourceClock,
-        Entity,
-        EntityCluster,
-        EntityCollection,
-        KmlCamera,
-        KmlLookAt,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait,
-        LabelGraphics,
-        PathGraphics,
-        PolygonGraphics,
-        PolylineGraphics,
-        PositionPropertyArray,
-        RectangleGraphics,
-        ReferenceProperty,
-        SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionProperty,
-        WallGraphics) {
-    'use strict';
-
-    // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
-    if (typeof DOMParser === 'undefined') {
-        return {};
-    }
+import ArcType from '../Core/ArcType.js';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import ClockRange from '../Core/ClockRange.js';
+import ClockStep from '../Core/ClockStep.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Event from '../Core/Event.js';
+import getExtensionFromUri from '../Core/getExtensionFromUri.js';
+import getFilenameFromUri from '../Core/getFilenameFromUri.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import HeadingPitchRange from '../Core/HeadingPitchRange.js';
+import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
+import Iso8601 from '../Core/Iso8601.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import objectToQuery from '../Core/objectToQuery.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import PinBuilder from '../Core/PinBuilder.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import queryToObject from '../Core/queryToObject.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TimeInterval from '../Core/TimeInterval.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import HeightReference from '../Scene/HeightReference.js';
+import HorizontalOrigin from '../Scene/HorizontalOrigin.js';
+import LabelStyle from '../Scene/LabelStyle.js';
+import SceneMode from '../Scene/SceneMode.js';
+import Autolinker from '../ThirdParty/Autolinker.js';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import zip from '../ThirdParty/zip.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import CompositePositionProperty from './CompositePositionProperty.js';
+import DataSource from './DataSource.js';
+import DataSourceClock from './DataSourceClock.js';
+import Entity from './Entity.js';
+import EntityCluster from './EntityCluster.js';
+import EntityCollection from './EntityCollection.js';
+import KmlCamera from './KmlCamera.js';
+import KmlLookAt from './KmlLookAt.js';
+import KmlTour from './KmlTour.js';
+import KmlTourFlyTo from './KmlTourFlyTo.js';
+import KmlTourWait from './KmlTourWait.js';
+import LabelGraphics from './LabelGraphics.js';
+import PathGraphics from './PathGraphics.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineGraphics from './PolylineGraphics.js';
+import PositionPropertyArray from './PositionPropertyArray.js';
+import RectangleGraphics from './RectangleGraphics.js';
+import ReferenceProperty from './ReferenceProperty.js';
+import SampledPositionProperty from './SampledPositionProperty.js';
+import ScaledPositionProperty from './ScaledPositionProperty.js';
+import TimeIntervalCollectionProperty from './TimeIntervalCollectionProperty.js';
+import WallGraphics from './WallGraphics.js';
 
     //This is by no means an exhaustive list of MIME types.
     //The purpose of this list is to be able to accurately identify content embedded
@@ -209,12 +133,15 @@ define([
         }
     };
 
-    var parser = new DOMParser();
+    var parser;
+    if (typeof DOMParser !== 'undefined') {
+        parser = new DOMParser();
+    }
+
     var autolinker = new Autolinker({
         stripPrefix : false,
-        twitter : false,
         email : false,
-        replaceFn : function(linker, match) {
+        replaceFn : function(match) {
             if (!match.protocolUrlMatch) {
                 //Prevent matching of non-explicit urls.
                 //i.e. foo.id won't match but http://foo.id will
@@ -1688,7 +1615,10 @@ define([
         entity.kml.extendedData = result;
     }
 
-    var scratchDiv = document.createElement('div');
+    var scratchDiv;
+    if (typeof document !== 'undefined') {
+        scratchDiv = document.createElement('div');
+    }
 
     function processDescription(node, entity, styleEntity, uriResolver, sourceResource) {
         var i;
@@ -2623,7 +2553,7 @@ define([
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=KML.html|Cesium Sandcastle KML Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
@@ -3297,5 +3227,4 @@ define([
     KmlDataSource._DeferredLoading = DeferredLoading;
     KmlDataSource._getTimestamp = getTimestamp;
 
-    return KmlDataSource;
-});
+export default KmlDataSource;

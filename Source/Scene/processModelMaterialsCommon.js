@@ -1,24 +1,12 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/WebGLConstants',
-        '../Core/webGLConstantToGlslType',
-        '../ThirdParty/GltfPipeline/addToArray',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/hasExtension',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        './ModelUtility'
-    ], function(
-        defaultValue,
-        defined,
-        WebGLConstants,
-        webGLConstantToGlslType,
-        addToArray,
-        ForEach,
-        hasExtension,
-        numberOfComponentsForType,
-        ModelUtility) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import webGLConstantToGlslType from '../Core/webGLConstantToGlslType.js';
+import addToArray from '../ThirdParty/GltfPipeline/addToArray.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import hasExtension from '../ThirdParty/GltfPipeline/hasExtension.js';
+import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
+import ModelUtility from './ModelUtility.js';
 
     /**
      * @private
@@ -790,6 +778,4 @@ define([
             }
         }
     }
-
-    return processModelMaterialsCommon;
-});
+export default processModelMaterialsCommon;

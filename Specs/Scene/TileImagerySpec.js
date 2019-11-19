@@ -1,10 +1,5 @@
-define([
-        'Scene/ImageryState',
-        'Scene/TileImagery'
-    ], function(
-        ImageryState,
-        TileImagery) {
-        'use strict';
+import { ImageryState } from '../../Source/Cesium.js';
+import { TileImagery } from '../../Source/Cesium.js';
 
 describe('Scene/TileImagery', function() {
 
@@ -64,5 +59,4 @@ describe('Scene/TileImagery', function() {
         expect(tileImagery.readyImagery).toBe(grandparentImagery);
         expect(parentImagery.processStateMachineCalls).toBe(1);
     });
-});
 });

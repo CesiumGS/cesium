@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/measureText',
-        './Color',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        measureText,
-        Color,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import measureText from '../ThirdParty/measureText.js';
+import Color from './Color.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     var imageSmoothingEnabledName;
 
@@ -137,6 +129,4 @@ define([
 
         return canvas;
     }
-
-    return writeTextToCanvas;
-});
+export default writeTextToCanvas;

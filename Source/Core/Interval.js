@@ -1,8 +1,4 @@
-define([
-        './defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import defaultValue from './defaultValue.js';
 
     /**
      * Represents the closed interval [start, stop].
@@ -26,6 +22,4 @@ define([
          */
         this.stop = defaultValue(stop, 0.0);
     }
-
-    return Interval;
-});
+export default Interval;

@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        './ImageryState'
-    ], function(
-        defined,
-        ImageryState) {
-    'use strict';
+import defined from '../Core/defined.js';
+import ImageryState from './ImageryState.js';
 
     /**
      * The assocation between a terrain tile and an imagery tile.
@@ -103,6 +98,4 @@ define([
 
         return false; // not done loading
     };
-
-    return TileImagery;
-});
+export default TileImagery;

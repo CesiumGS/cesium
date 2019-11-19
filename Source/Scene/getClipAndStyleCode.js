@@ -1,8 +1,4 @@
-define([
-        '../Core/Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from '../Core/Check.js';
 
     /**
      * Gets a GLSL snippet that clips a fragment using the `clip` function from {@link getClippingFunction} and styles it.
@@ -31,6 +27,4 @@ define([
         '    } \n';
         return shaderCode;
     }
-
-    return getClipAndStyleCode;
-});
+export default getClipAndStyleCode;

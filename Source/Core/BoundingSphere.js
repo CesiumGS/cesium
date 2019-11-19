@@ -1,32 +1,16 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './GeographicProjection',
-        './Intersect',
-        './Interval',
-        './Math',
-        './Matrix3',
-        './Matrix4',
-        './Rectangle'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        GeographicProjection,
-        Intersect,
-        Interval,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Rectangle) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import GeographicProjection from './GeographicProjection.js';
+import Intersect from './Intersect.js';
+import Interval from './Interval.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * A bounding sphere with a center and a radius.
@@ -79,7 +63,7 @@ define([
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
+     * @see {@link http://help.agi.com/AGIComponents/html/BlogBoundingSphere.htm|Bounding Sphere computation article}
      */
     BoundingSphere.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -493,7 +477,7 @@ define([
     };
 
     /**
-     * Computes a tight-fitting bounding sphere enclosing a list of {@link EncodedCartesian3}s, where the points are
+     * Computes a tight-fitting bounding sphere enclosing a list of EncodedCartesian3s, where the points are
      * stored in parallel flat arrays in X, Y, Z, order.  The bounding sphere is computed by running two
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.
@@ -1311,6 +1295,4 @@ define([
         var radius = this.radius;
         return volumeConstant * radius * radius * radius;
     };
-
-    return BoundingSphere;
-});
+export default BoundingSphere;

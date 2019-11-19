@@ -1,22 +1,11 @@
-define([
-        '../ThirdParty/when',
-        './Check',
-        './CompressedTextureBuffer',
-        './defined',
-        './PixelFormat',
-        './Resource',
-        './RuntimeError',
-        './WebGLConstants'
-    ], function(
-        when,
-        Check,
-        CompressedTextureBuffer,
-        defined,
-        PixelFormat,
-        Resource,
-        RuntimeError,
-        WebGLConstants) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import CompressedTextureBuffer from './CompressedTextureBuffer.js';
+import defined from './defined.js';
+import PixelFormat from './PixelFormat.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * Asynchronously loads and parses the given URL to a KTX file or parses the raw binary data of a KTX file.
@@ -237,6 +226,4 @@ define([
 
         return result;
     }
-
-    return loadKTX;
-});
+export default loadKTX;

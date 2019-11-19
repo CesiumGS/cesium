@@ -1,10 +1,5 @@
-define([
-        'Core/ComponentDatatype',
-        'Core/GeometryAttribute'
-    ], function(
-        ComponentDatatype,
-        GeometryAttribute) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
 
 describe('Core/GeometryAttribute', function() {
 
@@ -79,5 +74,4 @@ describe('Core/GeometryAttribute', function() {
         }).toThrowDeveloperError();
     });
 
-});
 });

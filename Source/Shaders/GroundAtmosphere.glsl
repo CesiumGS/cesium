@@ -33,7 +33,7 @@
 
  // Atmosphere:
  //   Code:  http://sponeil.net/
- //   GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
+ //   GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
 const float fInnerRadius = 6378137.0;
 const float fOuterRadius = 6378137.0 * 1.025;

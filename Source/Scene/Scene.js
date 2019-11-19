@@ -1,154 +1,75 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/BoxGeometry',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/createGuid',
-        '../Core/CullingVolume',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EllipsoidGeometry',
-        '../Core/Event',
-        '../Core/GeographicProjection',
-        '../Core/GeometryInstance',
-        '../Core/GeometryPipeline',
-        '../Core/Intersect',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/mergeSort',
-        '../Core/Occluder',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/PerspectiveOffCenterFrustum',
-        '../Core/Ray',
-        '../Core/RequestScheduler',
-        '../Core/TaskProcessor',
-        '../Core/Transforms',
-        '../Renderer/ClearCommand',
-        '../Renderer/ComputeEngine',
-        '../Renderer/Context',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        './BrdfLutGenerator',
-        './Camera',
-        './Cesium3DTilePass',
-        './Cesium3DTilePassState',
-        './CreditDisplay',
-        './DebugCameraPrimitive',
-        './DepthPlane',
-        './DerivedCommand',
-        './DeviceOrientationCameraController',
-        './Fog',
-        './FrameState',
-        './GlobeDepth',
-        './InvertClassification',
-        './JobScheduler',
-        './MapMode2D',
-        './OctahedralProjectedCubeMap',
-        './PerformanceDisplay',
-        './PerInstanceColorAppearance',
-        './Picking',
-        './PostProcessStageCollection',
-        './Primitive',
-        './PrimitiveCollection',
-        './SceneMode',
-        './SceneTransforms',
-        './SceneTransitioner',
-        './ScreenSpaceCameraController',
-        './ShadowMap',
-        './StencilConstants',
-        './SunPostProcess',
-        './TweenCollection',
-        './View'
-    ], function(
-        BoundingRectangle,
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        ColorGeometryInstanceAttribute,
-        createGuid,
-        CullingVolume,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EllipsoidGeometry,
-        Event,
-        GeographicProjection,
-        GeometryInstance,
-        GeometryPipeline,
-        Intersect,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        mergeSort,
-        Occluder,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
-        Ray,
-        RequestScheduler,
-        TaskProcessor,
-        Transforms,
-        ClearCommand,
-        ComputeEngine,
-        Context,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        BrdfLutGenerator,
-        Camera,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        CreditDisplay,
-        DebugCameraPrimitive,
-        DepthPlane,
-        DerivedCommand,
-        DeviceOrientationCameraController,
-        Fog,
-        FrameState,
-        GlobeDepth,
-        InvertClassification,
-        JobScheduler,
-        MapMode2D,
-        OctahedralProjectedCubeMap,
-        PerformanceDisplay,
-        PerInstanceColorAppearance,
-        Picking,
-        PostProcessStageCollection,
-        Primitive,
-        PrimitiveCollection,
-        SceneMode,
-        SceneTransforms,
-        SceneTransitioner,
-        ScreenSpaceCameraController,
-        ShadowMap,
-        StencilConstants,
-        SunPostProcess,
-        TweenCollection,
-        View) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxGeometry from '../Core/BoxGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import createGuid from '../Core/createGuid.js';
+import CullingVolume from '../Core/CullingVolume.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
+import Event from '../Core/Event.js';
+import GeographicProjection from '../Core/GeographicProjection.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryPipeline from '../Core/GeometryPipeline.js';
+import Intersect from '../Core/Intersect.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import mergeSort from '../Core/mergeSort.js';
+import Occluder from '../Core/Occluder.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import PerspectiveOffCenterFrustum from '../Core/PerspectiveOffCenterFrustum.js';
+import RequestScheduler from '../Core/RequestScheduler.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import Transforms from '../Core/Transforms.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import ComputeEngine from '../Renderer/ComputeEngine.js';
+import Context from '../Renderer/Context.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import BrdfLutGenerator from './BrdfLutGenerator.js';
+import Camera from './Camera.js';
+import Cesium3DTilePass from './Cesium3DTilePass.js';
+import Cesium3DTilePassState from './Cesium3DTilePassState.js';
+import CreditDisplay from './CreditDisplay.js';
+import DebugCameraPrimitive from './DebugCameraPrimitive.js';
+import DepthPlane from './DepthPlane.js';
+import DerivedCommand from './DerivedCommand.js';
+import DeviceOrientationCameraController from './DeviceOrientationCameraController.js';
+import Fog from './Fog.js';
+import FrameState from './FrameState.js';
+import GlobeDepth from './GlobeDepth.js';
+import InvertClassification from './InvertClassification.js';
+import JobScheduler from './JobScheduler.js';
+import MapMode2D from './MapMode2D.js';
+import OctahedralProjectedCubeMap from './OctahedralProjectedCubeMap.js';
+import PerformanceDisplay from './PerformanceDisplay.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Picking from './Picking.js';
+import PostProcessStageCollection from './PostProcessStageCollection.js';
+import Primitive from './Primitive.js';
+import PrimitiveCollection from './PrimitiveCollection.js';
+import SceneMode from './SceneMode.js';
+import SceneTransforms from './SceneTransforms.js';
+import SceneTransitioner from './SceneTransitioner.js';
+import ScreenSpaceCameraController from './ScreenSpaceCameraController.js';
+import ShadowMap from './ShadowMap.js';
+import StencilConstants from './StencilConstants.js';
+import SunPostProcess from './SunPostProcess.js';
+import TweenCollection from './TweenCollection.js';
+import View from './View.js';
 
     var requestRenderAfterFrame = function (scene) {
         return function () {
@@ -698,6 +619,7 @@ define([
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
+            separatePrimitiveFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
@@ -945,6 +867,21 @@ define([
         invertClassificationSupported : {
             get : function() {
                 return this._context.depthTexture;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if specular environment maps are supported.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Scene#specularEnvironmentMaps
+         */
+        specularEnvironmentMapsSupported : {
+            get : function() {
+                return OctahedralProjectedCubeMap.isSupported(this._context);
             }
         },
 
@@ -1539,7 +1476,7 @@ define([
 
         /**
          * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
-         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         * increasing performance. This property relies on fragmentDepth being supported.
          * @memberof Scene.prototype
          * @type {Boolean}
          */
@@ -2256,8 +2193,12 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
+        var frustumCommandsList = view.frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
+        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = false;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2268,9 +2209,6 @@ define([
 
         // Execute commands in each frustum in back to front order
         var j;
-        var frustumCommandsList = view.frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-
         for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -2292,9 +2230,14 @@ define([
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
 
+            if (separatePrimitiveFramebuffer) {
+                // Render to globe framebuffer in GLOBE pass
+                passState.framebuffer = globeDepth.framebuffer;
+            }
+
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
+                globeDepth.update(context, passState, view.viewport, scene._hdr, clearGlobeDepth);
                 globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
@@ -2334,6 +2277,11 @@ define([
                 if (useDepthPlane) {
                     depthPlane.execute(context, passState);
                 }
+            }
+
+            if (separatePrimitiveFramebuffer) {
+                // Render to primitive framebuffer in all other passes
+                passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2476,6 +2424,11 @@ define([
                 var pickDepth = scene._picking.getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
+            }
+
+            if (separatePrimitiveFramebuffer) {
+                // Reset framebuffer
+                passState.framebuffer = globeDepth.framebuffer;
             }
 
             if (picking || !usePostProcessSelected) {
@@ -3062,7 +3015,7 @@ define([
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr, environmentState.clearGlobeDepth);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
@@ -3135,15 +3088,21 @@ define([
         var frameState = this._frameState;
         var environmentState = this._environmentState;
         var view = this._view;
+        var globeDepth = view.globeDepth;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? view.globeDepth.framebuffer : undefined;
+        var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth.framebuffer : undefined;
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
+
+        if (environmentState.separatePrimitiveFramebuffer) {
+            // Merge primitive framebuffer into globe framebuffer
+            globeDepth.executeMergeColor(context, passState);
+        }
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -3166,7 +3125,7 @@ define([
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
-            view.globeDepth.executeCopyColor(context, passState);
+            globeDepth.executeCopyColor(context, passState);
         }
 
         var useLogDepth = frameState.useLogDepth;
@@ -3938,6 +3897,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Scene;
-});
+export default Scene;

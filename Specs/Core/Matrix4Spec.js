@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/TranslationRotationScale'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        TranslationRotationScale) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TranslationRotationScale } from '../../Source/Cesium.js';
 
 describe('Core/Matrix4', function() {
 
@@ -1789,5 +1779,4 @@ describe('Core/Matrix4', function() {
             expect(intArray[index]).toEqual(index + 1);
         }
     });
-});
 });

@@ -1,14 +1,7 @@
-define([
-        'Core/AxisAlignedBoundingBox',
-        'Core/Cartesian3',
-        'Core/Intersect',
-        'Core/Plane'
-    ], function(
-        AxisAlignedBoundingBox,
-        Cartesian3,
-        Intersect,
-        Plane) {
-        'use strict';
+import { AxisAlignedBoundingBox } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
 
 describe('Core/AxisAlignedBoundingBox', function() {
 
@@ -163,5 +156,4 @@ describe('Core/AxisAlignedBoundingBox', function() {
             AxisAlignedBoundingBox.intersectPlane(box, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

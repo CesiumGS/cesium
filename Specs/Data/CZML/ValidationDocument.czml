@@ -237,6 +237,15 @@
           15638,24381,37983
         ]
       },
+      "innerRadii":{
+        "cartesian":[
+          21988,44373,36013
+        ]
+      },
+      "minimumClock":57589,
+      "maximumClock":24940,
+      "minimumCone":54533,
+      "maximumCone":64532,
       "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
@@ -7567,6 +7576,21 @@
       "radii":{
         "reference":"Constant#ellipsoid.radii"
       },
+      "innerRadii":{
+        "reference":"Constant#ellipsoid.innerRadii"
+      },
+      "minimumClock":{
+        "reference":"Constant#ellipsoid.minimumClock"
+      },
+      "maximumClock":{
+        "reference":"Constant#ellipsoid.maximumClock"
+      },
+      "minimumCone":{
+        "reference":"Constant#ellipsoid.minimumCone"
+      },
+      "maximumCone":{
+        "reference":"Constant#ellipsoid.maximumCone"
+      },
       "heightReference":{
         "reference":"Constant#ellipsoid.heightReference"
       },
@@ -11329,6 +11353,41 @@
         "cartesian":[
           0,5183,10004,13863,
           3600,39497,12186,45103
+        ]
+      },
+      "innerRadii":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartesian":[
+          0,40318,27037,59497,
+          3600,57650,53729,12241
+        ]
+      },
+      "minimumClock":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,13484,
+          3600,2170
+        ]
+      },
+      "maximumClock":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,10874,
+          3600,2968
+        ]
+      },
+      "minimumCone":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,54230,
+          3600,59454
+        ]
+      },
+      "maximumCone":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,49077,
+          3600,26303
         ]
       },
       "material":{

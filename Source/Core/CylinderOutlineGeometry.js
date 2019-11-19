@@ -1,39 +1,19 @@
-
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './ComponentDatatype',
-        './CylinderGeometryLibrary',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './PrimitiveType'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        ComponentDatatype,
-        CylinderGeometryLibrary,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        IndexDatatype,
-        PrimitiveType) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import CylinderGeometryLibrary from './CylinderGeometryLibrary.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import IndexDatatype from './IndexDatatype.js';
+import PrimitiveType from './PrimitiveType.js';
 
     var radiusScratch = new Cartesian2();
 
@@ -261,6 +241,4 @@ define([
             offsetAttribute : cylinderGeometry._offsetAttribute
         });
     };
-
-    return CylinderOutlineGeometry;
-});
+export default CylinderOutlineGeometry;

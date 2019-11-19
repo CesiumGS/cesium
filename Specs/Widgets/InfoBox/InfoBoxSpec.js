@@ -1,12 +1,6 @@
-define([
-        'Core/defined',
-        'Specs/pollToPromise',
-        'Widgets/InfoBox/InfoBox'
-    ], function(
-        defined,
-        pollToPromise,
-        InfoBox) {
-        'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
+import { InfoBox } from '../../../Source/Cesium.js';
 
 describe('Widgets/InfoBox/InfoBox', function() {
 
@@ -76,5 +70,4 @@ describe('Widgets/InfoBox/InfoBox', function() {
             return new InfoBox('foo');
         }).toThrowDeveloperError();
     });
-});
 });

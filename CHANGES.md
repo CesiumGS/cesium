@@ -1,6 +1,41 @@
 Change Log
 ==========
 
+### 1.63.1 - 2019-11-06
+
+##### Fixes :wrench:
+* Fixed regression in 1.63 where ground atmosphere and labels rendered incorrectly on displays with `window.devicePixelRatio` greater than 1.0. [#8351](https://github.com/AnalyticalGraphicsInc/cesium/pull/8351)
+* Fixed regression in 1.63 where some primitives would show through the globe when log depth is disabled. [#8368](https://github.com/AnalyticalGraphicsInc/cesium/pull/8368)
+
+### 1.63 - 2019-11-01
+
+##### Major Announcements :loudspeaker:
+* Cesium has migrated to ES6 modules. This may or may not be a breaking change for your application depending on how you use Cesium.  See our [blog post](https://cesium.com/blog/2019/10/31/cesiumjs-es6/) for the full details.
+* We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com.  Here’s where you can now find:
+  * [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
+  * [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
+  * [Downloads](https://cesium.com/downloads/) - `https://cesium.com/downloads/`
+  * Hosted releases can be found at `https://cesium.com/downloads/cesiumjs/releases/<CesiumJS Version Number>/Build/Cesium/Cesium.js`
+  * See our [blog post](https://cesium.com/blog/2019/10/15/cesiumjs-migration/) for more information.
+
+##### Additions :tada:
+* Decreased Web Workers bundle size by a factor of 10, from 8384KB (2624KB gzipped) to 863KB (225KB gzipped). This makes Cesium load faster, especially on low-end devices and slower network connections.
+* Added full UTF-8 support to labels, greatly improving support for non-latin alphabets and emoji. [#7280](https://github.com/AnalyticalGraphicsInc/cesium/pull/7280)
+* Added `"type": "module"` to package.json to take advantage of native ES6 module support in newer versions of Node.js. This also enables module-based front-end development for tooling that relies on Node.js module resolution.
+* The combined `Build/Cesium/Cesium.js` and `Build/CesiumUnminified/Cesium.js` have been upgraded from IIFE to UMD modules that support IIFE, AMD, and commonjs.
+* Added `pixelRatio` parameter to `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions`. Pass in `scene.pixelRatio` for dimensions in CSS pixel units or `1.0` for dimensions in native device pixel units. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
+##### Fixes :wrench:
+* Fixed css pixel usage for polylines, point clouds, models, primitives, and post-processing. [#8113](https://github.com/AnalyticalGraphicsInc/cesium/issues/8113)
+* Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
+* Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
+* Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
+* Fixed rendering billboard collections containing more than 65536 billboards. [#8325](https://github.com/AnalyticalGraphicsInc/cesium/pull/8325)
+
+##### Deprecated :hourglass_flowing_sand:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now take a `pixelRatio` argument before the `result` argument. The previous function definition will no longer work in 1.65. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:

@@ -1,24 +1,12 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Matrix4',
-        'Core/Resource',
-        'Scene/CircleEmitter',
-        'Scene/ParticleBurst',
-        'Scene/ParticleSystem',
-        'Specs/createScene'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Color,
-        Matrix4,
-        Resource,
-        CircleEmitter,
-        ParticleBurst,
-        ParticleSystem,
-        createScene) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { CircleEmitter } from '../../Source/Cesium.js';
+import { ParticleBurst } from '../../Source/Cesium.js';
+import { ParticleSystem } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/ParticleSystem', function() {
 
@@ -356,5 +344,4 @@ describe('Scene/ParticleSystem', function() {
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
     });
-});
 });

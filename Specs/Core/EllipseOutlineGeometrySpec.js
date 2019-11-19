@@ -1,18 +1,9 @@
-define([
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/EllipseOutlineGeometry',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        Cartesian3,
-        EllipseOutlineGeometry,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipseOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/EllipseOutlineGeometry', function() {
 
@@ -232,5 +223,4 @@ describe('Core/EllipseOutlineGeometry', function() {
     });
     packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 5, 1, 5, 4, -1];
     createPackableSpecs(EllipseOutlineGeometry, packableInstance, packedInstance, 'at height');
-});
 });

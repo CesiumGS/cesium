@@ -1,38 +1,18 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './GeometryOffsetAttribute',
-        './GeometryType',
-        './Matrix2',
-        './Matrix3',
-        './Matrix4',
-        './PrimitiveType',
-        './Quaternion',
-        './Rectangle',
-        './Transforms'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        GeometryOffsetAttribute,
-        GeometryType,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        PrimitiveType,
-        Quaternion,
-        Rectangle,
-        Transforms) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GeometryType from './GeometryType.js';
+import Matrix2 from './Matrix2.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import Transforms from './Transforms.js';
 
     /**
      * A geometry representation with attributes forming vertices and optional index data
@@ -61,7 +41,7 @@ define([
      * @see BoxGeometry
      * @see EllipsoidGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
@@ -346,6 +326,4 @@ define([
 
         return result;
     };
-
-    return Geometry;
-});
+export default Geometry;

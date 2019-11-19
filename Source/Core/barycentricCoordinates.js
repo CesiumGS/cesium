@@ -1,16 +1,8 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defined',
-        './Math'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defined,
-        CesiumMath) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -115,6 +107,4 @@ define([
         result.x = 1.0 - result.y - result.z;
         return result;
     }
-
-    return barycentricCoordinates;
-});
+export default barycentricCoordinates;

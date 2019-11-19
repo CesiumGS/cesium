@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 3x3 matrix, indexable as a column-major order array.
@@ -1513,6 +1502,4 @@ define([
                '(' + this[1] + ', ' + this[4] + ', ' + this[7] + ')\n' +
                '(' + this[2] + ', ' + this[5] + ', ' + this[8] + ')';
     };
-
-    return Matrix3;
-});
+export default Matrix3;

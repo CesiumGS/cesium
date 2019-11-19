@@ -1,12 +1,6 @@
-define([
-        'Renderer/checkFloatTexturePrecision',
-        'Renderer/PixelDatatype',
-        'Specs/createContext'
-    ], function(
-        checkFloatTexturePrecision,
-        PixelDatatype,
-        createContext) {
-        'use strict';
+import { checkFloatTexturePrecision } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/checkFloatTexturePrecision', function() {
 
@@ -39,4 +33,3 @@ describe('Renderer/checkFloatTexturePrecision', function() {
         expect(checkFloatTexturePrecision(context)).toBe(false);
     });
 }, 'WebGL');
-});

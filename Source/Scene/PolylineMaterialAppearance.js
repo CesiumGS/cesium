@@ -1,26 +1,13 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/FeatureDetection',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/PolylineMaterialAppearanceVS',
-        '../Shaders/PolylineCommon',
-        '../Shaders/PolylineFS',
-        './Appearance',
-        './Material'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        FeatureDetection,
-        VertexFormat,
-        PolylineMaterialAppearanceVS,
-        PolylineCommon,
-        PolylineFS,
-        Appearance,
-        Material) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import PolylineMaterialAppearanceVS from '../Shaders/Appearances/PolylineMaterialAppearanceVS.js';
+import PolylineCommon from '../Shaders/PolylineCommon.js';
+import PolylineFS from '../Shaders/PolylineFS.js';
+import Appearance from './Appearance.js';
+import Material from './Material.js';
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
     var defaultFragmentShaderSource = PolylineFS;
@@ -228,6 +215,4 @@ define([
      * @returns {Object} The render state.
      */
     PolylineMaterialAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return PolylineMaterialAppearance;
-});
+export default PolylineMaterialAppearance;

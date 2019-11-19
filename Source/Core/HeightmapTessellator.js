@@ -1,40 +1,20 @@
-define([
-        './AxisAlignedBoundingBox',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidalOccluder',
-        './freezeObject',
-        './Math',
-        './Matrix4',
-        './OrientedBoundingBox',
-        './Rectangle',
-        './TerrainEncoding',
-        './Transforms',
-        './WebMercatorProjection'
-    ], function(
-        AxisAlignedBoundingBox,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidalOccluder,
-        freezeObject,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        Rectangle,
-        TerrainEncoding,
-        Transforms,
-        WebMercatorProjection) {
-    'use strict';
+import AxisAlignedBoundingBox from './AxisAlignedBoundingBox.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidalOccluder from './EllipsoidalOccluder.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import Rectangle from './Rectangle.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import Transforms from './Transforms.js';
+import WebMercatorProjection from './WebMercatorProjection.js';
 
     /**
      * Contains functions to create a mesh from a heightmap image.
@@ -477,6 +457,4 @@ define([
             northIndicesWestToEast : northIndicesWestToEast
         };
     };
-
-    return HeightmapTessellator;
-});
+export default HeightmapTessellator;
