@@ -138,7 +138,7 @@ import RuntimeError from './RuntimeError.js';
     var requireWasm;
 
     if (window.require) {
-        if (self.require.context) {
+        if (window.require.context) {
             requireWasmWrapper = window.require.context('../ThirdParty/Workers', false, /.*wasm_wrapper\.js$/);
             requireWasm = window.require.context('../ThirdParty', false, /\.wasm$/);
         } else {
