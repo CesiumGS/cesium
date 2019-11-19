@@ -20,6 +20,7 @@ import DataSourceDisplay from '../../DataSources/DataSourceDisplay.js';
 import Entity from '../../DataSources/Entity.js';
 import EntityView from '../../DataSources/EntityView.js';
 import Property from '../../DataSources/Property.js';
+import captureScreenshot from '../../Scene/captureScreenshot.js';
 import Cesium3DTileset from '../../Scene/Cesium3DTileset.js';
 import computeFlyToLocationForRectangle from '../../Scene/computeFlyToLocationForRectangle.js';
 import ImageryLayer from '../../Scene/ImageryLayer.js';
@@ -1859,6 +1860,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             zoomPromise.resolve(false);
         }
     }
+
+    /**
+     * Capture a screenshot of the viewer to a dataURI containing a PNG image.
+     *
+     * @param {Number} [resolutionScale] scaling factor for rendering resolution.  See {@link Viewer#resolutionScale} for
+     * more information on scale
+     *
+     * @return {Promise<String>} resolves to a dataURI of a PNG image
+     */
+    Viewer.prototype.captureScreenshot = function(targetResolution) {
+        return captureScreenshot(this, targetResolution);
+    };
 
     /**
      * @private
