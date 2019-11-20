@@ -20,6 +20,7 @@ import { Framebuffer } from '../../Source/Cesium.js';
 import { PixelDatatype } from '../../Source/Cesium.js';
 import { Texture } from '../../Source/Cesium.js';
 import { Camera } from '../../Source/Cesium.js';
+import { DirectionalLight } from '../../Source/Cesium.js';
 import { Globe } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
@@ -623,6 +624,47 @@ describe('Scene/ShadowMap', function() {
 
         // Change the time so that the shadows are no longer pointing straight down
         renderAndExpect(unshadowedColor, endTime);
+
+        scene.shadowMap = undefined;
+    });
+
+    it('uses scene\'s light source', function() {
+        box.show = true;
+        floor.show = true;
+
+        var lightDirectionAbove = new Cartesian3(0.709610014299089, 0.6103154501194787, 0.35209186152466626); // Light pointing straight above
+        var lightDirectionAngle = new Cartesian3(0.7160184930096664, 0.6027810300264894, 0.35209735515673896); // Light at an angle
+
+        var center = new Cartesian3.fromRadians(longitude, latitude, height);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
+
+        // Use the default shadow map which uses the scene's light source
+        scene.light = new DirectionalLight({
+            direction : lightDirectionAbove
+        });
+        scene.shadowMap = sunShadowMap;
+
+        // Render without shadows
+        scene.shadowMap.enabled = false;
+
+        var unshadowedColor;
+        renderAndCall(function(rgba) {
+            unshadowedColor = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
+
+        // Render with shadows
+        scene.shadowMap.enabled = true;
+        renderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            expect(rgba).not.toEqual(unshadowedColor);
+        });
+
+        // Change the light so that the shadows are no longer pointing straight down
+        scene.light = new DirectionalLight({
+            direction : lightDirectionAngle
+        });
+        renderAndExpect(unshadowedColor);
 
         scene.shadowMap = undefined;
     });

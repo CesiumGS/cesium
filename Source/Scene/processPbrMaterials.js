@@ -687,13 +687,12 @@ import ModelUtility from './ModelUtility.js';
             fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
             // Generate fragment shader's lighting block
-            // The Sun is brighter than your average light source, and has a yellowish tint balanced by the Earth's ambient blue.
             fragmentShader += '#ifndef USE_CUSTOM_LIGHT_COLOR \n';
-            fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
+            fragmentShader += '    vec3 lightColor = czm_lightColor;\n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 lightColor = gltf_lightColor;\n';
             fragmentShader += '#endif \n';
-            fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentShader += '    vec3 l = normalize(czm_lightDirectionEC);\n';
             fragmentShader += '    vec3 h = normalize(v + l);\n';
             fragmentShader += '    float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
             fragmentShader += '    float NdotV = abs(dot(n, v)) + 0.001;\n';

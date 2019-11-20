@@ -1227,7 +1227,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionEC
          * @namespace
@@ -1254,7 +1253,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionWC
          * @namespace
@@ -1263,6 +1261,9 @@ import WebGLConstants from '../Core/WebGLConstants.js';
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunDirectionWC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_sunDirectionWC, normalWC), 0.0);
          *
          * @see UniformState#sunDirectionWC
          * @see czm_sunPositionWC
@@ -1278,7 +1279,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_moonDirectionEC
          * @namespace
@@ -1299,6 +1299,72 @@ import WebGLConstants from '../Core/WebGLConstants.js';
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.moonDirectionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the scene's light source in eye coordinates.
+         * This is commonly used for directional lighting computations.
+         *
+         * @alias czm_lightDirectionEC
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightDirectionEC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_lightDirectionEC, normalEC), 0.0);
+         *
+         * @see UniformState#lightDirectionEC
+         * @see czm_lightDirectionWC
+         */
+        czm_lightDirectionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightDirectionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the scene's light source in world coordinates.
+         * This is commonly used for directional lighting computations.
+         *
+         * @alias czm_lightDirectionWC
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightDirectionWC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightDirectionWC
+         * @see czm_lightDirectionEC
+         */
+        czm_lightDirectionWC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightDirectionWC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that represents the color and intensity of light emitted by the scene's light source.
+         *
+         * @alias czm_lightColor
+         * @glslUniform
+         */
+        czm_lightColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightColor;
             }
         }),
 
@@ -1762,20 +1828,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.gamma;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform that defines the color of light emitted by the sun.
-         *
-         * @alias czm_sunColor
-         * @glslUniform
-         */
-        czm_sunColor: new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT_VEC3,
-            getValue: function(uniformState) {
-                return uniformState.sunColor;
             }
         })
     };

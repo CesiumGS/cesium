@@ -107,7 +107,7 @@ void main(void)
 
     // Now loop through the sample rays
     vec3 frontColor = vec3(0.0, 0.0, 0.0);
-    vec3 lightDir = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
+    vec3 lightDir = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_lightDirectionWC : czm_viewerPositionWC;
     lightDir = normalize(lightDir);
 
     for(int i=0; i<nSamples; i++)

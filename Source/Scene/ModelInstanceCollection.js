@@ -59,7 +59,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from each light source.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Cartesian3} [options.lightColor] The light color and intensity when shading models. When <code>undefined</code> the scene's light color and intensity are used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.

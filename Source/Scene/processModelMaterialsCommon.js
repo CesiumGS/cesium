@@ -517,7 +517,7 @@ import ModelUtility from './ModelUtility.js';
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
-            fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentLightingBlock += '  vec3 l = normalize(czm_lightDirectionEC);\n';
             var minimumLighting = '0.2'; // Use strings instead of values as 0.0 -> 0 when stringified
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
 

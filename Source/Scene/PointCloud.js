@@ -1112,7 +1112,7 @@ import StencilConstants from './StencilConstants.js';
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color.xyz *= diffuseStrength; \n';
         }

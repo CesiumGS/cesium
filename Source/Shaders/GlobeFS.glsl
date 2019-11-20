@@ -321,10 +321,10 @@ void main()
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
@@ -356,7 +356,7 @@ void main()
 
 #ifdef FOG
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), czm_lightDirectionWC), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
@@ -491,7 +491,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
 
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
+    float diffuseIntensity = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * maskValue;
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity * (1.0 - fade);
 
 #ifdef SHOW_OCEAN_WAVES
@@ -504,7 +504,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = czm_getSpecular(czm_lightDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
 

@@ -7,6 +7,7 @@ import { OrthographicFrustum } from '../../Source/Cesium.js';
 import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
 import { Pass } from '../../Source/Cesium.js';
 import { Texture } from '../../Source/Cesium.js';
+import { DirectionalLight } from '../../Source/Cesium.js';
 import { SceneMode } from '../../Source/Cesium.js';
 import createCamera from '../createCamera.js';
 import createContext from '../createContext.js';
@@ -1338,16 +1339,20 @@ describe('Renderer/AutomaticUniforms', function() {
         }).contextToRender();
     });
 
-    it('has czm_sunColor', function() {
+    it('has czm_lightColor', function() {
         var us = context.uniformState;
         var frameState = createFrameState(context, createMockCamera());
-        frameState.sunColor = new Cartesian3(1.0, 2.0, 3.0);
+        frameState.light = new DirectionalLight({
+           direction : new Cartesian3(0.0, 0.0, 1.0),
+           color : new Color(0.25, 0.5, 1.0),
+           intensity : 2.0
+        });
         us.update(frameState);
         var fs =
             'void main() {' +
-            '  bool b0 = czm_sunColor.x == 1.0;' +
-            '  bool b1 = czm_sunColor.y == 2.0;' +
-            '  bool b2 = czm_sunColor.z == 3.0;' +
+            '  bool b0 = czm_lightColor.x == 0.5;' +
+            '  bool b1 = czm_lightColor.y == 1.0;' +
+            '  bool b2 = czm_lightColor.z == 2.0;' +
             '  gl_FragColor = vec4(b0 && b1 && b2);' +
             '}';
         expect({

@@ -140,7 +140,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.fillHighlightColor = undefined;
 
         /**
-         * Enable lighting the globe with the sun as a light source.
+         * Enable lighting the globe with the scene's light source.
          *
          * @type {Boolean}
          * @default false
