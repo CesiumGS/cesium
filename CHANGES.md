@@ -4,7 +4,7 @@ Change Log
 ### 1.64 - 2019-12-01
 
 ##### Additions :tada:
-* Added captureScreenshot and Viewer.captureScreenshot.  Returns a dataURI for a PNG image of the scene. [#5938]
+* Added `captureScreenshot` and `Viewer.captureScreenshot`.  Returns a dataURI for a PNG image of the scene. [#5938](https://github.com/AnalyticalGraphicsInc/cesium/issues/5938)
 
 ### 1.63.1 - 2019-11-06
 
