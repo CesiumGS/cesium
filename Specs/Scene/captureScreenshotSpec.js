@@ -62,28 +62,12 @@ describe('Scene/captureScreenshot', function() {
             });
     });
 
-    it('Captures with specified resolutionScale', function() {
+    it('Called as viewer.captureScreenshot', function() {
         viewer = createViewer(container);
-
-        var scale = 2.0;
-        //var width = viewer.scene.drawingBufferWidth * scale;
-        //var height = viewer.scene.drawingBufferHeight * scale;
-
-        return captureScreenshot(viewer, scale)
+        return viewer.captureScreenshot()
             .then(function(dataURI) {
                 expect(dataURI).toBeDefined();
-                var complete = when.defer();
-                var image = new Image();
-                image.onload = function() {
-                    // TODO: find out why reports double the expected values.  See issue #8406
-                    // expect(image.width).toBe(width);
-                    // expect(image.height).toBe(height);
-                    complete.resolve();
-                };
-                image.src = dataURI;
-                return complete.promise;
-            }).otherwise(function() {
-                fail('should not fail');
             });
     });
+
 });
