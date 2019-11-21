@@ -5,9 +5,8 @@ import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EasingFunction from '../Core/EasingFunction.js';
+import EllipsoidGeodesic from '../Core/EllipsoidGeodesic.js';
 import CesiumMath from '../Core/Math.js';
-import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
-import PerspectiveOffCenterFrustum from '../Core/PerspectiveOffCenterFrustum.js';
 import SceneMode from './SceneMode.js';
 
     /**
@@ -19,29 +18,6 @@ import SceneMode from './SceneMode.js';
      */
     var CameraFlightPath = {
     };
-
-    function getAltitude(frustum, dx, dy) {
-        var near;
-        var top;
-        var right;
-        if (frustum instanceof PerspectiveFrustum) {
-            var tanTheta = Math.tan(0.5 * frustum.fovy);
-            near = frustum.near;
-            top = frustum.near * tanTheta;
-            right = frustum.aspectRatio * top;
-            return Math.max(dx * near / right, dy * near / top);
-        } else if (frustum instanceof PerspectiveOffCenterFrustum) {
-            near = frustum.near;
-            top = frustum.top;
-            right = frustum.right;
-            return Math.max(dx * near / right, dy * near / top);
-        }
-
-        return Math.max(dx, dy);
-    }
-
-    var scratchCart = new Cartesian3();
-    var scratchCart2 = new Cartesian3();
 
     function createPitchFunction(startPitch, endPitch, heightFunction, pitchAdjustHeight) {
         if (defined(pitchAdjustHeight) && heightFunction(0.5) > pitchAdjustHeight) {
@@ -68,24 +44,29 @@ import SceneMode from './SceneMode.js';
         };
     }
 
-    function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
+    var scratchEllipsoidGeodesic = new EllipsoidGeodesic();
+    var scratchCartographicCam = new Cartesian3();
+    var scratchCartographicDst = new Cartesian3();
+
+    function createHeightFunction(scene, camera, destination, startHeight, endHeight, optionAltitude) {
+        // This function chooses between using a parabolic or linear path when going between points.
+        // When altitude is given, use a parabola if the start and end points are below the altitude.
+        // When no altitude is given, the parabola height is proportional to the ellipsoid surface distance.
+        // For example, if two points are close to the surface but separated by a far distance, use a
+        // parabola. If two points have similar lat/long but differ in height, use a linear path.
+
         var altitude = optionAltitude;
-        var maxHeight = Math.max(startHeight, endHeight);
 
         if (!defined(altitude)) {
-            var start = camera.position;
-            var end = destination;
-            var up = camera.up;
-            var right = camera.right;
-            var frustum = camera.frustum;
-
-            var diff = Cartesian3.subtract(start, end, scratchCart);
-            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
-            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
-
-            altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
+            var ellipsoid = scene.mapProjection.ellipsoid;
+            scratchCartographicCam = Cartographic.fromCartesian(camera.position, ellipsoid, scratchCartographicCam);
+            scratchCartographicDst = Cartographic.fromCartesian(destination, ellipsoid, scratchCartographicDst);
+            scratchEllipsoidGeodesic.setEndPoints(scratchCartographicCam, scratchCartographicDst, ellipsoid);
+            var minHeight = Math.min(startHeight, endHeight);
+            altitude = Math.min(scratchEllipsoidGeodesic.surfaceDistance * 0.4 + minHeight, 1000000000.0);
         }
 
+        var maxHeight = Math.max(startHeight, endHeight);
         if (maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
@@ -128,7 +109,7 @@ import SceneMode from './SceneMode.js';
         var startHeading = adjustAngleForLERP(camera.heading, heading);
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
-        var heightFunction = createHeightFunction(camera, destination, start.z, destination.z, optionAltitude);
+        var heightFunction = createHeightFunction(scene, camera, destination, start.z, destination.z, optionAltitude);
 
         function update(value) {
             var time = value.time / duration;
@@ -214,7 +195,7 @@ import SceneMode from './SceneMode.js';
             useShortestFlight(startCart, destCart);
         }
 
-        var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height, optionAltitude);
+        var heightFunction = createHeightFunction(scene, camera, destination, startCart.height, destCart.height, optionAltitude);
         var pitchFunction = createPitchFunction(startPitch, pitch, heightFunction, optionPitchAdjustHeight);
 
         // Isolate scope for update function.
@@ -257,7 +238,7 @@ import SceneMode from './SceneMode.js';
         var startHeading = adjustAngleForLERP(camera.heading, heading);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
-        var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z, optionAltitude);
+        var heightFunction = createHeightFunction(scene, camera, destination, startHeight, destination.z, optionAltitude);
 
         function update(value) {
             var time = value.time / duration;
