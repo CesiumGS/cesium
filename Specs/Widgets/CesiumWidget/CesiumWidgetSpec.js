@@ -13,6 +13,7 @@ import DomEventSimulator from '../../DomEventSimulator.js';
 import getWebGLStub from '../../getWebGLStub.js';
 import pollToPromise from '../../pollToPromise.js';
 import { CesiumWidget } from '../../../Source/Cesium.js';
+import when from '../../../Source/ThirdParty/when.js';
 
 describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
@@ -253,6 +254,24 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         widget = createCesiumWidget(container);
         widget.resolutionScale = 0.5;
         expect(widget.resolutionScale).toBe(0.5);
+    });
+
+    it('setting resolutionScale does not resize canvas', function() {
+        widget = createCesiumWidget(container);
+        var width =  widget.canvas.clientWidth;
+        var height = widget.canvas.clientHeight;
+        widget.resolutionScale = 2;
+        expect(widget.canvas.clientWidth).toBe(width);
+        expect(widget.canvas.clientHeight).toBe(height);
+
+        var afterRender = when.defer();
+        widget.scene.postRender.addEventListener(function() {
+            expect(widget.canvas.clientWidth).toBe(width);
+            expect(widget.canvas.clientHeight).toBe(height);
+            afterRender.resolve();
+        });
+
+        return afterRender.promise;
     });
 
     it('can enable useBrowserRecommendedResolution', function() {
