@@ -41,7 +41,7 @@ import Resource from './Resource.js';
             return initPromise;
         }
 
-        var url = buildModuleUrl('Assets/approximateTerrainHeights.json');
+        var url = require('../Assets/approximateTerrainHeights.json');
         if (/build\/cesiumWorkers\.js$/.test(location.href)) {
             // We're running in a Web Worker, we can't just load by relative path.
             var basePath = location.href.substring(0, location.href.length - 'build/cesiumWorkers.js'.length);
