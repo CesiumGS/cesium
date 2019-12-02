@@ -5,6 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an issue in image based lighting where an invalid environment map would silently fail. [#8303](https://github.com/AnalyticalGraphicsInc/cesium/pull/8303)
+* Various small internal improvements
 
 ### 1.63.1 - 2019-11-06
 
