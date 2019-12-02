@@ -1351,6 +1351,9 @@ import WallGraphics from './WallGraphics.js';
             if (defined(zIndex)) {
                 oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
             }
+            if (dataSource._clampToGround && !tessellate) {
+                oneTimeWarning('kml-line-tesselate', 'Ignoring clampToGround for KML lines without the tessellate flag.')
+            }
 
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
             entity.polyline = polyline;
