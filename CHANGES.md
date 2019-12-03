@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.65.0 - 2019-01-02
+
+##### Fixes :wrench:
+* Fix Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
+
 ### 1.64.0 - 2019-12-02
 
 ##### Fixes :wrench:
