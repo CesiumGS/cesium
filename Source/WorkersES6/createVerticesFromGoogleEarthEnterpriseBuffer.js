@@ -372,7 +372,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        var occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
+        var occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(relativeToCenter, positions, minHeight);
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
         var encoding = new TerrainEncoding(aaBox, skirtOptions.hMin, maxHeight, fromENU, false, includeWebMercatorT);
