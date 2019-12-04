@@ -97,7 +97,7 @@ import Rectangle from './Rectangle.js';
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
         var ellipsoid = this._ellipsoid;
         var occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(occludee, scratchCartesian);
-        return this.isScaledSpacePointVisible(occludeeScaledSpacePosition);
+        return isScaledSpacePointVisible(occludeeScaledSpacePosition, this._cameraPositionInScaledSpace, this._distanceToLimbInScaledSpaceSquared);
     };
 
     /**
@@ -149,28 +149,6 @@ import Rectangle from './Rectangle.js';
         return isScaledSpacePointVisible(occludeeScaledSpacePosition, this._cameraPositionInScaledSpace, this._distanceToLimbInScaledSpaceSquared);
     };
 
-    function computeHorizonCullingPoint(ellipsoid, directionToPoint, positions, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('directionToPoint', directionToPoint);
-        Check.defined('positions', positions);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
-        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
-        var resultMagnitude = 0.0;
-
-        for (var i = 0, len = positions.length; i < len; ++i) {
-            var position = positions[i];
-            var candidateMagnitude = computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint);
-            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
-        }
-
-        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
-    }
-
     /**
      * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
      * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
@@ -188,7 +166,7 @@ import Rectangle from './Rectangle.js';
      * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function(directionToPoint, positions, result) {
-        return computeHorizonCullingPoint(this._ellipsoid, directionToPoint, positions, result);
+        return computeHorizonCullingPointFromPositions(this._ellipsoid, directionToPoint, positions, result);
     };
 
     /**
@@ -210,39 +188,8 @@ import Rectangle from './Rectangle.js';
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid = function(directionToPoint, positions, minimumHeight, result) {
         var possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(this._ellipsoid, minimumHeight);
-        return computeHorizonCullingPoint(possiblyShrunkEllipsoid, directionToPoint, positions, result);
+        return computeHorizonCullingPointFromPositions(possiblyShrunkEllipsoid, directionToPoint, positions, result);
     };
-
-    var positionScratch = new Cartesian3();
-
-    function computeHorizonCullingPointFromVertices(ellipsoid, directionToPoint, vertices, stride, center, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('directionToPoint', directionToPoint);
-        Check.defined('vertices', vertices);
-        Check.typeOf.number('stride', stride);
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
-        stride = defaultValue(stride, 3);
-        center = defaultValue(center, Cartesian3.ZERO);
-        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
-        var resultMagnitude = 0.0;
-
-        for (var i = 0, len = vertices.length; i < len; i += stride) {
-            positionScratch.x = vertices[i] + center.x;
-            positionScratch.y = vertices[i + 1] + center.y;
-            positionScratch.z = vertices[i + 2] + center.z;
-
-            var candidateMagnitude = computeMagnitude(ellipsoid, positionScratch, scaledSpaceDirectionToPoint);
-            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
-        }
-
-        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
-    }
-
     /**
      * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
      * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
@@ -334,6 +281,58 @@ import Rectangle from './Rectangle.js';
             ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk);
         }
         return ellipsoid;
+    }
+
+    function computeHorizonCullingPointFromPositions(ellipsoid, directionToPoint, positions, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('positions', positions);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
+        var resultMagnitude = 0.0;
+
+        for (var i = 0, len = positions.length; i < len; ++i) {
+            var position = positions[i];
+            var candidateMagnitude = computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint);
+            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
+        }
+
+        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
+    }
+
+    var positionScratch = new Cartesian3();
+
+    function computeHorizonCullingPointFromVertices(ellipsoid, directionToPoint, vertices, stride, center, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('vertices', vertices);
+        Check.typeOf.number('stride', stride);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        stride = defaultValue(stride, 3);
+        center = defaultValue(center, Cartesian3.ZERO);
+        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
+        var resultMagnitude = 0.0;
+
+        for (var i = 0, len = vertices.length; i < len; i += stride) {
+            positionScratch.x = vertices[i] + center.x;
+            positionScratch.y = vertices[i + 1] + center.y;
+            positionScratch.z = vertices[i + 2] + center.z;
+
+            var candidateMagnitude = computeMagnitude(ellipsoid, positionScratch, scaledSpaceDirectionToPoint);
+            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
+        }
+
+        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
     }
 
     function isScaledSpacePointVisible(occludeeScaledSpacePosition, cameraPositionInScaledSpace, distanceToLimbInScaledSpaceSquared) {
