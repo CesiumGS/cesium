@@ -564,7 +564,7 @@ DrawCommand.shallowClone = function (command, result) {
      * @param {PassState} [passState] The state for the current render pass.
      */
     DrawCommand.prototype.execute = function(context, passState) {
-        const v = this.vertexArray;
+        var v = this.vertexArray;
         if(!v || !v.isDestroyed()) //TODO после сортировки CESIUM_3D_TILE стали попадаться битые команды
             context.draw(this, passState);
 //        else
