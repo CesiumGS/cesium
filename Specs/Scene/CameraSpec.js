@@ -2633,6 +2633,23 @@ describe('Scene/Camera', function() {
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON5);
     });
 
+    it('viewBoundingSphere does not modify offset.range when it is zero', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var heading = CesiumMath.toRadians(45.0);
+        var pitch = CesiumMath.toRadians(-45.0);
+        var range = 0.0;
+        var offset = new HeadingPitchRange(heading, pitch, range);
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
+        camera.viewBoundingSphere(sphere, offset);
+        camera._setTransform(Matrix4.IDENTITY);
+
+        expect(offset.heading).toEqual(CesiumMath.toRadians(45.0));
+        expect(offset.pitch).toEqual(CesiumMath.toRadians(-45.0));
+        expect(offset.range).toEqual(0.0);
+    });
+
     it('viewBoundingSphere in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -10.0;
@@ -2746,6 +2763,20 @@ describe('Scene/Camera', function() {
 
         var distance = Cartesian3.distance(camera.position, sphere.center);
         expect(CesiumMath.equalsEpsilon(distance, maxValue, 0.1)).toBe(true);
+    });
+
+    it('flyToBoundingSphere does not modify options.offset range if it is zero ', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var options = {
+            offset: new HeadingPitchRange(0.0, -1.5, 0.0)
+        };
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000.0);
+        camera.flyToBoundingSphere(sphere, options);
+
+        expect(options.offset.heading).toEqual(0.0);
+        expect(options.offset.pitch).toEqual(-1.5);
+        expect(options.offset.range).toEqual(0.0);
     });
 
     it('distanceToBoundingSphere', function() {
