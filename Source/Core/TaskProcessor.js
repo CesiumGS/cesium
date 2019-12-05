@@ -134,24 +134,10 @@ import RuntimeError from './RuntimeError.js';
         return worker;
     }
 
-    var requireWasmWrapper;
-    var requireWasm;
-
-    if (window.require) {
-        if (window.require.context) {
-            requireWasmWrapper = window.require.context('../ThirdParty/Workers', false, /.*wasm_wrapper\.js$/);
-            requireWasm = window.require.context('../ThirdParty', false, /\.wasm$/);
-        } else {
-            requireWasmWrapper = window.require;
-            requireWasm = window.require;
-        }
-    } else {
-        requireWasmWrapper = requireWasmWrapper = function() {
-            throw new DeveloperError('Cannot `require` in this environment.');
-        };
-    }
-
     function getWebAssemblyLoaderConfig(processor, wasmOptions) {
+        var requireWasmWrapper = require.context('../ThirdParty/Workers', false, /.*wasm_wrapper\.js$/);
+        var requireWasm = require.context('../ThirdParty', false, /\.wasm$/);
+
         var config = {
             modulePath : undefined,
             wasmBinaryFile : undefined,
