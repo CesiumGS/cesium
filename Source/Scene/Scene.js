@@ -3522,7 +3522,7 @@ import View from './View.js';
     function updatePreloadFlightPass(scene) {
         var frameState = scene._frameState;
         var camera = frameState.camera;
-        if (!camera.hasCurrentFlight()) {
+        if (!camera.canPreloadFlight()) {
             return;
         }
 
