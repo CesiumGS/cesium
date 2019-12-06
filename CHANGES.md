@@ -5,6 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fix Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
+* Fix `Camera.hasCurrentFlight` incorrectly returning true in some cases. [#8444](https://github.com/AnalyticalGraphicsInc/cesium/pull/8444)
 
 ### 1.64.0 - 2019-12-02
 
