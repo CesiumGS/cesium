@@ -286,15 +286,15 @@ import SceneMode from './SceneMode.js';
     }
 
     /**
-     * Checks if there's a camera flight for this camera.
+     * Checks if there's a camera flight with preload for this camera.
      *
      * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
      *
      * @private
      *
      */
-    Camera.prototype.hasCurrentFlight = function() {
-        return defined(this._currentFlight);
+    Camera.prototype.canPreloadFlight = function() {
+        return defined(this._currentFlight) && this._mode !== SceneMode.SCENE2D;
     };
 
     Camera.prototype._updateCameraChanged = function() {

@@ -3004,14 +3004,14 @@ describe('Scene/Camera', function() {
         expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
     });
 
-    it('hasCurrentFlight returns false for a flight that doesn\'t go anywhere', function() {
+    it('_currentFlight is not set for a flight that doesn\'t go anywhere', function() {
         var complete = jasmine.createSpy('complete');
         spyOn(CameraFlightPath, 'createTween').and.returnValue({ complete: complete, duration: 0 });
         spyOn(scene.tweens, 'add');
 
         camera.flyTo({ complete: complete, destination: Cartesian3.fromDegrees(-117.16, 32.71, 5000) });
         expect(complete).toHaveBeenCalled();
-        expect(camera.hasCurrentFlight()).toBe(false);
+        expect(camera._currentFlight).toBeUndefined();
     });
 
     it('switches projections', function() {
