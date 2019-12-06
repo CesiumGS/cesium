@@ -314,7 +314,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {Number}
          * @default 0.00278
          */
-        this.dynamicScreenSpaceErrorDensity = 0.00278;
+        this.dynamicScreenSpaceErrorDensity = defaultValue(options.dynamicScreenSpaceErrorDensity, 0.00278);
 
         /**
          * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases less tiles
@@ -323,7 +323,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {Number}
          * @default 4.0
          */
-        this.dynamicScreenSpaceErrorFactor = 4.0;
+        this.dynamicScreenSpaceErrorFactor = defaultValue(options.dynamicScreenSpaceErrorFactor, 4.0);
 
         /**
          * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
@@ -336,7 +336,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {Number}
          * @default 0.25
          */
-        this.dynamicScreenSpaceErrorHeightFalloff = 0.25;
+        this.dynamicScreenSpaceErrorHeightFalloff = defaultValue(options.dynamicScreenSpaceErrorHeightFalloff, 0.25);
 
         this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
 
