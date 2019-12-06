@@ -1,7 +1,6 @@
-// This file loads the unbuilt ES6 version of Cesium
 // into the global scope during local developmnet
-window.CESIUM_BASE_URL = "./Source/";
-import * as Cesium from "./Source/Cesium.js";
+window.CESIUM_BASE_URL = "/map3d/js/develop/Cesium/Source";
+import * as Cesium from "./Cesium.js";
 window.Cesium = Cesium;
 
 // Since ES6 modules have no guaranteed load order,
@@ -26,5 +25,6 @@ window.Cesium = Cesium;
     if(scope.waitCesium)
         scope.waitCesium()
 
-    window.startup(Cesium);
+    if(window.startup)
+        window.startup(Cesium);
 //}

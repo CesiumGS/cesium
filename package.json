@@ -40,6 +40,9 @@
     }
   },
   "type": "module",
+  "dependencies": {
+    "hammerjs": "^2.0.8"
+  },
   "devDependencies": {
     "aws-sdk": "^2.531.0",
     "bluebird": "^3.4.6",
