@@ -294,8 +294,7 @@ import SceneMode from './SceneMode.js';
      *
      */
     Camera.prototype.hasCurrentFlight = function() {
-        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
-        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+        return defined(this._currentFlight);
     };
 
     Camera.prototype._updateCameraChanged = function() {
@@ -2892,7 +2891,16 @@ import SceneMode from './SceneMode.js';
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        var tweenOptions = CameraFlightPath.createTween(scene, newOptions);
+        // If the camera doesn't actually need to go anywhere, duration
+        // will be 0 and we can just complete the current flight.
+        if (tweenOptions.duration === 0) {
+            if (typeof tweenOptions.complete === 'function') {
+                tweenOptions.complete();
+            }
+            return;
+        }
+        flightTween = scene.tweens.add(tweenOptions);
         this._currentFlight = flightTween;
 
         // Save the final destination view information for the PRELOAD_FLIGHT pass.
@@ -2904,8 +2912,6 @@ import SceneMode from './SceneMode.js';
             preloadFlightCamera.setView({ destination: destination, orientation: orientation });
 
             this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
-        } else {
-            preloadFlightCamera = undefined;
         }
     };
 
