@@ -262,31 +262,10 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
     };
 
     TileMapServiceImageryProvider.prototype._metadataFailure = function(error) {
-        // Can't load XML, still allow options and defaults
-        var options = this._options;
-        var fileExtension = defaultValue(options.fileExtension, 'png');
-        var tileWidth = defaultValue(options.tileWidth, 256);
-        var tileHeight = defaultValue(options.tileHeight, 256);
-        var minimumLevel = defaultValue(options.minimumLevel, 0);
-        var maximumLevel = options.maximumLevel;
-        var tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ellipsoid : options.ellipsoid});
-        var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
-
-        var templateResource = this._tmsResource.getDerivedResource({
-            url : '{z}/{x}/{reverseY}.' + fileExtension
-        });
-
-        this._deferred.resolve({
-            url : templateResource,
-            tilingScheme : tilingScheme,
-            rectangle : rectangle,
-            tileWidth : tileWidth,
-            tileHeight : tileHeight,
-            minimumLevel : minimumLevel,
-            maximumLevel : maximumLevel,
-            tileDiscardPolicy : options.tileDiscardPolicy,
-            credit : options.credit
-        });
+        // Can't load XML, reject the ready promise.
+        var message = 'An error occurred while accessing ' + this._xmlResource.url + '. Error: ' + error;
+        TileProviderError.handleError(error, this, this._errorEvent, message, undefined, undefined, undefined, null);
+        this._deferred.reject(new RuntimeError(message));
     };
 
 export default TileMapServiceImageryProvider;
