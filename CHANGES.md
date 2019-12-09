@@ -5,6 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fix Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
+* `TileMapServiceImageryProvider` will now reject the `readyPromise` if the `tilemapresource.xml` metadata request fails [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448) 
 
 ### 1.64.0 - 2019-12-02
 
