@@ -420,7 +420,10 @@ import TileSelectionResult from './TileSelectionResult.js';
             }
 
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
-                addDrawCommandsForTile(this, tilesToRender[tileIndex], frameState);
+                var tile = tilesToRender[tileIndex];
+                var tileBoundingRegion = tile.data.tileBoundingRegion;
+                addDrawCommandsForTile(this, tile, frameState);
+                frameState.minimumTerrainHeight = Math.min(frameState.minimumTerrainHeight, tileBoundingRegion.minimumHeight);
             }
         }
     };
