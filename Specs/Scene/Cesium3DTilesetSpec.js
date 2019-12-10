@@ -3642,7 +3642,7 @@ describe('Scene/Cesium3DTileset', function() {
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            spyOn(Camera.prototype, 'hasCurrentFlight').and.callFake(function() {
+            spyOn(Camera.prototype, 'canPreloadFlight').and.callFake(function() {
                 return true;
             });
             scene.renderForSpecs();
