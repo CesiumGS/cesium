@@ -172,6 +172,8 @@ import Rectangle from './Rectangle.js';
         return computeHorizonCullingPointFromPositions(this._ellipsoid, directionToPoint, positions, result);
     };
 
+    var scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+
     /**
      * Similar to {@link EllipsoidalOccluder#computeHorizonCullingPoint} except computes the culling
      * point relative to an ellipsoid that has been shrunk by the minimum height when the minimum height is below
@@ -190,7 +192,7 @@ import Rectangle from './Rectangle.js';
      * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid = function(directionToPoint, positions, minimumHeight, result) {
-        var possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(this._ellipsoid, minimumHeight);
+        var possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(this._ellipsoid, minimumHeight, scratchEllipsoidShrunk);
         return computeHorizonCullingPointFromPositions(possiblyShrunkEllipsoid, directionToPoint, positions, result);
     };
     /**
@@ -235,7 +237,7 @@ import Rectangle from './Rectangle.js';
      * @returns {Cartesian3} The computed horizon culling point, expressed in the possibly-shrunk ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid = function(directionToPoint, vertices, stride, center, minimumHeight, result) {
-        var possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(this._ellipsoid, minimumHeight);
+        var possiblyShrunkEllipsoid = getPossiblyShrunkEllipsoid(this._ellipsoid, minimumHeight, scratchEllipsoidShrunk);
         return computeHorizonCullingPointFromVertices(possiblyShrunkEllipsoid, directionToPoint, vertices, stride, center, result);
     };
 
@@ -271,9 +273,8 @@ import Rectangle from './Rectangle.js';
     };
 
     var scratchEllipsoidShrunkRadii = new Cartesian3();
-    var scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
 
-    function getPossiblyShrunkEllipsoid(ellipsoid, minimumHeight) {
+    function getPossiblyShrunkEllipsoid(ellipsoid, minimumHeight, result) {
         if (defined(minimumHeight) && minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
             var ellipsoidShrunkRadii = Cartesian3.fromElements(
                 ellipsoid.radii.x + minimumHeight,
@@ -281,7 +282,7 @@ import Rectangle from './Rectangle.js';
                 ellipsoid.radii.z + minimumHeight,
                 scratchEllipsoidShrunkRadii
             );
-            ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk);
+            ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, result);
         }
         return ellipsoid;
     }
