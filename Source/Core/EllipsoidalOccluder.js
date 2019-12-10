@@ -134,19 +134,22 @@ import Rectangle from './Rectangle.js';
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid = function(occludeeScaledSpacePosition, minimumHeight) {
         var ellipsoid = this._ellipsoid;
-        if (defined(minimumHeight) && minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
-            var cameraPositionInScaledSpaceShrunk = Cartesian3.fromElements(
-                this._cameraPosition.x / (ellipsoid.radii.x + minimumHeight),
-                this._cameraPosition.y / (ellipsoid.radii.y + minimumHeight),
-                this._cameraPosition.z / (ellipsoid.radii.z + minimumHeight),
-                scratchCameraPositionInScaledSpaceShrunk
-            );
+        var vhMagnitudeSquared;
+        var cv;
 
-            var distanceToLimbInScaledSpaceSquaredShrunk = Cartesian3.magnitudeSquared(cameraPositionInScaledSpaceShrunk) - 1.0;
-            return isScaledSpacePointVisible(occludeeScaledSpacePosition, cameraPositionInScaledSpaceShrunk, distanceToLimbInScaledSpaceSquaredShrunk);
+        if (defined(minimumHeight) && minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
+            // This code is similar to the cameraPosition setter, but unrolled for performance because it will be called a lot.
+            cv = scratchCameraPositionInScaledSpaceShrunk;
+            cv.x = this._cameraPosition.x / (ellipsoid.radii.x + minimumHeight);
+            cv.y = this._cameraPosition.y / (ellipsoid.radii.y + minimumHeight);
+            cv.z = this._cameraPosition.z / (ellipsoid.radii.z + minimumHeight);
+            vhMagnitudeSquared = cv.x * cv.x + cv.y * cv.y + cv.z * cv.z - 1.0;
+        } else {
+            cv = this._cameraPositionInScaledSpace;
+            vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         }
 
-        return isScaledSpacePointVisible(occludeeScaledSpacePosition, this._cameraPositionInScaledSpace, this._distanceToLimbInScaledSpaceSquared);
+        return isScaledSpacePointVisible(occludeeScaledSpacePosition, cv, vhMagnitudeSquared);
     };
 
     /**
