@@ -310,7 +310,7 @@ import TerrainMesh from './TerrainMesh.js';
             var maximumHeight = result.maximumHeight;
             var boundingSphere = defaultValue(BoundingSphere.clone(result.boundingSphere), that._boundingSphere);
             var obb = defaultValue(OrientedBoundingBox.clone(result.orientedBoundingBox), that._orientedBoundingBox);
-            var occlusionPoint = Cartesian3.clone(that._horizonOcclusionPoint);
+            var occludeePointInScaledSpace = defaultValue(Cartesian3.clone(result.occludeePointInScaledSpace), that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
@@ -326,7 +326,7 @@ import TerrainMesh from './TerrainMesh.js';
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
-                    occlusionPoint,
+                    occludeePointInScaledSpace,
                     stride,
                     obb,
                     terrainEncoding,
