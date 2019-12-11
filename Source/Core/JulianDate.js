@@ -665,7 +665,7 @@ import TimeStandard from './TimeStandard.js';
 
         if (!defined(precision) && millisecond !== 0) {
             //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
-            millisecondStr = (millisecond * 0.01).toString().replace('.', '');
+            millisecondStr = sprintf('%f', millisecond * 0.01).replace('.', '');
             return sprintf('%04d-%02d-%02dT%02d:%02d:%02d.%sZ', year, month, day, hour, minute, second, millisecondStr);
         }
 
