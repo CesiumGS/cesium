@@ -1,18 +1,11 @@
-defineSuite([
-        'DataSources/PolylineDashMaterialProperty',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/TimeIntervalCollectionProperty'
-    ], function(
-        PolylineDashMaterialProperty,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        TimeIntervalCollectionProperty) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PolylineDashMaterialProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/PolylineDashMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineDashMaterialProperty();

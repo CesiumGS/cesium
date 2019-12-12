@@ -1,22 +1,11 @@
-define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/MapboxApi',
-    '../Core/Resource',
-    './UrlTemplateImageryProvider'
-], function(
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    MapboxApi,
-    Resource,
-    UrlTemplateImageryProvider) {
-'use strict';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import MapboxApi from '../Core/MapboxApi.js';
+import Resource from '../Core/Resource.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
 var trailingSlashRegex = /\/$/;
 var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
@@ -360,6 +349,4 @@ MapboxStyleImageryProvider.prototype.pickFeatures = function(x, y, level, longit
 
 // Exposed for tests
 MapboxStyleImageryProvider._defaultCredit = defaultCredit;
-
-return MapboxStyleImageryProvider;
-});
+export default MapboxStyleImageryProvider;

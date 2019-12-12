@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A Command is a function with an extra <code>canExecute</code> observable property to determine
@@ -43,6 +39,4 @@ define([
 
         DeveloperError.throwInstantiationError();
     }
-
-    return Command;
-});
+export default Command;

@@ -22,7 +22,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec2 pos = rotate(v_polylineAngle) * gl_FragCoord.xy;
 
     // Get the relative position within the dash from 0 to 1
-    float dashPosition = fract(pos.x / dashLength);
+    float dashPosition = fract(pos.x / (dashLength * czm_pixelRatio));
     // Figure out the mask index.
     float maskIndex = floor(dashPosition * maskLength);
     // Test the bit mask.

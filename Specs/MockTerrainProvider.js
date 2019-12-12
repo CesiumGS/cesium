@@ -1,22 +1,11 @@
-define([
-    'Core/defined',
-    'Core/GeographicTilingScheme',
-    'Core/HeightmapTerrainData',
-    'Core/RuntimeError',
-    'Core/TerrainProvider',
-    'ThirdParty/when',
-    './createTileKey',
-    './runLater'
-], function(
-    defined,
-    GeographicTilingScheme,
-    HeightmapTerrainData,
-    RuntimeError,
-    TerrainProvider,
-    when,
-    createTileKey,
-    runLater) {
-    'use strict';
+import createTileKey from './createTileKey.js';
+import runLater from './runLater.js';
+import { defined } from '../Source/Cesium.js';
+import { GeographicTilingScheme } from '../Source/Cesium.js';
+import { HeightmapTerrainData } from '../Source/Cesium.js';
+import { RuntimeError } from '../Source/Cesium.js';
+import { TerrainProvider } from '../Source/Cesium.js';
+import { when } from '../Source/Cesium.js';
 
     function MockTerrainProvider() {
         this.tilingScheme = new GeographicTilingScheme();
@@ -218,6 +207,4 @@ define([
 
         return terrainData;
     }
-
-    return MockTerrainProvider;
-});
+export default MockTerrainProvider;

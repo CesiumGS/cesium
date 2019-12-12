@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/PassState'
-    ], function(
-        PassState) {
-    'use strict';
+import { PassState } from '../../Source/Cesium.js';
+
+describe('Renderer/PassState', function() {
 
     it('creates a pass state', function() {
         var context = {};

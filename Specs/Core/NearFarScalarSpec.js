@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/NearFarScalar',
-        'Specs/createPackableSpecs'
-    ], function(
-        NearFarScalar,
-        createPackableSpecs) {
-    'use strict';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/NearFarScalar', function() {
 
     it('constructs without arguments', function() {
         var scalar = new NearFarScalar();

@@ -1,18 +1,9 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Fullscreen',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Fullscreen,
-        when) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Fullscreen from './Fullscreen.js';
     /*global CanvasPixelArray*/
 
     var theNavigator;
@@ -339,6 +330,4 @@ define([
     FeatureDetection.supportsWebAssembly = function() {
         return typeof WebAssembly !== 'undefined' && !FeatureDetection.isEdge();
     };
-
-    return FeatureDetection;
-});
+export default FeatureDetection;

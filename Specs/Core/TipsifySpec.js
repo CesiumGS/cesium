@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Tipsify'
-    ], function(
-        Tipsify) {
-    'use strict';
+import { Tipsify } from '../../Source/Cesium.js';
+
+describe('Core/Tipsify', function() {
 
     it('can calculate the ACMR', function() {
         //Hexagon formed from 6 triangles, 7 vertices

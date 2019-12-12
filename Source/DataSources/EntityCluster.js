@@ -1,40 +1,20 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/EllipsoidalOccluder',
-        '../Core/Event',
-        '../Core/Matrix4',
-        '../Scene/Billboard',
-        '../Scene/BillboardCollection',
-        '../Scene/Label',
-        '../Scene/LabelCollection',
-        '../Scene/PointPrimitive',
-        '../Scene/PointPrimitiveCollection',
-        '../Scene/SceneMode',
-        '../ThirdParty/kdbush'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        EllipsoidalOccluder,
-        Event,
-        Matrix4,
-        Billboard,
-        BillboardCollection,
-        Label,
-        LabelCollection,
-        PointPrimitive,
-        PointPrimitiveCollection,
-        SceneMode,
-        kdbush) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
+import Event from '../Core/Event.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Billboard from '../Scene/Billboard.js';
+import BillboardCollection from '../Scene/BillboardCollection.js';
+import Label from '../Scene/Label.js';
+import LabelCollection from '../Scene/LabelCollection.js';
+import PointPrimitive from '../Scene/PointPrimitive.js';
+import PointPrimitiveCollection from '../Scene/PointPrimitiveCollection.js';
+import SceneMode from '../Scene/SceneMode.js';
+import kdbush from '../ThirdParty/kdbush.js';
 
     /**
      * Defines how screen space objects (billboards, points, labels) are clustered.
@@ -50,7 +30,7 @@ define([
      * @alias EntityCluster
      * @constructor
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
      */
     function EntityCluster(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -116,8 +96,8 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
-            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
+        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
             expandBoundingBox(labelBBox, pixelRange);
@@ -130,8 +110,8 @@ define([
     function addNonClusteredItem(item, entityCluster) {
         item.clusterShow = true;
 
-        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
-            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
+        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             label.clusterShow = true;
         }
@@ -832,6 +812,4 @@ define([
      *     cluster.label.text = entities.length.toLocaleString();
      * });
      */
-
-    return EntityCluster;
-});
+export default EntityCluster;

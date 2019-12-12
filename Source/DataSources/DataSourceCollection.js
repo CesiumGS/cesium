@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        when) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * A collection of {@link DataSource} instances.
@@ -342,6 +331,4 @@ define([
         this.removeAll(true);
         return destroyObject(this);
     };
-
-    return DataSourceCollection;
-});
+export default DataSourceCollection;

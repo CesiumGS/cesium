@@ -23,7 +23,7 @@ void main()
     vec2 dir = vec2(1.0 - direction, direction);
 
 #ifdef USE_STEP_SIZE
-    vec2 step = vec2(stepSize / czm_viewport.zw);
+    vec2 step = vec2(stepSize * (czm_pixelRatio / czm_viewport.zw));
 #else
     vec2 step = step;
 #endif

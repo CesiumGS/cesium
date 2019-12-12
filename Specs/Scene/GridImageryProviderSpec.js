@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/GridImageryProvider',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/WebMercatorTilingScheme',
-        'Scene/ImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        GridImageryProvider,
-        Ellipsoid,
-        GeographicTilingScheme,
-        WebMercatorTilingScheme,
-        ImageryProvider,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GridImageryProvider } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/GridImageryProvider', function() {
 
     it('conforms to ImageryProvider interface', function() {
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);

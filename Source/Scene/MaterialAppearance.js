@@ -1,32 +1,16 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/freezeObject',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/AllMaterialAppearanceFS',
-        '../Shaders/Appearances/AllMaterialAppearanceVS',
-        '../Shaders/Appearances/BasicMaterialAppearanceFS',
-        '../Shaders/Appearances/BasicMaterialAppearanceVS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
-        './Appearance',
-        './Material'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        freezeObject,
-        VertexFormat,
-        AllMaterialAppearanceFS,
-        AllMaterialAppearanceVS,
-        BasicMaterialAppearanceFS,
-        BasicMaterialAppearanceVS,
-        TexturedMaterialAppearanceFS,
-        TexturedMaterialAppearanceVS,
-        Appearance,
-        Material) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import freezeObject from '../Core/freezeObject.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import AllMaterialAppearanceFS from '../Shaders/Appearances/AllMaterialAppearanceFS.js';
+import AllMaterialAppearanceVS from '../Shaders/Appearances/AllMaterialAppearanceVS.js';
+import BasicMaterialAppearanceFS from '../Shaders/Appearances/BasicMaterialAppearanceFS.js';
+import BasicMaterialAppearanceVS from '../Shaders/Appearances/BasicMaterialAppearanceVS.js';
+import TexturedMaterialAppearanceFS from '../Shaders/Appearances/TexturedMaterialAppearanceFS.js';
+import TexturedMaterialAppearanceVS from '../Shaders/Appearances/TexturedMaterialAppearanceVS.js';
+import Appearance from './Appearance.js';
+import Material from './Material.js';
 
     /**
      * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
@@ -47,7 +31,7 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -321,6 +305,4 @@ define([
             fragmentShaderSource : AllMaterialAppearanceFS
         })
     };
-
-    return MaterialAppearance;
-});
+export default MaterialAppearance;

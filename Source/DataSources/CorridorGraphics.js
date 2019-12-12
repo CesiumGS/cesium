@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a corridor, which is a shape defined by a centerline and width that
@@ -29,9 +19,9 @@ define([
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
      * @param {Property} [options.width] A numeric Property specifying the distance between the edges of the corridor.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the corridor is filled with the provided material.
@@ -45,7 +35,7 @@ define([
      * @param {ConstantProperty} [options.zIndex] A Property specifying the zIndex of the corridor, used for ordering.  Only has an effect if height and extrudedHeight are undefined, and if the corridor is static.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
     function CorridorGraphics(options) {
         this._definitionChanged = new Event();
@@ -309,6 +299,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return CorridorGraphics;
-});
+export default CorridorGraphics;

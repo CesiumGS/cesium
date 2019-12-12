@@ -1,90 +1,47 @@
-defineSuite([
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/PlaneGeometry',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CircleGeometry',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/CoplanarPolygonGeometry',
-        'Core/ComponentDatatype',
-        'Core/CornerType',
-        'Core/CorridorGeometry',
-        'Core/CylinderGeometry',
-        'Core/defined',
-        'Core/EllipseGeometry',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeometry',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PolygonGeometry',
-        'Core/PolylineGeometry',
-        'Core/PolylineVolumeGeometry',
-        'Core/PrimitiveType',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/SimplePolylineGeometry',
-        'Core/SphereGeometry',
-        'Core/Transforms',
-        'Core/WallGeometry',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/Material',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/Primitive',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], 'Scene/GeometryRendering', function(
-        ArcType,
-        BoundingSphere,
-        BoxGeometry,
-        PlaneGeometry,
-        Cartesian2,
-        Cartesian3,
-        CircleGeometry,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
-        ComponentDatatype,
-        CornerType,
-        CorridorGeometry,
-        CylinderGeometry,
-        defined,
-        EllipseGeometry,
-        Ellipsoid,
-        EllipsoidGeometry,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        PolygonGeometry,
-        PolylineGeometry,
-        PolylineVolumeGeometry,
-        PrimitiveType,
-        Rectangle,
-        RectangleGeometry,
-        SimplePolylineGeometry,
-        SphereGeometry,
-        Transforms,
-        WallGeometry,
-        EllipsoidSurfaceAppearance,
-        Material,
-        PerInstanceColorAppearance,
-        PolylineColorAppearance,
-        Primitive,
-        SceneMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleGeometry } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { CoplanarPolygonGeometry } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { CorridorGeometry } from '../../Source/Cesium.js';
+import { CylinderGeometry } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { EllipseGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PlaneGeometry } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { PolylineVolumeGeometry } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { SimplePolylineGeometry } from '../../Source/Cesium.js';
+import { SphereGeometry } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WallGeometry } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GeometryRenderingSpec', function() {
 
     var scene;
     var ellipsoid;

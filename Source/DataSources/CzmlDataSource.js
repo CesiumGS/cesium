@@ -1,190 +1,96 @@
-define([
-        '../Core/ArcType',
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/ClockRange',
-        '../Core/ClockStep',
-        '../Core/Color',
-        '../Core/CornerType',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/ExtrapolationType',
-        '../Core/getFilenameFromUri',
-        '../Core/HermitePolynomialApproximation',
-        '../Core/isArray',
-        '../Core/Iso8601',
-        '../Core/JulianDate',
-        '../Core/LagrangePolynomialApproximation',
-        '../Core/LinearApproximation',
-        '../Core/Math',
-        '../Core/NearFarScalar',
-        '../Core/PolygonHierarchy',
-        '../Core/Quaternion',
-        '../Core/Rectangle',
-        '../Core/ReferenceFrame',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/Spherical',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
-        '../Scene/ClassificationType',
-        '../Scene/ColorBlendMode',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
-        '../Scene/LabelStyle',
-        '../Scene/ShadowMode',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './BillboardGraphics',
-        './BoxGraphics',
-        './CallbackProperty',
-        './CheckerboardMaterialProperty',
-        './ColorMaterialProperty',
-        './CompositeMaterialProperty',
-        './CompositePositionProperty',
-        './CompositeProperty',
-        './ConstantPositionProperty',
-        './ConstantProperty',
-        './CorridorGraphics',
-        './CylinderGraphics',
-        './DataSource',
-        './DataSourceClock',
-        './EllipseGraphics',
-        './EllipsoidGraphics',
-        './EntityCluster',
-        './EntityCollection',
-        './GridMaterialProperty',
-        './ImageMaterialProperty',
-        './LabelGraphics',
-        './ModelGraphics',
-        './NodeTransformationProperty',
-        './PathGraphics',
-        './PointGraphics',
-        './PolygonGraphics',
-        './PolylineArrowMaterialProperty',
-        './PolylineDashMaterialProperty',
-        './PolylineGlowMaterialProperty',
-        './PolylineGraphics',
-        './PolylineOutlineMaterialProperty',
-        './PositionPropertyArray',
-        './Property',
-        './PropertyArray',
-        './PropertyBag',
-        './RectangleGraphics',
-        './ReferenceProperty',
-        './Rotation',
-        './SampledPositionProperty',
-        './SampledProperty',
-        './StripeMaterialProperty',
-        './StripeOrientation',
-        './TimeIntervalCollectionPositionProperty',
-        './TimeIntervalCollectionProperty',
-        './VelocityOrientationProperty',
-        './VelocityVectorProperty',
-        './WallGraphics'
-    ], function(
-        ArcType,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ClockRange,
-        ClockStep,
-        Color,
-        CornerType,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        Event,
-        ExtrapolationType,
-        getFilenameFromUri,
-        HermitePolynomialApproximation,
-        isArray,
-        Iso8601,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        CesiumMath,
-        NearFarScalar,
-        PolygonHierarchy,
-        Quaternion,
-        Rectangle,
-        ReferenceFrame,
-        Resource,
-        RuntimeError,
-        Spherical,
-        TimeInterval,
-        TimeIntervalCollection,
-        ClassificationType,
-        ColorBlendMode,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        ShadowMode,
-        VerticalOrigin,
-        Uri,
-        when,
-        BillboardGraphics,
-        BoxGraphics,
-        CallbackProperty,
-        CheckerboardMaterialProperty,
-        ColorMaterialProperty,
-        CompositeMaterialProperty,
-        CompositePositionProperty,
-        CompositeProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        CorridorGraphics,
-        CylinderGraphics,
-        DataSource,
-        DataSourceClock,
-        EllipseGraphics,
-        EllipsoidGraphics,
-        EntityCluster,
-        EntityCollection,
-        GridMaterialProperty,
-        ImageMaterialProperty,
-        LabelGraphics,
-        ModelGraphics,
-        NodeTransformationProperty,
-        PathGraphics,
-        PointGraphics,
-        PolygonGraphics,
-        PolylineArrowMaterialProperty,
-        PolylineDashMaterialProperty,
-        PolylineGlowMaterialProperty,
-        PolylineGraphics,
-        PolylineOutlineMaterialProperty,
-        PositionPropertyArray,
-        Property,
-        PropertyArray,
-        PropertyBag,
-        RectangleGraphics,
-        ReferenceProperty,
-        Rotation,
-        SampledPositionProperty,
-        SampledProperty,
-        StripeMaterialProperty,
-        StripeOrientation,
-        TimeIntervalCollectionPositionProperty,
-        TimeIntervalCollectionProperty,
-        VelocityOrientationProperty,
-        VelocityVectorProperty,
-        WallGraphics) {
-    'use strict';
+import ArcType from '../Core/ArcType.js';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import ClockRange from '../Core/ClockRange.js';
+import ClockStep from '../Core/ClockStep.js';
+import Color from '../Core/Color.js';
+import CornerType from '../Core/CornerType.js';
+import Credit from '../Core/Credit.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Event from '../Core/Event.js';
+import ExtrapolationType from '../Core/ExtrapolationType.js';
+import getFilenameFromUri from '../Core/getFilenameFromUri.js';
+import HermitePolynomialApproximation from '../Core/HermitePolynomialApproximation.js';
+import isArray from '../Core/isArray.js';
+import Iso8601 from '../Core/Iso8601.js';
+import JulianDate from '../Core/JulianDate.js';
+import LagrangePolynomialApproximation from '../Core/LagrangePolynomialApproximation.js';
+import LinearApproximation from '../Core/LinearApproximation.js';
+import CesiumMath from '../Core/Math.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import Quaternion from '../Core/Quaternion.js';
+import Rectangle from '../Core/Rectangle.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Spherical from '../Core/Spherical.js';
+import TimeInterval from '../Core/TimeInterval.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import ColorBlendMode from '../Scene/ColorBlendMode.js';
+import HeightReference from '../Scene/HeightReference.js';
+import HorizontalOrigin from '../Scene/HorizontalOrigin.js';
+import LabelStyle from '../Scene/LabelStyle.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import VerticalOrigin from '../Scene/VerticalOrigin.js';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import BoxGraphics from './BoxGraphics.js';
+import CallbackProperty from './CallbackProperty.js';
+import CheckerboardMaterialProperty from './CheckerboardMaterialProperty.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import CompositeMaterialProperty from './CompositeMaterialProperty.js';
+import CompositePositionProperty from './CompositePositionProperty.js';
+import CompositeProperty from './CompositeProperty.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import CorridorGraphics from './CorridorGraphics.js';
+import CylinderGraphics from './CylinderGraphics.js';
+import DataSource from './DataSource.js';
+import DataSourceClock from './DataSourceClock.js';
+import EllipseGraphics from './EllipseGraphics.js';
+import EllipsoidGraphics from './EllipsoidGraphics.js';
+import EntityCluster from './EntityCluster.js';
+import EntityCollection from './EntityCollection.js';
+import GridMaterialProperty from './GridMaterialProperty.js';
+import ImageMaterialProperty from './ImageMaterialProperty.js';
+import LabelGraphics from './LabelGraphics.js';
+import ModelGraphics from './ModelGraphics.js';
+import NodeTransformationProperty from './NodeTransformationProperty.js';
+import PathGraphics from './PathGraphics.js';
+import PointGraphics from './PointGraphics.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineArrowMaterialProperty from './PolylineArrowMaterialProperty.js';
+import PolylineDashMaterialProperty from './PolylineDashMaterialProperty.js';
+import PolylineGlowMaterialProperty from './PolylineGlowMaterialProperty.js';
+import PolylineGraphics from './PolylineGraphics.js';
+import PolylineOutlineMaterialProperty from './PolylineOutlineMaterialProperty.js';
+import PositionPropertyArray from './PositionPropertyArray.js';
+import Property from './Property.js';
+import PropertyArray from './PropertyArray.js';
+import PropertyBag from './PropertyBag.js';
+import RectangleGraphics from './RectangleGraphics.js';
+import ReferenceProperty from './ReferenceProperty.js';
+import Rotation from './Rotation.js';
+import SampledPositionProperty from './SampledPositionProperty.js';
+import SampledProperty from './SampledProperty.js';
+import StripeMaterialProperty from './StripeMaterialProperty.js';
+import StripeOrientation from './StripeOrientation.js';
+import TimeIntervalCollectionPositionProperty from './TimeIntervalCollectionPositionProperty.js';
+import TimeIntervalCollectionProperty from './TimeIntervalCollectionProperty.js';
+import VelocityOrientationProperty from './VelocityOrientationProperty.js';
+import VelocityVectorProperty from './VelocityVectorProperty.js';
+import WallGraphics from './WallGraphics.js';
 
     // A marker type to distinguish CZML properties where we need to end up with a unit vector.
     // The data is still loaded into Cartesian3 objects but they are normalized.
@@ -1626,6 +1532,11 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection);
+        processPacketData(Cartesian3, ellipsoid, 'innerRadii', ellipsoidData.innerRadii, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'minimumClock', ellipsoidData.minimumClock, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'maximumClock', ellipsoidData.maximumClock, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'minimumCone', ellipsoidData.minimumCone, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'maximumCone', ellipsoidData.maximumCone, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, ellipsoid, 'heightReference', ellipsoidData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection);
@@ -2150,11 +2061,28 @@ define([
         var promise = czml;
         var sourceUri = options.sourceUri;
 
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        dataSource._credit = credit;
+
         // If the czml is a URL
         if (typeof czml === 'string' || (czml instanceof Resource)) {
             czml = Resource.createIfNeeded(czml);
             promise = czml.fetchJson();
             sourceUri = defaultValue(sourceUri, czml.clone());
+
+            // Add resource credits to our list of credits to display
+            var resourceCredits = dataSource._resourceCredits;
+            var credits = czml.credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    resourceCredits.push(credits[i]);
+                }
+            }
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri);
@@ -2214,7 +2142,7 @@ define([
      *
      * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
     function CzmlDataSource(name) {
         this._name = name;
@@ -2227,6 +2155,8 @@ define([
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
         this._entityCluster = new EntityCluster();
+        this._credit = undefined;
+        this._resourceCredits = [];
     }
 
     /**
@@ -2235,6 +2165,7 @@ define([
      * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
      */
     CzmlDataSource.load = function(czml, options) {
@@ -2346,6 +2277,16 @@ define([
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }
+        },
+        /**
+         * Gets the credit that will be displayed for the data source
+         * @memberof CzmlDataSource.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
     });
 
@@ -2395,6 +2336,7 @@ define([
      * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.load = function(czml, options) {
@@ -2455,6 +2397,4 @@ define([
             processCzmlPacket(czml, entityCollection, updaterFunctions, sourceUri, dataSource);
         }
     };
-
-    return CzmlDataSource;
-});
+export default CzmlDataSource;

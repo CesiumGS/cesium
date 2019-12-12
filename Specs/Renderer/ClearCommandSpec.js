@@ -1,10 +1,7 @@
-defineSuite([
-        'Renderer/ClearCommand',
-        'Core/Color'
-    ], function(
-        ClearCommand,
-        Color) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+
+describe('Renderer/ClearCommand', function() {
 
     it('constructs with defaults', function() {
         var c = new ClearCommand();

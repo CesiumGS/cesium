@@ -1,62 +1,30 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/IndexDatatype',
-        '../Core/IntersectionTests',
-        '../Core/OrientedBoundingBox',
-        '../Core/PixelFormat',
-        '../Core/Request',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/TileProviderError',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        './ImageryState',
-        './QuadtreeTileLoadState',
-        './SceneMode',
-        './TerrainState',
-        './TileBoundingRegion',
-        '../ThirdParty/when'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        defined,
-        defineProperties,
-        IndexDatatype,
-        IntersectionTests,
-        OrientedBoundingBox,
-        PixelFormat,
-        Request,
-        RequestState,
-        RequestType,
-        TileProviderError,
-        Buffer,
-        BufferUsage,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        ImageryState,
-        QuadtreeTileLoadState,
-        SceneMode,
-        TerrainState,
-        TileBoundingRegion,
-        when) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Request from '../Core/Request.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import when from '../ThirdParty/when.js';
+import ImageryState from './ImageryState.js';
+import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
+import SceneMode from './SceneMode.js';
+import TerrainState from './TerrainState.js';
 
     /**
      * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -304,7 +272,7 @@ define([
     GlobeSurfaceTile.prototype.processImagery = function(tile, terrainProvider, frameState, skipLoading) {
         var surfaceTile = tile.data;
         var isUpsampledOnly = tile.upsampledFromParent;
-        var isRenderable = tile.renderable;
+        var isAnyTileLoaded = false;
         var isDoneLoading = true;
 
         // Transition imagery states
@@ -337,14 +305,16 @@ define([
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
-            isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+            isAnyTileLoaded = isAnyTileLoaded || (thisTileDoneLoading || defined(tileImagery.readyImagery));
 
             isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
                               (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         tile.upsampledFromParent = isUpsampledOnly;
-        tile.renderable = isRenderable;
+
+        // Allow rendering if any available layers are loaded
+        tile.renderable = tile.renderable && (isAnyTileLoaded || isDoneLoading);
 
         return isDoneLoading;
     };
@@ -689,6 +659,4 @@ define([
 
         return result;
     };
-
-    return GlobeSurfaceTile;
-});
+export default GlobeSurfaceTile;

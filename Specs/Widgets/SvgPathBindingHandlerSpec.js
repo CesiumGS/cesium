@@ -1,8 +1,6 @@
-defineSuite([
-        'ThirdParty/knockout'
-    ], function(
-        knockout) {
-    'use strict';
+import { knockout } from '../../Source/Cesium.js';
+
+describe('ThirdParty/knockout', function() {
 
     it('check binding with constants', function() {
         var div = document.createElement('div');

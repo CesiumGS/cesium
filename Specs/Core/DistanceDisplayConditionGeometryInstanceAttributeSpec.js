@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/ComponentDatatype',
-        'Core/DistanceDisplayCondition'
-    ], function(
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ComponentDatatype,
-        DistanceDisplayCondition) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+
+describe('Core/DistanceDisplayConditionGeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var attribute = new DistanceDisplayConditionGeometryInstanceAttribute(10.0, 100.0);

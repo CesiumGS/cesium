@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
@@ -22,6 +18,4 @@ define([
          */
         VERTICAL : 1
     };
-
-    return freezeObject(StripeOrientation);
-});
+export default freezeObject(StripeOrientation);

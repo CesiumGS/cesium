@@ -1,40 +1,20 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/freezeObject',
-        '../Core/NearFarScalar',
-        './Billboard',
-        './HeightReference',
-        './HorizontalOrigin',
-        './LabelStyle',
-        './SDFSettings',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        freezeObject,
-        NearFarScalar,
-        Billboard,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SDFSettings,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import freezeObject from '../Core/freezeObject.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import Billboard from './Billboard.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import LabelStyle from './LabelStyle.js';
+import SDFSettings from './SDFSettings.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     var textTypes = freezeObject({
         LTR : 0,
@@ -93,7 +73,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -920,7 +900,6 @@ define([
         /**
          * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
          * of the desired font compared to the generated glyph size.
-         * </div>
          * @memberof Label.prototype
          * @type {Number}
          * @default 1.0
@@ -1154,12 +1133,11 @@ define([
         var width = 0;
         var height = 0;
         var scale = label.totalScale;
-        var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -1182,8 +1160,8 @@ define([
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
+                var glyphX = screenSpacePosition.x + (billboard._translate.x);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y);
                 var glyphWidth = glyph.dimensions.width * scale;
                 var glyphHeight = glyph.dimensions.height * scale;
 
@@ -1482,6 +1460,4 @@ define([
         }
         return result;
     }
-
-    return Label;
-});
+export default Label;

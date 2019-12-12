@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/ParticleSystem',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Matrix4',
-        'Core/Resource',
-        'Scene/CircleEmitter',
-        'Scene/ParticleBurst',
-        'Specs/createScene'
-    ], function(
-        ParticleSystem,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        Matrix4,
-        Resource,
-        CircleEmitter,
-        ParticleBurst,
-        createScene) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { CircleEmitter } from '../../Source/Cesium.js';
+import { ParticleBurst } from '../../Source/Cesium.js';
+import { ParticleSystem } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/ParticleSystem', function() {
 
     var scene;
     var greenImage;

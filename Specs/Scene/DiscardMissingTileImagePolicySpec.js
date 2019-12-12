@@ -1,16 +1,10 @@
-defineSuite([
-        'Scene/DiscardMissingTileImagePolicy',
-        'Core/Cartesian2',
-        'Core/Resource',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        DiscardMissingTileImagePolicy,
-        Cartesian2,
-        Resource,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/DiscardMissingTileImagePolicy', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {

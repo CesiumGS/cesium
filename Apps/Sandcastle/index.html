@@ -28,8 +28,8 @@
     <meta property="og:title" content="Cesium Sandcastle" />
     <meta property="og:description" content="The Cesium Sandcastle provides an interactive environment for testing Cesium code." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/index.html" />
-    <meta property="og:image" content="https://cesiumjs.org/images/Sandcastle.png" />
+    <meta property="og:url" content="https://sandcastle.cesium.com/index.html" />
+    <meta property="og:image" content="https://cesium.com/images/social-card.jpg" />
     <meta property="og:site_name" content="Cesium" />
     <meta property="fb:admins" content="1222088662,1322006496" />
 </head>
@@ -37,7 +37,7 @@
     <div id="loading"><span>Loading...</span></div>
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle"><a href="http://cesiumjs.org/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
+            <div class="cesiumTitle"><a href="http://cesium.com/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
             <div id="buttonNew" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFile', showLabel: true">
                 New
             </div>
@@ -132,7 +132,7 @@
             </div>
         </div>
         <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center'">
-            <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium ' + Cesium.VERSION">
+            <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium ' + VERSION">
                 <iframe id="bucketFrame" src="templates/bucket.html" class="fullFrame" allowfullscreen mozallowfullscreen webkitallowfullscreen></iframe>
             </div>
         </div>

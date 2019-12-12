@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/GeographicTilingScheme',
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/GeographicProjection',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/TilingScheme'
-    ], function(
-        GeographicTilingScheme,
-        Cartesian2,
-        Cartographic,
-        GeographicProjection,
-        CesiumMath,
-        Rectangle,
-        TilingScheme) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TilingScheme } from '../../Source/Cesium.js';
+
+describe('Core/GeographicTilingScheme', function() {
 
     it('conforms to TilingScheme interface.', function() {
         expect(GeographicTilingScheme).toConformToInterface(TilingScheme);

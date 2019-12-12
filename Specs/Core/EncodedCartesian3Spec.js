@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/EncodedCartesian3',
-        'Core/Cartesian3'
-    ], function(
-        EncodedCartesian3,
-        Cartesian3) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EncodedCartesian3 } from '../../Source/Cesium.js';
+
+describe('Core/EncodedCartesian3', function() {
 
     it('construct with default values', function() {
         var encoded = new EncodedCartesian3();

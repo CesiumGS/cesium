@@ -1,50 +1,25 @@
-defineSuite([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/destroyObject',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/Batched3DModel3DTileContent',
-        'Scene/ClassificationType',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/StencilConstants',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], 'Scene/Batched3DModel3DTileContentClassification', function(
-        Cartesian3,
-        Cartographic,
-        Color,
-        ColorGeometryInstanceAttribute,
-        destroyObject,
-        Ellipsoid,
-        GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        RectangleGeometry,
-        Transforms,
-        Pass,
-        RenderState,
-        Batched3DModel3DTileContent,
-        ClassificationType,
-        PerInstanceColorAppearance,
-        Primitive,
-        StencilConstants,
-        Cesium3DTilesTester,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Batched3DModel3DTileContentClassification', function() {
 
     var scene;
     var modelMatrix;

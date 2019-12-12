@@ -1,12 +1,6 @@
-define([
-        './hasExtension',
-        '../../Core/defined',
-        '../../Core/isArray'
-    ], function(
-        hasExtension,
-        defined,
-        isArray) {
-    'use strict';
+import hasExtension from './hasExtension.js'
+import defined from '../../Core/defined.js'
+import isArray from '../../Core/isArray.js'
 
     /**
      * Contains traversal functions for processing elements of the glTF hierarchy.
@@ -24,7 +18,7 @@ define([
     ForEach.objectLegacy = function(objects, handler) {
         if (defined(objects)) {
             for (var objectId in objects) {
-                if (objects.hasOwnProperty(objectId)) {
+                if (Object.prototype.hasOwnProperty.call(objects, objectId)) {
                     var object = objects[objectId];
                     var value = handler(object, objectId);
 
@@ -74,10 +68,10 @@ define([
         var visited = {};
         return ForEach.mesh(gltf, function(mesh) {
             return ForEach.meshPrimitive(mesh, function(primitive) {
-                var value = ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeSemantic) {
+                var valueForEach = ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeSemantic) {
                     if (attributeSemantic.indexOf(semantic) === 0 && !defined(visited[accessorId])) {
                         visited[accessorId] = true;
-                        value = handler(accessorId);
+                        var value = handler(accessorId);
 
                         if (defined(value)) {
                             return value;
@@ -85,15 +79,15 @@ define([
                     }
                 });
 
-                if (defined(value)) {
-                    return value;
+                if (defined(valueForEach)) {
+                    return valueForEach;
                 }
 
                 return ForEach.meshPrimitiveTarget(primitive, function(target) {
                     return ForEach.meshPrimitiveTargetAttribute(target, function(accessorId, attributeSemantic) {
                         if (attributeSemantic.indexOf(semantic) === 0 && !defined(visited[accessorId])) {
                             visited[accessorId] = true;
-                            value = handler(accessorId);
+                            var value = handler(accessorId);
 
                             if (defined(value)) {
                                 return value;
@@ -109,10 +103,10 @@ define([
         var visited = {};
         return ForEach.mesh(gltf, function(mesh) {
             return ForEach.meshPrimitive(mesh, function(primitive) {
-                var value = ForEach.meshPrimitiveAttribute(primitive, function(accessorId) {
+                var valueForEach = ForEach.meshPrimitiveAttribute(primitive, function(accessorId) {
                     if (!defined(visited[accessorId])) {
                         visited[accessorId] = true;
-                        value = handler(accessorId);
+                        var value = handler(accessorId);
 
                         if (defined(value)) {
                             return value;
@@ -120,15 +114,15 @@ define([
                     }
                 });
 
-                if (defined(value)) {
-                    return value;
+                if (defined(valueForEach)) {
+                    return valueForEach;
                 }
 
                 return ForEach.meshPrimitiveTarget(primitive, function(target) {
                     return ForEach.meshPrimitiveTargetAttribute(target, function(accessorId) {
                         if (!defined(visited[accessorId])) {
                             visited[accessorId] = true;
-                            value = handler(accessorId);
+                            var value = handler(accessorId);
 
                             if (defined(value)) {
                                 return value;
@@ -191,7 +185,7 @@ define([
         if (defined(image.extras)) {
             var compressedImages = image.extras.compressedImage3DTiles;
             for (var type in compressedImages) {
-                if (compressedImages.hasOwnProperty(type)) {
+                if (Object.prototype.hasOwnProperty.call(compressedImages, type)) {
                     var compressedImage = compressedImages[type];
                     var value = handler(compressedImage, type);
 
@@ -214,7 +208,7 @@ define([
         }
 
         for (var name in values) {
-            if (values.hasOwnProperty(name)) {
+            if (Object.prototype.hasOwnProperty.call(values, name)) {
                 var value = handler(values[name], name);
 
                 if (defined(value)) {
@@ -246,7 +240,7 @@ define([
     ForEach.meshPrimitiveAttribute = function(primitive, handler) {
         var attributes = primitive.attributes;
         for (var semantic in attributes) {
-            if (attributes.hasOwnProperty(semantic)) {
+            if (Object.prototype.hasOwnProperty.call(attributes, semantic)) {
                 var value = handler(attributes[semantic], semantic);
 
                 if (defined(value)) {
@@ -272,7 +266,7 @@ define([
 
     ForEach.meshPrimitiveTargetAttribute = function(target, handler) {
         for (var semantic in target) {
-            if (target.hasOwnProperty(semantic)) {
+            if (Object.prototype.hasOwnProperty.call(target, semantic)) {
                 var accessorId = target[semantic];
                 var value = handler(accessorId, semantic);
 
@@ -349,10 +343,25 @@ define([
         return ForEach.topLevel(gltf, 'skins', handler);
     };
 
+    ForEach.skinJoint = function(skin, handler) {
+        var joints = skin.joints;
+        if (defined(joints)) {
+            var jointsLength = joints.length;
+            for (var i = 0; i < jointsLength; i++) {
+                var joint = joints[i];
+                var value = handler(joint);
+
+                if (defined(value)) {
+                    return value;
+                }
+            }
+        }
+    };
+
     ForEach.techniqueAttribute = function(technique, handler) {
         var attributes = technique.attributes;
         for (var attributeName in attributes) {
-            if (attributes.hasOwnProperty(attributeName)) {
+            if (Object.prototype.hasOwnProperty.call(attributes, attributeName)) {
                 var value = handler(attributes[attributeName], attributeName);
 
                 if (defined(value)) {
@@ -365,7 +374,7 @@ define([
     ForEach.techniqueUniform = function(technique, handler) {
         var uniforms = technique.uniforms;
         for (var uniformName in uniforms) {
-            if (uniforms.hasOwnProperty(uniformName)) {
+            if (Object.prototype.hasOwnProperty.call(uniforms, uniformName)) {
                 var value = handler(uniforms[uniformName], uniformName);
 
                 if (defined(value)) {
@@ -378,7 +387,7 @@ define([
     ForEach.techniqueParameter = function(technique, handler) {
         var parameters = technique.parameters;
         for (var parameterName in parameters) {
-            if (parameters.hasOwnProperty(parameterName)) {
+            if (Object.prototype.hasOwnProperty.call(parameters, parameterName)) {
                 var value = handler(parameters[parameterName], parameterName);
 
                 if (defined(value)) {
@@ -400,5 +409,4 @@ define([
         return ForEach.topLevel(gltf, 'textures', handler);
     };
 
-    return ForEach;
-});
+    export default ForEach;

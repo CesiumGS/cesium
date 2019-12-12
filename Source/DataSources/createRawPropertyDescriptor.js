@@ -1,8 +1,4 @@
-define([
-        './createPropertyDescriptor'
-    ], function(
-        createPropertyDescriptor) {
-    'use strict';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     function createRawProperty(value) {
         return value;
@@ -14,6 +10,4 @@ define([
     function createRawPropertyDescriptor(name, configurable) {
         return createPropertyDescriptor(name, configurable, createRawProperty);
     }
-
-    return createRawPropertyDescriptor;
-});
+export default createRawPropertyDescriptor;

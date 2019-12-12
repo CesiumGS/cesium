@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * Defines the interface for visualizers. Visualizers are plug-ins to
@@ -62,6 +58,4 @@ define([
      * @function
      */
     Visualizer.prototype.destroy = DeveloperError.throwInstantiationError;
-
-    return Visualizer;
-});
+export default Visualizer;

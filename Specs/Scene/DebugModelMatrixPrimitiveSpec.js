@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/DebugModelMatrixPrimitive',
-        'Core/Cartesian3',
-        'Core/Matrix4',
-        'Specs/createScene'
-    ], function(
-        DebugModelMatrixPrimitive,
-        Cartesian3,
-        Matrix4,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { DebugModelMatrixPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/DebugModelMatrixPrimitive', function() {
 
     var scene;
 

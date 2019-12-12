@@ -1,20 +1,10 @@
-define([
-        'Core/defaultValue',
-        'Core/GeographicProjection',
-        'Core/JulianDate',
-        'Scene/Camera',
-        'Scene/CreditDisplay',
-        'Scene/FrameState',
-        'Scene/JobScheduler'
-    ], function(
-        defaultValue,
-        GeographicProjection,
-        JulianDate,
-        Camera,
-        CreditDisplay,
-        FrameState,
-        JobScheduler) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { GeographicProjection } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { Camera } from '../Source/Cesium.js';
+import { CreditDisplay } from '../Source/Cesium.js';
+import { FrameState } from '../Source/Cesium.js';
+import { JobScheduler } from '../Source/Cesium.js';
 
     function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
@@ -42,6 +32,4 @@ define([
 
         return frameState;
     }
-
-    return createFrameState;
-});
+export default createFrameState;

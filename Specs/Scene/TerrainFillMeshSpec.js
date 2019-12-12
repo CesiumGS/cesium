@@ -1,38 +1,21 @@
-defineSuite([
-        'Scene/TerrainFillMesh',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/GeographicProjection',
-        'Core/HeightmapTerrainData',
-        'Core/Intersect',
-        'Core/Math',
-        'Scene/Camera',
-        'Scene/GlobeSurfaceTileProvider',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreePrimitive',
-        'Scene/SceneMode',
-        'Scene/TileBoundingRegion',
-        'Scene/TileSelectionResult',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
-    ], function(
-        TerrainFillMesh,
-        Cartesian2,
-        Cartesian3,
-        GeographicProjection,
-        HeightmapTerrainData,
-        Intersect,
-        CesiumMath,
-        Camera,
-        GlobeSurfaceTileProvider,
-        ImageryLayerCollection,
-        QuadtreePrimitive,
-        SceneMode,
-        TileBoundingRegion,
-        TileSelectionResult,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { GlobeSurfaceTileProvider } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { QuadtreePrimitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { TerrainFillMesh } from '../../Source/Cesium.js';
+import { TileBoundingRegion } from '../../Source/Cesium.js';
+import { TileSelectionResult } from '../../Source/Cesium.js';
+
+describe('Scene/TerrainFillMesh', function() {
 
     var processor;
     var scene;

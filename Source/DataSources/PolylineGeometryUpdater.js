@@ -1,70 +1,35 @@
-define([
-        '../Core/ArcType',
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/Event',
-        '../Core/GeometryInstance',
-        '../Core/GroundPolylineGeometry',
-        '../Core/Iso8601',
-        '../Core/oneTimeWarning',
-        '../Core/PolylineGeometry',
-        '../Core/PolylinePipeline',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../DataSources/Entity',
-        '../Scene/ClassificationType',
-        '../Scene/GroundPolylinePrimitive',
-        '../Scene/PolylineCollection',
-        '../Scene/PolylineColorAppearance',
-        '../Scene/PolylineMaterialAppearance',
-        '../Scene/ShadowMode',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './ConstantProperty',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        ArcType,
-        BoundingSphere,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        Event,
-        GeometryInstance,
-        GroundPolylineGeometry,
-        Iso8601,
-        oneTimeWarning,
-        PolylineGeometry,
-        PolylinePipeline,
-        ShowGeometryInstanceAttribute,
-        Entity,
-        ClassificationType,
-        GroundPolylinePrimitive,
-        PolylineCollection,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        ShadowMode,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        ConstantProperty,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import ArcType from '../Core/ArcType.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import Event from '../Core/Event.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
+import Iso8601 from '../Core/Iso8601.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import PolylineGeometry from '../Core/PolylineGeometry.js';
+import PolylinePipeline from '../Core/PolylinePipeline.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import Entity from '../DataSources/Entity.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
+import PolylineCollection from '../Scene/PolylineCollection.js';
+import PolylineColorAppearance from '../Scene/PolylineColorAppearance.js';
+import PolylineMaterialAppearance from '../Scene/PolylineMaterialAppearance.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     var defaultZIndex = new ConstantProperty(0);
 
@@ -712,7 +677,11 @@ define([
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
             generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, globe.ellipsoid);
-            positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
+            if (arcType === ArcType.GEODESIC) {
+                positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
+            } else {
+                positions = PolylinePipeline.generateCartesianRhumbArc(generateCartesianArcOptions);
+            }
         }
 
         line.show = true;
@@ -773,6 +742,4 @@ define([
         }
         destroyObject(this);
     };
-
-    return PolylineGeometryUpdater;
-});
+export default PolylineGeometryUpdater;

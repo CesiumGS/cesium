@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/Globe',
-        'Core/CesiumTerrainProvider',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/SingleTileImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Globe,
-        CesiumTerrainProvider,
-        Rectangle,
-        Resource,
-        SingleTileImageryProvider,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Globe', function() {
 
     var scene;
     var globe;

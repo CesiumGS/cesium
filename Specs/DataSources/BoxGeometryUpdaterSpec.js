@@ -1,38 +1,21 @@
-defineSuite([
-        'DataSources/BoxGeometryUpdater',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoxGraphics',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        BoxGeometryUpdater,
-        Cartesian3,
-        Color,
-        GeometryOffsetAttribute,
-        JulianDate,
-        TimeIntervalCollection,
-        BoxGraphics,
-        ConstantPositionProperty,
-        ConstantProperty,
-        Entity,
-        HeightReference,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoxGeometryUpdater } from '../../Source/Cesium.js';
+import { BoxGraphics } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/BoxGeometryUpdater', function() {
 
     var scene;
     var time;

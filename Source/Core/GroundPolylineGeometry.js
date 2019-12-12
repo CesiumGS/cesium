@@ -1,58 +1,29 @@
-define([
-        './ApproximateTerrainHeights',
-        './ArcType',
-        './arrayRemoveDuplicates',
-        './BoundingSphere',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './DeveloperError',
-        './Math',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './EllipsoidGeodesic',
-        './EllipsoidRhumbLine',
-        './EncodedCartesian3',
-        './GeographicProjection',
-        './Geometry',
-        './GeometryAttribute',
-        './IntersectionTests',
-        './Matrix3',
-        './Plane',
-        './Quaternion',
-        './Rectangle',
-        './WebMercatorProjection'
-    ], function(
-        ApproximateTerrainHeights,
-        ArcType,
-        arrayRemoveDuplicates,
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        DeveloperError,
-        CesiumMath,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        EllipsoidRhumbLine,
-        EncodedCartesian3,
-        GeographicProjection,
-        Geometry,
-        GeometryAttribute,
-        IntersectionTests,
-        Matrix3,
-        Plane,
-        Quaternion,
-        Rectangle,
-        WebMercatorProjection) {
-    'use strict';
+import ApproximateTerrainHeights from './ApproximateTerrainHeights.js';
+import ArcType from './ArcType.js';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidGeodesic from './EllipsoidGeodesic.js';
+import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
+import EncodedCartesian3 from './EncodedCartesian3.js';
+import GeographicProjection from './GeographicProjection.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import IntersectionTests from './IntersectionTests.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Plane from './Plane.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import WebMercatorProjection from './WebMercatorProjection.js';
 
     var PROJECTIONS = [GeographicProjection, WebMercatorProjection];
     var PROJECTION_COUNT = PROJECTIONS.length;
@@ -1175,6 +1146,4 @@ define([
      * @private
      */
     GroundPolylineGeometry._projectNormal = projectNormal;
-
-    return GroundPolylineGeometry;
-});
+export default GroundPolylineGeometry;

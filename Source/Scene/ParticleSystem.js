@@ -1,36 +1,18 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix4',
-        './BillboardCollection',
-        './CircleEmitter',
-        './Particle'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Event,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        BillboardCollection,
-        CircleEmitter,
-        Particle) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import BillboardCollection from './BillboardCollection.js';
+import CircleEmitter from './CircleEmitter.js';
+import Particle from './Particle.js';
 
     var defaultImageSize = new Cartesian2(1.0, 1.0);
 
@@ -69,9 +51,9 @@ define([
      * @param {Number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
      * @param {Number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
      * @param {Number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
-     * @tutorial {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
+     * @tutorial {@link https://cesium.com/docs/tutorials/particle-systems/|Particle Systems Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -787,8 +769,6 @@ define([
      * A function used to modify attributes of the particle at each time step. This can include force modifications,
      * color, sizing, etc.
      *
-     * @see {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     *
      * @callback ParticleSystem~updateCallback
      *
      * @param {Particle} particle The particle being updated.
@@ -802,6 +782,4 @@ define([
      *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
      * }
      */
-
-    return ParticleSystem;
-});
+export default ParticleSystem;

@@ -1,54 +1,28 @@
-defineSuite([
-        'Scene/ArcGisMapServerImageryProvider',
-        'Core/appendForwardSlash',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/DefaultProxy',
-        'Core/defined',
-        'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/objectToQuery',
-        'Core/queryToObject',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/DiscardMissingTileImagePolicy',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerFeatureInfo',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri'
-    ], function(
-        ArcGisMapServerImageryProvider,
-        appendForwardSlash,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        DefaultProxy,
-        defined,
-        GeographicTilingScheme,
-        getAbsoluteUri,
-        objectToQuery,
-        queryToObject,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        DiscardMissingTileImagePolicy,
-        Imagery,
-        ImageryLayer,
-        ImageryLayerFeatureInfo,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri) {
-    'use strict';
+import { appendForwardSlash } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { objectToQuery } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Scene/ArcGisMapServerImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {

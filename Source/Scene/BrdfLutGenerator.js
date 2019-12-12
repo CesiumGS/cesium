@@ -1,34 +1,17 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Shaders/BrdfLutGeneratorFS'
-    ], function(
-        BoundingRectangle,
-        defined,
-        defineProperties,
-        destroyObject,
-        PixelFormat,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        BrdfLutGeneratorFS) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
 
     /**
      * @private
@@ -106,6 +89,4 @@ define([
         this._colorTexture = this._colorTexture && this._colorTexture.destroy();
         return destroyObject(this);
     };
-
-    return BrdfLutGenerator;
-});
+export default BrdfLutGenerator;

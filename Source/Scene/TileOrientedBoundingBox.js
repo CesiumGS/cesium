@@ -1,30 +1,75 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defineProperties',
-        '../Core/GeometryInstance',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        './PerInstanceColorAppearance',
-        './Primitive'
-    ], function(
-        BoundingSphere,
-        BoxOutlineGeometry,
-        Cartesian3,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defineProperties,
-        GeometryInstance,
-        Matrix3,
-        Matrix4,
-        OrientedBoundingBox,
-        PerInstanceColorAppearance,
-        Primitive) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defineProperties from '../Core/defineProperties.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import CesiumMath from '../Core/Math.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+
+    var scratchU = new Cartesian3();
+    var scratchV = new Cartesian3();
+    var scratchW = new Cartesian3();
+    var scratchCartesian = new Cartesian3();
+
+    function computeMissingVector(a, b, result) {
+        result = Cartesian3.cross(a, b, result);
+        var magnitude = Cartesian3.magnitude(result);
+        return Cartesian3.multiplyByScalar(result, CesiumMath.EPSILON7 / magnitude, result);
+    }
+
+    function findOrthogonalVector(a, result) {
+        var temp = Cartesian3.normalize(a, scratchCartesian);
+        var b = Cartesian3.equalsEpsilon(temp, Cartesian3.UNIT_X, CesiumMath.EPSILON6) ? Cartesian3.UNIT_Y : Cartesian3.UNIT_X;
+        return computeMissingVector(a, b, result);
+    }
+
+    function checkHalfAxes(halfAxes) {
+        var u = Matrix3.getColumn(halfAxes, 0, scratchU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchW);
+
+        var uZero = Cartesian3.equals(u, Cartesian3.ZERO);
+        var vZero = Cartesian3.equals(v, Cartesian3.ZERO);
+        var wZero = Cartesian3.equals(w, Cartesian3.ZERO);
+
+        if (!uZero && !vZero && !wZero) {
+            return halfAxes;
+        }
+        if (uZero && vZero && wZero) {
+            halfAxes[0] = CesiumMath.EPSILON7;
+            halfAxes[4] = CesiumMath.EPSILON7;
+            halfAxes[8] = CesiumMath.EPSILON7;
+            return halfAxes;
+        }
+        if (uZero && !vZero && !wZero) {
+            u = computeMissingVector(v, w, u);
+        } else if (!uZero && vZero && !wZero) {
+            v = computeMissingVector(u, w, v);
+        } else if (!uZero && !vZero && wZero) {
+            w = computeMissingVector(v, u, w);
+        } else if (!uZero) {
+            v = findOrthogonalVector(u, v);
+            w = computeMissingVector(v, u, w);
+        } else if (!vZero) {
+            u = findOrthogonalVector(v, u);
+            w = computeMissingVector(v, u, w);
+        } else if (!wZero) {
+            u = findOrthogonalVector(w, u);
+            v = computeMissingVector(w, u, v);
+        }
+
+        Matrix3.setColumn(halfAxes, 0, u, halfAxes);
+        Matrix3.setColumn(halfAxes, 1, v, halfAxes);
+        Matrix3.setColumn(halfAxes, 2, w, halfAxes);
+
+        return halfAxes;
+    }
 
     /**
      * A tile bounding volume specified as an oriented bounding box.
@@ -39,6 +84,7 @@ define([
      * @private
      */
     function TileOrientedBoundingBox(center, halfAxes) {
+        halfAxes = checkHalfAxes(halfAxes);
         this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
         this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
     }
@@ -111,6 +157,7 @@ define([
      */
     TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
         Cartesian3.clone(center, this._orientedBoundingBox.center);
+        halfAxes = checkHalfAxes(halfAxes);
         Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
         BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox, this._boundingSphere);
     };
@@ -128,8 +175,8 @@ define([
 
         var geometry = new BoxOutlineGeometry({
             // Make a 2x2x2 cube
-            minimum: new Cartesian3(-1.0, -1.0, -1.0),
-            maximum: new Cartesian3(1.0, 1.0, 1.0)
+            minimum : new Cartesian3(-1.0, -1.0, -1.0),
+            maximum : new Cartesian3(1.0, 1.0, 1.0)
         });
         var modelMatrix = Matrix4.fromRotationTranslation(this.boundingVolume.halfAxes, this.boundingVolume.center);
         var instance = new GeometryInstance({
@@ -150,6 +197,4 @@ define([
             asynchronous : false
         });
     };
-
-    return TileOrientedBoundingBox;
-});
+export default TileOrientedBoundingBox;

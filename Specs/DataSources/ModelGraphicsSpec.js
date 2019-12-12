@@ -1,34 +1,19 @@
-defineSuite([
-        'DataSources/ModelGraphics',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'DataSources/ConstantProperty',
-        'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag',
-        'Scene/ClippingPlaneCollection',
-        'Scene/ColorBlendMode',
-        'Scene/HeightReference',
-        'Scene/ShadowMode'
-    ], function(
-        ModelGraphics,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        Quaternion,
-        ConstantProperty,
-        NodeTransformationProperty,
-        PropertyBag,
-        ClippingPlaneCollection,
-        ColorBlendMode,
-        HeightReference,
-        ShadowMode) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { ModelGraphics } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { PropertyBag } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+
+describe('DataSources/ModelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/parseResponseHeaders'
-    ], function(
-        parseResponseHeaders) {
-    'use strict';
+import { parseResponseHeaders } from '../../Source/Cesium.js';
+
+describe('Core/parseResponseHeaders', function() {
 
     it('returns an empty object literal when given falsy input', function() {
         expect(parseResponseHeaders()).toEqual({});

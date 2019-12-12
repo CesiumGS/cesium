@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
@@ -28,7 +18,7 @@ define([
      * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
      * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
      * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
@@ -252,6 +242,4 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return CylinderGraphics;
-});
+export default CylinderGraphics;

@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Constructs an exception object that is thrown due to a developer error, e.g., invalid argument,
@@ -74,6 +70,4 @@ define([
     DeveloperError.throwInstantiationError = function() {
         throw new DeveloperError('This function defines an interface and should not be called directly.');
     };
-
-    return DeveloperError;
-});
+export default DeveloperError;

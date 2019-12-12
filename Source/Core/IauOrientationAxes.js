@@ -1,20 +1,10 @@
-define([
-        './Cartesian3',
-        './defined',
-        './Iau2000Orientation',
-        './JulianDate',
-        './Math',
-        './Matrix3',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        defined,
-        Iau2000Orientation,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defined from './defined.js';
+import Iau2000Orientation from './Iau2000Orientation.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Quaternion from './Quaternion.js';
 
     /**
      * The Axes representing the orientation of a Globe as represented by the data
@@ -104,6 +94,4 @@ define([
      * @param {JulianDate} date The date to evaluate the parameters.
      * @returns {IauOrientationParameters} The orientation parameters.
      */
-
-    return IauOrientationAxes;
-});
+export default IauOrientationAxes;

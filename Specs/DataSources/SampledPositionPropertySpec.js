@@ -1,24 +1,14 @@
-defineSuite([
-        'DataSources/SampledPositionProperty',
-        'Core/Cartesian3',
-        'Core/ExtrapolationType',
-        'Core/JulianDate',
-        'Core/LagrangePolynomialApproximation',
-        'Core/LinearApproximation',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'DataSources/PositionProperty'
-    ], function(
-        SampledPositionProperty,
-        Cartesian3,
-        ExtrapolationType,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        ReferenceFrame,
-        TimeInterval,
-        PositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
+import { LinearApproximation } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/SampledPositionProperty', function() {
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();

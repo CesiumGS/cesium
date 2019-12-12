@@ -1,14 +1,9 @@
-defineSuite([
-        'Widgets/SceneModePicker/SceneModePicker',
-        'Core/FeatureDetection',
-        'Specs/createScene',
-        'Specs/DomEventSimulator'
-    ], function(
-        SceneModePicker,
-        FeatureDetection,
-        createScene,
-        DomEventSimulator) {
-    'use strict';
+import { FeatureDetection } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import { SceneModePicker } from '../../../Source/Cesium.js';
+
+describe('Widgets/SceneModePicker/SceneModePicker', function() {
 
     var scene;
 

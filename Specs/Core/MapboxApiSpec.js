@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/MapboxApi'
-    ], function(
-        MapboxApi) {
-    'use strict';
+import { MapboxApi } from '../../Source/Cesium.js';
+
+describe('Core/MapboxApi', function() {
 
     it('getAccessToken returns provided access token if one is provided', function() {
         expect(MapboxApi.getAccessToken('foo')).toEqual('foo');

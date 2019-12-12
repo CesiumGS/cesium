@@ -1,106 +1,49 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DoublyLinkedList',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/ManagedArray',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Renderer/ClearCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../ThirdParty/when',
-        './Axis',
-        './Cesium3DTile',
-        './Cesium3DTileColorBlendMode',
-        './Cesium3DTileContentState',
-        './Cesium3DTileOptimizations',
-        './Cesium3DTilePass',
-        './Cesium3DTilePassState',
-        './Cesium3DTileRefine',
-        './Cesium3DTilesetCache',
-        './Cesium3DTilesetHeatmap',
-        './Cesium3DTilesetMostDetailedTraversal',
-        './Cesium3DTilesetStatistics',
-        './Cesium3DTilesetTraversal',
-        './Cesium3DTileStyleEngine',
-        './ClippingPlaneCollection',
-        './LabelCollection',
-        './PointCloudEyeDomeLighting',
-        './PointCloudShading',
-        './SceneMode',
-        './ShadowMode',
-        './StencilConstants',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        DoublyLinkedList,
-        Ellipsoid,
-        Event,
-        JulianDate,
-        ManagedArray,
-        CesiumMath,
-        Matrix4,
-        Resource,
-        RuntimeError,
-        Transforms,
-        ClearCommand,
-        Pass,
-        RenderState,
-        when,
-        Axis,
-        Cesium3DTile,
-        Cesium3DTileColorBlendMode,
-        Cesium3DTileContentState,
-        Cesium3DTileOptimizations,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        Cesium3DTileRefine,
-        Cesium3DTilesetCache,
-        Cesium3DTilesetHeatmap,
-        Cesium3DTilesetMostDetailedTraversal,
-        Cesium3DTilesetStatistics,
-        Cesium3DTilesetTraversal,
-        Cesium3DTileStyleEngine,
-        ClippingPlaneCollection,
-        LabelCollection,
-        PointCloudEyeDomeLighting,
-        PointCloudShading,
-        SceneMode,
-        ShadowMode,
-        StencilConstants,
-        TileBoundingRegion,
-        TileBoundingSphere,
-        TileOrientedBoundingBox) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import ManagedArray from '../Core/ManagedArray.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import when from '../ThirdParty/when.js';
+import Axis from './Axis.js';
+import Cesium3DTile from './Cesium3DTile.js';
+import Cesium3DTileColorBlendMode from './Cesium3DTileColorBlendMode.js';
+import Cesium3DTileContentState from './Cesium3DTileContentState.js';
+import Cesium3DTileOptimizations from './Cesium3DTileOptimizations.js';
+import Cesium3DTilePass from './Cesium3DTilePass.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
+import Cesium3DTilesetCache from './Cesium3DTilesetCache.js';
+import Cesium3DTilesetHeatmap from './Cesium3DTilesetHeatmap.js';
+import Cesium3DTilesetStatistics from './Cesium3DTilesetStatistics.js';
+import Cesium3DTileStyleEngine from './Cesium3DTileStyleEngine.js';
+import ClippingPlaneCollection from './ClippingPlaneCollection.js';
+import LabelCollection from './LabelCollection.js';
+import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
+import PointCloudShading from './PointCloudShading.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import StencilConstants from './StencilConstants.js';
+import TileBoundingRegion from './TileBoundingRegion.js';
+import TileBoundingSphere from './TileBoundingSphere.js';
+import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles tileset},
@@ -144,7 +87,7 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
-     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
@@ -716,10 +659,10 @@ define([
          *
          * @type Number
          *
-         * @default 0.5
+         * @default 0.2
          *
          */
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
 
         /**
          * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
@@ -730,11 +673,11 @@ define([
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
          *
          * @type {Cartesian3[]}
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
@@ -742,7 +685,7 @@ define([
         /**
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @see Cesium3DTileset#sphericalHarmonicCoefficients
          */
@@ -2393,6 +2336,4 @@ define([
      * @param {Number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
      * @returns {Number} The interpolated value.
      */
-
-    return Cesium3DTileset;
-});
+export default Cesium3DTileset;

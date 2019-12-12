@@ -1,48 +1,24 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/Cartesian3',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/JulianDate',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/ReferenceFrame',
-        '../Core/TimeInterval',
-        '../Core/Transforms',
-        '../Scene/PolylineCollection',
-        '../Scene/SceneMode',
-        './CompositePositionProperty',
-        './ConstantPositionProperty',
-        './MaterialProperty',
-        './Property',
-        './ReferenceProperty',
-        './SampledPositionProperty',
-        './ScaledPositionProperty',
-        './TimeIntervalCollectionPositionProperty'
-    ], function(
-        AssociativeArray,
-        Cartesian3,
-        defined,
-        destroyObject,
-        DeveloperError,
-        JulianDate,
-        Matrix3,
-        Matrix4,
-        ReferenceFrame,
-        TimeInterval,
-        Transforms,
-        PolylineCollection,
-        SceneMode,
-        CompositePositionProperty,
-        ConstantPositionProperty,
-        MaterialProperty,
-        Property,
-        ReferenceProperty,
-        SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionPositionProperty) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import JulianDate from '../Core/JulianDate.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import TimeInterval from '../Core/TimeInterval.js';
+import Transforms from '../Core/Transforms.js';
+import PolylineCollection from '../Scene/PolylineCollection.js';
+import SceneMode from '../Scene/SceneMode.js';
+import CompositePositionProperty from './CompositePositionProperty.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
+import ReferenceProperty from './ReferenceProperty.js';
+import SampledPositionProperty from './SampledPositionProperty.js';
+import ScaledPositionProperty from './ScaledPositionProperty.js';
+import TimeIntervalCollectionPositionProperty from './TimeIntervalCollectionPositionProperty.js';
 
     var defaultResolution = 60.0;
     var defaultWidth = 1.0;
@@ -425,13 +401,22 @@ define([
         //>>includeEnd('debug');
 
         var updaters = this._updaters;
-        for ( var key in updaters) {
+        for (var key in updaters) {
             if (updaters.hasOwnProperty(key)) {
                 updaters[key].update(time);
             }
         }
 
         var items = this._items.values;
+        if (items.length === 0 && defined(this._updaters) && Object.keys(this._updaters).length > 0) {
+            for (var u in updaters) {
+                if (updaters.hasOwnProperty(u)) {
+                    updaters[u].destroy();
+                }
+            }
+            this._updaters = {};
+        }
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -538,6 +523,4 @@ define([
 
     //for testing
     PathVisualizer._subSample = subSample;
-
-    return PathVisualizer;
-});
+export default PathVisualizer;

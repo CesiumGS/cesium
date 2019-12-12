@@ -1,22 +1,11 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './PositionProperty'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        PositionProperty) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import PositionProperty from './PositionProperty.js';
 
     /**
      * A {@link PositionProperty} whose value does not change in respect to the
@@ -141,6 +130,4 @@ define([
                 Cartesian3.equals(this._value, other._value) &&
                 this._referenceFrame === other._referenceFrame);
     };
-
-    return ConstantPositionProperty;
-});
+export default ConstantPositionProperty;

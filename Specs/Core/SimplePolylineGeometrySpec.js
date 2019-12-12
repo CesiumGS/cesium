@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/SimplePolylineGeometry',
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/PrimitiveType',
-        'Specs/createPackableSpecs'
-    ], function(
-        SimplePolylineGeometry,
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        CesiumMath,
-        PrimitiveType,
-        createPackableSpecs) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { SimplePolylineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/SimplePolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {

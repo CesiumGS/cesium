@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Intersect',
-        'Core/Rectangle',
-        'Specs/createPackableSpecs'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Ellipsoid,
-        GeographicProjection,
-        Intersect,
-        Rectangle,
-        createPackableSpecs) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/BoundingRectangle', function() {
 
     it('default constructor sets expected values', function() {
         var rectangle = new BoundingRectangle();
