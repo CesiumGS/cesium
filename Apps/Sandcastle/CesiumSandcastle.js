@@ -42,6 +42,7 @@ require({
         'dojo/promise/all',
         'dojo/query',
         'dojo/when',
+        'dojo/Deferred',
         'dojo/request/script',
         'Sandcastle/LinkButton',
         'ThirdParty/clipboard.min',
@@ -87,6 +88,7 @@ require({
         all,
         query,
         when,
+        Deferred,
         dojoscript,
         LinkButton,
         ClipboardJS,
@@ -738,31 +740,34 @@ require({
             } else {
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(demo.code, 'text/html');
+                // This delay is required due to a Chrome 79 bug.
+                // See: https://github.com/AnalyticalGraphicsInc/cesium/issues/8460#issuecomment-565267601
+                setTimeout(function() {
+                    var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+                    if (!script) {
+                        appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                        return;
+                    }
 
-                var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-                if (!script) {
-                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                    return;
-                }
+                    var scriptMatch = scriptCodeRegex.exec(script.textContent);
+                    if (!scriptMatch) {
+                        appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                        return;
+                    }
 
-                var scriptMatch = scriptCodeRegex.exec(script.textContent);
-                if (!scriptMatch) {
-                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                    return;
-                }
+                    var scriptCode = scriptMatch[1];
 
-                var scriptCode = scriptMatch[1];
+                    var htmlText = '';
+                    var childIndex = 0;
+                    var childNode = doc.body.childNodes[childIndex];
+                    while (childIndex < doc.body.childNodes.length && childNode !== script) {
+                        htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+                        childNode = doc.body.childNodes[++childIndex];
+                    }
+                    htmlText = htmlText.replace(/^\s+/, '');
 
-                var htmlText = '';
-                var childIndex = 0;
-                var childNode = doc.body.childNodes[childIndex];
-                while (childIndex < doc.body.childNodes.length && childNode !== script) {
-                    htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
-                    childNode = doc.body.childNodes[++childIndex];
-                }
-                htmlText = htmlText.replace(/^\s+/, '');
-
-                applyLoadedDemo(scriptCode, htmlText);
+                    applyLoadedDemo(scriptCode, htmlText);
+                }, 500);
             }
         });
     }
@@ -1059,45 +1064,57 @@ require({
             var parser = new DOMParser();
             var doc = parser.parseFromString(value, 'text/html');
 
-            var bucket = doc.body.getAttribute('data-sandcastle-bucket');
-            demo.bucket = bucket ? bucket : 'bucket-requirejs.html';
+            // This delay is required due to a Chrome 79 bug.
+            // See: https://github.com/AnalyticalGraphicsInc/cesium/issues/8460#issuecomment-565267601
+            var deferred = new Deferred();
 
-            var descriptionMeta = doc.querySelector('meta[name="description"]');
-            var description = descriptionMeta && descriptionMeta.getAttribute('content');
-            demo.description = description ? description : '';
+            setTimeout(function() {
+                try {
+                    var bucket = doc.body.getAttribute('data-sandcastle-bucket');
+                    demo.bucket = bucket ? bucket : 'bucket-requirejs.html';
 
-            var labelsMeta = doc.querySelector('meta[name="cesium-sandcastle-labels"]');
-            var labels = labelsMeta && labelsMeta.getAttribute('content');
-            if (demo.isNew) {
-                demo.label = labels ? labels + ',' + newInLabel : newInLabel;
-            } else {
-                demo.label = labels ? labels : '';
-            }
+                    var descriptionMeta = doc.querySelector('meta[name="description"]');
+                    var description = descriptionMeta && descriptionMeta.getAttribute('content');
+                    demo.description = description ? description : '';
 
-            // Select the demo to load upon opening based on the query parameter.
-            if (defined(queryObject.src)) {
-                if (demo.name === queryObject.src.replace('.html', '')) {
-                    loadFromGallery(demo).then(function() {
-                        window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
-                        if (defined(queryObject.gist)) {
-                            document.title = 'Gist Import - Cesium Sandcastle';
-                        } else {
-                            document.title = demo.name + ' - Cesium Sandcastle';
+                    var labelsMeta = doc.querySelector('meta[name="cesium-sandcastle-labels"]');
+                    var labels = labelsMeta && labelsMeta.getAttribute('content');
+                    if (demo.isNew) {
+                        demo.label = labels ? labels + ',' + newInLabel : newInLabel;
+                    } else {
+                        demo.label = labels ? labels : '';
+                    }
+
+                    // Select the demo to load upon opening based on the query parameter.
+                    if (defined(queryObject.src)) {
+                        if (demo.name === queryObject.src.replace('.html', '')) {
+                            loadFromGallery(demo).then(function() {
+                                window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
+                                if (defined(queryObject.gist)) {
+                                    document.title = 'Gist Import - Cesium Sandcastle';
+                                } else {
+                                    document.title = demo.name + ' - Cesium Sandcastle';
+                                }
+                            });
                         }
+                    }
+
+                    // Create a tooltip containing the demo's description.
+                    demoTooltips[demo.name] = new TooltipDialog({
+                        id : demo.name + 'TooltipDialog',
+                        style : 'width: 200px; font-size: 12px;',
+                        content : demo.description.replace(/\\n/g, '<br/>')
                     });
+
+                    addFileToTab(demo);
+                    deferred.resolve(demo);
+                } catch (error) {
+                    deferred.reject(error);
                 }
-            }
+            }, 500);
 
-            // Create a tooltip containing the demo's description.
-            demoTooltips[demo.name] = new TooltipDialog({
-                id : demo.name + 'TooltipDialog',
-                style : 'width: 200px; font-size: 12px;',
-                content : demo.description.replace(/\\n/g, '<br/>')
-            });
-
-            addFileToTab(demo);
-            return demo;
-        });
+            return deferred.promise;
+        }).otherwise(console.error);
     }
 
     var loading = true;
