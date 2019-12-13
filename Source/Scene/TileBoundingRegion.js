@@ -8,6 +8,7 @@ import defineProperties from '../Core/defineProperties.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
+import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Plane from '../Core/Plane.js';
@@ -104,9 +105,12 @@ import SceneMode from './SceneMode.js';
 
         if (defaultValue(options.computeBoundingVolumes, true)) {
             // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+            var obb = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(obb);
 
-            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+            if (this.rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+                this._orientedBoundingBox = obb;
+            }
         }
     }
 
@@ -121,7 +125,7 @@ import SceneMode from './SceneMode.js';
          */
         boundingVolume : {
             get : function() {
-                return this._orientedBoundingBox;
+                return defaultValue(this._orientedBoundingBox, this._boundingSphere);
             }
         },
         /**
