@@ -385,12 +385,13 @@ import TileSelectionResult from './TileSelectionResult.js';
         if (!defined(this._renderState)) {
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
-                    enabled : true
+                    enabled : false
                 },
                 depthTest : {
                     enabled : true,
                     func : DepthFunction.LESS
-                }
+                },
+                blending : BlendingState.ALPHA_BLEND
             });
 
             this._blendRenderState = RenderState.fromCache({ // Write color and depth

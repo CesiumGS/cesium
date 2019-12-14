@@ -45,10 +45,13 @@ import StencilOperation from './StencilOperation.js';
         this._tempCopyDepthCommand = undefined;
         this._updateDepthCommand = undefined;
         this._mergeColorCommand = undefined;
+        this._mergeColorCommand2 = undefined;
+        this._mergeColorCommand3 = undefined;
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
         this._rsBlend = undefined;
+        this._rsDisabled = undefined;
         this._rsUpdate = undefined;
 
         this._useScissorTest = false;
@@ -59,6 +62,9 @@ import StencilOperation from './StencilOperation.js';
         this._clearGlobeDepth = undefined;
 
         this._debugGlobeDepthViewportCommand = undefined;
+
+        this.alpha = 1.0;
+        this.blendGlobeOntoPrimitives = true;
     }
 
     defineProperties(GlobeDepth.prototype, {
@@ -283,6 +289,14 @@ import StencilOperation from './StencilOperation.js';
                 },
                 blending: BlendingState.ALPHA_BLEND
             });
+            globeDepth._rsDisabled = RenderState.fromCache({
+                viewport : globeDepth._viewport,
+                scissorTest : {
+                    enabled : globeDepth._useScissorTest,
+                    rectangle : globeDepth._scissorRectangle
+                },
+                blending: BlendingState.DISABLED
+            });
 
             // Copy packed depth only if the 3D Tiles bit is set
             globeDepth._rsUpdate = RenderState.fromCache({
@@ -393,7 +407,48 @@ import StencilOperation from './StencilOperation.js';
         }
 
         globeDepth._mergeColorCommand.framebuffer = globeDepth._globeColorFramebuffer;
-        globeDepth._mergeColorCommand.renderState = globeDepth._rsBlend;
+        globeDepth._mergeColorCommand.renderState = globeDepth._rsDisabled;
+
+        if (!defined(globeDepth._mergeColorCommand2)) {
+            var fragmentShader =
+                'uniform sampler2D colorTexture;\n' +
+                'uniform float alpha;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    gl_FragColor = texture2D(colorTexture, v_textureCoordinates);\n' +
+                '    gl_FragColor.a *= alpha;\n' +
+                '}\n';
+
+            globeDepth._mergeColorCommand2 = context.createViewportQuadCommand(fragmentShader, {
+                uniformMap : {
+                    colorTexture : function() {
+                        return globeDepth._globeColorTexture;
+                    },
+                    alpha : function() {
+                        return globeDepth.alpha;
+                    }
+                },
+                owner : globeDepth
+            });
+        }
+
+        globeDepth._mergeColorCommand2.framebuffer = globeDepth._primitiveColorFramebuffer;
+        globeDepth._mergeColorCommand2.renderState = globeDepth._rsBlend;
+
+        if (!defined(globeDepth._mergeColorCommand3)) {
+            globeDepth._mergeColorCommand3 = context.createViewportQuadCommand(PassThrough, {
+                uniformMap : {
+                    colorTexture : function() {
+                        return globeDepth._primitiveColorTexture;
+                    }
+                },
+                owner : globeDepth
+            });
+        }
+
+        globeDepth._mergeColorCommand3.framebuffer = globeDepth._globeColorFramebuffer;
+        globeDepth._mergeColorCommand3.renderState = globeDepth._rsBlend;
     }
 
     GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState, useLogDepth) {
@@ -456,8 +511,17 @@ import StencilOperation from './StencilOperation.js';
     };
 
     GlobeDepth.prototype.executeMergeColor = function(context, passState) {
-        if (defined(this._mergeColorCommand)) {
-            this._mergeColorCommand.execute(context, passState);
+        if (this.blendGlobeOntoPrimitives) {
+            if (defined(this._mergeColorCommand2)) {
+                this._mergeColorCommand2.execute(context, passState);
+            }
+            if (defined(this._mergeColorCommand)) {
+                this._mergeColorCommand.execute(context, passState);
+            }
+        } else {
+            if (defined(this._mergeColorCommand3)) {
+                this._mergeColorCommand3.execute(context, passState);
+            }
         }
     };
 
@@ -501,6 +565,10 @@ import StencilOperation from './StencilOperation.js';
 
         if (defined(this._mergeColorCommand)) {
             this._mergeColorCommand.shaderProgram = this._mergeColorCommand.shaderProgram.destroy();
+        }
+
+        if (defined(this._mergeColorCommand2)) {
+            this._mergeColorCommand2.shaderProgram = this._mergeColorCommand2.shaderProgram.destroy();
         }
 
         if (defined(this._debugGlobeDepthViewportCommand)) {

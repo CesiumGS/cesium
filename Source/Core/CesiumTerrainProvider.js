@@ -547,7 +547,7 @@ import TileProviderError from './TileProviderError.js';
             pos += extensionLength;
         }
 
-        var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
+        var skirtHeight = provider.getLevelMaximumGeometricError(level) * 0.1;
 
         var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
         var orientedBoundingBox;
