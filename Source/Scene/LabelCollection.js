@@ -316,7 +316,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
     var glyphPixelOffset = new Cartesian2();
     var scratchBackgroundPadding = new Cartesian2();
 
-    function repositionAllGlyphs(label, resolutionScale) {
+    function repositionAllGlyphs(label) {
         var glyphs = label._glyphs;
         var text = label._renderedText;
         var glyph;
@@ -378,7 +378,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
             backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
         }
 
-        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+        glyphPixelOffset.x = widthOffset * scale;
         glyphPixelOffset.y = 0;
 
         var firstCharOfLine = true;
@@ -390,7 +390,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
                 lineOffsetY += lineSpacing;
                 lineWidth = lineWidths[lineIndex];
                 widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+                glyphPixelOffset.x = widthOffset * scale;
                 firstCharOfLine = true;
             } else {
                 glyph = glyphs[glyphIndex];
@@ -409,12 +409,12 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
                     glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
                     glyphPixelOffset.y -= SDFSettings.PADDING;
                 }
-                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
+                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale;
 
                 // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
                 if (firstCharOfLine)
                 {
-                    glyphPixelOffset.x -= SDFSettings.PADDING * scale * resolutionScale;
+                    glyphPixelOffset.x -= SDFSettings.PADDING * scale;
                     firstCharOfLine = false;
                 }
 
@@ -430,7 +430,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
                 //as well as any applied scale.
                 if (glyphIndex < glyphLength - 1) {
                     var nextGlyph = glyphs[glyphIndex + 1];
-                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale;
                 }
             }
         }
@@ -443,7 +443,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
             } else {
                 widthOffset = 0;
             }
-            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+            glyphPixelOffset.x = widthOffset * scale;
 
             if (verticalOrigin === VerticalOrigin.TOP) {
                 glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
@@ -455,7 +455,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
                 // VerticalOrigin.BOTTOM
                 glyphPixelOffset.y = 0;
             }
-            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
+            glyphPixelOffset.y = glyphPixelOffset.y * scale;
 
             backgroundBillboard.width = totalLineWidth;
             backgroundBillboard.height = totalLineHeight;
@@ -566,7 +566,6 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
         this._labels = [];
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
-        this._resolutionScale = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
@@ -844,21 +843,9 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
             addWhitePixelCanvas(this._backgroundTextureAtlas, this);
         }
 
-        var uniformState = context.uniformState;
-        var resolutionScale = uniformState.pixelRatio;
-        var resolutionChanged = this._resolutionScale !== resolutionScale;
-        this._resolutionScale = resolutionScale;
-
-        var labelsToUpdate;
-        if (resolutionChanged) {
-            labelsToUpdate = this._labels;
-        } else {
-            labelsToUpdate = this._labelsToUpdate;
-        }
-
-        var len = labelsToUpdate.length;
+        var len = this._labelsToUpdate.length;
         for (var i = 0; i < len; ++i) {
-            var label = labelsToUpdate[i];
+            var label = this._labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;
             }
@@ -870,8 +857,8 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
                 label._rebindAllGlyphs = false;
             }
 
-            if (resolutionChanged || label._repositionAllGlyphs) {
-                repositionAllGlyphs(label, resolutionScale);
+            if (label._repositionAllGlyphs) {
+                repositionAllGlyphs(label);
                 label._repositionAllGlyphs = false;
             }
 

@@ -1,6 +1,25 @@
 Change Log
 ==========
 
+### 1.65.0 - 2019-01-02
+
+##### Fixes :wrench:
+* Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
+* Fixed terrain tile culling problems when under ellipsoid. [#8397](https://github.com/AnalyticalGraphicsInc/cesium/pull/8397)
+* Fixed primitive culling when below the ellipsoid but above terrain. [#8398](https://github.com/AnalyticalGraphicsInc/cesium/pull/8398)
+
+### 1.64.0 - 2019-12-02
+
+##### Fixes :wrench:
+* Fixed an issue in image based lighting where an invalid environment map would silently fail. [#8303](https://github.com/AnalyticalGraphicsInc/cesium/pull/8303)
+* Various small internal improvements
+
+### 1.63.1 - 2019-11-06
+
+##### Fixes :wrench:
+* Fixed regression in 1.63 where ground atmosphere and labels rendered incorrectly on displays with `window.devicePixelRatio` greater than 1.0. [#8351](https://github.com/AnalyticalGraphicsInc/cesium/pull/8351)
+* Fixed regression in 1.63 where some primitives would show through the globe when log depth is disabled. [#8368](https://github.com/AnalyticalGraphicsInc/cesium/pull/8368)
+
 ### 1.63 - 2019-11-01
 
 ##### Major Announcements :loudspeaker:

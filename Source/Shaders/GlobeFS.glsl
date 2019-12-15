@@ -376,7 +376,7 @@ void main()
     }
 
 #if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-    float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));
+    float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
 

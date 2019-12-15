@@ -6,6 +6,7 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import defined from '../Core/defined.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -132,9 +133,16 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         var boundingSphere;
 
         if (exaggeration !== 1.0) {
-            // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
+            // Bounding volumes need to be recomputed since the tile payload assumes no exaggeration.
             boundingSphere = BoundingSphere.fromPoints(positions);
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+        }
+
+        var occludeePointInScaledSpace;
+        if (exaggeration !== 1.0 || minimumHeight < 0.0) {
+            // Horizon culling point needs to be recomputed since the tile payload assumes no exaggeration.
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(center, positions, minimumHeight);
         }
 
         var hMin = minimumHeight;
@@ -218,6 +226,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
             encoding : encoding,
             skirtIndex : parameters.indices.length
         };

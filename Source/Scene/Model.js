@@ -4066,7 +4066,7 @@ import ShadowMode from './ShadowMode.js';
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize * czm_pixelRatio / czm_viewport.z; \n' +
             '    gl_Position = clip; \n' +
             '}';
 
@@ -4704,9 +4704,13 @@ import ShadowMode from './ShadowMode.js';
             if (defined(this._specularEnvironmentMaps)) {
                 this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
                 var that = this;
-                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
-                    that._shouldRegenerateShaders = true;
-                });
+                this._specularEnvironmentMapAtlas.readyPromise
+                    .then(function() {
+                        that._shouldRegenerateShaders = true;
+                    })
+                    .otherwise(function(error) {
+                        console.error('Error loading specularEnvironmentMaps: ' + error);
+                    });
             }
 
             // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.

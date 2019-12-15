@@ -1,4 +1,4 @@
-import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian3, defined } from '../../Source/Cesium.js';
 import { ComputeEngine } from '../../Source/Cesium.js';
 import { Pass } from '../../Source/Cesium.js';
 import { OctahedralProjectedCubeMap } from '../../Source/Cesium.js';
@@ -188,6 +188,31 @@ describe('Scene/OctahedralProjectedCubeMap', function() {
             projection2.destroy();
         }).always(function() {
             projection.destroy();
+        });
+    });
+
+    it('rejects when environment map fails to load.', function() {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
+            return;
+        }
+
+        var projection = new OctahedralProjectedCubeMap('http://invalid.url');
+        var frameState = createFrameState(context);
+        var error;
+
+        projection.readyPromise
+            .then(function() {
+                fail('Should not resolve.');
+            })
+            .otherwise(function(e) {
+                error = e;
+                expect(error).toBeDefined();
+                expect(projection.ready).toEqual(false);
+            });
+
+        return pollToPromise(function() {
+            projection.update(frameState);
+            return defined(error);
         });
     });
 }, 'WebGL');

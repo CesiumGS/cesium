@@ -2892,7 +2892,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo rectangle in 2D', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         camera._mode = SceneMode.SCENE2D;
@@ -2919,7 +2919,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo rectangle in CV', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         camera._mode = SceneMode.COLUMBUS_VIEW;
@@ -2937,7 +2937,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo rectangle in 3D', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         camera._mode = SceneMode.SCENE3D;
@@ -2955,7 +2955,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo does not zoom closer than minimumZoomDistance', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         scene.mode = SceneMode.SCENE3D;
@@ -2972,7 +2972,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo does not zoom further than maximumZoomDistance', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         scene.mode = SceneMode.SCENE3D;
@@ -2989,7 +2989,7 @@ describe('Scene/Camera', function() {
     });
 
     it('flyTo zooms in between minimumZoomDistance and maximumZoomDistance', function() {
-        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween').and.returnValue({});
         spyOn(scene.tweens, 'add');
 
         scene.mode = SceneMode.SCENE3D;
@@ -3002,6 +3002,16 @@ describe('Scene/Camera', function() {
         camera.flyTo({destination : sourceDestination});
 
         expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
+    it('_currentFlight is not set for a flight that doesn\'t go anywhere', function() {
+        var complete = jasmine.createSpy('complete');
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({ complete: complete, duration: 0 });
+        spyOn(scene.tweens, 'add');
+
+        camera.flyTo({ complete: complete, destination: Cartesian3.fromDegrees(-117.16, 32.71, 5000) });
+        expect(complete).toHaveBeenCalled();
+        expect(camera._currentFlight).toBeUndefined();
     });
 
     it('switches projections', function() {
