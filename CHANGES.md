@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.66.0 - 2019-02-03
+
+##### Additions :tada:
+* Added `Globe.backFaceCulling` to support viewing terrain from below the surface.
+
 ### 1.65.0 - 2019-01-02
 
 ##### Fixes :wrench:
