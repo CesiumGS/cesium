@@ -51,7 +51,7 @@ import TerrainMesh from './TerrainMesh.js';
      * });
      *
      * @see TerrainData
-     * @see HeightTerrainData
+     * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
     function GoogleEarthEnterpriseTerrainData(options) {
@@ -109,6 +109,16 @@ import TerrainMesh from './TerrainMesh.js';
         waterMask : {
             get : function() {
                 return undefined;
+            }
+        },
+        /**
+         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * @memberof GoogleEarthEnterpriseTerrainData.prototype
+         * @type {Number}
+         */
+        skirtIndex : {
+            get : function() {
+                return this._skirtIndex;
             }
         }
     });

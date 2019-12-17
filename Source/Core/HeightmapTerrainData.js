@@ -91,6 +91,7 @@ import TerrainProvider from './TerrainProvider.js';
      *
      * @see TerrainData
      * @see QuantizedMeshTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);

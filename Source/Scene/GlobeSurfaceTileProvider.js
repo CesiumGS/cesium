@@ -100,6 +100,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.saturationShift = 0.0;
         this.brightnessShift = 0.0;
 
+        this.showSkirts = true;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -1899,12 +1901,18 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
+            var count;
+            if (!tileProvider.showSkirts) {
+                count = surfaceTile.skirtIndex;
+            }
+
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray || surfaceTile.fill.vertexArray;
+            command.count = count;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
 
@@ -1913,6 +1921,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 if (defined(surfaceTile.wireframeVertexArray)) {
                     command.vertexArray = surfaceTile.wireframeVertexArray;
                     command.primitiveType = PrimitiveType.LINES;
+                    command.count = defined(count) ? count * 2 : undefined;
                 }
             }
 

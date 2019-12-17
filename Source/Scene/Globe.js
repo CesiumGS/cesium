@@ -250,6 +250,15 @@ import TileSelectionResult from './TileSelectionResult.js';
          */
         this.atmosphereBrightnessShift = 0.0;
 
+        /**
+         * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
+         * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showSkirts = true;
+
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
     }
@@ -739,6 +748,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
             tileProvider.fillHighlightColor = this.fillHighlightColor;
+            tileProvider.showSkirts = this.showSkirts;
 
             surface.beginFrame(frameState);
         }

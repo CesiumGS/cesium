@@ -89,6 +89,7 @@ import TerrainMesh from './TerrainMesh.js';
      *
      * @see TerrainData
      * @see HeightmapTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
@@ -202,6 +203,16 @@ import TerrainMesh from './TerrainMesh.js';
         waterMask : {
             get : function() {
                 return this._waterMask;
+            }
+        },
+        /**
+         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Number}
+         */
+        skirtIndex : {
+            get : function() {
+                return this._skirtIndex;
             }
         },
 

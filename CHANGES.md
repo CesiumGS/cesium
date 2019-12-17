@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.66.0 - 2019-02-03
+
+##### Additions :tada:
+* Added `Globe.showSkirts` to support the ability to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+
 ### 1.65.0 - 2019-01-02
 
 ##### Fixes :wrench:

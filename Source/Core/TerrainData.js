@@ -10,6 +10,7 @@ import DeveloperError from './DeveloperError.js';
      *
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function TerrainData() {
         DeveloperError.throwInstantiationError();
@@ -33,6 +34,16 @@ import DeveloperError from './DeveloperError.js';
          */
         waterMask : {
             get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * @memberof TerrainData.prototype
+         * @type {Number}
+         */
+        skirtIndex : {
+            get : function() {
+                return this._skirtIndex;
+            }
         }
     });
 
