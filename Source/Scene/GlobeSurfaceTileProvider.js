@@ -855,7 +855,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceTile.boundingVolumeSourceTile = heightSource;
 
             var rectangle = tile.rectangle;
-            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            if (defined(rectangle)) {
                 surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
                     tile.rectangle,
                     tileBoundingRegion.minimumHeight,
