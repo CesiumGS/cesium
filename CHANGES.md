@@ -1,11 +1,6 @@
 Change Log
 ==========
 
-### 1.66.0 - 2019-02-03
-
-##### Additions :tada:
-* Added `Globe.backFaceCulling` to support viewing terrain from below the surface.
-
 ### 1.65.0 - 2019-01-02
 
 ##### Fixes :wrench:
@@ -13,6 +8,9 @@ Change Log
 * Fixed terrain tile culling problems when under ellipsoid. [#8397](https://github.com/AnalyticalGraphicsInc/cesium/pull/8397)
 * Fixed primitive culling when below the ellipsoid but above terrain. [#8398](https://github.com/AnalyticalGraphicsInc/cesium/pull/8398)
 * Improved the translucency calculation for the Water material type. [#8455](https://github.com/AnalyticalGraphicsInc/cesium/pull/8455)
+
+##### Additions :tada:
+* Added `Globe.backFaceCulling` to support viewing terrain from below the surface.
 
 ### 1.64.0 - 2019-12-02
 
