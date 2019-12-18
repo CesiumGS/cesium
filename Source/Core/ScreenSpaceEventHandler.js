@@ -53,7 +53,7 @@ import ScreenSpaceEventType from './ScreenSpaceEventType.js';
         function listener(e) {
             callback(screenSpaceEventHandler, e);
         }
-        element.addEventListener(domType, listener, false);
+        element.addEventListener(domType, listener, { capture: false, passive: false });
 
         screenSpaceEventHandler._removalFunctions.push(function() {
             element.removeEventListener(domType, listener, false);
