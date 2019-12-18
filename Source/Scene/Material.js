@@ -31,8 +31,11 @@ import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
 import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
 import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
 import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
+import Sampler from '../Renderer/Sampler.js';
 import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
 import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import WaterMaterial from '../Shaders/Materials/Water.js';
 import when from '../ThirdParty/when.js';
 
@@ -298,6 +301,30 @@ import when from '../ThirdParty/when.js';
          */
         this.translucent = undefined;
 
+        /**
+         * The {@link TextureMinificationFilter} to apply to this material.
+         * Possible values are {@link TextureMinificationFilter.LINEAR} (the default)
+         * and {@link TextureMinificationFilter.NEAREST}.
+         *
+         * To take effect, this property must be set before texture is created
+         *
+         * @type {TextureMinificationFilter}
+         * @default {@link Material.DEFAULT_MINIFICATION_FILTER}
+         */
+        this.minificationFilter = defaultValue(options.minificationFilter, Material.DEFAULT_MINIFICATION_FILTER);
+
+        /**
+         * The {@link TextureMagnificationFilter} to apply to this layer.
+         * Possible values are {@link TextureMagnificationFilter.LINEAR} (the default)
+         * and {@link TextureMagnificationFilter.NEAREST}.
+         *
+         * To take effect, this property must be set before texture is created
+         *
+         * @type {TextureMagnificationFilter}
+         * @default {@link Material.DEFAULT_MAGNIFICATION_FILTER}
+         */
+        this.magnificationFilter = defaultValue(options.magnificationFilter, Material.DEFAULT_MAGNIFICATION_FILTER);
+
         this._strict = undefined;
         this._template = undefined;
         this._count = undefined;
@@ -324,6 +351,22 @@ import when from '../ThirdParty/when.js';
             Material._uniformList[this.type] = Object.keys(this._uniforms);
         }
     }
+
+    /**
+     * This value is used as the default texture minification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMinificationFilter}
+     * @default TextureMinificationFilter.LINEAR
+     */
+    Material.DEFAULT_MINIFICATION_FILTER = TextureMinificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    Material.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
 
     // Cached list of combined uniform names indexed by type.
     // Used to get the list of uniforms in the same order.
@@ -410,6 +453,11 @@ import when from '../ThirdParty/when.js';
         var loadedImages = this._loadedImages;
         var length = loadedImages.length;
 
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
         for (i = 0; i < length; ++i) {
             var loadedImage = loadedImages[i];
             uniformId = loadedImage.id;
@@ -424,12 +472,14 @@ import when from '../ThirdParty/when.js';
                     height : image.height,
                     source : {
                         arrayBufferView : image.bufferView
-                    }
+                    },
+                    sampler : sampler
                 });
             } else {
                 texture = new Texture({
                     context : context,
-                    source : image
+                    source : image,
+                    sampler : sampler
                 });
             }
 
