@@ -234,13 +234,14 @@ import WebMercatorProjection from './WebMercatorProjection.js';
 
         var hMin = Number.POSITIVE_INFINITY;
 
-        var arrayWidth = width + (skirtHeight > 0.0 ? 2 : 0);
-        var arrayHeight = height + (skirtHeight > 0.0 ? 2 : 0);
-        var size = arrayWidth * arrayHeight;
-        var positions = new Array(size);
-        var heights = new Array(size);
-        var uvs = new Array(size);
-        var webMercatorTs = includeWebMercatorT ? new Array(size) : [];
+        var gridVertexCount = width * height;
+        var edgeVertexCount = width * 2 + height * 2;
+        var vertexCount = gridVertexCount + edgeVertexCount;
+
+        var positions = new Array(vertexCount);
+        var heights = new Array(vertexCount);
+        var uvs = new Array(vertexCount);
+        var webMercatorTs = includeWebMercatorT ? new Array(vertexCount) : [];
 
         var startRow = 0;
         var endRow = height;
@@ -253,8 +254,6 @@ import WebMercatorProjection from './WebMercatorProjection.js';
             --startCol;
             ++endCol;
         }
-
-        var index = 0;
 
         for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
@@ -326,29 +325,46 @@ import WebMercatorProjection from './WebMercatorProjection.js';
 
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
                 u = CesiumMath.clamp(u, 0.0, 1.0);
-                uvs[index] = new Cartesian2(u, v);
+
+                var index = row * width + col;
+
+                if (skirtHeight > 0.0) {
+                    var isCorner = rowIndex !== row && colIndex !== col;
+                    var isWestEdge = colIndex === startCol;
+                    var isSouthEdge = rowIndex === endRow - 1;
+                    var isEastEdge = colIndex === endCol - 1;
+                    var isNorthEdge = rowIndex === startRow;
+
+                    var percentage = 0.00001;
+                    var skirtLatitude = latitude;
+
+                    // TODO : simplifiy and more comments
+                    if (isCorner) {
+                        continue;
+                    } else if (isWestEdge) {
+                        index = gridVertexCount + height - row - 1;
+                        longitude -= percentage * rectangleWidth;
+                    } else if (isSouthEdge) {
+                        index = gridVertexCount + height + (width - col - 1);
+                        skirtLatitude -= percentage * rectangleHeight;
+                    } else if (isEastEdge) {
+                        index = gridVertexCount + height + width + row;
+                        longitude += percentage * rectangleWidth;
+                    } else if (isNorthEdge) {
+                        index = gridVertexCount + height + width + height + col;
+                        skirtLatitude += percentage * rectangleHeight;
+                    }
+
+                    if (isWestEdge || isSouthEdge || isEastEdge || isNorthEdge) {
+                        cosLatitude = cos(skirtLatitude);
+                        nZ = sin(skirtLatitude);
+                        kZ = radiiSquaredZ * nZ;
+                        heightSample -= skirtHeight;
+                    }
+                }
 
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);
-
-                if (colIndex !== col || rowIndex !== row) {
-                    var percentage = 0.00001;
-                    if (colIndex < 0) {
-                        longitude -= percentage * rectangleWidth;
-                    } else {
-                        longitude += percentage * rectangleWidth;
-                    }
-                    if (rowIndex < 0) {
-                        latitude += percentage * rectangleHeight;
-                    } else {
-                        latitude -= percentage * rectangleHeight;
-                    }
-
-                    cosLatitude = cos(latitude);
-                    nZ = sin(latitude);
-                    kZ = radiiSquaredZ * nZ;
-                    heightSample -= skirtHeight;
-                }
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -370,12 +386,11 @@ import WebMercatorProjection from './WebMercatorProjection.js';
 
                 positions[index] = position;
                 heights[index] = heightSample;
+                uvs[index] = new Cartesian2(u, v);
 
                 if (includeWebMercatorT) {
                     webMercatorTs[index] = webMercatorT;
                 }
-
-                index++;
 
                 Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
@@ -390,7 +405,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
         if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
             // Here, rectangle.width < pi/2, and rectangle.height < pi
             // (though it would still work with rectangle.width up to pi)
-            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+        orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
         }
 
         var occludeePointInScaledSpace;
@@ -401,46 +416,11 @@ import WebMercatorProjection from './WebMercatorProjection.js';
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
         var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false, includeWebMercatorT);
-        var vertices = new Float32Array(size * encoding.getStride());
+        var vertices = new Float32Array(vertexCount * encoding.getStride());
 
         var bufferIndex = 0;
-        for (var j = 0; j < size; ++j) {
+        for (var j = 0; j < vertexCount; ++j) {
             bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
-        }
-
-        var westIndicesSouthToNorth;
-        var southIndicesEastToWest;
-        var eastIndicesNorthToSouth;
-        var northIndicesWestToEast;
-
-        if (skirtHeight > 0.0) {
-            northIndicesWestToEast = [];
-            southIndicesEastToWest = [];
-            for (var i1 = 0; i1 < width; ++i1) {
-                northIndicesWestToEast.push(arrayWidth + 1 + i1);
-                southIndicesEastToWest.push(arrayWidth * (arrayHeight - 1) - 2 - i1);
-            }
-
-            westIndicesSouthToNorth = [];
-            eastIndicesNorthToSouth = [];
-            for (var i2 = 0; i2 < height; ++i2) {
-                eastIndicesNorthToSouth.push((i2 + 1) * arrayWidth + width);
-                westIndicesSouthToNorth.push((height - i2) * arrayWidth + 1);
-            }
-        } else {
-            northIndicesWestToEast = [];
-            southIndicesEastToWest = [];
-            for (var i3 = 0; i3 < width; ++i3) {
-                northIndicesWestToEast.push(i3);
-                southIndicesEastToWest.push(width * height - 1 - i3);
-            }
-
-            westIndicesSouthToNorth = [];
-            eastIndicesNorthToSouth = [];
-            for (var i4 = 0; i4 < height; ++i4) {
-                eastIndicesNorthToSouth.push((i4 + 1) * width - 1);
-                westIndicesSouthToNorth.push((height - i4 - 1) * width );
-            }
         }
 
         return {
@@ -450,11 +430,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
             encoding : encoding,
             boundingSphere3D : boundingSphere3D,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace,
-            westIndicesSouthToNorth : westIndicesSouthToNorth,
-            southIndicesEastToWest : southIndicesEastToWest,
-            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
-            northIndicesWestToEast : northIndicesWestToEast
+            occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     };
 export default HeightmapTessellator;

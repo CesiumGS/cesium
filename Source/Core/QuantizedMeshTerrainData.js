@@ -180,6 +180,8 @@ import TerrainMesh from './TerrainMesh.js';
         this._waterMask = options.waterMask;
 
         this._mesh = undefined;
+        this._skirtIndex = undefined;
+        this._vertexCountWithoutSkirts = undefined;
     }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {

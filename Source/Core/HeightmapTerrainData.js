@@ -132,6 +132,7 @@ import TerrainProvider from './TerrainProvider.js';
         this._skirtHeight = undefined;
         this._bufferType = (this._encoding === HeightmapEncoding.LERC) ? Float32Array : this._buffer.constructor;
         this._mesh = undefined;
+        this._skirtIndex = undefined;
     }
 
     defineProperties(HeightmapTerrainData.prototype, {
@@ -157,7 +158,16 @@ import TerrainProvider from './TerrainProvider.js';
                 return this._waterMask;
             }
         },
-
+        /**
+         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * @memberof HeightmapTerrainData.prototype
+         * @type {Number}
+         */
+        skirtIndex : {
+            get : function() {
+                return this._skirtIndex;
+            }
+        },
         childTileMask : {
             get : function() {
                 return this._childTileMask;
@@ -234,12 +244,22 @@ import TerrainProvider from './TerrainProvider.js';
 
         var that = this;
         return when(verticesPromise, function(result) {
+            var indicesAndEdges;
+            if (that._skirtHeight > 0.0) {
+                indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
+                that._skirtIndex = indicesAndEdges.skirtIndex;
+            } else {
+                indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
+            }
+
+            // TODO : should skirtIndex actually be a property of TerrainMesh
+
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
-                    TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
+                    indicesAndEdges.indices,
                     result.minimumHeight,
                     result.maximumHeight,
                     BoundingSphere.clone(result.boundingSphere3D),
@@ -248,10 +268,10 @@ import TerrainProvider from './TerrainProvider.js';
                     OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
                     exaggeration,
-                    result.westIndicesSouthToNorth,
-                    result.southIndicesEastToWest,
-                    result.eastIndicesNorthToSouth,
-                    result.northIndicesWestToEast);
+                    indicesAndEdges.westIndicesSouthToNorth,
+                    indicesAndEdges.southIndicesEastToWest,
+                    indicesAndEdges.eastIndicesNorthToSouth,
+                    indicesAndEdges.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
@@ -310,12 +330,12 @@ import TerrainProvider from './TerrainProvider.js';
         // Free memory received from server after mesh is created.
         this._buffer = undefined;
 
-        var arrayWidth = this._width;
-        var arrayHeight = this._height;
-
+        var indicesAndEdges;
         if (this._skirtHeight > 0.0) {
-            arrayWidth += 2;
-            arrayHeight += 2;
+            indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(this._width, this._height);
+            this._skirtIndex = indicesAndEdges.skirtIndex;
+        } else {
+            indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(this._width, this._height);
         }
 
         // No need to clone here (as we do in the async version) because the result
@@ -323,7 +343,7 @@ import TerrainProvider from './TerrainProvider.js';
         return new TerrainMesh(
             center,
             result.vertices,
-            TerrainProvider.getRegularGridIndices(arrayWidth, arrayHeight),
+            indicesAndEdges.indices,
             result.minimumHeight,
             result.maximumHeight,
             result.boundingSphere3D,
@@ -332,10 +352,10 @@ import TerrainProvider from './TerrainProvider.js';
             result.orientedBoundingBox,
             result.encoding,
             exaggeration,
-            result.westIndicesSouthToNorth,
-            result.southIndicesEastToWest,
-            result.eastIndicesNorthToSouth,
-            result.northIndicesWestToEast);
+            indicesAndEdges.westIndicesSouthToNorth,
+            indicesAndEdges.southIndicesEastToWest,
+            indicesAndEdges.eastIndicesNorthToSouth,
+            indicesAndEdges.northIndicesWestToEast);
     };
 
     /**
@@ -364,9 +384,8 @@ import TerrainProvider from './TerrainProvider.js';
         if (defined(this._mesh)) {
             var buffer = this._mesh.vertices;
             var encoding = this._mesh.encoding;
-            var skirtHeight = this._skirtHeight;
             var exaggeration = this._mesh.exaggeration;
-            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude, exaggeration);
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, rectangle, width, height, longitude, latitude, exaggeration);
         } else {
             heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
             heightSample = heightSample * heightScale + heightOffset;
@@ -427,7 +446,6 @@ import TerrainProvider from './TerrainProvider.js';
         var width = this._width;
         var height = this._height;
         var structure = this._structure;
-        var skirtHeight = this._skirtHeight;
         var stride = structure.stride;
 
         var heights = new this._bufferType(width * height * stride);
@@ -453,7 +471,7 @@ import TerrainProvider from './TerrainProvider.js';
             var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
             for (var i = 0; i < width; ++i) {
                 var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, sourceRectangle, width, height, longitude, latitude, exaggeration);
 
                 // Use conditionals here instead of Math.min and Math.max so that an undefined
                 // lowestEncodedHeight or highestEncodedHeight has no effect.
@@ -557,31 +575,21 @@ import TerrainProvider from './TerrainProvider.js';
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, sourceRectangle, width, height, longitude, latitude, exaggeration) {
         // returns a height encoded according to the structure's heightScale and heightOffset.
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
-        if (skirtHeight > 0) {
-            fromWest += 1.0;
-            fromSouth += 1.0;
-
-            width += 2;
-            height += 2;
-        }
-
-        var widthEdge = (skirtHeight > 0) ? width - 1 : width;
         var westInteger = fromWest | 0;
         var eastInteger = westInteger + 1;
-        if (eastInteger >= widthEdge) {
+        if (eastInteger >= width) {
             eastInteger = width - 1;
             westInteger = width - 2;
         }
 
-        var heightEdge = (skirtHeight > 0) ? height - 1 : height;
         var southInteger = fromSouth | 0;
         var northInteger = southInteger + 1;
-        if (northInteger >= heightEdge) {
+        if (northInteger >= height) {
             northInteger = height - 1;
             southInteger = height - 2;
         }

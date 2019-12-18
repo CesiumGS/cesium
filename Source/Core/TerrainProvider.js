@@ -1,6 +1,7 @@
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
 import CesiumMath from './Math.js';
 
     /**
@@ -138,31 +139,150 @@ import CesiumMath from './Math.js';
             } else {
                 indices = byWidth[height] = new Uint32Array((width - 1) * (height - 1) * 6);
             }
-
-            var index = 0;
-            var indicesIndex = 0;
-            for (var j = 0; j < height - 1; ++j) {
-                for (var i = 0; i < width - 1; ++i) {
-                    var upperLeft = index;
-                    var lowerLeft = upperLeft + width;
-                    var lowerRight = lowerLeft + 1;
-                    var upperRight = upperLeft + 1;
-
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = lowerRight;
-
-                    ++index;
-                }
-                ++index;
-            }
+            addRegularGridIndices(width, height, indices, 0);
         }
 
         return indices;
     };
+
+    /**
+     * TODO decide public vs. private strategy
+     */
+    TerrainProvider.getRegularGridIndicesAndEdgeIndices = function(width, height) {
+        var indices = TerrainProvider.getRegularGridIndices(width, height);
+
+        var edgeIndices = getEdgeIndices(width, height);
+        var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+        var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+        var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+        var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+
+        return {
+            indices : indices,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast
+        };
+    };
+
+    /**
+     * TODO
+     * @private
+     */
+    TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
+        var gridVertexCount = width * height;
+        var gridIndexCount = (width - 1) * (height - 1) * 6;
+        var edgeVertexCount = width * 2 + height * 2;
+        var edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
+        var vertexCount = gridVertexCount + edgeVertexCount;
+        var indexCount = gridIndexCount + edgeIndexCount;
+
+        var edgeIndices = getEdgeIndices(width, height);
+        var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+        var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+        var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+        var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+
+        // TODO : cache skirt indices too?
+        var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
+        addRegularGridIndices(width, height, indices, 0);
+        TerrainProvider.addSkirtIndices(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, gridVertexCount, indices, gridIndexCount);
+
+        return {
+            indices : indices,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast,
+            skirtIndex : gridIndexCount
+        };
+    };
+
+    /**
+     * TODO
+     * @private
+     */
+    TerrainProvider.addSkirtIndices = function(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, vertexCount, indices, offset) {
+        var vertexIndex = vertexCount;
+        offset = addSkirtIndices(westIndicesSouthToNorth, vertexIndex, indices, offset);
+        vertexIndex += westIndicesSouthToNorth.length;
+        offset = addSkirtIndices(southIndicesEastToWest, vertexIndex, indices, offset);
+        vertexIndex += southIndicesEastToWest.length;
+        offset = addSkirtIndices(eastIndicesNorthToSouth, vertexIndex, indices, offset);
+        vertexIndex += eastIndicesNorthToSouth.length;
+        addSkirtIndices(northIndicesWestToEast, vertexIndex, indices, offset);
+    };
+
+    function getEdgeIndices(width, height) {
+        var westIndicesSouthToNorth = new Array(height);
+        var southIndicesEastToWest = new Array(width);
+        var eastIndicesNorthToSouth = new Array(height);
+        var northIndicesWestToEast = new Array(width);
+
+        var i;
+        for (i = 0; i < width; ++i) {
+            northIndicesWestToEast[i] = i;
+            southIndicesEastToWest[i] = width * height - 1 - i;
+        }
+
+        for (i = 0; i < height; ++i) {
+            eastIndicesNorthToSouth[i] = (i + 1) * width - 1;
+            westIndicesSouthToNorth[i] = (height - i - 1) * width;
+        }
+
+        return {
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast
+        };
+    }
+
+    function addRegularGridIndices(width, height, indices, offset) {
+        var index = 0;
+        for (var j = 0; j < height - 1; ++j) {
+            for (var i = 0; i < width - 1; ++i) {
+                var upperLeft = index;
+                var lowerLeft = upperLeft + width;
+                var lowerRight = lowerLeft + 1;
+                var upperRight = upperLeft + 1;
+
+                indices[offset++] = upperLeft;
+                indices[offset++] = lowerLeft;
+                indices[offset++] = upperRight;
+                indices[offset++] = upperRight;
+                indices[offset++] = lowerLeft;
+                indices[offset++] = lowerRight;
+
+                ++index;
+            }
+            ++index;
+        }
+    }
+
+    // TODO : simplify potentially
+    function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
+        var previousIndex = edgeIndices[0];
+
+        var length = edgeIndices.length;
+        for (var i = 1; i < length; ++i) {
+            var index = edgeIndices[i];
+
+            indices[offset++] = previousIndex;
+            indices[offset++] = index;
+            indices[offset++] = vertexIndex;
+
+            indices[offset++] = vertexIndex;
+            indices[offset++] = index;
+            indices[offset++] = vertexIndex + 1;
+
+            previousIndex = index;
+            ++vertexIndex;
+        }
+
+        return offset;
+    }
 
     /**
      * Specifies the quality of terrain created from heightmaps.  A value of 1.0 will

@@ -84,8 +84,8 @@ import TerrainMesh from './TerrainMesh.js';
         this._mesh = undefined;
         this._minimumHeight = undefined;
         this._maximumHeight = undefined;
-        this._vertexCountWithoutSkirts = undefined;
         this._skirtIndex = undefined;
+        this._vertexCountWithoutSkirts = undefined;
     }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
@@ -202,8 +202,8 @@ import TerrainMesh from './TerrainMesh.js';
                     result.eastIndicesNorthToSouth,
                     result.northIndicesWestToEast);
 
-                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._skirtIndex = result.skirtIndex;
+                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._minimumHeight = result.minimumHeight;
                 that._maximumHeight = result.maximumHeight;
 
