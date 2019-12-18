@@ -39,6 +39,34 @@ describe('Core/EllipsoidalOccluder', function() {
         expect(occluder.isScaledSpacePointVisible(scaledSpacePoint)).toEqual(true);
     });
 
+    it('isScaledSpacePointVisiblePossiblyUnderEllipsoid example works as claimed', function() {
+        // Tests points that are halfway inside a unit sphere:
+        // 1) on the diagonal
+        // 2) on the +y-axis
+        // The camera is on the +z-axis so it will be able to see the diagonal point but not the +y-axis point.
+
+        var cameraPosition = new Cartesian3(0, 0, 1.0);
+        var ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+        var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
+        var height = -0.5;
+
+        var direction = Cartesian3.normalize(new Cartesian3(1.0, 1.0, 1.0), new Cartesian3());
+        var point = Cartesian3.multiplyByScalar(direction, 0.5, new Cartesian3());
+        var scaledSpacePoint = occluder.computeHorizonCullingPoint(point, [point]);
+        var scaledSpacePointShrunk = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(point, [point], height);
+
+        expect(occluder.isScaledSpacePointVisible(scaledSpacePoint)).toEqual(false);
+        expect(occluder.isScaledSpacePointVisiblePossiblyUnderEllipsoid(scaledSpacePointShrunk, height)).toEqual(true);
+
+        direction = new Cartesian3(0.0, 1.0, 0.0);
+        point = Cartesian3.multiplyByScalar(direction, 0.5, new Cartesian3());
+        scaledSpacePoint = occluder.computeHorizonCullingPoint(point, [point]);
+        scaledSpacePointShrunk = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(point, [point], height);
+
+        expect(occluder.isScaledSpacePointVisible(scaledSpacePoint)).toEqual(false);
+        expect(occluder.isScaledSpacePointVisiblePossiblyUnderEllipsoid(scaledSpacePointShrunk, height)).toEqual(false);
+    });
+
     it('reports not visible when point is directly behind ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
@@ -178,6 +206,19 @@ describe('Core/EllipsoidalOccluder', function() {
 
             expect(foundOneNearZero).toBe(true);
         });
+
+        it('computes a point under the ellipsoid with computeHorizonCullingPointPossiblyUnderEllipsoid', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 4567.0, 8910.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(12344.0, 0.0, 0.0)];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPointPossiblyUnderEllipsoid(directionToPoint, positions, -1.0);
+
+            expect(result.x).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+            expect(result.y).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(result.z).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        });
     });
 
     describe('computeHorizonCullingPointFromVertices', function() {
@@ -242,6 +283,20 @@ describe('Core/EllipsoidalOccluder', function() {
             expect(result1.x).toEqualEpsilon(result2.x, CesiumMath.EPSILON14);
             expect(result1.y).toEqualEpsilon(result2.y, CesiumMath.EPSILON14);
             expect(result1.z).toEqualEpsilon(result2.z, CesiumMath.EPSILON14);
+        });
+
+        it('computes a point under the ellipsoid with computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 4567.0, 8910.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var vertices = [12344.0, 0.0, 0.0];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+            var center = Cartesian3.ZERO;
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(directionToPoint, vertices, 3, center, -1.0);
+
+            expect(result.x).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+            expect(result.y).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(result.z).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
         });
     });
 

@@ -391,6 +391,14 @@ import SceneMode from './SceneMode.js';
          * @type {Cesium3DTilePassState}
          */
         this.tilesetPassState = undefined;
+
+        /**
+         * The minimum terrain height out of all rendered terrain tiles. Used to improve culling for objects underneath the ellipsoid but above terrain.
+         *
+         * @type {Number}
+         * @default 0.0
+         */
+        this.minimumTerrainHeight = 0.0;
     }
 
     /**

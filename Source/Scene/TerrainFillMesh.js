@@ -655,7 +655,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 minimumHeight,
                 maximumHeight,
                 BoundingSphere.fromOrientedBoundingBox(obb),
-                computeOccludeePoint(tileProvider, obb.center, rectangle, maximumHeight),
+                computeOccludeePoint(tileProvider, obb.center, rectangle, minimumHeight, maximumHeight),
                 encoding.getStride(),
                 obb,
                 encoding,
@@ -1183,16 +1183,16 @@ import TileSelectionResult from './TileSelectionResult.js';
 
     var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
-    function computeOccludeePoint(tileProvider, center, rectangle, height, result) {
+    function computeOccludeePoint(tileProvider, center, rectangle, minimumHeight, maximumHeight, result) {
         var ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
         var ellipsoid = ellipsoidalOccluder.ellipsoid;
 
         var cornerPositions = cornerPositionsScratch;
-        Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
-        Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.south, maximumHeight, ellipsoid, cornerPositions[0]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.south, maximumHeight, ellipsoid, cornerPositions[1]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.north, maximumHeight, ellipsoid, cornerPositions[2]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.north, maximumHeight, ellipsoid, cornerPositions[3]);
 
-        return ellipsoidalOccluder.computeHorizonCullingPoint(center, cornerPositions, result);
+        return ellipsoidalOccluder.computeHorizonCullingPointPossiblyUnderEllipsoid(center, cornerPositions, minimumHeight, result);
     }
 export default TerrainFillMesh;

@@ -1558,11 +1558,11 @@ import View from './View.js';
          */
         sunColor: {
             get: function() {
-                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.67. Use scene.light.color and scene.light.intensity instead.');
-                return this._light.color;
+                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
+                return this.light.color;
             },
             set: function(value) {
-                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.67. Use scene.light.color and scene.light.intensity instead.');
+                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
                 var maximumComponent = Cartesian3.maximumComponent(value);
                 var sunColor = Cartesian4.fromElements(value.x, value.y, value.z, 1.0, scratchSunColor);
                 var intensity = 1.0;
@@ -1570,8 +1570,8 @@ import View from './View.js';
                     Cartesian3.divideByScalar(sunColor, maximumComponent, sunColor); // Don't divide alpha channel
                     intensity = maximumComponent;
                 }
-                this._light.color = Color.fromCartesian4(sunColor, this._light.color);
-                this._light.intensity = intensity;
+                this.light.color = Color.fromCartesian4(sunColor, this.light.color);
+                this.light.intensity = intensity;
             }
         },
 
@@ -1730,7 +1730,8 @@ import View from './View.js';
         var globe = scene.globe;
         if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
-            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
+            var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene.camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
@@ -1773,6 +1774,7 @@ import View from './View.js';
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(this);
         frameState.terrainExaggeration = this._terrainExaggeration;
+        frameState.minimumTerrainHeight = 0.0;
         frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
         frameState.invertClassification = this.invertClassification;
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
@@ -3545,7 +3547,7 @@ import View from './View.js';
     function updatePreloadFlightPass(scene) {
         var frameState = scene._frameState;
         var camera = frameState.camera;
-        if (!camera.hasCurrentFlight()) {
+        if (!camera.canPreloadFlight()) {
             return;
         }
 
