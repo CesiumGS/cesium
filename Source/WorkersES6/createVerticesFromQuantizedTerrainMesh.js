@@ -11,6 +11,7 @@ import IndexDatatype from '../Core/IndexDatatype.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
 import TerrainEncoding from '../Core/TerrainEncoding.js';
 import Transforms from '../Core/Transforms.js';
 import WebMercatorProjection from '../Core/WebMercatorProjection.js';
@@ -35,7 +36,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
                               parameters.southIndices.length + parameters.northIndices.length;
         var includeWebMercatorT = parameters.includeWebMercatorT;
 
-        var rectangle = parameters.rectangle;
+        var rectangle = Rectangle.clone(parameters.rectangle);
         var west = rectangle.west;
         var south = rectangle.south;
         var east = rectangle.east;

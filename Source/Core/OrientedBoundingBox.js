@@ -386,7 +386,7 @@ import Rectangle from './Rectangle.js';
         var fullyAboveEquator = rectangle.south > 0.0;
         var fullyBelowEquator = rectangle.north < 0.0;
         var latitudeNearestToEquator = fullyAboveEquator ? rectangle.south : (fullyBelowEquator ? rectangle.north : 0.0);
-        var centerLongitude = 0.5 * (rectangle.west + rectangle.east);
+        var centerLongitude = Rectangle.center(rectangle, scratchRectangleCenterCartographic).longitude;
 
         // Plane is located at the rectangle's center longitude and the rectangle's latitude that is closest to the equator. It rotates around the Z axis.
         // This results in a better fit than the obb approach for smaller rectangles, which orients with the rectangle's center normal.
