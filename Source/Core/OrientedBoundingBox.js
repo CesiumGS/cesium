@@ -392,7 +392,7 @@ import Rectangle from './Rectangle.js';
         // This results in a better fit than the obb approach for smaller rectangles, which orients with the rectangle's center normal.
         var planeOrigin = Cartesian3.fromRadians(centerLongitude, latitudeNearestToEquator, maximumHeight, ellipsoid, scratchPlaneOrigin);
         planeOrigin.z = 0.0; // center the plane on the equator to simpify plane normal calculation
-        var isPole = planeOrigin.x < CesiumMath.EPSILON10 && planeOrigin.y < CesiumMath.EPSILON10;
+        var isPole = Math.abs(planeOrigin.x) < CesiumMath.EPSILON10 && Math.abs(planeOrigin.y) < CesiumMath.EPSILON10;
         var planeNormal = !isPole ? Cartesian3.normalize(planeOrigin, scratchPlaneNormal) : Cartesian3.UNIT_X;
         var planeYAxis = Cartesian3.UNIT_Z;
         var planeXAxis = Cartesian3.cross(planeNormal, planeYAxis, scratchPlaneXAxis);
