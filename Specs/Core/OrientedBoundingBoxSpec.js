@@ -232,7 +232,7 @@ describe('Core/OrientedBoundingBox', function() {
     it('fromRectangle for rectangles that span over half the ellipsoid', function() {
         var d90 = CesiumMath.PI_OVER_TWO;
         var d180 = CesiumMath.PI;
-        var d135 = (3/4) * CesiumMath.PI;
+        var d135 = (3.0 / 4.0) * CesiumMath.PI;
         var d45 = CesiumMath.PI_OVER_FOUR;
         var onePlusSqrtHalfDivTwo = (1.0 + Math.SQRT1_2) / 2.0;
         var oneMinusOnePlusSqrtHalfDivTwo = 1.0 - onePlusSqrtHalfDivTwo;
