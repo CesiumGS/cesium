@@ -1,6 +1,20 @@
 Change Log
 ==========
 
+### 1.65.0 - 2019-01-02
+
+##### Fixes :wrench:
+* Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
+* Fixed terrain tile culling problems when under ellipsoid. [#8397](https://github.com/AnalyticalGraphicsInc/cesium/pull/8397)
+* Fixed primitive culling when below the ellipsoid but above terrain. [#8398](https://github.com/AnalyticalGraphicsInc/cesium/pull/8398)
+* Improved the translucency calculation for the Water material type. [#8455](https://github.com/AnalyticalGraphicsInc/cesium/pull/8455)
+
+### 1.64.0 - 2019-12-02
+
+##### Fixes :wrench:
+* Fixed an issue in image based lighting where an invalid environment map would silently fail. [#8303](https://github.com/AnalyticalGraphicsInc/cesium/pull/8303)
+* Various small internal improvements
+
 ### 1.63.1 - 2019-11-06
 
 ##### Fixes :wrench:
