@@ -448,7 +448,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         var ellipsoid = frameState.mapProjection.ellipsoid;
         var rectangle = getRectangle(frameState, geometry);
 
-        var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._maxHeight, groundPrimitive._minHeight, ellipsoid);
+        var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._minHeight, groundPrimitive._maxHeight, ellipsoid);
         groundPrimitive._boundingVolumes.push(obb);
 
         if (!frameState.scene3DOnly) {
