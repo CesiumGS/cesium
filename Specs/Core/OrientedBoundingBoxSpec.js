@@ -236,6 +236,8 @@ describe('Core/OrientedBoundingBox', function() {
         var d45 = CesiumMath.PI_OVER_FOUR;
         var onePlusSqrtHalfDivTwo = (1.0 + Math.SQRT1_2) / 2.0;
         var oneMinusOnePlusSqrtHalfDivTwo = 1.0 - onePlusSqrtHalfDivTwo;
+        var sqrtTwoMinusOneDivFour = (Math.SQRT2 - 1.0) / 4.0;
+        var sqrtTwoPlusOneDivFour = (Math.SQRT2 + 1.0) / 4.0;
         var box;
 
         // Entire ellipsoid
@@ -252,6 +254,11 @@ describe('Core/OrientedBoundingBox', function() {
         box = OrientedBoundingBox.fromRectangle(new Rectangle(-d135, -d45, d135, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(oneMinusOnePlusSqrtHalfDivTwo, 0, 0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, onePlusSqrtHalfDivTwo, 1, 0, 0, 0, Math.SQRT1_2, 0), CesiumMath.EPSILON15);
+
+        // 3/4s of longitude centered at IDL, 1/2 of latitude centered at equator
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(d180, -d45, d90, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(sqrtTwoMinusOneDivFour, -sqrtTwoMinusOneDivFour, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(Math.SQRT1_2, 0, sqrtTwoPlusOneDivFour, Math.SQRT1_2, 0, -sqrtTwoPlusOneDivFour, 0, Math.SQRT1_2, 0.0), CesiumMath.EPSILON15);
 
         // Full longitude, 1/2 of latitude centered at equator
         box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, -d45, d180, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
