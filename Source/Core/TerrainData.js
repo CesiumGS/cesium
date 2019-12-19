@@ -36,7 +36,7 @@ import DeveloperError from './DeveloperError.js';
             get : DeveloperError.throwInstantiationError
         },
         /**
-         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * The index in the tile's index buffer where skirt geometry begins. This value is undefined if the terrain data does not contain skirts or there are no skirts, it returns undefined.
          * @memberof TerrainData.prototype
          * @type {Number}
          */

@@ -159,7 +159,7 @@ import TerrainProvider from './TerrainProvider.js';
             }
         },
         /**
-         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * The index in the tile's index buffer where skirt geometry begins.
          * @memberof HeightmapTerrainData.prototype
          * @type {Number}
          */

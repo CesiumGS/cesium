@@ -112,7 +112,7 @@ import TerrainMesh from './TerrainMesh.js';
             }
         },
         /**
-         * The index in the tile's index buffer where skirt geometry begins. Skirt geometry must begin after terrain geometry.
+         * The index in the tile's index buffer where skirt geometry begins.
          * @memberof GoogleEarthEnterpriseTerrainData.prototype
          * @type {Number}
          */
