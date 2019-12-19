@@ -8,6 +8,7 @@ Change Log
 * Fixed terrain tile culling problems when under ellipsoid. [#8397](https://github.com/AnalyticalGraphicsInc/cesium/pull/8397)
 * Fixed primitive culling when below the ellipsoid but above terrain. [#8398](https://github.com/AnalyticalGraphicsInc/cesium/pull/8398)
 * Improved the translucency calculation for the Water material type. [#8455](https://github.com/AnalyticalGraphicsInc/cesium/pull/8455)
+* Fixed globe picking so that it returns the closest intersecting triangle instead of the first intersecting triangle. [#8390](https://github.com/AnalyticalGraphicsInc/cesium/pull/8390)
 
 ### 1.64.0 - 2019-12-02
 
