@@ -235,7 +235,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
         var hMin = Number.POSITIVE_INFINITY;
 
         var gridVertexCount = width * height;
-        var edgeVertexCount = width * 2 + height * 2;
+        var edgeVertexCount = skirtHeight > 0.0 ? (width * 2 + height * 2) : 0;
         var vertexCount = gridVertexCount + edgeVertexCount;
 
         var positions = new Array(vertexCount);
