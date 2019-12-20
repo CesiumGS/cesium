@@ -108,7 +108,7 @@ import CesiumMath from './Math.js';
         }
     });
 
-    var regularGridIndexArrays = [];
+    var regularGridIndicesCache = [];
 
     /**
      * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
@@ -127,9 +127,9 @@ import CesiumMath from './Math.js';
         }
         //>>includeEnd('debug');
 
-        var byWidth = regularGridIndexArrays[width];
+        var byWidth = regularGridIndicesCache[width];
         if (!defined(byWidth)) {
-            regularGridIndexArrays[width] = byWidth = [];
+            regularGridIndicesCache[width] = byWidth = [];
         }
 
         var indices = byWidth[height];
@@ -145,36 +145,60 @@ import CesiumMath from './Math.js';
         return indices;
     };
 
+    var regularGridAndEdgeIndicesCache = [];
+
     /**
      * @private
      */
     TerrainProvider.getRegularGridIndicesAndEdgeIndices = function(width, height) {
-        var indices = TerrainProvider.getRegularGridIndices(width, height);
+        //>>includeStart('debug', pragmas.debug);
+        if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
+        }
+        //>>includeEnd('debug');
 
-        var edgeIndices = getEdgeIndices(width, height);
-        var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-        var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-        var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-        var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+        var byWidth = regularGridAndEdgeIndicesCache[width];
+        if (!defined(byWidth)) {
+            regularGridAndEdgeIndicesCache[width] = byWidth = [];
+        }
 
-        return {
-            indices : indices,
-            westIndicesSouthToNorth : westIndicesSouthToNorth,
-            southIndicesEastToWest : southIndicesEastToWest,
-            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
-            northIndicesWestToEast : northIndicesWestToEast
-        };
+        var indicesAndEdges = byWidth[height];
+        if (!defined(indicesAndEdges)) {
+            var indices = TerrainProvider.getRegularGridIndices(width, height);
+
+            var edgeIndices = getEdgeIndices(width, height);
+            var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+            var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+            var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+            var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+
+            indicesAndEdges = byWidth[height] = {
+                indices : indices,
+                westIndicesSouthToNorth : westIndicesSouthToNorth,
+                southIndicesEastToWest : southIndicesEastToWest,
+                eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+                northIndicesWestToEast : northIndicesWestToEast
+            };
+        }
+
+        return indicesAndEdges;
     };
 
-    var regularGridAndindexCountWithoutSkirtsArrays = [];
+    var regularGridAndSkirtAndEdgeIndicesCache = [];
 
     /**
      * @private
      */
     TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
-        var byWidth = regularGridAndindexCountWithoutSkirtsArrays[width];
+        //>>includeStart('debug', pragmas.debug);
+        if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
+        }
+        //>>includeEnd('debug');
+
+        var byWidth = regularGridAndSkirtAndEdgeIndicesCache[width];
         if (!defined(byWidth)) {
-            regularGridAndindexCountWithoutSkirtsArrays[width] = byWidth = [];
+            regularGridAndSkirtAndEdgeIndicesCache[width] = byWidth = [];
         }
 
         var indicesAndEdges = byWidth[height];
