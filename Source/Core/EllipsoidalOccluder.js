@@ -303,6 +303,10 @@ import Rectangle from './Rectangle.js';
         for (var i = 0, len = positions.length; i < len; ++i) {
             var position = positions[i];
             var candidateMagnitude = computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint);
+            if (candidateMagnitude < 0.0) {
+                // all points should face the same direction, but this one doesn't, so return undefined
+                return undefined;
+            }
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
         }
 
@@ -333,6 +337,10 @@ import Rectangle from './Rectangle.js';
             positionScratch.z = vertices[i + 2] + center.z;
 
             var candidateMagnitude = computeMagnitude(ellipsoid, positionScratch, scaledSpaceDirectionToPoint);
+            if (candidateMagnitude < 0.0) {
+                // all points should face the same direction, but this one doesn't, so return undefined
+                return undefined;
+            }
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
         }
 
