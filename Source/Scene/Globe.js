@@ -259,6 +259,14 @@ import TileSelectionResult from './TileSelectionResult.js';
          */
         this.showSkirts = true;
 
+        /**
+         * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.backFaceCulling = true;
+
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
     }
@@ -749,7 +757,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
             tileProvider.fillHighlightColor = this.fillHighlightColor;
             tileProvider.showSkirts = this.showSkirts;
-
+            tileProvider.backFaceCulling = this.backFaceCulling;
             surface.beginFrame(frameState);
         }
     };
