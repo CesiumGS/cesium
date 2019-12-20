@@ -132,7 +132,6 @@ import TerrainProvider from './TerrainProvider.js';
         this._skirtHeight = undefined;
         this._bufferType = (this._encoding === HeightmapEncoding.LERC) ? Float32Array : this._buffer.constructor;
         this._mesh = undefined;
-        this._skirtIndex = undefined;
     }
 
     defineProperties(HeightmapTerrainData.prototype, {
@@ -156,16 +155,6 @@ import TerrainProvider from './TerrainProvider.js';
         waterMask : {
             get : function() {
                 return this._waterMask;
-            }
-        },
-        /**
-         * The index in the tile's index buffer where skirt geometry begins.
-         * @memberof HeightmapTerrainData.prototype
-         * @type {Number}
-         */
-        skirtIndex : {
-            get : function() {
-                return this._skirtIndex;
             }
         },
         childTileMask : {
@@ -247,12 +236,11 @@ import TerrainProvider from './TerrainProvider.js';
             var indicesAndEdges;
             if (that._skirtHeight > 0.0) {
                 indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
-                that._skirtIndex = indicesAndEdges.skirtIndex;
             } else {
                 indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(result.gridWidth, result.gridHeight);
             }
 
-            // TODO : should skirtIndex actually be a property of TerrainMesh
+            var vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
 
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.
@@ -260,6 +248,8 @@ import TerrainProvider from './TerrainProvider.js';
                     center,
                     new Float32Array(result.vertices),
                     indicesAndEdges.indices,
+                    indicesAndEdges.skirtIndex,
+                    vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
                     BoundingSphere.clone(result.boundingSphere3D),
@@ -333,10 +323,11 @@ import TerrainProvider from './TerrainProvider.js';
         var indicesAndEdges;
         if (this._skirtHeight > 0.0) {
             indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(this._width, this._height);
-            this._skirtIndex = indicesAndEdges.skirtIndex;
         } else {
             indicesAndEdges = TerrainProvider.getRegularGridIndicesAndEdgeIndices(this._width, this._height);
         }
+
+        var vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
 
         // No need to clone here (as we do in the async version) because the result
         // is not coming from a web worker.
@@ -344,6 +335,8 @@ import TerrainProvider from './TerrainProvider.js';
             center,
             result.vertices,
             indicesAndEdges.indices,
+            indicesAndEdges.skirtIndex,
+            vertexCountWithoutSkirts,
             result.minimumHeight,
             result.maximumHeight,
             result.boundingSphere3D,

@@ -84,8 +84,6 @@ import TerrainMesh from './TerrainMesh.js';
         this._mesh = undefined;
         this._minimumHeight = undefined;
         this._maximumHeight = undefined;
-        this._skirtIndex = undefined;
-        this._vertexCountWithoutSkirts = undefined;
     }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
@@ -109,16 +107,6 @@ import TerrainMesh from './TerrainMesh.js';
         waterMask : {
             get : function() {
                 return undefined;
-            }
-        },
-        /**
-         * The index in the tile's index buffer where skirt geometry begins.
-         * @memberof GoogleEarthEnterpriseTerrainData.prototype
-         * @type {Number}
-         */
-        skirtIndex : {
-            get : function() {
-                return this._skirtIndex;
             }
         }
     });
@@ -189,6 +177,8 @@ import TerrainMesh from './TerrainMesh.js';
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
+                    result.skirtIndex,
+                    result.vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
                     BoundingSphere.clone(result.boundingSphere3D),
@@ -202,8 +192,6 @@ import TerrainMesh from './TerrainMesh.js';
                     result.eastIndicesNorthToSouth,
                     result.northIndicesWestToEast);
 
-                that._skirtIndex = result.skirtIndex;
-                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._minimumHeight = result.minimumHeight;
                 that._maximumHeight = result.maximumHeight;
 
@@ -279,9 +267,9 @@ import TerrainMesh from './TerrainMesh.js';
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            skirtIndex : mesh.skirtIndex,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,

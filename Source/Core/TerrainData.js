@@ -34,16 +34,6 @@ import DeveloperError from './DeveloperError.js';
          */
         waterMask : {
             get : DeveloperError.throwInstantiationError
-        },
-        /**
-         * The index in the tile's index buffer where skirt geometry begins. This value is undefined if the terrain data does not contain skirts or there are no skirts, it returns undefined.
-         * @memberof TerrainData.prototype
-         * @type {Number}
-         */
-        skirtIndex : {
-            get : function() {
-                return this._skirtIndex;
-            }
         }
     });
 

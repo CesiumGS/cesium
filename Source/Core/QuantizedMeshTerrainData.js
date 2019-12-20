@@ -180,8 +180,6 @@ import TerrainMesh from './TerrainMesh.js';
         this._waterMask = options.waterMask;
 
         this._mesh = undefined;
-        this._skirtIndex = undefined;
-        this._vertexCountWithoutSkirts = undefined;
     }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
@@ -205,16 +203,6 @@ import TerrainMesh from './TerrainMesh.js';
         waterMask : {
             get : function() {
                 return this._waterMask;
-            }
-        },
-        /**
-         * The index in the tile's index buffer where skirt geometry begins.
-         * @memberof QuantizedMeshTerrainData.prototype
-         * @type {Number}
-         */
-        skirtIndex : {
-            get : function() {
-                return this._skirtIndex;
             }
         },
 
@@ -327,8 +315,7 @@ import TerrainMesh from './TerrainMesh.js';
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-            that._skirtIndex = result.skirtIndex;
-            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.
@@ -336,6 +323,8 @@ import TerrainMesh from './TerrainMesh.js';
                     rtc,
                     vertices,
                     indicesTypedArray,
+                    result.skirtIndex,
+                    vertexCountWithoutSkirts,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
@@ -426,9 +415,9 @@ import TerrainMesh from './TerrainMesh.js';
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            skirtIndex : mesh.skirtIndex,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,

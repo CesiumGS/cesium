@@ -130,9 +130,9 @@ import TerrainState from './TerrainState.js';
          */
         skirtIndex : {
             get : function() {
-                var terrainData = this.terrainData;
-                if (defined(this.vertexArray) && defined(terrainData) && defined(terrainData.skirtIndex)) {
-                    return terrainData.skirtIndex;
+                var renderedMesh = this.renderedMesh;
+                if (defined(renderedMesh)) {
+                    return renderedMesh.skirtIndex;
                 }
             }
         }
