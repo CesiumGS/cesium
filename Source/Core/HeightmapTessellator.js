@@ -334,28 +334,32 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                     var isSouthEdge = rowIndex === endRow - 1;
                     var isEastEdge = colIndex === endCol - 1;
                     var isNorthEdge = rowIndex === startRow;
+                    var isEdge = isWestEdge || isSouthEdge || isEastEdge || isNorthEdge;
 
                     var percentage = 0.00001;
                     var skirtLatitude = latitude;
 
-                    // TODO : simplifiy and more comments
                     if (isCorner) {
                         continue;
                     } else if (isWestEdge) {
-                        index = gridVertexCount + height - row - 1;
+                        // The outer loop iterates north to south but the indices are ordered south to north, hence the index flip below
+                        index = gridVertexCount + (height - row - 1);
                         longitude -= percentage * rectangleWidth;
                     } else if (isSouthEdge) {
+                        // Add after west indices
                         index = gridVertexCount + height + (width - col - 1);
                         skirtLatitude -= percentage * rectangleHeight;
                     } else if (isEastEdge) {
+                        // Add after west and south indices
                         index = gridVertexCount + height + width + row;
                         longitude += percentage * rectangleWidth;
                     } else if (isNorthEdge) {
+                        // Add after west, south, and east indices
                         index = gridVertexCount + height + width + height + col;
                         skirtLatitude += percentage * rectangleHeight;
                     }
 
-                    if (isWestEdge || isSouthEdge || isEastEdge || isNorthEdge) {
+                    if (isEdge) {
                         cosLatitude = cos(skirtLatitude);
                         nZ = sin(skirtLatitude);
                         kZ = radiiSquaredZ * nZ;
@@ -405,7 +409,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
         if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
             // Here, rectangle.width < pi/2, and rectangle.height < pi
             // (though it would still work with rectangle.width up to pi)
-        orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
         }
 
         var occludeePointInScaledSpace;

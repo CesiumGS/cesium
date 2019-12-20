@@ -157,6 +157,7 @@ import TerrainProvider from './TerrainProvider.js';
                 return this._waterMask;
             }
         },
+
         childTileMask : {
             get : function() {
                 return this._childTileMask;

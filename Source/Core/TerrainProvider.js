@@ -146,7 +146,7 @@ import CesiumMath from './Math.js';
     };
 
     /**
-     * TODO decide public vs. private strategy
+     * @private
      */
     TerrainProvider.getRegularGridIndicesAndEdgeIndices = function(width, height) {
         var indices = TerrainProvider.getRegularGridIndices(width, height);
@@ -167,7 +167,6 @@ import CesiumMath from './Math.js';
     };
 
     /**
-     * TODO
      * @private
      */
     TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
@@ -200,7 +199,6 @@ import CesiumMath from './Math.js';
     };
 
     /**
-     * TODO
      * @private
      */
     TerrainProvider.addSkirtIndices = function(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, vertexCount, indices, offset) {
@@ -261,7 +259,6 @@ import CesiumMath from './Math.js';
         }
     }
 
-    // TODO : simplify potentially
     function addSkirtIndices(edgeIndices, vertexIndex, indices, offset) {
         var previousIndex = edgeIndices[0];
 

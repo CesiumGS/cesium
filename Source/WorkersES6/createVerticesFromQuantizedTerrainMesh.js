@@ -211,7 +211,6 @@ import TerrainProvider from '../Core/TerrainProvider.js';
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
         addSkirt(vertexBuffer, vertexBufferIndex, northIndicesWestToEast, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
 
-        // TODO : move this outside to non web worker code
         TerrainProvider.addSkirtIndices(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, quantizedVertexCount, indexBuffer, parameters.indices.length);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);

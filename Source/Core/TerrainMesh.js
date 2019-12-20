@@ -76,6 +76,7 @@ import defaultValue from './defaultValue.js';
 
         /**
          * The vertex count of the mesh not including skirts.
+         * @type {Number}
          */
         this.vertexCountWithoutSkirts = vertexCountWithoutSkirts;
 
