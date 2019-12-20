@@ -166,15 +166,15 @@ import CesiumMath from './Math.js';
         };
     };
 
-    var regularGridAndSkirtIndexArrays = [];
+    var regularGridAndindexCountWithoutSkirtsArrays = [];
 
     /**
      * @private
      */
     TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
-        var byWidth = regularGridAndSkirtIndexArrays[width];
+        var byWidth = regularGridAndindexCountWithoutSkirtsArrays[width];
         if (!defined(byWidth)) {
-            regularGridAndSkirtIndexArrays[width] = byWidth = [];
+            regularGridAndindexCountWithoutSkirtsArrays[width] = byWidth = [];
         }
 
         var indicesAndEdges = byWidth[height];
@@ -202,7 +202,7 @@ import CesiumMath from './Math.js';
                 southIndicesEastToWest : southIndicesEastToWest,
                 eastIndicesNorthToSouth : eastIndicesNorthToSouth,
                 northIndicesWestToEast : northIndicesWestToEast,
-                skirtIndex : gridIndexCount
+                indexCountWithoutSkirts : gridIndexCount
             };
         }
 

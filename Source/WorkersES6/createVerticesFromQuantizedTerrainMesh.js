@@ -230,7 +230,7 @@ import TerrainProvider from '../Core/TerrainProvider.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             encoding : encoding,
-            skirtIndex : parameters.indices.length
+            indexCountWithoutSkirts : parameters.indices.length
         };
     }
 

@@ -128,11 +128,11 @@ import TerrainState from './TerrainState.js';
          * @memberof GlobeSurfaceTile.prototype
          * @type {Number}
          */
-        skirtIndex : {
+        indexCountWithoutSkirts : {
             get : function() {
                 var renderedMesh = this.renderedMesh;
                 if (defined(renderedMesh)) {
-                    return renderedMesh.skirtIndex;
+                    return renderedMesh.indexCountWithoutSkirts;
                 }
             }
         }

@@ -177,7 +177,7 @@ import TerrainMesh from './TerrainMesh.js';
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
-                    result.skirtIndex,
+                    result.indexCountWithoutSkirts,
                     result.vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
@@ -268,7 +268,7 @@ import TerrainMesh from './TerrainMesh.js';
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
             indices : mesh.indices,
-            skirtIndex : mesh.skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
             vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,

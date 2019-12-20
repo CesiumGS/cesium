@@ -58,7 +58,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
             encoding : statistics.encoding,
             vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-            skirtIndex : statistics.skirtIndex,
+            indexCountWithoutSkirts : statistics.indexCountWithoutSkirts,
             westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
             southIndicesEastToWest : statistics.southIndicesEastToWest,
             eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
@@ -312,7 +312,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var vertexCountWithoutSkirts = pointOffset;
-        var skirtIndex = indicesOffset;
+        var indexCountWithoutSkirts = indicesOffset;
 
         // Add skirt points
         var skirtOptions = {
@@ -354,11 +354,11 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         //  two triangles between the last north vertex and the first west vertex
         if (westBorder.length > 0 && northBorder.length > 0) {
             var firstBorderIndex = westBorder[0].index;
-            var firstSkirtIndex = vertexCountWithoutSkirts;
+            var firstindexCountWithoutSkirts = vertexCountWithoutSkirts;
             var lastBorderIndex = northBorder[northBorder.length - 1].index;
-            var lastSkirtIndex = positions.length - 1;
+            var lastindexCountWithoutSkirts = positions.length - 1;
 
-            indices.push(lastBorderIndex, lastSkirtIndex, firstSkirtIndex, firstSkirtIndex, firstBorderIndex, lastBorderIndex);
+            indices.push(lastBorderIndex, lastindexCountWithoutSkirts, firstindexCountWithoutSkirts, firstindexCountWithoutSkirts, firstBorderIndex, lastBorderIndex);
         }
 
         size = positions.length; // Get new size with skirt vertices
@@ -404,7 +404,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex,
+            indexCountWithoutSkirts : indexCountWithoutSkirts,
             westIndicesSouthToNorth : westIndicesSouthToNorth,
             southIndicesEastToWest : southIndicesEastToWest,
             eastIndicesNorthToSouth : eastIndicesNorthToSouth,

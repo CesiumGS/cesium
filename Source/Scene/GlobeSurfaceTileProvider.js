@@ -1903,7 +1903,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
             var count;
             if (!tileProvider.showSkirts) {
-                count = surfaceTile.skirtIndex;
+                count = surfaceTile.indexCountWithoutSkirts;
             }
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);

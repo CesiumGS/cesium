@@ -58,7 +58,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
         var parentVertices = parameters.vertices;
         var parentIndices = parameters.indices;
-        parentIndices = parentIndices.subarray(0, parameters.skirtIndex);
+        parentIndices = parentIndices.subarray(0, parameters.indexCountWithoutSkirts);
 
         var encoding = TerrainEncoding.clone(parameters.encoding);
         var hasVertexNormals = encoding.hasVertexNormals;
