@@ -161,6 +161,26 @@ describe('Core/EllipsoidalOccluder', function() {
             expect(result).toBeUndefined();
         });
 
+        it('returns undefined when any point is in the opposite direction of the center line', function() {
+            var ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0)];
+            var directionToPoint = new Cartesian3(1.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, positions);
+            expect(result).toBeUndefined();
+        });
+
+        it('returns undefined when the direction is zero', function() {
+            var ellipsoid = new Ellipsoid(1.0, 1.0, 1.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+            var positions = [new Cartesian3(1.0, 0.0, 0.0)];
+            var directionToPoint = new Cartesian3(0.0, 0.0, 0.0);
+
+            var result = ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, positions);
+            expect(result).toBeUndefined();
+        });
+
         it('computes a point from a single position with a grazing altitude close to zero', function() {
             var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
             var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
