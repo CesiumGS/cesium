@@ -346,15 +346,15 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                         index = gridVertexCount + (height - row - 1);
                         longitude -= percentage * rectangleWidth;
                     } else if (isSouthEdge) {
-                        // Add after west indices
+                        // Add after west indices. South indices are ordered east to west.
                         index = gridVertexCount + height + (width - col - 1);
                         skirtLatitude -= percentage * rectangleHeight;
                     } else if (isEastEdge) {
-                        // Add after west and south indices
+                        // Add after west and south indices. East indices are ordered north to south. The index is flipped like above.
                         index = gridVertexCount + height + width + row;
                         longitude += percentage * rectangleWidth;
                     } else if (isNorthEdge) {
-                        // Add after west, south, and east indices
+                        // Add after west, south, and east indices. North indices are ordered west to east.
                         index = gridVertexCount + height + width + height + col;
                         skirtLatitude += percentage * rectangleHeight;
                     }
