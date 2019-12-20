@@ -166,36 +166,47 @@ import CesiumMath from './Math.js';
         };
     };
 
+    var regularGridAndSkirtIndexArrays = [];
+
     /**
      * @private
      */
     TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
-        var gridVertexCount = width * height;
-        var gridIndexCount = (width - 1) * (height - 1) * 6;
-        var edgeVertexCount = width * 2 + height * 2;
-        var edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
-        var vertexCount = gridVertexCount + edgeVertexCount;
-        var indexCount = gridIndexCount + edgeIndexCount;
+        var byWidth = regularGridAndSkirtIndexArrays[width];
+        if (!defined(byWidth)) {
+            regularGridAndSkirtIndexArrays[width] = byWidth = [];
+        }
 
-        var edgeIndices = getEdgeIndices(width, height);
-        var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
-        var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
-        var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
-        var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
+        var indicesAndEdges = byWidth[height];
+        if (!defined(indicesAndEdges)) {
+            var gridVertexCount = width * height;
+            var gridIndexCount = (width - 1) * (height - 1) * 6;
+            var edgeVertexCount = width * 2 + height * 2;
+            var edgeIndexCount = Math.max(0, edgeVertexCount - 4) * 6;
+            var vertexCount = gridVertexCount + edgeVertexCount;
+            var indexCount = gridIndexCount + edgeIndexCount;
 
-        // TODO : cache skirt indices too?
-        var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
-        addRegularGridIndices(width, height, indices, 0);
-        TerrainProvider.addSkirtIndices(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, gridVertexCount, indices, gridIndexCount);
+            var edgeIndices = getEdgeIndices(width, height);
+            var westIndicesSouthToNorth = edgeIndices.westIndicesSouthToNorth;
+            var southIndicesEastToWest = edgeIndices.southIndicesEastToWest;
+            var eastIndicesNorthToSouth = edgeIndices.eastIndicesNorthToSouth;
+            var northIndicesWestToEast = edgeIndices.northIndicesWestToEast;
 
-        return {
-            indices : indices,
-            westIndicesSouthToNorth : westIndicesSouthToNorth,
-            southIndicesEastToWest : southIndicesEastToWest,
-            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
-            northIndicesWestToEast : northIndicesWestToEast,
-            skirtIndex : gridIndexCount
-        };
+            var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
+            addRegularGridIndices(width, height, indices, 0);
+            TerrainProvider.addSkirtIndices(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, gridVertexCount, indices, gridIndexCount);
+
+            indicesAndEdges = byWidth[height] = {
+                indices : indices,
+                westIndicesSouthToNorth : westIndicesSouthToNorth,
+                southIndicesEastToWest : southIndicesEastToWest,
+                eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+                northIndicesWestToEast : northIndicesWestToEast,
+                skirtIndex : gridIndexCount
+            };
+        }
+
+        return indicesAndEdges;
     };
 
     /**
