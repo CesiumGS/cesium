@@ -323,6 +323,9 @@ import WebMercatorProjection from './WebMercatorProjection.js';
 
                 heightSample = (heightSample * heightScale + heightOffset) * exaggeration;
 
+                maximumHeight = Math.max(maximumHeight, heightSample);
+                minimumHeight = Math.min(minimumHeight, heightSample);
+
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
                 u = CesiumMath.clamp(u, 0.0, 1.0);
 
@@ -366,9 +369,6 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                         heightSample -= skirtHeight;
                     }
                 }
-
-                maximumHeight = Math.max(maximumHeight, heightSample);
-                minimumHeight = Math.min(minimumHeight, heightSample);
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
