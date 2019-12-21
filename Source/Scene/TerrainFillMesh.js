@@ -652,7 +652,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 encoding.center,
                 typedArray,
                 indices,
-                undefined,
+                indexCount,
                 vertexCount,
                 minimumHeight,
                 maximumHeight,

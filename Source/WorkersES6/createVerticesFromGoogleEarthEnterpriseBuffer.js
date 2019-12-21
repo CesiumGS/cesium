@@ -354,11 +354,11 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         //  two triangles between the last north vertex and the first west vertex
         if (westBorder.length > 0 && northBorder.length > 0) {
             var firstBorderIndex = westBorder[0].index;
-            var firstindexCountWithoutSkirts = vertexCountWithoutSkirts;
+            var firstSkirtIndex = vertexCountWithoutSkirts;
             var lastBorderIndex = northBorder[northBorder.length - 1].index;
-            var lastindexCountWithoutSkirts = positions.length - 1;
+            var lastSkirtIndex = positions.length - 1;
 
-            indices.push(lastBorderIndex, lastindexCountWithoutSkirts, firstindexCountWithoutSkirts, firstindexCountWithoutSkirts, firstBorderIndex, lastBorderIndex);
+            indices.push(lastBorderIndex, lastSkirtIndex, firstSkirtIndex, firstSkirtIndex, firstBorderIndex, lastBorderIndex);
         }
 
         size = positions.length; // Get new size with skirt vertices

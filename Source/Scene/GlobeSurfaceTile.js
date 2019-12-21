@@ -121,21 +121,6 @@ import TerrainState from './TerrainState.js';
                 }
                 return undefined;
             }
-        },
-        /**
-         * The index in the tile's index buffer where skirt geometry begins. This index is used to hide skirts when {@link Globe#showSkirts} is false.
-         * If the tile is a fill tile or there are no skirts, it returns undefined.
-         *
-         * @memberof GlobeSurfaceTile.prototype
-         * @type {Number}
-         */
-        indexCountWithoutSkirts : {
-            get : function() {
-                var renderedMesh = this.renderedMesh;
-                if (defined(renderedMesh)) {
-                    return renderedMesh.indexCountWithoutSkirts;
-                }
-            }
         }
     });
 
