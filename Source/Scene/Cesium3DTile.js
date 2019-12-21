@@ -12,6 +12,7 @@ import Ellipsoid from '../Core/Ellipsoid.js';
 import getMagic from '../Core/getMagic.js';
 import Intersect from '../Core/Intersect.js';
 import JulianDate from '../Core/JulianDate.js';
+import TimeInterval from '../Core/TimeInterval.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -85,6 +86,12 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         }
         this._contentBoundingVolume = contentBoundingVolume;
         this._contentBoundingVolume2D = undefined;
+
+        var availability;
+        if (defined(header.availability)) {
+          availability = TimeInterval.fromIso8601({iso8601: header.availability});
+        }
+        this._availability = availability
 
         var viewerRequestVolume;
         if (defined(header.viewerRequestVolume)) {
@@ -429,6 +436,21 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         },
 
         /**
+         * Returns the <code>availability</code> of the tile.
+         * Returns <code>undefined</code> if <code>availability</code> does not exist
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {TimeInterval}
+         * @readonly
+         */
+        availability : {
+            get : function() {
+                return this._availability;
+            }
+        },
+
+        /**
          * Gets or sets the tile's highlight color.
          *
          * @memberof Cesium3DTile.prototype
@@ -740,6 +762,11 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+        if (defined(this.availability)) {
+          if (!TimeInterval.contains(this._availability, frameState.time)) {
+            this._visible = false;
+          }
+        }
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
         this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
