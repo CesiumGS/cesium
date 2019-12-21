@@ -239,3 +239,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tinco Andringa](https://github.com/tinco)
 * [André Borud](https://github.com/andreborud)
 * [Nathan Schulte](https://github.com/nmschulte)
+* [Brian Ellingson](https://github.com/brianpojo56)

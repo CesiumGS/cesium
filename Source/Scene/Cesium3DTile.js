@@ -91,7 +91,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         if (defined(header.availability)) {
           availability = TimeInterval.fromIso8601({iso8601: header.availability});
         }
-        this._availability = availability
+        this._availability = availability;
 
         var viewerRequestVolume;
         if (defined(header.viewerRequestVolume)) {
@@ -761,12 +761,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._screenSpaceError = this.getScreenSpaceError(frameState, false);
         this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
-        this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-        if (defined(this.availability)) {
-          if (!TimeInterval.contains(this._availability, frameState.time)) {
-            this._visible = false;
-          }
-        }
+        this._visible = this.insideAvailability(frameState) && this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
         this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
@@ -1079,6 +1074,19 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
         var viewerRequestVolume = this._viewerRequestVolume;
         return !defined(viewerRequestVolume) || (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
+    };
+
+    /**
+     * Checks if the frameState time is within tile availability
+     *
+     * @param {FrameState} frameState The frame state.
+     * @returns {Boolean} Whether the frame state time is with the tile availability.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.insideAvailability = function(frameState) {
+        var availability = this._availability;
+        return !defined(availability) || TimeInterval.contains(this._availability, frameState.time);
     };
 
     var scratchMatrix = new Matrix3();

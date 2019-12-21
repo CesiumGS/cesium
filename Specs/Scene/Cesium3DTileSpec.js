@@ -1,6 +1,7 @@
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { clone } from '../../Source/Cesium.js';
 import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
 import { Matrix3 } from '../../Source/Cesium.js';
 import { Matrix4 } from '../../Source/Cesium.js';
@@ -11,6 +12,7 @@ import { Cesium3DTileRefine } from '../../Source/Cesium.js';
 import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
 import { TileBoundingRegion } from '../../Source/Cesium.js';
 import { TileOrientedBoundingBox } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 
 describe('Scene/Cesium3DTile', function() {
@@ -96,6 +98,16 @@ describe('Scene/Cesium3DTile', function() {
         },
         viewerRequestVolume : {
             box : [0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0]
+        }
+    };
+
+    var tileWithAvailability = {
+        geometricError : 1,
+        availability : '2019-12-20T01:01:01Z/2019-12-30T23:59:59Z',
+        refine : 'REPLACE',
+        children : [],
+        boundingVolume: {
+            region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
         }
     };
 
@@ -367,6 +379,32 @@ describe('Scene/Cesium3DTile', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugViewerRequestVolume).toBeDefined();
+        });
+    });
+
+    describe('time based culling', function() {
+        var tile = new Cesium3DTile(mockTileset, 'some_url', tileWithAvailability, undefined);
+        it('can have an availability', function() {
+            var availability = TimeInterval.fromIso8601({iso8601: tileWithAvailability.availability});
+            expect(tile.availability).toBeDefined();
+            expect(tile.availability).toEqual(availability);
+        });
+
+        var scene = createScene();
+        scene.frameState.passes.render = true;
+
+        it('is not visible when time is outside availability', function() {
+          var frameState = clone(scene.frameState);
+          frameState.time = JulianDate.fromIso8601('2019-12-15T00:00:00Z');
+          var visible = tile.insideAvailability(frameState);
+          expect(visible).toEqual(false);
+        });
+
+        it('is visible when time is inside availability', function() {
+          var frameState = clone(scene.frameState);
+          frameState.time = JulianDate.fromIso8601('2019-12-25T00:00:00Z');
+          var visible = tile.insideAvailability(frameState);
+          expect(visible).toEqual(true);
         });
     });
 
