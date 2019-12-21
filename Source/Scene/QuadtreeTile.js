@@ -160,13 +160,13 @@ QuadtreeTile.prototype._updateCustomData = function (
     });
     this._customData = customData;
 
-    rectangle = this._rectangle;
-    for (i = 0; i < added.length; ++i) {
-      data = added[i];
-      if (Rectangle.contains(rectangle, data.positionCartographic)) {
-        customData.push(data);
-      }
-    }
+	rectangle = this._rectangle;
+	for (i = 0; i < added.length; ++i) {
+		data = added[i];
+		if (data.positionCartographic && Rectangle.contains(rectangle, data.positionCartographic)) {
+			customData.push(data);
+		}
+	}
 
     this._frameUpdated = frameNumber;
   } else {

@@ -5049,16 +5049,18 @@ function updateClamping(model) {
   );
 
   // Set the correct height now
-  var height = globe.getHeight(cartoPosition);
-  if (defined(height)) {
-    // Get callback with cartoPosition being the non-clamped position
-    var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+  if(cartoPosition){
+	var height = globe.getHeight(cartoPosition);
+	if (defined(height)) {
+	  // Get callback with cartoPosition being the non-clamped position
+	  var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
 
-    // Compute the clamped cartesian and call updateHeight callback
-    Cartographic.clone(cartoPosition, scratchCartographic);
-    scratchCartographic.height = height;
-    ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-    cb(scratchPosition);
+	  // Compute the clamped cartesian and call updateHeight callback
+	  Cartographic.clone(cartoPosition, scratchCartographic);
+	  scratchCartographic.height = height;
+	  ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+	  cb(scratchPosition);
+	}
   }
 }
 

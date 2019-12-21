@@ -231,6 +231,11 @@ SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
   this._property.setInterpolationOptions(options);
 };
 
+/**Очистить список точек**/
+SampledPositionProperty.prototype.clearSamples = function(){
+	this._property.clearSamples();
+}
+
 /**
  * Adds a new sample.
  *
@@ -238,23 +243,14 @@ SampledPositionProperty.prototype.setInterpolationOptions = function (options) {
  * @param {Cartesian3} position The position at the provided time.
  * @param {Cartesian3[]} [derivatives] The array of derivative values at the provided time.
  */
-SampledPositionProperty.prototype.addSample = function (
-  time,
-  position,
-  derivatives
-) {
-  var numberOfDerivatives = this._numberOfDerivatives;
-  //>>includeStart('debug', pragmas.debug);
-  if (
-    numberOfDerivatives > 0 &&
-    (!defined(derivatives) || derivatives.length !== numberOfDerivatives)
-  ) {
-    throw new DeveloperError(
-      "derivatives length must be equal to the number of derivatives."
-    );
-  }
-  //>>includeEnd('debug');
-  this._property.addSample(time, position, derivatives);
+SampledPositionProperty.prototype.addSample = function(time, position, derivatives) {
+	var numberOfDerivatives = this._numberOfDerivatives;
+	//>>includeStart('debug', pragmas.debug);
+	if (numberOfDerivatives > 0 && (!defined(derivatives) || derivatives.length !== numberOfDerivatives)) {
+		throw new DeveloperError('derivatives length must be equal to the number of derivatives.');
+	}
+	//>>includeEnd('debug');
+	this._property.addSample(time, position, derivatives);
 };
 
 /**

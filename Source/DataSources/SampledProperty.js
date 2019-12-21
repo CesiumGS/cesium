@@ -717,15 +717,17 @@ SampledProperty.prototype.removeSample = function (time) {
   return true;
 };
 
+SampledProperty.prototype.clearSamples = function(){
+	var packedLength = this._packedLength;
+	removeSamples(this, 0, this._values.length / packedLength);
+}
+
 function removeSamples(property, startIndex, numberToRemove) {
-  var packedLength = property._packedLength;
-  property._times.splice(startIndex, numberToRemove);
-  property._values.splice(
-    startIndex * packedLength,
-    numberToRemove * packedLength
-  );
-  property._updateTableLength = true;
-  property._definitionChanged.raiseEvent(property);
+	var packedLength = property._packedLength;
+	property._times.splice(startIndex, numberToRemove);
+	property._values.splice(startIndex * packedLength, numberToRemove * packedLength);
+	property._updateTableLength = true;
+	property._definitionChanged.raiseEvent(property);
 }
 
 /**
