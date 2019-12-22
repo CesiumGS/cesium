@@ -23,5 +23,7 @@ vec4 czm_translucentPhong(vec3 toEye, czm_material material)
     color += materialDiffuse * diffuse;
     color += material.specular * specular;
 
+    color *= czm_lightColor;
+
     return vec4(color, material.alpha);
 }

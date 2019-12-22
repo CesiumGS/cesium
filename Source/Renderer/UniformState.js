@@ -131,6 +131,7 @@ import SunLight from '../Scene/SunLight.js';
         this._lightDirectionWC = new Cartesian3();
         this._lightDirectionEC = new Cartesian3();
         this._lightColor = new Cartesian3();
+        this._lightColorHdr = new Cartesian3();
 
         this._pass = undefined;
         this._mode = undefined;
@@ -768,13 +769,29 @@ import SunLight from '../Scene/SunLight.js';
         },
 
         /**
-         * The color and intensity of light emitted by the scene's light source.
+         * The color of light emitted by the scene's light source.
+         * This is equalivalent to the light color multiplied by the
+         * light intensity and constrained to a maximum luminance of 1.0
+         * situable for non-HDR lighting.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
         lightColor : {
             get : function() {
                 return this._lightColor;
+            }
+        },
+
+        /**
+         * The high dynamic range color of light emitted by the scene's light source.
+         * This is equivalent to the light color multiplied by the light intensity
+         * suitable for HDR lighting.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        lightColorHdr : {
+            get : function() {
+                return this._lightColorHdr;
             }
         },
 
@@ -1153,8 +1170,14 @@ import SunLight from '../Scene/SunLight.js';
         }
 
         var lightColor = light.color;
-        lightColor = Cartesian3.fromElements(lightColor.red, lightColor.green, lightColor.blue, this._lightColor);
-        this._lightColor = Cartesian3.multiplyByScalar(lightColor, light.intensity, this._lightColor);
+        var lightColorHdr = Cartesian3.fromElements(lightColor.red, lightColor.green, lightColor.blue, this._lightColorHdr);
+        lightColorHdr = Cartesian3.multiplyByScalar(lightColorHdr, light.intensity, lightColorHdr);
+        var maximumComponent = Cartesian3.maximumComponent(lightColorHdr);
+        if (maximumComponent > 1.0) {
+            Cartesian3.divideByScalar(lightColorHdr, maximumComponent, this._lightColor);
+        } else {
+            Cartesian3.clone(lightColorHdr, this._lightColor);
+        }
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;

@@ -688,7 +688,7 @@ import ModelUtility from './ModelUtility.js';
 
             // Generate fragment shader's lighting block
             fragmentShader += '#ifndef USE_CUSTOM_LIGHT_COLOR \n';
-            fragmentShader += '    vec3 lightColor = czm_lightColor;\n';
+            fragmentShader += '    vec3 lightColor = czm_lightColorHdr;\n';
             fragmentShader += '#else \n';
             fragmentShader += '    vec3 lightColor = gltf_lightColor;\n';
             fragmentShader += '#endif \n';

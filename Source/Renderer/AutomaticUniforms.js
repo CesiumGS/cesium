@@ -1355,7 +1355,9 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
-         * An automatic GLSL uniform that represents the color and intensity of light emitted by the scene's light source.
+         * An automatic GLSL uniform that represents the color of light emitted by the scene's
+         * light source. This is equalivalent to the light color multiplied by the light intensity
+         * and constrained to a maximum luminance of 1.0 situable for non-HDR lighting.
          *
          * @alias czm_lightColor
          * @glslUniform
@@ -1365,6 +1367,22 @@ import WebGLConstants from '../Core/WebGLConstants.js';
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.lightColor;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that represents the high dynamic range color of light emitted
+         * by the scene's light source. This is equivalent to the light color multiplied by the
+         * light intensity suitable for HDR lighting.
+         *
+         * @alias czm_lightColorHdr
+         * @glslUniform
+         */
+        czm_lightColorHdr : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightColorHdr;
             }
         }),
 

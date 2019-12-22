@@ -1350,6 +1350,28 @@ describe('Renderer/AutomaticUniforms', function() {
         us.update(frameState);
         var fs =
             'void main() {' +
+            '  bool b0 = czm_lightColor.x == 0.25;' +
+            '  bool b1 = czm_lightColor.y == 0.5;' +
+            '  bool b2 = czm_lightColor.z == 1.0;' +
+            '  gl_FragColor = vec4(b0 && b1 && b2);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_lightColorHdr', function() {
+        var us = context.uniformState;
+        var frameState = createFrameState(context, createMockCamera());
+        frameState.light = new DirectionalLight({
+           direction : new Cartesian3(0.0, 0.0, 1.0),
+           color : new Color(0.25, 0.5, 1.0),
+           intensity : 2.0
+        });
+        us.update(frameState);
+        var fs =
+            'void main() {' +
             '  bool b0 = czm_lightColor.x == 0.5;' +
             '  bool b1 = czm_lightColor.y == 1.0;' +
             '  bool b2 = czm_lightColor.z == 2.0;' +

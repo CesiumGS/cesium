@@ -47,8 +47,10 @@ vec4 czm_phong(vec3 toEye, czm_material material)
 
 #ifdef HDR
     float lightDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_lightDirectionEC, material);
-    color += materialDiffuse * lightDiffuse * czm_lightColor;
+    color += materialDiffuse * lightDiffuse;
 #endif
+
+    color *= czm_lightColor;
 
     return vec4(color, material.alpha);
 }
@@ -62,6 +64,8 @@ vec4 czm_private_phong(vec3 toEye, czm_material material)
     vec3 color = ambient + material.emission;
     color += material.diffuse * diffuse;
     color += material.specular * specular;
+
+    color *= czm_lightColor;
 
     return vec4(color, material.alpha);
 }
