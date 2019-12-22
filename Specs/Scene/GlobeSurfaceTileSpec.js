@@ -5,6 +5,7 @@ import { Cartesian3 } from '../../Source/Cesium.js';
 import { Cartesian4 } from '../../Source/Cesium.js';
 import { createWorldTerrain } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
 import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { Ray } from '../../Source/Cesium.js';
 import { GlobeSurfaceTile } from '../../Source/Cesium.js';
@@ -306,6 +307,32 @@ describe('Scene/GlobeSurfaceTile', function() {
                 var pickResult = tile.data.pick(ray, undefined, undefined, true);
                 var cartographic = Ellipsoid.WGS84.cartesianToCartographic(pickResult);
                 expect(cartographic.height).toBeGreaterThan(-500.0);
+            });
+        });
+
+        it('gets correct result when a closer triangle is processed after a farther triangle', function() {
+            // Pick root tile (0,0). It will intersect a triangle on the east and the west side.
+            // The east triangle is closer and should be the pick result even though the west triangle is checked first.
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 0,
+                x : 0,
+                y : 0
+            });
+
+            processor.frameState = scene.frameState;
+            processor.terrainProvider = terrainProvider;
+
+            return processor.process([tile]).then(function() {
+                var ray = new Ray(
+                    new Cartesian3(50000000.0, 0.0, 0.0),
+                    // nudge the direction to be pointing at the (0,0) tile
+                    new Cartesian3(-0.9999422718925407, -0.007344489332226594, -0.007842917749982258));
+                var cullBackFaces = false;
+                var pickResult = tile.data.pick(ray, undefined, undefined, cullBackFaces);
+                expect(pickResult.x).toBeGreaterThan(0.0);
             });
         });
     }, 'WebGL');
