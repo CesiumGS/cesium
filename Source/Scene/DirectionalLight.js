@@ -8,7 +8,7 @@ import DeveloperError from '../Core/DeveloperError.js';
      * A light that gets emitted in a single direction from infinitely far away.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.direction The direction that light gets emitted.
+     * @param {Cartesian3} options.direction The direction in which light gets emitted.
      * @param {Color} [options.color=Color.WHITE] The color of the light.
      * @param {Number} [options.intensity=1.0] The intensity of the light.
      *
@@ -27,7 +27,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         //>>includeEnd('debug');
 
         /**
-         * The direction that light gets emitted.
+         * The direction in which light gets emitted.
          * @type {Cartesian3}
          */
         this.direction = Cartesian3.clone(options.direction);

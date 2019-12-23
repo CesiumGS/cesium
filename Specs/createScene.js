@@ -1,5 +1,6 @@
-import { Cartesian2 } from '../Source/Cesium.js';
+import { Cartesian2, DirectionalLight } from '../Source/Cesium.js';
 import { clone } from '../Source/Cesium.js';
+import { Color } from '../Source/Cesium.js';
 import { defaultValue } from '../Source/Cesium.js';
 import { defined } from '../Source/Cesium.js';
 import { Scene } from '../Source/Cesium.js';
@@ -28,6 +29,8 @@ import getWebGLStub from './getWebGLStub.js';
 
         var scene = new Scene(options);
         scene.highDynamicRange = false;
+        scene.light.color = Color.WHITE;
+        scene.light.intensity = 1.0;
 
         if (!!window.webglValidation) {
             var context = scene.context;

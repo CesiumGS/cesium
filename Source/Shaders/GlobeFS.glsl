@@ -322,7 +322,7 @@ void main()
 
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * czm_lightolor * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
@@ -455,7 +455,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float positionToEyeECLength = length(positionToEyeEC);
 
     // The double normalize below works around a bug in Firefox on Android devices.
-    vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
+    vec3 normalizedPositionToEyeEC = normalize(normalize(positionToEyeEC));
 
     // Fade out the waves as the camera moves far from the surface.
     float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
@@ -504,7 +504,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = czm_getSpecular(czm_lightDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = czm_getSpecular(czm_lightDirectionEC, normalizedPositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
 

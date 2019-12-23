@@ -1,4 +1,4 @@
-import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoundingSphere, SunLight } from '../../Source/Cesium.js';
 import { BoxGeometry } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
@@ -629,11 +629,13 @@ describe('Scene/ShadowMap', function() {
     });
 
     it('uses scene\'s light source', function() {
+        var originalLight = scene.light;
+
         box.show = true;
         floor.show = true;
 
-        var lightDirectionAbove = new Cartesian3(0.709610014299089, 0.6103154501194787, 0.35209186152466626); // Light pointing straight above
-        var lightDirectionAngle = new Cartesian3(0.7160184930096664, 0.6027810300264894, 0.35209735515673896); // Light at an angle
+        var lightDirectionAbove = new Cartesian3(-0.22562675028973597, 0.8893549458095356, -0.3976686433675793); // Light pointing straight above
+        var lightDirectionAngle = new Cartesian3(0.14370705890272903, 0.9062077731227641, -0.3976628636840613); // Light at an angle
 
         var center = new Cartesian3.fromRadians(longitude, latitude, height);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
@@ -667,6 +669,7 @@ describe('Scene/ShadowMap', function() {
         renderAndExpect(unshadowedColor);
 
         scene.shadowMap = undefined;
+        scene.light = originalLight;
     });
 
     it('single cascade shadow map', function() {
