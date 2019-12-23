@@ -1,6 +1,17 @@
 Change Log
 ==========
 
+### 1.66.0 - 2020-02-03
+
+##### Deprecated :hourglass_flowing_sand:
+* The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#TODO](https://github.com/AnalyticalGraphicsInc/cesium/pull/TODO)
+
+##### Additions :tada:
+* Added improvements to Cesium's lighting system
+    * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
+    * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
+    * Primitives and the globe are now shaded with the scene light's color.
+
 ### 1.65.0 - 2020-01-02
 
 ##### Fixes :wrench:
