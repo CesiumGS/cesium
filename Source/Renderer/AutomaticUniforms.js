@@ -1355,12 +1355,23 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
-         * An automatic GLSL uniform that represents the color of light emitted by the scene's
-         * light source. This is equalivalent to the light color multiplied by the light intensity
-         * and constrained to a maximum luminance of 1.0 situable for non-HDR lighting.
+         * An automatic GLSL uniform that represents the color of light emitted by the scene's light source. This
+         * is equivalent to the light color multiplied by the light intensity limited to a maximum luminance of 1.0
+         * suitable for non-HDR lighting.
          *
          * @alias czm_lightColor
+         * @namespace
          * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightColor;
+         *
+         * // Example
+         * vec3 diffuseColor = czm_lightColor * max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightColor
+         * @see czm_lightColorHdr
          */
         czm_lightColor : new AutomaticUniform({
             size : 1,
@@ -1371,12 +1382,22 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
-         * An automatic GLSL uniform that represents the high dynamic range color of light emitted
-         * by the scene's light source. This is equivalent to the light color multiplied by the
-         * light intensity suitable for HDR lighting.
+         * An automatic GLSL uniform that represents the high dynamic range color of light emitted by the scene's light
+         * source. This is equivalent to the light color multiplied by the light intensity suitable for HDR lighting.
          *
          * @alias czm_lightColorHdr
+         * @namespace
          * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightColorHdr;
+         *
+         * // Example
+         * vec3 diffuseColor = czm_lightColorHdr * max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightColorHdr
+         * @see czm_lightColor
          */
         czm_lightColorHdr : new AutomaticUniform({
             size : 1,
