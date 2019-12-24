@@ -84,7 +84,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
-        this.enableAtmosphereLighting = false;
+        this.dynamicAtmosphereLighting = false;
+        this.dynamicAtmosphereLightingFromSun = false;
         this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
@@ -1495,7 +1496,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         showReflectiveOcean : undefined,
         showOceanWaves : undefined,
         enableLighting : undefined,
-        enableAtmosphereLighting : undefined,
+        dynamicAtmosphereLighting : undefined,
+        dynamicAtmosphereLightingFromSun : undefined,
         showGroundAtmosphere : undefined,
         perFragmentGroundAtmosphere : undefined,
         hasVertexNormals : undefined,
@@ -1659,7 +1661,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
         surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
         surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
-        surfaceShaderSetOptions.enableAtmosphereLighting = tileProvider.enableAtmosphereLighting;
+        surfaceShaderSetOptions.dynamicAtmosphereLighting = tileProvider.dynamicAtmosphereLighting;
+        surfaceShaderSetOptions.dynamicAtmosphereLightingFromSun = tileProvider.dynamicAtmosphereLightingFromSun;
         surfaceShaderSetOptions.showGroundAtmosphere = showGroundAtmosphere;
         surfaceShaderSetOptions.perFragmentGroundAtmosphere = perFragmentGroundAtmosphere;
         surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;

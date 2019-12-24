@@ -99,6 +99,13 @@ void main(void)
     float startOffset = depth*scale(startAngle);
 #endif
 
+    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
+    vec3 lightDir =
+        czm_viewerPositionWC * float(lightEnum == 0.0) +
+        czm_lightDirectionWC * float(lightEnum == 1.0) +
+        czm_sunDirectionWC * float(lightEnum == 2.0);
+    lightDir = normalize(lightDir);
+
     // Initialize the scattering loop variables
     float sampleLength = far / fSamples;
     float scaledLength = sampleLength * atmosphereScale;
@@ -107,8 +114,6 @@ void main(void)
 
     // Now loop through the sample rays
     vec3 frontColor = vec3(0.0, 0.0, 0.0);
-    vec3 lightDir = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_lightDirectionWC : czm_viewerPositionWC;
-    lightDir = normalize(lightDir);
 
     for(int i=0; i<nSamples; i++)
     {

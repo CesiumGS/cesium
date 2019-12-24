@@ -74,9 +74,9 @@ describe('Scene/Globe', function() {
         });
     });
 
-    it('renders with enableAtmosphereLighting', function() {
+    it('renders with dynamicAtmosphereLighting', function() {
         globe.enableLighting = true;
-        globe.enableAtmosphereLighting = true;
+        globe.dynamicAtmosphereLighting = true;
 
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();

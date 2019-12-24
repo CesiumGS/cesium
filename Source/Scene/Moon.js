@@ -53,7 +53,7 @@ import Material from './Material.js';
          */
         this.textureUrl = url;
 
-        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         /**
          * Use the sun as the only light source.

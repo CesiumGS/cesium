@@ -148,10 +148,17 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.enableLighting = false;
 
         /**
-         * Enable lighting effects on atmosphere and fog. This only takes effect
-         * when <code>enableLighting</code> is true.
+         * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
          */
-        this.enableAtmosphereLighting = true;
+        this.dynamicAtmosphereLighting = true;
+
+        /**
+         * Whether dynamic atmosphere lighting is based on the sun instead of the scene's
+         * light source. This only takes effect when <code>enableLighting</code> and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
+         */
+        this.dynamicAtmosphereLightingFromSun = false;
 
         /**
          * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
@@ -184,7 +191,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
          * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
-         * <code>enableAtmosphereLighting</code> are <code>true</code>.
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
@@ -194,7 +201,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
          * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
-         * <code>enableAtmosphereLighting</code> are <code>true</code>.
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 50000000.0
@@ -749,7 +756,8 @@ import TileSelectionResult from './TileSelectionResult.js';
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
-            tileProvider.enableAtmosphereLighting = this.enableAtmosphereLighting;
+            tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
+            tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
             tileProvider.hueShift = this.atmosphereHueShift;

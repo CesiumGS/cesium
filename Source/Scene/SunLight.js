@@ -6,7 +6,7 @@ import defined from '../Core/defined.js';
      * A directional light source that originates from the Sun.
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Color} [options.color=new Color(0.9, 0.925, 1.0)] The light's color.
+     * @param {Color} [options.color=new Color(1.0, 1.0, 1.0)] The light's color.
      * @param {Number} [options.intensity=2.0] The light's intensity.
      *
      * @alias SunLight
@@ -17,9 +17,9 @@ import defined from '../Core/defined.js';
         /**
          * The color of the light.
          * @type {Color}
-         * @default new Color(0.9, 0.925, 1.0)
+         * @default new Color(1.0, 1.0, 1.0)
          */
-        this.color = defined(options.color) ? Color.clone(options.color) : new Color(0.9, 0.925, 1.0);
+        this.color = defined(options.color) ? Color.clone(options.color) : new Color(1.0, 1.0, 1.0);
 
         /**
          * The intensity of the light.

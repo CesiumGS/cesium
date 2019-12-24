@@ -71,7 +71,8 @@ import SceneMode from './SceneMode.js';
         var showReflectiveOcean = options.showReflectiveOcean;
         var showOceanWaves = options.showOceanWaves;
         var enableLighting = options.enableLighting;
-        var enableAtmosphereLighting = options.enableAtmosphereLighting;
+        var dynamicAtmosphereLighting = options.dynamicAtmosphereLighting;
+        var dynamicAtmosphereLightingFromSun = options.dynamicAtmosphereLightingFromSun;
         var showGroundAtmosphere = options.showGroundAtmosphere;
         var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
         var hasVertexNormals = options.hasVertexNormals;
@@ -128,21 +129,22 @@ import SceneMode from './SceneMode.js';
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (enableAtmosphereLighting << 11) |
-                    (showGroundAtmosphere << 12) |
-                    (perFragmentGroundAtmosphere << 13) |
-                    (hasVertexNormals << 14) |
-                    (useWebMercatorProjection << 15) |
-                    (enableFog << 16) |
-                    (quantization << 17) |
-                    (applySplit << 18) |
-                    (enableClippingPlanes << 19) |
-                    (vertexLogDepth << 20) |
-                    (cartographicLimitRectangleFlag << 21) |
-                    (imageryCutoutFlag << 22) |
-                    (colorCorrect << 23) |
-                    (highlightFillTile << 24) |
-                    (colorToAlpha << 25);
+                    (dynamicAtmosphereLighting << 11) |
+                    (dynamicAtmosphereLightingFromSun << 12) |
+                    (showGroundAtmosphere << 13) |
+                    (perFragmentGroundAtmosphere << 14) |
+                    (hasVertexNormals << 15) |
+                    (useWebMercatorProjection << 16) |
+                    (enableFog << 17) |
+                    (quantization << 18) |
+                    (applySplit << 19) |
+                    (enableClippingPlanes << 20) |
+                    (vertexLogDepth << 21) |
+                    (cartographicLimitRectangleFlag << 22) |
+                    (imageryCutoutFlag << 23) |
+                    (colorCorrect << 24) |
+                    (highlightFillTile << 25) |
+                    (colorToAlpha << 26);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -216,8 +218,11 @@ import SceneMode from './SceneMode.js';
                 }
             }
 
-            if (enableAtmosphereLighting) {
-                fs.defines.push('ENABLE_ATMOSPHERE_LIGHTING');
+            if (dynamicAtmosphereLighting) {
+                fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING');
+                if (dynamicAtmosphereLightingFromSun) {
+                    fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN')
+                }
             }
 
             if (showGroundAtmosphere) {

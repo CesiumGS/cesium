@@ -32,16 +32,33 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var scene = viewer.scene;
 scene.globe.enableLighting = true;
 
+var scratchIcrfToFixed = new Cesium.Matrix3();
+var scratchMoonPosition = new Cesium.Cartesian3();
+var scratchMoonDirection = new Cesium.Cartesian3();
+
+function getMoonDirection(result) {
+    result = Cesium.defined(result) ? result : new Cesium.Cartesian3();
+    var icrfToFixed = scratchIcrfToFixed;
+    var date = viewer.clock.currentTime;
+    if (!Cesium.defined(Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
+        Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+    }
+    var moonPosition = Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date, scratchMoonPosition);
+    Cesium.Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
+    var moonDirection = Cesium.Cartesian3.normalize(moonPosition, scratchMoonDirection);
+    return Cesium.Cartesian3.negate(moonDirection, result);
+}
+
 var directionalLight = new Cesium.DirectionalLight({
     direction : new Cesium.Cartesian3(0.2454278300540191, 0.8842635425193919, 0.39729481195458805)
 });
 
 var flashlight = new Cesium.DirectionalLight({
-    direction : Cesium.Cartesian3.UNIT_Z // Updated every frame
+    direction : scene.camera.directionWC // Updated every frame
 });
 
 var moonLight = new Cesium.DirectionalLight({
-    direction : Cesium.Cartesian3.UNIT_Z, // Updated every frame
+    direction : getMoonDirection(), // Updated every frame
     color : new Cesium.Color(0.9, 0.925, 1.0),
     intensity : 0.5
 });
@@ -61,23 +78,27 @@ scene.preRender.addEventListener(function(scene, time) {
     }
 });
 
-var scratchIcrfToFixed = new Cesium.Matrix3();
-var scratchMoonPosition = new Cesium.Cartesian3();
-var scratchMoonDirection = new Cesium.Cartesian3();
-
-function getMoonDirection(result) {
-    var icrfToFixed = scratchIcrfToFixed;
-    var date = viewer.clock.currentTime;
-    if (!Cesium.defined(Cesium.Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
-        Cesium.Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
+var entity = viewer.entities.add({
+    position : Cesium.Cartesian3.fromRadians(-2.1463338399937277, 0.6677959688982861, 32.18991401746337),
+    model : {
+        uri : '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb',
+        scale : 7.0
     }
-    var moonPosition = Cesium.Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date, scratchMoonPosition);
-    Cesium.Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
-    var moonDirection = Cesium.Cartesian3.normalize(moonPosition, scratchMoonDirection);
-    return Cesium.Cartesian3.negate(moonDirection, result);
+});
+
+function setTime(iso8601) {
+    var currentTime = Cesium.JulianDate.fromIso8601(iso8601);
+    var endTime = Cesium.JulianDate.addDays(currentTime, 2, new Cesium.JulianDate());
+
+    viewer.clock.currentTime = currentTime;
+    viewer.timeline.zoomTo(currentTime, endTime);
 }
 
-viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2019-12-24T19:15:27.23293103447940666Z');
+function reset() {
+    scene.globe.dynamicAtmosphereLighting = true;
+    scene.globe.dynamicAtmosphereLightingFromSun = false;
+    setTime('2020-01-09T23:00:39.018261982600961346Z');
+}
 
 viewer.scene.camera.setView({
     destination : new Cesium.Cartesian3(-2729490.8390059783, -4206389.878855597, 3928671.2763356343),
@@ -88,32 +109,35 @@ viewer.scene.camera.setView({
 var options = [{
     text : 'Fixed lighting',
     onselect : function() {
+        reset();
         scene.light = directionalLight;
-        scene.globe.enableAtmosphereLighting = true;
     }
 }, {
     text : 'Flashlight',
     onselect : function() {
+        reset();
         scene.light = flashlight;
-        scene.globe.enableAtmosphereLighting = false;
+        scene.globe.dynamicAtmosphereLighting = false;
     }
 }, {
     text : 'Moonlight',
     onselect : function() {
+        reset();
         scene.light = moonLight;
-        scene.globe.enableAtmosphereLighting = true;
+        scene.globe.dynamicAtmosphereLightingFromSun = true;
+        setTime('2020-01-10T05:29:41.17946898164518643Z');
     }
 }, {
     text : 'Sunlight',
     onselect : function() {
+        reset();
         scene.light = sunLight;
-        scene.globe.enableAtmosphereLighting = true;
     }
 }, {
     text : 'Custom color',
     onselect : function() {
+        reset();
         scene.light = customColorLight;
-        scene.globe.enableAtmosphereLighting = true;
     }
 }];
 

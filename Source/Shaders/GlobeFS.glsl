@@ -72,7 +72,7 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#if defined(FOG) && defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+#if defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
 
@@ -354,9 +354,15 @@ void main()
 #endif
 #endif
 
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
+#endif
+
 #ifdef FOG
-#if defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), czm_lightDirectionWC), u_minimumBrightness, 1.0);
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
@@ -375,7 +381,7 @@ void main()
         return;
     }
 
-#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
@@ -389,7 +395,7 @@ void main()
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
-    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true, atmosphereLightDirection);
 
     vec3 groundAtmosphereColor = colorCorrect(atmosColor.mie) + finalColor.rgb * colorCorrect(atmosColor.rayleigh);
 #ifndef HDR

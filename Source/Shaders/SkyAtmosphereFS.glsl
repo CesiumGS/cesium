@@ -49,8 +49,15 @@ varying vec3 v_positionEC;
 
 void main (void)
 {
+    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
+    vec3 lightDir =
+        czm_viewerPositionWC * float(lightEnum == 0.0) +
+        czm_lightDirectionWC * float(lightEnum == 1.0) +
+        czm_sunDirectionWC * float(lightEnum == 2.0);
+    lightDir = normalize(lightDir);
+
     // Extra normalize added for Android
-    float cosAngle = dot(czm_lightDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
+    float cosAngle = dot(lightDir, normalize(v_toCamera)) / length(v_toCamera);
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
@@ -76,7 +83,7 @@ void main (void)
     float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
 
     // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), czm_lightDirectionWC), 0.0, 1.0) : 1.0;
+    float nightAlpha = clamp(dot(normalize(czm_viewerPositionWC), lightDir), 0.0, 1.0);
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
     gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
