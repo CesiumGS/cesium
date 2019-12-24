@@ -1,6 +1,5 @@
 import { Cartesian2 } from '../Source/Cesium.js';
 import { clone } from '../Source/Cesium.js';
-import { Color } from '../Source/Cesium.js';
 import { defaultValue } from '../Source/Cesium.js';
 import { defined } from '../Source/Cesium.js';
 import { Scene } from '../Source/Cesium.js';
