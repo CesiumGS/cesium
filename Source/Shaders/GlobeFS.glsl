@@ -72,7 +72,7 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) && defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
 
@@ -355,7 +355,7 @@ void main()
 #endif
 
 #ifdef FOG
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
+#if defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
     float darken = clamp(dot(normalize(czm_viewerPositionWC), czm_lightDirectionWC), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
@@ -375,7 +375,7 @@ void main()
         return;
     }
 
-#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(ENABLE_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;

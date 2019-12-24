@@ -89,26 +89,31 @@ var options = [{
     text : 'Fixed lighting',
     onselect : function() {
         scene.light = directionalLight;
+        scene.globe.enableAtmosphereLighting = true;
     }
 }, {
     text : 'Flashlight',
     onselect : function() {
         scene.light = flashlight;
+        scene.globe.enableAtmosphereLighting = false;
     }
 }, {
     text : 'Moonlight',
     onselect : function() {
         scene.light = moonLight;
+        scene.globe.enableAtmosphereLighting = true;
     }
 }, {
     text : 'Sunlight',
     onselect : function() {
         scene.light = sunLight;
+        scene.globe.enableAtmosphereLighting = true;
     }
 }, {
     text : 'Custom color',
     onselect : function() {
         scene.light = customColorLight;
+        scene.globe.enableAtmosphereLighting = true;
     }
 }];
 

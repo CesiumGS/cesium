@@ -71,6 +71,7 @@ import SceneMode from './SceneMode.js';
         var showReflectiveOcean = options.showReflectiveOcean;
         var showOceanWaves = options.showOceanWaves;
         var enableLighting = options.enableLighting;
+        var enableAtmosphereLighting = options.enableAtmosphereLighting;
         var showGroundAtmosphere = options.showGroundAtmosphere;
         var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
         var hasVertexNormals = options.hasVertexNormals;
@@ -127,20 +128,21 @@ import SceneMode from './SceneMode.js';
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (showGroundAtmosphere << 11) |
-                    (perFragmentGroundAtmosphere << 12) |
-                    (hasVertexNormals << 13) |
-                    (useWebMercatorProjection << 14) |
-                    (enableFog << 15) |
-                    (quantization << 16) |
-                    (applySplit << 17) |
-                    (enableClippingPlanes << 18) |
-                    (vertexLogDepth << 19) |
-                    (cartographicLimitRectangleFlag << 20) |
-                    (imageryCutoutFlag << 21) |
-                    (colorCorrect << 22) |
-                    (highlightFillTile << 23) |
-                    (colorToAlpha << 24);
+                    (enableAtmosphereLighting << 11) |
+                    (showGroundAtmosphere << 12) |
+                    (perFragmentGroundAtmosphere << 13) |
+                    (hasVertexNormals << 14) |
+                    (useWebMercatorProjection << 15) |
+                    (enableFog << 16) |
+                    (quantization << 17) |
+                    (applySplit << 18) |
+                    (enableClippingPlanes << 19) |
+                    (vertexLogDepth << 20) |
+                    (cartographicLimitRectangleFlag << 21) |
+                    (imageryCutoutFlag << 22) |
+                    (colorCorrect << 23) |
+                    (highlightFillTile << 24) |
+                    (colorToAlpha << 25);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -212,6 +214,10 @@ import SceneMode from './SceneMode.js';
                     vs.defines.push('ENABLE_DAYNIGHT_SHADING');
                     fs.defines.push('ENABLE_DAYNIGHT_SHADING');
                 }
+            }
+
+            if (enableAtmosphereLighting) {
+                fs.defines.push('ENABLE_ATMOSPHERE_LIGHTING');
             }
 
             if (showGroundAtmosphere) {

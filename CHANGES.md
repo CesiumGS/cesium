@@ -10,6 +10,7 @@ Change Log
 * Added improvements to Cesium's lighting system
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
+    * Added `Globe.enableAtmosphereLighting` for enabling lighting effects on atmosphere and fog.
     * Primitives and the globe are now shaded with the scene light's color.
 
 ### 1.65.0 - 2020-01-02
