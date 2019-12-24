@@ -101,17 +101,26 @@ css: { active: $data === $parent._selectedSuggestion }');
         this._form = form;
 
         this._onInputBegin = function(e) {
-            if (!container.contains(e.target)) {
+            // e.target will not be correct if we are inside of the Shadow DOM
+            // and contains will always fail. To retrieve the correct target,
+            // we need to access the first element of the composedPath.
+            // This allows us to use shadow DOM if it exists and fall
+            // back to legacy behavior if its not being used.
+
+            var target = e.target;
+            if (typeof e.composedPath === 'function') {
+                target = e.composedPath()[0];
+            }
+
+            if (!container.contains(target)) {
                 viewModel._focusTextbox = false;
                 viewModel.hideSuggestions();
             }
         };
 
         this._onInputEnd = function(e) {
-            if (container.contains(e.target)) {
-                viewModel._focusTextbox = true;
-                viewModel.showSuggestions();
-            }
+            viewModel._focusTextbox = true;
+            viewModel.showSuggestions();
         };
 
         //We subscribe to both begin and end events in order to give the text box
@@ -119,14 +128,14 @@ css: { active: $data === $parent._selectedSuggestion }');
 
         if (FeatureDetection.supportsPointerEvents()) {
             document.addEventListener('pointerdown', this._onInputBegin, true);
-            document.addEventListener('pointerup', this._onInputEnd, true);
-            document.addEventListener('pointercancel', this._onInputEnd, true);
+            container.addEventListener('pointerup', this._onInputEnd, true);
+            container.addEventListener('pointercancel', this._onInputEnd, true);
         } else {
             document.addEventListener('mousedown', this._onInputBegin, true);
-            document.addEventListener('mouseup', this._onInputEnd, true);
+            container.addEventListener('mouseup', this._onInputEnd, true);
             document.addEventListener('touchstart', this._onInputBegin, true);
-            document.addEventListener('touchend', this._onInputEnd, true);
-            document.addEventListener('touchcancel', this._onInputEnd, true);
+            container.addEventListener('touchend', this._onInputEnd, true);
+            container.addEventListener('touchcancel', this._onInputEnd, true);
         }
 
     }
@@ -181,20 +190,21 @@ css: { active: $data === $parent._selectedSuggestion }');
      * removing the widget from layout.
      */
     Geocoder.prototype.destroy = function() {
+        var container = this._container;
         if (FeatureDetection.supportsPointerEvents()) {
             document.removeEventListener('pointerdown', this._onInputBegin, true);
-            document.removeEventListener('pointerup', this._onInputEnd, true);
+            container.removeEventListener('pointerup', this._onInputEnd, true);
         } else {
             document.removeEventListener('mousedown', this._onInputBegin, true);
-            document.removeEventListener('mouseup', this._onInputEnd, true);
+            container.removeEventListener('mouseup', this._onInputEnd, true);
             document.removeEventListener('touchstart', this._onInputBegin, true);
-            document.removeEventListener('touchend', this._onInputEnd, true);
+            container.removeEventListener('touchend', this._onInputEnd, true);
         }
         this._viewModel.destroy();
         knockout.cleanNode(this._form);
         knockout.cleanNode(this._searchSuggestionsContainer);
-        this._container.removeChild(this._form);
-        this._container.removeChild(this._searchSuggestionsContainer);
+        container.removeChild(this._form);
+        container.removeChild(this._searchSuggestionsContainer);
         this._textBox.removeEventListener('focus', this._onTextBoxFocus, false);
 
         return destroyObject(this);

@@ -5,7 +5,7 @@ varying float v_logZ;
 /**
  * Writes the fragment depth to the logarithmic depth buffer.
  * <p>
- * Use this when the vertex shader does not calls {@link czm_vertexlogDepth}, for example, when
+ * Use this when the vertex shader does not call {@link czm_vertexlogDepth}, for example, when
  * ray-casting geometry using a full screen quad.
  * </p>
  * @name czm_writeLogDepth
