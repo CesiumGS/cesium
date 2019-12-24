@@ -221,7 +221,7 @@ import SceneMode from './SceneMode.js';
             if (dynamicAtmosphereLighting) {
                 fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING');
                 if (dynamicAtmosphereLightingFromSun) {
-                    fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN')
+                    fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN');
                 }
             }
 

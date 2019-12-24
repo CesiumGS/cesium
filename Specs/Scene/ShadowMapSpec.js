@@ -1,4 +1,4 @@
-import { BoundingSphere, SunLight } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
 import { BoxGeometry } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';

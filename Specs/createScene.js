@@ -1,4 +1,4 @@
-import { Cartesian2, DirectionalLight } from '../Source/Cesium.js';
+import { Cartesian2 } from '../Source/Cesium.js';
 import { clone } from '../Source/Cesium.js';
 import { Color } from '../Source/Cesium.js';
 import { defaultValue } from '../Source/Cesium.js';
