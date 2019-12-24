@@ -78,11 +78,29 @@ scene.preRender.addEventListener(function(scene, time) {
     }
 });
 
-var entity = viewer.entities.add({
+viewer.entities.add({
     position : Cesium.Cartesian3.fromRadians(-2.1463338399937277, 0.6677959688982861, 32.18991401746337),
     model : {
         uri : '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb',
         scale : 7.0
+    }
+});
+
+viewer.entities.add({
+    position : Cesium.Cartesian3.fromRadians(-2.14633449752228, 0.667796065242357, 24.47647034111423),
+    cylinder : {
+        length : 8.0,
+        topRadius : 2.0,
+        bottomRadius : 2.0,
+        material : Cesium.Color.WHITE
+    }
+});
+
+viewer.entities.add({
+    position : Cesium.Cartesian3.fromRadians(-2.1463332294173365, 0.6677959755384729, 26.2876064083145),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(2.5, 2.5, 2.5),
+        material : Cesium.Color.WHITE.withAlpha(0.5),
     }
 });
 

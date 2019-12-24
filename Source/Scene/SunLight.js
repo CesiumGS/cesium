@@ -13,7 +13,7 @@ import defined from '../Core/defined.js';
      * @constructor
      */
     function SunLight(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         /**
          * The color of the light.
          * @type {Color}

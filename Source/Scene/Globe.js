@@ -150,13 +150,19 @@ import TileSelectionResult from './TileSelectionResult.js';
         /**
          * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
          * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default true
          */
         this.dynamicAtmosphereLighting = true;
 
         /**
-         * Whether dynamic atmosphere lighting is based on the sun instead of the scene's
+         * Whether dynamic atmosphere lighting uses the sun direction instead of the scene's
          * light source. This only takes effect when <code>enableLighting</code> and
          * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.dynamicAtmosphereLightingFromSun = false;
 

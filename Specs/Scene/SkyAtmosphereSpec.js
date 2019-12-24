@@ -62,6 +62,21 @@ describe('Scene/SkyAtmosphere', function() {
         s.destroy();
     });
 
+    it('draws sky with setDynamicAtmosphereColor set to true and fromSun set to true', function() {
+        var s = new SkyAtmosphere();
+        s.setDynamicAtmosphereColor(true, true);
+
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.render();
+
+        var command = s.update(scene.frameState);
+        expect(command).toBeDefined();
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(2);
+        command.execute(scene.context); // Not reliable enough across browsers to test pixels
+
+        s.destroy();
+    });
+
     it('draws sky with setDynamicAtmosphereColor set to false', function() {
         var s = new SkyAtmosphere();
         s.setDynamicAtmosphereColor(false, false);

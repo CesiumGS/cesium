@@ -100,11 +100,11 @@ void main(void)
 #endif
 
     float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
-    vec3 lightDir =
+    vec3 lightDirection =
         czm_viewerPositionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
         czm_sunDirectionWC * float(lightEnum == 2.0);
-    lightDir = normalize(lightDir);
+    lightDirection = normalize(lightDirection);
 
     // Initialize the scattering loop variables
     float sampleLength = far / fSamples;
@@ -119,7 +119,7 @@ void main(void)
     {
         float height = length(samplePoint);
         float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - height));
-        float fLightAngle = dot(lightDir, samplePoint) / height;
+        float fLightAngle = dot(lightDirection, samplePoint) / height;
         float fCameraAngle = dot(ray, samplePoint) / height;
         float fScatter = (startOffset + depth*(scale(fLightAngle) - scale(fCameraAngle)));
         vec3 attenuate = exp(-fScatter * (InvWavelength * Kr4PI + Km4PI));
