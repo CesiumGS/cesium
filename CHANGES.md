@@ -4,10 +4,10 @@ Change Log
 ### 1.66.0 - 2020-02-03
 
 ##### Deprecated :hourglass_flowing_sand:
-* The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#TODO](https://github.com/AnalyticalGraphicsInc/cesium/pull/TODO)
+* The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
 
 ##### Additions :tada:
-* Added improvements to Cesium's lighting system
+* Add more customization to Cesium's lighting system [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
     * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog, such as day/night transitions. It is true by default but may be set to false if the atmosphere should stay unchanged regardless of the scene's light direction.
