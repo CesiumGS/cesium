@@ -781,7 +781,7 @@ import ModelUtility from './ModelUtility.js';
 
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);\n';
-            fragmentShader += '    IBLColor *= czm_lightColor;\n';
+            fragmentShader += '    IBLColor *= lightColor;\n';
 
             fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
             fragmentShader += '    color += IBLColor * luminance;\n';
