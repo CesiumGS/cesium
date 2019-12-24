@@ -29,8 +29,6 @@ import getWebGLStub from './getWebGLStub.js';
 
         var scene = new Scene(options);
         scene.highDynamicRange = false;
-        scene.light.color = Color.WHITE;
-        scene.light.intensity = 1.0;
 
         if (!!window.webglValidation) {
             var context = scene.context;

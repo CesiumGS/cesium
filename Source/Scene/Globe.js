@@ -158,7 +158,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         /**
          * Whether dynamic atmosphere lighting uses the sun direction instead of the scene's
-         * light source. This only takes effect when <code>enableLighting</code> and
+         * light direction. This only takes effect when <code>enableLighting</code> and
          * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Boolean}

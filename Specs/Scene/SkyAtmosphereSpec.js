@@ -62,7 +62,7 @@ describe('Scene/SkyAtmosphere', function() {
         s.destroy();
     });
 
-    it('draws sky with setDynamicAtmosphereColor set to true and fromSun set to true', function() {
+    it('draws sky with setDynamicAtmosphereColor set to true using the sun direction', function() {
         var s = new SkyAtmosphere();
         s.setDynamicAtmosphereColor(true, true);
 
