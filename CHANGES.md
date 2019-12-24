@@ -10,8 +10,8 @@ Change Log
 * Added improvements to Cesium's lighting system
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
-    * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog when `Globe.enableLighting` is true. This is true by default but may be set to false so that the scene's light source does not affect atmosphere lighting.
-    * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun as the light source when `Globe.dynamicAtmosphereLighting` is enabled. This is false by default but may be set to true so that the atmosphere is lit by the sun instead of the scene's light source. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
+    * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog, such as day/night transitions. It is true by default but may be set to false if the atmosphere should stay unchanged regardless of the scene's light direction.
+    * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun direction instead of the scene's light direction when `Globe.dynamicAtmosphereLighting` is enabled. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
     * Primitives and the globe are now shaded with the scene light's color.
 
 ### 1.65.0 - 2020-01-02
