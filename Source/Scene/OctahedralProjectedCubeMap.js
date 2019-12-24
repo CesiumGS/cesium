@@ -233,6 +233,7 @@ import when from '../ThirdParty/when.js';
      */
     OctahedralProjectedCubeMap.prototype.update = function(frameState) {
         var context = frameState.context;
+
         if (!OctahedralProjectedCubeMap.isSupported(context)) {
             return;
         }
@@ -262,7 +263,7 @@ import when from '../ThirdParty/when.js';
             loadKTX(this._url).then(function(buffers) {
                 that._cubeMapBuffers = buffers;
                 that._loading = false;
-            });
+            }).otherwise(this._readyPromise.reject);
             this._loading = true;
         }
         if (!defined(this._cubeMapBuffers)) {
