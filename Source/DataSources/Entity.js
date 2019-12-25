@@ -1,82 +1,41 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/Transforms',
-        '../Scene/HeightReference',
-        '../Scene/GroundPrimitive',
-        '../Scene/GroundPolylinePrimitive',
-        './BillboardGraphics',
-        './BoxGraphics',
-        './ConstantPositionProperty',
-        './CorridorGraphics',
-        './createPropertyDescriptor',
-        './createRawPropertyDescriptor',
-        './CylinderGraphics',
-        './EllipseGraphics',
-        './EllipsoidGraphics',
-        './LabelGraphics',
-        './ModelGraphics',
-        './PathGraphics',
-        './PlaneGraphics',
-        './PointGraphics',
-        './PolygonGraphics',
-        './PolylineGraphics',
-        './PolylineVolumeGraphics',
-        './Property',
-        './PropertyBag',
-        './RectangleGraphics',
-        './WallGraphics'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        Transforms,
-        HeightReference,
-        GroundPrimitive,
-        GroundPolylinePrimitive,
-        BillboardGraphics,
-        BoxGraphics,
-        ConstantPositionProperty,
-        CorridorGraphics,
-        createPropertyDescriptor,
-        createRawPropertyDescriptor,
-        CylinderGraphics,
-        EllipseGraphics,
-        EllipsoidGraphics,
-        LabelGraphics,
-        ModelGraphics,
-        PathGraphics,
-        PlaneGraphics,
-        PointGraphics,
-        PolygonGraphics,
-        PolylineGraphics,
-        PolylineVolumeGraphics,
-        Property,
-        PropertyBag,
-        RectangleGraphics,
-        WallGraphics) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import Transforms from '../Core/Transforms.js';
+import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import HeightReference from '../Scene/HeightReference.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import BoxGraphics from './BoxGraphics.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import CorridorGraphics from './CorridorGraphics.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import createRawPropertyDescriptor from './createRawPropertyDescriptor.js';
+import CylinderGraphics from './CylinderGraphics.js';
+import EllipseGraphics from './EllipseGraphics.js';
+import EllipsoidGraphics from './EllipsoidGraphics.js';
+import LabelGraphics from './LabelGraphics.js';
+import ModelGraphics from './ModelGraphics.js';
+import PathGraphics from './PathGraphics.js';
+import PlaneGraphics from './PlaneGraphics.js';
+import PointGraphics from './PointGraphics.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineGraphics from './PolylineGraphics.js';
+import PolylineVolumeGraphics from './PolylineVolumeGraphics.js';
+import Property from './Property.js';
+import PropertyBag from './PropertyBag.js';
+import RectangleGraphics from './RectangleGraphics.js';
+import WallGraphics from './WallGraphics.js';
 
     var cartoScratch = new Cartographic();
 
@@ -132,7 +91,7 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -686,6 +645,4 @@ define([
     Entity.supportsPolylinesOnTerrain = function(scene) {
         return GroundPolylinePrimitive.isSupported(scene);
     };
-
-    return Entity;
-});
+export default Entity;

@@ -1,54 +1,26 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/Resource',
-        '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../ThirdParty/when',
-        './PostProcessStageSampleMode'
-    ], function(
-        BoundingRectangle,
-        Check,
-        Color,
-        combine,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        Resource,
-        PassState,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        when,
-        PostProcessStageSampleMode) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Resource from '../Core/Resource.js';
+import PassState from '../Renderer/PassState.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import when from '../ThirdParty/when.js';
+import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
 
     /**
      * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
@@ -556,7 +528,7 @@ define([
                 '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n' +
                 '    for (int i = 0; i < ' + width + '; ++i) \n' +
                 '    { \n' +
-                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2(float(i) * czm_selectedIdTextureStep, 0.5)); \n' +
+                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n' +
                 '        if (all(equal(id, selectedId))) \n' +
                 '        { \n' +
                 '            return true; \n' +
@@ -968,6 +940,4 @@ define([
         releaseResources(this);
         return destroyObject(this);
     };
-
-    return PostProcessStage;
-});
+export default PostProcessStage;

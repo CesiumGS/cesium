@@ -1,32 +1,16 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './Cartographic',
-        './Math',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './MapProjectionType',
-        './Matrix4',
-        './SerializedMapProjection',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        CesiumMath,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        MapProjectionType,
-        Matrix4,
-        SerializedMapProjection,
-        when) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Cartographic from './Cartographic.js';
+import CesiumMath from './Math.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Ellipsoid from './Ellipsoid.js';
+import MapProjectionType from './MapProjectionType.js';
+import Matrix4 from './Matrix4.js';
+import SerializedMapProjection from './SerializedMapProjection.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * MapProjection that uses a {@link Matrix4} to map from longitude/latitude/altitude to projected coordinates.
@@ -221,6 +205,4 @@ define([
 
         return result;
     };
-
-    return Matrix4Projection;
-});
+export default Matrix4Projection;

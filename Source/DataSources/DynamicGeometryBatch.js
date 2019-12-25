@@ -1,12 +1,6 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/defined',
-        './BoundingSphereState'
-    ], function(
-        AssociativeArray,
-        defined,
-        BoundingSphereState) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import defined from '../Core/defined.js';
+import BoundingSphereState from './BoundingSphereState.js';
 
     /**
      * @private
@@ -53,6 +47,4 @@ define([
         }
         return BoundingSphereState.FAILED;
     };
-
-    return DynamicGeometryBatch;
-});
+export default DynamicGeometryBatch;

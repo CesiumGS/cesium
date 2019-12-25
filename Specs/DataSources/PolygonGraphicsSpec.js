@@ -1,28 +1,17 @@
-defineSuite([
-        'DataSources/PolygonGraphics',
-        'Core/ArcType',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/PolygonHierarchy',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'Scene/ClassificationType',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        PolygonGraphics,
-        ArcType,
-        Color,
-        DistanceDisplayCondition,
-        PolygonHierarchy,
-        ColorMaterialProperty,
-        ConstantProperty,
-        ClassificationType,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PolygonGraphics } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
+
+describe('DataSources/PolygonGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -274,5 +263,30 @@ defineSuite([
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 54, 3);
+    });
+
+    it('converts an array of positions to a PolygonHierarchy', function() {
+        var positions = [
+            new Cartesian3(1, 2, 3),
+            new Cartesian3(4, 5, 6),
+            new Cartesian3(7, 8, 9)
+        ];
+
+        var graphics = new PolygonGraphics({
+            hierarchy: positions
+        });
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        var hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
+
+        graphics = new PolygonGraphics();
+        graphics.hierarchy = positions;
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
     });
 });

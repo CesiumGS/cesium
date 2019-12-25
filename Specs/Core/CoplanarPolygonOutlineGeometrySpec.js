@@ -1,16 +1,8 @@
-defineSuite([
-    'Core/CoplanarPolygonOutlineGeometry',
-    'Core/Cartesian3',
-    'Core/Ellipsoid',
-    'Core/Math',
-    'Specs/createPackableSpecs'
-], function(
-    CoplanarPolygonOutlineGeometry,
-    Cartesian3,
-    Ellipsoid,
-    CesiumMath,
-    createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CoplanarPolygonOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CoplanarPolygonOutlineGeometry', function() {
 
     it('throws with no hierarchy', function() {
         expect(function() {

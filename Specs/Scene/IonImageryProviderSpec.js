@@ -1,40 +1,22 @@
-defineSuite([
-        'Scene/IonImageryProvider',
-        'Core/Credit',
-        'Core/defaultValue',
-        'Core/IonResource',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'Scene/ArcGisMapServerImageryProvider',
-        'Scene/BingMapsImageryProvider',
-        'Scene/GoogleEarthEnterpriseMapsProvider',
-        'Scene/ImageryProvider',
-        'Scene/MapboxImageryProvider',
-        'Scene/SingleTileImageryProvider',
-        'Scene/UrlTemplateImageryProvider',
-        'Scene/WebMapServiceImageryProvider',
-        'Scene/WebMapTileServiceImageryProvider',
-        'ThirdParty/when'
-    ], function(
-        IonImageryProvider,
-        Credit,
-        defaultValue,
-        IonResource,
-        RequestScheduler,
-        Resource,
-        RuntimeError,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        ImageryProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider,
-        when) {
-    'use strict';
+import { Credit } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { BingMapsImageryProvider } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMapsProvider } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { IonImageryProvider } from '../../Source/Cesium.js';
+import { MapboxImageryProvider } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import { WebMapTileServiceImageryProvider } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {

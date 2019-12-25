@@ -1,44 +1,22 @@
-define([
-        './ArcType',
-        './arrayRemoveDuplicates',
-        './BoundingSphere',
-        './Cartesian3',
-        './Color',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryType',
-        './IndexDatatype',
-        './Math',
-        './PolylinePipeline',
-        './PrimitiveType',
-        './VertexFormat'
-    ], function(
-        ArcType,
-        arrayRemoveDuplicates,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryType,
-        IndexDatatype,
-        CesiumMath,
-        PolylinePipeline,
-        PrimitiveType,
-        VertexFormat) {
-    'use strict';
+import ArcType from './ArcType.js';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Color from './Color.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryType from './GeometryType.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PolylinePipeline from './PolylinePipeline.js';
+import PrimitiveType from './PrimitiveType.js';
+import VertexFormat from './VertexFormat.js';
 
     var scratchInterpolateColorsArray = [];
 
@@ -100,7 +78,7 @@ define([
      *
      * @see PolylineGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // A polyline with two connected line segments
@@ -531,6 +509,4 @@ define([
             geometryType : GeometryType.POLYLINES
         });
     };
-
-    return PolylineGeometry;
-});
+export default PolylineGeometry;

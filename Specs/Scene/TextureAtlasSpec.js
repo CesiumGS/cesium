@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/TextureAtlas',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/createGuid',
-        'Core/Math',
-        'Core/PixelFormat',
-        'Core/Resource',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], function(
-        TextureAtlas,
-        BoundingRectangle,
-        Cartesian2,
-        createGuid,
-        CesiumMath,
-        PixelFormat,
-        Resource,
-        createScene,
-        when) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { createGuid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TextureAtlas } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/TextureAtlas', function() {
 
     var scene;
     var atlas;

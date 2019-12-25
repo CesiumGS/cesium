@@ -1,36 +1,23 @@
-define([
-        'Cesium/Core/Cartesian3',
-        'Cesium/Core/createWorldTerrain',
-        'Cesium/Core/defined',
-        'Cesium/Core/formatError',
-        'Cesium/Core/Math',
-        'Cesium/Core/objectToQuery',
-        'Cesium/Core/queryToObject',
-        'Cesium/DataSources/CzmlDataSource',
-        'Cesium/DataSources/GeoJsonDataSource',
-        'Cesium/DataSources/KmlDataSource',
-        'Cesium/Scene/createTileMapServiceImageryProvider',
-        'Cesium/Widgets/Viewer/Viewer',
-        'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
-        'Cesium/Widgets/Viewer/viewerDragDropMixin',
-        'domReady!'
-    ], function(
-        Cartesian3,
-        createWorldTerrain,
-        defined,
-        formatError,
-        CesiumMath,
-        objectToQuery,
-        queryToObject,
-        CzmlDataSource,
-        GeoJsonDataSource,
-        KmlDataSource,
-        createTileMapServiceImageryProvider,
-        Viewer,
-        viewerCesiumInspectorMixin,
-        viewerDragDropMixin) {
-    'use strict';
+window.CESIUM_BASE_URL = '../../Source/';
 
+import {
+    Cartesian3,
+    createWorldTerrain,
+    defined,
+    formatError,
+    Math as CesiumMath,
+    objectToQuery,
+    queryToObject,
+    CzmlDataSource,
+    GeoJsonDataSource,
+    KmlDataSource,
+    TileMapServiceImageryProvider,
+    Viewer,
+    viewerCesiumInspectorMixin,
+    viewerDragDropMixin
+} from '../../Source/Cesium.js';
+
+function main() {
     /*
      Options parsed from query string:
        source=url          The URL of a CZML/GeoJSON/KML data source to load at startup.
@@ -54,7 +41,7 @@ define([
 
     var imageryProvider;
     if (defined(endUserOptions.tmsImageryUrl)) {
-        imageryProvider = createTileMapServiceImageryProvider({
+        imageryProvider = new TileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
@@ -218,4 +205,6 @@ define([
     }
 
     loadingIndicator.style.display = 'none';
-});
+}
+
+main();

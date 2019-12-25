@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * MapProjectionType defines the path that should be taken connecting vertices.
@@ -51,6 +47,4 @@ define([
          */
         MATRIX4 : 4
     };
-
-    return freezeObject(MapProjectionType);
-});
+export default freezeObject(MapProjectionType);

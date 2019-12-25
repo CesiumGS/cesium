@@ -1,30 +1,16 @@
-define([
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../ThirdParty/when'
-    ], function(
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        when) {
-    'use strict';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import when from '../ThirdParty/when.js';
+import ImageryProvider from './ImageryProvider.js';
 
     /**
      * Provides a single, top-level imagery tile.  The single image is assumed to use a
@@ -42,14 +28,14 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
     function SingleTileImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -109,7 +95,10 @@ define([
         }
 
         function doRequest() {
-            resource.fetchImage().then(success).otherwise(failure);
+            ImageryProvider
+                .loadImage(null, resource)
+                .then(success)
+                .otherwise(failure);
         }
 
         doRequest();
@@ -393,6 +382,4 @@ define([
     SingleTileImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    return SingleTileImageryProvider;
-});
+export default SingleTileImageryProvider;

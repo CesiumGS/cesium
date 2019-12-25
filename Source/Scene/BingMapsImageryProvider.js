@@ -1,44 +1,22 @@
-define([
-        '../Core/BingMapsApi',
-        '../Core/buildModuleUrl',
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './BingMapsStyle',
-        './DiscardEmptyTileImagePolicy',
-        './ImageryProvider'
-    ], function(
-        BingMapsApi,
-        buildModuleUrl,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        WebMercatorTilingScheme,
-        when,
-        BingMapsStyle,
-        DiscardEmptyTilePolicy,
-        ImageryProvider) {
-    'use strict';
+import BingMapsApi from '../Core/BingMapsApi.js';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import BingMapsStyle from './BingMapsStyle.js';
+import DiscardEmptyTilePolicy from './DiscardEmptyTileImagePolicy.js';
+import ImageryProvider from './ImageryProvider.js';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.
@@ -51,7 +29,7 @@ define([
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
-     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
@@ -65,9 +43,9 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -84,7 +62,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function BingMapsImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
@@ -134,11 +112,26 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
+        var tileProtocol = this._tileProtocol;
+
+        // For backward compatibility reasons, the tileProtocol may end with
+        // a `:`. Remove it.
+        if (defined(tileProtocol)) {
+            if (tileProtocol.length > 0 && tileProtocol[tileProtocol.length - 1] === ':') {
+                tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
+            }
+        } else {
+            // use http if the document's protocol is http, otherwise use https
+            var documentProtocol = document.location.protocol;
+            tileProtocol = documentProtocol === 'http:' ? 'http' : 'https';
+        }
+
         var metadataResource = this._resource.getDerivedResource({
             url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
-                key: this._key
+                key: this._key,
+                uriScheme: tileProtocol
             }
         });
         var that = this;
@@ -156,15 +149,6 @@ define([
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl;
-
-            var tileProtocol = that._tileProtocol;
-            if (!defined(tileProtocol)) {
-                // use the document's protocol, unless it's not http or https
-                var documentProtocol = document.location.protocol;
-                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
-            }
-
-            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
 
             var attributionList = that._attributionList = resource.imageryProviders;
             if (!attributionList) {
@@ -712,6 +696,4 @@ define([
 
     // Exposed for testing
     BingMapsImageryProvider._metadataCache = {};
-
-    return BingMapsImageryProvider;
-});
+export default BingMapsImageryProvider;

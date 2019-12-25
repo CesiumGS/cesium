@@ -1,26 +1,13 @@
-define([
-        'Core/Color',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/SampledProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection'
-    ], function(
-        Color,
-        GeometryOffsetAttribute,
-        JulianDate,
-        ColorMaterialProperty,
-        ConstantProperty,
-        SampledProperty,
-        ClassificationType,
-        GroundPrimitive,
-        HeightReference,
-        PrimitiveCollection) {
-    'use strict';
+import { Color } from '../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { ColorMaterialProperty } from '../Source/Cesium.js';
+import { ConstantProperty } from '../Source/Cesium.js';
+import { SampledProperty } from '../Source/Cesium.js';
+import { ClassificationType } from '../Source/Cesium.js';
+import { GroundPrimitive } from '../Source/Cesium.js';
+import { HeightReference } from '../Source/Cesium.js';
+import { PrimitiveCollection } from '../Source/Cesium.js';
 
     function createGeometryUpdaterGroundGeometrySpecs(Updater, geometryPropertyName, createEntity, createDynamicEntity, getScene) {
         var time = JulianDate.now();
@@ -288,6 +275,4 @@ define([
             updater.destroy();
         });
     }
-
-    return createGeometryUpdaterGroundGeometrySpecs;
-});
+export default createGeometryUpdaterGroundGeometrySpecs;

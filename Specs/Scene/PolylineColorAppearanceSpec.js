@@ -1,26 +1,15 @@
-defineSuite([
-        'Scene/PolylineColorAppearance',
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryInstance',
-        'Core/PolylineGeometry',
-        'Scene/Appearance',
-        'Scene/Primitive',
-        'Specs/createScene'
-    ], function(
-        PolylineColorAppearance,
-        ArcType,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        GeometryInstance,
-        PolylineGeometry,
-        Appearance,
-        Primitive,
-        createScene) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PolylineColorAppearance', function() {
 
     var scene;
     var primitive;

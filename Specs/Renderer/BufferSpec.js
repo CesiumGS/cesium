@@ -1,14 +1,9 @@
-defineSuite([
-        'Renderer/Buffer',
-        'Core/IndexDatatype',
-        'Renderer/BufferUsage',
-        'Specs/createContext'
-    ], function(
-        Buffer,
-        IndexDatatype,
-        BufferUsage,
-        createContext) {
-    'use strict';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Buffer', function() {
 
     createBufferSpecs({});
     var c = createContext({ requestWebgl2 : true });

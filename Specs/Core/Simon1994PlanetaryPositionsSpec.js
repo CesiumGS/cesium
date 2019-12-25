@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/Simon1994PlanetaryPositions',
-        'Core/defined',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/TimeStandard',
-        'Core/Transforms'
-    ], function(
-        PlanetaryPositions,
-        defined,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        TimeStandard,
-        Transforms) {
-    'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Simon1994PlanetaryPositions as PlanetaryPositions } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+
+describe('Core/Simon1994PlanetaryPositions', function() {
 
     // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the
     // sun center of mass point and the earth J2000 reference frame.

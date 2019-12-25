@@ -1,18 +1,11 @@
-defineSuite([
-        'Scene/ClippingPlane',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Plane'
-    ], function(
-        ClippingPlane,
-        Cartesian3,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Plane) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+
+describe('Scene/ClippingPlane', function() {
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;

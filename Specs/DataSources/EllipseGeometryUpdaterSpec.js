@@ -1,42 +1,22 @@
-defineSuite([
-        'DataSources/EllipseGeometryUpdater',
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterGroundGeometrySpecs',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        EllipseGeometryUpdater,
-        ApproximateTerrainHeights,
-        Cartesian3,
-        GeometryOffsetAttribute,
-        JulianDate,
-        TimeIntervalCollection,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGraphics,
-        Entity,
-        SampledPositionProperty,
-        SampledProperty,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterGroundGeometrySpecs,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterGroundGeometrySpecs from '../createGeometryUpdaterGroundGeometrySpecs.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/EllipseGeometryUpdater', function() {
 
     var scene;
     var time;

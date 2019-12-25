@@ -1,18 +1,11 @@
-defineSuite([
-    'Core/Proj4Projection',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Ellipsoid',
-    'Core/Math',
-    'Core/Rectangle'
-], function(
-    Proj4Projection,
-    Cartesian3,
-    Cartographic,
-    Ellipsoid,
-    CesiumMath,
-    Rectangle) {
-    'use strict';
+import { Proj4Projection } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+
+describe('Core/Proj4Projection', function() {
 
     var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
     var webMercatorWellKnownText = '+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext  +no_defs';

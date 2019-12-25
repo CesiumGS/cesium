@@ -1,22 +1,13 @@
-defineSuite([
-        'Core/WebMercatorTilingScheme',
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/TilingScheme',
-        'Core/WebMercatorProjection'
-    ], function(
-        WebMercatorTilingScheme,
-        Cartesian2,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        TilingScheme,
-        WebMercatorProjection) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TilingScheme } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+
+describe('Core/WebMercatorTilingScheme', function() {
 
     var tilingScheme;
     beforeEach(function() {

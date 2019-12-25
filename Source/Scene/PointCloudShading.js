@@ -1,10 +1,5 @@
-define([
-        '../Core/defaultValue',
-        './PointCloudEyeDomeLighting'
-    ], function(
-        defaultValue,
-        PointCloudEyeDomeLighting) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
 
     /**
      * Options for performing point attenuation based on geometric error when rendering
@@ -106,6 +101,4 @@ define([
     PointCloudShading.isSupported = function(scene) {
         return PointCloudEyeDomeLighting.isSupported(scene.context);
     };
-
-    return PointCloudShading;
-});
+export default PointCloudShading;

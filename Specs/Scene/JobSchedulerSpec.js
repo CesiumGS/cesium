@@ -1,10 +1,7 @@
-defineSuite([
-        'Scene/JobScheduler',
-        'Scene/JobType'
-    ], function(
-        JobScheduler,
-        JobType) {
-    'use strict';
+import { JobScheduler } from '../../Source/Cesium.js';
+import { JobType } from '../../Source/Cesium.js';
+
+describe('Scene/JobScheduler', function() {
 
     var originalGetTimestamp;
 

@@ -1,38 +1,19 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './FeatureDetection',
-        './getAbsoluteUri',
-        './isDataUri',
-        './loadAndExecuteScript',
-        './MapProjectionType',
-        './RuntimeError',
-        './SerializedMapProjection',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        getAbsoluteUri,
-        isDataUri,
-        loadAndExecuteScript,
-        MapProjectionType,
-        RuntimeError,
-        SerializedMapProjection,
-        when) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import FeatureDetection from './FeatureDetection.js';
+import getAbsoluteUri from './getAbsoluteUri.js';
+import isDataUri from './isDataUri.js';
+import loadAndExecuteScript from './loadAndExecuteScript.js';
+import MapProjectionType from './MapProjectionType.js';
+import RuntimeError from './RuntimeError.js';
+import SerializedMapProjection from './SerializedMapProjection.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * {@link MapProjection} that uses custom project and unproject functions defined in user code.
@@ -362,6 +343,4 @@ define([
 
     // exposed for testing
     CustomProjection._loadedProjectionFunctions = {};
-
-    return CustomProjection;
-});
+export default CustomProjection;

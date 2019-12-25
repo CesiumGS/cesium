@@ -1,28 +1,14 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/createGuid',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Iso8601',
-        '../Core/JulianDate',
-        '../Core/RuntimeError',
-        '../Core/TimeInterval',
-        './Entity'
-    ], function(
-        AssociativeArray,
-        createGuid,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        Iso8601,
-        JulianDate,
-        RuntimeError,
-        TimeInterval,
-        Entity) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import createGuid from '../Core/createGuid.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import Iso8601 from '../Core/Iso8601.js';
+import JulianDate from '../Core/JulianDate.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TimeInterval from '../Core/TimeInterval.js';
+import Entity from './Entity.js';
 
     var entityOptionsScratch = {
         id : undefined
@@ -424,6 +410,4 @@ define([
         }
         fireChangedEvent(this);
     };
-
-    return EntityCollection;
-});
+export default EntityCollection;

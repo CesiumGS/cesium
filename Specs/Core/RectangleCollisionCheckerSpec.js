@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/RectangleCollisionChecker',
-        'Core/Rectangle',
-        'Core/GeographicProjection'
-    ], function(
-        RectangleCollisionChecker,
-        Rectangle,
-        GeographicProjection) {
-    'use strict';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleCollisionChecker } from '../../Source/Cesium.js';
+
+describe('Core/RectangleCollisionChecker', function() {
 
     var testRectangle1 = new Rectangle(0.0, 0.0, 1.0, 1.0);
     var testRectangle2 = new Rectangle(1.1, 1.1, 2.1, 2.1);

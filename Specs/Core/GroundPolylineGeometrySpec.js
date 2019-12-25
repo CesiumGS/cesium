@@ -1,28 +1,16 @@
-defineSuite([
-        'Core/GroundPolylineGeometry',
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/arraySlice',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Math',
-        'Core/WebMercatorProjection',
-        'Specs/createPackableSpecs'
-    ], function(
-        GroundPolylineGeometry,
-        ApproximateTerrainHeights,
-        ArcType,
-        arraySlice,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        GeographicProjection,
-        CesiumMath,
-        WebMercatorProjection,
-        createPackableSpecs) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { arraySlice } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GroundPolylineGeometry } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/GroundPolylineGeometry', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -287,7 +275,7 @@ defineSuite([
             positions : Cartesian3.fromDegreesArray([
                 0.01, 0.0,
                 0.02, 0.0,
-                0.01, 0.0
+                0.01, CesiumMath.EPSILON7
             ]),
             granularity : 0.0
         });
@@ -299,11 +287,10 @@ defineSuite([
 
         var miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 32);
         var miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 0);
-        var reverseMiteredEndNormal = Cartesian3.multiplyByScalar(miteredEndNormal, -1.0, new Cartesian3());
 
-        expect(Cartesian3.equalsEpsilon(miteredStartNormal, reverseMiteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
+        expect(Cartesian3.equalsEpsilon(miteredStartNormal, miteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
 
-        var approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 0.0);
+        var approximateExpectedMiterNormal = new Cartesian3(0.0, -1.0, 0.0);
 
         Cartesian3.normalize(approximateExpectedMiterNormal, approximateExpectedMiterNormal);
         expect(Cartesian3.equalsEpsilon(approximateExpectedMiterNormal, miteredStartNormal, CesiumMath.EPSILON2)).toBe(true);

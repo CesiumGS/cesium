@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Renderer/ClearCommand',
-        'Renderer/Framebuffer',
-        'Renderer/RenderState',
-        'Renderer/Texture',
-        'Specs/createContext'
-    ], 'Renderer/Clear', function(
-        BoundingRectangle,
-        Color,
-        ClearCommand,
-        Framebuffer,
-        RenderState,
-        Texture,
-        createContext) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { Framebuffer } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Clear', function() {
 
     var context;
 

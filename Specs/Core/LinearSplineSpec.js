@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/LinearSpline',
-        'Core/Cartesian3'
-    ], function(
-        LinearSpline,
-        Cartesian3) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { LinearSpline } from '../../Source/Cesium.js';
+
+describe('Core/LinearSpline', function() {
 
     var points;
     var times;

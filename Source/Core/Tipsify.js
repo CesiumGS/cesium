@@ -1,12 +1,6 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Encapsulates an algorithm to optimize triangles for the post
@@ -296,6 +290,4 @@ define([
 
         return outputIndices;
     };
-
-    return Tipsify;
-});
+export default Tipsify;

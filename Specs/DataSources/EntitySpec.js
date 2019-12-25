@@ -1,60 +1,32 @@
-defineSuite([
-        'DataSources/Entity',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'Core/Transforms',
-        'DataSources/BillboardGraphics',
-        'DataSources/BoxGraphics',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/CorridorGraphics',
-        'DataSources/CylinderGraphics',
-        'DataSources/EllipseGraphics',
-        'DataSources/EllipsoidGraphics',
-        'DataSources/LabelGraphics',
-        'DataSources/ModelGraphics',
-        'DataSources/PathGraphics',
-        'DataSources/PlaneGraphics',
-        'DataSources/PointGraphics',
-        'DataSources/PolygonGraphics',
-        'DataSources/PolylineGraphics',
-        'DataSources/PolylineVolumeGraphics',
-        'DataSources/RectangleGraphics',
-        'DataSources/WallGraphics'
-    ], function(
-        Entity,
-        Cartesian3,
-        JulianDate,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        TimeInterval,
-        TimeIntervalCollection,
-        Transforms,
-        BillboardGraphics,
-        BoxGraphics,
-        ConstantPositionProperty,
-        ConstantProperty,
-        CorridorGraphics,
-        CylinderGraphics,
-        EllipseGraphics,
-        EllipsoidGraphics,
-        LabelGraphics,
-        ModelGraphics,
-        PathGraphics,
-        PlaneGraphics,
-        PointGraphics,
-        PolygonGraphics,
-        PolylineGraphics,
-        PolylineVolumeGraphics,
-        RectangleGraphics,
-        WallGraphics) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { BoxGraphics } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CorridorGraphics } from '../../Source/Cesium.js';
+import { CylinderGraphics } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { EllipsoidGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { LabelGraphics } from '../../Source/Cesium.js';
+import { ModelGraphics } from '../../Source/Cesium.js';
+import { PathGraphics } from '../../Source/Cesium.js';
+import { PlaneGraphics } from '../../Source/Cesium.js';
+import { PointGraphics } from '../../Source/Cesium.js';
+import { PolygonGraphics } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { PolylineVolumeGraphics } from '../../Source/Cesium.js';
+import { RectangleGraphics } from '../../Source/Cesium.js';
+import { WallGraphics } from '../../Source/Cesium.js';
+
+describe('DataSources/Entity', function() {
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();

@@ -1,22 +1,13 @@
-defineSuite([
-        'DataSources/KmlTour',
-        'Core/Cartesian3',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'DataSources/KmlLookAt',
-        'DataSources/KmlTourFlyTo',
-        'DataSources/KmlTourWait',
-        'Specs/pollToPromise'
-    ], function(
-        KmlTour,
-        Cartesian3,
-        HeadingPitchRange,
-        CesiumMath,
-        KmlLookAt,
-        KmlTourFlyTo,
-        KmlTourWait,
-        pollToPromise) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { KmlLookAt } from '../../Source/Cesium.js';
+import { KmlTour } from '../../Source/Cesium.js';
+import { KmlTourFlyTo } from '../../Source/Cesium.js';
+import { KmlTourWait } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/KmlTour', function() {
 
     function getLookAt() {
         var position = Cartesian3.fromDegrees(40.0, 30.0, 1000);

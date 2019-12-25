@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     /**
      * A {@link TileDiscardPolicy} specifying that tile images should never be discard.
@@ -29,6 +27,4 @@ define([], function() {
     NeverTileDiscardPolicy.prototype.shouldDiscardImage = function(image) {
         return false;
     };
-
-    return NeverTileDiscardPolicy;
-});
+export default NeverTileDiscardPolicy;

@@ -1,18 +1,11 @@
-defineSuite([
-        'Scene/SkyAtmosphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        SkyAtmosphere,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SkyAtmosphere } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/SkyAtmosphere', function() {
 
     var scene;
 
@@ -89,7 +82,7 @@ defineSuite([
         var s = new SkyAtmosphere();
 
         scene.skyAtmosphere = s;
-        scene._environmentState.isReadyForAtmosphere = true;
+        scene.environmentState.isReadyForAtmosphere = true;
 
         scene.camera.setView({
             destination : Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),

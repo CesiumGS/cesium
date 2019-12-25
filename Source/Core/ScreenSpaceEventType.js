@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
@@ -130,6 +126,4 @@ define([
          */
         PINCH_MOVE : 19
     };
-
-    return freezeObject(ScreenSpaceEventType);
-});
+export default freezeObject(ScreenSpaceEventType);

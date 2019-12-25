@@ -1,82 +1,40 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/CullingVolume',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/getMagic',
-        '../Core/Intersect',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/OrthographicFrustum',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../ThirdParty/when',
-        './Cesium3DTileContentFactory',
-        './Cesium3DTileContentState',
-        './Cesium3DTileOptimizationHint',
-        './Cesium3DTilePass',
-        './Cesium3DTileRefine',
-        './Empty3DTileContent',
-        './SceneMode',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CullingVolume,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        Ellipsoid,
-        getMagic,
-        Intersect,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrientedBoundingBox,
-        OrthographicFrustum,
-        Rectangle,
-        Request,
-        RequestScheduler,
-        RequestState,
-        RequestType,
-        Resource,
-        RuntimeError,
-        Transforms,
-        when,
-        Cesium3DTileContentFactory,
-        Cesium3DTileContentState,
-        Cesium3DTileOptimizationHint,
-        Cesium3DTilePass,
-        Cesium3DTileRefine,
-        Empty3DTileContent,
-        SceneMode,
-        TileBoundingRegion,
-        TileBoundingSphere,
-        TileOrientedBoundingBox) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import CullingVolume from '../Core/CullingVolume.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import getMagic from '../Core/getMagic.js';
+import Intersect from '../Core/Intersect.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import Rectangle from '../Core/Rectangle.js';
+import Request from '../Core/Request.js';
+import RequestScheduler from '../Core/RequestScheduler.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import Cesium3DTileContentFactory from './Cesium3DTileContentFactory.js';
+import Cesium3DTileContentState from './Cesium3DTileContentState.js';
+import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
+import Cesium3DTilePass from './Cesium3DTilePass.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
+import Empty3DTileContent from './Empty3DTileContent.js';
+import SceneMode from './SceneMode.js';
+import TileBoundingRegion from './TileBoundingRegion.js';
+import TileBoundingSphere from './TileBoundingSphere.js';
+import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     /**
      * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -142,11 +100,14 @@ define([
          * @readonly
          */
         this.geometricError = header.geometricError;
+        this._geometricError = header.geometricError;
 
-        if (!defined(this.geometricError)) {
-            this.geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
+        if (!defined(this._geometricError)) {
+            this._geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
             Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
+
+        this.updateGeometricErrorScale();
 
         var refine;
         if (defined(header.refine)) {
@@ -731,6 +692,9 @@ define([
                 error -= dynamicError;
             }
         }
+
+        error /= frameState.pixelRatio;
+
         return error;
     };
 
@@ -1104,7 +1068,7 @@ define([
 
         // Find the transformed center and halfAxes
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result)) {
@@ -1128,7 +1092,7 @@ define([
         // This is why the transform is calculated as the difference between the initial transform and the current transform.
         transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result) && (result instanceof TileOrientedBoundingBox)) {
@@ -1228,10 +1192,18 @@ define([
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
+        this.updateGeometricErrorScale();
+
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
+    };
+
+    Cesium3DTile.prototype.updateGeometricErrorScale = function() {
+        var scale = Matrix4.getScale(this.computedTransform, scratchScale);
+        var uniformScale = Cartesian3.maximumComponent(scale);
+        this.geometricError = this._geometricError * uniformScale;
     };
 
     function applyDebugSettings(tile, tileset, frameState) {
@@ -1464,6 +1436,4 @@ define([
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
     };
-
-    return Cesium3DTile;
-});
+export default Cesium3DTile;

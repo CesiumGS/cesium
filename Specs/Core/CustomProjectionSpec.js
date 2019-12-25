@@ -1,19 +1,11 @@
-defineSuite([
-        'Core/CustomProjection',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/FeatureDetection',
-        'Core/Math'
-    ], function(
-        CustomProjection,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        FeatureDetection,
-        CesiumMath) {
-    'use strict';
+import { CustomProjection } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
+describe('Core/CustomProjection', function() {
     beforeEach(function() {
         CustomProjection._loadedProjectionFunctions = {};
     });

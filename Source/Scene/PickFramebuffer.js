@@ -1,26 +1,13 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Renderer/Framebuffer',
-        '../Renderer/PassState',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/Texture'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        Framebuffer,
-        PassState,
-        Renderbuffer,
-        RenderbufferFormat,
-        Texture) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PassState from '../Renderer/PassState.js';
+import Renderbuffer from '../Renderer/Renderbuffer.js';
+import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
+import Texture from '../Renderer/Texture.js';
 
     /**
      * @private
@@ -145,6 +132,4 @@ define([
         this._fb = this._fb && this._fb.destroy();
         return destroyObject(this);
     };
-
-    return PickFramebuffer;
-});
+export default PickFramebuffer;

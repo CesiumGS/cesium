@@ -1,36 +1,20 @@
-defineSuite([
-        'Scene/PostProcessStage',
-        'Core/BoundingRectangle',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/HeadingPitchRange',
-        'Core/Matrix4',
-        'Core/PixelFormat',
-        'Core/Transforms',
-        'Renderer/PixelDatatype',
-        'Scene/Model',
-        'Scene/PostProcessStageSampleMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        PostProcessStage,
-        BoundingRectangle,
-        Cartesian3,
-        Color,
-        defined,
-        HeadingPitchRange,
-        Matrix4,
-        PixelFormat,
-        Transforms,
-        PixelDatatype,
-        Model,
-        PostProcessStageSampleMode,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageSampleMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/PostProcessStage', function() {
 
     var scene;
 
@@ -206,6 +190,12 @@ defineSuite([
         }
 
         expect(s).toRender([0, 0, 0, 255]);
+        // Dummy Stage
+        var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
+        s.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(vec3(' + (bgColor / 255) + '), 1.0); }'
+        }));
+
         var stage = s.postProcessStages.add(new PostProcessStage({
             fragmentShader : 'uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }'
         }));
@@ -213,7 +203,7 @@ defineSuite([
             s.renderForSpecs();
             return stage.ready;
         }).then(function() {
-            expect(s).toRender([0, 0, 0, 255]);
+            expect(s).toRender([bgColor, bgColor, bgColor, 255]);
         }).always(function(e) {
             s.destroyForSpecs();
             if (e) {

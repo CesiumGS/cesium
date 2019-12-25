@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/deserializeMapProjection',
-        'Core/CustomProjection',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Matrix4',
-        'Core/Matrix4Projection',
-        'Core/Proj4Projection',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection'
-    ], function(
-        deserializeMapProjection,
-        CustomProjection,
-        Ellipsoid,
-        GeographicProjection,
-        Matrix4,
-        Matrix4Projection,
-        Proj4Projection,
-        Rectangle,
-        WebMercatorProjection) {
-    'use strict';
+import { deserializeMapProjection } from '../../Source/Cesium.js';
+import { CustomProjection } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Matrix4Projection } from '../../Source/Cesium.js';
+import { Proj4Projection } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+
+describe('Core/deserializeMapProjection', function() {
 
     it('deserializes to GeographicProjection', function() {
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);

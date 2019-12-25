@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/JulianDate',
-        'Core/Iso8601',
-        'Core/Math',
-        'Core/TimeConstants',
-        'Core/TimeStandard'
-    ], function(
-        JulianDate,
-        Iso8601,
-        CesiumMath,
-        TimeConstants,
-        TimeStandard) {
-    'use strict';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeConstants } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+
+describe('Core/JulianDate', function() {
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {

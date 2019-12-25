@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/Matrix4',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Quaternion',
-        'Core/TranslationRotationScale'
-    ], function(
-        Matrix4,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix3,
-        Quaternion,
-        TranslationRotationScale) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TranslationRotationScale } from '../../Source/Cesium.js';
+
+describe('Core/Matrix4', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -956,11 +948,11 @@ defineSuite([
         expect(expected).toEqual(returnedResult);
     });
 
-    it('getRotation works', function() {
+    it('getMatrix3 works', function() {
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
         var result = new Matrix3();
-        var returnedResult = Matrix4.getRotation(matrix, result);
+        var returnedResult = Matrix4.getMatrix3(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqual(returnedResult);
     });
@@ -1543,9 +1535,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getRotation throws without matrix parameter', function() {
+    it('getMatrix3 throws without matrix parameter', function() {
         expect(function() {
-            Matrix4.getRotation(undefined);
+            Matrix4.getMatrix3(undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1718,9 +1710,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('getRotation throws without result parameter', function() {
+    it('getMatrix3 throws without result parameter', function() {
         expect(function() {
-            Matrix4.getRotation(new Matrix4());
+            Matrix4.getMatrix3(new Matrix4());
         }).toThrowDeveloperError();
     });
 

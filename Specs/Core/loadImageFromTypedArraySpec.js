@@ -1,12 +1,17 @@
-defineSuite([
-        'Core/loadImageFromTypedArray',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        loadImageFromTypedArray,
-        Resource,
-        when) {
-    'use strict';
+import { loadImageFromTypedArray } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/loadImageFromTypedArray', function() {
+
+    var supportsImageBitmapOptions;
+
+    beforeAll(function() {
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     it('can load an image', function() {
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
@@ -23,6 +28,10 @@ defineSuite([
     });
 
     it('flips image only when flipY is true', function() {
+        if (!supportsImageBitmapOptions) {
+            return;
+        }
+
         var options = {
             uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
             format: 'image/png',
@@ -60,6 +69,10 @@ defineSuite([
     });
 
     it('can load an image when ImageBitmap is not supported', function() {
+        if (!supportsImageBitmapOptions) {
+            return;
+        }
+
         spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
         spyOn(window, 'createImageBitmap').and.callThrough();
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {

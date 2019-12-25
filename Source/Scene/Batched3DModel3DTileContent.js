@@ -1,58 +1,24 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/getStringFromTypedArray',
-        '../Core/Matrix4',
-        '../Core/RequestType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Renderer/Pass',
-        './Axis',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './ClassificationModel',
-        './Model',
-        './ModelUtility'
-    ], function(
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        getStringFromTypedArray,
-        Matrix4,
-        RequestType,
-        RuntimeError,
-        Transforms,
-        Pass,
-        Axis,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        ClassificationModel,
-        Model,
-        ModelUtility) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import Matrix4 from '../Core/Matrix4.js';
+import RequestType from '../Core/RequestType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Pass from '../Renderer/Pass.js';
+import Axis from './Axis.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
+import ClassificationModel from './ClassificationModel.js';
+import Model from './Model.js';
+import ModelUtility from './ModelUtility.js';
 
     /**
      * Represents the contents of a
@@ -449,13 +415,11 @@ define([
         }
     };
 
-    var scratchColor = new Color();
-
     Batched3DModel3DTileContent.prototype.applyStyle = function(style) {
         if (this.featuresLength === 0) {
             var hasColorStyle = defined(style) && defined(style.color);
             var hasShowStyle = defined(style) && defined(style.show);
-            this._model.color = hasColorStyle ? style.color.evaluateColor(undefined, scratchColor) : Color.WHITE;
+            this._model.color = hasColorStyle ? style.color.evaluateColor(undefined, this._model.color) : Color.clone(Color.WHITE, this._model.color);
             this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
         } else {
             this._batchTable.applyStyle(style);
@@ -515,6 +479,4 @@ define([
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
-
-    return Batched3DModel3DTileContent;
-});
+export default Batched3DModel3DTileContent;

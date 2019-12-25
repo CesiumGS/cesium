@@ -1,6 +1,6 @@
 # Documentation Guide
 
-CesiumJS's reference documentation is one of the most popular sections of the CesiumJS website, and a critical resource for developers.  
+CesiumJS's reference documentation is one of the most popular sections of the CesiumJS website, and a critical resource for developers.
 
 This guide describes best practices for writing reference doc.
 
@@ -33,6 +33,8 @@ The reference doc is written in JavaScript code comments using [JSDoc3](http://u
 npm run generateDocumentation
 ```
 This creates a `Build/Documentation` directory with the built HTML files.
+
+>Alternatively, you can build documentation in watch mode `npm run generateDocumentation-watch` and have it generated automatically when source files change.
 
 There is a link to the doc from CesiumJS's main `index.html` when running
 ```
@@ -442,7 +444,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -463,7 +465,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -484,7 +486,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```
@@ -507,7 +509,7 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
 
 [@private]
 ```

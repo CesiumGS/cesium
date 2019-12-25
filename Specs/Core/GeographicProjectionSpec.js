@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/GeographicProjection',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math'
-    ], function(
-        GeographicProjection,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/GeographicProjection', function() {
 
     it('construct0', function() {
         var projection = new GeographicProjection();

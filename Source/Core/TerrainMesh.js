@@ -1,12 +1,6 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './defaultValue'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        defaultValue) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
 
     /**
       * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -147,6 +141,4 @@ define([
          */
         this.center2D = Cartesian3.clone(encoding.center2D);
     }
-
-    return TerrainMesh;
-});
+export default TerrainMesh;

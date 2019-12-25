@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
-        './Appearance',
-        './Material'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        VertexFormat,
-        EllipsoidSurfaceAppearanceFS,
-        EllipsoidSurfaceAppearanceVS,
-        Appearance,
-        Material) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import EllipsoidSurfaceAppearanceFS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js';
+import EllipsoidSurfaceAppearanceVS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS.js';
+import Appearance from './Appearance.js';
+import Material from './Material.js';
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
@@ -276,6 +265,4 @@ define([
      * @returns {Object} The render state.
      */
     EllipsoidSurfaceAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return EllipsoidSurfaceAppearance;
-});
+export default EllipsoidSurfaceAppearance;

@@ -1,57 +1,12 @@
-define([
-        'Source/ThirdParty/when',
-        'Specs/addDefaultMatchers',
-        'Specs/equalsMethodEqualityTester'
-    ], function(
-        when,
-        addDefaultMatchers,
-        equalsMethodEqualityTester) {
-    'use strict';
+import { when } from '../Source/Cesium.js';
+import addDefaultMatchers from './addDefaultMatchers.js';
+import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
 
-    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
-        function defineSuite(deps, name, suite, categories, focus) {
-            /*global define,describe,fdescribe*/
-            if (typeof suite === 'object' || typeof suite === 'string') {
-                categories = suite;
-            }
-
-            if (typeof name === 'function') {
-                suite = name;
-                name = deps[0];
-            }
-
-            // exclude this spec if we're filtering by category and it's not the selected category
-            // otherwise if we have an excluded category, exclude this test if the category of this spec matches
-            if (includedCategory && categories !== includedCategory) {
-                return;
-            } else if (excludedCategory && categories === excludedCategory) {
-                return;
-            }
-
-            define(deps, function() {
-                var args = arguments;
-                if (focus) {
-                    fdescribe(name, function() { //eslint-disable-line
-                        suite.apply(null, args);
-                    }, categories);
-                } else {
-                    describe(name, function() {
-                        suite.apply(null, args);
-                    }, categories);
-                }
-            });
-        }
+    function customizeJasmine(env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
+        // set this for uniform test resolution across devices
+        window.devicePixelRatio = 1;
 
         window.specsUsingRelease = release;
-
-        window.fdefineSuite = function(deps, name, suite, categories) {
-            defineSuite(deps, name, suite, categories, true);
-        };
-
-        window.defineSuite = function(deps, name, suite, categories) {
-            defineSuite(deps, name, suite, categories, false);
-
-        };
 
         var originalDescribe = window.describe;
 
@@ -148,5 +103,5 @@ define([
             addDefaultMatchers(!release).call(env);
             env.addCustomEqualityTester(equalsMethodEqualityTester);
         });
-    };
-});
+    }
+export default customizeJasmine;

@@ -1,50 +1,27 @@
-defineSuite([
-        'DataSources/EllipsoidGeometryUpdater',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Quaternion',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipsoidGraphics',
-        'DataSources/Entity',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        EllipsoidGeometryUpdater,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        GeometryOffsetAttribute,
-        JulianDate,
-        CesiumMath,
-        Quaternion,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipsoidGraphics,
-        Entity,
-        SampledPositionProperty,
-        SampledProperty,
-        HeightReference,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipsoidGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipsoidGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/EllipsoidGeometryUpdater', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -134,9 +111,64 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying innerRadii causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.innerRadii = new SampledProperty(Cartesian3);
+        entity.ellipsoid.innerRadii.addSample(time, new Cartesian3(1, 2, 3));
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying minimumClock causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.minimumClock = new SampledProperty(Number);
+        entity.ellipsoid.minimumClock.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying maximumClock causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.maximumClock = new SampledProperty(Number);
+        entity.ellipsoid.maximumClock.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying minimumCone causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.minimumCone = new SampledProperty(Number);
+        entity.ellipsoid.minimumCone.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying maximumCone causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.maximumCone = new SampledProperty(Number);
+        entity.ellipsoid.maximumCone.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
     it('Creates geometry with expected properties', function() {
         var options = {
             radii : new Cartesian3(1, 2, 3),
+            innerRadii: new Cartesian3(0.5, 1, 1.5),
+            minimumClock: CesiumMath.toRadians(90.0),
+            maximumClock: CesiumMath.toRadians(270.0),
+            minimumCone: CesiumMath.toRadians(45.0),
+            maximumCone: CesiumMath.toRadians(90.0),
             stackPartitions : 32,
             slicePartitions : 64,
             subdivisions : 15
@@ -151,6 +183,11 @@ defineSuite([
         ellipsoid.radii = new ConstantProperty(options.radii);
         ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
         ellipsoid.slicePartitions = new ConstantProperty(options.slicePartitions);
+        ellipsoid.innerRadii = new ConstantProperty(options.innerRadii);
+        ellipsoid.minimumClock = new ConstantProperty(options.minimumClock);
+        ellipsoid.maximumClock = new ConstantProperty(options.maximumClock);
+        ellipsoid.minimumCone = new ConstantProperty(options.minimumCone);
+        ellipsoid.maximumCone = new ConstantProperty(options.maximumCone);
         ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
         entity.ellipsoid = ellipsoid;
 
@@ -162,6 +199,11 @@ defineSuite([
         geometry = instance.geometry;
         expect(geometry._center).toEqual(options.center);
         expect(geometry._radii).toEqual(options.radii);
+        expect(geometry._innerRadii).toEqual(options.innerRadii);
+        expect(geometry._minimumClock).toEqual(options.minimumClock);
+        expect(geometry._maximumClock).toEqual(options.maximumClock);
+        expect(geometry._minimumCone).toEqual(options.minimumCone);
+        expect(geometry._maximumCone).toEqual(options.maximumCone);
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
         expect(geometry._offsetAttribute).toBeUndefined();
@@ -170,6 +212,11 @@ defineSuite([
         geometry = instance.geometry;
         expect(geometry._center).toEqual(options.center);
         expect(geometry._radii).toEqual(options.radii);
+        expect(geometry._innerRadii).toEqual(options.innerRadii);
+        expect(geometry._minimumClock).toEqual(options.minimumClock);
+        expect(geometry._maximumClock).toEqual(options.maximumClock);
+        expect(geometry._minimumCone).toEqual(options.minimumCone);
+        expect(geometry._maximumCone).toEqual(options.maximumCone);
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
         expect(geometry._subdivisions).toEqual(options.subdivisions);
@@ -308,6 +355,31 @@ defineSuite([
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
         updater.destroy();
+    });
+
+    it('Inner radii should be set when not in 3D mode', function() {
+        var ellipsoid = new EllipsoidGraphics();
+        ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
+        // Turns 3d mode path off
+        ellipsoid.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        ellipsoid.material = new ColorMaterialProperty(Color.RED);
+
+        var entity = new Entity();
+        entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
+        entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
+        entity.ellipsoid = ellipsoid;
+
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        var primitives = scene.primitives;
+
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
+        dynamicUpdater.update(time);
+
+        scene.initializeFrame();
+        scene.render();
+
+        expect(dynamicUpdater._options.innerRadii).toEqual(ellipsoid.innerRadii.getValue());
     });
 
     it('dynamic ellipsoid fast path updates attributes', function() {

@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/mersenne-twister',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        MersenneTwister,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import MersenneTwister from '../ThirdParty/mersenne-twister.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Math functions.
@@ -197,6 +189,13 @@ define([
      * @constant
      */
     CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
+
+    /**
+     * 4 * 1024 * 1024 * 1024
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
 
     /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
@@ -725,7 +724,9 @@ define([
         if (n >= length) {
             var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
-                factorials.push(sum * i);
+                var next = sum * i;
+                factorials.push(next);
+                sum = next;
             }
         }
         return factorials[n];
@@ -1043,6 +1044,4 @@ define([
         t = y < 0.0 ? -t : t;
         return t;
     };
-
-    return CesiumMath;
-});
+export default CesiumMath;

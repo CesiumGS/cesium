@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/EarthOrientationParameters',
-        'Core/defined',
-        'Core/JulianDate',
-        'Core/TimeStandard'
-    ], function(
-        EarthOrientationParameters,
-        defined,
-        JulianDate,
-        TimeStandard) {
-    'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { EarthOrientationParameters } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+
+describe('Core/EarthOrientationParameters', function() {
 
     var officialLeapSeconds;
 

@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/Spherical',
-        'Core/Cartesian3',
-        'Core/Math'
-    ], function(
-        Spherical,
-        Cartesian3,
-        CesiumMath) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Spherical } from '../../Source/Cesium.js';
+
+describe('Core/Spherical', function() {
 
     //Mock object to make sure methods take non-sphericals.
     function NotSpherical(clock, cone, magnitude) {

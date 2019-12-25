@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/CylinderGeometry',
-        'Core/arrayFill',
-        'Core/GeometryOffsetAttribute',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        CylinderGeometry,
-        arrayFill,
-        GeometryOffsetAttribute,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { CylinderGeometry } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CylinderGeometry', function() {
 
     it('constructor throws with no length', function() {
         expect(function() {

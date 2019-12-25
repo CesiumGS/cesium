@@ -1,42 +1,20 @@
-define([
-        '../Core/arraySlice',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Shaders/PostProcessStages/PassThrough',
-        './PostProcessStageLibrary',
-        './PostProcessStageTextureCache',
-        './Tonemapper'
-    ], function(
-        arraySlice,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        PixelFormat,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        PassThrough,
-        PostProcessStageLibrary,
-        PostProcessStageTextureCache,
-        Tonemapper) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
+import PostProcessStageLibrary from './PostProcessStageLibrary.js';
+import PostProcessStageTextureCache from './PostProcessStageTextureCache.js';
+import Tonemapper from './Tonemapper.js';
 
     var stackScratch = [];
 
@@ -73,6 +51,7 @@ define([
 
         var tonemapping = this._tonemapping;
 
+        fxaa.enabled = false;
         ao.enabled = false;
         bloom.enabled = false;
         tonemapping.enabled = false; // will be enabled if necessary in update
@@ -845,6 +824,4 @@ define([
         this._textureCache = this._textureCache && this._textureCache.destroy();
         return destroyObject(this);
     };
-
-    return PostProcessStageCollection;
-});
+export default PostProcessStageCollection;

@@ -1,42 +1,24 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Core/writeTextToCanvas',
-        './BillboardCollection',
-        './BlendOption',
-        './HeightReference',
-        './HorizontalOrigin',
-        './Label',
-        './LabelStyle',
-        './TextureAtlas',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Matrix4,
-        writeTextToCanvas,
-        BillboardCollection,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        Label,
-        LabelStyle,
-        TextureAtlas,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix4 from '../Core/Matrix4.js';
+import writeTextToCanvas from '../Core/writeTextToCanvas.js';
+import bitmapSDF from '../ThirdParty/bitmap-sdf.js';
+import BillboardCollection from './BillboardCollection.js';
+import BlendOption from './BlendOption.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import Label from './Label.js';
+import LabelStyle from './LabelStyle.js';
+import SDFSettings from './SDFSettings.js';
+import TextureAtlas from './TextureAtlas.js';
+import VerticalOrigin from './VerticalOrigin.js';
+import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into
@@ -86,6 +68,8 @@ define([
         writeTextToCanvasParameters.fillColor = fillColor;
         writeTextToCanvasParameters.strokeColor = outlineColor;
         writeTextToCanvasParameters.strokeWidth = outlineWidth;
+        // Setting the padding to something bigger is necessary to get enough space for the outlining.
+        writeTextToCanvasParameters.padding = SDFSettings.PADDING;
 
         if (verticalOrigin === VerticalOrigin.CENTER) {
             writeTextToCanvasParameters.textBaseline = 'middle';
@@ -98,6 +82,7 @@ define([
 
         writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
         writeTextToCanvasParameters.stroke = style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
+        writeTextToCanvasParameters.backgroundColor = Color.BLACK;
 
         return writeTextToCanvas(character, writeTextToCanvasParameters);
     }
@@ -125,15 +110,21 @@ define([
         });
     }
 
+    var splitter = new GraphemeSplitter();
+
     function rebindAllGlyphs(labelCollection, label) {
         var text = label._renderedText;
-        var textLength = text.length;
+        var graphemes = splitter.splitGraphemes(text);
+        var textLength = graphemes.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
         var glyph;
         var glyphIndex;
         var textIndex;
+
+        // Compute a font size scale relative to the sdf font generated size.
+        label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -171,7 +162,7 @@ define([
             backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
             backgroundBillboard.verticalOrigin = label._verticalOrigin;
             backgroundBillboard.heightReference = label._heightReference;
-            backgroundBillboard.scale = label._scale;
+            backgroundBillboard.scale = label.totalScale;
             backgroundBillboard.pickPrimitive = label;
             backgroundBillboard.id = label._id;
             backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
@@ -186,35 +177,52 @@ define([
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
-            var character = text.charAt(textIndex);
-            var font = label._font;
-            var fillColor = label._fillColor;
-            var outlineColor = label._outlineColor;
-            var outlineWidth = label._outlineWidth;
-            var style = label._style;
+            var character = graphemes[textIndex];
             var verticalOrigin = label._verticalOrigin;
 
-            // retrieve glyph dimensions and texture index (if the canvas has area)
-            // from the glyph texture cache, or create and add if not present.
             var id = JSON.stringify([
                                      character,
-                                     font,
-                                     fillColor.toRgba(),
-                                     outlineColor.toRgba(),
-                                     outlineWidth,
-                                     +style,
+                                     label._fontFamily,
+                                     label._fontStyle,
+                                     label._fontWeight,
                                      +verticalOrigin
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
-                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
+
+                var glyphFont = label._fontStyle + ' ' + label._fontWeight + ' ' + SDFSettings.FONT_SIZE + 'px ' + label._fontFamily;
+
+                var canvas = createGlyphCanvas(character, glyphFont, Color.WHITE, Color.WHITE, 0.0, LabelStyle.FILL, verticalOrigin);
 
                 glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
 
                 if (canvas.width > 0 && canvas.height > 0) {
-                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
+                    var sdfValues = bitmapSDF(canvas, {
+                        cutoff: SDFSettings.CUTOFF,
+                        radius: SDFSettings.RADIUS
+                    });
+
+                    var ctx = canvas.getContext('2d');
+                    var canvasWidth = canvas.width;
+                    var canvasHeight = canvas.height;
+                    var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+                    for (var i = 0; i < canvasWidth; i++) {
+                        for (var j = 0; j < canvasHeight; j++) {
+                            var baseIndex = (j * canvasWidth + i);
+                            var alpha = sdfValues[baseIndex] * 255;
+                            var imageIndex = baseIndex * 4;
+                            imgData.data[imageIndex + 0] = alpha;
+                            imgData.data[imageIndex + 1] = alpha;
+                            imgData.data[imageIndex + 2] = alpha;
+                            imgData.data[imageIndex + 3] = alpha;
+                        }
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+                    if (character !== ' ') {
+                        addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
+                    }
                 }
             }
 
@@ -264,7 +272,7 @@ define([
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
                 billboard.heightReference = label._heightReference;
-                billboard.scale = label._scale;
+                billboard.scale = label.totalScale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
@@ -274,6 +282,19 @@ define([
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
                 billboard.disableDepthTestDistance = label._disableDepthTestDistance;
                 billboard._batchIndex = label._batchIndex;
+                billboard.outlineColor = label.outlineColor;
+                if (label.style === LabelStyle.FILL_AND_OUTLINE) {
+                    billboard.color = label._fillColor;
+                    billboard.outlineWidth = label.outlineWidth;
+                }
+                else if (label.style === LabelStyle.FILL) {
+                    billboard.color = label._fillColor;
+                    billboard.outlineWidth = 0.0;
+                }
+                else if (label.style === LabelStyle.OUTLINE) {
+                    billboard.color = Color.TRANSPARENT;
+                    billboard.outlineWidth = label.outlineWidth;
+                }
             }
         }
 
@@ -295,7 +316,7 @@ define([
     var glyphPixelOffset = new Cartesian2();
     var scratchBackgroundPadding = new Cartesian2();
 
-    function repositionAllGlyphs(label, resolutionScale) {
+    function repositionAllGlyphs(label) {
         var glyphs = label._glyphs;
         var text = label._renderedText;
         var glyph;
@@ -313,6 +334,10 @@ define([
         var backgroundPadding = Cartesian2.clone(
             (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
             scratchBackgroundPadding);
+
+        // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
+        backgroundPadding.x /= label._relativeSize;
+        backgroundPadding.y /= label._relativeSize;
 
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
@@ -336,7 +361,7 @@ define([
         lineWidths.push(lastLineWidth);
         var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
-        var scale = label._scale;
+        var scale = label.totalScale;
         var horizontalOrigin = label._horizontalOrigin;
         var verticalOrigin = label._verticalOrigin;
         var lineIndex = 0;
@@ -353,8 +378,10 @@ define([
             backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
         }
 
-        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+        glyphPixelOffset.x = widthOffset * scale;
         glyphPixelOffset.y = 0;
+
+        var firstCharOfLine = true;
 
         var lineOffsetY = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
@@ -363,22 +390,33 @@ define([
                 lineOffsetY += lineSpacing;
                 lineWidth = lineWidths[lineIndex];
                 widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
-                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+                glyphPixelOffset.x = widthOffset * scale;
+                firstCharOfLine = true;
             } else {
                 glyph = glyphs[glyphIndex];
                 dimensions = glyph.dimensions;
 
                 if (verticalOrigin === VerticalOrigin.TOP) {
                     glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
+                    glyphPixelOffset.y += SDFSettings.PADDING;
                 } else if (verticalOrigin === VerticalOrigin.CENTER) {
                     glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
                 } else if (verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphPixelOffset.y = otherLinesHeight;
+                    glyphPixelOffset.y -= SDFSettings.PADDING;
                 } else {
                     // VerticalOrigin.BOTTOM
                     glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
+                    glyphPixelOffset.y -= SDFSettings.PADDING;
                 }
-                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
+                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale;
+
+                // Handle any offsets for the first character of the line since the bounds might not be right on the bottom left pixel.
+                if (firstCharOfLine)
+                {
+                    glyphPixelOffset.x -= SDFSettings.PADDING * scale;
+                    firstCharOfLine = false;
+                }
 
                 if (defined(glyph.billboard)) {
                     glyph.billboard._setTranslate(glyphPixelOffset);
@@ -392,7 +430,7 @@ define([
                 //as well as any applied scale.
                 if (glyphIndex < glyphLength - 1) {
                     var nextGlyph = glyphs[glyphIndex + 1];
-                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale;
                 }
             }
         }
@@ -405,7 +443,7 @@ define([
             } else {
                 widthOffset = 0;
             }
-            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+            glyphPixelOffset.x = widthOffset * scale;
 
             if (verticalOrigin === VerticalOrigin.TOP) {
                 glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
@@ -417,7 +455,7 @@ define([
                 // VerticalOrigin.BOTTOM
                 glyphPixelOffset.y = 0;
             }
-            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
+            glyphPixelOffset.y = glyphPixelOffset.y * scale;
 
             backgroundBillboard.width = totalLineWidth;
             backgroundBillboard.height = totalLineHeight;
@@ -487,7 +525,7 @@ define([
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      *
      * @example
      * // Create a label collection with two labels
@@ -521,13 +559,13 @@ define([
             batchTable : this._batchTable
         });
         this._billboardCollection.destroyTextureAtlas = false;
+        this._billboardCollection._sdf = true;
 
         this._spareBillboards = [];
         this._glyphTextureCache = {};
         this._labels = [];
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
-        this._resolutionScale = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
@@ -805,21 +843,9 @@ define([
             addWhitePixelCanvas(this._backgroundTextureAtlas, this);
         }
 
-        var uniformState = context.uniformState;
-        var resolutionScale = uniformState.resolutionScale;
-        var resolutionChanged = this._resolutionScale !== resolutionScale;
-        this._resolutionScale = resolutionScale;
-
-        var labelsToUpdate;
-        if (resolutionChanged) {
-            labelsToUpdate = this._labels;
-        } else {
-            labelsToUpdate = this._labelsToUpdate;
-        }
-
-        var len = labelsToUpdate.length;
+        var len = this._labelsToUpdate.length;
         for (var i = 0; i < len; ++i) {
-            var label = labelsToUpdate[i];
+            var label = this._labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;
             }
@@ -831,8 +857,8 @@ define([
                 label._rebindAllGlyphs = false;
             }
 
-            if (resolutionChanged || label._repositionAllGlyphs) {
-                repositionAllGlyphs(label, resolutionScale);
+            if (label._repositionAllGlyphs) {
+                repositionAllGlyphs(label);
                 label._repositionAllGlyphs = false;
             }
 
@@ -891,6 +917,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return LabelCollection;
-});
+export default LabelCollection;

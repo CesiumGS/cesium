@@ -1,8 +1,4 @@
-define([
-        '../ThirdParty/knockout'
-    ], function(
-        knockout) {
-    'use strict';
+import knockout from '../ThirdParty/knockout.js';
 
     /**
      * Subscribe to a Knockout observable ES5 property, and immediately fire
@@ -23,6 +19,4 @@ define([
         callback.call(target, owner[observablePropertyName]);
         return knockout.getObservable(owner, observablePropertyName).subscribe(callback, target, event);
     }
-
-    return subscribeAndEvaluate;
-});
+export default subscribeAndEvaluate;

@@ -1,8 +1,4 @@
-define([
-        './Math'
-    ], function(
-        CesiumMath) {
-    'use strict';
+import CesiumMath from './Math.js';
 
     /**
      * @private
@@ -54,6 +50,4 @@ define([
 
         return positions;
     };
-
-    return CylinderGeometryLibrary;
-});
+export default CylinderGeometryLibrary;

@@ -1,88 +1,42 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/GeographicProjection',
-        '../Core/GeographicTilingScheme',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/TerrainProvider',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorProjection',
-        '../Core/WebMercatorTilingScheme',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ComputeCommand',
-        '../Renderer/ContextLimits',
-        '../Renderer/MipmapHint',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS',
-        '../ThirdParty/when',
-        './Imagery',
-        './ImagerySplitDirection',
-        './ImageryState',
-        './TileImagery'
-    ], function(
-        Cartesian2,
-        Cartesian4,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        GeographicProjection,
-        GeographicTilingScheme,
-        IndexDatatype,
-        CesiumMath,
-        PixelFormat,
-        Rectangle,
-        Request,
-        RequestState,
-        RequestType,
-        TerrainProvider,
-        TileProviderError,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        Buffer,
-        BufferUsage,
-        ComputeCommand,
-        ContextLimits,
-        MipmapHint,
-        Sampler,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS,
-        when,
-        Imagery,
-        ImagerySplitDirection,
-        ImageryState,
-        TileImagery) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import GeographicProjection from '../Core/GeographicProjection.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Rectangle from '../Core/Rectangle.js';
+import Request from '../Core/Request.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import TerrainProvider from '../Core/TerrainProvider.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ComputeCommand from '../Renderer/ComputeCommand.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import MipmapHint from '../Renderer/MipmapHint.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import ReprojectWebMercatorFS from '../Shaders/ReprojectWebMercatorFS.js';
+import ReprojectWebMercatorVS from '../Shaders/ReprojectWebMercatorVS.js';
+import when from '../ThirdParty/when.js';
+import Imagery from './Imagery.js';
+import ImagerySplitDirection from './ImagerySplitDirection.js';
+import ImageryState from './ImageryState.js';
+import TileImagery from './TileImagery.js';
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
@@ -164,7 +118,7 @@ define([
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -1255,6 +1209,4 @@ define([
         var rounded = Math.round(level);
         return rounded | 0;
     }
-
-    return ImageryLayer;
-});
+export default ImageryLayer;
