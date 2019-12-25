@@ -602,6 +602,7 @@ import ModelUtility from './ModelUtility.js';
                 fragmentShader += '    vec3 n = ng;\n';
             }
             if (material.doubleSided) {
+                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/AnalyticalGraphicsInc/cesium/pull/8494.
                 fragmentShader += '    if (gl_FrontFacing == false)\n';
                 fragmentShader += '    {\n';
                 fragmentShader += '        n = -n;\n';
