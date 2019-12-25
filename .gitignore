@@ -6,13 +6,8 @@
 Thumbs.db
 .eslintcache
 
-/Apps/CesiumViewer/Gallery/gallery-index.js
-
-/Apps/Sandcastle/jsHintOptions.js
-/Apps/Sandcastle/gallery/gallery-index.js
-/Apps/Sandcastle/templates/bucket.css
-/Apps/opgis-map-react
-/Apps/opgis-map-vue
+# app
+/Apps/*
 
 /Source/Cesium.js
 
@@ -33,7 +28,7 @@ yarn.lock
 .idea/workspace.xml
 .idea/tasks.xml
 .idea
-.vscode
+.vscode/settings.json
 .github
 .concierge
-.gitignore
+# .gitignore
