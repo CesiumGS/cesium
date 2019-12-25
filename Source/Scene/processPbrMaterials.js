@@ -602,7 +602,7 @@ import ModelUtility from './ModelUtility.js';
                 fragmentShader += '    vec3 n = ng;\n';
             }
             if (material.doubleSided) {
-                fragmentShader += '    if (!gl_FrontFacing)\n';
+                fragmentShader += '    if (gl_FrontFacing == false)\n';
                 fragmentShader += '    {\n';
                 fragmentShader += '        n = -n;\n';
                 fragmentShader += '    }\n';
