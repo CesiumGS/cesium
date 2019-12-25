@@ -1,4 +1,4 @@
-import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoundingSphere, SunLight, DirectionalLight } from '../../Source/Cesium.js';
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { CesiumTerrainProvider } from '../../Source/Cesium.js';
@@ -1713,6 +1713,51 @@ describe('Scene/Scene', function() {
         });
         scene.renderForSpecs();
         expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
+    it('sets light', function() {
+        var scene = createScene();
+        var uniformState = scene.context.uniformState;
+        var lightDirectionWC = uniformState._lightDirectionWC;
+        var sunDirectionWC = uniformState._sunDirectionWC;
+        var lightColor = uniformState._lightColor;
+        var lightColorHdr = uniformState._lightColorHdr;
+
+        // Default light is a sun light
+        scene.renderForSpecs();
+        expect(lightDirectionWC).toEqual(sunDirectionWC);
+        expect(lightColor).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+        expect(lightColorHdr).toEqual(new Cartesian3(2.0, 2.0, 2.0));
+
+        // Test directional light
+        scene.light = new DirectionalLight({
+            direction : new Cartesian3(1.0, 0.0, 0.0),
+            color : Color.RED,
+            intensity : 2.0
+        });
+        scene.renderForSpecs();
+        expect(lightDirectionWC).toEqual(new Cartesian3(-1.0, 0.0, 0.0)); // Negated because the uniform is the direction to the light, not from the light
+        expect(lightColor).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+        expect(lightColorHdr).toEqual(new Cartesian3(2.0, 0.0, 0.0));
+
+        // Test sun light
+        scene.light = new SunLight({
+            color : Color.BLUE,
+            intensity : 0.5
+        });
+        scene.renderForSpecs();
+        expect(lightDirectionWC).toEqual(sunDirectionWC);
+        expect(lightColor).toEqual(new Cartesian3(0.0, 0.0, 0.5));
+        expect(lightColorHdr).toEqual(new Cartesian3(0.0, 0.0, 0.5));
+
+        // Test light set to undefined
+        scene.light = undefined;
+        scene.renderForSpecs();
+        expect(lightDirectionWC).toEqual(sunDirectionWC);
+        expect(lightColor).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+        expect(lightColorHdr).toEqual(new Cartesian3(2.0, 2.0, 2.0));
 
         scene.destroyForSpecs();
     });

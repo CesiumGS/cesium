@@ -1160,8 +1160,8 @@ import SunLight from '../Scene/SunLight.js';
 
         var light = defaultValue(frameState.light, defaultLight);
         if (light instanceof SunLight) {
-            this._lightDirectionWC = Cartesian3.clone(this._sunDirectionWC);
-            this._lightDirectionEC = Cartesian3.clone(this._sunDirectionEC);
+            this._lightDirectionWC = Cartesian3.clone(this._sunDirectionWC, this._lightDirectionWC);
+            this._lightDirectionEC = Cartesian3.clone(this._sunDirectionEC, this._lightDirectionEC);
         } else {
             this._lightDirectionWC = Cartesian3.normalize(Cartesian3.negate(light.direction, this._lightDirectionWC), this._lightDirectionWC);
             this._lightDirectionEC = Matrix3.multiplyByVector(this.viewRotation3D, this._lightDirectionWC, this._lightDirectionEC);

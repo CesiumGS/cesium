@@ -3270,7 +3270,7 @@ import View from './View.js';
 
         var shadowMap = scene.shadowMap;
         if (defined(shadowMap) && shadowMap.enabled) {
-            if (scene.light instanceof SunLight) {
+            if (!defined(scene.light) || scene.light instanceof SunLight) {
                 // Negate the sun direction so that it is from the Sun, not to the Sun
                 Cartesian3.negate(us.sunDirectionWC, scene._shadowMapCamera.direction);
             } else {
