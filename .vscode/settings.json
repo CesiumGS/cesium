@@ -1,13 +1,13 @@
 {
   "files.exclude": {
-    "**/.git": true,
-    "**/.DS_Store": true,
-    "**/Thumbs.db": true,
+    ".externalToolBuilders": true,
     ".idea": true,
     ".metadata": true,
-    ".settings": true,
-    ".externalToolBuilders": true,
     ".project": true,
+    ".settings": true,
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/Thumbs.db": true,
     "launches": true,
     "Build": "explorerExcludedFiles",
     "Cesium-*.zip": "explorerExcludedFiles",
