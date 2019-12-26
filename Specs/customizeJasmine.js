@@ -1,14 +1,8 @@
-define([
-        'Source/ThirdParty/when',
-        'Specs/addDefaultMatchers',
-        'Specs/equalsMethodEqualityTester'
-    ], function(
-        when,
-        addDefaultMatchers,
-        equalsMethodEqualityTester) {
-    'use strict';
+import { when } from '../Source/Cesium.js';
+import addDefaultMatchers from './addDefaultMatchers.js';
+import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
 
-    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
+    function customizeJasmine(env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
         // set this for uniform test resolution across devices
         window.devicePixelRatio = 1;
 
@@ -109,5 +103,5 @@ define([
             addDefaultMatchers(!release).call(env);
             env.addCustomEqualityTester(equalsMethodEqualityTester);
         });
-    };
-});
+    }
+export default customizeJasmine;

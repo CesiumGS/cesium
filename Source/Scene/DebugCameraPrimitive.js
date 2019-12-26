@@ -1,42 +1,21 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FrustumGeometry',
-        '../Core/FrustumOutlineGeometry',
-        '../Core/GeometryInstance',
-        '../Core/Matrix3',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/PerspectiveOffCenterFrustum',
-        '../Core/Quaternion',
-        './PerInstanceColorAppearance',
-        './Primitive'
-    ], function(
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        FrustumGeometry,
-        FrustumOutlineGeometry,
-        GeometryInstance,
-        Matrix3,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
-        Quaternion,
-        PerInstanceColorAppearance,
-        Primitive) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import FrustumGeometry from '../Core/FrustumGeometry.js';
+import FrustumOutlineGeometry from '../Core/FrustumOutlineGeometry.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Matrix3 from '../Core/Matrix3.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import PerspectiveOffCenterFrustum from '../Core/PerspectiveOffCenterFrustum.js';
+import Quaternion from '../Core/Quaternion.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
 
     /**
      * Draws the outline of the camera's view frustum.
@@ -261,6 +240,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return DebugCameraPrimitive;
-});
+export default DebugCameraPrimitive;

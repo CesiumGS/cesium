@@ -1,24 +1,12 @@
-define([
-        '../Core/clone',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/EasingFunction',
-        '../Core/getTimestamp',
-        '../Core/TimeConstants',
-        '../ThirdParty/Tween'
-    ], function(
-        clone,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EasingFunction,
-        getTimestamp,
-        TimeConstants,
-        TweenJS) {
-    'use strict';
+import clone from '../Core/clone.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EasingFunction from '../Core/EasingFunction.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import TimeConstants from '../Core/TimeConstants.js';
+import TweenJS from '../ThirdParty/Tween.js';
 
     /**
      * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
@@ -557,6 +545,4 @@ define([
      * A function that will execute when a tween is cancelled.
      * @callback TweenCollection~TweenCancelledCallback
      */
-
-    return TweenCollection;
-});
+export default TweenCollection;

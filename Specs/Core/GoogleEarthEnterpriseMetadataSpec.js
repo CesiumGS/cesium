@@ -1,22 +1,11 @@
-define([
-        'Core/decodeGoogleEarthEnterpriseData',
-        'Core/defaultValue',
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/Math',
-        'Core/Request',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        decodeGoogleEarthEnterpriseData,
-        defaultValue,
-        GoogleEarthEnterpriseMetadata,
-        GoogleEarthEnterpriseTileInformation,
-        CesiumMath,
-        Request,
-        Resource,
-        when) {
-        'use strict';
+import { decodeGoogleEarthEnterpriseData } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMetadata } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/GoogleEarthEnterpriseMetadata', function() {
 
@@ -244,5 +233,4 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
             expect(e.message).toContain(url);
         });
     });
-});
 });

@@ -5,5 +5,18 @@
     ],
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "index.js",
+                "server.js",
+                "gulpfile.js",
+                "Source/Workers/transferTypedArrayTest.js"
+            ],
+            "parserOptions": {
+                "sourceType": "script"
+            }
+        }
+    ]
 }

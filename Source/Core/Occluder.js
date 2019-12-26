@@ -1,26 +1,13 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './Math',
-        './Rectangle',
-        './Visibility'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        Visibility) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import CesiumMath from './Math.js';
+import Rectangle from './Rectangle.js';
+import Visibility from './Visibility.js';
 
     /**
      * Creates an Occluder derived from an object's position and radius, as well as the camera position.
@@ -522,6 +509,4 @@ define([
         var dot1 = Cartesian3.dot(occluderPlaneNormal, tempVec);
         return (dot0 < dot1) ? dot0 : dot1;
     };
-
-    return Occluder;
-});
+export default Occluder;

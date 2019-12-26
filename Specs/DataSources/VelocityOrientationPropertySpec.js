@@ -1,26 +1,13 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/ExtrapolationType',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'Core/Transforms',
-        'DataSources/CallbackProperty',
-        'DataSources/SampledPositionProperty',
-        'DataSources/VelocityOrientationProperty'
-    ], function(
-        Cartesian3,
-        Ellipsoid,
-        Event,
-        ExtrapolationType,
-        JulianDate,
-        Quaternion,
-        Transforms,
-        CallbackProperty,
-        SampledPositionProperty,
-        VelocityOrientationProperty) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { VelocityOrientationProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/VelocityOrientationProperty', function() {
 
@@ -203,5 +190,4 @@ describe('DataSources/VelocityOrientationProperty', function() {
             property.getValue();
         }).toThrowDeveloperError();
     });
-});
 });

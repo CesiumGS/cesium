@@ -1,16 +1,8 @@
-define([
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/defined',
-        'Core/JulianDate'
-    ], function(
-        Clock,
-        ClockRange,
-        ClockStep,
-        defined,
-        JulianDate) {
-        'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
 
 describe('Core/Clock', function() {
 
@@ -605,5 +597,4 @@ describe('Core/Clock', function() {
             expect(time1).toEqual(JulianDate.addSeconds(JulianDate.fromDate(baseDate), 1.0, new JulianDate()));
         });
     });
-});
 });

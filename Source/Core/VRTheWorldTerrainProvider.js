@@ -1,38 +1,19 @@
-define([
-        '../ThirdParty/when',
-        './Credit',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './Event',
-        './GeographicTilingScheme',
-        './getImagePixels',
-        './HeightmapTerrainData',
-        './Math',
-        './Rectangle',
-        './Resource',
-        './TerrainProvider',
-        './TileProviderError'
-    ], function(
-        when,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Event,
-        GeographicTilingScheme,
-        getImagePixels,
-        HeightmapTerrainData,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        TerrainProvider,
-        TileProviderError) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Event from './Event.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import getImagePixels from './getImagePixels.js';
+import HeightmapTerrainData from './HeightmapTerrainData.js';
+import CesiumMath from './Math.js';
+import Rectangle from './Rectangle.js';
+import Resource from './Resource.js';
+import TerrainProvider from './TerrainProvider.js';
+import TileProviderError from './TileProviderError.js';
 
     function DataRectangle(rectangle, maxLevel) {
         this.rectangle = rectangle;
@@ -368,6 +349,4 @@ define([
     VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
         return undefined;
     };
-
-    return VRTheWorldTerrainProvider;
-});
+export default VRTheWorldTerrainProvider;

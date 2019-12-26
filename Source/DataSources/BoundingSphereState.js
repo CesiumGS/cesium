@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
@@ -29,6 +25,4 @@ define([
          */
         FAILED : 2
     };
-
-    return freezeObject(BoundingSphereState);
-});
+export default freezeObject(BoundingSphereState);

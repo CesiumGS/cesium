@@ -1,52 +1,26 @@
-define([
-        './arrayRemoveDuplicates',
-        './BoundingRectangle',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './CornerType',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './oneTimeWarning',
-        './PolygonPipeline',
-        './PolylineVolumeGeometryLibrary',
-        './PrimitiveType',
-        './VertexFormat',
-        './WindingOrder'
-    ], function(
-        arrayRemoveDuplicates,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        CornerType,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        oneTimeWarning,
-        PolygonPipeline,
-        PolylineVolumeGeometryLibrary,
-        PrimitiveType,
-        VertexFormat,
-        WindingOrder) {
-    'use strict';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingRectangle from './BoundingRectangle.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import CornerType from './CornerType.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import oneTimeWarning from './oneTimeWarning.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PolylineVolumeGeometryLibrary from './PolylineVolumeGeometryLibrary.js';
+import PrimitiveType from './PrimitiveType.js';
+import VertexFormat from './VertexFormat.js';
+import WindingOrder from './WindingOrder.js';
 
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();
@@ -201,7 +175,7 @@ define([
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      *
      * @example
      * function computeCircle(radius) {
@@ -402,6 +376,4 @@ define([
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeGeometry, true);
         return computeAttributes(computedPositions, shape2D, boundingRectangle, polylineVolumeGeometry._vertexFormat);
     };
-
-    return PolylineVolumeGeometry;
-});
+export default PolylineVolumeGeometry;

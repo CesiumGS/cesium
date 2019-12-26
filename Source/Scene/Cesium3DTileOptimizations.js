@@ -1,16 +1,8 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        './Cesium3DTileOptimizationHint',
-        './TileBoundingRegion',
-        './TileOrientedBoundingBox'
-    ], function(
-        Cartesian3,
-        Check,
-        Cesium3DTileOptimizationHint,
-        TileBoundingRegion,
-        TileOrientedBoundingBox) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
+import TileBoundingRegion from './TileBoundingRegion.js';
+import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     /**
      * Utility functions for computing optimization hints for a {@link Cesium3DTileset}.
@@ -100,6 +92,4 @@ define([
 
         return tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
     };
-
-    return Cesium3DTileOptimizations;
-});
+export default Cesium3DTileOptimizations;

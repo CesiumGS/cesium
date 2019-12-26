@@ -1,10 +1,5 @@
-define([
-        'Core/FeatureDetection',
-        'Core/Fullscreen'
-    ], function(
-        FeatureDetection,
-        Fullscreen) {
-        'use strict';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { Fullscreen } from '../../Source/Cesium.js';
 
 describe('Core/Fullscreen', function() {
 
@@ -74,5 +69,4 @@ describe('Core/Fullscreen', function() {
             }
         });
     }
-});
 });

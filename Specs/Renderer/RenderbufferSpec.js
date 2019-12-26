@@ -1,14 +1,7 @@
-define([
-        'Renderer/ContextLimits',
-        'Renderer/Renderbuffer',
-        'Renderer/RenderbufferFormat',
-        'Specs/createContext'
-    ], function(
-        ContextLimits,
-        Renderbuffer,
-        RenderbufferFormat,
-        createContext) {
-        'use strict';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { Renderbuffer } from '../../Source/Cesium.js';
+import { RenderbufferFormat } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/Renderbuffer', function() {
 
@@ -121,4 +114,3 @@ describe('Renderer/Renderbuffer', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

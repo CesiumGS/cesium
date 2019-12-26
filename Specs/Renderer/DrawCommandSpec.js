@@ -1,12 +1,6 @@
-define([
-        'Core/PrimitiveType',
-        'Renderer/DrawCommand',
-        'Renderer/Pass'
-    ], function(
-        PrimitiveType,
-        DrawCommand,
-        Pass) {
-        'use strict';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
 
 describe('Renderer/DrawCommand', function() {
 
@@ -212,5 +206,4 @@ describe('Renderer/DrawCommand', function() {
     it('shallow clone returns undefined', function() {
         expect(DrawCommand.shallowClone()).toBeUndefined();
     });
-});
 });

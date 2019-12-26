@@ -1,18 +1,7 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/JulianDate',
-        '../Core/Math'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        JulianDate,
-        CesiumMath) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
 
     /**
      * A heatmap colorizer in a {@link Cesium3DTileset}. A tileset can colorize its visible tiles in a heatmap style.
@@ -149,6 +138,4 @@ define([
             this._maximum = -Number.MAX_VALUE;
         }
     };
-
-    return Cesium3DTilesetHeatmap;
-});
+export default Cesium3DTilesetHeatmap;

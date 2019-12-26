@@ -1,16 +1,8 @@
-define([
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/WebMercatorTilingScheme',
-        'Scene/QuadtreeTile'
-    ], function(
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        WebMercatorTilingScheme,
-        QuadtreeTile) {
-        'use strict';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
 
 describe('Scene/QuadtreeTile', function() {
 
@@ -368,5 +360,4 @@ describe('Scene/QuadtreeTile', function() {
             expect(northwest.rectangle.south).toBeGreaterThan(southwest.rectangle.south);
         });
     });
-});
 });

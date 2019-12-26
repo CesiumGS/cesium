@@ -1,62 +1,31 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/IndexDatatype',
-        '../Core/IntersectionTests',
-        '../Core/OrientedBoundingBox',
-        '../Core/PixelFormat',
-        '../Core/Request',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/TileProviderError',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../ThirdParty/when',
-        './ImageryState',
-        './QuadtreeTileLoadState',
-        './SceneMode',
-        './TerrainState',
-        './TileBoundingRegion'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        defined,
-        defineProperties,
-        IndexDatatype,
-        IntersectionTests,
-        OrientedBoundingBox,
-        PixelFormat,
-        Request,
-        RequestState,
-        RequestType,
-        TileProviderError,
-        Buffer,
-        BufferUsage,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        when,
-        ImageryState,
-        QuadtreeTileLoadState,
-        SceneMode,
-        TerrainState,
-        TileBoundingRegion) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Ray from '../Core/Ray.js';
+import Request from '../Core/Request.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import when from '../ThirdParty/when.js';
+import ImageryState from './ImageryState.js';
+import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
+import SceneMode from './SceneMode.js';
+import TerrainState from './TerrainState.js';
 
     /**
      * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -171,7 +140,6 @@ define([
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
-    var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
         var mesh = this.renderedMesh;
@@ -182,9 +150,11 @@ define([
         var vertices = mesh.vertices;
         var indices = mesh.indices;
         var encoding = mesh.encoding;
+        var indicesLength = indices.length;
 
-        var length = indices.length;
-        for (var i = 0; i < length; i += 3) {
+        var minT = Number.MAX_VALUE;
+
+        for (var i = 0; i < indicesLength; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
@@ -193,13 +163,13 @@ define([
             var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
             var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
-            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
-            if (defined(intersection)) {
-                return Cartesian3.clone(intersection, result);
+            var t = IntersectionTests.rayTriangleParametric(ray, v0, v1, v2, cullBackFaces);
+            if (defined(t) && t < minT) {
+                minT = t;
             }
         }
 
-        return undefined;
+        return minT < Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
     };
 
     GlobeSurfaceTile.prototype.freeResources = function() {
@@ -691,6 +661,4 @@ define([
 
         return result;
     };
-
-    return GlobeSurfaceTile;
-});
+export default GlobeSurfaceTile;

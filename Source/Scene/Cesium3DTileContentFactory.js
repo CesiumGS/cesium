@@ -1,20 +1,10 @@
-define([
-        './Batched3DModel3DTileContent',
-        './Composite3DTileContent',
-        './Geometry3DTileContent',
-        './Instanced3DModel3DTileContent',
-        './PointCloud3DTileContent',
-        './Tileset3DTileContent',
-        './Vector3DTileContent'
-    ], function(
-        Batched3DModel3DTileContent,
-        Composite3DTileContent,
-        Geometry3DTileContent,
-        Instanced3DModel3DTileContent,
-        PointCloud3DTileContent,
-        Tileset3DTileContent,
-        Vector3DTileContent) {
-    'use strict';
+import Batched3DModel3DTileContent from './Batched3DModel3DTileContent.js';
+import Composite3DTileContent from './Composite3DTileContent.js';
+import Geometry3DTileContent from './Geometry3DTileContent.js';
+import Instanced3DModel3DTileContent from './Instanced3DModel3DTileContent.js';
+import PointCloud3DTileContent from './PointCloud3DTileContent.js';
+import Tileset3DTileContent from './Tileset3DTileContent.js';
+import Vector3DTileContent from './Vector3DTileContent.js';
 
     /**
      * Maps a tile's magic field in its header to a new content object for the tile's payload.
@@ -45,6 +35,4 @@ define([
             return new Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
         }
     };
-
-    return Cesium3DTileContentFactory;
-});
+export default Cesium3DTileContentFactory;

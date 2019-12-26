@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'DataSources/CallbackProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/TerrainOffsetProperty',
-        'Specs/createGlobe',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        JulianDate,
-        CallbackProperty,
-        ConstantProperty,
-        TerrainOffsetProperty,
-        createGlobe,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { TerrainOffsetProperty } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/TerrainOffsetProperty', function() {
 
@@ -56,5 +46,4 @@ describe('DataSources/TerrainOffsetProperty', function() {
             return new TerrainOffsetProperty(scene, undefined, height, extrudedHeight);
         }).toThrowDeveloperError();
     });
-});
 });

@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Tests an object to see if it is an array.
@@ -17,6 +13,4 @@ define([
             return Object.prototype.toString.call(value) === '[object Array]';
         };
     }
-
-    return isArray;
-});
+export default isArray;

@@ -1,20 +1,10 @@
-define([
-        'Core/Color',
-        'Core/defined',
-        'Scene/PostProcessStage',
-        'Scene/PostProcessStageComposite',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Color,
-        defined,
-        PostProcessStage,
-        PostProcessStageComposite,
-        createScene,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageComposite } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PostProcessStageComposite', function() {
 
@@ -228,4 +218,3 @@ describe('Scene/PostProcessStageComposite', function() {
     });
 
 }, 'WebGL');
-});

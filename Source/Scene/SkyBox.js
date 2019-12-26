@@ -1,48 +1,24 @@
-define([
-        '../Core/BoxGeometry',
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryPipeline',
-        '../Core/Matrix4',
-        '../Core/VertexFormat',
-        '../Renderer/BufferUsage',
-        '../Renderer/CubeMap',
-        '../Renderer/DrawCommand',
-        '../Renderer/loadCubeMap',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/SkyBoxFS',
-        '../Shaders/SkyBoxVS',
-        './BlendingState',
-        './SceneMode'
-    ], function(
-        BoxGeometry,
-        Cartesian3,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        GeometryPipeline,
-        Matrix4,
-        VertexFormat,
-        BufferUsage,
-        CubeMap,
-        DrawCommand,
-        loadCubeMap,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        SkyBoxFS,
-        SkyBoxVS,
-        BlendingState,
-        SceneMode) {
-    'use strict';
+import BoxGeometry from '../Core/BoxGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryPipeline from '../Core/GeometryPipeline.js';
+import Matrix4 from '../Core/Matrix4.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import CubeMap from '../Renderer/CubeMap.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import loadCubeMap from '../Renderer/loadCubeMap.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import SkyBoxFS from '../Shaders/SkyBoxFS.js';
+import SkyBoxVS from '../Shaders/SkyBoxVS.js';
+import BlendingState from './BlendingState.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -258,6 +234,4 @@ define([
         this._cubeMap = this._cubeMap && this._cubeMap.destroy();
         return destroyObject(this);
     };
-
-    return SkyBox;
-});
+export default SkyBox;

@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Renderer/ComputeEngine',
-        'Renderer/Pass',
-        'Scene/OctahedralProjectedCubeMap',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/pollToPromise'
-    ], function(
-        Cartesian3,
-        ComputeEngine,
-        Pass,
-        OctahedralProjectedCubeMap,
-        createContext,
-        createFrameState,
-        pollToPromise) {
-        'use strict';
+import { Cartesian3, defined } from '../../Source/Cesium.js';
+import { ComputeEngine } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { OctahedralProjectedCubeMap } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+import createFrameState from '../createFrameState.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/OctahedralProjectedCubeMap', function() {
 
@@ -200,5 +190,29 @@ describe('Scene/OctahedralProjectedCubeMap', function() {
             projection.destroy();
         });
     });
+
+    it('rejects when environment map fails to load.', function() {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
+            return;
+        }
+
+        var projection = new OctahedralProjectedCubeMap('http://invalid.url');
+        var frameState = createFrameState(context);
+        var error;
+
+        projection.readyPromise
+            .then(function() {
+                fail('Should not resolve.');
+            })
+            .otherwise(function(e) {
+                error = e;
+                expect(error).toBeDefined();
+                expect(projection.ready).toEqual(false);
+            });
+
+        return pollToPromise(function() {
+            projection.update(frameState);
+            return defined(error);
+        });
+    });
 }, 'WebGL');
-});

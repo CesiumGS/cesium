@@ -1,16 +1,8 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        './ShaderProgram',
-        './ShaderSource'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        ShaderProgram,
-        ShaderSource) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import ShaderProgram from './ShaderProgram.js';
+import ShaderSource from './ShaderSource.js';
 
     /**
      * @private
@@ -263,6 +255,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return ShaderCache;
-});
+export default ShaderCache;

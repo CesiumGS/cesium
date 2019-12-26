@@ -1,8 +1,4 @@
-define([
-        'Core/binarySearch'
-    ], function(
-        binarySearch) {
-        'use strict';
+import { binarySearch } from '../../Source/Cesium.js';
 
 describe('Core/binarySearch', function() {
 
@@ -72,5 +68,4 @@ describe('Core/binarySearch', function() {
             binarySearch([0, 1, 2], 1, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

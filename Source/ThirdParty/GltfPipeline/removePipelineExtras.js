@@ -1,10 +1,5 @@
-define([
-        './ForEach',
-        '../../Core/defined'
-    ], function(
-        ForEach,
-        defined) {
-    'use strict';
+import ForEach from './ForEach.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Iterate through the objects within the glTF and delete their pipeline extras object.
@@ -47,5 +42,4 @@ define([
         }
     }
 
-    return removePipelineExtras;
-});
+    export default removePipelineExtras;

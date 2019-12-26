@@ -1,38 +1,19 @@
-define([
-        '../ThirdParty/protobuf-minimal',
-        '../ThirdParty/when',
-        './buildModuleUrl',
-        './Check',
-        './Credit',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './GoogleEarthEnterpriseTileInformation',
-        './isBitSet',
-        './loadAndExecuteScript',
-        './Math',
-        './Request',
-        './Resource',
-        './RuntimeError',
-        './TaskProcessor'
-    ], function(
-        protobufMinimal,
-        when,
-        buildModuleUrl,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        GoogleEarthEnterpriseTileInformation,
-        isBitSet,
-        loadAndExecuteScript,
-        CesiumMath,
-        Request,
-        Resource,
-        RuntimeError,
-        TaskProcessor) {
-    'use strict';
+import protobufMinimal from '../ThirdParty/protobuf-minimal.js';
+import when from '../ThirdParty/when.js';
+import buildModuleUrl from './buildModuleUrl.js';
+import Check from './Check.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import GoogleEarthEnterpriseTileInformation from './GoogleEarthEnterpriseTileInformation.js';
+import isBitSet from './isBitSet.js';
+import loadAndExecuteScript from './loadAndExecuteScript.js';
+import CesiumMath from './Math.js';
+import Request from './Request.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TaskProcessor from './TaskProcessor.js';
 
     function stringToBuffer(str) {
         var len = str.length;
@@ -566,6 +547,4 @@ define([
                 that.key = defaultKey;
             });
     }
-
-    return GoogleEarthEnterpriseMetadata;
-});
+export default GoogleEarthEnterpriseMetadata;

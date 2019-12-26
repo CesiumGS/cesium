@@ -1,10 +1,5 @@
-define([
-        './defaultValue',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import DeveloperError from './DeveloperError.js';
 
     function returnTrue() {
         return true;
@@ -56,6 +51,4 @@ define([
 
         return undefined;
     }
-
-    return destroyObject;
-});
+export default destroyObject;

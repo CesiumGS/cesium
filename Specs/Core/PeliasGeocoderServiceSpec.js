@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/GeocodeType',
-        'Core/PeliasGeocoderService',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        Cartesian3,
-        GeocodeType,
-        PeliasGeocoderService,
-        Resource,
-        when) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeocodeType } from '../../Source/Cesium.js';
+import { PeliasGeocoderService } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/PeliasGeocoderService', function() {
 
@@ -92,5 +84,4 @@ describe('Core/PeliasGeocoderService', function() {
             }
         });
     });
-});
 });

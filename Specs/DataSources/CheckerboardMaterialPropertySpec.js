@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/CheckerboardMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        Cartesian2,
-        Color,
-        JulianDate,
-        TimeInterval,
-        CheckerboardMaterialProperty,
-        ConstantProperty,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { CheckerboardMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
 
 describe('DataSources/CheckerboardMaterialProperty', function() {
 
@@ -147,5 +136,4 @@ describe('DataSources/CheckerboardMaterialProperty', function() {
         testDefinitionChanged(property, 'oddColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'repeat', new Cartesian2(5, 5), new Cartesian2(7, 7));
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        'Core/BingMapsGeocoderService',
-        'Core/Rectangle',
-        'Core/Resource'
-    ], function(
-        BingMapsGeocoderService,
-        Rectangle,
-        Resource) {
-        'use strict';
+import { BingMapsGeocoderService } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
 
 describe('Core/BingMapsGeocoderService', function() {
 
@@ -67,5 +61,4 @@ describe('Core/BingMapsGeocoderService', function() {
             done();
         });
     });
-});
 });

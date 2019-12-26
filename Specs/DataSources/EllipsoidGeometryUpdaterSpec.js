@@ -1,50 +1,25 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Quaternion',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipsoidGeometryUpdater',
-        'DataSources/EllipsoidGraphics',
-        'DataSources/Entity',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        GeometryOffsetAttribute,
-        JulianDate,
-        CesiumMath,
-        Quaternion,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipsoidGeometryUpdater,
-        EllipsoidGraphics,
-        Entity,
-        SampledPositionProperty,
-        SampledProperty,
-        HeightReference,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipsoidGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipsoidGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/EllipsoidGeometryUpdater', function() {
 
@@ -131,6 +106,56 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.subdivisions = new SampledProperty(Number);
         entity.ellipsoid.subdivisions.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying innerRadii causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.innerRadii = new SampledProperty(Cartesian3);
+        entity.ellipsoid.innerRadii.addSample(time, new Cartesian3(1, 2, 3));
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying minimumClock causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.minimumClock = new SampledProperty(Number);
+        entity.ellipsoid.minimumClock.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying maximumClock causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.maximumClock = new SampledProperty(Number);
+        entity.ellipsoid.maximumClock.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying minimumCone causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.minimumCone = new SampledProperty(Number);
+        entity.ellipsoid.minimumCone.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying maximumCone causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.maximumCone = new SampledProperty(Number);
+        entity.ellipsoid.maximumCone.addSample(time, 1);
         updater._onEntityPropertyChanged(entity, 'ellipsoid');
 
         expect(updater.isDynamic).toBe(true);
@@ -438,4 +463,3 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
 
     createDynamicGeometryUpdaterSpecs(EllipsoidGeometryUpdater, 'ellipsoid', createDynamicEllipsoid, getScene);
 }, 'WebGL');
-});

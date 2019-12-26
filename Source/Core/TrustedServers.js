@@ -1,12 +1,6 @@
-define([
-        '../ThirdParty/Uri',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Uri,
-        defined,
-        DeveloperError) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * A singleton that contains all of the servers that are trusted. Credentials will be sent with
@@ -148,6 +142,4 @@ define([
     TrustedServers.clear = function() {
         _servers = {};
     };
-
-    return TrustedServers;
-});
+export default TrustedServers;

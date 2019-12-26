@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian2',
-        'Core/Math',
-        'Core/Matrix2'
-    ], function(
-        Cartesian2,
-        CesiumMath,
-        Matrix2) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix2 } from '../../Source/Cesium.js';
 
 describe('Core/Matrix2', function() {
 
@@ -816,5 +810,4 @@ describe('Core/Matrix2', function() {
             expect(intArray[index]).toEqual(index + 1);
         }
     });
-});
 });

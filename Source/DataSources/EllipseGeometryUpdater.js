@@ -1,56 +1,26 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/EllipseGeometry',
-        '../Core/EllipseOutlineGeometry',
-        '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Iso8601',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/Rectangle',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPrimitive',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './GroundGeometryUpdater',
-        './Property'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        EllipseGeometry,
-        EllipseOutlineGeometry,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        Iso8601,
-        OffsetGeometryInstanceAttribute,
-        Rectangle,
-        ShowGeometryInstanceAttribute,
-        GroundPrimitive,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        GroundGeometryUpdater,
-        Property) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import EllipseGeometry from '../Core/EllipseGeometry.js';
+import EllipseOutlineGeometry from '../Core/EllipseOutlineGeometry.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Iso8601 from '../Core/Iso8601.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import Rectangle from '../Core/Rectangle.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import GroundGeometryUpdater from './GroundGeometryUpdater.js';
+import Property from './Property.js';
 
     var scratchColor = new Color();
     var defaultOffset = Cartesian3.ZERO;
@@ -287,6 +257,4 @@ define([
 
         options.extrudedHeight = extrudedHeightValue;
     };
-
-    return EllipseGeometryUpdater;
-});
+export default EllipseGeometryUpdater;

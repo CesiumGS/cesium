@@ -1,8 +1,4 @@
-define([
-        '../Core/Queue'
-    ], function(
-        Queue) {
-    'use strict';
+import Queue from '../Core/Queue.js';
 
     /**
      * @private
@@ -97,6 +93,4 @@ define([
     ModelLoadResources.prototype.finished = function() {
         return this.finishedDecoding() && this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
     };
-
-    return ModelLoadResources;
-});
+export default ModelLoadResources;

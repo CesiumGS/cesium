@@ -574,8 +574,10 @@ dd { margin-left: 10px; }
     border-bottom: 1px solid #A35A00;
 }
 
+span.attribute-abstract,
 span.attribute-static,
 span.attribute-readonly,
+span.attribute-deprecated,
 span.attribute-constant {
   display: inline-block;
   border-radius: 3px;
@@ -587,6 +589,15 @@ span.attribute-constant {
   margin-bottom: 1px;
   position: relative;
   top: -1px;
+}
+
+span.attribute-abstract {
+    background-color: #fff !important;
+    border: 1px solid #888;
+    color: black;}
+
+span.attribute-deprecated {
+    background-color: #950B02 !important;
 }
 
 .description {

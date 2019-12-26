@@ -1,34 +1,17 @@
-define([
-        'Core/Cartesian3',
-        'Core/clone',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/Transforms',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTilesetHeatmap',
-        'Scene/TileBoundingRegion',
-        'Scene/TileOrientedBoundingBox',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        clone,
-        HeadingPitchRoll,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Rectangle,
-        Transforms,
-        Cesium3DTile,
-        Cesium3DTileRefine,
-        Cesium3DTilesetHeatmap,
-        TileBoundingRegion,
-        TileOrientedBoundingBox,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { clone } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
+import { TileBoundingRegion } from '../../Source/Cesium.js';
+import { TileOrientedBoundingBox } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/Cesium3DTile', function() {
 
@@ -430,4 +413,3 @@ describe('Scene/Cesium3DTile', function() {
     });
 
 }, 'WebGL');
-});

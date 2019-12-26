@@ -1,18 +1,9 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
@@ -106,6 +97,4 @@ define([
                (other instanceof ColorMaterialProperty && //
                 Property.equals(this._color, other._color));
     };
-
-    return ColorMaterialProperty;
-});
+export default ColorMaterialProperty;

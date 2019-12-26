@@ -1,8 +1,4 @@
-define([
-        'Scene/Cesium3DTileContent'
-    ], function(
-        Cesium3DTileContent) {
-        'use strict';
+import { Cesium3DTileContent } from '../../Source/Cesium.js';
 
 describe('Scene/Cesium3DTileContent', function() {
 
@@ -66,5 +62,4 @@ describe('Scene/Cesium3DTileContent', function() {
             content.destroy();
         }).toThrowDeveloperError();
     });
-});
 });

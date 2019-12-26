@@ -1,20 +1,10 @@
-define([
-        './addPipelineExtras',
-        './removeExtensionsUsed',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/getMagic',
-        '../../Core/getStringFromTypedArray',
-        '../../Core/RuntimeError'
-    ], function(
-        addPipelineExtras,
-        removeExtensionsUsed,
-        defaultValue,
-        defined,
-        getMagic,
-        getStringFromTypedArray,
-        RuntimeError) {
-    'use strict';
+import addPipelineExtras from './addPipelineExtras.js'
+import removeExtensionsUsed from './removeExtensionsUsed.js'
+import defaultValue from '../../Core/defaultValue.js'
+import defined from '../../Core/defined.js'
+import getMagic from '../../Core/getMagic.js'
+import getStringFromTypedArray from '../../Core/getStringFromTypedArray.js'
+import RuntimeError from '../../Core/RuntimeError.js'
 
     var sizeOfUint32 = 4;
 
@@ -122,5 +112,4 @@ define([
         return gltf;
     }
 
-    return parseGlb;
-});
+    export default parseGlb;

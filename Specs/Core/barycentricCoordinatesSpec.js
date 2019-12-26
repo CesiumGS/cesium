@@ -1,12 +1,6 @@
-define([
-        'Core/barycentricCoordinates',
-        'Core/Cartesian3',
-        'Core/Math'
-    ], function(
-        barycentricCoordinates,
-        Cartesian3,
-        CesiumMath) {
-        'use strict';
+import { barycentricCoordinates } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/barycentricCoordinates', function() {
 
@@ -88,5 +82,4 @@ describe('Core/barycentricCoordinates', function() {
             barycentricCoordinates(new Cartesian3(), new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
-});
 });

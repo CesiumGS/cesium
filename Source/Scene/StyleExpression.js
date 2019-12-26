@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * An expression for a style applied to a {@link Cesium3DTileset}.
@@ -71,6 +67,4 @@ define([
     StyleExpression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
         DeveloperError.throwInstantiationError();
     };
-
-    return StyleExpression;
-});
+export default StyleExpression;

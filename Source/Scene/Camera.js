@@ -1,68 +1,34 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/EasingFunction',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidGeodesic',
-        '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/HeadingPitchRange',
-        '../Core/HeadingPitchRoll',
-        '../Core/Intersect',
-        '../Core/IntersectionTests',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/Quaternion',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Transforms',
-        './CameraFlightPath',
-        './MapMode2D',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EasingFunction,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        Event,
-        getTimestamp,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Intersect,
-        IntersectionTests,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Quaternion,
-        Ray,
-        Rectangle,
-        Transforms,
-        CameraFlightPath,
-        MapMode2D,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EasingFunction from '../Core/EasingFunction.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidGeodesic from '../Core/EllipsoidGeodesic.js';
+import Event from '../Core/Event.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import HeadingPitchRange from '../Core/HeadingPitchRange.js';
+import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
+import Intersect from '../Core/Intersect.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import Quaternion from '../Core/Quaternion.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Transforms from '../Core/Transforms.js';
+import CameraFlightPath from './CameraFlightPath.js';
+import MapMode2D from './MapMode2D.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * The camera is defined by a position, orientation, and view frustum.
@@ -80,8 +46,8 @@ define([
      *
      * @param {Scene} scene The scene.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -320,16 +286,15 @@ define([
     }
 
     /**
-     * Checks if there's a camera flight for this camera.
+     * Checks if there's a camera flight with preload for this camera.
      *
      * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
      *
      * @private
      *
      */
-    Camera.prototype.hasCurrentFlight = function() {
-        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
-        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    Camera.prototype.canPreloadFlight = function() {
+        return defined(this._currentFlight) && this._mode !== SceneMode.SCENE2D;
     };
 
     Camera.prototype._updateCameraChanged = function() {
@@ -2686,7 +2651,7 @@ define([
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
-        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, this._scene.pixelRatio, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
 
@@ -2926,7 +2891,16 @@ define([
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        var tweenOptions = CameraFlightPath.createTween(scene, newOptions);
+        // If the camera doesn't actually need to go anywhere, duration
+        // will be 0 and we can just complete the current flight.
+        if (tweenOptions.duration === 0) {
+            if (typeof tweenOptions.complete === 'function') {
+                tweenOptions.complete();
+            }
+            return;
+        }
+        flightTween = scene.tweens.add(tweenOptions);
         this._currentFlight = flightTween;
 
         // Save the final destination view information for the PRELOAD_FLIGHT pass.
@@ -2938,8 +2912,6 @@ define([
             preloadFlightCamera.setView({ destination: destination, orientation: orientation });
 
             this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
-        } else {
-            preloadFlightCamera = undefined;
         }
     };
 
@@ -3328,6 +3300,4 @@ define([
      * A function that will execute when a flight is cancelled.
      * @callback Camera~FlightCancelledCallback
      */
-
-    return Camera;
-});
+export default Camera;

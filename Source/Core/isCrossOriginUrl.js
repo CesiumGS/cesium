@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     var a;
 
@@ -30,6 +26,4 @@ define([
 
         return protocol !== a.protocol || host !== a.host;
     }
-
-    return isCrossOriginUrl;
-});
+export default isCrossOriginUrl;

@@ -1,20 +1,10 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './HomeButtonViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        knockout,
-        getElement,
-        HomeButtonViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import HomeButtonViewModel from './HomeButtonViewModel.js';
 
     /**
      * A single button widget for returning to the default camera view of the current scene.
@@ -99,6 +89,4 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
 
         return destroyObject(this);
     };
-
-    return HomeButton;
-});
+export default HomeButton;

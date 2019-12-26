@@ -1,22 +1,11 @@
-define([
-        '../../Core/ClockRange',
-        '../../Core/defined',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/JulianDate',
-        '../getElement',
-        './TimelineHighlightRange',
-        './TimelineTrack'
-    ], function(
-        ClockRange,
-        defined,
-        destroyObject,
-        DeveloperError,
-        JulianDate,
-        getElement,
-        TimelineHighlightRange,
-        TimelineTrack) {
-    'use strict';
+import ClockRange from '../../Core/ClockRange.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import JulianDate from '../../Core/JulianDate.js';
+import getElement from '../getElement.js';
+import TimelineHighlightRange from './TimelineHighlightRange.js';
+import TimelineTrack from './TimelineTrack.js';
 
     var timelineWheelDelta = 1e12;
 
@@ -790,6 +779,4 @@ define([
         this._lastWidth = width;
         this._lastHeight = height;
     };
-
-    return Timeline;
-});
+export default Timeline;

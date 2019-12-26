@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Rectangle',
-        './QuadtreeTileLoadState',
-        './TileSelectionResult'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Rectangle,
-        QuadtreeTileLoadState,
-        TileSelectionResult) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Rectangle from '../Core/Rectangle.js';
+import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
+import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * A single tile in a {@link QuadtreePrimitive}.
@@ -529,6 +520,4 @@ define([
             tile.freeResources();
         }
     }
-
-    return QuadtreeTile;
-});
+export default QuadtreeTile;

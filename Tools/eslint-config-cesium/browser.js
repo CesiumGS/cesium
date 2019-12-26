@@ -3,11 +3,13 @@
 module.exports = {
     extends: './index.js',
     env: {
-        amd: true,
         browser: true
     },
+    parserOptions: {
+        ecmaVersion: 2015,
+        sourceType: "module"
+    },
     rules: {
-        'no-implicit-globals': 'error',
-        "no-prototype-builtins": "off"
+        'no-implicit-globals': 'error'
     }
 };

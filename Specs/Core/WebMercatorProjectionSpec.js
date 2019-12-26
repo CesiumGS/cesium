@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/WebMercatorProjection'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        WebMercatorProjection) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
 
 describe('Core/WebMercatorProjection', function() {
 
@@ -157,5 +148,4 @@ describe('Core/WebMercatorProjection', function() {
             return projection.unproject();
         }).toThrowDeveloperError();
     });
-});
 });

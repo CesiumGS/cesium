@@ -1,10 +1,5 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties'
-    ], function(
-        defaultValue,
-        defineProperties) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
@@ -54,6 +49,4 @@ define([
             }
         }
     });
-
-    return ParticleBurst;
-});
+export default ParticleBurst;

@@ -1,8 +1,4 @@
-define([
-        '../Core/defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * @private
@@ -290,6 +286,4 @@ define([
         }
 
     });
-
-    return ContextLimits;
-});
+export default ContextLimits;

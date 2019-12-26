@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        './ImageryState'
-    ], function(
-        defined,
-        destroyObject,
-        ImageryState) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ImageryState from './ImageryState.js';
 
     /**
      * Stores details about a tile of imagery.
@@ -105,6 +99,4 @@ define([
             this.imageryLayer._reprojectTexture(frameState, this, needGeographicProjection);
         }
     };
-
-    return Imagery;
-});
+export default Imagery;

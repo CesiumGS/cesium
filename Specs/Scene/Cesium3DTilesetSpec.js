@@ -1,80 +1,40 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/CullingVolume',
-        'Core/defined',
-        'Core/getAbsoluteUri',
-        'Core/getStringFromTypedArray',
-        'Core/HeadingPitchRange',
-        'Core/Intersect',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PrimitiveType',
-        'Core/Ray',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/Transforms',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Scene/Camera',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileColorBlendMode',
-        'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTilePass',
-        'Scene/Cesium3DTilePassState',
-        'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/CullFace',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        CullingVolume,
-        defined,
-        getAbsoluteUri,
-        getStringFromTypedArray,
-        HeadingPitchRange,
-        Intersect,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        PrimitiveType,
-        Ray,
-        RequestScheduler,
-        Resource,
-        Transforms,
-        ClearCommand,
-        ContextLimits,
-        Camera,
-        Cesium3DTile,
-        Cesium3DTileColorBlendMode,
-        Cesium3DTileContentState,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        Cesium3DTileRefine,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        CullFace,
-        Cesium3DTilesTester,
-        createScene,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { CullingVolume } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { getStringFromTypedArray } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTileColorBlendMode } from '../../Source/Cesium.js';
+import { Cesium3DTileContentState } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
+import { Cesium3DTilePassState } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTileset } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { CullFace } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Cesium3DTileset', function() {
 
@@ -3682,7 +3642,7 @@ describe('Scene/Cesium3DTileset', function() {
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            spyOn(Camera.prototype, 'hasCurrentFlight').and.callFake(function() {
+            spyOn(Camera.prototype, 'canPreloadFlight').and.callFake(function() {
                 return true;
             });
             scene.renderForSpecs();
@@ -3716,4 +3676,3 @@ describe('Scene/Cesium3DTileset', function() {
         });
     });
 }, 'WebGL');
-});
