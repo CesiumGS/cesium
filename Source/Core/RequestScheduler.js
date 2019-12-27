@@ -1,28 +1,14 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Event',
-        './Heap',
-        './isBlobUri',
-        './isDataUri',
-        './RequestState'
-    ], function(
-        Uri,
-        when,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        Heap,
-        isBlobUri,
-        isDataUri,
-        RequestState) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Event from './Event.js';
+import Heap from './Heap.js';
+import isBlobUri from './isBlobUri.js';
+import isDataUri from './isDataUri.js';
+import RequestState from './RequestState.js';
 
     function sortRequests(a, b) {
         return a.priority - b.priority;
@@ -34,7 +20,8 @@ define([
         numberOfCancelledRequests : 0,
         numberOfCancelledActiveRequests : 0,
         numberOfFailedRequests : 0,
-        numberOfActiveRequestsEver : 0
+        numberOfActiveRequestsEver : 0,
+        lastNumberOfActiveRequests : 0
     };
 
     var priorityHeapLength = 20;
@@ -373,34 +360,34 @@ define([
         return issueRequest(request);
     };
 
-    function clearStatistics() {
-        statistics.numberOfAttemptedRequests = 0;
-        statistics.numberOfCancelledRequests = 0;
-        statistics.numberOfCancelledActiveRequests = 0;
-    }
-
     function updateStatistics() {
         if (!RequestScheduler.debugShowStatistics) {
             return;
         }
 
-        if (statistics.numberOfAttemptedRequests > 0) {
-            console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
-        }
-        if (statistics.numberOfActiveRequests > 0) {
-            console.log('Number of active requests: ' + statistics.numberOfActiveRequests);
-        }
-        if (statistics.numberOfCancelledRequests > 0) {
-            console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
-        }
-        if (statistics.numberOfCancelledActiveRequests > 0) {
-            console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
-        }
-        if (statistics.numberOfFailedRequests > 0) {
-            console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+        if (statistics.numberOfActiveRequests === 0 && statistics.lastNumberOfActiveRequests > 0) {
+            if (statistics.numberOfAttemptedRequests > 0) {
+                console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+                statistics.numberOfAttemptedRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledRequests > 0) {
+                console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
+                statistics.numberOfCancelledRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledActiveRequests > 0) {
+                console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
+                statistics.numberOfCancelledActiveRequests = 0;
+            }
+
+            if (statistics.numberOfFailedRequests > 0) {
+                console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+                statistics.numberOfFailedRequests = 0;
+            }
         }
 
-        clearStatistics();
+        statistics.lastNumberOfActiveRequests = statistics.numberOfActiveRequests;
     }
 
     /**
@@ -427,6 +414,7 @@ define([
         statistics.numberOfCancelledActiveRequests = 0;
         statistics.numberOfFailedRequests = 0;
         statistics.numberOfActiveRequestsEver = 0;
+        statistics.lastNumberOfActiveRequests = 0;
     };
 
     /**
@@ -444,6 +432,4 @@ define([
      * @private
      */
     RequestScheduler.requestHeap = requestHeap;
-
-    return RequestScheduler;
-});
+export default RequestScheduler;

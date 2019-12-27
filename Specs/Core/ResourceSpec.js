@@ -1,28 +1,15 @@
-defineSuite([
-        'Core/Resource',
-        'Core/defaultValue',
-        'Core/DefaultProxy',
-        'Core/queryToObject',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/TrustedServers',
-        'Specs/createCanvas',
-        'ThirdParty/Uri',
-        'ThirdParty/when'
-    ], function(
-        Resource,
-        defaultValue,
-        DefaultProxy,
-        queryToObject,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        TrustedServers,
-        createCanvas,
-        Uri,
-        when) {
-    'use strict';
+import { DefaultProxy } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import { Uri } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/Resource', function() {
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
     var supportsImageBitmapOptions;
@@ -1228,7 +1215,7 @@ defineSuite([
             }).then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
-                expect(loadedImage instanceof ImageBitmap);
+                expect(loadedImage).toBeInstanceOf(ImageBitmap);
             });
         });
 
@@ -1308,6 +1295,27 @@ defineSuite([
                 })
                 .otherwise(function(error) {
                    expect(error).toBeInstanceOf(RequestErrorEvent);
+                });
+        });
+
+        it('rejects the promise with extra error information when image errors and options.preferBlob is true', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            // Force the fetching of a bad blob that is not an image to trigger the error
+            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
+
+            return Resource.fetchImage({
+                url: 'http://example.invalid/testuri.png',
+                preferImageBitmap: true,
+                preferBlob: true
+            })
+                .then(function() {
+                    fail('expected promise to reject');
+                })
+                .otherwise(function(error) {
+                   expect(error.blob).toBeInstanceOf(Blob);
                 });
         });
     });
@@ -1712,7 +1720,6 @@ defineSuite([
                 }).then(function(result) {
                     expect(result.type).toEqual('image/png');
 
-                    /*global URL*/
                     var blobUrl = URL.createObjectURL(result);
 
                     return Resource.fetchImage(blobUrl).then(function(image) {
@@ -1745,7 +1752,7 @@ defineSuite([
                     }).then(function() {
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
-                        expect(err instanceof RequestErrorEvent).toBe(true);
+                        expect(err).toBeInstanceOf(RequestErrorEvent);
                     });
                 });
 
@@ -1757,7 +1764,7 @@ defineSuite([
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
                         expect(err).toBeDefined();
-                        expect(err instanceof Error).toBe(true);
+                        expect(err).toBeInstanceOf(Error);
                     });
                 });
             });
@@ -1844,7 +1851,7 @@ defineSuite([
 
                     fakeXHR.simulateError();
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('results in an HTTP status code less than 200', function() {
@@ -1867,7 +1874,38 @@ defineSuite([
 
                     fakeXHR.simulateHttpResponse(199);
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
+                });
+
+                it('is an image with status code 204 with preferImageBitmap', function() {
+                    if (!supportsImageBitmapOptions) {
+                        return;
+                    }
+
+                    var promise = Resource.fetchImage({
+                        url: './Data/Images/Green.png',
+                        preferImageBitmap: true
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolved = false;
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolved = true;
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateHttpResponse(204);
+                    expect(resolved).toBe(false);
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeDefined();
                 });
 
                 it('resolves undefined for status code 204', function() {
@@ -2040,7 +2078,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because we only retry once
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('rejects after callback returns false', function() {
@@ -2069,7 +2107,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because the callback returns false
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
 
                     expect(cb.calls.count()).toEqual(1);
                     var receivedResource = cb.calls.argsFor(0)[0];

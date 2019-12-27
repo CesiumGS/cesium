@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/freezeRenderState'
-    ], function(
-        freezeRenderState) {
-    'use strict';
+import { freezeRenderState } from '../../Source/Cesium.js';
+
+describe('Renderer/freezeRenderState', function() {
 
     it('works as expected', function() {
         var fresh = {

@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="CZML">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -64,6 +59,16 @@ var czml = [{
                 -40, 50, 0,
                 -40, 20, 0,
                 -35, 20, 0
+            ]
+        }],
+        "holes": [{
+            "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:20:00Z",
+            "cartographicDegrees" : [
+                [
+                    -47, 35, 0,
+                    -46, 25, 0,
+                    -42, 30, 0
+                ]
             ]
         }],
         "material": {
@@ -148,9 +153,8 @@ viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

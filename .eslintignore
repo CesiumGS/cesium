@@ -3,12 +3,15 @@ Apps/Sandcastle/ThirdParty/**
 Apps/SampleData/**
 Build/**
 Documentation/**
-Instrumented/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/cesiumWorkerBootstrapper.js
 Specs/Data/**
+Source/Workers/**
+!Source/Workers/transferTypedArrayTest.js
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
 Apps/Sandcastle/gallery/gallery-index.js
+Source/Core/buildModuleUrl.js
+Specs/spec-main.js

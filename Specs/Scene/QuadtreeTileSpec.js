@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/QuadtreeTile',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/GeographicTilingScheme',
-        'Core/GeographicProjection',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/WebMercatorTilingScheme'
-    ], function(
-        QuadtreeTile,
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        GeographicTilingScheme,
-        GeographicProjection,
-        CesiumMath,
-        Rectangle,
-        WebMercatorTilingScheme) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+
+describe('Scene/QuadtreeTile', function() {
 
     it('throws without a options', function() {
         expect(function() {

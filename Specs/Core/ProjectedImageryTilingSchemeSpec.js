@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/ProjectedImageryTilingScheme',
-        'Core/Math',
-        'Core/Proj4Projection',
-        'Core/Rectangle',
-        'Core/TilingScheme'
-    ], function(
-        ProjectedImageryTilingScheme,
-        CesiumMath,
-        Proj4Projection,
-        Rectangle,
-        TilingScheme) {
-    'use strict';
+import { ProjectedImageryTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Proj4Projection } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TilingScheme } from '../../Source/Cesium.js';
+
+describe('Core/ProjectedImageryTilingScheme', function() {
 
     var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
     var mollweideProjection = new Proj4Projection({

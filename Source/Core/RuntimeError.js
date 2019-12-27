@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Constructs an exception object that is thrown due to an error that can occur at runtime, e.g.,
@@ -66,6 +62,4 @@ define([
 
         return str;
     };
-
-    return RuntimeError;
-});
+export default RuntimeError;

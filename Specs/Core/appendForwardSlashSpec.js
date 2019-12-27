@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/appendForwardSlash'
-    ], function(
-        appendForwardSlash) {
-    'use strict';
+import { appendForwardSlash } from '../../Source/Cesium.js';
+
+describe('Core/appendForwardSlash', function() {
 
     it('Appends to a url', function() {
         expect(appendForwardSlash('http://cesiumjs.org')).toEqual('http://cesiumjs.org/');

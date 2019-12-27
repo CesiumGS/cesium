@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/Axis',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4'
-    ], function(
-        Axis,
-        Cartesian4,
-        CesiumMath,
-        Matrix4) {
-    'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Axis } from '../../Source/Cesium.js';
+
+describe('Scene/Axis', function() {
 
     function convertUpAxis(upAxis, transformation, expected) {
         var transformed = Matrix4.multiplyByVector(transformation, upAxis, new Cartesian4());

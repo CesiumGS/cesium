@@ -1,10 +1,5 @@
-define([
-        './ForEach',
-        '../../Core/defined'
-    ], function(
-        ForEach,
-        defined) {
-    'use strict';
+import ForEach from './ForEach.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Adds extras._pipeline to each object that can have extras in the glTF asset.
@@ -39,5 +34,4 @@ define([
         object.extras._pipeline = defined(object.extras._pipeline) ? object.extras._pipeline : {};
     }
 
-    return addPipelineExtras;
-});
+    export default addPipelineExtras;

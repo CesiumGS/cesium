@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/mersenne-twister',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        MersenneTwister,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import MersenneTwister from '../ThirdParty/mersenne-twister.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Math functions.
@@ -199,6 +191,13 @@ define([
     CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
 
     /**
+     * 4 * 1024 * 1024 * 1024
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
+
+    /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
@@ -227,29 +226,41 @@ define([
     };
 
     /**
-     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMax]
+     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMaximum]
      * @param {Number} value The scalar value in the range [-1.0, 1.0]
-     * @param {Number} [rangeMax=255] The maximum value in the mapped range, 255 by default.
-     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMax maps to 1.0.
+     * @param {Number} [rangeMaximum=255] The maximum value in the mapped range, 255 by default.
+     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMaximum maps to 1.0.
      *
      * @see CesiumMath.fromSNorm
      */
-    CesiumMath.toSNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMax);
+    CesiumMath.toSNorm = function(value, rangeMaximum) {
+        rangeMaximum = defaultValue(rangeMaximum, 255);
+        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum);
     };
 
     /**
-     * Converts a SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
-     * @param {Number} value SNORM value in the range [0, 255]
-     * @param {Number} [rangeMax=255] The maximum value in the SNORM range, 255 by default.
+     * Converts a SNORM value in the range [0, rangeMaximum] to a scalar in the range [-1.0, 1.0].
+     * @param {Number} value SNORM value in the range [0, rangeMaximum]
+     * @param {Number} [rangeMaximum=255] The maximum value in the SNORM range, 255 by default.
      * @returns {Number} Scalar in the range [-1.0, 1.0].
      *
      * @see CesiumMath.toSNorm
      */
-    CesiumMath.fromSNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return CesiumMath.clamp(value, 0.0, rangeMax) / rangeMax * 2.0 - 1.0;
+    CesiumMath.fromSNorm = function(value, rangeMaximum) {
+        rangeMaximum = defaultValue(rangeMaximum, 255);
+        return CesiumMath.clamp(value, 0.0, rangeMaximum) / rangeMaximum * 2.0 - 1.0;
+    };
+
+    /**
+     * Converts a scalar value in the range [rangeMinimum, rangeMaximum] to a scalar in the range [0.0, 1.0]
+     * @param {Number} value The scalar value in the range [rangeMinimum, rangeMaximum]
+     * @param {Number} rangeMinimum The minimum value in the mapped range.
+     * @param {Number} rangeMaximum The maximum value in the mapped range.
+     * @returns {Number} A scalar value, where rangeMinimum maps to 0.0 and rangeMaximum maps to 1.0.
+     */
+    CesiumMath.normalize = function(value, rangeMinimum, rangeMaximum) {
+        rangeMaximum = Math.max(rangeMaximum - rangeMinimum, 0.0);
+        return rangeMaximum === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMinimum) / rangeMaximum, 0.0, 1.0);
     };
 
     /**
@@ -713,7 +724,9 @@ define([
         if (n >= length) {
             var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
-                factorials.push(sum * i);
+                var next = sum * i;
+                factorials.push(next);
+                sum = next;
             }
         }
         return factorials[n];
@@ -1031,6 +1044,4 @@ define([
         t = y < 0.0 ? -t : t;
         return t;
     };
-
-    return CesiumMath;
-});
+export default CesiumMath;

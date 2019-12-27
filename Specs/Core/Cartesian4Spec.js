@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Specs/createPackableArraySpecs',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian4,
-        Color,
-        CesiumMath,
-        createPackableArraySpecs,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableArraySpecs from '../createPackableArraySpecs.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Cartesian4', function() {
 
     it('construct with default values', function() {
         var cartesian = new Cartesian4();

@@ -1,32 +1,16 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Math',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './MapProjectionType',
-        './Rectangle',
-        './SerializedMapProjection',
-        '../ThirdParty/when',
-        '../ThirdParty/proj4-2.5.0'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        CesiumMath,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        MapProjectionType,
-        Rectangle,
-        SerializedMapProjection,
-        when,
-        proj4) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import CesiumMath from './Math.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Ellipsoid from './Ellipsoid.js';
+import MapProjectionType from './MapProjectionType.js';
+import Rectangle from './Rectangle.js';
+import SerializedMapProjection from './SerializedMapProjection.js';
+import when from '../ThirdParty/when.js';
+import proj4 from '../ThirdParty/proj4-2.6.0.js';
 
     var UNBOUNDED = new Rectangle(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
 
@@ -263,5 +247,4 @@ define([
         return result;
     };
 
-    return Proj4Projection;
-});
+export default Proj4Projection;

@@ -1,8 +1,4 @@
-define([
-        './Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from './Check.js';
 
     /**
      * Contains data for transfer to a web worker that can be used to
@@ -30,6 +26,4 @@ define([
         this.mapProjectionType = mapProjectionType;
         this.json = json;
     }
-
-    return SerializedMapProjection;
-});
+export default SerializedMapProjection;

@@ -31,7 +31,7 @@
  */
 
  // Code:  http://sponeil.net/
- // GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
+ // GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
 attribute vec4 position;
 

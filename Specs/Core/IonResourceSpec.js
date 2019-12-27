@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/IonResource',
-        'Core/Ion',
-        'Core/RequestErrorEvent',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'ThirdParty/when'
-    ], function(
-        IonResource,
-        Ion,
-        RequestErrorEvent,
-        Resource,
-        RuntimeError,
-        when) {
-'use strict';
+import { Ion } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
@@ -219,6 +212,18 @@ defineSuite([
         var resource = new IonResource(externalEndpoint, endpointResource);
         resource._makeRequest(options);
         expect(_makeRequest.calls.argsFor(0)[0]).toBe(options);
+    });
+
+    it('Calls base _makeRequest with no changes for ion assets with external urls', function() {
+        var originalOptions = {};
+        var expectedOptions = {};
+
+        var _makeRequest = spyOn(Resource.prototype, '_makeRequest');
+        var endpointResource = IonResource._createEndpointResource(assetId);
+        var resource = new IonResource(endpoint, endpointResource);
+        resource.url = 'http://test.invalid';
+        resource._makeRequest(originalOptions);
+        expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
     });
 
     it('Calls base fetchImage with preferBlob for ion assets', function() {

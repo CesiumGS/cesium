@@ -1,26 +1,15 @@
-defineSuite([
-        'Core/HeightmapTessellator',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/CustomProjection',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection'
-    ], function(
-        HeightmapTessellator,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        CustomProjection,
-        Ellipsoid,
-        GeographicProjection,
-        CesiumMath,
-        Rectangle,
-        WebMercatorProjection) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { CustomProjection } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeightmapTessellator } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+
+describe('Scene/HeightmapTessellator', function() {
 
     var geographicProjection = new GeographicProjection();
 

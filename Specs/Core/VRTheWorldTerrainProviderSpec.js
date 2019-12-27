@@ -1,28 +1,16 @@
-defineSuite([
-        'Core/VRTheWorldTerrainProvider',
-        'Core/DefaultProxy',
-        'Core/GeographicTilingScheme',
-        'Core/HeightmapTerrainData',
-        'Core/Math',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/TerrainProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        VRTheWorldTerrainProvider,
-        DefaultProxy,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
-        CesiumMath,
-        Request,
-        RequestScheduler,
-        Resource,
-        TerrainProvider,
-        pollToPromise,
-        when) {
-    'use strict';
+import { DefaultProxy } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TerrainProvider } from '../../Source/Cesium.js';
+import { VRTheWorldTerrainProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/VRTheWorldTerrainProvider', function() {
 
     var imageUrl = 'Data/Images/Red16x16.png';
 
@@ -256,10 +244,10 @@ defineSuite([
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                expect(terrainProvider.tilingScheme instanceof GeographicTilingScheme).toBe(true);
-                return terrainProvider.requestTileGeometry(0, 0, 0).then(function(loadedData) {
-                    expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
-                });
+                expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function(loadedData) {
+                expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
             });
         });
 

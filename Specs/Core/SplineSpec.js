@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/Spline',
-        'Core/Cartesian3',
-        'Core/HermiteSpline'
-    ], function(
-        Spline,
-        Cartesian3,
-        HermiteSpline) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HermiteSpline } from '../../Source/Cesium.js';
+import { Spline } from '../../Source/Cesium.js';
+
+describe('Core/Spline', function() {
 
     it('contructor throws', function() {
         expect(function() {

@@ -1,18 +1,9 @@
-define([
-        './Cartesian2',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './freezeObject'
-    ], function(
-        Cartesian2,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        freezeObject) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import freezeObject from './freezeObject.js';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
@@ -877,6 +868,4 @@ define([
         return '(' + this[0] + ', ' + this[2] + ')\n' +
                '(' + this[1] + ', ' + this[3] + ')';
     };
-
-    return Matrix2;
-});
+export default Matrix2;

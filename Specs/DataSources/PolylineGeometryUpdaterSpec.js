@@ -1,72 +1,38 @@
-defineSuite([
-        'DataSources/PolylineGeometryUpdater',
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/GroundPolylineGeometry',
-        'Core/JulianDate',
-        'Core/PolylinePipeline',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoundingSphereState',
-        'DataSources/CallbackProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineGraphics',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/Globe',
-        'Scene/GroundPolylinePrimitive',
-        'Scene/ShadowMode',
-        'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        PolylineGeometryUpdater,
-        ApproximateTerrainHeights,
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        GroundPolylineGeometry,
-        JulianDate,
-        PolylinePipeline,
-        ShowGeometryInstanceAttribute,
-        TimeInterval,
-        TimeIntervalCollection,
-        BoundingSphereState,
-        CallbackProperty,
-        ColorMaterialProperty,
-        ConstantProperty,
-        Entity,
-        GridMaterialProperty,
-        PolylineGraphics,
-        PropertyArray,
-        SampledPositionProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty,
-        Globe,
-        GroundPolylinePrimitive,
-        ShadowMode,
-        createDynamicProperty,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GroundPolylineGeometry } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { PolylinePipeline } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/PolylineGeometryUpdater', function() {
 
     var scene;
     beforeAll(function(){
@@ -205,17 +171,17 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying followSurface causes geometry to be dynamic', function() {
-        var followSurface = new TimeIntervalCollectionProperty();
-        followSurface.intervals.addInterval(new TimeInterval({
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var arcType = new TimeIntervalCollectionProperty();
+        arcType.intervals.addInterval(new TimeInterval({
             start : new JulianDate(0, 0),
             stop : new JulianDate(10, 0),
-            data : false
+            data : ArcType.NONE
         }));
 
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity, scene);
-        entity.polyline.followSurface = followSurface;
+        entity.polyline.arcType = arcType;
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -261,7 +227,6 @@ defineSuite([
         polyline.depthFailMaterial = options.depthFailMaterial;
 
         polyline.width = new ConstantProperty(options.width);
-        polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
         polyline.distanceDisplayCondition = options.distanceDisplayCondition;
         polyline.clampToGround = new ConstantProperty(clampToGround);
@@ -280,9 +245,6 @@ defineSuite([
             expect(geometry.width).toEqual(options.width);
         } else {
             expect(geometry._width).toEqual(options.width);
-            if (defined(options.followSurface)) {
-                expect(geometry._followSurface).toEqual(options.followSurface);
-            }
             if (defined(options.arcType)) {
                 expect(geometry._arcType).toEqual(options.arcType);
             }
@@ -311,7 +273,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : false,
             granularity : 1.0,
             arcType : ArcType.NONE
@@ -326,7 +287,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : true,
             granularity : 1.0,
             arcType : ArcType.GEODESIC
@@ -339,7 +299,6 @@ defineSuite([
             material : new ColorMaterialProperty(Color.RED),
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 3,
-            followSurface : true,
             clampToGround : false,
             granularity : 1.0,
             arcType : ArcType.GEODESIC
@@ -363,7 +322,6 @@ defineSuite([
             show : true,
             material : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : false,
             granularity : 0.5,
             arcType: ArcType.GEODESIC
@@ -378,7 +336,6 @@ defineSuite([
             show : true,
             material : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : true,
             granularity : 0.5,
             arcType: ArcType.GEODESIC
@@ -391,7 +348,6 @@ defineSuite([
             material : new GridMaterialProperty(),
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 4,
-            followSurface : true,
             clampToGround : false,
             granularity : 0.5
         });
@@ -403,7 +359,6 @@ defineSuite([
             material : new GridMaterialProperty(),
             depthFailMaterial : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : false,
             granularity : 0.5
         });
@@ -414,7 +369,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : false,
             granularity : 1.0,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
@@ -429,7 +383,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : true,
             granularity : 1.0,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
@@ -500,9 +453,8 @@ defineSuite([
         polyline.width = width;
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
         polyline.material = new ColorMaterialProperty(Color.RED);
-        polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
-        polyline.ArcType = new ConstantProperty(ArcType.NONE);
+        polyline.arcType = new ConstantProperty(ArcType.NONE);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -524,7 +476,6 @@ defineSuite([
         expect(primitive.material.uniforms.color).toEqual(Color.RED);
         expect(primitive.positions.length).toEqual(2);
 
-        polyline.followSurface = new ConstantProperty(true);
         polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
         dynamicUpdater.update(time3);
 
@@ -557,7 +508,6 @@ defineSuite([
         polyline.width = new ConstantProperty(1.0);
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
         polyline.material = new ColorMaterialProperty(Color.RED);
-        polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
         polyline.clampToGround = clampToGround;
 
@@ -604,7 +554,6 @@ defineSuite([
         polyline.width = new ConstantProperty(1.0);
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
         polyline.material = new ColorMaterialProperty(Color.RED);
-        polyline.followSurface = new ConstantProperty(true);
         polyline.granularity = new ConstantProperty(0.001);
         polyline.clampToGround = new ConstantProperty(false);
         polyline.arcType = arcType;
@@ -846,26 +795,21 @@ defineSuite([
         expect(scene.groundPrimitives.length).toBe(0);
     });
 
-    it('followSurface true with undefined globe does not call generateCartesianArc', function() {
-        if (!Entity.supportsPolylinesOnTerrain(scene)) {
-            return;
-        }
-
+    it('calls generateCartesianRhumbArc for RHUMB arcType', function() {
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
-        scene.globe = undefined;
+        entity.polyline.arcType = ArcType.RHUMB;
+
         var updater = new PolylineGeometryUpdater(entity, scene);
         var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
-        spyOn(PolylinePipeline, 'generateCartesianArc').and.callThrough();
+        spyOn(PolylinePipeline, 'generateCartesianRhumbArc').and.callThrough();
         dynamicUpdater.update(time);
-        expect(PolylinePipeline.generateCartesianArc).not.toHaveBeenCalled();
+        expect(PolylinePipeline.generateCartesianRhumbArc).toHaveBeenCalled();
         dynamicUpdater.destroy();
         updater.destroy();
 
         expect(scene.primitives.length).toBe(0);
         expect(scene.groundPrimitives.length).toBe(0);
-
-        scene.globe = new Globe();
     });
 
     it('arcType GEODESIC with undefined globe does not call generateCartesianArc', function() {
@@ -905,7 +849,7 @@ defineSuite([
         expect(updater.clampToGround).toBe(false);
 
         var instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry instanceof GroundPolylineGeometry).toBe(false);
+        expect(instance.geometry).not.toBeInstanceOf(GroundPolylineGeometry);
 
         updater.destroy();
     });

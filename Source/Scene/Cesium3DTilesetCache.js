@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/DoublyLinkedList'
-    ], function(
-        defined,
-        DoublyLinkedList) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DoublyLinkedList from '../Core/DoublyLinkedList.js';
 
     /**
      * Stores tiles with content loaded.
@@ -74,6 +69,4 @@ define([
     Cesium3DTilesetCache.prototype.trim = function() {
         this._trimTiles = true;
     };
-
-    return Cesium3DTilesetCache;
-});
+export default Cesium3DTilesetCache;

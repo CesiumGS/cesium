@@ -1,18 +1,8 @@
-define([
-        './Cartographic',
-        './Cartesian3',
-        './Check',
-        './defineProperties',
-        './DeveloperError',
-        './Rectangle'
-    ], function(
-        Cartographic,
-        Cartesian3,
-        Check,
-        defineProperties,
-        DeveloperError,
-        Rectangle) {
-    'use strict';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
@@ -140,5 +130,4 @@ define([
         return result;
     };
 
-    return MapProjection;
-});
+export default MapProjection;

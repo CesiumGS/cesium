@@ -1,80 +1,43 @@
-defineSuite([
-        'Scene/Model',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/CesiumTerrainProvider',
-        'Core/Color',
-        'Core/combine',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/defineProperties',
-        'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/FeatureDetection',
-        'Core/HeadingPitchRange',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PrimitiveType',
-        'Core/Resource',
-        'Core/Transforms',
-        'Core/WebGLConstants',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Renderer/ShaderSource',
-        'Scene/Axis',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/ColorBlendMode',
-        'Scene/DracoLoader',
-        'Scene/HeightReference',
-        'Scene/ModelAnimationLoop',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Model,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumTerrainProvider,
-        Color,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        Event,
-        FeatureDetection,
-        HeadingPitchRange,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        PerspectiveFrustum,
-        PrimitiveType,
-        Resource,
-        Transforms,
-        WebGLConstants,
-        Pass,
-        RenderState,
-        ShaderSource,
-        Axis,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        ColorBlendMode,
-        DracoLoader,
-        HeightReference,
-        ModelAnimationLoop,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { defineProperties } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ShaderSource } from '../../Source/Cesium.js';
+import { Axis } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { DracoLoader } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { ModelAnimationLoop } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/Model', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -95,6 +58,7 @@ defineSuite([
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
     var boxWithUnusedMaterial = './Data/Models/BoxWithUnusedMaterial/Box.gltf';
+    var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
@@ -293,6 +257,7 @@ defineSuite([
         expect(texturedBoxModel.color).toEqual(Color.WHITE);
         expect(texturedBoxModel.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(texturedBoxModel.colorBlendAmount).toEqual(0.5);
+        expect(texturedBoxModel.credit).toBeUndefined();
     });
 
     it('preserves query string in url', function() {
@@ -330,6 +295,15 @@ defineSuite([
         });
         expect(model._resource).toEqual(basePath);
         expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(url.url);
+    });
+
+    it('fromGltf takes a credit', function() {
+        var url = texturedBoxBasePathUrl;
+        var model = Model.fromGltf({
+            url: url,
+            credit: 'This is my model credit'
+        });
+        expect(model.credit).toBeInstanceOf(Credit);
     });
 
     it('renders', function() {
@@ -1025,7 +999,7 @@ defineSuite([
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -1037,6 +1011,38 @@ defineSuite([
             verifyRender(m);
             m.show = true;
             expect(scene).toRender([204, 0, 0, 255]); // Red
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model with AGI_articulations extension', function() {
+        return loadModel(boxArticulationsUrl).then(function(m) {
+            verifyRender(m);
+
+            m.setArticulationStage('SampleArticulation MoveX', 1.0);
+            m.setArticulationStage('SampleArticulation MoveY', 2.0);
+            m.setArticulationStage('SampleArticulation MoveZ', 3.0);
+            m.setArticulationStage('SampleArticulation Yaw', 4.0);
+            m.setArticulationStage('SampleArticulation Pitch', 5.0);
+            m.setArticulationStage('SampleArticulation Roll', 6.0);
+            m.setArticulationStage('SampleArticulation Size', 0.9);
+            m.setArticulationStage('SampleArticulation SizeX', 0.8);
+            m.setArticulationStage('SampleArticulation SizeY', 0.7);
+            m.setArticulationStage('SampleArticulation SizeZ', 0.6);
+            m.applyArticulations();
+
+            var node = m.getNode('Root');
+            expect(node.useMatrix).toBe(true);
+
+            var expected = [
+                0.7147690483240505, -0.04340611926232735, -0.0749741046529782, 0,
+                -0.06188330295778636, 0.05906797312763484, -0.6241645867602773, 0,
+                0.03752515582279579, 0.5366347296529127, 0.04706410108373541, 0,
+                1, 3, -2, 1
+            ];
+
+            expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
             primitives.remove(m);
         });
     });
@@ -2389,27 +2395,19 @@ defineSuite([
 
     function checkVertexColors(model) {
         model.zoomTo();
-        scene.camera.moveUp(0.1);
-        // Red
+        // Blue plane
         scene.camera.moveLeft(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(20);
-            expect(rgba[1]).toBeLessThan(20);
-            expect(rgba[2]).toBeLessThan(20);
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(255);
         });
-        // Green
-        scene.camera.moveRight(0.5);
+        // Red plane
+        scene.camera.moveRight(1.0);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(20);
-            expect(rgba[1]).toBeGreaterThan(20);
-            expect(rgba[2]).toBeLessThan(20);
-        });
-        // Blue
-        scene.camera.moveRight(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(20);
-            expect(rgba[1]).toBeLessThan(20);
-            expect(rgba[2]).toBeGreaterThan(20);
+            expect(rgba[0]).toEqual(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
         });
     }
 
@@ -3066,17 +3064,27 @@ defineSuite([
         return loadModel(boxPbrUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba).not.toEqual([0, 0, 0, 255]);
-                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
-                    expect(rgba2).not.toEqual(rgba);
-                    model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
 
-                    primitives.remove(model);
-                });
+            var sceneArgs = {
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 23:00:00 UTC'))
+            };
+
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([119, 6, 5, 255], 5);
             });
+
+            model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([85, 6, 5, 255], 5);
+            });
+
+            model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([164, 16, 16, 255], 5);
+            });
+
+            primitives.remove(model);
         });
     });
 

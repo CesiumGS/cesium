@@ -1,56 +1,29 @@
-defineSuite([
-        'Scene/WebMapServiceImageryProvider',
-        'Core/Cartographic',
-        'Core/Clock',
-        'Core/ClockStep',
-        'Core/DefaultProxy',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/queryToObject',
-        'Core/Rectangle',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/RequestState',
-        'Core/Resource',
-        'Core/TimeIntervalCollection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GetFeatureInfoFormat',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerFeatureInfo',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri'
-    ], function(
-        WebMapServiceImageryProvider,
-        Cartographic,
-        Clock,
-        ClockStep,
-        DefaultProxy,
-        Ellipsoid,
-        GeographicTilingScheme,
-        JulianDate,
-        CesiumMath,
-        queryToObject,
-        Rectangle,
-        Request,
-        RequestScheduler,
-        RequestState,
-        Resource,
-        TimeIntervalCollection,
-        WebMercatorTilingScheme,
-        GetFeatureInfoFormat,
-        Imagery,
-        ImageryLayer,
-        ImageryLayerFeatureInfo,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri) {
-    'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { RequestState } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GetFeatureInfoFormat } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Scene/WebMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

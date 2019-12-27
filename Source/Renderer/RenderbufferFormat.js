@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * @private
@@ -26,6 +21,4 @@ define([
                     (renderbufferFormat === RenderbufferFormat.DEPTH_STENCIL));
         }
     };
-
-    return freezeObject(RenderbufferFormat);
-});
+export default freezeObject(RenderbufferFormat);

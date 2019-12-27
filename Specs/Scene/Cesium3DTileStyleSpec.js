@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/Cesium3DTileStyle',
-        'Core/Cartesian2',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Resource',
-        'Scene/ConditionsExpression',
-        'Scene/Expression'
-    ], function(
-        Cesium3DTileStyle,
-        Cartesian2,
-        Cartesian4,
-        Color,
-        Resource,
-        ConditionsExpression,
-        Expression) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ConditionsExpression } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+
+describe('Scene/Cesium3DTileStyle', function() {
 
     function MockFeature() {
         this._properties = {};

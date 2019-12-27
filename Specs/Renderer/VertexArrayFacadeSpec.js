@@ -1,14 +1,9 @@
-defineSuite([
-        'Renderer/VertexArrayFacade',
-        'Core/ComponentDatatype',
-        'Renderer/BufferUsage',
-        'Specs/createContext'
-    ], function(
-        VertexArrayFacade,
-        ComponentDatatype,
-        BufferUsage,
-        createContext) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { VertexArrayFacade } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/VertexArrayFacade', function() {
 
     var context;
 

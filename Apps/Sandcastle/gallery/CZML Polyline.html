@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="CZML">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -65,9 +60,10 @@ var czml = [{
         "material" : {
             "polylineGlow" : {
                 "color" : {
-                    "rgba" : [0, 0, 255, 255]
+                    "rgba" : [100, 149, 237, 255]
                 },
-                "glowPower" : 0.2
+                "glowPower" : 0.2,
+                "taperPower" : 0.5
             }
         },
         "width" : 10
@@ -145,9 +141,8 @@ viewer.zoomTo(dataSourcePromise);
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

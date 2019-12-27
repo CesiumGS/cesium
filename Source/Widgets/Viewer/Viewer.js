@@ -1,104 +1,51 @@
-define([
-        '../../Core/BoundingSphere',
-        '../../Core/Cartesian3',
-        '../../Core/Cartographic',
-        '../../Core/Clock',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/EventHelper',
-        '../../Core/HeadingPitchRange',
-        '../../Core/isArray',
-        '../../Core/Matrix4',
-        '../../Core/Rectangle',
-        '../../Core/ScreenSpaceEventType',
-        '../../DataSources/BoundingSphereState',
-        '../../DataSources/ConstantPositionProperty',
-        '../../DataSources/DataSourceCollection',
-        '../../DataSources/DataSourceDisplay',
-        '../../DataSources/Entity',
-        '../../DataSources/EntityView',
-        '../../DataSources/Property',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/computeFlyToLocationForRectangle',
-        '../../Scene/ImageryLayer',
-        '../../Scene/SceneMode',
-        '../../Scene/TimeDynamicPointCloud',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/when',
-        '../Animation/Animation',
-        '../Animation/AnimationViewModel',
-        '../BaseLayerPicker/BaseLayerPicker',
-        '../BaseLayerPicker/createDefaultImageryProviderViewModels',
-        '../BaseLayerPicker/createDefaultTerrainProviderViewModels',
-        '../CesiumWidget/CesiumWidget',
-        '../ClockViewModel',
-        '../FullscreenButton/FullscreenButton',
-        '../Geocoder/Geocoder',
-        '../getElement',
-        '../HomeButton/HomeButton',
-        '../InfoBox/InfoBox',
-        '../NavigationHelpButton/NavigationHelpButton',
-        '../ProjectionPicker/ProjectionPicker',
-        '../SceneModePicker/SceneModePicker',
-        '../SelectionIndicator/SelectionIndicator',
-        '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../VRButton/VRButton'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Clock,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        EventHelper,
-        HeadingPitchRange,
-        isArray,
-        Matrix4,
-        Rectangle,
-        ScreenSpaceEventType,
-        BoundingSphereState,
-        ConstantPositionProperty,
-        DataSourceCollection,
-        DataSourceDisplay,
-        Entity,
-        EntityView,
-        Property,
-        Cesium3DTileset,
-        computeFlyToLocationForRectangle,
-        ImageryLayer,
-        SceneMode,
-        TimeDynamicPointCloud,
-        knockout,
-        when,
-        Animation,
-        AnimationViewModel,
-        BaseLayerPicker,
-        createDefaultImageryProviderViewModels,
-        createDefaultTerrainProviderViewModels,
-        CesiumWidget,
-        ClockViewModel,
-        FullscreenButton,
-        Geocoder,
-        getElement,
-        HomeButton,
-        InfoBox,
-        NavigationHelpButton,
-        ProjectionPicker,
-        SceneModePicker,
-        SelectionIndicator,
-        subscribeAndEvaluate,
-        Timeline,
-        VRButton) {
-    'use strict';
+import BoundingSphere from '../../Core/BoundingSphere.js';
+import Cartesian3 from '../../Core/Cartesian3.js';
+import Cartographic from '../../Core/Cartographic.js';
+import Clock from '../../Core/Clock.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Event from '../../Core/Event.js';
+import EventHelper from '../../Core/EventHelper.js';
+import HeadingPitchRange from '../../Core/HeadingPitchRange.js';
+import isArray from '../../Core/isArray.js';
+import Matrix4 from '../../Core/Matrix4.js';
+import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
+import BoundingSphereState from '../../DataSources/BoundingSphereState.js';
+import ConstantPositionProperty from '../../DataSources/ConstantPositionProperty.js';
+import DataSourceCollection from '../../DataSources/DataSourceCollection.js';
+import DataSourceDisplay from '../../DataSources/DataSourceDisplay.js';
+import Entity from '../../DataSources/Entity.js';
+import EntityView from '../../DataSources/EntityView.js';
+import Property from '../../DataSources/Property.js';
+import Cesium3DTileset from '../../Scene/Cesium3DTileset.js';
+import computeFlyToLocationForRectangle from '../../Scene/computeFlyToLocationForRectangle.js';
+import ImageryLayer from '../../Scene/ImageryLayer.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import TimeDynamicPointCloud from '../../Scene/TimeDynamicPointCloud.js';
+import knockout from '../../ThirdParty/knockout.js';
+import when from '../../ThirdParty/when.js';
+import Animation from '../Animation/Animation.js';
+import AnimationViewModel from '../Animation/AnimationViewModel.js';
+import BaseLayerPicker from '../BaseLayerPicker/BaseLayerPicker.js';
+import createDefaultImageryProviderViewModels from '../BaseLayerPicker/createDefaultImageryProviderViewModels.js';
+import createDefaultTerrainProviderViewModels from '../BaseLayerPicker/createDefaultTerrainProviderViewModels.js';
+import CesiumWidget from '../CesiumWidget/CesiumWidget.js';
+import ClockViewModel from '../ClockViewModel.js';
+import FullscreenButton from '../FullscreenButton/FullscreenButton.js';
+import Geocoder from '../Geocoder/Geocoder.js';
+import getElement from '../getElement.js';
+import HomeButton from '../HomeButton/HomeButton.js';
+import InfoBox from '../InfoBox/InfoBox.js';
+import NavigationHelpButton from '../NavigationHelpButton/NavigationHelpButton.js';
+import ProjectionPicker from '../ProjectionPicker/ProjectionPicker.js';
+import SceneModePicker from '../SceneModePicker/SceneModePicker.js';
+import SelectionIndicator from '../SelectionIndicator/SelectionIndicator.js';
+import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
+import Timeline from '../Timeline/Timeline.js';
+import VRButton from '../VRButton/VRButton.js';
 
     var boundingSphereScratch = new BoundingSphere();
 
@@ -284,6 +231,7 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -315,7 +263,7 @@ define([
      * @see Timeline
      * @see viewerDragDropMixin
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Hello%20World.html|Cesium Sandcastle Hello World Demo}
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
@@ -327,7 +275,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -430,6 +378,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
+            useBrowserRecommendedResolution : options.useBrowserRecommendedResolution,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
             creditViewport : options.creditViewport,
             scene3DOnly : scene3DOnly,
@@ -709,7 +658,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._needTrackedEntityUpdate = false;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
-        this._forceResize = false;
         this._zoomIsFlight = false;
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
@@ -1195,7 +1143,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget.resolutionScale = value;
-                this._forceResize = true;
+            }
+        },
+
+        /**
+        * Boolean flag indicating if the browser's recommended resolution is used.
+        * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
+        * effectively rendering based on CSS pixels instead of device pixels. This can improve
+        * performance on less powerful devices that have high pixel density. When false, rendering
+        * will be in device pixels. {@link Viewer#resolutionScale} will still take effect whether
+        * this flag is true or false.
+        * @memberof Viewer.prototype
+        *
+        * @type {Boolean}
+        * @default false
+        */
+        useBrowserRecommendedResolution : {
+            get : function() {
+                return this._cesiumWidget.useBrowserRecommendedResolution;
+            },
+            set : function(value) {
+                this._cesiumWidget.useBrowserRecommendedResolution = value;
             }
         },
 
@@ -1359,12 +1327,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var animationExists = defined(this._animation);
         var timelineExists = defined(this._timeline);
 
-        if (!this._forceResize && width === this._lastWidth && height === this._lastHeight) {
+        cesiumWidget.resize();
+
+        if (width === this._lastWidth && height === this._lastHeight) {
             return;
         }
 
-        cesiumWidget.resize();
-        this._forceResize = false;
         var panelMaxHeight = height - 125;
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 
@@ -2098,6 +2066,4 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      *
      * @see Viewer#extend
      */
-
-    return Viewer;
-});
+export default Viewer;

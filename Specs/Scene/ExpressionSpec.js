@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/Expression',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Scene/ExpressionNodeType'
-    ], function(
-        Expression,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        CesiumMath,
-        ExpressionNodeType) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+import { ExpressionNodeType } from '../../Source/Cesium.js';
+
+describe('Scene/Expression', function() {
 
     function MockFeature() {
         this._properties = {};

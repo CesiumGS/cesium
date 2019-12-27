@@ -1,10 +1,5 @@
-define([
-        './Credit',
-        './defined'
-    ], function(
-        Credit,
-        defined) {
-    'use strict';
+import Credit from './Credit.js';
+import defined from './defined.js';
 
     /**
      * @exports MapboxApi
@@ -55,6 +50,4 @@ define([
 
         return errorCredit;
     };
-
-    return MapboxApi;
-});
+export default MapboxApi;

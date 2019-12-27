@@ -1,24 +1,12 @@
-define([
-        './AttributeCompression',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './Math',
-        './Matrix4',
-        './TerrainQuantization'
-    ], function(
-        AttributeCompression,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        CesiumMath,
-        Matrix4,
-        TerrainQuantization) {
-    'use strict';
+import AttributeCompression from './AttributeCompression.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
+import TerrainQuantization from './TerrainQuantization.js';
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3DimScratch = new Cartesian3();
@@ -496,6 +484,4 @@ define([
         result.center2D = Cartesian3.clone(encoding.center2D);
         return result;
     };
-
-    return TerrainEncoding;
-});
+export default TerrainEncoding;

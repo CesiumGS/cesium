@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/SkyBox',
-        'Core/Resource',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        SkyBox,
-        Resource,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { Resource } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SkyBox } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/SkyBox', function() {
 
     var scene;
     var skyBox;

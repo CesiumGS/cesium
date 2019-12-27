@@ -1,26 +1,13 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './MapProjectionType',
-        './SerializedMapProjection',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        MapProjectionType,
-        SerializedMapProjection,
-        when) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import MapProjectionType from './MapProjectionType.js';
+import SerializedMapProjection from './SerializedMapProjection.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
@@ -155,6 +142,4 @@ define([
         result.height = height;
         return result;
     };
-
-    return GeographicProjection;
-});
+export default GeographicProjection;

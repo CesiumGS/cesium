@@ -1,16 +1,8 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './EllipsoidOutlineGeometry'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        EllipsoidOutlineGeometry) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import EllipsoidOutlineGeometry from './EllipsoidOutlineGeometry.js';
 
     /**
      * A description of the outline of a sphere.
@@ -115,6 +107,4 @@ define([
     SphereOutlineGeometry.createGeometry = function(sphereGeometry) {
         return EllipsoidOutlineGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
     };
-
-    return SphereOutlineGeometry;
-});
+export default SphereOutlineGeometry;

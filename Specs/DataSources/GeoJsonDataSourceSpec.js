@@ -1,30 +1,18 @@
-defineSuite([
-        'DataSources/GeoJsonDataSource',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Event',
-        'Core/JulianDate',
-        'Core/PolygonHierarchy',
-        'Core/RuntimeError',
-        'DataSources/CallbackProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'Scene/HeightReference',
-        'ThirdParty/when'
-    ], function(
-        GeoJsonDataSource,
-        Cartesian3,
-        Color,
-        Event,
-        JulianDate,
-        PolygonHierarchy,
-        RuntimeError,
-        CallbackProperty,
-        ConstantProperty,
-        EntityCollection,
-        HeightReference,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { GeoJsonDataSource } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/GeoJsonDataSource', function() {
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -277,6 +265,15 @@ defineSuite([
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeUndefined();
+    });
+
+    it('credit gets set from options', function() {
+        return GeoJsonDataSource.load(point, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('setting name raises changed event', function() {

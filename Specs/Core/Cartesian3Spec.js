@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Specs/createPackableArraySpecs',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        createPackableArraySpecs,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableArraySpecs from '../createPackableArraySpecs.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Cartesian3', function() {
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();

@@ -1,8 +1,6 @@
-defineSuite([
-        'Scene/Empty3DTileContent'
-    ], function(
-        Empty3DTileContent) {
-    'use strict';
+import { Empty3DTileContent } from '../../Source/Cesium.js';
+
+describe('Scene/Empty3DTileContent', function() {
 
     it('destroys', function() {
         var content = new Empty3DTileContent();

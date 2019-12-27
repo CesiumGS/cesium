@@ -1,28 +1,14 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './PrimitiveType',
-        './VertexFormat'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        PrimitiveType,
-        VertexFormat) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import PrimitiveType from './PrimitiveType.js';
+import VertexFormat from './VertexFormat.js';
 
     /**
      * Describes geometry representing a plane centered at the origin, with a unit width and length.
@@ -257,6 +243,4 @@ define([
             boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0))
         });
     };
-
-    return PlaneGeometry;
-});
+export default PlaneGeometry;

@@ -1,18 +1,9 @@
-define([
-        './buildModuleUrl',
-        './Color',
-        './defined',
-        './DeveloperError',
-        './Resource',
-        './writeTextToCanvas'
-    ], function(
-        buildModuleUrl,
-        Color,
-        defined,
-        DeveloperError,
-        Resource,
-        writeTextToCanvas) {
-    'use strict';
+import buildModuleUrl from './buildModuleUrl.js';
+import Color from './Color.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Resource from './Resource.js';
+import writeTextToCanvas from './writeTextToCanvas.js';
 
     /**
      * A utility class for generating custom map pins as canvas elements.
@@ -25,7 +16,7 @@ define([
      * @alias PinBuilder
      * @constructor
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
     function PinBuilder() {
         this._cache = {};
@@ -234,6 +225,4 @@ define([
         cache[id] = canvas;
         return canvas;
     }
-
-    return PinBuilder;
-});
+export default PinBuilder;

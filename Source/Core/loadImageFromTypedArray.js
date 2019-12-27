@@ -1,18 +1,8 @@
-define([
-        '../ThirdParty/when',
-        './Check',
-        './defined',
-        './defaultValue',
-        './FeatureDetection',
-        './Resource'
-    ], function(
-        when,
-        Check,
-        defined,
-        defaultValue,
-        FeatureDetection,
-        Resource) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Resource from './Resource.js';
 
     /**
      * @private
@@ -31,24 +21,37 @@ define([
             type : format
         });
 
-        var blobUrl = window.URL.createObjectURL(blob);
-        var resource = new Resource({
-            url: blobUrl,
-            request: request
-        });
-        return resource.fetchImage({
-            flipY : flipY,
-            preferImageBitmap : true
-        })
-            .then(function(image) {
-                window.URL.revokeObjectURL(blobUrl);
-                return image;
+        var blobUrl;
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                if (result) {
+                    return when(Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    }));
+                }
+
+                blobUrl = window.URL.createObjectURL(blob);
+                var resource = new Resource({
+                    url: blobUrl,
+                    request: request
+                });
+
+                return resource.fetchImage({
+                    flipY : flipY
+                });
+            })
+            .then(function(result) {
+                if (defined(blobUrl)) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+                return result;
             })
             .otherwise(function(error) {
-                window.URL.revokeObjectURL(blobUrl);
+                if (defined(blobUrl)) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
                 return when.reject(error);
             });
     }
-
-    return loadImageFromTypedArray;
-});
+export default loadImageFromTypedArray;

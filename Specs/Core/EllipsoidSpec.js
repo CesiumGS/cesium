@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/Ellipsoid',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Math',
-        'Specs/createPackableSpecs'
-    ], function(
-        Ellipsoid,
-        Cartesian3,
-        Cartographic,
-        CesiumMath,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Ellipsoid', function() {
 
     var radii = new Cartesian3(1.0, 2.0, 3.0);
     var radiiSquared = Cartesian3.multiplyComponents(radii, radii, new Cartesian3());
@@ -411,7 +405,7 @@ defineSuite([
         };
 
         var cloned = Ellipsoid.clone(myEllipsoid);
-        expect(cloned instanceof Ellipsoid).toBe(true);
+        expect(cloned).toBeInstanceOf(Ellipsoid);
         expect(cloned).toEqual(myEllipsoid);
     });
 
@@ -460,7 +454,7 @@ defineSuite([
         var cartographic  = Cartographic.fromDegrees(35.23,33.23);
         var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
         var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface);
-        expect(returnedResult instanceof Cartesian3).toBe(true);
+        expect(returnedResult).toBeInstanceOf(Cartesian3);
     });
 
     it('getSurfaceNormalIntersectionWithZAxis works with a result parameter', function() {

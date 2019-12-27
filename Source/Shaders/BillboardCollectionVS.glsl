@@ -10,6 +10,7 @@ attribute vec4 eyeOffset;                                  // eye offset in mete
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
+attribute vec2 sdf;                                        // sdf outline color (rgb) and width (w)
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
 attribute vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
@@ -27,6 +28,10 @@ varying mat2 v_rotationMatrix;
 
 varying vec4 v_pickColor;
 varying vec4 v_color;
+#ifdef SDF
+varying vec4 v_outlineColor;
+varying float v_outlineWidth;
+#endif
 
 const float UPPER_BOUND = 32768.0;
 
@@ -51,7 +56,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
 {
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
-    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
+    vec2 halfSize = imageSize * scale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
 
     vec2 originTranslate = origin * abs(halfSize);
@@ -78,26 +83,10 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
     }
 #endif
 
-    if (sizeInMeters)
-    {
-        positionEC.xy += halfSize;
-    }
-
     mpp = czm_metersPerPixel(positionEC);
+    positionEC.xy += (originTranslate + halfSize) * czm_branchFreeTernary(sizeInMeters, 1.0, mpp);
+    positionEC.xy += (translate + pixelOffset) * mpp;
 
-    if (!sizeInMeters)
-    {
-        originTranslate *= mpp;
-    }
-
-    positionEC.xy += originTranslate;
-    if (!sizeInMeters)
-    {
-        positionEC.xy += halfSize * mpp;
-    }
-
-    positionEC.xy += translate * mpp;
-    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
     return positionEC;
 }
 
@@ -413,8 +402,32 @@ if (lengthSq < disableDepthTestDistance) {
 
 #endif
 
+#ifdef SDF
+    vec4 outlineColor;
+    float outlineWidth;
+
+    temp = sdf.x;
+    temp = temp * SHIFT_RIGHT8;
+    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
+    outlineColor.r = floor(temp);
+
+    temp = sdf.y;
+    temp = temp * SHIFT_RIGHT8;
+    float temp3 = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
+    outlineColor.a = floor(temp);
+    outlineColor /= 255.0;
+
+    v_outlineWidth = outlineWidth / 255.0;
+    v_outlineColor = outlineColor;
+#endif
+
     v_pickColor = pickColor;
 
     v_color = color;
     v_color.a *= translucency;
+
 }

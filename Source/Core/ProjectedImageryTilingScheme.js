@@ -1,27 +1,11 @@
-define([
-        './Cartesian2',
-        './Cartographic',
-        './Math',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './GeographicTilingScheme',
-        './Ellipsoid',
-        './Rectangle'
-    ], function(
-        Cartesian2,
-        Cartographic,
-        CesiumMath,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        GeographicTilingScheme,
-        Ellipsoid,
-        Rectangle) {
-    'use strict';
-
+import CesiumMath from './Math.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import Ellipsoid from './Ellipsoid.js';
+import Rectangle from './Rectangle.js';
     /**
      * A tiling scheme for imagery being reprojected from any projection to geographic.
      * ProjectedImageryTilingScheme is intended for generating geographic {@link Imagery} tiles that draw from
@@ -290,5 +274,4 @@ define([
         return this._geographicProjection.positionToTileXY(position, level, result);
     };
 
-    return ProjectedImageryTilingScheme;
-});
+export default ProjectedImageryTilingScheme;

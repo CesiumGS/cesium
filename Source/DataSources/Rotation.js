@@ -1,14 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Math'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
 
     /**
      * Represents a {@link Packable} number that always interpolates values
@@ -145,6 +138,4 @@ define([
             return result;
         }
     };
-
-    return Rotation;
-});
+export default Rotation;

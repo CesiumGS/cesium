@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/TranslationRotationScale',
-        'Core/Cartesian3',
-        'Core/Quaternion'
-    ], function(
-        TranslationRotationScale,
-        Cartesian3,
-        Quaternion) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TranslationRotationScale } from '../../Source/Cesium.js';
+
+describe('Core/TranslationRotationScale', function() {
 
     it('sets correct values when constructed with no arguments', function() {
         var transformation = new TranslationRotationScale();

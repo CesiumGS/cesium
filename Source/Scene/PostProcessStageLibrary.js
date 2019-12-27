@@ -1,68 +1,32 @@
-define([
-        '../Core/buildModuleUrl',
-        '../Core/createGuid',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Shaders/PostProcessStages/AcesTonemapping',
-        '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
-        '../Shaders/PostProcessStages/AmbientOcclusionModulate',
-        '../Shaders/PostProcessStages/BlackAndWhite',
-        '../Shaders/PostProcessStages/BloomComposite',
-        '../Shaders/PostProcessStages/Brightness',
-        '../Shaders/PostProcessStages/ContrastBias',
-        '../Shaders/PostProcessStages/DepthOfField',
-        '../Shaders/PostProcessStages/DepthView',
-        '../Shaders/PostProcessStages/EdgeDetection',
-        '../Shaders/PostProcessStages/FilmicTonemapping',
-        '../Shaders/PostProcessStages/FXAA',
-        '../Shaders/PostProcessStages/GaussianBlur1D',
-        '../Shaders/PostProcessStages/LensFlare',
-        '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
-        '../Shaders/PostProcessStages/NightVision',
-        '../Shaders/PostProcessStages/ReinhardTonemapping',
-        '../Shaders/PostProcessStages/Silhouette',
-        '../ThirdParty/Shaders/FXAA3_11',
-        './AutoExposure',
-        './PostProcessStage',
-        './PostProcessStageComposite',
-        './PostProcessStageSampleMode'
-    ], function(
-        buildModuleUrl,
-        createGuid,
-        Color,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        Ellipsoid,
-        AcesTonemapping,
-        AmbientOcclusionGenerate,
-        AmbientOcclusionModulate,
-        BlackAndWhite,
-        BloomComposite,
-        Brightness,
-        ContrastBias,
-        DepthOfField,
-        DepthView,
-        EdgeDetection,
-        FilmicTonemapping,
-        FXAA,
-        GaussianBlur1D,
-        LensFlare,
-        ModifiedReinhardTonemapping,
-        NightVision,
-        ReinhardTonemapping,
-        Silhouette,
-        FXAA3_11,
-        AutoExposure,
-        PostProcessStage,
-        PostProcessStageComposite,
-        PostProcessStageSampleMode) {
-    'use strict';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import AcesTonemapping from '../Shaders/PostProcessStages/AcesTonemappingStage.js';
+import AmbientOcclusionGenerate from '../Shaders/PostProcessStages/AmbientOcclusionGenerate.js';
+import AmbientOcclusionModulate from '../Shaders/PostProcessStages/AmbientOcclusionModulate.js';
+import BlackAndWhite from '../Shaders/PostProcessStages/BlackAndWhite.js';
+import BloomComposite from '../Shaders/PostProcessStages/BloomComposite.js';
+import Brightness from '../Shaders/PostProcessStages/Brightness.js';
+import ContrastBias from '../Shaders/PostProcessStages/ContrastBias.js';
+import DepthOfField from '../Shaders/PostProcessStages/DepthOfField.js';
+import DepthView from '../Shaders/PostProcessStages/DepthView.js';
+import EdgeDetection from '../Shaders/PostProcessStages/EdgeDetection.js';
+import FilmicTonemapping from '../Shaders/PostProcessStages/FilmicTonemapping.js';
+import FXAA from '../Shaders/PostProcessStages/FXAA.js';
+import GaussianBlur1D from '../Shaders/PostProcessStages/GaussianBlur1D.js';
+import LensFlare from '../Shaders/PostProcessStages/LensFlare.js';
+import ModifiedReinhardTonemapping from '../Shaders/PostProcessStages/ModifiedReinhardTonemapping.js';
+import NightVision from '../Shaders/PostProcessStages/NightVision.js';
+import ReinhardTonemapping from '../Shaders/PostProcessStages/ReinhardTonemapping.js';
+import Silhouette from '../Shaders/PostProcessStages/Silhouette.js';
+import FXAA3_11 from '../ThirdParty/Shaders/FXAA3_11.js';
+import AutoExposure from './AutoExposure.js';
+import PostProcessStage from './PostProcessStage.js';
+import PostProcessStageComposite from './PostProcessStageComposite.js';
+import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
 
     /**
      * Contains functions for creating common post-process stages.
@@ -839,7 +803,7 @@ define([
      * Creates a post-process stage that applies an effect simulating light flaring a camera lens.
      * <p>
      * This stage has the following uniforms: <code>dirtTexture</code>, <code>starTexture</code>, <code>intensity</code>, <code>distortion</code>, <code>ghostDispersal</code>,
-     * <code>haloWidth</code>, and <code>earthRadius</code>.
+     * <code>haloWidth</code>, <code>dirtAmount</code>, and <code>earthRadius</code>.
      * <ul>
      * <li><code>dirtTexture</code> is a texture sampled to simulate dirt on the lens.</li>
      * <li><code>starTexture</code> is the texture sampled for the star pattern of the flare.</li>
@@ -847,6 +811,7 @@ define([
      * <li><code>distortion</code> is a scalar value that affects the chromatic effect distortion. The default value is <code>10.0</code>.</li>
      * <li><code>ghostDispersal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
      * <li><code>haloWidth</code> is a scalar representing the width of the halo  from the ghost dispersal. The default value is <code>0.4</code>.</li>
+     * <li><code>dirtAmount</code> is a scalar representing the amount of dirt on the lens. The default value is <code>0.4</code>.</li>
      * <li><code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.</li>
      * </ul>
      * </p>
@@ -863,10 +828,9 @@ define([
                 distortion : 10.0,
                 ghostDispersal : 0.4,
                 haloWidth : 0.4,
+                dirtAmount : 0.4,
                 earthRadius : Ellipsoid.WGS84.maximumRadius
             }
         });
     };
-
-    return PostProcessStageLibrary;
-});
+export default PostProcessStageLibrary;

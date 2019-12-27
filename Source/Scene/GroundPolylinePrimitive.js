@@ -1,68 +1,34 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/GeometryInstanceAttribute',
-        '../Core/GroundPolylineGeometry',
-        '../Core/isArray',
-        '../Shaders/PolylineShadowVolumeVS',
-        '../Shaders/PolylineShadowVolumeFS',
-        '../Shaders/PolylineShadowVolumeMorphVS',
-        '../Shaders/PolylineShadowVolumeMorphFS',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../ThirdParty/when',
-        './BlendingState',
-        './ClassificationType',
-        './CullFace',
-        './PolylineColorAppearance',
-        './PolylineMaterialAppearance',
-        './Primitive',
-        './SceneMode',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        ApproximateTerrainHeights,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        GeometryInstanceAttribute,
-        GroundPolylineGeometry,
-        isArray,
-        PolylineShadowVolumeVS,
-        PolylineShadowVolumeFS,
-        PolylineShadowVolumeMorphVS,
-        PolylineShadowVolumeMorphFS,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        when,
-        BlendingState,
-        ClassificationType,
-        CullFace,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        Primitive,
-        SceneMode,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
+import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
+import isArray from '../Core/isArray.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import PolylineShadowVolumeFS from '../Shaders/PolylineShadowVolumeFS.js';
+import PolylineShadowVolumeMorphFS from '../Shaders/PolylineShadowVolumeMorphFS.js';
+import PolylineShadowVolumeMorphVS from '../Shaders/PolylineShadowVolumeMorphVS.js';
+import PolylineShadowVolumeVS from '../Shaders/PolylineShadowVolumeVS.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import ClassificationType from './ClassificationType.js';
+import CullFace from './CullFace.js';
+import PolylineColorAppearance from './PolylineColorAppearance.js';
+import PolylineMaterialAppearance from './PolylineMaterialAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
      * A GroundPolylinePrimitive represents a polyline draped over the terrain or 3D Tiles in the {@link Scene}.
@@ -101,9 +67,7 @@ define([
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
-     *   })
+     *   appearance : new Cesium.PolylineMaterialAppearance()
      * }));
      *
      * // 2. Draw a looped polyline on terrain with per-instance color and a distance display condition.
@@ -122,14 +86,14 @@ define([
      *   }),
      *   attributes : {
      *      color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7)),
-            distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
+     *      distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
      *   },
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : Cesium.PolylineColorAppearance()
+     *   appearance : new Cesium.PolylineColorAppearance()
      * }));
      */
     function GroundPolylinePrimitive(options) {
@@ -792,6 +756,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GroundPolylinePrimitive;
-});
+export default GroundPolylinePrimitive;

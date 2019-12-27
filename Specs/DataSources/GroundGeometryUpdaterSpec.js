@@ -1,22 +1,9 @@
-defineSuite([
-    'DataSources/GroundGeometryUpdater',
-    'Core/ApproximateTerrainHeights',
-    'Core/Event',
-    'Core/GeometryOffsetAttribute',
-    'Core/JulianDate',
-    'Core/Rectangle',
-    'Scene/HeightReference',
-    'DataSources/ConstantProperty'
-], function(
-    GroundGeometryUpdater,
-    ApproximateTerrainHeights,
-    Event,
-    GeometryOffsetAttribute,
-    JulianDate,
-    Rectangle,
-    HeightReference,
-    ConstantProperty) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { GroundGeometryUpdater } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+
+describe('DataSources/GroundGeometryUpdater', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -114,5 +101,36 @@ defineSuite([
 
         result = GroundGeometryUpdater.computeGeometryOffsetAttribute(undefined, heightReference, undefined, extrudedHeightReference);
         expect(result).toBeUndefined();
+    });
+
+    it('Overridden version of destroy is called', function() {
+        var options = {
+            scene: {
+                frameState: {
+                    context: {
+                        depthTexture: true
+                    }
+                }
+            },
+            entity: {},
+            geometryOptions: {},
+            geometryPropertyName: '',
+            observedPropertyNames: []
+        };
+
+        var groundGeometryUpdater = new GroundGeometryUpdater(options);
+
+        // Just make the terrain propery a dummy object with a destroy method
+        var destroySpy = jasmine.createSpy('destroy');
+        groundGeometryUpdater._terrainOffsetProperty = {
+            destroy: destroySpy
+        };
+
+        groundGeometryUpdater.destroy();
+
+        // Make sure the terrain updater is destroyed and the parent class' destroy is called
+        expect(destroySpy).toHaveBeenCalled();
+        expect(groundGeometryUpdater._terrainOffsetProperty).toBeUndefined();
+        expect(groundGeometryUpdater.isDestroyed()).toBe(true);
     });
 });

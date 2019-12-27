@@ -1,84 +1,42 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EncodedCartesian3',
-        '../Core/FeatureDetection',
-        '../Core/IndexDatatype',
-        '../Core/Intersect',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Plane',
-        '../Core/RuntimeError',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/VertexArray',
-        '../Shaders/PolylineCommon',
-        '../Shaders/PolylineFS',
-        '../Shaders/PolylineVS',
-        './BatchTable',
-        './BlendingState',
-        './Material',
-        './Polyline',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EncodedCartesian3,
-        FeatureDetection,
-        IndexDatatype,
-        Intersect,
-        CesiumMath,
-        Matrix4,
-        Plane,
-        RuntimeError,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        VertexArray,
-        PolylineCommon,
-        PolylineFS,
-        PolylineVS,
-        BatchTable,
-        BlendingState,
-        Material,
-        Polyline,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Intersect from '../Core/Intersect.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Plane from '../Core/Plane.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import PolylineCommon from '../Shaders/PolylineCommon.js';
+import PolylineFS from '../Shaders/PolylineFS.js';
+import PolylineVS from '../Shaders/PolylineVS.js';
+import BatchTable from './BatchTable.js';
+import BlendingState from './BlendingState.js';
+import Material from './Material.js';
+import Polyline from './Polyline.js';
+import SceneMode from './SceneMode.js';
 
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var WIDTH_INDEX = Polyline.WIDTH_INDEX;
@@ -240,7 +198,7 @@ define([
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the polyline's properties as shown in Example 1.
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -264,8 +222,8 @@ define([
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
      */
-    PolylineCollection.prototype.add = function(polyline) {
-        var p = new Polyline(polyline, this);
+    PolylineCollection.prototype.add = function(options) {
+        var p = new Polyline(options, this);
         p._index = this._polylines.length;
         this._polylines.push(p);
         this._createVertexArray = true;
@@ -1696,6 +1654,4 @@ define([
             positionBuffer.copyFromArrayView(positionArray, 6 * 3 * Float32Array.BYTES_PER_ELEMENT * index);
         }
     };
-
-    return PolylineCollection;
-});
+export default PolylineCollection;

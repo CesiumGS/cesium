@@ -1,24 +1,12 @@
-define([
-    '../ThirdParty/when',
-    './Check',
-    './CustomProjection',
-    './DeveloperError',
-    './GeographicProjection',
-    './MapProjectionType',
-    './Matrix4Projection',
-    './Proj4Projection',
-    './WebMercatorProjection'
-], function(
-    when,
-    Check,
-    CustomProjection,
-    DeveloperError,
-    GeographicProjection,
-    MapProjectionType,
-    Matrix4Projection,
-    Proj4Projection,
-    WebMercatorProjection) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import CustomProjection from './CustomProjection.js';
+import DeveloperError from './DeveloperError.js';
+import GeographicProjection from './GeographicProjection.js';
+import MapProjectionType from './MapProjectionType.js';
+import Matrix4Projection from './Matrix4Projection.js';
+import Proj4Projection from './Proj4Projection.js';
+import WebMercatorProjection from './WebMercatorProjection.js';
 
     /**
      * Unpacks the given SerializedMapProjection on a web worker.
@@ -55,6 +43,4 @@ define([
 
         return when.reject(new DeveloperError('unknown projection'));
     }
-
-    return deserializeMapProjection;
-});
+export default deserializeMapProjection;

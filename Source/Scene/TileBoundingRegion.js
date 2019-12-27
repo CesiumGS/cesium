@@ -1,46 +1,23 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/GeometryInstance',
-        '../Core/IntersectionTests',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/Plane',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/RectangleOutlineGeometry',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        GeometryInstance,
-        IntersectionTests,
-        Matrix4,
-        OrientedBoundingBox,
-        Plane,
-        Ray,
-        Rectangle,
-        RectangleOutlineGeometry,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Plane from '../Core/Plane.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import RectangleOutlineGeometry from '../Core/RectangleOutlineGeometry.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * A tile bounding volume specified as a longitude/latitude/height region.
@@ -403,6 +380,4 @@ define([
             asynchronous : false
         });
     };
-
-    return TileBoundingRegion;
-});
+export default TileBoundingRegion;

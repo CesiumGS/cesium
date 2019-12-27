@@ -1,12 +1,6 @@
-define([
-        '../ThirdParty/rbush',
-        './Check',
-        './Rectangle'
-    ], function(
-        rbush,
-        Check,
-        Rectangle) {
-    'use strict';
+import rbush from '../ThirdParty/rbush.js';
+import Rectangle from './Rectangle.js';
+import Check from './Check.js';
 
     /**
      * Wrapper around rbush for use with Rectangle types.
@@ -95,6 +89,4 @@ define([
         var withId = RectangleWithId.fromRectangleAndId('', rectangle, collisionScratch, this._mapProjection);
         return this._tree.collides(withId);
     };
-
-    return RectangleCollisionChecker;
-});
+export default RectangleCollisionChecker;

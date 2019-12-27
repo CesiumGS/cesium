@@ -1,42 +1,21 @@
-define([
-        '../Core/Credit',
-        '../Core/decodeGoogleEarthEnterpriseData',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/GoogleEarthEnterpriseMetadata',
-        '../Core/loadImageFromTypedArray',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../ThirdParty/protobuf-minimal',
-        '../ThirdParty/when'
-    ], function(
-        Credit,
-        decodeGoogleEarthEnterpriseData,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        GoogleEarthEnterpriseMetadata,
-        loadImageFromTypedArray,
-        CesiumMath,
-        Rectangle,
-        Request,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        protobuf,
-        when) {
-    'use strict';
+import Credit from '../Core/Credit.js';
+import decodeGoogleEarthEnterpriseData from '../Core/decodeGoogleEarthEnterpriseData.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import GoogleEarthEnterpriseMetadata from '../Core/GoogleEarthEnterpriseMetadata.js';
+import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import Request from '../Core/Request.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import protobuf from '../ThirdParty/protobuf-minimal.js';
+import when from '../ThirdParty/when.js';
 
     function GoogleEarthEnterpriseDiscardPolicy() {
         this._image = new Image();
@@ -81,9 +60,9 @@ define([
      * @see GoogleEarthEnterpriseTerrainProvider
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -608,6 +587,4 @@ define([
 
         return message;
     }
-
-    return GoogleEarthEnterpriseImageryProvider;
-});
+export default GoogleEarthEnterpriseImageryProvider;

@@ -1,18 +1,9 @@
-define([
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Resource',
-        '../ThirdParty/when',
-        './CubeMap'
-    ], function(
-        Check,
-        defined,
-        DeveloperError,
-        Resource,
-        when,
-        CubeMap) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Resource from '../Core/Resource.js';
+import when from '../ThirdParty/when.js';
+import CubeMap from './CubeMap.js';
 
     /**
      * Asynchronously loads six images and creates a cube map.  Returns a promise that
@@ -94,6 +85,4 @@ define([
             });
         });
     }
-
-    return loadCubeMap;
-});
+export default loadCubeMap;

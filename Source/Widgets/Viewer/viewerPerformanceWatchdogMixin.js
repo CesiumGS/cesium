@@ -1,16 +1,8 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../PerformanceWatchdog/PerformanceWatchdog'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        PerformanceWatchdog) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import PerformanceWatchdog from '../PerformanceWatchdog/PerformanceWatchdog.js';
 
     /**
      * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.
@@ -55,6 +47,4 @@ define([
             }
         });
     }
-
-    return viewerPerformanceWatchdogMixin;
-});
+export default viewerPerformanceWatchdogMixin;

@@ -1,10 +1,7 @@
-defineSuite([
-        'Scene/TileImagery',
-        'Scene/ImageryState'
-    ], function(
-        TileImagery,
-        ImageryState) {
-    'use strict';
+import { ImageryState } from '../../Source/Cesium.js';
+import { TileImagery } from '../../Source/Cesium.js';
+
+describe('Scene/TileImagery', function() {
 
     it('does not use ancestor ready imagery that needs to be reprojected', function() {
         var imageryLayer = {

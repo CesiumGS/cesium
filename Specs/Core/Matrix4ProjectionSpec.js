@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/Matrix4Projection',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Math',
-        'Core/Ellipsoid',
-        'Core/Matrix4',
-        'Core/Rectangle'
-    ], function(
-        Matrix4Projection,
-        Cartesian3,
-        Cartographic,
-        CesiumMath,
-        Ellipsoid,
-        Matrix4,
-        Rectangle) {
-    'use strict';
+import { Matrix4Projection } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+
+describe('Core/Matrix4Projection', function() {
 
     it('construct0', function() {
         var projection = new Matrix4Projection({

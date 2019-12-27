@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/CartographicGeocoderService',
-        'Core/Cartesian3'
-    ], function(
-        CartographicGeocoderService,
-        Cartesian3) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CartographicGeocoderService } from '../../Source/Cesium.js';
+
+describe('Core/CartographicGeocoderService', function() {
 
     var service = new CartographicGeocoderService();
 

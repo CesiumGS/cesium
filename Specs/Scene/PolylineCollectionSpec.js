@@ -1,30 +1,17 @@
-defineSuite([
-        'Scene/PolylineCollection',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
-        'Scene/Camera',
-        'Scene/Material',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        PolylineCollection,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
-        Camera,
-        Material,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PolylineCollection } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PolylineCollection', function() {
 
     var scene;
     var polylines;

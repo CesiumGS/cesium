@@ -1,40 +1,20 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Scene/ClassificationType',
-        '../Scene/PolylineColorAppearance',
-        '../Scene/PolylineMaterialAppearance',
-        '../Scene/ShadowMode',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './DynamicGeometryBatch',
-        './PolylineGeometryUpdater',
-        './StaticGeometryColorBatch',
-        './StaticGeometryPerMaterialBatch',
-        './StaticGroundPolylinePerMaterialBatch'
-    ], function(
-        AssociativeArray,
-        BoundingSphere,
-        Check,
-        defaultValue,
-        defined,
-        destroyObject,
-        ClassificationType,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        ShadowMode,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        DynamicGeometryBatch,
-        PolylineGeometryUpdater,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticGroundPolylinePerMaterialBatch) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import PolylineColorAppearance from '../Scene/PolylineColorAppearance.js';
+import PolylineMaterialAppearance from '../Scene/PolylineMaterialAppearance.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryBatch from './DynamicGeometryBatch.js';
+import PolylineGeometryUpdater from './PolylineGeometryUpdater.js';
+import StaticGeometryColorBatch from './StaticGeometryColorBatch.js';
+import StaticGeometryPerMaterialBatch from './StaticGeometryPerMaterialBatch.js';
+import StaticGroundPolylinePerMaterialBatch from './StaticGroundPolylinePerMaterialBatch.js';
 
     var emptyArray = [];
 
@@ -347,6 +327,4 @@ define([
             }
         }
     };
-
-    return PolylineVisualizer;
-});
+export default PolylineVisualizer;

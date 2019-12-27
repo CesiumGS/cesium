@@ -1,16 +1,10 @@
-defineSuite([
-        'Renderer/RenderState',
-        'Core/WebGLConstants',
-        'Core/WindingOrder',
-        'Renderer/ContextLimits',
-        'Specs/createContext'
-    ], function(
-        RenderState,
-        WebGLConstants,
-        WindingOrder,
-        ContextLimits,
-        createContext) {
-    'use strict';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { WindingOrder } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/RenderState', function() {
 
     var context;
 

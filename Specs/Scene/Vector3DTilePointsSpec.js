@@ -1,46 +1,23 @@
-defineSuite([
-        'Scene/Vector3DTilePoints',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/combine',
-        'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/NearFarScalar',
-        'Core/Rectangle',
-        'Scene/Cesium3DTileBatchTable',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ColorBlendMode',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/VerticalOrigin',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Vector3DTilePoints,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        combine,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        CesiumMath,
-        Matrix4,
-        NearFarScalar,
-        Rectangle,
-        Cesium3DTileBatchTable,
-        Cesium3DTileStyle,
-        ColorBlendMode,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Cesium3DTileBatchTable } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { Vector3DTilePoints } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Vector3DTilePoints', function() {
 
     var scene;
     var rectangle;

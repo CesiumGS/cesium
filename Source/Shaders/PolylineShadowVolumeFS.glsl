@@ -65,7 +65,7 @@ void main(void)
     distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_endEcAndStartEcX.xyz), eyeCoordinate.xyz);
 
 #ifdef PER_INSTANCE_COLOR
-    gl_FragColor = v_color;
+    gl_FragColor = czm_gammaCorrect(v_color);
 #else // PER_INSTANCE_COLOR
     // Clamp - distance to aligned planes may be negative due to mitering,
     // so fragment texture coordinate might be out-of-bounds.

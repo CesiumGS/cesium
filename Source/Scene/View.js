@@ -1,50 +1,23 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian3',
-        '../Core/CullingVolume',
-        '../Core/defined',
-        '../Core/getTimestamp',
-        '../Core/Interval',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Renderer/ClearCommand',
-        '../Renderer/Pass',
-        '../Renderer/PassState',
-        './Camera',
-        './FrustumCommands',
-        './GlobeDepth',
-        './OIT',
-        './PickDepthFramebuffer',
-        './PickFramebuffer',
-        './SceneFramebuffer',
-        './SceneMode',
-        './ShadowMap'
-    ], function(
-        BoundingRectangle,
-        Cartesian3,
-        CullingVolume,
-        defined,
-        getTimestamp,
-        Interval,
-        CesiumMath,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        ClearCommand,
-        Pass,
-        PassState,
-        Camera,
-        FrustumCommands,
-        GlobeDepth,
-        OIT,
-        PickDepthFramebuffer,
-        PickFramebuffer,
-        SceneFramebuffer,
-        SceneMode,
-        ShadowMap) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import CullingVolume from '../Core/CullingVolume.js';
+import defined from '../Core/defined.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import Interval from '../Core/Interval.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Pass from '../Renderer/Pass.js';
+import PassState from '../Renderer/PassState.js';
+import Camera from './Camera.js';
+import FrustumCommands from './FrustumCommands.js';
+import GlobeDepth from './GlobeDepth.js';
+import OIT from './OIT.js';
+import PickDepthFramebuffer from './PickDepthFramebuffer.js';
+import PickFramebuffer from './PickFramebuffer.js';
+import SceneFramebuffer from './SceneFramebuffer.js';
+import SceneMode from './SceneMode.js';
+import ShadowMap from './ShadowMap.js';
 
     /**
      * @private
@@ -389,6 +362,4 @@ define([
             debugGlobeDepths[i].destroy();
         }
     };
-
-    return View;
-});
+export default View;

@@ -76,7 +76,7 @@ var epsg3031mapProjection = new Cesium.Proj4Projection({
 });
 
 // Add TMS layer derived from Landsat Imagery Mosaic of Antarctica (LIMA): https://lima.usgs.gov/access.php
-var limaProvider = Cesium.createTileMapServiceImageryProvider({
+var limaProvider = new Cesium.TileMapServiceImageryProvider({
     url : '../../SampleData/LIMAportion/',
     mapProjection : epsg3031mapProjection
 });
@@ -97,10 +97,9 @@ brazilMollweide.alpha = 0.7;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
 }
 </script>
 </body>

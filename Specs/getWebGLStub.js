@@ -1,16 +1,8 @@
-define([
-        'Core/clone',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/DeveloperError',
-        'Core/WebGLConstants'
-    ], function(
-        clone,
-        defaultValue,
-        defined,
-        DeveloperError,
-        WebGLConstants) {
-    'use strict';
+import { clone } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { DeveloperError } from '../Source/Cesium.js';
+import { WebGLConstants } from '../Source/Cesium.js';
 
     function getWebGLStub(canvas, options) {
         var stub = clone(WebGLConstants);
@@ -294,6 +286,4 @@ define([
     function readPixelsStub(x, y, width, height, format, type, pixels) {
         return [0, 0, 0, 0];
     }
-
-    return getWebGLStub;
-});
+export default getWebGLStub;

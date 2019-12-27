@@ -1,14 +1,7 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/ProjectedImageryTilingScheme',
-        './ImageryState'
-    ], function(
-        defined,
-        destroyObject,
-        ProjectedImageryTilingScheme,
-        ImageryState) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ImageryState from './ImageryState.js';
+import ProjectedImageryTilingScheme from '../Core/ProjectedImageryTilingScheme.js';
 
     /**
      * Stores details about a tile of imagery.
@@ -155,6 +148,4 @@ define([
             }
         }
     };
-
-    return Imagery;
-});
+export default Imagery;

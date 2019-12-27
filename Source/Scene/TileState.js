@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -13,6 +9,4 @@ define([
         READY : 2,
         UPSAMPLED_ONLY : 3
     };
-
-    return freezeObject(TileState);
-});
+export default freezeObject(TileState);

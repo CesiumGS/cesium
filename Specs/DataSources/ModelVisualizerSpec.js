@@ -1,54 +1,32 @@
-defineSuite([
-        'DataSources/ModelVisualizer',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/Resource',
-        'Core/Transforms',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ModelGraphics',
-        'DataSources/NodeTransformationProperty',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/Globe',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ModelVisualizer,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        JulianDate,
-        Matrix4,
-        Quaternion,
-        Resource,
-        Transforms,
-        BoundingSphereState,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        ModelGraphics,
-        NodeTransformationProperty,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        Globe,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ModelGraphics } from '../../Source/Cesium.js';
+import { ModelVisualizer } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/ModelVisualizer', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';
 
     var scene;
     var visualizer;
@@ -189,6 +167,59 @@ defineSuite([
 
             var transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
             expect(node.matrix).toEqual(transformationMatrix);
+        });
+    });
+
+    it('can apply model articulations', function() {
+        var time = JulianDate.now();
+        var entityCollection = new EntityCollection();
+        visualizer = new ModelVisualizer(scene, entityCollection);
+
+        var model = new ModelGraphics();
+        model.uri = new ConstantProperty(boxArticulationsUrl);
+
+        var articulations = {
+            'SampleArticulation MoveX' : 1.0,
+            'SampleArticulation MoveY' : 2.0,
+            'SampleArticulation MoveZ' : 3.0,
+            'SampleArticulation Yaw' : 4.0,
+            'SampleArticulation Pitch' : 5.0,
+            'SampleArticulation Roll' : 6.0,
+            'SampleArticulation Size' : 0.9,
+            'SampleArticulation SizeX' : 0.8,
+            'SampleArticulation SizeY' : 0.7,
+            'SampleArticulation SizeZ' : 0.6
+        };
+        model.articulations = articulations;
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
+        testObject.model = model;
+
+        visualizer.update(time);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        var primitive = scene.primitives.get(0);
+
+        // wait till the model is loaded before we can check articulations
+        return pollToPromise(function() {
+            scene.render();
+            return primitive.ready;
+        }).then(function() {
+            visualizer.update(time);
+
+            var node = primitive.getNode('Root');
+            expect(node.useMatrix).toBe(true);
+
+            var expected = [
+                0.7147690483240505, -0.04340611926232735, -0.0749741046529782, 0,
+                -0.06188330295778636, 0.05906797312763484, -0.6241645867602773, 0,
+                0.03752515582279579, 0.5366347296529127, 0.04706410108373541, 0,
+                1, 3, -2, 1
+            ];
+
+            expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
         });
     });
 

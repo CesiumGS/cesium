@@ -1,28 +1,14 @@
-define([
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ProjectedImageryTilingScheme',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../ThirdParty/when'
-    ], function(
-        Check,
-        Credit,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ProjectedImageryTilingScheme,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        when) {
-    'use strict';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ProjectedImageryTilingScheme from '../Core/ProjectedImageryTilingScheme.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * Provides a single, top-level imagery tile.  The single image may be in any projection.
@@ -394,5 +380,4 @@ define([
         return undefined;
     };
 
-    return SingleTileProjectedImageryProvider;
-});
+export default SingleTileProjectedImageryProvider;

@@ -1,18 +1,9 @@
-define([
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError'
-    ], function(
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError) {
-    'use strict';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A collection of primitives.  This is most often used with {@link Scene#primitives},
@@ -100,6 +91,8 @@ define([
      * Adds a primitive to the collection.
      *
      * @param {Object} primitive The primitive to add.
+     * @param {Number} [index] the index to add the layer at.  If omitted, the primitive will
+     *                         added at the bottom  of all existing primitives.
      * @returns {Object} The primitive added to the collection.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -107,10 +100,19 @@ define([
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      */
-    PrimitiveCollection.prototype.add = function(primitive) {
+    PrimitiveCollection.prototype.add = function(primitive, index) {
+        var hasIndex = defined(index);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(primitive)) {
             throw new DeveloperError('primitive is required.');
+        }
+        if (hasIndex) {
+            if (index < 0) {
+                throw new DeveloperError('index must be greater than or equal to zero.');
+            } else if (index > this._primitives.length) {
+                throw new DeveloperError('index must be less than or equal to the number of primitives.');
+            }
         }
         //>>includeEnd('debug');
 
@@ -120,7 +122,11 @@ define([
             collection : this
         };
 
-        this._primitives.push(primitive);
+        if (!hasIndex) {
+            this._primitives.push(primitive);
+        } else {
+            this._primitives.splice(index, 0, primitive);
+        }
 
         return primitive;
     };
@@ -183,7 +189,7 @@ define([
     PrimitiveCollection.prototype.removeAll = function() {
         var primitives = this._primitives;
         var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             delete primitives[i]._external._composites[this._guid];
             if (this.destroyPrimitives) {
                 primitives[i].destroy();
@@ -371,6 +377,54 @@ define([
     };
 
     /**
+     * @private
+     */
+    PrimitiveCollection.prototype.prePassesUpdate = function(frameState) {
+        var primitives = this._primitives;
+        // Using primitives.length in the loop is a temporary workaround
+        // to allow quadtree updates to add and remove primitives in
+        // update().  This will be changed to manage added and removed lists.
+        for (var i = 0; i < primitives.length; ++i) {
+            var primitive = primitives[i];
+            if (defined(primitive.prePassesUpdate)) {
+                primitive.prePassesUpdate(frameState);
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitiveCollection.prototype.updateForPass = function(frameState, passState) {
+        var primitives = this._primitives;
+        // Using primitives.length in the loop is a temporary workaround
+        // to allow quadtree updates to add and remove primitives in
+        // update().  This will be changed to manage added and removed lists.
+        for (var i = 0; i < primitives.length; ++i) {
+            var primitive = primitives[i];
+            if (defined(primitive.updateForPass)) {
+                primitive.updateForPass(frameState, passState);
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitiveCollection.prototype.postPassesUpdate = function(frameState) {
+        var primitives = this._primitives;
+        // Using primitives.length in the loop is a temporary workaround
+        // to allow quadtree updates to add and remove primitives in
+        // update().  This will be changed to manage added and removed lists.
+        for (var i = 0; i < primitives.length; ++i) {
+            var primitive = primitives[i];
+            if (defined(primitive.postPassesUpdate)) {
+                primitive.postPassesUpdate(frameState);
+            }
+        }
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -408,6 +462,4 @@ define([
         this.removeAll();
         return destroyObject(this);
     };
-
-    return PrimitiveCollection;
-});
+export default PrimitiveCollection;

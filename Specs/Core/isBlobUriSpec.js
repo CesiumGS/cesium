@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/isBlobUri'
-    ], function(
-        isBlobUri) {
-    'use strict';
+import { isBlobUri } from '../../Source/Cesium.js';
+
+describe('Core/isBlobUri', function() {
 
     it('Throws if url is undefined', function() {
         expect(function() {

@@ -1,30 +1,17 @@
-defineSuite([
-        'Scene/SingleTileProjectedImageryProvider',
-        'Core/Ellipsoid',
-        'Core/ProjectedImageryTilingScheme',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        SingleTileProjectedImageryProvider,
-        Ellipsoid,
-        ProjectedImageryTilingScheme,
-        Rectangle,
-        Resource,
-        WebMercatorProjection,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        when) {
-    'use strict';
+import { SingleTileProjectedImageryProvider } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { ProjectedImageryTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Core/SingleTileProjectedImageryProvider', function() {
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;

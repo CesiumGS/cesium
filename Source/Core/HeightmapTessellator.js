@@ -1,42 +1,21 @@
-define([
-        './AxisAlignedBoundingBox',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './EllipsoidalOccluder',
-        './freezeObject',
-        './Math',
-        './Matrix4',
-        './OrientedBoundingBox',
-        './Rectangle',
-        './TerrainEncoding',
-        './Transforms',
-        './WebMercatorProjection'
-    ], function(
-        AxisAlignedBoundingBox,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        EllipsoidalOccluder,
-        freezeObject,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        Rectangle,
-        TerrainEncoding,
-        Transforms,
-        WebMercatorProjection) {
-    'use strict';
+import AxisAlignedBoundingBox from './AxisAlignedBoundingBox.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidalOccluder from './EllipsoidalOccluder.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import Rectangle from './Rectangle.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import Transforms from './Transforms.js';
+import WebMercatorProjection from './WebMercatorProjection.js';
 
     /**
      * Contains functions to create a mesh from a heightmap image.
@@ -435,16 +414,14 @@ define([
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
         var orientedBoundingBox;
-        if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
-            // Here, rectangle.width < pi/2, and rectangle.height < pi
-            // (though it would still work with rectangle.width up to pi)
+        if (defined(rectangle)) {
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
         }
 
         var occludeePointInScaledSpace;
         if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(relativeToCenter, positions, minimumHeight);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
@@ -512,6 +489,4 @@ define([
             northIndicesWestToEast : northIndicesWestToEast
         };
     };
-
-    return HeightmapTessellator;
-});
+export default HeightmapTessellator;

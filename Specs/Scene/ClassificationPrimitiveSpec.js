@@ -1,54 +1,28 @@
-defineSuite([
-        'Scene/ClassificationPrimitive',
-        'Core/BoxGeometry',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/destroyObject',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/PolygonGeometry',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/ClassificationType',
-        'Scene/InvertClassification',
-        'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/ShadowVolumeAppearance',
-        'Scene/StencilConstants',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ClassificationPrimitive,
-        BoxGeometry,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        destroyObject,
-        Ellipsoid,
-        GeometryInstance,
-        PolygonGeometry,
-        Rectangle,
-        RectangleGeometry,
-        ShowGeometryInstanceAttribute,
-        Transforms,
-        Pass,
-        RenderState,
-        ClassificationType,
-        InvertClassification,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive,
-        ShadowVolumeAppearance,
-        StencilConstants,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ClassificationPrimitive } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { InvertClassification } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/ClassificationPrimitive', function() {
 
     var scene;
 

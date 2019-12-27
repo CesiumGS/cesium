@@ -1,20 +1,12 @@
-defineSuite([
-        'DataSources/TimeIntervalCollectionPositionProperty',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/PositionProperty'
-    ], function(
-        TimeIntervalCollectionPositionProperty,
-        Cartesian3,
-        JulianDate,
-        ReferenceFrame,
-        TimeInterval,
-        TimeIntervalCollection,
-        PositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionPositionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/TimeIntervalCollectionPositionProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionPositionProperty();

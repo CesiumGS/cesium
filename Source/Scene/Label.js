@@ -1,38 +1,20 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/freezeObject',
-        '../Core/NearFarScalar',
-        './Billboard',
-        './HeightReference',
-        './HorizontalOrigin',
-        './LabelStyle',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        freezeObject,
-        NearFarScalar,
-        Billboard,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import freezeObject from '../Core/freezeObject.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import Billboard from './Billboard.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import LabelStyle from './LabelStyle.js';
+import SDFSettings from './SDFSettings.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     var textTypes = freezeObject({
         LTR : 0,
@@ -57,6 +39,25 @@ define([
         label._repositionAllGlyphs = true;
     }
 
+    function getCSSValue(element, property) {
+        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
+    }
+
+    function parseFont(label) {
+        var div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.opacity = 0;
+        div.style.font = label._font;
+        document.body.appendChild(div);
+
+        label._fontFamily = getCSSValue(div,'font-family');
+        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
+        label._fontStyle = getCSSValue(div,'font-style');
+        label._fontWeight = getCSSValue(div,'font-weight');
+
+        document.body.removeChild(div);
+    }
+
     /**
      * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
      * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
@@ -72,7 +73,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -160,6 +161,10 @@ define([
         this._clusterShow = true;
 
         this.text = defaultValue(options.text, '');
+
+        this._relativeSize = 1.0;
+
+        parseFont(this);
 
         this._updateClamping();
     }
@@ -322,6 +327,7 @@ define([
                 if (this._font !== value) {
                     this._font = value;
                     rebindAllGlyphs(this);
+                    parseFont(this);
                 }
             }
         },
@@ -878,16 +884,29 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            glyph.billboard.scale = value;
+                            glyph.billboard.scale = value * this._relativeSize;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.scale = value;
+                        backgroundBillboard.scale = value * this._relativeSize;
                     }
 
                     repositionAllGlyphs(this);
                 }
+            }
+        },
+
+        /**
+         * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
+         * of the desired font compared to the generated glyph size.
+         * @memberof Label.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        totalScale: {
+            get : function() {
+                return this._scale * this._relativeSize;
             }
         },
 
@@ -1113,13 +1132,12 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.scale;
-        var resolutionScale = label._labelCollection._resolutionScale;
+        var scale = label.totalScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -1142,15 +1160,22 @@ define([
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = billboard.width * scale;
-                var glyphHeight = billboard.height * scale;
+                var glyphX = screenSpacePosition.x + (billboard._translate.x);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y);
+                var glyphWidth = glyph.dimensions.width * scale;
+                var glyphHeight = glyph.dimensions.height * scale;
 
                 if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphY -= glyphHeight;
                 } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
                     glyphY -= glyphHeight * 0.5;
+                }
+
+                if (label._verticalOrigin === VerticalOrigin.TOP) {
+                    glyphY += SDFSettings.PADDING * scale;
+                }
+                else if (label._verticalOrigin === VerticalOrigin.BOTTOM || label._verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= SDFSettings.PADDING * scale;
                 }
 
                 x = Math.min(x, glyphX);
@@ -1435,6 +1460,4 @@ define([
         }
         return result;
     }
-
-    return Label;
-});
+export default Label;

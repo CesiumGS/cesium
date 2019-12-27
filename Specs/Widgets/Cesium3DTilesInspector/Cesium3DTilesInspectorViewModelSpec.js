@@ -1,18 +1,11 @@
-defineSuite([
-        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
-        'Scene/Globe',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], function(
-        Cesium3DTilesInspectorViewModel,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        Globe,
-        createScene,
-        when) {
-    'use strict';
+import { Cesium3DTileset } from '../../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../../Source/Cesium.js';
+import { Globe } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { when } from '../../../Source/Cesium.js';
+import { Cesium3DTilesInspectorViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', function() {
 
     // Parent tile with content and four child tiles with content
     var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';

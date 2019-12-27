@@ -1,14 +1,7 @@
-define([
-        './Cartesian3',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        Cartesian3,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     var scaleToGeodeticSurfaceIntersection = new Cartesian3();
     var scaleToGeodeticSurfaceGradient = new Cartesian3();
@@ -130,6 +123,4 @@ define([
         result.z = positionZ * zMultiplier;
         return result;
     }
-
-    return scaleToGeodeticSurface;
-});
+export default scaleToGeodeticSurface;

@@ -1,16 +1,10 @@
-defineSuite([
-        'DataSources/Rotation',
-        'Core/JulianDate',
-        'Core/Math',
-        'DataSources/SampledProperty',
-        'Specs/createPackableSpecs'
-    ], function(
-        Rotation,
-        JulianDate,
-        CesiumMath,
-        SampledProperty,
-        createPackableSpecs) {
-    'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rotation } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('DataSources/Rotation', function() {
 
     it('Interpolates towards the closest angle.', function() {
         var time1 = JulianDate.fromIso8601('2010-05-07T00:00:00');

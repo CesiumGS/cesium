@@ -20,12 +20,14 @@ varying vec4 v_color;
 #endif
 
 #ifdef NORMAL_EC
-vec3 getEyeCoordinate3FromWindowCoordinate(vec2 fragCoord, float logDepthOrDepth) {
+vec3 getEyeCoordinate3FromWindowCoordinate(vec2 fragCoord, float logDepthOrDepth)
+{
     vec4 eyeCoordinate = czm_windowToEyeCoordinates(fragCoord, logDepthOrDepth);
     return eyeCoordinate.xyz / eyeCoordinate.w;
 }
 
-vec3 vectorFromOffset(vec4 eyeCoordinate, vec2 positiveOffset) {
+vec3 vectorFromOffset(vec4 eyeCoordinate, vec2 positiveOffset)
+{
     vec2 glFragCoordXY = gl_FragCoord.xy;
     // Sample depths at both offset and negative offset
     float upOrRightLogDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, (glFragCoordXY + positiveOffset) / czm_viewport.zw));
@@ -71,7 +73,8 @@ void main(void)
 
 #ifdef PICK
 #ifdef CULL_FRAGMENTS
-    if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0) {
+    if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0)
+    {
         gl_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
         czm_writeDepthClampedToFarPlane();
     }
@@ -81,7 +84,8 @@ void main(void)
 #else // PICK
 
 #ifdef CULL_FRAGMENTS
-    if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y) {
+    if (uv.x <= 0.0 || 1.0 <= uv.x || uv.y <= 0.0 || 1.0 <= uv.y)
+    {
         discard;
     }
 #endif
