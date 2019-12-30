@@ -337,6 +337,7 @@ describe('Scene/GlobeSurfaceTile', function() {
         });
 
         it('ignores triangles that are behind the ray', function() {
+            // Pick root tile (level=0, x=0, y=0) from the center towards the east side (+X).
             var terrainProvider = new EllipsoidTerrainProvider();
 
             var tile = new QuadtreeTile({
