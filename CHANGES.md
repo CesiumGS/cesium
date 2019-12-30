@@ -1,7 +1,11 @@
 Change Log
 ==========
 
-### 1.65.0 - 2019-01-02
+### 1.66.0 - 2020-02-03
+
+* Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface.
+
+### 1.65.0 - 2020-01-02
 
 ##### Fixes :wrench:
 * Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
@@ -15,7 +19,6 @@ Change Log
 
 ##### Additions :tada:
 * Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
-* Added `Globe.showSkirts` to support the ability to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
 
 ### 1.64.0 - 2019-12-02
 
