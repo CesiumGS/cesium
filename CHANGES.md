@@ -3,7 +3,7 @@ Change Log
 
 ### 1.66.0 - 2020-02-03
 
-* Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface.
+* Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 
 ### 1.65.0 - 2020-01-02
 
@@ -16,6 +16,7 @@ Change Log
 * Fixed `OrientedBoundingBox.fromRectangle` for rectangles with width greater than 180 degrees. [#8475](https://github.com/AnalyticalGraphicsInc/cesium/pull/8475)
 * Fixed globe picking so that it returns the closest intersecting triangle instead of the first intersecting triangle. [#8390](https://github.com/AnalyticalGraphicsInc/cesium/pull/8390)
 * Fixed horizon culling issues with large root tiles. [#8487](https://github.com/AnalyticalGraphicsInc/cesium/pull/8487)
+* Fixed a lighting bug affecting Macs with Intel integrated graphics where glTF 2.0 PBR models with double sided materials would have flipped normals. [#8494](https://github.com/AnalyticalGraphicsInc/cesium/pull/8494)
 
 ##### Additions :tada:
 * Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
