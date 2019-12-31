@@ -1,3 +1,8 @@
+/**
+ * 帧缓冲类
+ * 帧缓冲的创建，绑定/解绑/清除，
+ * 帧缓存有自己的缓存对象（颜色，深度和模板），它们诞生于窗口创建前
+ */
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
@@ -7,12 +12,23 @@ import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import ContextLimits from './ContextLimits.js';
 import PixelDatatype from './PixelDatatype.js';
-
+/**
+ *绑定颜色纹理，绑定 颜色纹理，指定帧缓冲附件attachment
+ * @param {*} framebuffer
+ * @param {*} attachment
+ * @param {*} texture
+ */
     function attachTexture(framebuffer, attachment, texture) {
         var gl = framebuffer._gl;
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._target, texture._texture, 0);
     }
 
+    /**
+     * 绑定渲染缓存对象，指定帧缓存附件attachment
+     * @param {*} framebuffer
+     * @param {*} attachment
+     * @param {*} renderbuffer
+     */
     function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
         var gl = framebuffer._gl;
         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
@@ -70,10 +86,10 @@ import PixelDatatype from './PixelDatatype.js';
         //>>includeEnd('debug');
 
         var gl = context._gl;
-        var maximumColorAttachments = ContextLimits.maximumColorAttachments;
+        var maximumColorAttachments = ContextLimits.maximumColorAttachments; // 颜色附件最大值
 
         this._gl = gl;
-        this._framebuffer = gl.createFramebuffer();
+        this._framebuffer = gl.createFramebuffer(); // 创建帧缓冲对象
 
         this._colorTextures = [];
         this._colorRenderbuffers = [];
@@ -130,7 +146,7 @@ import PixelDatatype from './PixelDatatype.js';
 
         ///////////////////////////////////////////////////////////////////
 
-        this._bind();
+        this._bind(); // 绑定缓冲区
 
         var texture;
         var renderbuffer;
@@ -180,6 +196,7 @@ import PixelDatatype from './PixelDatatype.js';
             }
             //>>includeEnd('debug');
 
+            // 依次绑定颜色纹理
             for (i = 0; i < length; ++i) {
                 renderbuffer = renderbuffers[i];
                 attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
@@ -296,14 +313,19 @@ import PixelDatatype from './PixelDatatype.js';
         }
     });
 
+    /**
+     * 绑定帧缓冲区
+     */
     Framebuffer.prototype._bind = function() {
         var gl = this._gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer); // 绑定帧缓冲区
     };
-
+    /**
+     * 清除缓冲区，解绑帧缓冲
+     */
     Framebuffer.prototype._unBind = function() {
         var gl = this._gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null); // 清除缓冲区，解绑帧缓冲
     };
 
     Framebuffer.prototype._getActiveColorAttachments = function() {
@@ -363,7 +385,7 @@ import PixelDatatype from './PixelDatatype.js';
             this._depthStencilRenderbuffer = this._depthStencilRenderbuffer && this._depthStencilRenderbuffer.destroy();
         }
 
-        this._gl.deleteFramebuffer(this._framebuffer);
+        this._gl.deleteFramebuffer(this._framebuffer); // 直接销毁帧缓冲
         return destroyObject(this);
     };
 export default Framebuffer;

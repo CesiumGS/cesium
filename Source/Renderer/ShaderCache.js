@@ -88,6 +88,7 @@ import ShaderSource from './ShaderSource.js';
             });
         }
 
+        // 生成最终的GLSL代码
         var vertexShaderText = vertexShaderSource.createCombinedVertexShader(this._context);
         var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(this._context);
 
@@ -178,6 +179,7 @@ import ShaderSource from './ShaderSource.js';
 
         var context = this._context;
 
+          // 生成最终的GLSL代码
         var vertexShaderText = vertexShaderSource.createCombinedVertexShader(context);
         var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(context);
 

@@ -2602,7 +2602,7 @@ import View from './View.js';
 
     var scratchEyeTranslation = new Cartesian3();
 
-    /**
+    /**更新和执行绘制命令，更新passState.framebuffer，并对该FBO渲染
      * @private
      */
     Scene.prototype.updateAndExecuteCommands = function(passState, backgroundColor) {
@@ -2615,6 +2615,7 @@ import View from './View.js';
         } else if (mode !== SceneMode.SCENE2D || this._mapMode2D === MapMode2D.ROTATE) {
             executeCommandsInViewport(true, this, passState, backgroundColor);
         } else {
+            // 更新和清除帧缓冲
             updateAndClearFramebuffers(this, passState, backgroundColor);
             execute2DViewportCommands(this, passState);
         }
@@ -2626,6 +2627,7 @@ import View from './View.js';
         var environmentState = scene._environmentState;
         var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
 
+         // 更新和清除帧缓冲
         updateAndClearFramebuffers(scene, passState, backgroundColor);
 
         if (!renderTranslucentDepthForPick) {
@@ -2795,6 +2797,13 @@ import View from './View.js';
         passState.viewport = originalViewport;
     }
 
+    /**
+     * 在视图中执行drawCommands 绘制命令，在updateAndExecuteCommands中调用，开始渲染所有的DrawCommand
+     * @param {*} firstViewport
+     * @param {*} scene
+     * @param {*} passState
+     * @param {*} backgroundColor
+     */
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
         var environmentState = scene._environmentState;
         var view = scene._view;
@@ -2812,6 +2821,7 @@ import View from './View.js';
 
         if (firstViewport) {
             if (defined(backgroundColor)) {
+                 // 更新和清除帧缓冲
                 updateAndClearFramebuffers(scene, passState, backgroundColor);
             }
             if (!renderTranslucentDepthForPick) {
@@ -2980,6 +2990,12 @@ import View from './View.js';
             scene._globe.render(frameState);
         }
     }
+    /**
+     * 更新和清除帧缓冲对象，updateAndExecuteCommands中调用，更新passState.framebuffer
+     * @param {*} scene
+     * @param {*} passState
+     * @param {*} clearColor
+     */
 
     function updateAndClearFramebuffers(scene, passState, clearColor) {
         var context = scene._context;
@@ -3082,7 +3098,8 @@ import View from './View.js';
         }
     }
 
-    /**
+    /**处理FBO(帧缓冲对象)，并且渲染到屏幕中，resolve 翻译为处理
+     * 真正的将图形渲染到屏幕中
      * @private
      */
     Scene.prototype.resolveFramebuffers = function(passState) {
@@ -3222,6 +3239,10 @@ import View from './View.js';
 
     var scratchBackgroundColor = new Color();
 
+    /**
+     * 每一帧渲染 渲染FBO FrameBufferObject
+     * @param {*} scene
+     */
     function render(scene) {
         var frameState = scene._frameState;
 
@@ -3276,7 +3297,9 @@ import View from './View.js';
         }
 
         scene.updateEnvironment();
+        // 更新passState.framebuffer，并对该FBO渲染
         scene.updateAndExecuteCommands(passState, backgroundColor);
+        // 处理FBO,并且渲染到屏幕
         scene.resolveFramebuffers(passState);
 
         passState.framebuffer = undefined;

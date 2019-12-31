@@ -192,7 +192,13 @@ import StencilOperation from './StencilOperation.js';
         });
     }
 
+    /**
+     *
+     * @param {*} globeDepth
+     * @param {*} context
+     */
     function createFramebuffers(globeDepth, context) {
+        // GlobeDepth中创建一个和当前窗口大小一样的颜色纹理
         globeDepth._globeColorFramebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._globeColorTexture],

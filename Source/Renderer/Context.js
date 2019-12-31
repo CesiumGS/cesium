@@ -905,6 +905,11 @@ import VertexArray from './VertexArray.js';
         scratchBackBufferArray = [WebGLConstants.BACK];
     }
 
+    /**
+     * 绑定帧缓冲区
+     * @param {*} context  环境上下文
+     * @param {*} framebuffer 帧缓冲对象
+     */
     function bindFramebuffer(context, framebuffer) {
         if (framebuffer !== context._currentFramebuffer) {
             context._currentFramebuffer = framebuffer;
@@ -1029,6 +1034,7 @@ import VertexArray from './VertexArray.js';
         } else {
             count = defaultValue(count, va.numberOfVertices);
             if (instanceCount === 0) {
+                // 真正的绘制3d图元出来
                 context._gl.drawArrays(primitiveType, offset, count);
             } else {
                 context.glDrawArraysInstanced(primitiveType, offset, count, instanceCount);
@@ -1046,6 +1052,7 @@ import VertexArray from './VertexArray.js';
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        // 获取对应的FBO,优先离屏渲染
         var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
         var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
         shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
@@ -1198,6 +1205,7 @@ import VertexArray from './VertexArray.js';
         return this._pickObjects[pickColor.toRgba()];
     };
 
+    // 构建一个PickID对象，包括该Object以及Key和Color
     function PickId(pickObjects, key, color) {
         this._pickObjects = pickObjects;
         this.key = key;
@@ -1224,6 +1232,8 @@ import VertexArray from './VertexArray.js';
      * Creates a unique ID associated with the input object for use with color-buffer picking.
      * The ID has an RGBA color value unique to this context.  You must call destroy()
      * on the pick ID when destroying the input object.
+     * 提供构建PickID方法，将颜色值与对象id 进行唯一映射
+     * 保证每一个Ojbect的ID唯一,通过Color.fromRgba(key)方法将ID转为对应的Color
      *
      * @param {Object} object The object to associate with the pick ID.
      * @returns {Object} A PickId object with a <code>color</code> property.
@@ -1240,6 +1250,7 @@ import VertexArray from './VertexArray.js';
      * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {
+        // 场景所有可拾取对象的映射，都是这个函数，所以全局查看关键词cratePickId即可查看所有可拾取对象类型的创建位置
         //>>includeStart('debug', pragmas.debug);
         Check.defined('object', object);
         //>>includeEnd('debug');

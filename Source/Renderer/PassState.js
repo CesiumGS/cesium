@@ -1,5 +1,6 @@
 
     /**
+     * 渲染权重，渲染优先级
      * The state for a particular rendering pass.  This is used to supplement the state
      * in a command being executed.
      *

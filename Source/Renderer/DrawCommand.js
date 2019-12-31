@@ -550,9 +550,9 @@ import PrimitiveType from '../Core/PrimitiveType.js';
 
     /**
      * Executes the draw command.
-     *
+     * 执行渲染命令
      * @param {Context} context The renderer context in which to draw.
-     * @param {PassState} [passState] The state for the current render pass.
+     * @param {PassState} [passState] The state for the current render pass. 渲染权重
      */
     DrawCommand.prototype.execute = function(context, passState) {
         context.draw(this, passState);

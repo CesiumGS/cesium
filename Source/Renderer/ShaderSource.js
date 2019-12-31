@@ -5,6 +5,10 @@ import modernizeShader from '../Renderer/modernizeShader.js';
 import CzmBuiltins from '../Shaders/Builtin/CzmBuiltins.js';
 import AutomaticUniforms from './AutomaticUniforms.js';
 
+    /**
+     * 移除shader源代码的注释  单行 //   多行 /**
+     * @param {*} source  glsl string 类型的源码
+     */
     function removeComments(source) {
         // remove inline comments
         source = source.replace(/\/\/.*/g, '');
@@ -20,6 +24,12 @@ import AutomaticUniforms from './AutomaticUniforms.js';
         });
     }
 
+    /**
+     * 获取给定名字的 节点的 依赖节点
+     * @param {*} name
+     * @param {*} glslSource
+     * @param {*} nodes
+     */
     function getDependencyNode(name, glslSource, nodes) {
         var dependencyNode;
 
@@ -37,11 +47,11 @@ import AutomaticUniforms from './AutomaticUniforms.js';
 
             // create new node
             dependencyNode = {
-                name : name,
-                glslSource : glslSource,
-                dependsOn : [],
-                requiredBy : [],
-                evaluated : false
+                name : name,  // main
+                glslSource : glslSource, // 内部代码
+                dependsOn : [],    // 依赖节点
+                requiredBy : [],   // 依赖本节点的 其他 节点
+                evaluated : false  // 标识是否已解析
             };
             nodes.push(dependencyNode);
         }
@@ -50,11 +60,11 @@ import AutomaticUniforms from './AutomaticUniforms.js';
     }
 
     function generateDependencies(currentNode, dependencyNodes) {
-        if (currentNode.evaluated) {
+        if (currentNode.evaluated) { // 已经解析过直接返回
             return;
         }
 
-        currentNode.evaluated = true;
+        currentNode.evaluated = true; // 更新标识 当前节点 已经被解析
 
         // identify all dependencies that are referenced from this glsl source code
         var czmMatches = currentNode.glslSource.match(/\bczm_[a-zA-Z0-9_]*/g);
@@ -127,11 +137,18 @@ import AutomaticUniforms from './AutomaticUniforms.js';
         //>>includeEnd('debug');
     }
 
+    /**
+     * 追加内建变量
+     * @param {*} shaderSource
+     */
     function getBuiltinsAndAutomaticUniforms(shaderSource) {
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
+        // 获取根节点，入口main函数
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
+        // 生成root依赖的所有节点，保存在dependencyNodes
         generateDependencies(root, dependencyNodes);
+        // 根据依赖关系排序
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
@@ -144,23 +161,30 @@ import AutomaticUniforms from './AutomaticUniforms.js';
         return builtinsSource.replace(root.glslSource, '');
     }
 
+    /**
+     *  shader glsl源代码合并处理
+     * @param {*} shaderSource
+     * @param {*} isFragmentShader
+     * @param {*} context
+     */
     function combineShader(shaderSource, isFragmentShader, context) {
         var i;
         var length;
 
         // Combine shader sources, generally for pseudo-polymorphism, e.g., czm_getMaterial.
         var combinedSources = '';
-        var sources = shaderSource.sources;
-        if (defined(sources)) {
+        var sources = shaderSource.sources; // shader 源代码存放数组
+        if (defined(sources)) { // 添加 #line 0 标识，每一个shader
             for (i = 0, length = sources.length; i < length; ++i) {
                 // #line needs to be on its own line.
                 combinedSources += '\n#line 0\n' + sources[i];
             }
         }
 
+        // 去掉注释后的 shader 源代码
         combinedSources = removeComments(combinedSources);
 
-        // Extract existing shader version from sources
+        // Extract existing shader version from sources 从shader源代码中提取已经存在的版本
         var version;
         combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function(match, group1) {
             //>>includeStart('debug', pragmas.debug);
@@ -179,7 +203,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
             return '\n';
         });
 
-        // Extract shader extensions from sources
+        // Extract shader extensions from sources 从 shader源代码中提取已经存在的扩展
         var extensions = [];
         combinedSources = combinedSources.replace(/#extension.*\n/gm, function(match) {
             // Extract extension to put at the top
@@ -190,7 +214,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
             return '\n';
         });
 
-        // Remove precision qualifier
+        // Remove precision qualifier 移除精度声明
         combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
 
         // Replace main() for picked if desired.
@@ -199,20 +223,21 @@ import AutomaticUniforms from './AutomaticUniforms.js';
             combinedSources = ShaderSource.createPickFragmentShaderSource(combinedSources, pickColorQualifier);
         }
 
-        // combine into single string
+        // combine into single string 最终要拼凑好的 glsl代码存放变量
         var result = '';
 
-        // #version must be first
+        // #version must be first // 1 新加版本
         // defaults to #version 100 if not specified
         if (defined(version)) {
             result = '#version ' + version + '\n';
         }
 
-        var extensionsLength = extensions.length;
+        var extensionsLength = extensions.length; // 2. 再加拓展
         for (i = 0; i < extensionsLength; i++) {
             result += extensions[i];
         }
 
+        // 如果是片元着色器源码，则判断系统环境,给片元着色器定义合适的精度 3. 定义精度
         if (isFragmentShader) {
             result += '\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
@@ -222,7 +247,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
 #endif\n\n';
         }
 
-        // Prepend #defines for uber-shaders
+        // Prepend #defines for uber-shaders    添加glsl预编译宏  4. 添加预编译
         var defines = shaderSource.defines;
         if (defined(defines)) {
             for (i = 0, length = defines.length; i < length; ++i) {
@@ -234,7 +259,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
         }
 
         // GLSLModernizer inserts its own layout qualifiers
-        // at this position in the source
+        // at this position in the source // 如果是webgl2环境
         if (context.webgl2) {
             result += '#define OUTPUT_DECLARATION\n\n';
         }
@@ -244,7 +269,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
             result += '#define OES_texture_float_linear\n\n';
         }
 
-        // append built-ins
+        // append built-ins  追加内建变量  6. 追加之前内建定义的变量
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
         }
@@ -321,7 +346,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
 
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
-     *
+     * 创建顶点着色器源码
      * @param {Context} context The current rendering context
      *
      * @returns {String} The combined shader string.
@@ -332,7 +357,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
 
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
-     *
+     * 创建片元着色器源码
      * @param {Context} context The current rendering context
      *
      * @returns {String} The combined shader string.
@@ -375,6 +400,7 @@ import AutomaticUniforms from './AutomaticUniforms.js';
         return renamedVS + '\n' + pickMain;
     };
 
+   // 如果是拾取状态，属于特殊情况，则会更新片源着色器的代码，对于选中的地物赋予选中风格（颜色）
     ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
         var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
         var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +

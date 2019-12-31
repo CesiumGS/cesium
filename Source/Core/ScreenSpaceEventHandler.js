@@ -1,3 +1,6 @@
+/**
+ * 所有原生dom事件的封装
+ */
 import AssociativeArray from './AssociativeArray.js';
 import Cartesian2 from './Cartesian2.js';
 import defaultValue from './defaultValue.js';
@@ -49,6 +52,13 @@ import ScreenSpaceEventType from './ScreenSpaceEventType.js';
         RIGHT : 2
     };
 
+    /**
+     * 注册dom事件
+     * @param {*} screenSpaceEventHandler
+     * @param {*} domType
+     * @param {*} element
+     * @param {*} callback
+     */
     function registerListener(screenSpaceEventHandler, domType, element, callback) {
         function listener(e) {
             callback(screenSpaceEventHandler, e);

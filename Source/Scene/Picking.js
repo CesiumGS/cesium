@@ -1,3 +1,7 @@
+/**
+ * 场景拾取类
+ * 场景的拾取
+ */
 import  ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
 import  BoundingRectangle from '../Core/BoundingRectangle.js';
 import  Cartesian2 from '../Core/Cartesian2.js';
@@ -215,10 +219,10 @@ import  View from './View.js';
         scratchRectangle.height = scratchRectangleHeight;
         passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
 
-        scene.updateAndExecuteCommands(passState, scratchColorZero);
-        scene.resolveFramebuffers(passState);
+        scene.updateAndExecuteCommands(passState, scratchColorZero); // 更新绘制命令
+        scene.resolveFramebuffers(passState); // 处理FBO ,渲染帧缓冲到屏幕
 
-        var object = view.pickFramebuffer.end(scratchRectangle);
+        var object = view.pickFramebuffer.end(scratchRectangle); // ，在PickFramebuffer.prototype.end中读取对应纹理的颜色值，找到对应的object，完成整个拾取的过程。
         context.endFrame();
         return object;
     };

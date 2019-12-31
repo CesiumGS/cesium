@@ -165,20 +165,28 @@ import createUniformArray from './createUniformArray.js';
 
     var consolePrefix = '[Cesium WebGL] ';
 
+
+    /**
+     * 创建和连接shader程序
+     * @param {*} gl WebGLRenderingContext 对象
+     * @param {*} shader cesium 封装的ShaderSource对象
+     */
     function createAndLinkProgram(gl, shader) {
         var vsSource = shader._vertexShaderText;
         var fsSource = shader._fragmentShaderText;
 
-        var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        // 1 创建shader
+        var vertexShader = gl.createShader(gl.VERTEX_SHADER); // 创建顶点shader 对象
         gl.shaderSource(vertexShader, vsSource);
-        gl.compileShader(vertexShader);
+        gl.compileShader(vertexShader); // 编译
 
-        var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER); // 创建片元shader 对象
         gl.shaderSource(fragmentShader, fsSource);
-        gl.compileShader(fragmentShader);
+        gl.compileShader(fragmentShader);// 编译
 
-        var program = gl.createProgram();
-        gl.attachShader(program, vertexShader);
+        // 2. 创建shader程序
+        var program = gl.createProgram(); // 创建shader程序
+        gl.attachShader(program, vertexShader); //  shader 对象与程序关联
         gl.attachShader(program, fragmentShader);
 
         gl.deleteShader(vertexShader);
@@ -193,7 +201,8 @@ import createUniformArray from './createUniformArray.js';
             }
         }
 
-        gl.linkProgram(program);
+        // 连接shader程序
+        gl.linkProgram(program); //
 
         var log;
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
