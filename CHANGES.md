@@ -5,7 +5,7 @@ Change Log
 
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 
-### 1.65.0 - 2020-01-02
+### 1.65.0 - 2020-01-06
 
 ##### Fixes :wrench:
 * Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
