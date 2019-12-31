@@ -123,7 +123,7 @@ import CesiumMath from './Math.js';
     TerrainProvider.getRegularGridIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
         if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,296.');
         }
         //>>includeEnd('debug');
 
@@ -153,7 +153,7 @@ import CesiumMath from './Math.js';
     TerrainProvider.getRegularGridIndicesAndEdgeIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
         if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,296.');
         }
         //>>includeEnd('debug');
 
@@ -192,7 +192,7 @@ import CesiumMath from './Math.js';
     TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
         if (width * height >= CesiumMath.FOUR_GIGABYTES) {
-            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,296.');
         }
         //>>includeEnd('debug');
 

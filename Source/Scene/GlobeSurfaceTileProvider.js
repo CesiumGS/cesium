@@ -1915,11 +1915,9 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
-            var count;
+            var count = surfaceTile.renderedMesh.indices.length;
             if (!tileProvider.showSkirts) {
-                if (defined(surfaceTile.renderedMesh)) {
-                    count = surfaceTile.renderedMesh.indexCountWithoutSkirts;
-                }
+                count = surfaceTile.renderedMesh.indexCountWithoutSkirts;
             }
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
@@ -1937,7 +1935,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 if (defined(surfaceTile.wireframeVertexArray)) {
                     command.vertexArray = surfaceTile.wireframeVertexArray;
                     command.primitiveType = PrimitiveType.LINES;
-                    command.count = defined(count) ? count * 2 : undefined;
+                    command.count = count * 2;
                 }
             }
 

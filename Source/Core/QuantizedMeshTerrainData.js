@@ -301,8 +301,8 @@ import TerrainMesh from './TerrainMesh.js';
 
         var that = this;
         return when(verticesPromise, function(result) {
-            var vertexCount = that._quantizedVertices.length / 3;
-            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+            var vertexCount = vertexCountWithoutSkirts + that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
             var vertices = new Float32Array(result.vertices);
@@ -314,8 +314,6 @@ import TerrainMesh from './TerrainMesh.js';
             var occludeePointInScaledSpace = defaultValue(Cartesian3.clone(result.occludeePointInScaledSpace), that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
-
-            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.

@@ -282,11 +282,13 @@ describe('Scene/Globe', function() {
             globe.showSkirts = true;
             scene.render();
             var command = scene.frameState.commandList[0];
-            expect(command.count).toBeUndefined();
+            var indexCount = command.count;
+            expect(indexCount).toBe(command.owner.data.renderedMesh.indices.length);
+
             globe.showSkirts = false;
             scene.render();
             command = scene.frameState.commandList[0];
-            expect(command.count).toBeDefined();
+            expect(command.count).toBeLessThan(indexCount);
             expect(command.count).toBe(command.owner.data.renderedMesh.indexCountWithoutSkirts);
         });
     });

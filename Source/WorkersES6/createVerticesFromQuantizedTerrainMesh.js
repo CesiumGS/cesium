@@ -13,10 +13,10 @@ import Matrix4 from '../Core/Matrix4.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
 import TerrainEncoding from '../Core/TerrainEncoding.js';
+import TerrainProvider from '../Core/TerrainProvider.js';
 import Transforms from '../Core/Transforms.js';
 import WebMercatorProjection from '../Core/WebMercatorProjection.js';
 import createTaskProcessorWorker from './createTaskProcessorWorker.js';
-import TerrainProvider from '../Core/TerrainProvider.js';
 
     var maxShort = 32767;
 

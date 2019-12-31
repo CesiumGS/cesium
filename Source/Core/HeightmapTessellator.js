@@ -255,6 +255,8 @@ import WebMercatorProjection from './WebMercatorProjection.js';
             ++endCol;
         }
 
+        var skirtOffsetPercentage = 0.00001;
+
         for (var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
             var row = rowIndex;
             if (row < 0) {
@@ -272,12 +274,22 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                 latitude = toRadians(latitude);
             }
 
+            var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            v = CesiumMath.clamp(v, 0.0, 1.0);
+
+            var isNorthEdge = rowIndex === startRow;
+            var isSouthEdge = rowIndex === endRow - 1;
+            if (skirtHeight > 0.0) {
+                if (isNorthEdge) {
+                    latitude += skirtOffsetPercentage * rectangleHeight;
+                } else if (isSouthEdge) {
+                    latitude -= skirtOffsetPercentage * rectangleHeight;
+                }
+            }
+
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
-
-            var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
-            v = CesiumMath.clamp(v, 0.0, 1.0);
 
             var webMercatorT;
             if (includeWebMercatorT) {
@@ -291,14 +303,6 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                 }
                 if (col >= width) {
                     col = width - 1;
-                }
-
-                var longitude = nativeRectangle.west + granularityX * col;
-
-                if (!isGeographic) {
-                    longitude = longitude * oneOverGlobeSemimajorAxis;
-                } else {
-                    longitude = toRadians(longitude);
                 }
 
                 var terrainOffset = row * (width * stride) + col * stride;
@@ -326,47 +330,45 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                 maximumHeight = Math.max(maximumHeight, heightSample);
                 minimumHeight = Math.min(minimumHeight, heightSample);
 
+                var longitude = nativeRectangle.west + granularityX * col;
+
+                if (!isGeographic) {
+                    longitude = longitude * oneOverGlobeSemimajorAxis;
+                } else {
+                    longitude = toRadians(longitude);
+                }
+
                 var u = (longitude - geographicWest) / (geographicEast - geographicWest);
                 u = CesiumMath.clamp(u, 0.0, 1.0);
 
                 var index = row * width + col;
 
                 if (skirtHeight > 0.0) {
-                    var isCorner = rowIndex !== row && colIndex !== col;
                     var isWestEdge = colIndex === startCol;
-                    var isSouthEdge = rowIndex === endRow - 1;
                     var isEastEdge = colIndex === endCol - 1;
-                    var isNorthEdge = rowIndex === startRow;
-                    var isEdge = isWestEdge || isSouthEdge || isEastEdge || isNorthEdge;
-
-                    var percentage = 0.00001;
-                    var skirtLatitude = latitude;
-
+                    var isEdge = isNorthEdge || isSouthEdge || isWestEdge || isEastEdge;
+                    var isCorner = (isNorthEdge || isSouthEdge) && (isWestEdge || isEastEdge);
                     if (isCorner) {
+                        // Don't generate skirts on the corners.
                         continue;
-                    } else if (isWestEdge) {
-                        // The outer loop iterates north to south but the indices are ordered south to north, hence the index flip below
-                        index = gridVertexCount + (height - row - 1);
-                        longitude -= percentage * rectangleWidth;
-                    } else if (isSouthEdge) {
-                        // Add after west indices. South indices are ordered east to west.
-                        index = gridVertexCount + height + (width - col - 1);
-                        skirtLatitude -= percentage * rectangleHeight;
-                    } else if (isEastEdge) {
-                        // Add after west and south indices. East indices are ordered north to south. The index is flipped like above.
-                        index = gridVertexCount + height + width + row;
-                        longitude += percentage * rectangleWidth;
-                    } else if (isNorthEdge) {
-                        // Add after west, south, and east indices. North indices are ordered west to east.
-                        index = gridVertexCount + height + width + height + col;
-                        skirtLatitude += percentage * rectangleHeight;
-                    }
-
-                    if (isEdge) {
-                        cosLatitude = cos(skirtLatitude);
-                        nZ = sin(skirtLatitude);
-                        kZ = radiiSquaredZ * nZ;
+                    } else if (isEdge) {
                         heightSample -= skirtHeight;
+
+                        if (isWestEdge) {
+                            // The outer loop iterates north to south but the indices are ordered south to north, hence the index flip below
+                            index = gridVertexCount + (height - row - 1);
+                            longitude -= skirtOffsetPercentage * rectangleWidth;
+                        } else if (isSouthEdge) {
+                            // Add after west indices. South indices are ordered east to west.
+                            index = gridVertexCount + height + (width - col - 1);
+                        } else if (isEastEdge) {
+                            // Add after west and south indices. East indices are ordered north to south. The index is flipped like above.
+                            index = gridVertexCount + height + width + row;
+                            longitude += skirtOffsetPercentage * rectangleWidth;
+                        } else if (isNorthEdge) {
+                            // Add after west, south, and east indices. North indices are ordered west to east.
+                            index = gridVertexCount + height + width + height + col;
+                        }
                     }
                 }
 

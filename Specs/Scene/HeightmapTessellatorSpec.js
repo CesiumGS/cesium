@@ -90,10 +90,10 @@ describe('Scene/HeightmapTessellator', function() {
         }).toThrowDeveloperError();
     });
 
-    function checkExpectedVertex(rectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight) {
-        var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
+    function checkExpectedVertex(nativeRectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight) {
+        var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
         latitude = CesiumMath.toRadians(latitude);
-        var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
+        var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
         longitude = CesiumMath.toRadians(longitude);
 
         var heightSample = heightmap[j * width + i];
@@ -117,10 +117,10 @@ describe('Scene/HeightmapTessellator', function() {
         expect(vertices[index + 5]).toEqualEpsilon(1.0 - j / (height - 1), CesiumMath.EPSILON7);
     }
 
-    function checkExpectedQuantizedVertex(rectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight, encoding) {
-        var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
+    function checkExpectedQuantizedVertex(nativeRectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight, encoding) {
+        var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
         latitude = CesiumMath.toRadians(latitude);
-        var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
+        var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
         longitude = CesiumMath.toRadians(longitude);
 
         var heightSample = heightmap[j * width + i];
@@ -203,23 +203,25 @@ describe('Scene/HeightmapTessellator', function() {
             }
         }
 
+        // Heightmap is expected to be ordered from west to east and north to south,
+        // so flip i and j depending on how skirts are arranged.
         for (j = 0; j < height; ++j) {
-            // West edge goes from south to north (checkExpectedPosition expects north to south so flip j)
+            // West edge goes from south to north
             checkExpectedVertex(nativeRectangle, 0, height - 1 - j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
         }
 
         for (i = 0; i < height; ++i) {
-            // South edge goes from east to west (checkExpectedPosition expects north to south so flip j)
+            // South edge goes from east to west
             checkExpectedVertex(nativeRectangle, width - 1 - i, height - 1, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
         }
 
         for (j = 0; j < height; ++j) {
-            // East edge goes from north to south (checkExpectedPosition expects north to south so flip j)
+            // East edge goes from north to south
             checkExpectedVertex(nativeRectangle, width - 1, j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
         }
 
         for (i = 0; i < height; ++i) {
-            // North edge goes from west to east (checkExpectedPosition expects north to south so flip j)
+            // North edge goes from west to east
             checkExpectedVertex(nativeRectangle, i, 0, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
         }
     });
@@ -254,23 +256,25 @@ describe('Scene/HeightmapTessellator', function() {
             }
         }
 
+        // Heightmap is expected to be ordered from west to east and north to south,
+        // so flip i and j depending on how skirts are arranged.
         for (j = 0; j < height; ++j) {
-            // West edge goes from south to north (checkExpectedPosition expects north to south so flip j)
+            // West edge goes from south to north
             checkExpectedQuantizedVertex(nativeRectangle, 0, height - 1 - j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
         }
 
         for (i = 0; i < height; ++i) {
-            // South edge goes from east to west (checkExpectedPosition expects north to south so flip j)
+            // South edge goes from east to west
             checkExpectedQuantizedVertex(nativeRectangle, width - 1 - i, height - 1, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
         }
 
         for (j = 0; j < height; ++j) {
-            // East edge goes from north to south (checkExpectedPosition expects north to south so flip j)
+            // East edge goes from north to south
             checkExpectedQuantizedVertex(nativeRectangle, width - 1, j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
         }
 
         for (i = 0; i < height; ++i) {
-            // North edge goes from west to east (checkExpectedPosition expects north to south so flip j)
+            // North edge goes from west to east
             checkExpectedQuantizedVertex(nativeRectangle, i, 0, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
         }
     });
