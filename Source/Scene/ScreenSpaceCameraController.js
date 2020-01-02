@@ -266,6 +266,7 @@ import TweenCollection from './TweenCollection.js';
         this._strafing = false;
         this._zoomingOnVector = false;
         this._rotatingZoom = false;
+        this._adjustedHeightForTerrain = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
@@ -1926,6 +1927,8 @@ import TweenCollection from './TweenCollection.js';
             return;
         }
 
+        controller._adjustedHeightForTerrain = true;
+
         var scene = controller._scene;
         var mode = scene.mode;
         var globe = scene.globe;
@@ -2004,6 +2007,7 @@ import TweenCollection from './TweenCollection.js';
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
 
+        this._adjustedHeightForTerrain = false;
         var previousPosition = Cartesian3.clone(camera.positionWC);
         var previousDirection = Cartesian3.clone(camera.directionWC);
 
@@ -2019,9 +2023,12 @@ import TweenCollection from './TweenCollection.js';
             update3D(this);
         }
 
-        var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
-        if (cameraChanged) {
-            adjustHeightForTerrain(this);
+        if (!this._adjustedHeightForTerrain) {
+            // Adjust the camera height if the camera moved at all (user input or intertia) and an action didn't already adjust the camera height
+            var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
+            if (cameraChanged) {
+                adjustHeightForTerrain(this);
+            }
         }
 
         this._aggregator.reset();
