@@ -1986,6 +1986,9 @@ import TweenCollection from './TweenCollection.js';
         }
     }
 
+    var scratchPreviousPosition = new Cartesian3();
+    var scratchPreviousDirection = new Cartesian3();
+
     /**
      * @private
      */
@@ -2008,8 +2011,8 @@ import TweenCollection from './TweenCollection.js';
         this._rotateRateRangeAdjustment = radius;
 
         this._adjustedHeightForTerrain = false;
-        var previousPosition = Cartesian3.clone(camera.positionWC);
-        var previousDirection = Cartesian3.clone(camera.directionWC);
+        var previousPosition = Cartesian3.clone(camera.positionWC, scratchPreviousPosition);
+        var previousDirection = Cartesian3.clone(camera.directionWC, scratchPreviousDirection);
 
         var scene = this._scene;
         var mode = scene.mode;
