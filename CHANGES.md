@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.66.0 - 2020-02-03
+
+##### Fixes :wrench:
+* Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
+
 ### 1.65.0 - 2020-01-06
 
 ##### Fixes :wrench:
