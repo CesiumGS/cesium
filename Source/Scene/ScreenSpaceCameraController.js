@@ -1138,7 +1138,10 @@ import TweenCollection from './TweenCollection.js';
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, rotateCVCartesian3);
-        adjustHeightForTerrain(controller);
+
+        if (controller.enableCollisionDetection) {
+            adjustHeightForTerrain(controller);
+        }
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1767,7 +1770,10 @@ import TweenCollection from './TweenCollection.js';
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
-        adjustHeightForTerrain(controller);
+
+        if (controller.enableCollisionDetection) {
+            adjustHeightForTerrain(controller);
+        }
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1923,10 +1929,6 @@ import TweenCollection from './TweenCollection.js';
     var scratchAdjustHeightCartographic = new Cartographic();
 
     function adjustHeightForTerrain(controller) {
-        if (!controller.enableCollisionDetection) {
-            return;
-        }
-
         controller._adjustedHeightForTerrain = true;
 
         var scene = controller._scene;
@@ -2026,7 +2028,7 @@ import TweenCollection from './TweenCollection.js';
             update3D(this);
         }
 
-        if (!this._adjustedHeightForTerrain) {
+        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain) {
             // Adjust the camera height if the camera moved at all (user input or intertia) and an action didn't already adjust the camera height
             var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
             if (cameraChanged) {
