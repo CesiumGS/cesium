@@ -1,3 +1,6 @@
+/**
+ * 绘制 的渲染命令
+ */
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
@@ -25,9 +28,9 @@ import PrimitiveType from '../Core/PrimitiveType.js';
         this._uniformMap = options.uniformMap;
         this._renderState = options.renderState;
         this._framebuffer = options.framebuffer;
-        this._pass = options.pass;
+        this._pass = options.pass; //渲染队列的优先级控制
         this._executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
-        this._owner = options.owner;
+        this._owner = options.owner; // 绘制命令
         this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);

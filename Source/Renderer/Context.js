@@ -275,6 +275,7 @@ import VertexArray from './VertexArray.js';
         var instancedArrays;
         var drawBuffers;
 
+        // 封装weblgl1 和webgl2 顶点数组的相关api 创建，绑定，解除，VBO 顶点数组对象
         if (webgl2) {
             var that = this;
 
@@ -988,12 +989,22 @@ import VertexArray from './VertexArray.js';
         }
         //>>includeEnd('debug');
 
+        // 绑定FBO
         bindFramebuffer(context, framebuffer);
+        // 应用渲染状态
         applyRenderState(context, renderState, passState, false);
+        // 绑定 shaderProgram 程序
         shaderProgram._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, shaderProgram.maximumTextureUnitIndex);
     }
 
+    /**
+     * 真正的渲染webgl渲染函数，直接渲染到屏幕
+     * @param {*} context
+     * @param {*} drawCommand
+     * @param {*} shaderProgram
+     * @param {*} uniformMap
+     */
     function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         var primitiveType = drawCommand._primitiveType;
         var va = drawCommand._vertexArray;
@@ -1018,11 +1029,14 @@ import VertexArray from './VertexArray.js';
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
+        // 设置shader中的渲染参数
         shaderProgram._setUniforms(uniformMap, context._us, context.validateShaderProgram);
 
+        // 绑定Vao顶点数组对象数据
         va._bind();
         var indexBuffer = va.indexBuffer;
 
+        // 执行渲染
         if (defined(indexBuffer)) {
             offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
             count = defaultValue(count, indexBuffer.numberOfIndices);
@@ -1057,8 +1071,9 @@ import VertexArray from './VertexArray.js';
         var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
         shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
         uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
-
+        // 渲染前准备工作
         beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+        // 开始渲染
         continueDraw(this, drawCommand, shaderProgram, uniformMap);
     };
 

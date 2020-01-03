@@ -50,6 +50,7 @@ import BufferUsage from './BufferUsage.js';
         Check.typeOf.number.greaterThan('sizeInBytes', sizeInBytes, 0);
         //>>includeEnd('debug');
 
+        // 创建缓冲，绑定缓冲数组数据
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
         gl.bufferData(bufferTarget, hasArray ? typedArray : sizeInBytes, usage);
@@ -66,6 +67,7 @@ import BufferUsage from './BufferUsage.js';
 
     /**
      * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
+     * 创建顶点缓冲
      * <br /><br />
      * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
      * etc., by interpreting the raw data in one or more vertex buffers.
@@ -340,6 +342,9 @@ import BufferUsage from './BufferUsage.js';
         return false;
     };
 
+    /**
+     * 删除缓冲
+     */
     Buffer.prototype.destroy = function() {
         this._gl.deleteBuffer(this._buffer);
         return destroyObject(this);

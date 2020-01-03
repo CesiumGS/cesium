@@ -23,6 +23,7 @@ import SceneMode from './SceneMode.js';
 
         /**
          * An array of rendering commands.
+         * 渲染命令数组，存放渲染队列
          *
          * @type {DrawCommand[]}
          */

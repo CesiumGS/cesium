@@ -1747,6 +1747,17 @@ import ShadowMode from './ShadowMode.js';
         }
     };
 
+    /**
+     * 更新绘制命令
+     * @param {} primitive
+     * @param {*} frameState
+     * @param {*} colorCommands
+     * @param {*} pickCommands
+     * @param {*} modelMatrix
+     * @param {*} cull
+     * @param {*} debugShowBoundingVolume
+     * @param {*} twoPasses
+     */
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
@@ -1767,6 +1778,7 @@ import ShadowMode from './ShadowMode.js';
             boundingSpheres = primitive._boundingSphereMorph;
         }
 
+        // 渲染队列
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render || passes.pick) {

@@ -183,15 +183,19 @@ import ShadowMap from './ShadowMap.js';
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
+    /**
+     * 判断权重，将渲染放入对应的渲染队列中
+     */
     View.prototype.createPotentiallyVisibleSet = function(scene) {
         var frameState = scene.frameState;
         var camera = frameState.camera;
         var direction = camera.directionWC;
         var position = camera.positionWC;
 
-        var computeList = scene._computeCommandList;
-        var overlayList = scene._overlayCommandList;
-        var commandList = frameState.commandList;
+        // 三个渲染列表
+        var computeList = scene._computeCommandList; // 计算列表
+        var overlayList = scene._overlayCommandList; // 延迟列表
+        var commandList = frameState.commandList;  // 绘制列表
 
         if (scene.debugShowFrustums) {
             this.debugFrustumStatistics = {
@@ -200,6 +204,7 @@ import ShadowMap from './ShadowMap.js';
             };
         }
 
+        // 视锥绘制列表
         var frustumCommandsList = this.frustumCommandsList;
         var numberOfFrustums = frustumCommandsList.length;
         var numberOfPasses = Pass.NUMBER_OF_PASSES;
@@ -236,6 +241,7 @@ import ShadowMap from './ShadowMap.js';
             var command = commandList[i];
             var pass = command.pass;
 
+            // 优先computecommand，通过GPU计算
             if (pass === Pass.COMPUTE) {
                 computeList.push(command);
             } else if (pass === Pass.OVERLAY) {

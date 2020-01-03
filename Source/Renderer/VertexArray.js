@@ -74,7 +74,9 @@ import ContextLimits from './ContextLimits.js';
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
                 var index = this.index;
+                // 之前通过Buffer创建的顶点数据_getBuffer
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
+                  // 根据Attribute中的属性值来设置如下参数
                 gl.vertexAttribPointer(index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(index);
                 if (this.instanceDivisor > 0) {
@@ -122,15 +124,23 @@ import ContextLimits from './ContextLimits.js';
         attributes.push(attr);
     }
 
+    /**
+     * 绑定 VBO 顶点数组对象 的顶点属性
+     * @param {} gl
+     * @param {*} attributes
+     * @param {*} indexBuffer
+     */
     function bind(gl, attributes, indexBuffer) {
         for ( var i = 0; i < attributes.length; ++i) {
             var attribute = attributes[i];
             if (attribute.enabled) {
+                // 绑定顶点属性
                 attribute.vertexAttrib(gl);
             }
         }
 
         if (defined(indexBuffer)) {
+            // 绑定顶点索引
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer._getBuffer());
         }
     }
@@ -307,6 +317,7 @@ import ContextLimits from './ContextLimits.js';
         var vao;
 
         // Setup VAO if supported
+        // 创建 和 绑定 VBO 顶点数组对象
         if (context.vertexArrayObject) {
             vao = context.glCreateVertexArray();
             context.glBindVertexArray(vao);

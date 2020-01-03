@@ -2113,6 +2113,11 @@ import View from './View.js';
     var scratchOrthographicFrustum = new OrthographicFrustum();
     var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
+    /**
+     * 执行多个渲染命令,根据渲染优先级排序后，会先渲染环境相关的command，比如skybox，大气层等，接着，开始渲染其他command：
+     * @param {} scene
+     * @param {*} passState
+     */
     function executeCommands(scene, passState) {
         var camera = scene.camera;
         var context = scene.context;
@@ -2251,6 +2256,7 @@ import View from './View.js';
                 clearStencil.execute(context, passState);
             }
 
+            // 渲染地球
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
@@ -2267,6 +2273,7 @@ import View from './View.js';
             }
 
             // Draw terrain classification
+            // 熏染分类地形
             us.updatePass(Pass.TERRAIN_CLASSIFICATION);
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
@@ -2303,6 +2310,7 @@ import View from './View.js';
                     }
 
                     // Draw classifications. Modifies 3D Tiles color.
+                    // 渲染分类 3dtile
                     us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                     commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                     length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2395,6 +2403,7 @@ import View from './View.js';
                 clearStencil.execute(context, passState);
             }
 
+            // 不透明
             us.updatePass(Pass.OPAQUE);
             commands = frustumCommands.commands[Pass.OPAQUE];
             length = frustumCommands.indices[Pass.OPAQUE];
@@ -2415,6 +2424,7 @@ import View from './View.js';
                 invertClassification = scene._invertClassification;
             }
 
+            //  渲染透明
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
@@ -2445,6 +2455,7 @@ import View from './View.js';
             frustum.far = frustumCommands.far;
             us.updateFrustum(frustum);
 
+            // 渲染地下
             us.updatePass(Pass.GLOBE);
             commands = frustumCommands.commands[Pass.GLOBE];
             length = frustumCommands.indices[Pass.GLOBE];
@@ -2462,6 +2473,7 @@ import View from './View.js';
                 depthPlane.execute(context, passState);
             }
 
+            // 渲染3dtile
             us.updatePass(Pass.CESIUM_3D_TILE);
             commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
             length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2469,6 +2481,7 @@ import View from './View.js';
                 executeIdCommand(commands[j], scene, context, passState);
             }
 
+            // 渲染不透明
             us.updatePass(Pass.OPAQUE);
             commands = frustumCommands.commands[Pass.OPAQUE];
             length = frustumCommands.indices[Pass.OPAQUE];
@@ -2476,6 +2489,7 @@ import View from './View.js';
                 executeIdCommand(commands[j], scene, context, passState);
             }
 
+            // 渲染透明
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             length = frustumCommands.indices[Pass.TRANSLUCENT];

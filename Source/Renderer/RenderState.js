@@ -1,3 +1,8 @@
+/**
+ * 指定DrawCommand的渲染状态
+ * 比如：cull 剔除 polygonoffset多边形偏移，scissor 裁剪，depth 深度检测 ，
+ * colorMask 颜色遮罩， blend 混合 ,stencil模板
+ */
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
