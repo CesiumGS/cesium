@@ -652,6 +652,8 @@ import TileSelectionResult from './TileSelectionResult.js';
                 encoding.center,
                 typedArray,
                 indices,
+                indexCount,
+                vertexCount,
                 minimumHeight,
                 maximumHeight,
                 BoundingSphere.fromOrientedBoundingBox(obb),

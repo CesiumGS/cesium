@@ -3,6 +3,10 @@ Change Log
 
 ### 1.66.0 - 2020-02-03
 
+##### Additions :tada:
+
+* Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
+
 ##### Fixes :wrench:
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
 
