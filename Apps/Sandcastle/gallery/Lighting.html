@@ -113,6 +113,8 @@ function setTime(iso8601) {
 }
 
 function reset() {
+    // Set scene defaults
+    scene.light = sunLight;
     scene.globe.dynamicAtmosphereLighting = true;
     scene.globe.dynamicAtmosphereLightingFromSun = false;
     setTime('2020-01-09T23:00:39.018261982600961346Z');
@@ -149,7 +151,6 @@ var options = [{
     text : 'Sunlight',
     onselect : function() {
         reset();
-        scene.light = sunLight;
     }
 }, {
     text : 'Custom color',

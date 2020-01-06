@@ -238,7 +238,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.depthTestAgainstTerrain = false;
 
         /**
-         * Determines whether the globe casts or receives shadows from each light source. Setting the globe
+         * Determines whether the globe casts or receives shadows from light sources. Setting the globe
          * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
          * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
          *
