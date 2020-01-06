@@ -3,6 +3,14 @@ Change Log
 
 ### 1.65.0 - 2020-01-06
 
+##### Breaking Changes :mega:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now require a `pixelRatio` argument before the `result` argument. The previous function definition has been deprecated since 1.63. [#8320](https://github.com/AnalyticalGraphicsInc/cesium/pull/8320)
+* The function `Matrix4.getRotation` has been renamed to `Matrix4.getMatrix3`. `Matrix4.getRotation` has been deprecated since 1.62. [#8183](https://github.com/AnalyticalGraphicsInc/cesium/pull/8183)
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been removed. Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively. The old functions have been deprecated since 1.62. [#8174](https://github.com/AnalyticalGraphicsInc/cesium/pull/8174)
+
+##### Additions :tada:
+* Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
+
 ##### Fixes :wrench:
 * Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
 * Fixed terrain tile culling problems when under ellipsoid. [#8397](https://github.com/AnalyticalGraphicsInc/cesium/pull/8397)
@@ -13,9 +21,6 @@ Change Log
 * Fixed globe picking so that it returns the closest intersecting triangle instead of the first intersecting triangle. [#8390](https://github.com/AnalyticalGraphicsInc/cesium/pull/8390)
 * Fixed horizon culling issues with large root tiles. [#8487](https://github.com/AnalyticalGraphicsInc/cesium/pull/8487)
 * Fixed a lighting bug affecting Macs with Intel integrated graphics where glTF 2.0 PBR models with double sided materials would have flipped normals. [#8494](https://github.com/AnalyticalGraphicsInc/cesium/pull/8494)
-
-##### Additions :tada:
-* Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
 
 ### 1.64.0 - 2019-12-02
 
