@@ -303,10 +303,9 @@ import when from '../ThirdParty/when.js';
 
         /**
          * The {@link TextureMinificationFilter} to apply to this material.
-         * Possible values are {@link TextureMinificationFilter.LINEAR} (the default)
-         * and {@link TextureMinificationFilter.NEAREST}.
+         * The default value is {@link TextureMinificationFilter.LINEAR}.
          *
-         * To take effect, this property must be set before texture is created
+         * To take effect, this property must be set before the texture is created.
          *
          * @type {TextureMinificationFilter}
          * @default {@link Material.DEFAULT_MINIFICATION_FILTER}
@@ -315,10 +314,9 @@ import when from '../ThirdParty/when.js';
 
         /**
          * The {@link TextureMagnificationFilter} to apply to this layer.
-         * Possible values are {@link TextureMagnificationFilter.LINEAR} (the default)
-         * and {@link TextureMagnificationFilter.NEAREST}.
+         * The default value is {@link TextureMagnificationFilter.LINEAR}.
          *
-         * To take effect, this property must be set before texture is created
+         * To take effect, this property must be set before the texture is created.
          *
          * @type {TextureMagnificationFilter}
          * @default {@link Material.DEFAULT_MAGNIFICATION_FILTER}
@@ -353,16 +351,16 @@ import when from '../ThirdParty/when.js';
     }
 
     /**
-     * This value is used as the default texture minification filter for the imagery layer if one is not provided
-     * during construction or by the imagery provider.
+     * This value is used as the default texture minification filter for the material if one is not provided
+     * during construction.
      * @type {TextureMinificationFilter}
      * @default TextureMinificationFilter.LINEAR
      */
     Material.DEFAULT_MINIFICATION_FILTER = TextureMinificationFilter.LINEAR;
 
     /**
-     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
-     * during construction or by the imagery provider.
+     * This value is used as the default texture magnification filter for the material if one is not provided
+     * during construction.
      * @type {TextureMagnificationFilter}
      * @default TextureMagnificationFilter.LINEAR
      */
@@ -453,15 +451,15 @@ import when from '../ThirdParty/when.js';
         var loadedImages = this._loadedImages;
         var length = loadedImages.length;
 
-        var sampler = new Sampler({
-            minificationFilter : this.minificationFilter,
-            magnificationFilter : this.magnificationFilter
-        });
-
         for (i = 0; i < length; ++i) {
             var loadedImage = loadedImages[i];
             uniformId = loadedImage.id;
             var image = loadedImage.image;
+
+            var sampler = new Sampler({
+                minificationFilter : this.minificationFilter,
+                magnificationFilter : this.magnificationFilter
+            });
 
             var texture;
             if (defined(image.internalFormat)) {
@@ -512,7 +510,11 @@ import when from '../ThirdParty/when.js';
                         negativeY : images[3],
                         positiveZ : images[4],
                         negativeZ : images[5]
-                    }
+                    },
+                    sampler : new Sampler({
+                        minificationFilter : this.minificationFilter,
+                        magnificationFilter : this.magnificationFilter
+                    })
                 });
 
             this._textures[uniformId] = cubeMap;

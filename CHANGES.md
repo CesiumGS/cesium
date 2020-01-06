@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.66.0 - 2020-02-03
+
+##### Additions :tada:
+* Added texture minification and magnification filter options to materials. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
+
 ### 1.65.0 - 2019-01-02
 
 ##### Fixes :wrench:
