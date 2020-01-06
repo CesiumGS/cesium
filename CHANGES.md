@@ -7,14 +7,28 @@ Change Log
 * The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
 
 ##### Additions :tada:
+
 * Add more customization to Cesium's lighting system [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
     * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog, such as day/night transitions. It is true by default but may be set to false if the atmosphere should stay unchanged regardless of the scene's light direction.
     * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun direction instead of the scene's light direction when `Globe.dynamicAtmosphereLighting` is enabled. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
     * Primitives and the globe are now shaded with the scene light's color.
+* Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
+* Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 
-### 1.65.0 - 2020-01-02
+##### Fixes :wrench:
+* Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
+
+### 1.65.0 - 2020-01-06
+
+##### Breaking Changes :mega:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now require a `pixelRatio` argument before the `result` argument. The previous function definition has been deprecated since 1.63. [#8320](https://github.com/AnalyticalGraphicsInc/cesium/pull/8320)
+* The function `Matrix4.getRotation` has been renamed to `Matrix4.getMatrix3`. `Matrix4.getRotation` has been deprecated since 1.62. [#8183](https://github.com/AnalyticalGraphicsInc/cesium/pull/8183)
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been removed. Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively. The old functions have been deprecated since 1.62. [#8174](https://github.com/AnalyticalGraphicsInc/cesium/pull/8174)
+
+##### Additions :tada:
+* Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
 
 ##### Fixes :wrench:
 * Fixed Geocoder auto-complete suggestions when hosted inside Web Components. [#8425](https://github.com/AnalyticalGraphicsInc/cesium/pull/8425)
@@ -25,9 +39,7 @@ Change Log
 * Fixed `OrientedBoundingBox.fromRectangle` for rectangles with width greater than 180 degrees. [#8475](https://github.com/AnalyticalGraphicsInc/cesium/pull/8475)
 * Fixed globe picking so that it returns the closest intersecting triangle instead of the first intersecting triangle. [#8390](https://github.com/AnalyticalGraphicsInc/cesium/pull/8390)
 * Fixed horizon culling issues with large root tiles. [#8487](https://github.com/AnalyticalGraphicsInc/cesium/pull/8487)
-
-##### Additions :tada:
-* Added `Globe.backFaceCulling` to support viewing terrain from below the surface. [#8470](https://github.com/AnalyticalGraphicsInc/cesium/pull/8470)
+* Fixed a lighting bug affecting Macs with Intel integrated graphics where glTF 2.0 PBR models with double sided materials would have flipped normals. [#8494](https://github.com/AnalyticalGraphicsInc/cesium/pull/8494)
 
 ### 1.64.0 - 2019-12-02
 

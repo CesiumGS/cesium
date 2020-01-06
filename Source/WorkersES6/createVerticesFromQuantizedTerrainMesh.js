@@ -13,6 +13,7 @@ import Matrix4 from '../Core/Matrix4.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
 import TerrainEncoding from '../Core/TerrainEncoding.js';
+import TerrainProvider from '../Core/TerrainProvider.js';
 import Transforms from '../Core/Transforms.js';
 import WebMercatorProjection from '../Core/WebMercatorProjection.js';
 import createTaskProcessorWorker from './createTaskProcessorWorker.js';
@@ -203,14 +204,15 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
-        var indexBufferIndex = parameters.indices.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, westLongitudeOffset, westLatitudeOffset);
+        addSkirt(vertexBuffer, vertexBufferIndex, westIndicesSouthToNorth, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, exaggeration, southMercatorY, oneOverMercatorHeight, westLongitudeOffset, westLatitudeOffset);
         vertexBufferIndex += parameters.westIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, southLongitudeOffset, southLatitudeOffset);
+        addSkirt(vertexBuffer, vertexBufferIndex, southIndicesEastToWest, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, exaggeration, southMercatorY, oneOverMercatorHeight, southLongitudeOffset, southLatitudeOffset);
         vertexBufferIndex += parameters.southIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration, southMercatorY, oneOverMercatorHeight, eastLongitudeOffset, eastLatitudeOffset);
+        addSkirt(vertexBuffer, vertexBufferIndex, eastIndicesNorthToSouth, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, exaggeration, southMercatorY, oneOverMercatorHeight, eastLongitudeOffset, eastLatitudeOffset);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
-        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
+        addSkirt(vertexBuffer, vertexBufferIndex, northIndicesWestToEast, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, exaggeration, southMercatorY, oneOverMercatorHeight, northLongitudeOffset, northLatitudeOffset);
+
+        TerrainProvider.addSkirtIndices(westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast, quantizedVertexCount, indexBuffer, parameters.indices.length);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -229,7 +231,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             encoding : encoding,
-            skirtIndex : parameters.indices.length
+            indexCountWithoutSkirts : parameters.indices.length
         };
     }
 
@@ -266,23 +268,8 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         return hMin;
     }
 
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration, southMercatorY, oneOverMercatorHeight, longitudeOffset, latitudeOffset) {
-        var start, end, increment;
-        if (isWestOrNorthEdge) {
-            start = edgeVertices.length - 1;
-            end = -1;
-            increment = -1;
-        } else {
-            start = 0;
-            end = edgeVertices.length;
-            increment = 1;
-        }
-
-        var previousIndex = -1;
-
+    function addSkirt(vertexBuffer, vertexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, exaggeration, southMercatorY, oneOverMercatorHeight, longitudeOffset, latitudeOffset) {
         var hasVertexNormals = defined(octEncodedNormals);
-        var vertexStride = encoding.getStride();
-        var vertexIndex = vertexBufferIndex / vertexStride;
 
         var north = rectangle.north;
         var south = rectangle.south;
@@ -293,7 +280,8 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             east += CesiumMath.TWO_PI;
         }
 
-        for (var i = start; i !== end; i += increment) {
+        var length = edgeVertices.length;
+        for (var i = 0; i < length; ++i) {
             var index = edgeVertices[i];
             var h = heights[index];
             var uv = uvs[index];
@@ -331,22 +319,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             }
 
             vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, cartographicScratch.height, toPack, webMercatorT);
-
-            if (previousIndex !== -1) {
-                indexBuffer[indexBufferIndex++] = previousIndex;
-                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
-                indexBuffer[indexBufferIndex++] = index;
-
-                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
-                indexBuffer[indexBufferIndex++] = vertexIndex;
-                indexBuffer[indexBufferIndex++] = index;
-            }
-
-            previousIndex = index;
-            ++vertexIndex;
         }
-
-        return indexBufferIndex;
     }
 
     function copyAndSort(typedArray, comparator) {
