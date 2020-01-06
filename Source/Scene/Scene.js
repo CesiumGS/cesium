@@ -1711,7 +1711,8 @@ import View from './View.js';
         var globe = scene.globe;
         if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
-            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
+            var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene.camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
@@ -1754,6 +1755,7 @@ import View from './View.js';
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(this);
         frameState.terrainExaggeration = this._terrainExaggeration;
+        frameState.minimumTerrainHeight = 0.0;
         frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
         frameState.invertClassification = this.invertClassification;
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
@@ -3522,7 +3524,7 @@ import View from './View.js';
     function updatePreloadFlightPass(scene) {
         var frameState = scene._frameState;
         var camera = frameState.camera;
-        if (!camera.hasCurrentFlight()) {
+        if (!camera.canPreloadFlight()) {
             return;
         }
 

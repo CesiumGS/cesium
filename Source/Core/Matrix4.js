@@ -4,7 +4,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
-import deprecationWarning from './deprecationWarning.js';
 import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import Matrix3 from './Matrix3.js';
@@ -2135,20 +2134,6 @@ import RuntimeError from './RuntimeError.js';
         result.y = matrix[13];
         result.z = matrix[14];
         return result;
-    };
-
-    /**
-     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is an affine transformation matrix.
-     *
-     * @param {Matrix4} matrix The matrix to use.
-     * @param {Matrix3} result The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter.
-     *
-     * @deprecated moved to Matrix4.getMatrix3
-     */
-    Matrix4.getRotation = function(matrix, result) {
-        deprecationWarning('Matrix4.getRotation', 'Matrix4.getRotation is deprecated and will be removed in Cesium 1.65. Use Matrix4.getMatrix3 instead.');
-        return Matrix4.getMatrix3(matrix, result);
     };
 
     /**
