@@ -274,4 +274,22 @@ describe('Scene/Globe', function() {
             expect(command.renderState.cull.enabled).toBe(false);
         });
     });
+
+    it('shows terrain skirts', function() {
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            globe.showSkirts = true;
+            scene.render();
+            var command = scene.frameState.commandList[0];
+            var indexCount = command.count;
+            expect(indexCount).toBe(command.owner.data.renderedMesh.indices.length);
+
+            globe.showSkirts = false;
+            scene.render();
+            command = scene.frameState.commandList[0];
+            expect(command.count).toBeLessThan(indexCount);
+            expect(command.count).toBe(command.owner.data.renderedMesh.indexCountWithoutSkirts);
+        });
+    });
 }, 'WebGL');

@@ -10,6 +10,7 @@ import IndexDatatype from '../Core/IndexDatatype.js';
 import Intersections2D from '../Core/Intersections2D.js';
 import CesiumMath from '../Core/Math.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
 import TerrainEncoding from '../Core/TerrainEncoding.js';
 import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
@@ -58,7 +59,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
         var parentVertices = parameters.vertices;
         var parentIndices = parameters.indices;
-        parentIndices = parentIndices.subarray(0, parameters.skirtIndex);
+        parentIndices = parentIndices.subarray(0, parameters.indexCountWithoutSkirts);
 
         var encoding = TerrainEncoding.clone(parameters.encoding);
         var hasVertexNormals = encoding.hasVertexNormals;
@@ -206,7 +207,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         cartesianVertices.length = 0;
 
         var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
-        var rectangle = parameters.childRectangle;
+        var rectangle = Rectangle.clone(parameters.childRectangle);
 
         var north = rectangle.north;
         var south = rectangle.south;

@@ -164,12 +164,12 @@ import TerrainState from './TerrainState.js';
             var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
             var t = IntersectionTests.rayTriangleParametric(ray, v0, v1, v2, cullBackFaces);
-            if (defined(t) && t < minT) {
+            if (defined(t) && t < minT && t >= 0.0) {
                 minT = t;
             }
         }
 
-        return minT < Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
+        return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
     };
 
     GlobeSurfaceTile.prototype.freeResources = function() {

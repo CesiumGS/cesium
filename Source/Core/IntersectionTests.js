@@ -67,7 +67,7 @@ import Ray from './Ray.js';
     var scratchQVec = new Cartesian3();
 
     /**
-     * Computes the intersection of a ray and a triangle as a parametric distance along the input ray.
+     * Computes the intersection of a ray and a triangle as a parametric distance along the input ray. The result is negative when the triangle is behind the ray.
      *
      * Implements {@link https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf|
      * Fast Minimum Storage Ray/Triangle Intersection} by Tomas Moller and Ben Trumbore.

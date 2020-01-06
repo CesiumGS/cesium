@@ -251,6 +251,15 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.atmosphereBrightnessShift = 0.0;
 
         /**
+         * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
+         * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showSkirts = true;
+
+        /**
          * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
          *
          * @type {Boolean}
@@ -618,19 +627,26 @@ import TileSelectionResult from './TileSelectionResult.js';
             return undefined;
         }
 
+        var tileWithMesh = tile;
+
         while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
             tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
                    tileIfContainsCartographic(tile.southeastChild, cartographic) ||
                    tileIfContainsCartographic(tile.northwestChild, cartographic) ||
                    tile.northeastChild;
+            if (defined(tile.data) && defined(tile.data.renderedMesh)) {
+                tileWithMesh = tile;
+            }
         }
+
+        tile = tileWithMesh;
 
         // This tile was either rendered or culled.
         // It is sometimes useful to get a height from a culled tile,
         // e.g. when we're getting a height in order to place a billboard
         // on terrain, and the camera is looking at that same billboard.
         // The culled tile must have a valid mesh, though.
-        if (!defined(tile.data) || !defined(tile.data.renderedMesh)) {
+        if (!defined(tile)) {
             // Tile was not rendered (culled).
             return undefined;
         }
@@ -747,6 +763,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
             tileProvider.fillHighlightColor = this.fillHighlightColor;
+            tileProvider.showSkirts = this.showSkirts;
             tileProvider.backFaceCulling = this.backFaceCulling;
             surface.beginFrame(frameState);
         }
