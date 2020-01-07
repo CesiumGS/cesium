@@ -31,8 +31,11 @@ import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
 import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
 import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
 import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
+import Sampler from '../Renderer/Sampler.js';
 import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
 import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import WaterMaterial from '../Shaders/Materials/Water.js';
 import when from '../ThirdParty/when.js';
 
@@ -225,6 +228,8 @@ import when from '../ThirdParty/when.js';
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
      * @param {Object} options.fabric The fabric JSON used to generate the material.
      *
      * @constructor
@@ -297,6 +302,9 @@ import when from '../ThirdParty/when.js';
          * @default undefined
          */
         this.translucent = undefined;
+
+        this._minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
+        this._magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
 
         this._strict = undefined;
         this._template = undefined;
@@ -415,6 +423,11 @@ import when from '../ThirdParty/when.js';
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
+            var sampler = new Sampler({
+                minificationFilter : this._minificationFilter,
+                magnificationFilter : this._magnificationFilter
+            });
+
             var texture;
             if (defined(image.internalFormat)) {
                 texture = new Texture({
@@ -424,12 +437,14 @@ import when from '../ThirdParty/when.js';
                     height : image.height,
                     source : {
                         arrayBufferView : image.bufferView
-                    }
+                    },
+                    sampler : sampler
                 });
             } else {
                 texture = new Texture({
                     context : context,
-                    source : image
+                    source : image,
+                    sampler : sampler
                 });
             }
 
@@ -462,7 +477,11 @@ import when from '../ThirdParty/when.js';
                         negativeY : images[3],
                         positiveZ : images[4],
                         negativeZ : images[5]
-                    }
+                    },
+                    sampler : new Sampler({
+                        minificationFilter : this._minificationFilter,
+                        magnificationFilter : this._magnificationFilter
+                    })
                 });
 
             this._textures[uniformId] = cubeMap;
@@ -725,9 +744,14 @@ import when from '../ThirdParty/when.js';
                     }
 
                     if (!defined(texture) || texture === context.defaultTexture) {
+                        var sampler = new Sampler({
+                            minificationFilter : material._minificationFilter,
+                            magnificationFilter : material._magnificationFilter
+                        });
                         texture = new Texture({
                             context : context,
-                            source : uniformValue
+                            source : uniformValue,
+                            sampler : sampler
                         });
                         material._textures[uniformId] = texture;
                         return;
