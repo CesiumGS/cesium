@@ -761,9 +761,14 @@ import when from '../ThirdParty/when.js';
                     }
 
                     if (!defined(texture) || texture === context.defaultTexture) {
+                        var sampler = new Sampler({
+                            minificationFilter : material.minificationFilter,
+                            magnificationFilter : material.magnificationFilter
+                        });
                         texture = new Texture({
                             context : context,
-                            source : uniformValue
+                            source : uniformValue,
+                            sampler : sampler
                         });
                         material._textures[uniformId] = texture;
                         return;
