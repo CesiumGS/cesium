@@ -935,6 +935,9 @@ import VertexArray from './VertexArray.js';
 
     var defaultClearCommand = new ClearCommand();
 
+    /**
+     * 根据你设置的颜色，深度，模板值来清空对应的帧缓冲区
+     */
     Context.prototype.clear = function(clearCommand, passState) {
         clearCommand = defaultValue(clearCommand, defaultClearCommand);
         passState = defaultValue(passState, this._defaultPassState);
@@ -949,7 +952,7 @@ import VertexArray from './VertexArray.js';
         if (defined(c)) {
             if (!Color.equals(this._clearColor, c)) {
                 Color.clone(c, this._clearColor);
-                gl.clearColor(c.red, c.green, c.blue, c.alpha);
+                gl.clearColor(c.red, c.green, c.blue, c.alpha); // 清除颜色
             }
             bitmask |= gl.COLOR_BUFFER_BIT;
         }
@@ -957,7 +960,7 @@ import VertexArray from './VertexArray.js';
         if (defined(d)) {
             if (d !== this._clearDepth) {
                 this._clearDepth = d;
-                gl.clearDepth(d);
+                gl.clearDepth(d); // 清除缓冲
             }
             bitmask |= gl.DEPTH_BUFFER_BIT;
         }
@@ -965,7 +968,7 @@ import VertexArray from './VertexArray.js';
         if (defined(s)) {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
-                gl.clearStencil(s);
+                gl.clearStencil(s); // 清除模板
             }
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }

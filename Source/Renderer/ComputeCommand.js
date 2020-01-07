@@ -3,7 +3,7 @@ import Pass from './Pass.js';
 
     /**
      * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
-     *
+     *一个特殊的DrawCommand，它不是为了渲染，而是通过渲染机制，实现GPU的计算
      * @private
      */
     function ComputeCommand(options) {
@@ -44,7 +44,7 @@ import Pass from './Pass.js';
 
         /**
          * Texture to use for offscreen rendering.
-         *
+         * 执行后的结果保存在outputTexture
          * @type {Texture}
          * @default undefined
          */
@@ -53,7 +53,7 @@ import Pass from './Pass.js';
         /**
          * Function that is called immediately before the ComputeCommand is executed. Used to
          * update any renderer resources. Takes the ComputeCommand as its single argument.
-         *
+         *执行前计算一下当前网格中插值点经纬度和墨卡托 并构建相关的参数，比如GLSL中的计算逻辑,传入的参数，包括attribute和uniform等
          * @type {Function}
          * @default undefined
          */

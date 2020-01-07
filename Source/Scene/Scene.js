@@ -2126,6 +2126,7 @@ import View from './View.js';
         us.updateCamera(camera);
 
         // Create a working frustum from the original camera frustum.
+        // 通过原始相机的视锥生成工作视锥
         var frustum;
         if (defined(camera.frustum.fov)) {
             frustum = camera.frustum.clone(scratchPerspectiveFrustum);
@@ -2152,14 +2153,15 @@ import View from './View.js';
         var useWebVR = environmentState.useWebVR;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
+        // 在拾取过程中不要渲染环境图元，因为他们不会生成拾取命令
         if (!picking) {
             var skyBoxCommand = environmentState.skyBoxCommand;
             if (defined(skyBoxCommand)) {
-                executeCommand(skyBoxCommand, scene, context, passState);
+                executeCommand(skyBoxCommand, scene, context, passState); // 渲染天空盒子
             }
 
             if (environmentState.isSkyAtmosphereVisible) {
-                executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
+                executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState); // 渲染大气
             }
 
             if (environmentState.isSunVisible) {
@@ -2273,7 +2275,7 @@ import View from './View.js';
             }
 
             // Draw terrain classification
-            // 熏染分类地形
+            // 渲染分类地形
             us.updatePass(Pass.TERRAIN_CLASSIFICATION);
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
@@ -2297,6 +2299,7 @@ import View from './View.js';
                 // Common/fastest path. Draw 3D Tiles and classification normally.
 
                 // Draw 3D Tiles
+                // 绘制3dtiles
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2310,7 +2313,7 @@ import View from './View.js';
                     }
 
                     // Draw classifications. Modifies 3D Tiles color.
-                    // 渲染分类 3dtile
+                    // 渲染分类 3dtile,修改3dtile 颜色值
                     us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                     commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                     length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2356,7 +2359,7 @@ import View from './View.js';
                 var opaqueClassificationFramebuffer = passState.framebuffer;
                 passState.framebuffer = scene._invertClassification._fbo;
 
-                // Draw normally
+                // Draw normally 绘制法线
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2451,11 +2454,12 @@ import View from './View.js';
             passState.framebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
             // reset frustum
+            // 重置视锥
             frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
             frustum.far = frustumCommands.far;
             us.updateFrustum(frustum);
 
-            // 渲染地下
+            // 渲染地球
             us.updatePass(Pass.GLOBE);
             commands = frustumCommands.commands[Pass.GLOBE];
             length = frustumCommands.indices[Pass.GLOBE];

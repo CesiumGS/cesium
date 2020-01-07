@@ -4,7 +4,7 @@ import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents a command to the renderer for clearing a framebuffer.
-     *
+     * 清除绘制命令
      * @private
      */
     function ClearCommand(options) {
