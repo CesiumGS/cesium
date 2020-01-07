@@ -228,6 +228,8 @@ import when from '../ThirdParty/when.js';
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
      * @param {Object} options.fabric The fabric JSON used to generate the material.
      *
      * @constructor
@@ -301,27 +303,8 @@ import when from '../ThirdParty/when.js';
          */
         this.translucent = undefined;
 
-        /**
-         * The {@link TextureMinificationFilter} to apply to this material.
-         * The default value is {@link TextureMinificationFilter.LINEAR}.
-         *
-         * To take effect, this property must be set before the texture is created.
-         *
-         * @type {TextureMinificationFilter}
-         * @default {@link TextureMinificationFilter.LINEAR}
-         */
-        this.minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
-
-        /**
-         * The {@link TextureMagnificationFilter} to apply to this material.
-         * The default value is {@link TextureMagnificationFilter.LINEAR}.
-         *
-         * To take effect, this property must be set before the texture is created.
-         *
-         * @type {TextureMagnificationFilter}
-         * @default {@link TextureMagnificationFilter.LINEAR}
-         */
-        this.magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
+        this._minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
+        this._magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
 
         this._strict = undefined;
         this._template = undefined;
@@ -441,8 +424,8 @@ import when from '../ThirdParty/when.js';
             var image = loadedImage.image;
 
             var sampler = new Sampler({
-                minificationFilter : this.minificationFilter,
-                magnificationFilter : this.magnificationFilter
+                minificationFilter : this._minificationFilter,
+                magnificationFilter : this._magnificationFilter
             });
 
             var texture;
@@ -496,8 +479,8 @@ import when from '../ThirdParty/when.js';
                         negativeZ : images[5]
                     },
                     sampler : new Sampler({
-                        minificationFilter : this.minificationFilter,
-                        magnificationFilter : this.magnificationFilter
+                        minificationFilter : this._minificationFilter,
+                        magnificationFilter : this._magnificationFilter
                     })
                 });
 
@@ -762,8 +745,8 @@ import when from '../ThirdParty/when.js';
 
                     if (!defined(texture) || texture === context.defaultTexture) {
                         var sampler = new Sampler({
-                            minificationFilter : material.minificationFilter,
-                            magnificationFilter : material.magnificationFilter
+                            minificationFilter : material._minificationFilter,
+                            magnificationFilter : material._magnificationFilter
                         });
                         texture = new Texture({
                             context : context,
