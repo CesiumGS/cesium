@@ -313,7 +313,7 @@ import when from '../ThirdParty/when.js';
         this.minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
 
         /**
-         * The {@link TextureMagnificationFilter} to apply to this layer.
+         * The {@link TextureMagnificationFilter} to apply to this material.
          * The default value is {@link TextureMagnificationFilter.LINEAR}.
          *
          * To take effect, this property must be set before the texture is created.
