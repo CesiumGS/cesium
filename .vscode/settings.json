@@ -1,7 +1,6 @@
 {
   "files.exclude": {
     ".externalToolBuilders": true,
-    ".idea": true,
     ".metadata": true,
     ".project": true,
     ".settings": true,
@@ -31,10 +30,8 @@
     ".idea/workspace.xml": "explorerExcludedFiles",
     ".idea/tasks.xml": "explorerExcludedFiles",
     ".idea": "explorerExcludedFiles",
-    ".vscode": "explorerExcludedFiles",
+    ".vscode/settings.json": "explorerExcludedFiles",
     ".github": "explorerExcludedFiles",
-    ".concierge": "explorerExcludedFiles",
-    ".gitignore": "explorerExcludedFiles",
-    "Apps/*": "explorerExcludedFiles"
+    ".concierge": "explorerExcludedFiles"
   }
 }
