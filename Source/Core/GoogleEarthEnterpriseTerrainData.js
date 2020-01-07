@@ -51,7 +51,7 @@ import TerrainMesh from './TerrainMesh.js';
      * });
      *
      * @see TerrainData
-     * @see HeightTerrainData
+     * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
     function GoogleEarthEnterpriseTerrainData(options) {
@@ -84,8 +84,6 @@ import TerrainMesh from './TerrainMesh.js';
         this._mesh = undefined;
         this._minimumHeight = undefined;
         this._maximumHeight = undefined;
-        this._vertexCountWithoutSkirts = undefined;
-        this._skirtIndex = undefined;
     }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
@@ -179,6 +177,8 @@ import TerrainMesh from './TerrainMesh.js';
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
+                    result.indexCountWithoutSkirts,
+                    result.vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
                     BoundingSphere.clone(result.boundingSphere3D),
@@ -192,8 +192,6 @@ import TerrainMesh from './TerrainMesh.js';
                     result.eastIndicesNorthToSouth,
                     result.northIndicesWestToEast);
 
-                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
-                that._skirtIndex = result.skirtIndex;
                 that._minimumHeight = result.minimumHeight;
                 that._maximumHeight = result.maximumHeight;
 
@@ -269,9 +267,9 @@ import TerrainMesh from './TerrainMesh.js';
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,

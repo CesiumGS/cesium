@@ -58,7 +58,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
             encoding : statistics.encoding,
             vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-            skirtIndex : statistics.skirtIndex,
+            indexCountWithoutSkirts : statistics.indexCountWithoutSkirts,
             westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
             southIndicesEastToWest : statistics.southIndicesEastToWest,
             eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
@@ -312,7 +312,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var vertexCountWithoutSkirts = pointOffset;
-        var skirtIndex = indicesOffset;
+        var indexCountWithoutSkirts = indicesOffset;
 
         // Add skirt points
         var skirtOptions = {
@@ -365,9 +365,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
         var orientedBoundingBox;
-        if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
-            // Here, rectangle.width < pi/2, and rectangle.height < pi
-            // (though it would still work with rectangle.width up to pi)
+        if (defined(rectangle)) {
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
         }
 
@@ -404,7 +402,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex,
+            indexCountWithoutSkirts : indexCountWithoutSkirts,
             westIndicesSouthToNorth : westIndicesSouthToNorth,
             southIndicesEastToWest : southIndicesEastToWest,
             eastIndicesNorthToSouth : eastIndicesNorthToSouth,

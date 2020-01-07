@@ -7,6 +7,7 @@ import IndexDatatype from '../Core/IndexDatatype.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import PixelFormat from '../Core/PixelFormat.js';
+import Ray from '../Core/Ray.js';
 import Request from '../Core/Request.js';
 import RequestState from '../Core/RequestState.js';
 import RequestType from '../Core/RequestType.js';
@@ -139,7 +140,6 @@ import TerrainState from './TerrainState.js';
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
-    var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
         var mesh = this.renderedMesh;
@@ -150,9 +150,11 @@ import TerrainState from './TerrainState.js';
         var vertices = mesh.vertices;
         var indices = mesh.indices;
         var encoding = mesh.encoding;
+        var indicesLength = indices.length;
 
-        var length = indices.length;
-        for (var i = 0; i < length; i += 3) {
+        var minT = Number.MAX_VALUE;
+
+        for (var i = 0; i < indicesLength; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
@@ -161,13 +163,13 @@ import TerrainState from './TerrainState.js';
             var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
             var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
-            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
-            if (defined(intersection)) {
-                return Cartesian3.clone(intersection, result);
+            var t = IntersectionTests.rayTriangleParametric(ray, v0, v1, v2, cullBackFaces);
+            if (defined(t) && t < minT && t >= 0.0) {
+                minT = t;
             }
         }
 
-        return undefined;
+        return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
     };
 
     GlobeSurfaceTile.prototype.freeResources = function() {
