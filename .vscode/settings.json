@@ -1,6 +1,5 @@
 {
   "files.exclude": {
-<<<<<<< HEAD
     ".externalToolBuilders": true,
     ".idea": true,
     ".metadata": true,
@@ -10,9 +9,6 @@
     "**/.git": true,
     "**/Thumbs.db": true,
     "launches": true,
-=======
-    ".metadata": "explorerExcludedFiles",
->>>>>>> origin
     "Build": "explorerExcludedFiles",
     "Cesium-*.zip": "explorerExcludedFiles",
     "cesium-*.tgz": "explorerExcludedFiles",
@@ -34,36 +30,6 @@
     "yarn.lock": "explorerExcludedFiles",
     ".idea/workspace.xml": "explorerExcludedFiles",
     ".idea/tasks.xml": "explorerExcludedFiles",
-<<<<<<< HEAD
-    ".vscode/settings.json": "explorerExcludedFiles",
-    ".github": "explorerExcludedFiles",
-    ".concierge": "explorerExcludedFiles"
-  },
-  "search.exclude": {
-    "Build": true,
-    "Instrumented": true,
-    "node_modules": true,
-    "Source/Shaders/**/*.js": true
-  },
-  "files.associations": {
-    "*.czml": "json"
-  },
-  "files.trimTrailingWhitespace": true,
-  "files.insertFinalNewline": true,
-  "editor.insertSpaces": true,
-  "editor.tabSize": 4,
-  "editor.detectIndentation": false,
-  "eslint.enable": true,
-  "javascript.format.insertSpaceAfterCommaDelimiter": true,
-  "javascript.format.insertSpaceAfterSemicolonInForStatements": true,
-  "javascript.format.insertSpaceBeforeAndAfterBinaryOperators": true,
-  "javascript.format.insertSpaceAfterKeywordsInControlFlowStatements": true,
-  "javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
-  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
-  "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
-  "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
-  "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false
-=======
     ".idea": "explorerExcludedFiles",
     ".vscode": "explorerExcludedFiles",
     ".github": "explorerExcludedFiles",
@@ -71,5 +37,4 @@
     ".gitignore": "explorerExcludedFiles",
     "Apps/*": "explorerExcludedFiles"
   }
->>>>>>> origin
 }
