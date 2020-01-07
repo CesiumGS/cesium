@@ -79,7 +79,9 @@ describe('Scene/Material', function() {
             expect(scene).toRender(backgroundColor);
         }
 
+        scene.primitives.removeAll();
         scene.primitives.add(polygon);
+
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual(backgroundColor);
             if (defined(callback)) {
@@ -92,7 +94,9 @@ describe('Scene/Material', function() {
         polyline.material = material;
         expect(scene).toRender(backgroundColor);
 
+        scene.primitives.removeAll();
         scene.primitives.add(polylines);
+
         var result;
         expect(scene).toRenderAndCall(function(rgba) {
             result = rgba;
@@ -622,17 +626,26 @@ describe('Scene/Material', function() {
 
         var purple = [127, 0, 127, 255];
 
+        var ignoreBackground = true;
+        renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
         return pollToPromise(function() {
-            var result = materialLinear._loadedImages.length !== 0 || materialNearest._loadedImages.length !== 0;
-            materialLinear.update(scene.context);
-            materialNearest.update(scene.context);
-            return result;
+            var imageLoaded = materialLinear._loadedImages.length !== 0;
+            scene.renderForSpecs();
+            return imageLoaded;
         }).then(function() {
-            renderMaterial(materialLinear, true, function(rgba) {
+            renderMaterial(materialLinear, ignoreBackground, function(rgba) {
                 expect(rgba).toEqualEpsilon(purple, 1);
             });
-            renderMaterial(materialNearest, true, function(rgba) {
-                expect(rgba).not.toEqualEpsilon(purple, 1);
+        }).then(function() {
+            renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
+            return pollToPromise(function() {
+                var imageLoaded = materialNearest._loadedImages.length !== 0;
+                scene.renderForSpecs();
+                return imageLoaded;
+            }).then(function() {
+                renderMaterial(materialNearest, ignoreBackground, function(rgba) {
+                    expect(rgba).not.toEqualEpsilon(purple, 1);
+                });
             });
         });
     });
@@ -830,12 +843,13 @@ describe('Scene/Material', function() {
         var material = Material.fromType(Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
 
+        renderMaterial(material);
+
         return pollToPromise(function() {
             var result = material._loadedImages.length !== 0;
-            material.update(scene.context);
+            scene.renderForSpecs();
             return result;
         }).then(function() {
-            renderMaterial(material);
             material.destroy();
             expect(material.isDestroyed()).toEqual(true);
         });
@@ -864,13 +878,13 @@ describe('Scene/Material', function() {
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
+        renderMaterial(material);
+
         return pollToPromise(function() {
             var result = material.materials.diffuseMap._loadedImages.length !== 0;
-            material.update(scene.context);
+            scene.renderForSpecs();
             return result;
         }).then(function() {
-            renderMaterial(material);
-
             var diffuseMap = material.materials.diffuseMap;
             material.destroy();
             expect(material.isDestroyed()).toEqual(true);
