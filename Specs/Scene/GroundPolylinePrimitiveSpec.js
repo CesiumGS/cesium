@@ -881,6 +881,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             scene.renderForSpecs();
             return groundPolylinePrimitive.ready;
         }).then(function() {
+            // verifyGroundPolylinePrimitiveRender adds the primitive, so remove it to avoid being added twice.
             scene.groundPrimitives.destroyPrimitives = false;
             scene.groundPrimitives.removeAll();
             scene.groundPrimitives.destroyPrimitives = true;
@@ -906,6 +907,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         groundPolylinePrimitive.destroy();
         expect(groundPolylinePrimitive.isDestroyed()).toEqual(true);
 
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
         scene.groundPrimitives.destroyPrimitives = true;

@@ -1121,6 +1121,7 @@ describe('Scene/ClassificationPrimitive', function() {
             scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
+            // verifyClassificationPrimitiveRender adds the primitive, so remove it to avoid being added twice.
             scene.primitives.destroyPrimitives = false;
             scene.primitives.removeAll();
             scene.primitives.destroyPrimitives = true;
@@ -1144,6 +1145,7 @@ describe('Scene/ClassificationPrimitive', function() {
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
 
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
         scene.primitives.destroyPrimitives = false;
         scene.primitives.removeAll();
         scene.primitives.destroyPrimitives = true;
