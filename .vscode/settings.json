@@ -1,5 +1,6 @@
 {
   "files.exclude": {
+<<<<<<< HEAD
     ".externalToolBuilders": true,
     ".idea": true,
     ".metadata": true,
@@ -9,6 +10,9 @@
     "**/.git": true,
     "**/Thumbs.db": true,
     "launches": true,
+=======
+    ".metadata": "explorerExcludedFiles",
+>>>>>>> origin
     "Build": "explorerExcludedFiles",
     "Cesium-*.zip": "explorerExcludedFiles",
     "cesium-*.tgz": "explorerExcludedFiles",
@@ -30,6 +34,7 @@
     "yarn.lock": "explorerExcludedFiles",
     ".idea/workspace.xml": "explorerExcludedFiles",
     ".idea/tasks.xml": "explorerExcludedFiles",
+<<<<<<< HEAD
     ".vscode/settings.json": "explorerExcludedFiles",
     ".github": "explorerExcludedFiles",
     ".concierge": "explorerExcludedFiles"
@@ -58,4 +63,13 @@
   "javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
   "javascript.format.placeOpenBraceOnNewLineForFunctions": false,
   "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false
+=======
+    ".idea": "explorerExcludedFiles",
+    ".vscode": "explorerExcludedFiles",
+    ".github": "explorerExcludedFiles",
+    ".concierge": "explorerExcludedFiles",
+    ".gitignore": "explorerExcludedFiles",
+    "Apps/*": "explorerExcludedFiles"
+  }
+>>>>>>> origin
 }
