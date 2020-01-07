@@ -4,6 +4,7 @@ Change Log
 ### 1.66.0 - 2020-02-03
 
 ##### Additions :tada:
+
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 * Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 * Added `magnificationFilter` and `minificationFilter` options to materials to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
