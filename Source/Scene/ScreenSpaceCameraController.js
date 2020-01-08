@@ -4,6 +4,7 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -280,6 +281,17 @@ import TweenCollection from './TweenCollection.js';
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
     }
+
+    defineProperties(ScreenSpaceCameraController.prototype, {
+        /**
+         * @private
+         */
+        adjustedHeightForTerrain : {
+            get : function() {
+                return this._adjustedHeightForTerrain;
+            }
+        }
+    });
 
     function decay(time, coefficient) {
         if (time < 0) {

@@ -597,6 +597,7 @@ import View from './View.js';
         this._debugVolume = undefined;
 
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+        this._cameraUnderground = false;
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
         // Keeps track of the state of a frame. FrameState is the state across
@@ -953,6 +954,19 @@ import View from './View.js';
             set : function(camera) {
                 // For internal use only. Documentation is still @readonly.
                 this._view.camera = camera;
+            }
+        },
+
+        /**
+         * Whether the camera is underground.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        cameraUnderground : {
+            get : function() {
+                return this._cameraUnderground;
             }
         },
 
@@ -1728,7 +1742,7 @@ import View from './View.js';
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show && !scene._cameraUnderground) {
             var ellipsoid = globe.ellipsoid;
             var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
@@ -1779,6 +1793,7 @@ import View from './View.js';
         frameState.invertClassification = this.invertClassification;
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
+        frameState.cameraUnderground = this._cameraUnderground;
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
             frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
@@ -3174,6 +3189,30 @@ import View from './View.js';
         functions.length = 0;
     }
 
+    function isCameraUnderground(scene) {
+        if (scene._screenSpaceCameraController.adjustedHeightForTerrain) {
+            return false;
+        }
+
+        var camera = scene.camera;
+        var mode = scene._mode;
+        var globe = scene.globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return false;
+        }
+
+        var cartographic = camera.positionCartographic;
+        var globeHeight = globe.getHeight(cartographic);
+        if (defined(globeHeight)) {
+            if (cartographic.height < globeHeight) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @private
      */
@@ -3194,6 +3233,8 @@ import View from './View.js';
 
         this.camera.update(this._mode);
         this.camera._updateCameraChanged();
+
+        this._cameraUnderground = isCameraUnderground(this);
     };
 
     function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
