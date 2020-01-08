@@ -74,6 +74,43 @@ describe('Scene/Globe', function() {
         });
     });
 
+    it('renders with dynamicAtmosphereLighting', function() {
+        globe.enableLighting = true;
+        globe.dynamicAtmosphereLighting = true;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
+    it('renders with dynamicAtmosphereLightingFromSun', function() {
+        globe.enableLighting = true;
+        globe.dynamicAtmosphereLighting = true;
+        globe.dynamicAtmosphereLightingFromSun = true;
+
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        scene.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
+
+        return updateUntilDone(globe).then(function() {
+            scene.globe.show = false;
+            expect(scene).toRender([0, 0, 0, 255]);
+            scene.globe.show = true;
+            expect(scene).notToRender([0, 0, 0, 255]);
+        });
+    });
+
     it('renders with showWaterEffect set to false', function() {
         globe.showWaterEffect = false;
 
