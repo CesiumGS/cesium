@@ -883,6 +883,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * NOTE: This getter exists so that `Picking.js` can differentiate between
          *       PrimitiveCollection and Cesium3DTileset objects without inflating
          *       the size of the module via `instanceof Cesium3DTileset`
+         * @private
          */
         isCesium3DTileset : {
             get : function() {
