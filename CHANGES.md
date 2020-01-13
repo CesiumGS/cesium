@@ -20,6 +20,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
+* Fixed a bug where files with backslashes were not loaded in KMZ files. [#8533](https://github.com/AnalyticalGraphicsInc/cesium/pull/8533)
 
 ### 1.65.0 - 2020-01-06
 
