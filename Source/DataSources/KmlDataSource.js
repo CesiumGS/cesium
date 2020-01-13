@@ -595,7 +595,7 @@ import WallGraphics from './WallGraphics.js';
 
         var resource;
         if (defined(uriResolver)) {
-            href = href.replace(/\\/g, "/");
+            href = href.replace(/\\/g, '/');
             var blob = uriResolver[href];
             if (defined(blob)) {
                 resource = new Resource({
