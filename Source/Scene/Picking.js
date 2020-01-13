@@ -17,8 +17,10 @@ import  Ray from '../Core/Ray.js';
 import  ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
 import  when from '../ThirdParty/when.js';
 import  Camera from './Camera.js';
+import  Cesium3DTileFeature from './Cesium3DTileFeature.js';
 import  Cesium3DTilePass from './Cesium3DTilePass.js';
 import  Cesium3DTilePassState from './Cesium3DTilePassState.js';
+import  Cesium3DTileset from './Cesium3DTileset.js';
 import  PickDepth from './PickDepth.js';
 import  PrimitiveCollection from './PrimitiveCollection.js';
 import  SceneMode from './SceneMode.js';
@@ -419,7 +421,7 @@ import  View from './View.js';
                 }
             }
 
-            if (defined(object.isCesium3DTileFeature)) {
+            if (object instanceof Cesium3DTileFeature) {
                 hasShowAttribute = true;
                 object.show = false;
                 pickedFeatures.push(object);
