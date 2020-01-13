@@ -50,6 +50,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Omar Shehata](https://github.com/OmarShehata)
    * [Matt Petry](https://github.com/MattPetry)
    * [Michael Squires](https://github.com/mksquires)
+   * [Sam Suhag](https://github.com/sanjeetsuhag)
 * [NICTA/CSIRO's Data61](https://www.data61.csiro.au/)
    * [Kevin Ring](https://github.com/kring)
    * [Keith Grochow](https://github.com/kgrochow)
