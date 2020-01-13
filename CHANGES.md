@@ -20,6 +20,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
+* Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js` [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
 
 ### 1.65.0 - 2020-01-06
 
