@@ -41,6 +41,15 @@ import defineProperties from '../Core/defineProperties.js';
         this._content = content;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
+
+        /**
+         * NOTE: This property exists so that `Picking.js` can differentiate between
+         *       PrimitiveCollections and isCesium3DTileFeature objects without inflating
+         *       the size of the module via `instance of Cesium3DTileFeature`
+         * @private
+         */
+
+        this.isCesium3DTileFeature = true;
     }
 
     defineProperties(Cesium3DTileFeature.prototype, {
