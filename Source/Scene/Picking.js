@@ -546,7 +546,7 @@ import  View from './View.js';
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if (primitive.show) {
-                if ((primitive instanceof Cesium3DTileset)) {
+                if (defined(primitive.isCesium3DTileset)) {
                     if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
                         tilesets.push(primitive);
                     }
