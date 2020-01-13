@@ -190,7 +190,7 @@ import StencilConstants from './StencilConstants.js';
                 }
             },
             set : function(value) {
-                this._boundingSphere = BoundingSphere.clone(value);
+                this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);
             }
         }
     });
