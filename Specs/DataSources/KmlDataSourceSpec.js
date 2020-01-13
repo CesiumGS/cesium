@@ -223,7 +223,6 @@ describe('DataSources/KmlDataSource', function() {
         var dataSource = new KmlDataSource(options);
         return dataSource.load('Data/KML/simple.kmz').then(function(source) {
             expect(source).toBe(dataSource);
-            console.log(source.entities.values[0]._billboard._image._value);
             expect(source.entities.values.length).toEqual(1);
         });
     });
