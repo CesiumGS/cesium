@@ -20,7 +20,6 @@ import getAbsoluteUri from '../Core/getAbsoluteUri.js';
 import getMagic from '../Core/getMagic.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -1141,7 +1140,7 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
                     throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
                 }
                 //>>includeEnd('debug');

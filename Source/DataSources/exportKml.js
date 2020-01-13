@@ -8,7 +8,6 @@ import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
-import isArray from '../Core/isArray.js';
 import Iso8601 from '../Core/Iso8601.js';
 import JulianDate from '../Core/JulianDate.js';
 import CesiumMath from '../Core/Math.js';
@@ -949,7 +948,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
             var hierarchy = valueGetter.get(hierarchyProperty);
 
             // Polygon hierarchy can sometimes just be an array of positions
-            var positions = isArray(hierarchy) ? hierarchy : hierarchy.positions;
+            var positions = Array.isArray(hierarchy) ? hierarchy : hierarchy.positions;
 
             // Polygon boundaries
             var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
@@ -1206,7 +1205,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
         }
 
         function getCoordinates(coordinates, ellipsoid) {
-            if (!isArray(coordinates)) {
+            if (!Array.isArray(coordinates)) {
                 coordinates = [coordinates];
             }
 

@@ -6,7 +6,6 @@ import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import freezeObject from '../Core/freezeObject.js';
-import isArray from '../Core/isArray.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
@@ -205,7 +204,7 @@ import TimeDynamicImagery from './TimeDynamicImagery.js';
         this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
 
         this._subdomains = options.subdomains;
-        if (isArray(this._subdomains)) {
+        if (Array.isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
         } else if (defined(this._subdomains) && this._subdomains.length > 0) {
             this._subdomains = this._subdomains.split('');

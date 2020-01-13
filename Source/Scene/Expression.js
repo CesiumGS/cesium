@@ -6,7 +6,6 @@ import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
-import isArray from '../Core/isArray.js';
 import CesiumMath from '../Core/Math.js';
 import RuntimeError from '../Core/RuntimeError.js';
 import jsep from '../ThirdParty/jsep.js';
@@ -1569,7 +1568,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
         var value = this._value;
 
         if (defined(this._left)) {
-            if (isArray(this._left)) {
+            if (Array.isArray(this._left)) {
                 // Left can be an array if the type is LITERAL_COLOR or LITERAL_VECTOR
                 left = getExpressionArray(this._left, attributePrefix, shaderState, this);
             } else {
@@ -1585,7 +1584,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
             test = this._test.getShaderExpression(attributePrefix, shaderState, this);
         }
 
-        if (isArray(this._value)) {
+        if (Array.isArray(this._value)) {
             // For ARRAY type
             value = getExpressionArray(this._value, attributePrefix, shaderState, this);
         }

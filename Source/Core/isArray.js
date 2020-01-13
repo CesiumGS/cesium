@@ -6,6 +6,8 @@ import defined from './defined.js';
      *
      * @param {*} value The value to test.
      * @returns {Boolean} true if the value is an array, false otherwise.
+     * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/8526.
+     * Use `Array.isArray` instead
      */
     var isArray = Array.isArray;
     if (!defined(isArray)) {

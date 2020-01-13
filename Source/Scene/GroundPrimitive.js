@@ -9,7 +9,6 @@ import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
-import isArray from '../Core/isArray.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
 import when from '../ThirdParty/when.js';
@@ -119,7 +118,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         var appearance = options.appearance;
         var geometryInstances = options.geometryInstances;
         if (!defined(appearance) && defined(geometryInstances)) {
-            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var geometryInstancesArray = Array.isArray(geometryInstances) ? geometryInstances : [geometryInstances];
             var geometryInstanceCount = geometryInstancesArray.length;
             for (var i = 0; i < geometryInstanceCount; i++) {
                 var attributes = geometryInstancesArray[i].attributes;
@@ -619,7 +618,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
             var geometry;
             var instanceType;
 
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
             var groundInstances = new Array(length);
 

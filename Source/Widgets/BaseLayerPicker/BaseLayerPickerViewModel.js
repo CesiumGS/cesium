@@ -3,7 +3,6 @@ import defined from '../../Core/defined.js';
 import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import EllipsoidTerrainProvider from '../../Core/EllipsoidTerrainProvider.js';
-import isArray from '../../Core/isArray.js';
 import knockout from '../../ThirdParty/knockout.js';
 import createCommand from '../createCommand.js';
 
@@ -186,7 +185,7 @@ import createCommand from '../createCommand.js';
 
                 if (defined(value)) {
                     var newProviders = value.creationCommand();
-                    if (isArray(newProviders)) {
+                    if (Array.isArray(newProviders)) {
                         var newProvidersLength = newProviders.length;
                         for (i = newProvidersLength - 1; i >= 0; i--) {
                             imageryLayers.addImageryProvider(newProviders[i], 0);
