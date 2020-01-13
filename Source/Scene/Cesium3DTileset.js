@@ -137,14 +137,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        /**
-         * NOTE: This property exists so that `Picking.js` can differentiate between
-         *       PrimitiveCollections and Cesium3DTileset objects without inflating
-         *       the size of the module via `instance of Cesium3DTileset`
-         * @private
-         */
-        this.isCesium3DTileset = true;
-
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options.url', options.url);
         //>>includeEnd('debug');
@@ -887,6 +879,19 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     }
 
     defineProperties(Cesium3DTileset.prototype, {
+
+        /**
+         * NOTE: This getter exists so that `Picking.js` can differentiate between
+         *       PrimitiveCollections and Cesium3DTileset objects without inflating
+         *       the size of the module via `instance of Cesium3DTileset`
+         */
+
+        isCesium3DTileset: {
+            get: function() {
+                return true;
+            }
+        }
+
         /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
