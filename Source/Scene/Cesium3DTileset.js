@@ -884,7 +884,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          *       PrimitiveCollection and Cesium3DTileset objects without inflating
          *       the size of the module via `instanceof Cesium3DTileset`
          */
-
         isCesium3DTileset : {
             get : function() {
                 return true;
