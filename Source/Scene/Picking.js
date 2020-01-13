@@ -20,7 +20,6 @@ import  Camera from './Camera.js';
 import  Cesium3DTileFeature from './Cesium3DTileFeature.js';
 import  Cesium3DTilePass from './Cesium3DTilePass.js';
 import  Cesium3DTilePassState from './Cesium3DTilePassState.js';
-import  Cesium3DTileset from './Cesium3DTileset.js';
 import  PickDepth from './PickDepth.js';
 import  PrimitiveCollection from './PrimitiveCollection.js';
 import  SceneMode from './SceneMode.js';
