@@ -23,6 +23,7 @@ Change Log
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
 * Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js` [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
 * Fixed WebGL warning message about `EXT_float_blend` being implicitly enabled. [#8534](https://github.com/AnalyticalGraphicsInc/cesium/pull/8534)
+* Fixed a bug where toggling classification visibility would result in a grey screen on Linux / Nvidia [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
 
 ### 1.65.0 - 2020-01-06
 
