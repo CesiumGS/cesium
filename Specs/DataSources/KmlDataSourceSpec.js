@@ -1,4 +1,4 @@
-import { ArcType, isDataUri } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
 import { BoundingRectangle } from '../../Source/Cesium.js';
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
@@ -11,6 +11,7 @@ import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
 import { HeadingPitchRange } from '../../Source/Cesium.js';
 import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { isDataUri } from '../../Source/Cesium.js';
 import { Iso8601 } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
