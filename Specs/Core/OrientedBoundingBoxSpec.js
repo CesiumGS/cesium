@@ -226,6 +226,74 @@ describe('Core/OrientedBoundingBox', function() {
         box = OrientedBoundingBox.fromRectangle(new Rectangle(-d90, -d90, d90, d90), -1.0, 0.0, Ellipsoid.UNIT_SPHERE);
         expect(box.center).toEqualEpsilon(new Cartesian3(0.5, 0.0, 0.0), CesiumMath.EPSILON15);
         expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0.5, 1, 0, 0, 0, 1, 0), CesiumMath.EPSILON15);
+
+    });
+
+    it('fromRectangle for rectangles that span over half the ellipsoid', function() {
+        var d90 = CesiumMath.PI_OVER_TWO;
+        var d180 = CesiumMath.PI;
+        var d135 = (3.0 / 4.0) * CesiumMath.PI;
+        var d45 = CesiumMath.PI_OVER_FOUR;
+        var onePlusSqrtHalfDivTwo = (1.0 + Math.SQRT1_2) / 2.0;
+        var oneMinusOnePlusSqrtHalfDivTwo = 1.0 - onePlusSqrtHalfDivTwo;
+        var sqrtTwoMinusOneDivFour = (Math.SQRT2 - 1.0) / 4.0;
+        var sqrtTwoPlusOneDivFour = (Math.SQRT2 + 1.0) / 4.0;
+        var box;
+
+        // Entire ellipsoid
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, -d90, d180, d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0), CesiumMath.EPSILON15);
+
+        // 3/4s of longitude, full latitude
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d135, -d90, d135, d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(oneMinusOnePlusSqrtHalfDivTwo, 0, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, onePlusSqrtHalfDivTwo, 1, 0, 0, 0, 1, 0), CesiumMath.EPSILON15);
+
+        // 3/4s of longitude, 1/2 of latitude centered at equator
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d135, -d45, d135, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(oneMinusOnePlusSqrtHalfDivTwo, 0, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, onePlusSqrtHalfDivTwo, 1, 0, 0, 0, Math.SQRT1_2, 0), CesiumMath.EPSILON15);
+
+        // 3/4s of longitude centered at IDL, 1/2 of latitude centered at equator
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(d180, -d45, d90, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(sqrtTwoMinusOneDivFour, -sqrtTwoMinusOneDivFour, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(Math.SQRT1_2, 0, sqrtTwoPlusOneDivFour, Math.SQRT1_2, 0, -sqrtTwoPlusOneDivFour, 0, Math.SQRT1_2, 0.0), CesiumMath.EPSILON15);
+
+        // Full longitude, 1/2 of latitude centered at equator
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, -d45, d180, d45), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, 0), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 1, 1, 0, 0, 0, Math.SQRT1_2, 0), CesiumMath.EPSILON15);
+
+        // Full longitude, 1/4 of latitude starting from north pole
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, d45, d180, d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, onePlusSqrtHalfDivTwo), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, Math.SQRT1_2, Math.SQRT1_2, 0, 0, 0, oneMinusOnePlusSqrtHalfDivTwo, 0), CesiumMath.EPSILON15);
+
+        // Full longitude, 1/4 of latitude starting from south pole
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, -d90, d180, -d45), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, -onePlusSqrtHalfDivTwo), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, Math.SQRT1_2, Math.SQRT1_2, 0, 0, 0, oneMinusOnePlusSqrtHalfDivTwo, 0), CesiumMath.EPSILON15);
+
+        // Cmpletely on north pole
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, d90, d180, d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, 1), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0), CesiumMath.EPSILON15);
+
+        // Completely on north pole 2
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d135, d90, d135, d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, 1), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0), CesiumMath.EPSILON15);
+
+        // Completely on south pole
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d180, -d90, d180, -d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0), CesiumMath.EPSILON15);
+
+        // Completely on south pole 2
+        box = OrientedBoundingBox.fromRectangle(new Rectangle(-d135, -d90, d135, -d90), 0, 0, Ellipsoid.UNIT_SPHERE);
+        expect(box.center).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON15);
+        expect(box.halfAxes).toEqualEpsilon(new Matrix3(0, 0, 0, 0, 0, 0, 0, 0, 0), CesiumMath.EPSILON15);
     });
 
     it('fromRectangle for interesting, degenerate, and edge-case rectangles', function() {

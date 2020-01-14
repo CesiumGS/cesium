@@ -23,7 +23,7 @@ import SceneMode from './SceneMode.js';
 
     /**
      * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
-     * {@link http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
+     * {@link https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
      * in GPU Gems 2.
      * <p>
      * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
@@ -37,7 +37,7 @@ import SceneMode from './SceneMode.js';
      * @example
      * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
      *
      * @see Scene.skyAtmosphere
      */
@@ -131,8 +131,8 @@ import SceneMode from './SceneMode.js';
     /**
      * @private
      */
-    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
-        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
+    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting, useSunDirection) {
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
     };
 
     /**

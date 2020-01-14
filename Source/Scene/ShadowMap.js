@@ -50,7 +50,7 @@ import Primitive from './Primitive.js';
 import ShadowMapShader from './ShadowMapShader.js';
 
     /**
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map. Do not construct this directly.
      *
      * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
@@ -76,7 +76,7 @@ import ShadowMapShader from './ShadowMapShader.js';
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1089,6 +1089,9 @@ import ShadowMapShader from './ShadowMapShader.js';
         // Start to construct the light view matrix. Set translation later once the bounding box is found.
         var lightDir = shadowMapCamera.directionWC;
         var lightUp = sceneCamera.directionWC; // Align shadows to the camera view.
+        if (Cartesian3.equalsEpsilon(lightDir, lightUp, CesiumMath.EPSILON10)) {
+            lightUp = sceneCamera.upWC;
+        }
         var lightRight = Cartesian3.cross(lightDir, lightUp, scratchRight);
         lightUp = Cartesian3.cross(lightRight, lightDir, scratchUp); // Recalculate up now that right is derived
         Cartesian3.normalize(lightUp, lightUp);

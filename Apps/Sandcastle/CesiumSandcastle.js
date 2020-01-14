@@ -42,6 +42,7 @@ require({
         'dojo/promise/all',
         'dojo/query',
         'dojo/when',
+        'dojo/Deferred',
         'dojo/request/script',
         'Sandcastle/LinkButton',
         'ThirdParty/clipboard.min',
@@ -87,6 +88,7 @@ require({
         all,
         query,
         when,
+        Deferred,
         dojoscript,
         LinkButton,
         ClipboardJS,
@@ -739,6 +741,10 @@ require({
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(demo.code, 'text/html');
 
+                return waitForDoc(doc, function(){
+                    return doc.querySelector('script[id="cesium_sandcastle_script"]');
+                }).then(function(){
+
                 var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
                 if (!script) {
                     appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
@@ -763,6 +769,7 @@ require({
                 htmlText = htmlText.replace(/^\s+/, '');
 
                 applyLoadedDemo(scriptCode, htmlText);
+                });
             }
         });
     }
@@ -1050,6 +1057,22 @@ require({
         });
     }
 
+    // Work around Chrome 79 bug: https://github.com/AnalyticalGraphicsInc/cesium/issues/8460
+    function waitForDoc(doc, test) {
+        var deferred = new Deferred();
+        if (test()) {
+            deferred.resolve(doc);
+        } else {
+            var counter = 1;
+            setTimeout(function() {
+                if (test() || counter++ > 10) {
+                    deferred.resolve(doc);
+                }
+            }, 100 * counter);
+        }
+        return deferred.promise;
+    }
+
     var newInLabel = 'New in ' + VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
@@ -1058,6 +1081,10 @@ require({
 
             var parser = new DOMParser();
             var doc = parser.parseFromString(value, 'text/html');
+            return waitForDoc(doc, function(){
+                return doc.body.getAttribute('data-sandcastle-bucket');
+            });
+        }).then(function(doc) {
 
             var bucket = doc.body.getAttribute('data-sandcastle-bucket');
             demo.bucket = bucket ? bucket : 'bucket-requirejs.html';

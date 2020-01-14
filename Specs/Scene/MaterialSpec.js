@@ -11,6 +11,8 @@ import { Material } from '../../Source/Cesium.js';
 import { MaterialAppearance } from '../../Source/Cesium.js';
 import { PolylineCollection } from '../../Source/Cesium.js';
 import { Primitive } from '../../Source/Cesium.js';
+import { TextureMagnificationFilter } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 
@@ -20,13 +22,13 @@ describe('Scene/Material', function() {
 
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
     var polygon;
-    var backgroundColor = [0, 0, 255, 255];
+    var backgroundColor = [0, 0, 128, 255];
     var polylines;
     var polyline;
 
     beforeAll(function() {
         scene = createScene();
-        Color.unpack(backgroundColor, 0, scene.backgroundColor);
+        Color.fromBytes(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3], scene.backgroundColor);
         scene.primitives.destroyPrimitives = false;
         scene.camera.setView({destination : rectangle});
     });
@@ -77,7 +79,9 @@ describe('Scene/Material', function() {
             expect(scene).toRender(backgroundColor);
         }
 
+        scene.primitives.removeAll();
         scene.primitives.add(polygon);
+
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual(backgroundColor);
             if (defined(callback)) {
@@ -90,7 +94,9 @@ describe('Scene/Material', function() {
         polyline.material = material;
         expect(scene).toRender(backgroundColor);
 
+        scene.primitives.removeAll();
         scene.primitives.add(polylines);
+
         var result;
         expect(scene).toRenderAndCall(function(rgba) {
             result = rgba;
@@ -595,6 +601,55 @@ describe('Scene/Material', function() {
         });
     });
 
+    it('creates material with custom texture filter', function() {
+        var materialLinear = new Material({
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image : './Data/Images/BlueOverRed.png'
+                }
+            },
+            minificationFilter : TextureMinificationFilter.LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR
+        });
+
+        var materialNearest = new Material({
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image : './Data/Images/BlueOverRed.png'
+                }
+            },
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
+
+        var purple = [127, 0, 127, 255];
+
+        var ignoreBackground = true;
+        renderMaterial(materialLinear, ignoreBackground); // Populate the scene with the primitive prior to updating
+        return pollToPromise(function() {
+            var imageLoaded = materialLinear._loadedImages.length !== 0;
+            scene.renderForSpecs();
+            return imageLoaded;
+        }).then(function() {
+            renderMaterial(materialLinear, ignoreBackground, function(rgba) {
+                expect(rgba).toEqualEpsilon(purple, 1);
+            });
+        }).then(function() {
+            renderMaterial(materialNearest, ignoreBackground); // Populate the scene with the primitive prior to updating
+            return pollToPromise(function() {
+                var imageLoaded = materialNearest._loadedImages.length !== 0;
+                scene.renderForSpecs();
+                return imageLoaded;
+            }).then(function() {
+                renderMaterial(materialNearest, ignoreBackground, function(rgba) {
+                    expect(rgba).not.toEqualEpsilon(purple, 1);
+                });
+            });
+        });
+    });
+
     it('throws with source and components in same template', function () {
         expect(function() {
             return new Material({
@@ -788,10 +843,13 @@ describe('Scene/Material', function() {
         var material = Material.fromType(Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
 
-        pollToPromise(function() {
-            return material._loadedImages.length !== 0;
+        renderMaterial(material);
+
+        return pollToPromise(function() {
+            var result = material._loadedImages.length !== 0;
+            scene.renderForSpecs();
+            return result;
         }).then(function() {
-            renderMaterial(material);
             material.destroy();
             expect(material.isDestroyed()).toEqual(true);
         });
@@ -820,11 +878,13 @@ describe('Scene/Material', function() {
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
-        pollToPromise(function() {
-            return material.materials.diffuseMap._loadedImages.length !== 0;
-        }).then(function() {
-            renderMaterial(material);
+        renderMaterial(material);
 
+        return pollToPromise(function() {
+            var result = material.materials.diffuseMap._loadedImages.length !== 0;
+            scene.renderForSpecs();
+            return result;
+        }).then(function() {
             var diffuseMap = material.materials.diffuseMap;
             material.destroy();
             expect(material.isDestroyed()).toEqual(true);

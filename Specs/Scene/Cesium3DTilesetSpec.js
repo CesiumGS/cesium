@@ -1887,24 +1887,32 @@ describe('Scene/Cesium3DTileset', function() {
     });
 
     it('renders with imageBaseLightingFactor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).notToRender(rgba);
+                expect(renderOptions).notToRender(rgba);
             });
         });
     });
 
     it('renders with lightColor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
+                expect(renderOptions).toRenderAndCall(function(rgba2) {
                     expect(rgba2).not.toEqual(rgba);
                     tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
+                    expect(renderOptions).notToRender(rgba2);
                 });
             });
         });
@@ -3642,7 +3650,7 @@ describe('Scene/Cesium3DTileset', function() {
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            spyOn(Camera.prototype, 'hasCurrentFlight').and.callFake(function() {
+            spyOn(Camera.prototype, 'canPreloadFlight').and.callFake(function() {
                 return true;
             });
             scene.renderForSpecs();

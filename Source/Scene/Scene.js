@@ -2,6 +2,7 @@ import BoundingRectangle from '../Core/BoundingRectangle.js';
 import BoundingSphere from '../Core/BoundingSphere.js';
 import BoxGeometry from '../Core/BoxGeometry.js';
 import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
 import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
@@ -10,6 +11,7 @@ import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
@@ -67,6 +69,7 @@ import SceneTransitioner from './SceneTransitioner.js';
 import ScreenSpaceCameraController from './ScreenSpaceCameraController.js';
 import ShadowMap from './ShadowMap.js';
 import StencilConstants from './StencilConstants.js';
+import SunLight from './SunLight.js';
 import SunPostProcess from './SunPostProcess.js';
 import TweenCollection from './TweenCollection.js';
 import View from './View.js';
@@ -131,7 +134,7 @@ import View from './View.js';
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
@@ -536,16 +539,15 @@ import View from './View.js';
          */
         this.fog = new Fog();
 
-        this._sunCamera = new Camera(this);
+        this._shadowMapCamera = new Camera(this);
 
         /**
-         * The shadow map in the scene. When enabled, models, primitives, and the globe may cast and receive shadows.
-         * By default the light source of the shadow map is the sun.
+         * The shadow map for the scene's light source. When enabled, models, primitives, and the globe may cast and receive shadows.
          * @type {ShadowMap}
          */
         this.shadowMap = new ShadowMap({
             context : context,
-            lightCamera : this._sunCamera,
+            lightCamera : this._shadowMapCamera,
             enabled : defaultValue(options.shadows, false)
         });
 
@@ -619,6 +621,7 @@ import View from './View.js';
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
+            separatePrimitiveFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
@@ -698,7 +701,6 @@ import View from './View.js';
         this._hdrDirty = undefined;
         this.highDynamicRange = false;
         this.gamma = 2.2;
-        this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
 
         /**
          * The spherical harmonic coefficients for image-based lighting of PBR models.
@@ -712,6 +714,12 @@ import View from './View.js';
          */
         this.specularEnvironmentMaps = undefined;
         this._specularEnvironmentMapAtlas = undefined;
+
+        /**
+         * The light source for shading. Defaults to a directional light from the Sun.
+         * @type {Light}
+         */
+        this.light = new SunLight();
 
         // Give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameNumber(this, 0.0, JulianDate.now());
@@ -732,6 +740,8 @@ import View from './View.js';
         }
         scene._removeGlobeCallbacks = removeGlobeCallbacks;
     }
+
+    var scratchSunColor = new Cartesian4();
 
     defineProperties(Scene.prototype, {
         /**
@@ -1475,7 +1485,7 @@ import View from './View.js';
 
         /**
          * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
-         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
+         * increasing performance. This property relies on fragmentDepth being supported.
          * @memberof Scene.prototype
          * @type {Boolean}
          */
@@ -1548,10 +1558,20 @@ import View from './View.js';
          */
         sunColor: {
             get: function() {
-                return this._sunColor;
+                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
+                return this.light.color;
             },
             set: function(value) {
-                this._sunColor = value;
+                deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
+                var maximumComponent = Cartesian3.maximumComponent(value);
+                var sunColor = Cartesian4.fromElements(value.x, value.y, value.z, 1.0, scratchSunColor);
+                var intensity = 1.0;
+                if (maximumComponent > 1.0) {
+                    Cartesian3.divideByScalar(sunColor, maximumComponent, sunColor); // Don't divide alpha channel
+                    intensity = maximumComponent;
+                }
+                this.light.color = Color.fromCartesian4(sunColor, this.light.color);
+                this.light.intensity = intensity;
             }
         },
 
@@ -1710,7 +1730,8 @@ import View from './View.js';
         var globe = scene.globe;
         if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
-            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
+            var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene.camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
@@ -1753,10 +1774,11 @@ import View from './View.js';
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(this);
         frameState.terrainExaggeration = this._terrainExaggeration;
+        frameState.minimumTerrainHeight = 0.0;
         frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
         frameState.invertClassification = this.invertClassification;
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
-        frameState.sunColor = this._sunColor;
+        frameState.light = this.light;
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
             frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
@@ -2192,8 +2214,12 @@ import View from './View.js';
             executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
+        var frustumCommandsList = view.frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
+        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = false;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2204,9 +2230,6 @@ import View from './View.js';
 
         // Execute commands in each frustum in back to front order
         var j;
-        var frustumCommandsList = view.frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-
         for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -2228,9 +2251,14 @@ import View from './View.js';
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
 
+            if (separatePrimitiveFramebuffer) {
+                // Render to globe framebuffer in GLOBE pass
+                passState.framebuffer = globeDepth.framebuffer;
+            }
+
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
+                globeDepth.update(context, passState, view.viewport, scene._hdr, clearGlobeDepth);
                 globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
@@ -2270,6 +2298,11 @@ import View from './View.js';
                 if (useDepthPlane) {
                     depthPlane.execute(context, passState);
                 }
+            }
+
+            if (separatePrimitiveFramebuffer) {
+                // Render to primitive framebuffer in all other passes
+                passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2412,6 +2445,11 @@ import View from './View.js';
                 var pickDepth = scene._picking.getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
+            }
+
+            if (separatePrimitiveFramebuffer) {
+                // Reset framebuffer
+                passState.framebuffer = globeDepth.framebuffer;
             }
 
             if (picking || !usePostProcessSelected) {
@@ -2828,7 +2866,7 @@ import View from './View.js';
             environmentState.moonCommand = undefined;
         } else {
             if (defined(skyAtmosphere) && defined(globe)) {
-                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
@@ -2998,7 +3036,7 @@ import View from './View.js';
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr, environmentState.clearGlobeDepth);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
@@ -3071,15 +3109,21 @@ import View from './View.js';
         var frameState = this._frameState;
         var environmentState = this._environmentState;
         var view = this._view;
+        var globeDepth = view.globeDepth;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? view.globeDepth.framebuffer : undefined;
+        var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth.framebuffer : undefined;
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
+
+        if (environmentState.separatePrimitiveFramebuffer) {
+            // Merge primitive framebuffer into globe framebuffer
+            globeDepth.executeMergeColor(context, passState);
+        }
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -3102,7 +3146,7 @@ import View from './View.js';
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
-            view.globeDepth.executeCopyColor(context, passState);
+            globeDepth.executeCopyColor(context, passState);
         }
 
         var useLogDepth = frameState.useLogDepth;
@@ -3226,8 +3270,12 @@ import View from './View.js';
 
         var shadowMap = scene.shadowMap;
         if (defined(shadowMap) && shadowMap.enabled) {
-            // Update the sun's direction
-            Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
+            if (!defined(scene.light) || scene.light instanceof SunLight) {
+                // Negate the sun direction so that it is from the Sun, not to the Sun
+                Cartesian3.negate(us.sunDirectionWC, scene._shadowMapCamera.direction);
+            } else {
+                Cartesian3.clone(scene.light.direction, scene._shadowMapCamera.direction);
+            }
             frameState.shadowMaps.push(shadowMap);
         }
 
@@ -3499,7 +3547,7 @@ import View from './View.js';
     function updatePreloadFlightPass(scene) {
         var frameState = scene._frameState;
         var camera = frameState.camera;
-        if (!camera.hasCurrentFlight()) {
+        if (!camera.canPreloadFlight()) {
             return;
         }
 

@@ -272,18 +272,20 @@ import Matrix4 from './Matrix4.js';
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
      * @param {Number} distance The distance to the near plane in meters.
+     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
      * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+     * @exception {DeveloperError} pixelRatio must be greater than zero.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      */
-    OrthographicOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+    OrthographicOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
@@ -299,6 +301,12 @@ import Matrix4 from './Matrix4.js';
         if (!defined(distance)) {
             throw new DeveloperError('distance is required.');
         }
+        if (!defined(pixelRatio)) {
+            throw new DeveloperError('pixelRatio is required.');
+        }
+        if (pixelRatio <= 0) {
+            throw new DeveloperError('pixelRatio must be greater than zero.');
+        }
         if (!defined(result)) {
             throw new DeveloperError('A result object is required.');
         }
@@ -306,8 +314,8 @@ import Matrix4 from './Matrix4.js';
 
         var frustumWidth = this.right - this.left;
         var frustumHeight = this.top - this.bottom;
-        var pixelWidth = frustumWidth / drawingBufferWidth;
-        var pixelHeight = frustumHeight / drawingBufferHeight;
+        var pixelWidth = pixelRatio * frustumWidth / drawingBufferWidth;
+        var pixelHeight = pixelRatio * frustumHeight / drawingBufferHeight;
 
         result.x = pixelWidth;
         result.y = pixelHeight;

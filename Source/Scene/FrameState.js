@@ -349,11 +349,11 @@ import SceneMode from './SceneMode.js';
         this.backgroundColor = undefined;
 
         /**
-         * The color of the light emitted by the sun.
+         * The light used to shade the scene.
          *
-         * @type {Color}
+         * @type {Light}
          */
-        this.sunColor = undefined;
+        this.light = undefined;
 
         /**
          * The distance from the camera at which to disable the depth test of billboards, labels and points
@@ -391,6 +391,14 @@ import SceneMode from './SceneMode.js';
          * @type {Cesium3DTilePassState}
          */
         this.tilesetPassState = undefined;
+
+        /**
+         * The minimum terrain height out of all rendered terrain tiles. Used to improve culling for objects underneath the ellipsoid but above terrain.
+         *
+         * @type {Number}
+         * @default 0.0
+         */
+        this.minimumTerrainHeight = 0.0;
     }
 
     /**

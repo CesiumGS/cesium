@@ -10,6 +10,7 @@ import Material from '../Scene/Material.js';
      *
      * @alias MaterialProperty
      * @constructor
+     * @abstract
      *
      * @see ColorMaterialProperty
      * @see CompositeMaterialProperty

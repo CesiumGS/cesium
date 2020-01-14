@@ -89,6 +89,7 @@ import TerrainMesh from './TerrainMesh.js';
      *
      * @see TerrainData
      * @see HeightmapTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
@@ -300,8 +301,8 @@ import TerrainMesh from './TerrainMesh.js';
 
         var that = this;
         return when(verticesPromise, function(result) {
-            var vertexCount = that._quantizedVertices.length / 3;
-            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+            var vertexCount = vertexCountWithoutSkirts + that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
             var vertices = new Float32Array(result.vertices);
@@ -310,12 +311,9 @@ import TerrainMesh from './TerrainMesh.js';
             var maximumHeight = result.maximumHeight;
             var boundingSphere = defaultValue(BoundingSphere.clone(result.boundingSphere), that._boundingSphere);
             var obb = defaultValue(OrientedBoundingBox.clone(result.orientedBoundingBox), that._orientedBoundingBox);
-            var occlusionPoint = Cartesian3.clone(that._horizonOcclusionPoint);
+            var occludeePointInScaledSpace = defaultValue(Cartesian3.clone(result.occludeePointInScaledSpace), that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
-
-            that._skirtIndex = result.skirtIndex;
-            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.
@@ -323,10 +321,12 @@ import TerrainMesh from './TerrainMesh.js';
                     rtc,
                     vertices,
                     indicesTypedArray,
+                    result.indexCountWithoutSkirts,
+                    vertexCountWithoutSkirts,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
-                    occlusionPoint,
+                    occludeePointInScaledSpace,
                     stride,
                     obb,
                     terrainEncoding,
@@ -413,9 +413,9 @@ import TerrainMesh from './TerrainMesh.js';
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,

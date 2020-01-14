@@ -11,7 +11,7 @@ import { ImageryState } from '../../Source/Cesium.js';
 import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
 
-describe('Scene/createOpenStreetMapImageryProvider', function() {
+describe('Scene/OpenStreetMapImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

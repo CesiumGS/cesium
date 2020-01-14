@@ -197,7 +197,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
@@ -211,7 +211,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -219,7 +219,7 @@ import ShadowMode from './ShadowMode.js';
      *
      * @see Model.fromGltf
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -424,7 +424,7 @@ import ShadowMode from './ShadowMode.js';
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
-         * Determines whether the model casts or receives shadows from each light source.
+         * Determines whether the model casts or receives shadows from light sources.
          *
          * @type {ShadowMode}
          *
@@ -641,8 +641,7 @@ import ShadowMode from './ShadowMode.js';
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
-         * geometry, textures, and animations are embedded in the .gltf file, which is the
-         * default for the {@link https://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * geometry, textures, and animations are embedded in the .gltf file.
          * This is especially useful for cases like 3D buildings, where each .gltf model is unique
          * and caching the glTF JSON is not effective.
          *
@@ -1069,7 +1068,7 @@ import ShadowMode from './ShadowMode.js';
         },
 
         /**
-         * The color and intensity of the sunlight used to shade the model.
+         * The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
@@ -1100,7 +1099,7 @@ import ShadowMode from './ShadowMode.js';
          *
          * @memberof Model.prototype
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
          * @default 0.2
          */
@@ -1127,13 +1126,13 @@ import ShadowMode from './ShadowMode.js';
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Model#specularEnvironmentMaps}.
          *
          * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         sphericalHarmonicCoefficients : {
@@ -1158,7 +1157,7 @@ import ShadowMode from './ShadowMode.js';
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
          * @memberof Model.prototype
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @see Model#sphericalHarmonicCoefficients
          */
@@ -1264,8 +1263,8 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
@@ -3905,7 +3904,7 @@ import ShadowMode from './ShadowMode.js';
 
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:
-        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+        // http://help.agi.com/AGIComponents/html/BlogDeletionInBoundingVolumeHierarchies.htm
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -4067,7 +4066,7 @@ import ShadowMode from './ShadowMode.js';
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize * czm_pixelRatio / czm_viewport.z; \n' +
             '    gl_Position = clip; \n' +
             '}';
 
@@ -4705,9 +4704,13 @@ import ShadowMode from './ShadowMode.js';
             if (defined(this._specularEnvironmentMaps)) {
                 this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
                 var that = this;
-                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
-                    that._shouldRegenerateShaders = true;
-                });
+                this._specularEnvironmentMapAtlas.readyPromise
+                    .then(function() {
+                        that._shouldRegenerateShaders = true;
+                    })
+                    .otherwise(function(error) {
+                        console.error('Error loading specularEnvironmentMaps: ' + error);
+                    });
             }
 
             // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.

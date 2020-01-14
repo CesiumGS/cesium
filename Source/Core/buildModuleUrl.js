@@ -1,12 +1,11 @@
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import FeatureDetection from './FeatureDetection.js';
 import getAbsoluteUri from './getAbsoluteUri.js';
 import Resource from './Resource.js';
 
     /*global CESIUM_BASE_URL*/
 
-    var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
+    var cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js$/;
     function getBaseUrlFromCesiumScript() {
         var scripts = document.getElementsByTagName('script');
         for ( var i = 0, len = scripts.length; i < len; ++i) {
@@ -47,14 +46,8 @@ import Resource from './Resource.js';
             baseUrlString = CESIUM_BASE_URL;
         } else if (typeof define === 'object' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
             baseUrlString = getAbsoluteUri('..', buildModuleUrl('Core/buildModuleUrl.js'));
-        } else if (!FeatureDetection.isInternetExplorer() && /\/buildModuleUrl\.js$/.test(import.meta.url)) {
-            baseUrlString = getAbsoluteUri('..', import.meta.url);
         } else {
             baseUrlString = getBaseUrlFromCesiumScript();
-        }
-
-        if (baseUrlString === '') {
-            baseUrlString = '.';
         }
 
         //>>includeStart('debug', pragmas.debug);

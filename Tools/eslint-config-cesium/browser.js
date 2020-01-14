@@ -6,11 +6,10 @@ module.exports = {
         browser: true
     },
     parserOptions: {
-        ecmaVersion: "2015",
+        ecmaVersion: 2015,
         sourceType: "module"
     },
     rules: {
-        'no-implicit-globals': 'error',
-        'no-prototype-builtins': 'off'
+        'no-implicit-globals': 'error'
     }
 };

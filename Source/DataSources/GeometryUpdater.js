@@ -189,7 +189,7 @@ import Property from './Property.js';
         },
         /**
          * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof GeometryUpdater.prototype
          *
          * @type {Property}
@@ -226,7 +226,7 @@ import Property from './Property.js';
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * If true, all visualization is delegated to a DynamicGeometryUpdater
          * returned by GeometryUpdater#createDynamicUpdater.
          * @memberof GeometryUpdater.prototype
          *
