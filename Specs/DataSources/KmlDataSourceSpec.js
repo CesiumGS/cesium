@@ -1,4 +1,4 @@
-import { ArcType } from '../../Source/Cesium.js';
+import { ArcType, isDataUri } from '../../Source/Cesium.js';
 import { BoundingRectangle } from '../../Source/Cesium.js';
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
@@ -231,7 +231,7 @@ describe('DataSources/KmlDataSource', function() {
         var dataSource = new KmlDataSource(options);
         return dataSource.load('Data/KML/backslash.kmz').then(function(source) {
             expect(source).toBe(dataSource);
-            expect(source.entities.values[0]._billboard._image._value).toBeDefined();
+            expect(isDataUri(source.entities.values[0]._billboard._image._value.url)).toBe(true);
         });
     });
 
