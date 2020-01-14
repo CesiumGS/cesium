@@ -1127,8 +1127,8 @@ import StencilConstants from './StencilConstants.js';
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n' +
-                  '    gl_PointSize *= show; \n';
+            vs += '    gl_Position.w *= float(show); \n' +
+                  '    gl_PointSize *= float(show); \n';
         }
 
         vs += '} \n';
