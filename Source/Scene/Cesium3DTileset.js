@@ -880,6 +880,18 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     defineProperties(Cesium3DTileset.prototype, {
         /**
+         * NOTE: This getter exists so that `Picking.js` can differentiate between
+         *       PrimitiveCollection and Cesium3DTileset objects without inflating
+         *       the size of the module via `instanceof Cesium3DTileset`
+         * @private
+         */
+        isCesium3DTileset : {
+            get : function() {
+                return true;
+            }
+        },
+
+        /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
          * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
