@@ -58,6 +58,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Arthur Street](https://github.com/RacingTadpole)
    * [Alex Gilleran](https://github.com/AlexGilleran)
    * [Emma Krantz](https://github.com/KeyboardSounds)
+   * [Stephen Davies](https://github.com/steve9164)
 * [EU Edge](http://euedge.com/)
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
