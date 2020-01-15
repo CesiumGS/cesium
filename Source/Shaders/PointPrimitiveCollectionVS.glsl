@@ -135,7 +135,7 @@ void main()
     float nearSq = distanceDisplayConditionAndDisableDepth.x;
     float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
-        positionEC.xyz = vec3(0.0);
+        positionEC.xyz = vec3(1.0);
     }
 #endif
 
