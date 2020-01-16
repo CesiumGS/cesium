@@ -1049,10 +1049,13 @@ import SceneMode from './SceneMode.js';
     function removePolylines(collection) {
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
+
             collection._polylines = collection._polylines
                                         .filter((polyline) => defined(polyline))
                                         .map((polyline, index) => {polyline._index = index; return polyline;});
 
+            collection._polylinesToUpdate = collection._polylinesToUpdate
+                                        .filter((polyline) => defined(polyline._polylineCollection));
         }
     }
 
