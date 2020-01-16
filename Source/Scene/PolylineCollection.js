@@ -1049,19 +1049,10 @@ import SceneMode from './SceneMode.js';
     function removePolylines(collection) {
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
+            collection._polylines = collection._polylines
+                                        .filter((polyline) => defined(polyline))
+                                        .map((polyline, index) => {polyline._index = index; return polyline;});
 
-            var polylines = [];
-
-            var length = collection._polylines.length;
-            for ( var i = 0, j = 0; i < length; ++i) {
-                var polyline = collection._polylines[i];
-                if (defined(polyline)) {
-                    polyline._index = j++;
-                    polylines.push(polyline);
-                }
-            }
-
-            collection._polylines = polylines;
         }
     }
 
