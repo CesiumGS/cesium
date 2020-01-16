@@ -58,7 +58,7 @@ describe('DataSources/ReferenceProperty', function() {
         var collection = new EntityCollection();
         collection.add(testObject);
 
-        //Basic property resolution
+        // Basic property resolution
         var property = ReferenceProperty.fromString(collection, 'testId#billboard.scale');
         expect(property.referenceFrame).toBeUndefined();
         expect(property.isConstant).toEqual(true);
@@ -68,21 +68,21 @@ describe('DataSources/ReferenceProperty', function() {
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
-        //Change to exist target property is reflected in reference.
+        // A change to exist target property is reflected in reference.
         testObject.billboard.scale.setValue(6);
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(6);
         listener.calls.reset();
 
-        //Assignment of new leaf property to existing target is reflected in reference.
+        // Assignment of new leaf property to existing target is reflected in reference.
         testObject.billboard.scale = new ConstantProperty(7);
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(7);
         listener.calls.reset();
 
-        //Assignment of non-leaf property to existing target is reflected in reference.
+        // Assignment of non-leaf property to existing target is reflected in reference.
         testObject.billboard = new BillboardGraphics();
         testObject.billboard.scale = new ConstantProperty(8);
         expect(listener).toHaveBeenCalledWith(property);
@@ -90,15 +90,15 @@ describe('DataSources/ReferenceProperty', function() {
         expect(property.getValue(time)).toEqual(8);
         listener.calls.reset();
 
-        //Removing an object should cause the reference to be severed but maintain last value
+        // Removing an object should cause the reference to be severed.
         collection.remove(testObject);
 
-        expect(listener).not.toHaveBeenCalledWith();
+        expect(listener).not.toHaveBeenCalled();
         expect(property.isConstant).toEqual(true);
-        expect(property.getValue(time)).toEqual(8);
+        expect(property.getValue(time)).toBeUndefined();
         listener.calls.reset();
 
-        //adding a new object should re-wire the reference.
+        // Adding a new object should re-wire the reference.
         var testObject2 = new Entity({
             id : 'testId'
         });
@@ -108,6 +108,18 @@ describe('DataSources/ReferenceProperty', function() {
         expect(listener).toHaveBeenCalledWith(property);
         expect(property.isConstant).toEqual(true);
         expect(property.getValue(time)).toEqual(9);
+
+        // setting the target property to undefined should cause the reference to be severed.
+        testObject2.billboard.scale = undefined;
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property.isConstant).toEqual(true);
+        expect(property.getValue(time)).toBeUndefined();
+
+        // Assigning a valid property should re-connect the reference.
+        testObject2.billboard.scale = new ConstantProperty(10);
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property.isConstant).toEqual(true);
+        expect(property.getValue(time)).toEqual(10);
     });
 
     it('works with position properties', function() {
@@ -119,12 +131,18 @@ describe('DataSources/ReferenceProperty', function() {
         var collection = new EntityCollection();
         collection.add(testObject);
 
-        //Basic property resolution
+        // Basic property resolution
         var property = ReferenceProperty.fromString(collection, 'testId#position');
         expect(property.isConstant).toEqual(true);
         expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
         expect(property.getValue(time)).toEqual(testObject.position.getValue(time));
         expect(property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL)).toEqual(testObject.position.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL));
+
+        property = ReferenceProperty.fromString(collection, 'nonExistent#position');
+        expect(property.isConstant).toEqual(true);
+        expect(property.referenceFrame).toBeUndefined();
+        expect(property.getValue(time)).toBeUndefined();
+        expect(property.getValueInReferenceFrame(time, ReferenceFrame.INERTIAL)).toBeUndefined();
     });
 
     it('works with material properties', function() {
@@ -137,11 +155,17 @@ describe('DataSources/ReferenceProperty', function() {
         var collection = new EntityCollection();
         collection.add(testObject);
 
-        //Basic property resolution
+        // Basic property resolution
         var property = ReferenceProperty.fromString(collection, 'testId#testMaterial');
         expect(property.isConstant).toEqual(true);
         expect(property.getType(time)).toEqual(testObject.testMaterial.getType(time));
         expect(property.getValue(time)).toEqual(testObject.testMaterial.getValue(time));
+
+        property = ReferenceProperty.fromString(collection, 'nonExistent#testMaterial');
+        expect(property.isConstant).toEqual(true);
+        expect(property.referenceFrame).toBeUndefined();
+        expect(property.getType(time)).toBeUndefined();
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('equals works', function() {
@@ -151,19 +175,19 @@ describe('DataSources/ReferenceProperty', function() {
         var right = ReferenceProperty.fromString(entityCollection, 'objectId#foo.bar');
         expect(left.equals(right)).toEqual(true);
 
-        //collection differs
+        // collection differs
         right = ReferenceProperty.fromString(new EntityCollection(), 'objectId#foo.bar');
         expect(left.equals(right)).toEqual(false);
 
-        //target id differs
+        // target id differs
         right = ReferenceProperty.fromString(entityCollection, 'otherObjectId#foo.bar');
         expect(left.equals(right)).toEqual(false);
 
-        //number of sub-properties differ
+        // number of sub-properties differ
         right = ReferenceProperty.fromString(entityCollection, 'objectId#foo');
         expect(left.equals(right)).toEqual(false);
 
-        //sub-properties of same length differ
+        // sub-properties of same length differ
         right = ReferenceProperty.fromString(entityCollection, 'objectId#foo.baz');
         expect(left.equals(right)).toEqual(false);
     });
@@ -193,6 +217,34 @@ describe('DataSources/ReferenceProperty', function() {
         expect(listener).not.toHaveBeenCalled();
         collection.remove(testObject);
         expect(listener).not.toHaveBeenCalled();
+    });
+
+    it('attaches to a target entity created later', function() {
+        var collection = new EntityCollection();
+
+        var property = ReferenceProperty.fromString(collection, 'testId#billboard.scale');
+        expect(property.resolvedProperty).toBeUndefined();
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        var otherObject = new Entity({
+            id : 'other'
+        });
+        collection.add(otherObject);
+
+        expect(listener).not.toHaveBeenCalled();
+        expect(property.resolvedProperty).toBeUndefined();
+
+        var testObject = new Entity({
+            id : 'testId'
+        });
+        testObject.billboard = new BillboardGraphics();
+        testObject.billboard.scale = new ConstantProperty(5);
+        collection.add(testObject);
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property.resolvedProperty).toBe(testObject.billboard.scale);
     });
 
     it('constructor throws with undefined targetCollection', function() {
@@ -251,15 +303,13 @@ describe('DataSources/ReferenceProperty', function() {
         }).toThrowDeveloperError();
     });
 
-    it('throws RuntimeError if targetId can not be resolved', function() {
+    it('getValue returns undefined if target entity can not be resolved', function() {
         var collection = new EntityCollection();
         var property = ReferenceProperty.fromString(collection, 'testId#foo.bar');
-        expect(function() {
-            property.getValue(time);
-        }).toThrowRuntimeError();
+        expect(property.getValue(time)).toBeUndefined();
     });
 
-    it('throws RuntimeError if property can not be resolved', function() {
+    it('getValue returns undefined if target property can not be resolved', function() {
         var collection = new EntityCollection();
 
         var testObject = new Entity({
@@ -268,12 +318,10 @@ describe('DataSources/ReferenceProperty', function() {
         collection.add(testObject);
 
         var property = ReferenceProperty.fromString(collection, 'testId#billboard');
-        expect(function() {
-            property.getValue(time);
-        }).toThrowRuntimeError();
+        expect(property.getValue(time)).toBeUndefined();
     });
 
-    it('throws RuntimeError if sub-property can not be resolved', function() {
+    it('getValue returns undefined if sub-property of target property can not be resolved', function() {
         var collection = new EntityCollection();
 
         var testObject = new Entity({
@@ -283,8 +331,6 @@ describe('DataSources/ReferenceProperty', function() {
         collection.add(testObject);
 
         var property = ReferenceProperty.fromString(collection, 'testId#billboard.foo');
-        expect(function() {
-            property.getValue(time);
-        }).toThrowRuntimeError();
+        expect(property.getValue(time)).toBeUndefined();
     });
 });

@@ -17,6 +17,7 @@ Change Log
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 * Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
+* Update [earcut](https://github.com/mapbox/earcut) to 2.2.1 [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
 
 ##### Fixes :wrench:
 * Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
@@ -25,7 +26,8 @@ Change Log
 * Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js` [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
 * Fixed WebGL warning message about `EXT_float_blend` being implicitly enabled. [#8534](https://github.com/AnalyticalGraphicsInc/cesium/pull/8534)
 * Fixed a bug where toggling point cloud classification visibility would result in a grey screen on Linux / Nvidia [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
-* Fixed a bug where a point in a PointPrimitiveCollection is rendered in the middle of the screen instead of being clipped [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
+* Fixed a bug where a point in a `PointPrimitiveCollection` is rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
+* Fixed a crash when deleting and re-creating polylines from CZML. `ReferenceProperty` now returns undefined when the target entity or property does not exist, instead of throwing. [#8544](https://github.com/AnalyticalGraphicsInc/cesium/pull/8544)
 
 ### 1.65.0 - 2020-01-06
 
