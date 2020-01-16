@@ -8,6 +8,19 @@ Change Log
 
 ##### Additions :tada:
 
+* `useBrowserRecommendedResolution` flag in `Viewer` and `CesiumWidget` now defaults to `true`. This ensures Cesium rendering is fast and smooth by default across all devices. Set it to `false` to always render at native device resolution instead at the cost of performance on under-powered devices.
+* Cesium now creates a WebGL context with a `powerPreference` value of `high-performance`. Some browsers use this setting to enable a second, more powerful, GPU.  You can set it back to `default`, or opt-in to `low-power` mode, by passing the context option when creating a `Viewer` or `CesiumWidget` instance:
+
+```js
+    var viewer = new Viewer('cesiumContainer', {
+        contextOptions : {
+            webgl : {
+                powerPreference: 'default'
+            }
+        }
+    });
+```
+
 * Add more customization to Cesium's lighting system [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
