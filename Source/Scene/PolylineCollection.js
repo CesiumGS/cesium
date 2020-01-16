@@ -257,6 +257,12 @@ import SceneMode from './SceneMode.js';
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
+
+            var index = this._polylinesToUpdate.indexOf(polyline);
+            if (index !== -1) {
+                this._polylinesToUpdate.splice(index, 1);
+            }
+
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             this._createBatchTable = true;
