@@ -1050,17 +1050,18 @@ import SceneMode from './SceneMode.js';
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
 
-            const definedPolylines = [];
-            let i=0;
-            for (let polyline of collection._polylines) {
+            var definedPolylines = [];
+            var i=0;
+            var polyline;
+            for (polyline of collection._polylines) {
                 if (defined(polyline)) {
                     polyline._index = i++;
                     definedPolylines.push(polyline);
                 }
             }
 
-            const definedPolylinesToUpdate = [];
-            for (let polyline of collection._polylinesToUpdate) {
+            var definedPolylinesToUpdate = [];
+            for (polyline of collection._polylinesToUpdate) {
                 if (defined(polyline._polylineCollection)) {
                     definedPolylinesToUpdate.push(polyline);
                 }
