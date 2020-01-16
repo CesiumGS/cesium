@@ -1050,12 +1050,24 @@ import SceneMode from './SceneMode.js';
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
 
-            collection._polylines = collection._polylines
-                                        .filter((polyline) => defined(polyline))
-                                        .map((polyline, index) => {polyline._index = index; return polyline;});
+            const definedPolylines = [];
+            let i=0;
+            for (let polyline of collection._polylines) {
+                if (defined(polyline)) {
+                    polyline._index = i++;
+                    definedPolylines.push(polyline);
+                }
+            }
 
-            collection._polylinesToUpdate = collection._polylinesToUpdate
-                                        .filter((polyline) => defined(polyline._polylineCollection));
+            const definedPolylinesToUpdate = [];
+            for (let polyline of collection._polylinesToUpdate) {
+                if (defined(polyline._polylineCollection)) {
+                    definedPolylinesToUpdate.push(polyline);
+                }
+            }
+
+            collection._polylines = definedPolylines;
+            collection._polylinesToUpdate = definedPolylinesToUpdate;
         }
     }
 
