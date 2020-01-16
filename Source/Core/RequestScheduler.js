@@ -43,7 +43,7 @@ import RequestState from './RequestState.js';
      *
      * @exports RequestScheduler
      *
-     * @private
+     * @public
      */
     function RequestScheduler() {
     }
@@ -82,6 +82,7 @@ import RequestState from './RequestState.js';
      * When true, log statistics to the console every frame
      * @type {Boolean}
      * @default false
+     * @private
      */
     RequestScheduler.debugShowStatistics = false;
 
@@ -91,6 +92,7 @@ import RequestState from './RequestState.js';
      *
      * @type {Event}
      * @default Event()
+     * @private
      */
     RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
@@ -102,6 +104,7 @@ import RequestState from './RequestState.js';
          *
          * @type Object
          * @readonly
+         * @private
          */
         statistics : {
             get : function() {
@@ -116,6 +119,7 @@ import RequestState from './RequestState.js';
          *
          * @type {Number}
          * @default 20
+         * @private
          */
         priorityHeapLength : {
             get : function() {
@@ -215,6 +219,7 @@ import RequestState from './RequestState.js';
 
     /**
      * Sort requests by priority and start requests.
+     * @private
      */
     RequestScheduler.update = function() {
         var i;
@@ -280,6 +285,7 @@ import RequestState from './RequestState.js';
      *
      * @param {String} url The url.
      * @returns {String} The server key.
+     * @private
      */
     RequestScheduler.getServerKey = function(url) {
         //>>includeStart('debug', pragmas.debug);
@@ -309,6 +315,8 @@ import RequestState from './RequestState.js';
      * @param {Request} request The request object.
      *
      * @returns {Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
+     *
+     * @private
      */
     RequestScheduler.request = function(request) {
         //>>includeStart('debug', pragmas.debug);
