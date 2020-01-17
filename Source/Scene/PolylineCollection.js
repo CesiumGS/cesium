@@ -1101,7 +1101,7 @@ import SceneMode from './SceneMode.js';
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (polylines[i].isDestroyed) {
+            if (!polylines[i].isDestroyed) {
                 polylines[i]._destroy();
             }
         }
