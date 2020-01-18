@@ -272,7 +272,7 @@ import getElement from '../getElement.js';
                         if (viewer.flyToOnDrop) {
                             viewer.flyTo(dataSource);
                         }
-                    }).otherwise(function(error) {
+                    }).catch(function(error) {
                         viewer.dropError.raiseEvent(viewer, fileName, error);
                     });
                 }

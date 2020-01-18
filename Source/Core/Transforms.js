@@ -1,4 +1,3 @@
-import when from '../ThirdParty/when.js';
 import Cartesian2 from './Cartesian2.js';
 import Cartesian3 from './Cartesian3.js';
 import Cartesian4 from './Cartesian4.js';
@@ -520,7 +519,7 @@ import TimeConstants from './TimeConstants.js';
      *
      * @example
      * var interval = new Cesium.TimeInterval(...);
-     * when(Cesium.Transforms.preloadIcrfFixed(interval), function() {
+     * Cesium.Transforms.preloadIcrfFixed(interval).then(function() {
      *     // the data is now loaded
      * });
      *
@@ -537,7 +536,7 @@ import TimeConstants from './TimeConstants.js';
         var xysPromise = Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
         var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
 
-        return when.all([xysPromise, eopPromise]);
+        return Promise.all([xysPromise, eopPromise]);
     };
 
     /**

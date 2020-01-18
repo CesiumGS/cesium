@@ -128,7 +128,7 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
                 }
             });
         }
-    }).otherwise(function(error) {
+    }).catch(function(error) {
         throw(error);
     });
 });

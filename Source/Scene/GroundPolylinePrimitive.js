@@ -1,6 +1,7 @@
 import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -18,7 +19,6 @@ import PolylineShadowVolumeFS from '../Shaders/PolylineShadowVolumeFS.js';
 import PolylineShadowVolumeMorphFS from '../Shaders/PolylineShadowVolumeMorphFS.js';
 import PolylineShadowVolumeMorphVS from '../Shaders/PolylineShadowVolumeMorphVS.js';
 import PolylineShadowVolumeVS from '../Shaders/PolylineShadowVolumeVS.js';
-import when from '../ThirdParty/when.js';
 import BlendingState from './BlendingState.js';
 import ClassificationType from './ClassificationType.js';
 import CullFace from './CullFace.js';
@@ -183,7 +183,7 @@ import StencilOperation from './StencilOperation.js';
         this._zIndex = undefined;
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this._primitive = undefined;
 

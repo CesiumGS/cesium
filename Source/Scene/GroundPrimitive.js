@@ -4,6 +4,7 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -12,7 +13,6 @@ import GeometryInstance from '../Core/GeometryInstance.js';
 import isArray from '../Core/isArray.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
-import when from '../ThirdParty/when.js';
 import ClassificationPrimitive from './ClassificationPrimitive.js';
 import ClassificationType from './ClassificationType.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
@@ -202,7 +202,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         this._boundingVolumes2D = [];
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this._primitive = undefined;
 

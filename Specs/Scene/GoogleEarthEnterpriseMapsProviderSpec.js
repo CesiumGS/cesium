@@ -107,7 +107,7 @@ describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain(url);
         });

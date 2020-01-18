@@ -1,7 +1,7 @@
+import { defer } from '../../Source/Cesium.js';
 import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { RequestState } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/RequestScheduler', function() {
 
@@ -76,7 +76,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -141,7 +141,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -208,7 +208,7 @@ describe('Core/RequestScheduler', function() {
         var requests = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -253,7 +253,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -309,7 +309,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -336,7 +336,7 @@ describe('Core/RequestScheduler', function() {
         var statistics = RequestScheduler.statistics;
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         var request = new Request({
@@ -357,7 +357,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
@@ -367,7 +367,7 @@ describe('Core/RequestScheduler', function() {
         var cancelFunction = jasmine.createSpy('cancelFunction');
 
         function requestFunction() {
-            return when.defer().promise;
+            return defer().promise;
         }
 
         var request = new Request({
@@ -392,7 +392,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
@@ -402,7 +402,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -422,7 +422,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBe('Request failed');
         });
     });
@@ -434,7 +434,7 @@ describe('Core/RequestScheduler', function() {
             return function() {
                 expect(priority).toBeGreaterThan(currentPriority);
                 currentPriority = priority;
-                return when.resolve();
+                return Promise.resolve();
             };
         }
 
@@ -470,7 +470,7 @@ describe('Core/RequestScheduler', function() {
         }
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         function createRequest(priority) {
@@ -522,7 +522,7 @@ describe('Core/RequestScheduler', function() {
 
     it('handles low priority requests', function() {
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         function createRequest(priority) {
@@ -558,7 +558,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -596,7 +596,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -631,7 +631,7 @@ describe('Core/RequestScheduler', function() {
         RequestScheduler.maximumRequests = 0;
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         RequestScheduler.throttleRequests = true;
@@ -662,7 +662,7 @@ describe('Core/RequestScheduler', function() {
         var deferreds = [];
 
         function requestFunction() {
-            var deferred = when.defer();
+            var deferred = defer();
             deferreds.push(deferred);
             return deferred.promise;
         }
@@ -705,7 +705,7 @@ describe('Core/RequestScheduler', function() {
         var deferred;
 
         function requestFunction() {
-            deferred = when.defer();
+            deferred = defer();
             return deferred.promise;
         }
 
@@ -726,7 +726,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -735,7 +735,7 @@ describe('Core/RequestScheduler', function() {
         var deferred;
 
         function requestFunction() {
-            deferred = when.defer();
+            deferred = defer();
             return deferred.promise;
         }
 
@@ -757,7 +757,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -766,7 +766,7 @@ describe('Core/RequestScheduler', function() {
         var deferred;
 
         function requestFunction() {
-            deferred = when.defer();
+            deferred = defer();
             return deferred.promise;
         }
 
@@ -795,7 +795,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -803,7 +803,7 @@ describe('Core/RequestScheduler', function() {
     it('unsuccessful requests raise requestCompletedEvent with error', function() {
         var deferred;
         function requestFunction() {
-            deferred = when.defer();
+            deferred = defer();
             return deferred.promise;
         }
 
@@ -828,7 +828,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -836,7 +836,7 @@ describe('Core/RequestScheduler', function() {
     it('canceled requests do not cause requestCompletedEvent to be raised', function() {
         var cancelDeferred;
         function requestCancelFunction() {
-            cancelDeferred = when.defer();
+            cancelDeferred = defer();
             return cancelDeferred.promise;
         }
 
@@ -867,7 +867,7 @@ describe('Core/RequestScheduler', function() {
                 url: 'http://test.invalid/1',
                 throttle: true,
                 throttleByServer: true,
-                requestFunction: function() { return when.defer(); }
+                requestFunction: function() { return defer(); }
             }));
             RequestScheduler.update();
             expect(promise).toBeDefined();
@@ -877,7 +877,7 @@ describe('Core/RequestScheduler', function() {
             url: 'http://test.invalid/1',
             throttle: true,
             throttleByServer: true,
-            requestFunction: function() { return when.defer(); }
+            requestFunction: function() { return defer(); }
         }));
         expect(promise).toBeUndefined();
     });

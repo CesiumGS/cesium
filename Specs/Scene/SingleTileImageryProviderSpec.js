@@ -9,7 +9,6 @@ import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import { SingleTileImageryProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/SingleTileImageryProvider', function() {
 
@@ -54,7 +53,7 @@ describe('Scene/SingleTileImageryProvider', function() {
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).catch(function (e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain(provider.url);
         });
@@ -137,7 +136,7 @@ describe('Scene/SingleTileImageryProvider', function() {
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            return when(provider.requestImage(0, 0, 0), function(image) {
+            return Promise.resolve(provider.requestImage(0, 0, 0)).then(function(image) {
                 expect(image).toBeImageOrImageBitmap();
             });
         });

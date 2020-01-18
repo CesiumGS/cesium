@@ -150,7 +150,7 @@ function loadTileset(url) {
             planeEntities.push(planeEntity);
         }
         return tileset;
-    }).otherwise(function(error) {
+    }).catch(function(error) {
         console.log(error);
     });
 }

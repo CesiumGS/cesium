@@ -1,5 +1,5 @@
-import when from '../ThirdParty/when.js';
 import defaultValue from './defaultValue.js';
+import defer from './defer.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
@@ -212,7 +212,7 @@ import Fullscreen from './Fullscreen.js';
             return supportsWebP._promise;
         }
 
-        var supportsWebPDeferred = when.defer();
+        var supportsWebPDeferred = defer();
         supportsWebP._promise = supportsWebPDeferred.promise;
         if (isEdge()) {
             // Edge's WebP support with WebGL is incomplete.

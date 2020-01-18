@@ -4,7 +4,6 @@ import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
-import when from '../ThirdParty/when.js';
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
     var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
@@ -52,7 +51,7 @@ import when from '../ThirdParty/when.js';
         // We only need a single canvas since all tiles will be the same
         this._canvas = this._createGridCanvas();
 
-        this._readyPromise = when.resolve(true);
+        this._readyPromise = Promise.resolve(true);
     }
 
     defineProperties(GridImageryProvider.prototype, {

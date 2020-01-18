@@ -1,4 +1,3 @@
-import when from '../ThirdParty/when.js';
 import Cartesian3 from './Cartesian3.js';
 import Check from './Check.js';
 
@@ -48,9 +47,9 @@ import Check from './Check.js';
                     displayName: query,
                     destination: Cartesian3.fromDegrees(longitude, latitude, height)
                 };
-                return when.resolve([result]);
+                return Promise.resolve([result]);
             }
         }
-        return when.resolve([]);
+        return Promise.resolve([]);
     };
 export default CartographicGeocoderService;

@@ -10,7 +10,6 @@ import isArray from '../Core/isArray.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
-import when from '../ThirdParty/when.js';
 import ImageryProvider from './ImageryProvider.js';
 import TimeDynamicImagery from './TimeDynamicImagery.js';
 
@@ -185,7 +184,7 @@ import TimeDynamicImagery from './TimeDynamicImagery.js';
             });
         }
 
-        this._readyPromise = when.resolve(true);
+        this._readyPromise = Promise.resolve(true);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum

@@ -18,7 +18,6 @@ import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createCanvas from '../createCanvas.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PointCloud3DTileContent', function() {
 
@@ -258,12 +257,12 @@ describe('Scene/PointCloud3DTileContent', function() {
             return DracoLoader._taskProcessorReady;
         }).then(function() {
             var decoder = DracoLoader._getDecoderTaskProcessor();
-            spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+            spyOn(decoder, 'scheduleTask').and.returnValue(Promise.reject({message : 'my error'}));
             return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
                 var root = tileset.root;
                 return root.contentReadyPromise.then(function() {
                     fail('should not resolve');
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     expect(error.message).toBe('my error');
                 });
             });
@@ -817,7 +816,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             1000 * 11  // 3 shorts (quantized xyz), 3 bytes (rgb), 2 bytes (oct-encoded normal)
         ];
 
-        return when.all(promises).then(function(tilesets) {
+        return Promise.all(promises).then(function(tilesets) {
             var length = tilesets.length;
             for (var i = 0; i < length; ++i) {
                 var content = tilesets[i].root.content;

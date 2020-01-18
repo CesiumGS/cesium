@@ -235,13 +235,13 @@ WebGLGlobeDataSource.prototype.loadUrl = function(url) {
     var that = this;
     return Cesium.Resource.fetchJson(url).then(function(json) {
         return that.load(json, url);
-    }).otherwise(function(error) {
+    }).catch(function(error) {
         //Otherwise will catch any errors or exceptions that occur
         //during the promise processing. When this happens,
         //we raise the error event and reject the promise.
         this._setLoading(false);
         that._error.raiseEvent(that, error);
-        return Cesium.when.reject(error);
+        return Promise.reject(error);
     });
 };
 

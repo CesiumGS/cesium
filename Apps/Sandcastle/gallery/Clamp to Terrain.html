@@ -183,7 +183,7 @@ Sandcastle.addDefaultToolbarMenu([{
             terrainSamplePositions.push(position);
         }
 
-        Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, terrainSamplePositions), function(samples) {
+        Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, terrainSamplePositions).then(function(samples) {
             var offset = 10.0;
             for (var i = 0; i < samples.length; ++i) {
                 samples[i].height += offset;

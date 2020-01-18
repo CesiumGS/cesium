@@ -8,6 +8,7 @@ import Color from '../Core/Color.js';
 import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -33,7 +34,6 @@ import RenderState from '../Renderer/RenderState.js';
 import ShaderProgram from '../Renderer/ShaderProgram.js';
 import ShaderSource from '../Renderer/ShaderSource.js';
 import VertexArray from '../Renderer/VertexArray.js';
-import when from '../ThirdParty/when.js';
 import BatchTable from './BatchTable.js';
 import CullFace from './CullFace.js';
 import DepthFunction from './DepthFunction.js';
@@ -336,7 +336,7 @@ import ShadowMode from './ShadowMode.js';
 
         this._createGeometryResults = undefined;
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this._batchTable = undefined;
         this._batchTableAttributeIndices = undefined;
@@ -1142,10 +1142,10 @@ import ShadowMode from './ShadowMode.js';
 
             primitive._state = PrimitiveState.CREATING;
 
-            when.all(promises, function(results) {
+            Promise.all(promises).then(function(results) {
                 primitive._createGeometryResults = results;
                 primitive._state = PrimitiveState.CREATED;
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 setReady(primitive, frameState, PrimitiveState.FAILED, error);
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
@@ -1171,7 +1171,7 @@ import ShadowMode from './ShadowMode.js';
             primitive._createGeometryResults = undefined;
             primitive._state = PrimitiveState.COMBINING;
 
-            when(promise, function(packedResult) {
+            Promise.resolve(promise).then(function(packedResult) {
                 var result = PrimitivePipeline.unpackCombineGeometryResults(packedResult);
                 primitive._geometries = result.geometries;
                 primitive._attributeLocations = result.attributeLocations;
@@ -1187,7 +1187,7 @@ import ShadowMode from './ShadowMode.js';
                 } else {
                     setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
                 }
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 setReady(primitive, frameState, PrimitiveState.FAILED, error);
             });
         }

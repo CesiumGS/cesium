@@ -1,6 +1,6 @@
-import when from '../ThirdParty/when.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
+import defer from './defer.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
@@ -56,7 +56,7 @@ import TileProviderError from './TileProviderError.js';
 
         this._errorEvent = new Event();
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this._terrainDataStructure = {
             heightScale : 1.0 / 1000.0,
@@ -120,7 +120,7 @@ import TileProviderError from './TileProviderError.js';
         }
 
         function requestMetadata() {
-            when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
+            that._resource.fetchXML().then(metadataSuccess).catch(metadataFailure);
         }
 
         requestMetadata();
@@ -256,7 +256,7 @@ import TileProviderError from './TileProviderError.js';
         }
 
         var that = this;
-        return when(promise)
+        return Promise.resolve(promise)
             .then(function(image) {
                 return new HeightmapTerrainData({
                     buffer : getImagePixels(image),

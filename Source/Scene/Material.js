@@ -37,7 +37,6 @@ import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
 import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
 import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import WaterMaterial from '../Shaders/Materials/Water.js';
-import when from '../ThirdParty/when.js';
 
     /**
      * A Material defines surface appearance through a combination of diffuse, specular,
@@ -820,7 +819,7 @@ import when from '../ThirdParty/when.js';
                     } else {
                         promise = resource.fetchImage();
                     }
-                    when(promise, function(image) {
+                    Promise.resolve(promise).then(function(image) {
                         material._loadedImages.push({
                             id: uniformId,
                             image: image
@@ -876,7 +875,7 @@ import when from '../ThirdParty/when.js';
                     Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
-                when.all(promises).then(function(images) {
+                Promise.all(promises).then(function(images) {
                     material._loadedCubeMaps.push({
                         id : uniformId,
                         images : images

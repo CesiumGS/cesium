@@ -12,7 +12,6 @@ import Rectangle from '../../Core/Rectangle.js';
 import sampleTerrainMostDetailed from '../../Core/sampleTerrainMostDetailed.js';
 import computeFlyToLocationForRectangle from '../../Scene/computeFlyToLocationForRectangle.js';
 import knockout from '../../ThirdParty/knockout.js';
-import when from '../../ThirdParty/when.js';
 import createCommand from '../createCommand.js';
 import getElement from '../getElement.js';
 
@@ -331,7 +330,7 @@ import getElement from '../getElement.js';
 
         if (!defined(availability)) {
             cartographic.height += DEFAULT_HEIGHT;
-            return when.resolve(cartographic);
+            return Promise.resolve(cartographic);
         }
 
         return sampleTerrainMostDetailed(terrainProvider, [cartographic])
@@ -373,7 +372,7 @@ import getElement from '../getElement.js';
             .then(function(result) {
                 finalDestination = ellipsoid.cartographicToCartesian(result);
             })
-            .always(function() {
+            .finally(function() {
                 // Whether terrain querying succeeded or not, fly to the destination.
                 camera.flyTo({
                     destination: finalDestination,
@@ -396,7 +395,7 @@ import getElement from '../getElement.js';
                     .then(function (result) {
                         return {state: 'fulfilled', value: result};
                     })
-                    .otherwise(function (err) {
+                    .catch(function (err) {
                         return {state: 'rejected', reason: err};
                     });
 
@@ -414,7 +413,7 @@ import getElement from '../getElement.js';
 
         viewModel._isSearchInProgress = true;
 
-        var promise = when.resolve();
+        var promise = Promise.resolve();
         for (var i = 0; i < geocoderServices.length; i++) {
             promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
         }
@@ -484,7 +483,7 @@ import getElement from '../getElement.js';
             return;
         }
 
-        var promise = when.resolve([]);
+        var promise = Promise.resolve([]);
         viewModel._geocoderServices.forEach(function (service) {
             promise = promise.then(function(results) {
                 if (results.length >= 5) {

@@ -97,7 +97,7 @@ var promise2 = Cesium.CzmlDataSource.load(czml2);
 viewer.dataSources.add(promise2);
 
 Sandcastle.addToolbarButton('Swap', function() {
-    Cesium.when.all([promise1, promise2])
+    Promise.all([promise1, promise2])
     .then(function(results) {
         var ds1 = results[0];
         var ds2 = results[1];

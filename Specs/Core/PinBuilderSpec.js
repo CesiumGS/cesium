@@ -1,7 +1,6 @@
 import { buildModuleUrl } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { PinBuilder } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/PinBuilder', function() {
 
@@ -35,7 +34,7 @@ describe('Core/PinBuilder', function() {
         var builder = new PinBuilder();
 
         //Solid square icon
-        return when(builder.fromUrl(buildModuleUrl('Assets/Textures/maki/square.png'), Color.RED, 128), function(canvas) {
+        return Promise.resolve(builder.fromUrl(buildModuleUrl('Assets/Textures/maki/square.png'), Color.RED, 128)).then(function(canvas) {
             expect(getPinColor(canvas)).toEqual(Color.RED);
             expect(getIconColor(canvas)).toEqual(Color.WHITE);
         });
@@ -45,7 +44,7 @@ describe('Core/PinBuilder', function() {
         var builder = new PinBuilder();
 
         //Solid square icon
-        return when(builder.fromMakiIconId('square', Color.YELLOW, 128), function(canvas) {
+        return Promise.resolve(builder.fromMakiIconId('square', Color.YELLOW, 128)).then(function(canvas) {
             expect(getPinColor(canvas)).toEqual(Color.YELLOW);
             expect(getIconColor(canvas)).toEqual(Color.WHITE);
         });

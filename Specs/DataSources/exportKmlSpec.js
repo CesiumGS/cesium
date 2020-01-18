@@ -4,6 +4,7 @@ import { Cartesian3 } from '../../Source/Cesium.js';
 import { Cartographic } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { defaultValue } from '../../Source/Cesium.js';
+import { defer } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
 import { Iso8601 } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
@@ -22,7 +23,6 @@ import { SampledPositionProperty } from '../../Source/Cesium.js';
 import { HeightReference } from '../../Source/Cesium.js';
 import { HorizontalOrigin } from '../../Source/Cesium.js';
 import { VerticalOrigin } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/exportKml', function() {
 
@@ -494,7 +494,7 @@ describe('DataSources/exportKml', function() {
                         expect(result.externalFiles).toBeUndefined();
                         expect(result.kmz).toBeDefined();
 
-                        var deferred = when.defer();
+                        var deferred = defer();
                         var fileReader = new FileReader();
                         fileReader.onload = function(event) {
                             // Verify its a zip archive

@@ -5,7 +5,6 @@ import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
 import { Request } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/GoogleEarthEnterpriseMetadata', function() {
 
@@ -109,7 +108,7 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
             this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             index = (index + 1) % 4;
 
-            return when();
+            return Promise.resolve();
         });
 
         var metadata = new GoogleEarthEnterpriseMetadata({
@@ -229,7 +228,7 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(e.message).toContain(url);
         });
     });

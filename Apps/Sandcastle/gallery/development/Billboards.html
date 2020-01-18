@@ -135,7 +135,7 @@ function fadeByDistance() {
 
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
-    Cesium.when.all([
+    Promise.all([
          Cesium.Resource.createIfNeeded('../images/Cesium_Logo_overlay.png').fetchImage(),
          Cesium.Resource.createIfNeeded('../images/facility.gif').fetchImage()
         ],

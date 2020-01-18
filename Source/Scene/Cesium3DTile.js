@@ -4,6 +4,7 @@ import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
@@ -24,7 +25,6 @@ import RequestState from '../Core/RequestState.js';
 import RequestType from '../Core/RequestType.js';
 import Resource from '../Core/Resource.js';
 import RuntimeError from '../Core/RuntimeError.js';
-import when from '../ThirdParty/when.js';
 import Cesium3DTileContentFactory from './Cesium3DTileContentFactory.js';
 import Cesium3DTileContentState from './Cesium3DTileContentState.js';
 import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
@@ -834,8 +834,8 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
         var contentState = this._contentState;
         this._contentState = Cesium3DTileContentState.LOADING;
-        this._contentReadyToProcessPromise = when.defer();
-        this._contentReadyPromise = when.defer();
+        this._contentReadyToProcessPromise = defer();
+        this._contentReadyPromise = defer();
 
         if (expired) {
             this.expireDate = undefined;
@@ -884,7 +884,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             if (request.state === RequestState.CANCELLED) {
                 // Cancelled due to low priority - try again later.
                 that._contentState = contentState;

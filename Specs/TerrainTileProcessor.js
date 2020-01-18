@@ -1,9 +1,9 @@
 import { clone } from '../Source/Cesium.js';
+import { defer } from '../Source/Cesium.js';
 import { Texture } from '../Source/Cesium.js';
 import { GlobeSurfaceTile } from '../Source/Cesium.js';
 import { ImageryLayer } from '../Source/Cesium.js';
 import { TerrainState } from '../Source/Cesium.js';
-import { when } from '../Source/Cesium.js';
 
     function TerrainTileProcessor(frameState, terrainProvider, imageryLayerCollection) {
         this.frameState = frameState;
@@ -15,7 +15,7 @@ import { when } from '../Source/Cesium.js';
     TerrainTileProcessor.prototype.process = function(tiles, maxIterations) {
         var that = this;
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         function getState(tile) {
             return [

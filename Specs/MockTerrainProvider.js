@@ -5,7 +5,6 @@ import { GeographicTilingScheme } from '../Source/Cesium.js';
 import { HeightmapTerrainData } from '../Source/Cesium.js';
 import { RuntimeError } from '../Source/Cesium.js';
 import { TerrainProvider } from '../Source/Cesium.js';
-import { when } from '../Source/Cesium.js';
 
     function MockTerrainProvider() {
         this.tilingScheme = new GeographicTilingScheme();
@@ -36,7 +35,7 @@ import { when } from '../Source/Cesium.js';
                 throw new RuntimeError('requestTileGeometry failed as requested.');
             }
 
-            return when(willSucceed).then(function() {
+            return Promise.resolve(willSucceed).then(function() {
                 return createTerrainData(that, x, y, level, false);
             });
         });
@@ -199,7 +198,7 @@ import { when } from '../Source/Cesium.js';
             var args = arguments;
 
             return runLater(function() {
-                return when(willSucceed).then(function() {
+                return Promise.resolve(willSucceed).then(function() {
                     return originalCreateMesh.apply(terrainData, args);
                 });
             });

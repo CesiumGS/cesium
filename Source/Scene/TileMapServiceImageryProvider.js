@@ -1,6 +1,7 @@
 import Cartesian2 from '../Core/Cartesian2.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeographicProjection from '../Core/GeographicProjection.js';
@@ -10,7 +11,6 @@ import Resource from '../Core/Resource.js';
 import RuntimeError from '../Core/RuntimeError.js';
 import TileProviderError from '../Core/TileProviderError.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
-import when from '../ThirdParty/when.js';
 import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     /**
@@ -71,7 +71,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         }
         //>>includeEnd('debug');
 
-        var deferred = when.defer();
+        var deferred = defer();
         UrlTemplateImageryProvider.call(this, deferred.promise);
 
         this._tmsResource = undefined;
@@ -86,7 +86,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
         var resource;
         var that = this;
-        when(options.url)
+        Promise.resolve(options.url)
             .then(function(url) {
                 resource = Resource.createIfNeeded(url);
                 resource.appendForwardSlash();
@@ -98,7 +98,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
                 that._requestMetadata();
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 deferred.reject(e);
             });
     }
@@ -110,7 +110,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     TileMapServiceImageryProvider.prototype._requestMetadata = function() {
         // Try to load remaining parameters from XML
-        this._xmlResource.fetchXML().then(this._metadataSuccess).otherwise(this._metadataFailure);
+        this._xmlResource.fetchXML().then(this._metadataSuccess).catch(this._metadataFailure);
     };
 
     TileMapServiceImageryProvider.prototype._metadataSuccess = function(xml) {

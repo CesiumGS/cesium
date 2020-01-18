@@ -1,4 +1,3 @@
-import when from '../ThirdParty/when.js';
 import BoundingSphere from './BoundingSphere.js';
 import Cartesian2 from './Cartesian2.js';
 import Cartesian3 from './Cartesian3.js';
@@ -300,7 +299,7 @@ import TerrainMesh from './TerrainMesh.js';
         }
 
         var that = this;
-        return when(verticesPromise, function(result) {
+        return Promise.resolve(verticesPromise).then(function(result) {
             var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
             var vertexCount = vertexCountWithoutSkirts + that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
@@ -441,7 +440,7 @@ import TerrainMesh from './TerrainMesh.js';
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
         var credits = this._credits;
 
-        return when(upsamplePromise).then(function(result) {
+        return Promise.resolve(upsamplePromise).then(function(result) {
             var quantizedVertices = new Uint16Array(result.vertices);
             var indicesTypedArray = IndexDatatype.createTypedArray(quantizedVertices.length / 3, result.indices);
             var encodedNormals;

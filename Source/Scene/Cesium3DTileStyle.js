@@ -4,7 +4,6 @@ import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Resource from '../Core/Resource.js';
-import when from '../ThirdParty/when.js';
 import ConditionsExpression from './ConditionsExpression.js';
 import Expression from './Expression.js';
 
@@ -89,7 +88,7 @@ import Expression from './Expression.js';
             var resource = Resource.createIfNeeded(style);
             promise = resource.fetchJson(style);
         } else {
-            promise = when.resolve(style);
+            promise = Promise.resolve(style);
         }
 
         var that = this;

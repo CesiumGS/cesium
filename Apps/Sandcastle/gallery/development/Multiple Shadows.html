@@ -74,7 +74,7 @@
                     multiplier : 0.5,
                     loop : Cesium.ModelAnimationLoop.REPEAT
                 });
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 window.alert(error);
             });
 

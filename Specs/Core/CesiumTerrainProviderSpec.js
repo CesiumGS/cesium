@@ -1,4 +1,5 @@
 import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { defer } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { getAbsoluteUri } from '../../Source/Cesium.js';
@@ -11,7 +12,6 @@ import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/CesiumTerrainProvider', function() {
 
@@ -88,7 +88,7 @@ describe('Core/CesiumTerrainProvider', function() {
         }).then(function() {
             var promise = terrainProvider.requestTileGeometry(level, x, y);
 
-            return when(promise, f, function(error) {
+            return Promise.resolve(promise).then(f).catch(function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
         });
@@ -128,7 +128,7 @@ describe('Core/CesiumTerrainProvider', function() {
 
     it('resolves readyPromise when url promise is used', function() {
         var provider = new CesiumTerrainProvider({
-            url : when.resolve('made/up/url')
+            url : Promise.resolve('made/up/url')
         });
 
         return provider.readyPromise.then(function (result) {
@@ -155,13 +155,13 @@ describe('Core/CesiumTerrainProvider', function() {
     it('rejects readyPromise when url rejects', function() {
         var error = new Error();
         var provider = new CesiumTerrainProvider({
-            url: when.reject(error)
+            url: Promise.reject(error)
         });
         return provider.readyPromise
             .then(function() {
                 fail('should not resolve');
             })
-            .otherwise(function(result) {
+            .catch(function(result) {
                 expect(result).toBe(error);
                 expect(provider.ready).toBe(false);
             });
@@ -333,7 +333,7 @@ describe('Core/CesiumTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         provider.errorEvent.addEventListener(function(e) {
             deferred.resolve(e);
@@ -351,7 +351,7 @@ describe('Core/CesiumTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         provider.errorEvent.addEventListener(function(e) {
             deferred.resolve(e);
@@ -369,7 +369,7 @@ describe('Core/CesiumTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         provider.errorEvent.addEventListener(function(e) {
             deferred.resolve(e);
@@ -404,7 +404,7 @@ describe('Core/CesiumTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         provider.errorEvent.addEventListener(function(e) {
             deferred.resolve(e);
@@ -422,7 +422,7 @@ describe('Core/CesiumTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         provider.errorEvent.addEventListener(function(e) {
             deferred.resolve(e);

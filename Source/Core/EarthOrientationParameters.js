@@ -1,4 +1,3 @@
-import when from '../ThirdParty/when.js';
 import binarySearch from './binarySearch.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
@@ -82,9 +81,9 @@ import TimeStandard from './TimeStandard.js';
 
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(resource.fetchJson(), function(eopData) {
+            this._downloadPromise = resource.fetchJson().then(function(eopData) {
                 onDataReady(that, eopData);
-            }, function() {
+            }).catch(function() {
                 that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + resource.url + '.';
             });
         } else {
@@ -101,7 +100,7 @@ import TimeStandard from './TimeStandard.js';
      */
     EarthOrientationParameters.NONE = freezeObject({
             getPromiseToLoad : function() {
-                return when();
+                return Promise.resolve();
             },
             compute : function(date, result) {
                 if (!defined(result)) {
@@ -126,7 +125,7 @@ import TimeStandard from './TimeStandard.js';
      * @see when
      */
     EarthOrientationParameters.prototype.getPromiseToLoad = function() {
-        return when(this._downloadPromise);
+        return Promise.resolve(this._downloadPromise);
     };
 
     /**

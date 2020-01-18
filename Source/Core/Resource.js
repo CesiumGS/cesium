@@ -1,10 +1,10 @@
 import Uri from '../ThirdParty/Uri.js';
-import when from '../ThirdParty/when.js';
 import appendForwardSlash from './appendForwardSlash.js';
 import Check from './Check.js';
 import clone from './clone.js';
 import combine from './combine.js';
 import defaultValue from './defaultValue.js';
+import defer from './defer.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
@@ -232,7 +232,7 @@ import TrustedServers from './TrustedServers.js';
      *         resource.queryParameters.access_token = token;
      *         return true;
      *       })
-     *       .otherwise(function() {
+     *       .catch(function() {
      *         return false;
      *       });
      *   }
@@ -360,7 +360,7 @@ import TrustedServers from './TrustedServers.js';
         }
 
         if (typeof createImageBitmap !== 'function') {
-            supportsImageBitmapOptionsPromise = when.resolve(false);
+            supportsImageBitmapOptionsPromise = Promise.resolve(false);
             return supportsImageBitmapOptionsPromise;
         }
 
@@ -378,7 +378,7 @@ import TrustedServers from './TrustedServers.js';
             .then(function(imageBitmap) {
                 return true;
             })
-            .otherwise(function() {
+            .catch(function() {
                 return false;
             });
 
@@ -663,11 +663,11 @@ import TrustedServers from './TrustedServers.js';
     Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
         if ((typeof retryCallback !== 'function') || (this._retryCount >= this.retryAttempts)) {
-            return when(false);
+            return Promise.resolve(false);
         }
 
         var that = this;
-        return when(retryCallback(this, error))
+        return Promise.resolve(retryCallback(this, error))
             .then(function(result) {
                 ++that._retryCount;
 
@@ -732,7 +732,7 @@ import TrustedServers from './TrustedServers.js';
      * // load a single URL asynchronously
      * resource.fetchArrayBuffer().then(function(arrayBuffer) {
      *     // use the data
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -776,7 +776,7 @@ import TrustedServers from './TrustedServers.js';
      * // load a single URL asynchronously
      * resource.fetchBlob().then(function(blob) {
      *     // use the data
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -824,12 +824,12 @@ import TrustedServers from './TrustedServers.js';
      * // load a single image asynchronously
      * resource.fetchImage().then(function(image) {
      *     // use the loaded image
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
      * // load several images in parallel
-     * when.all([resource1.fetchImage(), resource2.fetchImage()]).then(function(images) {
+     * Promise.all([resource1.fetchImage(), resource2.fetchImage()]).then(function(images) {
      *     // images is an array containing all the loaded images
      * });
      *
@@ -910,7 +910,7 @@ import TrustedServers from './TrustedServers.js';
                 window.URL.revokeObjectURL(generatedBlobResource.url);
                 return image;
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 if (defined(generatedBlobResource)) {
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
@@ -921,7 +921,7 @@ import TrustedServers from './TrustedServers.js';
                 // zero-length response that is returned when a tile is not available.
                 error.blob = generatedBlob;
 
-                return when.reject(error);
+                return Promise.reject(error);
             });
     };
 
@@ -950,7 +950,7 @@ import TrustedServers from './TrustedServers.js';
                 crossOrigin = resource.isCrossOriginUrl;
             }
 
-            var deferred = when.defer();
+            var deferred = defer();
             Resource._Implementations.createImage(request, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
@@ -962,10 +962,10 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return promise
-            .otherwise(function(e) {
+            .catch(function(e) {
                 // Don't retry cancelled or otherwise aborted requests
                 if (request.state !== RequestState.FAILED) {
-                    return when.reject(e);
+                    return Promise.reject(e);
                 }
 
                 return resource.retryOnError(e)
@@ -982,7 +982,7 @@ import TrustedServers from './TrustedServers.js';
                             });
                         }
 
-                        return when.reject(e);
+                        return Promise.reject(e);
                     });
             });
     }
@@ -1031,7 +1031,7 @@ import TrustedServers from './TrustedServers.js';
      * });
      * resource.fetchText().then(function(text) {
      *     // Do something with the text
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -1079,7 +1079,7 @@ import TrustedServers from './TrustedServers.js';
      * @example
      * resource.fetchJson().then(function(jsonData) {
      *     // Do something with the JSON object
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -1141,7 +1141,7 @@ import TrustedServers from './TrustedServers.js';
      *   'X-Custom-Header' : 'some value'
      * }).then(function(document) {
      *     // Do something with the document
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -1186,7 +1186,7 @@ import TrustedServers from './TrustedServers.js';
      * // load a data asynchronously
      * resource.fetchJsonp().then(function(data) {
      *     // use the loaded data
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -1214,7 +1214,7 @@ import TrustedServers from './TrustedServers.js';
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
-            var deferred = when.defer();
+            var deferred = defer();
 
             //assign a function with that name in the global scope
             window[functionName] = function(data) {
@@ -1237,9 +1237,9 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return promise
-            .otherwise(function(e) {
+            .catch(function(e) {
                 if (request.state !== RequestState.FAILED) {
-                    return when.reject(e);
+                    return Promise.reject(e);
                 }
 
                 return resource.retryOnError(e)
@@ -1252,7 +1252,7 @@ import TrustedServers from './TrustedServers.js';
                             return fetchJsonp(resource, callbackParameterName, functionName);
                         }
 
-                        return when.reject(e);
+                        return Promise.reject(e);
                     });
             });
     }
@@ -1293,7 +1293,7 @@ import TrustedServers from './TrustedServers.js';
             var overrideMimeType = options.overrideMimeType;
             var method = options.method;
             var data = options.data;
-            var deferred = when.defer();
+            var deferred = defer();
             var xhr = Resource._Implementations.loadWithXhr(resource.url, responseType, method, data, headers, deferred, overrideMimeType);
             if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
@@ -1312,9 +1312,9 @@ import TrustedServers from './TrustedServers.js';
             .then(function(data) {
                 return data;
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 if (request.state !== RequestState.FAILED) {
-                    return when.reject(e);
+                    return Promise.reject(e);
                 }
 
                 return resource.retryOnError(e)
@@ -1327,7 +1327,7 @@ import TrustedServers from './TrustedServers.js';
                             return resource.fetch(options);
                         }
 
-                        return when.reject(e);
+                        return Promise.reject(e);
                     });
             });
     };
@@ -1399,7 +1399,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.fetch()
      *   .then(function(body) {
      *       // use the data
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1455,7 +1455,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.delete()
      *   .then(function(body) {
      *       // use the data
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1513,7 +1513,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.head()
      *   .then(function(headers) {
      *       // use the data
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1569,7 +1569,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.options()
      *   .then(function(headers) {
      *       // use the data
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1627,7 +1627,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.post(data)
      *   .then(function(result) {
      *       // use the result
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1688,7 +1688,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.put(data)
      *   .then(function(result) {
      *       // use the result
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1749,7 +1749,7 @@ import TrustedServers from './TrustedServers.js';
      * resource.patch(data)
      *   .then(function(result) {
      *       // use the result
-     *   }).otherwise(function(error) {
+     *   }).catch(function(error) {
      *       // an error occurred
      *   });
      *
@@ -1838,7 +1838,7 @@ import TrustedServers from './TrustedServers.js';
                 }
                 var responseType = 'blob';
                 var method = 'GET';
-                var xhrDeferred = when.defer();
+                var xhrDeferred = defer();
                 var xhr = Resource._Implementations.loadWithXhr(
                     url,
                     responseType,
@@ -1868,7 +1868,7 @@ import TrustedServers from './TrustedServers.js';
                     });
                 }).then(deferred.resolve);
             })
-            .otherwise(deferred.reject);
+            .catch(deferred.reject);
     };
 
     /**
@@ -2049,7 +2049,7 @@ import TrustedServers from './TrustedServers.js';
     };
 
     Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
-        return loadAndExecuteScript(url, functionName).otherwise(deferred.reject);
+        return loadAndExecuteScript(url, functionName).catch(deferred.reject);
     };
 
     /**

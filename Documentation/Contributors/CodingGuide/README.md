@@ -130,7 +130,7 @@ function Model(options) {
     this._allowPicking = defaultValue(options.allowPicking, true);
 
     this._ready = false;
-    this._readyPromise = when.defer();
+    this._readyPromise = defer();
     // ...
 };
 ```

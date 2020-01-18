@@ -43,7 +43,6 @@ import LabelStyle from '../Scene/LabelStyle.js';
 import ShadowMode from '../Scene/ShadowMode.js';
 import VerticalOrigin from '../Scene/VerticalOrigin.js';
 import Uri from '../ThirdParty/Uri.js';
-import when from '../ThirdParty/when.js';
 import BillboardGraphics from './BillboardGraphics.js';
 import BoxGraphics from './BoxGraphics.js';
 import CallbackProperty from './CallbackProperty.js';
@@ -2089,13 +2088,13 @@ import WallGraphics from './WallGraphics.js';
 
         DataSource.setLoading(dataSource, true);
 
-        return when(promise, function(czml) {
+        return Promise.resolve(promise).then(function(czml) {
             return loadCzml(dataSource, czml, sourceUri, clear);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     }
 

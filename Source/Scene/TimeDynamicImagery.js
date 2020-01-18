@@ -119,7 +119,7 @@ import RequestType from '../Core/RequestType.js';
         if (defined(cache) && defined(cache[key])) {
             var item = cache[key];
             result = item.promise
-                .otherwise(function(e) {
+                .catch(function(e) {
                     // Set the correct state in case it was cancelled
                     request.state = item.request.state;
                     throw e;

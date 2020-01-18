@@ -6,7 +6,6 @@ import { RequestScheduler } from '../../Source/Cesium.js';
 import { RequestType } from '../../Source/Cesium.js';
 import { TimeIntervalCollection } from '../../Source/Cesium.js';
 import { TimeDynamicImagery } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/TimeDynamicImagery', function() {
 
@@ -144,7 +143,7 @@ describe('Scene/TimeDynamicImagery', function() {
         var options = {
             clock: clock,
             times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
+            requestImageFunction: jasmine.createSpy().and.returnValue(Promise.resolve()),
             reloadFunction: jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
@@ -169,7 +168,7 @@ describe('Scene/TimeDynamicImagery', function() {
         var options = {
             clock: clock,
             times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
+            requestImageFunction: jasmine.createSpy().and.returnValue(Promise.resolve()),
             reloadFunction: jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
@@ -193,7 +192,7 @@ describe('Scene/TimeDynamicImagery', function() {
         var options = {
             clock: clock,
             times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
+            requestImageFunction: jasmine.createSpy().and.returnValue(Promise.resolve()),
             reloadFunction: jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);

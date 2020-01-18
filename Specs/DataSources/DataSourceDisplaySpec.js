@@ -10,7 +10,6 @@ import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
 import { GroundPrimitive } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import MockDataSource from '../MockDataSource.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/DataSourceDisplay', function() {
 
@@ -21,7 +20,7 @@ describe('DataSources/DataSourceDisplay', function() {
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
 
-        return when.join(GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights());
+        return Promise.all([GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights()]);
     });
 
     afterAll(function() {

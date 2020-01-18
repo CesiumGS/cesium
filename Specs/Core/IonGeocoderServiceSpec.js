@@ -2,7 +2,6 @@ import { GeocodeType } from '../../Source/Cesium.js';
 import { Ion } from '../../Source/Cesium.js';
 import { IonGeocoderService } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/IonGeocoderService', function() {
 
@@ -39,7 +38,7 @@ describe('Core/IonGeocoderService', function() {
     it('calls inner geocoder and returns result', function () {
         var service = new IonGeocoderService({ scene: scene });
 
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(service._pelias, 'geocode').and.returnValue(expectedResult);
 
         var query = 'some query';

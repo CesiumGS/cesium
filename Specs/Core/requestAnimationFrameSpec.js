@@ -1,11 +1,11 @@
 import { cancelAnimationFrame } from '../../Source/Cesium.js';
+import { defer } from '../../Source/Cesium.js';
 import { requestAnimationFrame } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/requestAnimationFrame', function() {
 
     it('calls the callback', function() {
-        var deferred = when.defer();
+        var deferred = defer();
         var requestID = requestAnimationFrame(function() {
             deferred.resolve();
         });
@@ -14,7 +14,7 @@ describe('Core/requestAnimationFrame', function() {
     });
 
     it('provides a timestamp that increases each frame', function() {
-        var deferred = when.defer();
+        var deferred = defer();
 
         var callbackTimestamps = [];
 
@@ -36,7 +36,7 @@ describe('Core/requestAnimationFrame', function() {
     });
 
     it('can cancel a callback', function() {
-        var deferred = when.defer();
+        var deferred = defer();
 
         var shouldNotBeCalled = jasmine.createSpy('shouldNotBeCalled');
 

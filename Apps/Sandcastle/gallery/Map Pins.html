@@ -45,7 +45,7 @@ var questionPin = viewer.entities.add({
 });
 
 var url = Cesium.buildModuleUrl('Assets/Textures/maki/grocery.png');
-var groceryPin = Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), function(canvas) {
+var groceryPin = Promise.resolve(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48)).then(function(canvas) {
     return viewer.entities.add({
         name : 'Grocery store',
         position : Cesium.Cartesian3.fromDegrees(-75.1705217, 39.921786),
@@ -57,7 +57,7 @@ var groceryPin = Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), fu
 });
 
 //Create a red pin representing a hospital from the maki icon set.
-var hospitalPin = Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), function(canvas) {
+var hospitalPin = Promise.resolve(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48)).then(function(canvas) {
     return viewer.entities.add({
         name : 'Hospital',
         position : Cesium.Cartesian3.fromDegrees(-75.1698606, 39.9211275),
@@ -69,7 +69,7 @@ var hospitalPin = Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color
 });
 
 //Since some of the pins are created asynchronously, wait for them all to load before zooming/
-Cesium.when.all([bluePin, questionPin, groceryPin, hospitalPin], function(pins){
+Promise.all([bluePin, questionPin, groceryPin, hospitalPin], function(pins){
     viewer.zoomTo(pins);
 });
 

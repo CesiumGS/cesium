@@ -115,7 +115,7 @@ model.readyPromise.then(function(model) {
             model.specularEnvironmentMaps = undefined;
         }
     });
-}).otherwise(function(error){
+}).catch(function(error){
     window.alert(error);
 });
 //Sandcastle_End

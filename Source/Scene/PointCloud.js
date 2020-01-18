@@ -7,6 +7,7 @@ import Color from '../Core/Color.js';
 import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -25,7 +26,6 @@ import Pass from '../Renderer/Pass.js';
 import RenderState from '../Renderer/RenderState.js';
 import ShaderProgram from '../Renderer/ShaderProgram.js';
 import VertexArray from '../Renderer/VertexArray.js';
-import when from '../ThirdParty/when.js';
 import BlendingState from './BlendingState.js';
 import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
 import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
@@ -107,7 +107,7 @@ import StencilConstants from './StencilConstants.js';
         this._mode = undefined;
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
         this._pointsLength = 0;
         this._geometryByteLength = 0;
 
@@ -1235,7 +1235,7 @@ import StencilConstants from './StencilConstants.js';
                     parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
                     parsedContent.batchIds = defaultValue(decodedBatchIds, parsedContent.batchIds);
                     parsedContent.styleableProperties = styleableProperties;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     pointCloud._decodingState = DecodingState.FAILED;
                     pointCloud._readyPromise.reject(error);
                 });

@@ -167,7 +167,7 @@ import Axis from './Axis.js';
                 ++loadResources.pendingBufferLoads;
                 bufferResource.fetchArrayBuffer()
                     .then(bufferLoad(model, bufferViewId))
-                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
+                    .catch(ModelUtility.getFailedLoadFunction(model, 'buffer', bufferResource.url));
             }
         });
     };

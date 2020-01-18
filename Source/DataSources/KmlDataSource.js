@@ -11,6 +11,7 @@ import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -41,7 +42,6 @@ import LabelStyle from '../Scene/LabelStyle.js';
 import SceneMode from '../Scene/SceneMode.js';
 import Autolinker from '../ThirdParty/Autolinker.js';
 import Uri from '../ThirdParty/Uri.js';
-import when from '../ThirdParty/when.js';
 import zip from '../ThirdParty/zip.js';
 import BillboardGraphics from './BillboardGraphics.js';
 import CompositePositionProperty from './CompositePositionProperty.js';
@@ -181,7 +181,7 @@ import WallGraphics from './WallGraphics.js';
 
     function DeferredLoading(dataSource) {
         this._dataSource = dataSource;
-        this._deferred = when.defer();
+        this._deferred = defer();
         this._stack = [];
         this._promises = [];
         this._timeoutSet = false;
@@ -219,7 +219,7 @@ import WallGraphics from './WallGraphics.js';
             deferred.resolve();
         }
 
-        return when.join(deferred.promise, when.all(this._promises));
+        return Promise.all([deferred.promise, Promise.all(this._promises)]);
     };
 
     DeferredLoading.prototype.process = function() {
@@ -303,7 +303,7 @@ import WallGraphics from './WallGraphics.js';
 
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
-        var deferred = when.defer();
+        var deferred = defer();
         var reader = new FileReader();
         reader.addEventListener('load', function() {
             deferred.resolve(new DataView(reader.result).getUint32(0, false) === 0x504b0304);
@@ -316,7 +316,7 @@ import WallGraphics from './WallGraphics.js';
     }
 
     function readBlobAsText(blob) {
-        var deferred = when.defer();
+        var deferred = defer();
         var reader = new FileReader();
         reader.addEventListener('load', function() {
             deferred.resolve(reader.result);
@@ -2324,7 +2324,7 @@ import WallGraphics from './WallGraphics.js';
                     } else if (viewRefreshMode === 'onRegion') {
                         oneTimeWarning('kml-refrehMode-onRegion', 'KML - Unsupported viewRefreshMode: onRegion');
                     }
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     oneTimeWarning('An error occured during loading ' + href.url);
                     dataSource._error.raiseEvent(dataSource, error);
                 });
@@ -2360,7 +2360,7 @@ import WallGraphics from './WallGraphics.js';
 
         var deferredLoading = new KmlDataSource._DeferredLoading(dataSource);
         var styleCollection = new EntityCollection(dataSource);
-        return when.all(processStyles(dataSource, kml, styleCollection, sourceResource, false, uriResolver)).then(function() {
+        return Promise.all(processStyles(dataSource, kml, styleCollection, sourceResource, false, uriResolver)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -2394,7 +2394,7 @@ import WallGraphics from './WallGraphics.js';
     }
 
     function loadKmz(dataSource, entityCollection, blob, sourceResource) {
-        var deferred = when.defer();
+        var deferred = defer();
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
@@ -2404,7 +2404,7 @@ import WallGraphics from './WallGraphics.js';
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
-                        var innerDefer = when.defer();
+                        var innerDefer = defer();
                         promises.push(innerDefer.promise);
                         if (/\.kml$/i.test(entry.filename)) {
                             // We use the first KML document we come across
@@ -2431,7 +2431,7 @@ import WallGraphics from './WallGraphics.js';
                 if (defined(docEntry)) {
                     loadXmlFromZip(docEntry, uriResolver, docDefer);
                 }
-                when.all(promises).then(function() {
+                Promise.all(promises).then(function() {
                     reader.close();
                     if (!defined(uriResolver.kml)) {
                         deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
@@ -2439,7 +2439,7 @@ import WallGraphics from './WallGraphics.js';
                     }
                     uriResolver.keys = Object.keys(uriResolver);
                     return loadKml(dataSource, entityCollection, uriResolver.kml, sourceResource, uriResolver);
-                }).then(deferred.resolve).otherwise(deferred.reject);
+                }).then(deferred.resolve).catch(deferred.reject);
             });
         }, function(e) {
             deferred.reject(e);
@@ -2475,7 +2475,7 @@ import WallGraphics from './WallGraphics.js';
 
         sourceUri = Resource.createIfNeeded(sourceUri);
 
-        return when(promise)
+        return Promise.resolve(promise)
             .then(function(dataToLoad) {
                 if (dataToLoad instanceof Blob) {
                     return isZipFile(dataToLoad).then(function(isZip) {
@@ -2521,10 +2521,10 @@ import WallGraphics from './WallGraphics.js';
                 }
                 return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 dataSource._error.raiseEvent(dataSource, error);
                 console.log(error);
-                return when.reject(error);
+                return Promise.reject(error);
             });
     }
 
@@ -2859,11 +2859,11 @@ import WallGraphics from './WallGraphics.js';
             DataSource.setLoading(that, false);
 
             return that;
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     };
 
@@ -3090,7 +3090,7 @@ import WallGraphics from './WallGraphics.js';
 
                     load(that, newEntityCollection, href, {context : entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
-                        .otherwise(function(error) {
+                        .catch(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
                             console.log(msg);
                             that._error.raiseEvent(that, msg);

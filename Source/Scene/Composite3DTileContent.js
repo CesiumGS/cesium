@@ -1,10 +1,10 @@
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getMagic from '../Core/getMagic.js';
 import RuntimeError from '../Core/RuntimeError.js';
-import when from '../ThirdParty/when.js';
 
     /**
      * Represents the contents of a
@@ -24,7 +24,7 @@ import when from '../ThirdParty/when.js';
         this._tile = tile;
         this._resource = resource;
         this._contents = [];
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         initialize(this, arrayBuffer, byteOffset, factory);
     }
@@ -201,9 +201,9 @@ import when from '../ThirdParty/when.js';
             byteOffset += tileByteLength;
         }
 
-        when.all(contentPromises).then(function() {
+        Promise.all(contentPromises).then(function() {
             content._readyPromise.resolve(content);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             content._readyPromise.reject(error);
         });
     }

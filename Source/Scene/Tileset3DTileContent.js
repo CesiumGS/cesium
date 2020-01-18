@@ -1,9 +1,9 @@
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import RuntimeError from '../Core/RuntimeError.js';
-import when from '../ThirdParty/when.js';
 
     /**
      * Represents content for a tile in a
@@ -22,7 +22,7 @@ import when from '../ThirdParty/when.js';
         this._tileset = tileset;
         this._tile = tile;
         this._resource = resource;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this.featurePropertiesDirty = false;
 

@@ -75,7 +75,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             //Since the population is a huge number, we divide by 50.
             entity.polygon.extrudedHeight = entity.properties.Population / 50.0;
         }
-    }).otherwise(function(error){
+    }).catch(function(error){
         //Display any errrors encountered while loading.
         window.alert(error);
     });

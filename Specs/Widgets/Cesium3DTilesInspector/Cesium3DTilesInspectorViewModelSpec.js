@@ -1,8 +1,8 @@
 import { Cesium3DTileset } from '../../../Source/Cesium.js';
 import { Cesium3DTileStyle } from '../../../Source/Cesium.js';
+import { defer } from '../../../Source/Cesium.js';
 import { Globe } from '../../../Source/Cesium.js';
 import createScene from '../../createScene.js';
-import { when } from '../../../Source/Cesium.js';
 import { Cesium3DTilesInspectorViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', function() {
@@ -58,7 +58,7 @@ describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', funct
                 url : tilesetUrl
             });
             viewModel.tileset = tileset;
-            var done = when.defer();
+            var done = defer();
             tileset.readyPromise.then(function() {
                 expect(viewModel.properties.indexOf('id') !== -1).toBe(true);
                 expect(viewModel.properties.indexOf('Longitude') !== -1).toBe(true);

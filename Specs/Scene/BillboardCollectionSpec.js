@@ -5,6 +5,7 @@ import { Cartesian3 } from '../../Source/Cesium.js';
 import { CesiumTerrainProvider } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { createGuid } from '../../Source/Cesium.js';
+import { defer } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
 import { NearFarScalar } from '../../Source/Cesium.js';
@@ -22,7 +23,6 @@ import { VerticalOrigin } from '../../Source/Cesium.js';
 import createGlobe from '../createGlobe.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/BillboardCollection', function() {
 
@@ -41,7 +41,7 @@ describe('Scene/BillboardCollection', function() {
         context = scene.context;
         camera = scene.camera;
 
-        return when.join(
+        return Promise.all([
             Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
                 greenImage = result;
             }),
@@ -54,7 +54,7 @@ describe('Scene/BillboardCollection', function() {
             Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
             })
-        );
+        ]);
     });
 
     afterAll(function() {
@@ -1676,7 +1676,7 @@ describe('Scene/BillboardCollection', function() {
         return pollToPromise(function() {
             return one.ready;
         }).then(function() {
-            var deferred = when.defer();
+            var deferred = defer();
 
             // render and yield control several times to make sure the
             // green image doesn't clobber the blue
@@ -1716,7 +1716,7 @@ describe('Scene/BillboardCollection', function() {
         expect(one.ready).toEqual(false);
         expect(one.image).toBeUndefined();
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         // render and yield control several times to make sure the
         // green image never loads
@@ -1747,7 +1747,7 @@ describe('Scene/BillboardCollection', function() {
 
         billboards.remove(one);
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         // render and yield control several times to make sure the
         // green image doesn't crash when it loads

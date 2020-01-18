@@ -1,4 +1,3 @@
-import when from '../ThirdParty/when.js';
 import Check from './Check.js';
 
     /**
@@ -31,8 +30,8 @@ import Check from './Check.js';
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
      *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
      * ];
-     * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
-     * Cesium.when(promise, function(updatedPositions) {
+     * Cesium.sampleTerrain(terrainProvider, 11, positions)
+     * .then(function(updatedPositions) {
      *     // positions[0].height and positions[1].height have been updated.
      *     // updatedPositions is just a reference to positions.
      * });
@@ -84,11 +83,11 @@ import Check from './Check.js';
             var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
             var tilePromise = requestPromise
                 .then(createInterpolateFunction(tileRequest))
-                .otherwise(createMarkFailedFunction(tileRequest));
+                .catch(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 
-        return when.all(tilePromises, function() {
+        return Promise.all(tilePromises, function() {
             return positions;
         });
     }

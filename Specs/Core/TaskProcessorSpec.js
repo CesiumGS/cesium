@@ -1,7 +1,6 @@
 import { FeatureDetection } from '../../Source/Cesium.js';
 import { TaskProcessor } from '../../Source/Cesium.js';
 import absolutize from '../absolutize.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/TaskProcessor', function() {
 
@@ -51,7 +50,7 @@ describe('Core/TaskProcessor', function() {
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        return when(TaskProcessor._canTransferArrayBuffer, function(canTransferArrayBuffer) {
+        return Promise.resolve(TaskProcessor._canTransferArrayBuffer).then(function(canTransferArrayBuffer) {
             var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
             if (canTransferArrayBuffer) {
@@ -90,7 +89,7 @@ describe('Core/TaskProcessor', function() {
 
         return taskProcessor.scheduleTask(parameters).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error.message).toEqual(message);
         });
     });
@@ -105,7 +104,7 @@ describe('Core/TaskProcessor', function() {
 
         return taskProcessor.scheduleTask(parameters).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toContain('postMessage failed');
         });
     });
@@ -126,7 +125,7 @@ describe('Core/TaskProcessor', function() {
 
         return taskProcessor.scheduleTask(parameters).then(function(result) {
             expect(eventRaised).toBe(true);
-        }).always(function () {
+        }).finally(function () {
             removeListenerCallback();
         });
     });
@@ -147,10 +146,10 @@ describe('Core/TaskProcessor', function() {
 
         return taskProcessor.scheduleTask(parameters).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(eventRaised).toBe(true);
 
-        }).always(function () {
+        }).finally(function () {
             removeListenerCallback();
         });
     });

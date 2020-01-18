@@ -4,7 +4,6 @@ import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
 import { GridImageryProvider } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/GridImageryProvider', function() {
 
@@ -57,7 +56,7 @@ describe('Scene/GridImageryProvider', function() {
             expect(provider.tileDiscardPolicy).toBeUndefined();
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
-            return when(provider.requestImage(0, 0, 0), function(image) {
+            return Promise.resolve(provider.requestImage(0, 0, 0)).then(function(image) {
                 expect(image).toBeDefined();
             });
         });

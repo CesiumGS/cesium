@@ -6,6 +6,7 @@ import Color from '../Core/Color.js';
 import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -23,7 +24,6 @@ import getAccessorByteStride from '../ThirdParty/GltfPipeline/getAccessorByteStr
 import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
 import parseGlb from '../ThirdParty/GltfPipeline/parseGlb.js';
 import updateVersion from '../ThirdParty/GltfPipeline/updateVersion.js';
-import when from '../ThirdParty/when.js';
 import Axis from './Axis.js';
 import ModelLoadResources from './ModelLoadResources.js';
 import ModelUtility from './ModelUtility.js';
@@ -146,7 +146,7 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.

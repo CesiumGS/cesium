@@ -19,7 +19,6 @@ import Texture from '../Renderer/Texture.js';
 import GlobeFS from '../Shaders/GlobeFS.js';
 import GlobeVS from '../Shaders/GlobeVS.js';
 import GroundAtmosphere from '../Shaders/GroundAtmosphere.js';
-import when from '../ThirdParty/when.js';
 import GlobeSurfaceShaderSet from './GlobeSurfaceShaderSet.js';
 import GlobeSurfaceTileProvider from './GlobeSurfaceTileProvider.js';
 import ImageryLayerCollection from './ImageryLayerCollection.js';
@@ -736,7 +735,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             var oceanNormalMapUrl =  oceanNormalMapResource.url;
             if (defined(oceanNormalMapUrl)) {
                 var that = this;
-                when(oceanNormalMapResource.fetchImage(), function(image) {
+                Promise.resolve(oceanNormalMapResource.fetchImage()).then(function(image) {
                     if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
                         // url changed while we were loading
                         return;

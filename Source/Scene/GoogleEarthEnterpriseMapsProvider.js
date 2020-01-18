@@ -2,6 +2,7 @@ import buildModuleUrl from '../Core/buildModuleUrl.js';
 import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -12,7 +13,6 @@ import Resource from '../Core/Resource.js';
 import RuntimeError from '../Core/RuntimeError.js';
 import TileProviderError from '../Core/TileProviderError.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
-import when from '../ThirdParty/when.js';
 import ImageryProvider from './ImageryProvider.js';
 
     /**
@@ -134,7 +134,7 @@ import ImageryProvider from './ImageryProvider.js';
         this._errorEvent = new Event();
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         var metadataResource = resource.getDerivedResource({
             url: 'query',
@@ -215,7 +215,7 @@ import ImageryProvider from './ImageryProvider.js';
 
         function requestMetadata() {
             var metadata = metadataResource.fetchText();
-            when(metadata, metadataSuccess, metadataFailure);
+            Promise.resolve(metadata).then(metadataSuccess).catch(metadataFailure);
         }
 
         requestMetadata();

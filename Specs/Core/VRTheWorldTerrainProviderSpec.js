@@ -1,4 +1,5 @@
 import { DefaultProxy } from '../../Source/Cesium.js';
+import { defer } from '../../Source/Cesium.js';
 import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { HeightmapTerrainData } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
@@ -8,7 +9,6 @@ import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
 import { VRTheWorldTerrainProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/VRTheWorldTerrainProvider', function() {
 
@@ -206,7 +206,7 @@ describe('Core/VRTheWorldTerrainProvider', function() {
             url : 'made/up/url'
         });
 
-        var deferred = when.defer();
+        var deferred = defer();
 
         terrainProvider.errorEvent.addEventListener(function() {
             deferred.resolve();

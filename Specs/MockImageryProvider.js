@@ -3,7 +3,6 @@ import runLater from './runLater.js';
 import { GeographicTilingScheme } from '../Source/Cesium.js';
 import { Resource } from '../Source/Cesium.js';
 import { RuntimeError } from '../Source/Cesium.js';
-import { when } from '../Source/Cesium.js';
 
     function MockImageryProvider() {
         this.tilingScheme = new GeographicTilingScheme();
@@ -34,7 +33,7 @@ import { when } from '../Source/Cesium.js';
                 throw new RuntimeError('requestImage failed as request.');
             }
 
-            return when(willSucceed).then(function() {
+            return Promise.resolve(willSucceed).then(function() {
                 return that._image;
             });
         });

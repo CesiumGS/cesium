@@ -2,6 +2,7 @@ import arrayFill from '../Core/arrayFill.js';
 import Check from '../Core/Check.js';
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -11,7 +12,6 @@ import JulianDate from '../Core/JulianDate.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
 import Resource from '../Core/Resource.js';
-import when from '../ThirdParty/when.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import PointCloud from './PointCloud.js';
 import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
@@ -182,7 +182,7 @@ import ShadowMode from './ShadowMode.js';
         this._nextInterval = undefined;
         this._lastRenderedFrame = undefined;
         this._clockMultiplier = 0.0;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         // For calculating average load time of the last N frames
         this._runningSum = 0.0;
@@ -400,7 +400,7 @@ import ShadowMode from './ShadowMode.js';
                     pickIdLoaded : getPickIdLoaded
                 });
                 return frame.pointCloud.readyPromise;
-            }).otherwise(handleFrameFailure(that, uri));
+            }).catch(handleFrameFailure(that, uri));
         }
         return frame;
     }

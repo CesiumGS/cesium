@@ -121,7 +121,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -135,7 +135,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -149,7 +149,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -163,7 +163,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -177,7 +177,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : './Data/Images/Blue.png'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -191,7 +191,7 @@ describe('Renderer/loadCubeMap', function() {
             negativeZ : 'not.found'
         }).then(function(cubeMap) {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 

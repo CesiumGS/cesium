@@ -63,7 +63,7 @@ if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
 var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(8564) });
 tileset.readyPromise.then(function(tileset) {
     viewer.scene.primitives.add(tileset);
-}).otherwise(function(error) {
+}).catch(function(error) {
     console.log(error);
 });
 

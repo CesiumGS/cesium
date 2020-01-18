@@ -6,6 +6,9 @@
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
     },
+    "globals": {
+        "Promise": false
+    },
     "overrides": [
         {
             "files": [

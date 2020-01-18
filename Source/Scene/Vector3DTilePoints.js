@@ -2,6 +2,7 @@ import arraySlice from '../Core/arraySlice.js';
 import Cartesian2 from '../Core/Cartesian2.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -10,7 +11,6 @@ import Ellipsoid from '../Core/Ellipsoid.js';
 import NearFarScalar from '../Core/NearFarScalar.js';
 import Rectangle from '../Core/Rectangle.js';
 import TaskProcessor from '../Core/TaskProcessor.js';
-import when from '../ThirdParty/when.js';
 import BillboardCollection from './BillboardCollection.js';
 import Cesium3DTilePointFeature from './Cesium3DTilePointFeature.js';
 import HorizontalOrigin from './HorizontalOrigin.js';
@@ -54,7 +54,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         this._packedBuffer = undefined;
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
         this._resolvedPromise = false;
     }
 

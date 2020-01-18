@@ -16,7 +16,6 @@ import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
@@ -65,7 +64,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
             this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
 
-            return when();
+            return Promise.resolve();
         });
     }
 
@@ -143,7 +142,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
         return imageryProvider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(imageryProvider.ready).toBe(false);
             expect(e.message).toContain(url);
         });
@@ -166,7 +165,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
             .then(function() {
                 fail('Server does not have imagery, so we shouldn\'t resolve.');
             })
-            .otherwise(function() {
+            .catch(function() {
                 expect(imageryProvider.ready).toBe(false);
             });
     });

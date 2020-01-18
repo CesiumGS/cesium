@@ -10,6 +10,7 @@ import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -53,7 +54,6 @@ import hasExtension from '../ThirdParty/GltfPipeline/hasExtension.js';
 import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
 import parseGlb from '../ThirdParty/GltfPipeline/parseGlb.js';
 import updateVersion from '../ThirdParty/GltfPipeline/updateVersion.js';
-import when from '../ThirdParty/when.js';
 import Axis from './Axis.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
@@ -403,7 +403,7 @@ import ShadowMode from './ShadowMode.js';
         this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._ready = false;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         /**
          * The currently playing glTF animations.
@@ -779,11 +779,11 @@ import ShadowMode from './ShadowMode.js';
          *
          * @example
          * // Play all animations at half-speed when the model is ready to render
-         * Cesium.when(model.readyPromise).then(function(model) {
+         * model.readyPromise.then(function(model) {
          *   model.activeAnimations.addAll({
          *     multiplier : 0.5
          *   });
-         * }).otherwise(function(error){
+         * }).catch(function(error){
          *   window.alert(error);
          * });
          *
@@ -1376,7 +1376,7 @@ import ShadowMode from './ShadowMode.js';
                         resourceCredits.push(credits[i]);
                     }
                 }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
+            }).catch(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -1706,7 +1706,7 @@ import ShadowMode from './ShadowMode.js';
 
                 shaderResource.fetchText()
                     .then(shaderLoad(model, shader.type, id))
-                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
+                    .catch(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
@@ -1859,7 +1859,7 @@ import ShadowMode from './ShadowMode.js';
                 } else {
                     promise = imageResource.fetchImage();
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
+                promise.then(imageLoad(model, id, imageId)).catch(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }
         });
     }
@@ -2471,10 +2471,10 @@ import ShadowMode from './ShadowMode.js';
             var onerror = ModelUtility.getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
 
             if (gltfTexture.mimeType === 'image/ktx') {
-                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).catch(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
-                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).catch(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
@@ -2483,7 +2483,7 @@ import ShadowMode from './ShadowMode.js';
                     format: gltfTexture.mimeType,
                     flipY: false
                 })
-                    .then(onload).otherwise(onerror);
+                    .then(onload).catch(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
         }
@@ -4635,7 +4635,7 @@ import ShadowMode from './ShadowMode.js';
 
                 if (!loadResources.finishedDecoding()) {
                     DracoLoader.decodeModel(this, context)
-                        .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
+                        .catch(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
@@ -4708,7 +4708,7 @@ import ShadowMode from './ShadowMode.js';
                     .then(function() {
                         that._shouldRegenerateShaders = true;
                     })
-                    .otherwise(function(error) {
+                    .catch(function(error) {
                         console.error('Error loading specularEnvironmentMaps: ' + error);
                     });
             }

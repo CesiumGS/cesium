@@ -719,7 +719,7 @@ require({
                     var htmlFile = files['Cesium-Sandcastle.html'];
                     var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                     applyLoadedDemo(code, html);
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
                     console.log(error);
                 });
@@ -1308,7 +1308,7 @@ require({
         });
     }
 
-    when(promise).then(function() {
+    Promise.resolve(promise).then(function() {
         dom.byId('searchDemos').appendChild(galleryErrorMsg);
         searchContainer = registry.byId('searchContainer');
 

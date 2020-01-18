@@ -143,7 +143,7 @@ function main() {
                 } else if (!defined(view) && endUserOptions.flyTo !== 'false') {
                     viewer.flyTo(dataSource);
                 }
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 showLoadError(source, error);
             });
         }

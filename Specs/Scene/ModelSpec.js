@@ -35,7 +35,6 @@ import { Model } from '../../Source/Cesium.js';
 import { ModelAnimationLoop } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Model', function() {
 
@@ -141,7 +140,7 @@ describe('Scene/Model', function() {
         }));
         modelPromises.push(FeatureDetection.supportsWebP.initialize());
 
-        return when.all(modelPromises);
+        return Promise.all(modelPromises);
     });
 
     afterAll(function() {
@@ -185,8 +184,8 @@ describe('Scene/Model', function() {
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             return model;
-        }).otherwise(function() {
-            return when.reject(model);
+        }).catch(function() {
+            return Promise.reject(model);
         });
     }
 
@@ -321,7 +320,7 @@ describe('Scene/Model', function() {
     });
 
     it('renders in 2D over the IDL', function() {
-        return when(loadModel(texturedBoxUrl)).then(function(model) {
+        return loadModel(texturedBoxUrl).then(function(model) {
             model.modelMatrix = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(180.0, 0.0, 100.0));
             scene.morphTo2D(0.0);
             verifyRender(model);
@@ -498,7 +497,7 @@ describe('Scene/Model', function() {
 
             return model.readyPromise.then(function(model) {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(model.ready).toEqual(false);
                 primitives.remove(model);
             });
@@ -1902,7 +1901,7 @@ describe('Scene/Model', function() {
 
         expect(gltfCache[key].count).toEqual(2);
 
-        return when.all([promise, promise2], function(models) {
+        return Promise.all([promise, promise2], function(models) {
             var m = models[0];
             var m2 = models[1];
 
@@ -2522,7 +2521,7 @@ describe('Scene/Model', function() {
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(e).toBeDefined();
             primitives.remove(model);
             context._elementIndexUint = uint32Supported;
@@ -2647,7 +2646,7 @@ describe('Scene/Model', function() {
 
     it('error decoding a draco compressed glTF causes model loading to fail', function() {
         var decoder = DracoLoader._getDecoderTaskProcessor();
-        spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+        spyOn(decoder, 'scheduleTask').and.returnValue(Promise.reject({message : 'my error'}));
 
         var model = primitives.add(Model.fromGltf({
             url : dracoCompressedModelUrl,
@@ -2660,7 +2659,7 @@ describe('Scene/Model', function() {
         }, { timeout: 10000 }).then(function() {
             model.readyPromise.then(function (e) {
                 fail('should not resolve');
-            }).otherwise(function(e) {
+            }).catch(function(e) {
                 expect(e).toBeDefined();
                 expect(e.message).toEqual('Failed to load model: ./Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf\nmy error');
                 primitives.remove(model);
@@ -3466,7 +3465,7 @@ describe('Scene/Model', function() {
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0),
                 show : true
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
             });
         });
@@ -3494,7 +3493,7 @@ describe('Scene/Model', function() {
                 position : Cartesian3.fromDegrees(-72.0, 40.0),
                 scene : scene,
                 show : true
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(error.message).toEqual('Height reference is not supported without a scene and globe.');
             });
         });

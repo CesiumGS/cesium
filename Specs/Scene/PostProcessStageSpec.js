@@ -12,7 +12,6 @@ import { PostProcessStage } from '../../Source/Cesium.js';
 import { PostProcessStageSampleMode } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PostProcessStage', function() {
 
@@ -204,10 +203,10 @@ describe('Scene/PostProcessStage', function() {
             return stage.ready;
         }).then(function() {
             expect(s).toRender([bgColor, bgColor, bgColor, 255]);
-        }).always(function(e) {
+        }).finally(function(e) {
             s.destroyForSpecs();
             if (e) {
-                return when.reject(e);
+                return Promise.reject(e);
             }
         });
     });
@@ -232,8 +231,8 @@ describe('Scene/PostProcessStage', function() {
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             return model;
-        }).otherwise(function() {
-            return when.reject(model);
+        }).catch(function() {
+            return Promise.reject(model);
         });
     }
 

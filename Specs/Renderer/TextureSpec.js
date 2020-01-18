@@ -12,7 +12,6 @@ import { TextureMagnificationFilter } from '../../Source/Cesium.js';
 import { TextureMinificationFilter } from '../../Source/Cesium.js';
 import { TextureWrap } from '../../Source/Cesium.js';
 import createContext from '../createContext.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Renderer/Texture', function() {
 
@@ -76,7 +75,7 @@ describe('Renderer/Texture', function() {
             greenETC1Image = image;
         }));
 
-        return when.all(promises);
+        return Promise.all(promises);
     });
 
     afterAll(function() {

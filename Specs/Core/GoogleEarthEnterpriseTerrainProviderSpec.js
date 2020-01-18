@@ -11,7 +11,6 @@ import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
 
@@ -34,7 +33,7 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '3'] = t;
 
-            return when();
+            return Promise.resolve();
         });
     }
 
@@ -50,7 +49,7 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
         }).then(function() {
             var promise = terrainProvider.requestTileGeometry(level, x, y);
 
-            return when(promise, f, function(error) {
+            return Promise.resolve(promise).then(f).catch(function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
         });
@@ -179,7 +178,7 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
             .then(function() {
                 fail('Server does not have terrain, so we shouldn\'t resolve.');
             })
-            .otherwise(function() {
+            .catch(function() {
                 expect(terrainProvider.ready).toBe(false);
             });
     });
@@ -307,8 +306,8 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
                     }
 
                     // Parsing terrain will fail, so just eat the errors and request the tile again
-                    return when.all(promises)
-                        .otherwise(function() {
+                    return Promise.all(promises)
+                        .catch(function() {
                             loadRealTile = true;
                             return terrainProvider.requestTileGeometry(1, 2, 3);
                         });

@@ -16,7 +16,6 @@ import RuntimeError from '../Core/RuntimeError.js';
 import HeightReference from '../Scene/HeightReference.js';
 import VerticalOrigin from '../Scene/VerticalOrigin.js';
 import topojson from '../ThirdParty/topojson.js';
-import when from '../ThirdParty/when.js';
 import BillboardGraphics from './BillboardGraphics.js';
 import CallbackProperty from './CallbackProperty.js';
 import ColorMaterialProperty from './ColorMaterialProperty.js';
@@ -281,9 +280,9 @@ import PolylineGraphics from './PolylineGraphics.js';
         entity.billboard = billboard;
         entity.position = new ConstantPositionProperty(crsFunction(coordinates));
 
-        var promise = when(canvasOrPromise).then(function(image) {
+        var promise = Promise.resolve(canvasOrPromise).then(function(image) {
             billboard.image = new ConstantProperty(image);
-        }).otherwise(function() {
+        }).catch(function() {
             billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(color, size));
         });
 
@@ -838,13 +837,13 @@ import PolylineGraphics from './PolylineGraphics.js';
         };
 
         var that = this;
-        return when(promise, function(geoJson) {
+        return Promise.resolve(promise).then(function(geoJson) {
             return load(that, geoJson, options, sourceUri);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     };
 
@@ -900,7 +899,7 @@ import PolylineGraphics from './PolylineGraphics.js';
             }
         }
 
-        return when(crsFunction, function(crsFunction) {
+        return Promise.resolve(crsFunction).then(function(crsFunction) {
             that._entityCollection.removeAll();
 
             // null is a valid value for the crs, but means the entire load process becomes a no-op
@@ -909,7 +908,7 @@ import PolylineGraphics from './PolylineGraphics.js';
                 typeHandler(that, geoJson, geoJson, crsFunction, options);
             }
 
-            return when.all(that._promises, function() {
+            return Promise.all(that._promises, function() {
                 that._promises.length = 0;
                 DataSource.setLoading(that, false);
                 return that;

@@ -1,5 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
+import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -10,7 +11,6 @@ import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
 import Rectangle from '../Core/Rectangle.js';
 import RuntimeError from '../Core/RuntimeError.js';
-import when from '../ThirdParty/when.js';
 import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
 import Vector3DTilePoints from './Vector3DTilePoints.js';
 import Vector3DTilePolygons from './Vector3DTilePolygons.js';
@@ -39,7 +39,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         this._points = undefined;
 
         this._contentReadyPromise = undefined;
-        this._readyPromise = when.defer();
+        this._readyPromise = defer();
 
         this._batchTable = undefined;
         this._features = undefined;
@@ -503,7 +503,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
 
             var that = this;
-            this._contentReadyPromise = when.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
+            this._contentReadyPromise = Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
                 that._readyPromise.resolve(that);
             });
         }

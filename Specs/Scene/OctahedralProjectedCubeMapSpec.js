@@ -186,7 +186,7 @@ describe('Scene/OctahedralProjectedCubeMap', function() {
             expect(projection2.ready).toEqual(true);
             expect(projection.texture).toEqual(projection2.texture);
             projection2.destroy();
-        }).always(function() {
+        }).finally(function() {
             projection.destroy();
         });
     });
@@ -204,7 +204,7 @@ describe('Scene/OctahedralProjectedCubeMap', function() {
             .then(function() {
                 fail('Should not resolve.');
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 error = e;
                 expect(error).toBeDefined();
                 expect(projection.ready).toEqual(false);
