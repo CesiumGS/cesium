@@ -908,7 +908,7 @@ import PolylineGraphics from './PolylineGraphics.js';
                 typeHandler(that, geoJson, geoJson, crsFunction, options);
             }
 
-            return Promise.all(that._promises, function() {
+            return Promise.all(that._promises).then(function() {
                 that._promises.length = 0;
                 DataSource.setLoading(that, false);
                 return that;
