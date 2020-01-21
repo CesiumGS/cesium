@@ -1902,7 +1902,7 @@ import TrustedServers from './TrustedServers.js';
 
         // Specifically use the Node version of require to avoid conflicts with the global
         // require defined in the built version of Cesium.
-        var nodeRequire = global.require; // eslint-disable-line
+        var nodeRequire = global.require ? global.require : require; // eslint-disable-line
 
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
         var URL = nodeRequire('url').parse(url);
