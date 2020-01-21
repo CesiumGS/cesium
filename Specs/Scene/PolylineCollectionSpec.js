@@ -325,7 +325,7 @@ describe('Scene/PolylineCollection', function() {
 
         expect(polylines._polylinesToUpdate.length).toEqual(2);
         polylines.remove(secondPolyline);
-        polylines.update(scene._frameState);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
@@ -341,7 +341,7 @@ describe('Scene/PolylineCollection', function() {
         expect(polylines._polylinesToUpdate.length).toEqual(2);
 
         polylines.remove(secondPolyline);
-        polylines.update(scene._frameState);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });

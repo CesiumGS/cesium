@@ -1043,11 +1043,11 @@ import SceneMode from './SceneMode.js';
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
             var definedPolylines = [];
+            var definedPolylinesToUpdate = [];
             var polyIndex = 0;
             var polyline;
 
             var length = collection._polylines.length;
-            var definedPolylinesToUpdate = [];
             for (var i = 0; i < length; ++i) {
                 polyline = collection._polylines[i];
                 if (!polyline.isDestroyed) {

@@ -289,7 +289,7 @@ import Material from './Material.js';
          * Gets the destruction status of this polyline
          * @memberof Polyline.prototype
          * @type {Boolean}
-         * @default undefined
+         * @default false
          * @private
          */
         isDestroyed : {
