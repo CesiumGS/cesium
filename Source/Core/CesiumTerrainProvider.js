@@ -9,6 +9,7 @@ import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Event from './Event.js';
 import GeographicTilingScheme from './GeographicTilingScheme.js';
+import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
 import getStringFromTypedArray from './getStringFromTypedArray.js';
 import HeightmapTerrainData from './HeightmapTerrainData.js';
 import IndexDatatype from './IndexDatatype.js';
@@ -72,18 +73,11 @@ import TileProviderError from './TileProviderError.js';
         }
         //>>includeEnd('debug');
 
-        this._tilingScheme = new GeographicTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 1,
-            ellipsoid : options.ellipsoid
-        });
-
         this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
-
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
         this._hasVertexNormals = false;
+        this._ellipsoid = options.ellipsoid;
 
         /**
          * Boolean flag that indicates if the client should request vertex normals from the server.
@@ -198,6 +192,31 @@ import TileProviderError from './TileProviderError.js';
             var maxZoom = data.maxzoom;
             overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
             // Keeps track of which of the availablity containing tiles have been loaded
+
+            if (!data.tilingScheme || data.tilingScheme === 'GlobalGeodetic') {
+              that._tilingScheme = new GeographicTilingScheme({
+                  numberOfLevelZeroTilesX : 2,
+                  numberOfLevelZeroTilesY : 1,
+                  ellipsoid : that._ellipsoid
+              });
+            } else if (data.tilingScheme === 'WebMercator') {
+              that._tilingScheme = new WebMercatorTilingScheme({
+                  numberOfLevelZeroTilesX : 1,
+                  numberOfLevelZeroTilesY : 1,
+                  ellipsoid : that._ellipsoid
+              });
+            } else {
+                message = 'The layer.json tilingScheme "' + data.tilingScheme + '" is invalid or not supported.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
+                return;
+            }
+
+            that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
+                that._tilingScheme.ellipsoid,
+                that._heightmapWidth,
+                that._tilingScheme.getNumberOfXTilesAtLevel(0)
+            );
+
             var availabilityTilesLoaded;
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
@@ -402,7 +421,7 @@ import TileProviderError from './TileProviderError.js';
         };
     }
 
-    function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
+    function createHeightmapTerrainData(provider, buffer, level, x, y) {
         var heightBuffer = new Uint16Array(buffer, 0, provider._heightmapWidth * provider._heightmapWidth);
         return new HeightmapTerrainData({
             buffer : heightBuffer,
@@ -415,7 +434,7 @@ import TileProviderError from './TileProviderError.js';
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layer) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
         var littleEndianExtensionSize = layer.littleEndianExtensionSize;
         var pos = 0;
         var cartesian3Elements = 3;
@@ -633,9 +652,10 @@ import TileProviderError from './TileProviderError.js';
             return undefined;
         }
 
-        var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
-
-        var tmsY = (yTiles - y - 1);
+        if (provider._tilingScheme instanceof GeographicTilingScheme) {
+          var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
+          y = (yTiles - y - 1);
+        }
 
         var extensionList = [];
         if (provider._requestVertexNormals && layerToUse.hasVertexNormals) {
@@ -650,7 +670,7 @@ import TileProviderError from './TileProviderError.js';
 
         var headers;
         var query;
-        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length];
+        var url = urlTemplates[(x + y + level) % urlTemplates.length];
         var resource = layerToUse.resource;
         if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
             // ion uses query paremeters to request extensions
@@ -669,7 +689,7 @@ import TileProviderError from './TileProviderError.js';
                 version: layerToUse.version,
                 z: level,
                 x: x,
-                y: tmsY
+                y: y
             },
             queryParameters: query,
             headers: headers,
@@ -682,9 +702,9 @@ import TileProviderError from './TileProviderError.js';
 
         return promise.then(function (buffer) {
             if (defined(provider._heightmapStructure)) {
-                return createHeightmapTerrainData(provider, buffer, level, x, y, tmsY);
+                return createHeightmapTerrainData(provider, buffer, level, x, y);
             }
-            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, layerToUse);
+            return createQuantizedMeshTerrainData(provider, buffer, level, x, y, layerToUse);
         });
     }
 
