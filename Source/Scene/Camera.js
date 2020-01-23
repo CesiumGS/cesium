@@ -2401,6 +2401,12 @@ import SceneMode from './SceneMode.js';
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     *
+     * @example
+     * var canvas = viewer.scene.canvas;
+     * var center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
+     * var ellipsoid = viewer.scene.globe.ellipsoid;
+     * var result = viewer.camera.pickEllipsoid(center, ellipsoid);
      */
     Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
