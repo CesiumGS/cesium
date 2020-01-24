@@ -43,6 +43,7 @@ Change Log
 * Fixed a bug where a point in a `PointPrimitiveCollection` is rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
 * Fixed a crash when deleting and re-creating polylines from CZML. `ReferenceProperty` now returns undefined when the target entity or property does not exist, instead of throwing. [#8544](https://github.com/AnalyticalGraphicsInc/cesium/pull/8544)
 * Fixed a bug where rapidly updating a PolylineCollection could result in an instanceIndex is out of range error [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
+* Fixed terrain tile picking in the Cesium Inspector. [#8567](https://github.com/AnalyticalGraphicsInc/cesium/pull/8567)
 
 ### 1.65.0 - 2020-01-06
 
