@@ -958,19 +958,6 @@ import View from './View.js';
         },
 
         /**
-         * Whether the camera is underground.
-         * @memberof Scene.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         */
-        cameraUnderground : {
-            get : function() {
-                return this._cameraUnderground;
-            }
-        },
-
-        /**
          * Gets or sets the view.
          * @memberof Scene.prototype
          *
