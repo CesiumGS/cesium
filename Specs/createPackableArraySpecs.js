@@ -70,9 +70,10 @@ import { defaultValue } from '../Source/Cesium.js';
             expect(result).toBe(array);
             expect(result).toEqual(unpackedArray);
 
+            var PackableClass = packable;
             array = new Array(unpackedArray.length);
             for (var i = 0; i < unpackedArray.length; i++) {
-                array[i] = new packable();
+                array[i] = new PackableClass();
             }
 
             result = packable.unpackArray(packedArray, array);
