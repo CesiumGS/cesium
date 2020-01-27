@@ -4,7 +4,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -281,17 +280,6 @@ import TweenCollection from './TweenCollection.js';
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
     }
-
-    defineProperties(ScreenSpaceCameraController.prototype, {
-        /**
-         * @private
-         */
-        adjustedHeightForTerrain : {
-            get : function() {
-                return this._adjustedHeightForTerrain;
-            }
-        }
-    });
 
     function decay(time, coefficient) {
         if (time < 0) {
@@ -949,10 +937,8 @@ import TweenCollection from './TweenCollection.js';
 
         var scene = controller._scene;
         var camera = scene.camera;
-        var maxCoord = controller._maxCoord;
-        var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
 
-        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller._minimumPickingTerrainHeight) {
+        if (controller._tiltCVOffMap || !onMap(controller) || camera.position.z > controller._minimumPickingTerrainHeight) {
             controller._tiltCVOffMap = true;
             rotateCVOnPlane(controller, startPosition, movement);
         } else {
@@ -2000,6 +1986,18 @@ import TweenCollection from './TweenCollection.js';
         }
     }
 
+    function onMap(controller) {
+        var scene = controller._scene;
+        var mode = scene.mode;
+        var camera = scene.camera;
+
+        if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+            return Math.abs(camera.position.x) - controller._maxCoord.x < 0 && Math.abs(camera.position.y) - controller._maxCoord.y < 0;
+        }
+
+        return true;
+    }
+
     var scratchPreviousPosition = new Cartesian3();
     var scratchPreviousDirection = new Cartesian3();
 
@@ -2040,7 +2038,12 @@ import TweenCollection from './TweenCollection.js';
             update3D(this);
         }
 
-        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain) {
+        var skipHeightAdjustment = !onMap(this);
+        if (skipHeightAdjustment) {
+            this._adjustedHeightForTerrain = false;
+        }
+
+        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain && !skipHeightAdjustment) {
             // Adjust the camera height if the camera moved at all (user input or intertia) and an action didn't already adjust the camera height
             var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
             if (cameraChanged) {
@@ -2049,6 +2052,13 @@ import TweenCollection from './TweenCollection.js';
         }
 
         this._aggregator.reset();
+    };
+
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.adjustedHeightForTerrain = function() {
+        return this._adjustedHeightForTerrain;
     };
 
     /**

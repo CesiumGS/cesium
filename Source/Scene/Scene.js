@@ -3177,7 +3177,7 @@ import View from './View.js';
     }
 
     function isCameraUnderground(scene) {
-        if (scene._screenSpaceCameraController.adjustedHeightForTerrain) {
+        if (scene._screenSpaceCameraController.adjustedHeightForTerrain()) {
             return false;
         }
 
@@ -3185,18 +3185,18 @@ import View from './View.js';
         var mode = scene._mode;
         var globe = scene.globe;
 
-        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+        if (!defined(globe) || !globe.show || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return false;
         }
 
         var cartographic = camera.positionCartographic;
         var globeHeight = globe.getHeight(cartographic);
         if (defined(globeHeight)) {
-            if (cartographic.height < globeHeight) {
-                return true;
-            }
-        } else if (mode === SceneMode.COLUMBUS_VIEW && cartographic.height < 0.0) {
-            return true;
+            return cartographic.height < globeHeight;
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            // The camera is somewhere off the map if globe.getHeight returns undefined in Columbus View.
+            // Make a best guess as to whether it's underground by checking if its height is less than zero.
+            return cartographic.height < 0.0;
         }
 
         return false;

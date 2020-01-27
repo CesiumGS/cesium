@@ -7,6 +7,7 @@ import { defined } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
 import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
 import { WebMercatorProjection } from '../../Source/Cesium.js';
 import { ContextLimits } from '../../Source/Cesium.js';
@@ -62,7 +63,6 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
     }
 
     var cameraDestination = new Rectangle(0.0001, 0.0001, 0.0030, 0.0030);
-
     function switchViewMode(mode, projection) {
         scene.mode = mode;
         scene.frameState.mapProjection = projection;
@@ -1029,6 +1029,27 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
             return updateUntilDone(scene.globe);
         }).then(function() {
             expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+        });
+    });
+
+    it('disables skirts and enables back face culling when camera is underground', function() {
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(scene.globe).then(function() {
+            var command = scene.frameState.commandList[0];
+            expect(command.count).toBe(command.owner.data.renderedMesh.indices.length); // Has skirts
+            expect(command.renderState.cull.enabled).toBe(true); // Has back face culling
+
+            // Look underground
+            scene.camera.setView({
+                destination : new Cartesian3(-746658.0557573901, -5644191.0002196245, 2863585.099969967),
+                orientation : new HeadingPitchRoll(0.3019699121236403, 0.07316306869231592, 0.0007089903642230055)
+            });
+            return updateUntilDone(scene.globe);
+        }).then(function() {
+            var command = scene.frameState.commandList[0];
+            expect(command.count).toBe(command.owner.data.renderedMesh.indexCountWithoutSkirts); // No skirts
+            expect(command.renderState.cull.enabled).toBe(false); // No back face culling
         });
     });
 
