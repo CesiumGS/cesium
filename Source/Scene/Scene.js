@@ -3195,6 +3195,8 @@ import View from './View.js';
             if (cartographic.height < globeHeight) {
                 return true;
             }
+        } else if (mode === SceneMode.COLUMBUS_VIEW && cartographic.height < 0.0) {
+            return true;
         }
 
         return false;
