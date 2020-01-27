@@ -54,8 +54,71 @@ describe('Core/Cartesian3', function() {
         }).toThrowDeveloperError();
     });
 
+    it('packArray works', function() {
+        var cartesians = [
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0)
+        ];
+
+        var array = new Array(9);
+        var result = Cartesian3.packArray(cartesians, array);
+        expect(result).toEqual([1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
+    });
+
+    it('packArray resizes arrays as needed', function() {
+        var cartesians = [
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0)
+        ];
+
+        var emptyArray = [];
+        var result = Cartesian3.packArray(cartesians, emptyArray);
+        expect(result).toEqual([1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
+
+        var largerArray = new Array(10).fill(0.0);
+        result = Cartesian3.packArray(cartesians, largerArray);
+        expect(result).toEqual([1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]);
+    });
+
+    it('packArray works with typed arrays', function() {
+        var cartesians = [
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0)
+        ];
+
+        var typedArray = new Float64Array(9);
+        var result = Cartesian3.packArray(cartesians, typedArray);
+        expect(result).toEqual(new Float64Array([1.0, 2.0, 3.0, 1.0, 2.0, 3.0, 1.0, 2.0, 3.0]));
+    });
+
+    it('packArray throws for typed arrays of the wrong size', function() {
+        var cartesians = [
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(1.0, 2.0, 3.0)
+        ];
+
+        expect(function() {
+            var tooSmall = new Float64Array(3);
+            Cartesian3.packArray(cartesians, tooSmall);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            var tooBig = new Float64Array(3);
+            Cartesian3.packArray(cartesians, tooBig);
+        }).toThrowDeveloperError();
+    });
+
     it('unpackArray works', function() {
         var array = Cartesian3.unpackArray([0.0, 1.0, 2.0, 3.0, 0.0, 4.0]);
+        expect(array).toEqual([new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 0.0, 4.0)]);
+    });
+
+    it('unpackArray works for typed arrays', function() {
+        var array = Cartesian3.unpackArray(new Float64Array([0.0, 1.0, 2.0, 3.0, 0.0, 4.0]));
         expect(array).toEqual([new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 0.0, 4.0)]);
     });
 
