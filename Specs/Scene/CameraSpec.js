@@ -1512,7 +1512,7 @@ describe('Scene/Camera', function() {
         expect(tempCamera.up).toEqualEpsilon(Cartesian3.cross(tempCamera.right, tempCamera.direction, new Cartesian3()), CesiumMath.EPSILON11);
     });
 
-    it('lookAt when target and camera is zero', function() {
+    it('lookAt when target and camera are zero', function() {
         var target = Cartesian3.clone(Cartesian3.ZERO);
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
