@@ -128,8 +128,13 @@ import TimeConstants from './TimeConstants.js';
                 if (!defined(result)) {
                     result = new Matrix4();
                 }
-                // If x and y are zero, assume origin is at a pole, which is a special case.
-                if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                if (Cartesian3.equalsEpsilon(origin, Cartesian3.ZERO, CesiumMath.EPSILON14)) {
+                    // If x, y, and z are zero, use the degenerate local frame, which is a special case
+                    Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
+                    Cartesian3.unpack(degeneratePositionLocalFrame[secondAxis], 0, scratchSecondCartesian);
+                    Cartesian3.unpack(degeneratePositionLocalFrame[thirdAxis], 0, scratchThirdCartesian);
+                } else if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) && CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                    // If x and y are zero, assume origin is at a pole, which is a special case.
                     var sign = CesiumMath.sign(origin.z);
 
                     Cartesian3.unpack(degeneratePositionLocalFrame[firstAxis], 0, scratchFirstCartesian);
