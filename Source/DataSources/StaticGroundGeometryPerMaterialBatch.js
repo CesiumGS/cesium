@@ -119,7 +119,7 @@ import Property from './Property.js';
                 primitive = new GroundPrimitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     appearance : new this.appearanceType({
                         material : this.material
                         // translucent and closed properties overridden
