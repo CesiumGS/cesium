@@ -4,7 +4,7 @@ Change Log
 ### 1.67.0 - 2020-03-02
 
 ##### Fixes :wrench:
-* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled.
+* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
 
 ### 1.66.0 - 2020-02-03
 
