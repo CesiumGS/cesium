@@ -30,20 +30,21 @@ Change Log
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 * Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
-* Update [earcut](https://github.com/mapbox/earcut) to 2.2.1 [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
+* Update [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
 
 ##### Fixes :wrench:
 * Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
 * Fixed a bug where files with backslashes were not loaded in KMZ files. [#8533](https://github.com/AnalyticalGraphicsInc/cesium/pull/8533)
-* Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js` [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
+* Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js`. [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
 * Fixed WebGL warning message about `EXT_float_blend` being implicitly enabled. [#8534](https://github.com/AnalyticalGraphicsInc/cesium/pull/8534)
 * Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
-* Fixed a bug where toggling point cloud classification visibility would result in a grey screen on Linux / Nvidia [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
+* Fixed a bug where toggling point cloud classification visibility would result in a grey screen on Linux / Nvidia. [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
 * Fixed a bug where a point in a `PointPrimitiveCollection` is rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
 * Fixed a crash when deleting and re-creating polylines from CZML. `ReferenceProperty` now returns undefined when the target entity or property does not exist, instead of throwing. [#8544](https://github.com/AnalyticalGraphicsInc/cesium/pull/8544)
 * Fixed a bug where rapidly updating a `PolylineCollection` could result in an instanceIndex is out of range error. [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
 * Fixed a crash that could occur when an entity was deleted while the corresponding `Primitive` was being created asynchronously. [#8569](https://github.com/AnalyticalGraphicsInc/cesium/pull/8569)
+* Fixed a crash when calling `camera.lookAt` with the origin as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
 
 ### 1.65.0 - 2020-01-06
 
