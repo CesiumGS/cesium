@@ -938,7 +938,7 @@ import TweenCollection from './TweenCollection.js';
         var scene = controller._scene;
         var camera = scene.camera;
 
-        if (controller._tiltCVOffMap || !onMap(controller) || camera.position.z > controller._minimumPickingTerrainHeight) {
+        if (controller._tiltCVOffMap || !controller.onMap() || camera.position.z > controller._minimumPickingTerrainHeight) {
             controller._tiltCVOffMap = true;
             rotateCVOnPlane(controller, startPosition, movement);
         } else {
@@ -1986,17 +1986,20 @@ import TweenCollection from './TweenCollection.js';
         }
     }
 
-    function onMap(controller) {
-        var scene = controller._scene;
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.onMap = function() {
+        var scene = this._scene;
         var mode = scene.mode;
         var camera = scene.camera;
 
-        if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            return Math.abs(camera.position.x) - controller._maxCoord.x < 0 && Math.abs(camera.position.y) - controller._maxCoord.y < 0;
+        if (mode === SceneMode.COLUMBUS_VIEW) {
+            return Math.abs(camera.position.x) - this._maxCoord.x < 0 && Math.abs(camera.position.y) - this._maxCoord.y < 0;
         }
 
         return true;
-    }
+    };
 
     var scratchPreviousPosition = new Cartesian3();
     var scratchPreviousDirection = new Cartesian3();
@@ -2038,12 +2041,7 @@ import TweenCollection from './TweenCollection.js';
             update3D(this);
         }
 
-        var skipHeightAdjustment = !onMap(this);
-        if (skipHeightAdjustment) {
-            this._adjustedHeightForTerrain = false;
-        }
-
-        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain && !skipHeightAdjustment) {
+        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain) {
             // Adjust the camera height if the camera moved at all (user input or intertia) and an action didn't already adjust the camera height
             var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
             if (cameraChanged) {

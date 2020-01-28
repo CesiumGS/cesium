@@ -3177,26 +3177,30 @@ import View from './View.js';
     }
 
     function isCameraUnderground(scene) {
-        if (scene._screenSpaceCameraController.adjustedHeightForTerrain()) {
-            return false;
-        }
-
         var camera = scene.camera;
         var mode = scene._mode;
         var globe = scene.globe;
+        var cameraController = scene._screenSpaceCameraController;
+        var cartographic = camera.positionCartographic;
+
+        if (!cameraController.onMap() && cartographic.height < 0.0) {
+            // The camera can go off the map while in Columbus View.
+            // Make a best guess as to whether it's underground by checking if its height is less than zero.
+            return true;
+        }
 
         if (!defined(globe) || !globe.show || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return false;
         }
 
-        var cartographic = camera.positionCartographic;
+        if (cameraController.adjustedHeightForTerrain()) {
+            // The camera controller already adjusted the camera, no need to call globe.getHeight again
+            return false;
+        }
+
         var globeHeight = globe.getHeight(cartographic);
-        if (defined(globeHeight)) {
-            return cartographic.height < globeHeight;
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            // The camera is somewhere off the map if globe.getHeight returns undefined in Columbus View.
-            // Make a best guess as to whether it's underground by checking if its height is less than zero.
-            return cartographic.height < 0.0;
+        if (defined(globeHeight) && cartographic.height < globeHeight) {
+            return true;
         }
 
         return false;
@@ -3224,6 +3228,7 @@ import View from './View.js';
         this.camera._updateCameraChanged();
 
         this._cameraUnderground = isCameraUnderground(this);
+        console.log(this._cameraUnderground);
     };
 
     function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
