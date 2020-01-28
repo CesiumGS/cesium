@@ -1784,7 +1784,6 @@ describe('Scene/Scene', function() {
 
         return updateGlobeUntilDone(scene).then(function() {
             expect(scene._cameraUnderground).toBe(false);
-            expect(scene.frameState.cameraUnderground).toBe(false);
 
             // Look underground
             scene.camera.setView({
@@ -1794,7 +1793,6 @@ describe('Scene/Scene', function() {
             return updateGlobeUntilDone(scene);
         }).then(function() {
             expect(scene._cameraUnderground).toBe(true);
-            expect(scene.frameState.cameraUnderground).toBe(true);
             scene.destroyForSpecs();
         });
     });
@@ -1847,11 +1845,9 @@ describe('Scene/Scene', function() {
             destination : new Cartesian3(-4643042.379120885, 4314056.579506199, -451828.8968118975),
             orientation : new HeadingPitchRoll(6.283185307179586, -0.7855491933100796, 6.283185307179586)
         });
+        scene.morphToColumbusView(0.0);
 
         return updateGlobeUntilDone(scene).then(function() {
-            scene.morphToColumbusView(0.0);
-            return updateGlobeUntilDone(scene);
-        }).then(function() {
             expect(scene._cameraUnderground).toBe(true);
             scene.destroyForSpecs();
         });
@@ -1875,7 +1871,7 @@ describe('Scene/Scene', function() {
 
         scene.primitives.add(new CommandMockPrimitive(command));
 
-        spyOn(DrawCommand.prototype, 'execute');
+        spyOn(DrawCommand.prototype, 'execute'); // Don't execute any commands, just watch what gets added to the frustum commands list
 
         return updateGlobeUntilDone(scene).then(function() {
             expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);

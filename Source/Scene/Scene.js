@@ -3183,7 +3183,7 @@ import View from './View.js';
         var cameraController = scene._screenSpaceCameraController;
         var cartographic = camera.positionCartographic;
 
-        if (!cameraController.onMap() && cartographic.height < 0.0) {
+        if (!cameraController.onMap() && (cartographic.height < 0.0)) {
             // The camera can go off the map while in Columbus View.
             // Make a best guess as to whether it's underground by checking if its height is less than zero.
             return true;
@@ -3199,7 +3199,7 @@ import View from './View.js';
         }
 
         var globeHeight = globe.getHeight(cartographic);
-        if (defined(globeHeight) && cartographic.height < globeHeight) {
+        if (defined(globeHeight) && (cartographic.height < globeHeight)) {
             return true;
         }
 
@@ -3228,7 +3228,6 @@ import View from './View.js';
         this.camera._updateCameraChanged();
 
         this._cameraUnderground = isCameraUnderground(this);
-        console.log(this._cameraUnderground);
     };
 
     function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
