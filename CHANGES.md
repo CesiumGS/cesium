@@ -46,6 +46,7 @@ Change Log
 * Fixed a bug where rapidly updating a `PolylineCollection` could result in an instanceIndex is out of range error. [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
 * Fixed a crash that could occur when an entity was deleted while the corresponding `Primitive` was being created asynchronously. [#8569](https://github.com/AnalyticalGraphicsInc/cesium/pull/8569)
 * Fixed a crash when calling `camera.lookAt` with the origin as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
+* Fixed a bug where `camera.viewBoundingSphere` was modifying the `offset` parameter [#8438](https://github.com/AnalyticalGraphicsInc/cesium/pull/8438)
 
 ### 1.65.0 - 2020-01-06
 
