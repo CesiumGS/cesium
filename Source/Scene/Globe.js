@@ -140,12 +140,31 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.fillHighlightColor = undefined;
 
         /**
-         * Enable lighting the globe with the sun as a light source.
+         * Enable lighting the globe with the scene's light source.
          *
          * @type {Boolean}
          * @default false
          */
         this.enableLighting = false;
+
+        /**
+         * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.dynamicAtmosphereLighting = true;
+
+        /**
+         * Whether dynamic atmosphere lighting uses the sun direction instead of the scene's
+         * light direction. This only takes effect when <code>enableLighting</code> and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.dynamicAtmosphereLightingFromSun = false;
 
         /**
          * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
@@ -177,7 +196,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
@@ -186,7 +206,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 50000000.0
@@ -217,7 +238,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.depthTestAgainstTerrain = false;
 
         /**
-         * Determines whether the globe casts or receives shadows from each light source. Setting the globe
+         * Determines whether the globe casts or receives shadows from light sources. Setting the globe
          * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
          * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
          *
@@ -249,6 +270,23 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @default 0.0
          */
         this.atmosphereBrightnessShift = 0.0;
+
+        /**
+         * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
+         * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showSkirts = true;
+
+        /**
+         * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.backFaceCulling = true;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
@@ -610,19 +648,26 @@ import TileSelectionResult from './TileSelectionResult.js';
             return undefined;
         }
 
+        var tileWithMesh = tile;
+
         while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
             tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
                    tileIfContainsCartographic(tile.southeastChild, cartographic) ||
                    tileIfContainsCartographic(tile.northwestChild, cartographic) ||
                    tile.northeastChild;
+            if (defined(tile.data) && defined(tile.data.renderedMesh)) {
+                tileWithMesh = tile;
+            }
         }
+
+        tile = tileWithMesh;
 
         // This tile was either rendered or culled.
         // It is sometimes useful to get a height from a culled tile,
         // e.g. when we're getting a height in order to place a billboard
         // on terrain, and the camera is looking at that same billboard.
         // The culled tile must have a valid mesh, though.
-        if (!defined(tile.data) || !defined(tile.data.renderedMesh)) {
+        if (!defined(tile)) {
             // Tile was not rendered (culled).
             return undefined;
         }
@@ -733,13 +778,16 @@ import TileSelectionResult from './TileSelectionResult.js';
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
+            tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
             tileProvider.hueShift = this.atmosphereHueShift;
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
             tileProvider.fillHighlightColor = this.fillHighlightColor;
-
+            tileProvider.showSkirts = this.showSkirts;
+            tileProvider.backFaceCulling = this.backFaceCulling;
             surface.beginFrame(frameState);
         }
     };

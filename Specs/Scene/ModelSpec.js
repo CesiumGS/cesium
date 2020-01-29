@@ -999,7 +999,7 @@ describe('Scene/Model', function() {
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([179, 9, 9, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -3071,12 +3071,12 @@ describe('Scene/Model', function() {
             };
 
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([119, 6, 5, 255], 5);
+                expect(rgba).toEqualEpsilon([131, 9, 9, 255], 5);
             });
 
             model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([85, 6, 5, 255], 5);
+                expect(rgba).toEqualEpsilon([102, 9, 9, 255], 5);
             });
 
             model.lightColor = new Cartesian3(5.0, 5.0, 5.0);

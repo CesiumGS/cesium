@@ -90,6 +90,54 @@ describe('Scene/HeightmapTessellator', function() {
         }).toThrowDeveloperError();
     });
 
+    function checkExpectedVertex(nativeRectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight) {
+        var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
+        latitude = CesiumMath.toRadians(latitude);
+        var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
+        longitude = CesiumMath.toRadians(longitude);
+
+        var heightSample = heightmap[j * width + i];
+
+        if (isEdge) {
+            heightSample -= skirtHeight;
+        }
+
+        var expectedVertexPosition = ellipsoid.cartographicToCartesian({
+            longitude : longitude,
+            latitude : latitude,
+            height : heightSample
+        });
+
+        index = index * 6;
+        var vertexPosition = new Cartesian3(vertices[index], vertices[index + 1], vertices[index + 2]);
+
+        expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
+        expect(vertices[index + 3]).toEqual(heightSample);
+        expect(vertices[index + 4]).toEqualEpsilon(i / (width - 1), CesiumMath.EPSILON7);
+        expect(vertices[index + 5]).toEqualEpsilon(1.0 - j / (height - 1), CesiumMath.EPSILON7);
+    }
+
+    function checkExpectedQuantizedVertex(nativeRectangle, i, j, width, height, index, isEdge, vertices, heightmap, ellipsoid, skirtHeight, encoding) {
+        var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
+        latitude = CesiumMath.toRadians(latitude);
+        var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
+        longitude = CesiumMath.toRadians(longitude);
+
+        var heightSample = heightmap[j * width + i];
+
+        if (isEdge) {
+            heightSample -= skirtHeight;
+        }
+
+        var expectedVertexPosition = ellipsoid.cartographicToCartesian({
+            longitude : longitude,
+            latitude : latitude,
+            height : heightSample
+        });
+
+        expect(encoding.decodePosition(vertices, index)).toEqualEpsilon(expectedVertexPosition, 1.0);
+    }
+
     it('creates mesh without skirt', function() {
         var width = 3;
         var height = 3;
@@ -116,28 +164,11 @@ describe('Scene/HeightmapTessellator', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
 
+        var index = 0;
+
         for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
-            latitude = CesiumMath.toRadians(latitude);
             for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
-                longitude = CesiumMath.toRadians(longitude);
-
-                var heightSample = options.heightmap[j * width + i];
-
-                var expectedVertexPosition = ellipsoid.cartographicToCartesian({
-                    longitude : longitude,
-                    latitude : latitude,
-                    height : heightSample
-                });
-
-                var index = (j * width + i) * 6;
-                var vertexPosition = new Cartesian3(vertices[index], vertices[index + 1], vertices[index + 2]);
-
-                expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
-                expect(vertices[index + 3]).toEqual(heightSample);
-                expect(vertices[index + 4]).toEqualEpsilon(i / (width - 1), CesiumMath.EPSILON7);
-                expect(vertices[index + 5]).toEqualEpsilon(1.0 - j / (height - 1), CesiumMath.EPSILON7);
+                checkExpectedVertex(nativeRectangle, i, j, width, height, index++, false, vertices, options.heightmap, ellipsoid, options.skirtHeight);
             }
         }
     });
@@ -163,35 +194,35 @@ describe('Scene/HeightmapTessellator', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
 
-        for (var j = -1; j <= height; ++j) {
-            var realJ = CesiumMath.clamp(j, 0, height - 1);
-            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, realJ / (height - 1));
-            latitude = CesiumMath.toRadians(latitude);
-            for (var i = -1; i <= width; ++i) {
-                var realI = CesiumMath.clamp(i, 0, width - 1);
-                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, realI / (width - 1));
-                longitude = CesiumMath.toRadians(longitude);
+        var i, j;
+        var index = 0;
 
-                var heightSample = options.heightmap[realJ * width + realI];
-
-                if (realI !== i || realJ !== j) {
-                    heightSample -= options.skirtHeight;
-                }
-
-                var expectedVertexPosition = ellipsoid.cartographicToCartesian({
-                                                                                   longitude : longitude,
-                                                                                   latitude : latitude,
-                                                                                   height : heightSample
-                                                                               });
-
-                var index = ((j + 1) * (width + 2) + i + 1) * 6;
-                var vertexPosition = new Cartesian3(vertices[index], vertices[index + 1], vertices[index + 2]);
-
-                expect(vertexPosition).toEqualEpsilon(expectedVertexPosition, 1.0);
-                expect(vertices[index + 3]).toEqual(heightSample);
-                expect(vertices[index + 4]).toEqualEpsilon(realI / (width - 1), CesiumMath.EPSILON7);
-                expect(vertices[index + 5]).toEqualEpsilon(1.0 - realJ / (height - 1), CesiumMath.EPSILON7);
+        for (j = 0; j < height; ++j) {
+            for (i = 0; i < width; ++i) {
+                checkExpectedVertex(nativeRectangle, i, j, width, height, index++, false, vertices, options.heightmap, ellipsoid, options.skirtHeight);
             }
+        }
+
+        // Heightmap is expected to be ordered from west to east and north to south,
+        // so flip i and j depending on how skirts are arranged.
+        for (j = 0; j < height; ++j) {
+            // West edge goes from south to north
+            checkExpectedVertex(nativeRectangle, 0, height - 1 - j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
+        }
+
+        for (i = 0; i < height; ++i) {
+            // South edge goes from east to west
+            checkExpectedVertex(nativeRectangle, width - 1 - i, height - 1, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
+        }
+
+        for (j = 0; j < height; ++j) {
+            // East edge goes from north to south
+            checkExpectedVertex(nativeRectangle, width - 1, j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
+        }
+
+        for (i = 0; i < height; ++i) {
+            // North edge goes from west to east
+            checkExpectedVertex(nativeRectangle, i, 0, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight);
         }
     });
 
@@ -216,29 +247,35 @@ describe('Scene/HeightmapTessellator', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
 
-        for (var j = -1; j <= height; ++j) {
-            var realJ = CesiumMath.clamp(j, 0, height - 1);
-            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, realJ / (height - 1));
-            latitude = CesiumMath.toRadians(latitude);
-            for (var i = -1; i <= width; ++i) {
-                var realI = CesiumMath.clamp(i, 0, width - 1);
-                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, realI / (width - 1));
-                longitude = CesiumMath.toRadians(longitude);
+        var i, j;
+        var index = 0;
 
-                var heightSample = options.heightmap[realJ * width + realI];
-
-                if (realI !== i || realJ !== j) {
-                    heightSample -= options.skirtHeight;
-                }
-
-                var index = ((j + 1) * (width + 2) + i + 1);
-                var expectedVertexPosition = ellipsoid.cartographicToCartesian({
-                                                                                   longitude : longitude,
-                                                                                   latitude : latitude,
-                                                                                   height : heightSample
-                                                                               });
-                expect(results.encoding.decodePosition(vertices, index)).toEqualEpsilon(expectedVertexPosition, 1.0);
+        for (j = 0; j < height; ++j) {
+            for (i = 0; i < width; ++i) {
+                checkExpectedQuantizedVertex(nativeRectangle, i, j, width, height, index++, false, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
             }
+        }
+
+        // Heightmap is expected to be ordered from west to east and north to south,
+        // so flip i and j depending on how skirts are arranged.
+        for (j = 0; j < height; ++j) {
+            // West edge goes from south to north
+            checkExpectedQuantizedVertex(nativeRectangle, 0, height - 1 - j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
+        }
+
+        for (i = 0; i < height; ++i) {
+            // South edge goes from east to west
+            checkExpectedQuantizedVertex(nativeRectangle, width - 1 - i, height - 1, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
+        }
+
+        for (j = 0; j < height; ++j) {
+            // East edge goes from north to south
+            checkExpectedQuantizedVertex(nativeRectangle, width - 1, j, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
+        }
+
+        for (i = 0; i < height; ++i) {
+            // North edge goes from west to east
+            checkExpectedQuantizedVertex(nativeRectangle, i, 0, width, height, index++, true, vertices, options.heightmap, ellipsoid, options.skirtHeight, results.encoding);
         }
     });
 

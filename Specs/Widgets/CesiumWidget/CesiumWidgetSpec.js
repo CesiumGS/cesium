@@ -59,6 +59,7 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         expect(widget.camera).toBeInstanceOf(Camera);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
+        expect(widget.useBrowserRecommendedResolution).toBe(true);
         widget.render();
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
@@ -190,7 +191,8 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
             stencil : true,
             antialias : false,
             premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
-            preserveDrawingBuffer : true
+            preserveDrawingBuffer : true,
+            powerPreference: 'low-power'
         };
         var contextOptions = {
             allowTextureFilterAnisotropic : false,
@@ -210,6 +212,7 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
+        expect(contextAttributes.powerPreference).toEqual(webglOptions.powerPreference);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
