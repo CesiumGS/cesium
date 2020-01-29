@@ -40,8 +40,8 @@ var ellipseGeometry = new Cesium.EllipseGeometry({
 // in this case, we're creating a solid red color.
 var redEllipseInstance = new Cesium.GeometryInstance({
     geometry : ellipseGeometry,
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
     }
 });
 
@@ -56,7 +56,7 @@ ellipseGeometry = new Cesium.EllipseGeometry({
     semiMinorAxis : 200000.0,
     semiMajorAxis : 400000.0,
     rotation : Cesium.Math.toRadians(45),
-    height: 200000.0,
+    height : 200000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
 });
 // Create a geometry instance using the ellipse geometry

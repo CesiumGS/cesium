@@ -14,9 +14,9 @@ import { Imagery } from '../../Source/Cesium.js';
 import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
@@ -84,7 +84,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
                     expect(url).toEqual(expectedUrl);
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 

@@ -39,10 +39,10 @@ function startup(Cesium) {
 // Use clipping planes to selectively hide parts of the globe surface.
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    skyAtmosphere: false,
+    skyAtmosphere : false,
     shouldAnimate : true,
-    terrainProvider: Cesium.createWorldTerrain(),
-    scene3DOnly: true
+    terrainProvider : Cesium.createWorldTerrain(),
+    scene3DOnly : true
 });
 var globe = viewer.scene.globe;
 
@@ -101,8 +101,8 @@ function loadCesiumMan() {
             new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), -700.0),
             new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), -700.0)
         ],
-        edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
-        edgeColor: Cesium.Color.WHITE,
+        edgeWidth : edgeStylingEnabled ? 1.0 : 0.0,
+        edgeColor : Cesium.Color.WHITE,
         enabled : clippingPlanesEnabled
     });
     globe.backFaceCulling = true;
@@ -154,15 +154,15 @@ function loadStHelens() {
     }
     globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
         planes : clippingPlanes,
-        edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
-        edgeColor: Cesium.Color.WHITE,
+        edgeWidth : edgeStylingEnabled ? 1.0 : 0.0,
+        edgeColor : Cesium.Color.WHITE,
         enabled : clippingPlanesEnabled
     });
     globe.backFaceCulling = true;
     globe.showSkirts = true;
 
     // Load tileset
-    tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
+    tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5713) });
     return tileset.readyPromise.then(function() {
         tileset.pointCloudShading.attenuation = true;
 

@@ -139,7 +139,7 @@ import TileProviderError from './TileProviderError.js';
                 resource.appendForwardSlash();
                 lastResource = resource;
                 layerJsonResource = lastResource.getDerivedResource({
-                    url: 'layer.json'
+                    url : 'layer.json'
                 });
 
                 // ion resources have a credits property we can use for additional attribution.
@@ -259,17 +259,17 @@ import TileProviderError from './TileProviderError.js';
             }
 
             layers.push(new LayerInformation({
-                resource: lastResource,
-                version: data.version,
-                isHeightmap: isHeightmap,
-                tileUrlTemplates: tileUrlTemplates,
-                availability: availability,
-                hasVertexNormals: hasVertexNormals,
-                hasWaterMask: hasWaterMask,
-                hasMetadata: hasMetadata,
-                availabilityLevels: availabilityLevels,
-                availabilityTilesLoaded: availabilityTilesLoaded,
-                littleEndianExtensionSize: littleEndianExtensionSize
+                resource : lastResource,
+                version : data.version,
+                isHeightmap : isHeightmap,
+                tileUrlTemplates : tileUrlTemplates,
+                availability : availability,
+                hasVertexNormals : hasVertexNormals,
+                hasWaterMask : hasWaterMask,
+                hasMetadata : hasMetadata,
+                availabilityLevels : availabilityLevels,
+                availabilityTilesLoaded : availabilityTilesLoaded,
+                littleEndianExtensionSize : littleEndianExtensionSize
             }));
 
             var parentUrl = data.parentUrl;
@@ -279,11 +279,11 @@ import TileProviderError from './TileProviderError.js';
                     return when.resolve();
                 }
                 lastResource = lastResource.getDerivedResource({
-                    url: parentUrl
+                    url : parentUrl
                 });
                 lastResource.appendForwardSlash(); // Terrain always expects a directory
                 layerJsonResource = lastResource.getDerivedResource({
-                    url: 'layer.json'
+                    url : 'layer.json'
                 });
                 var parentMetadata = layerJsonResource.fetchJson();
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
@@ -335,7 +335,7 @@ import TileProviderError from './TileProviderError.js';
             // If the metadata is not found, assume this is a pre-metadata heightmap tileset.
             if (defined(data) && data.statusCode === 404) {
                 metadataSuccess({
-                    tilejson: '2.1.0',
+                    tilejson : '2.1.0',
                     format : 'heightmap-1.0',
                     version : '1.0.0',
                     scheme : 'tms',
@@ -371,7 +371,7 @@ import TileProviderError from './TileProviderError.js';
          * @constant
          * @default 1
          */
-        OCT_VERTEX_NORMALS: 1,
+        OCT_VERTEX_NORMALS : 1,
         /**
          * A watermask is included as an extension to the tile mesh
          *
@@ -379,7 +379,7 @@ import TileProviderError from './TileProviderError.js';
          * @constant
          * @default 2
          */
-        WATER_MASK: 2,
+        WATER_MASK : 2,
         /**
          * A json object contain metadata about the tile
          *
@@ -387,7 +387,7 @@ import TileProviderError from './TileProviderError.js';
          * @constant
          * @default 4
          */
-        METADATA: 4
+        METADATA : 4
     };
 
     function getRequestHeader(extensionsList) {
@@ -411,7 +411,7 @@ import TileProviderError from './TileProviderError.js';
             width : provider._heightmapWidth,
             height : provider._heightmapWidth,
             structure : provider._heightmapStructure,
-            credits: provider._tileCredits
+            credits : provider._tileCredits
         });
     }
 
@@ -574,9 +574,9 @@ import TileProviderError from './TileProviderError.js';
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
-            waterMask: waterMaskBuffer,
-            credits: provider._tileCredits
+            childTileMask : provider.availability.computeChildMaskForTile(level, x, y),
+            waterMask : waterMaskBuffer,
+            credits : provider._tileCredits
         });
     }
 
@@ -655,7 +655,7 @@ import TileProviderError from './TileProviderError.js';
         if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
             // ion uses query paremeters to request extensions
             if (extensionList.length !== 0) {
-                query = { extensions: extensionList.join('-') };
+                query = { extensions : extensionList.join('-') };
             }
             headers = getRequestHeader(undefined);
         } else {
@@ -664,16 +664,16 @@ import TileProviderError from './TileProviderError.js';
         }
 
         var promise = resource.getDerivedResource({
-            url: url,
-            templateValues: {
-                version: layerToUse.version,
-                z: level,
-                x: x,
-                y: tmsY
+            url : url,
+            templateValues : {
+                version : layerToUse.version,
+                z : level,
+                x : x,
+                y : tmsY
             },
-            queryParameters: query,
-            headers: headers,
-            request: request
+            queryParameters : query,
+            headers : headers,
+            request : request
         }).fetchArrayBuffer();
 
         if (!defined(promise)) {
@@ -970,9 +970,9 @@ import TileProviderError from './TileProviderError.js';
         var parentY = (y / divisor) | 0;
 
         return {
-            level: parentLevel,
-            x: parentX,
-            y: parentY
+            level : parentLevel,
+            x : parentX,
+            y : parentY
         };
     }
 
@@ -980,7 +980,7 @@ import TileProviderError from './TileProviderError.js';
         if (!defined(layer.availabilityLevels)) {
             // It's definitely not in this layer
             return {
-                result: false
+                result : false
             };
         }
 
@@ -1004,9 +1004,9 @@ import TileProviderError from './TileProviderError.js';
                         // For cutout terrain, if this isn't the top layer the availability tiles
                         //  may never get loaded, so request it here.
                         var request = new Request({
-                            throttle: true,
-                            throttleByServer: true,
-                            type: RequestType.TERRAIN
+                            throttle : true,
+                            throttleByServer : true,
+                            type : RequestType.TERRAIN
                         });
                         requestPromise = requestTileGeometry(provider, tile.x, tile.y, tile.level, layer, request);
                         if (defined(requestPromise)) {
@@ -1019,8 +1019,8 @@ import TileProviderError from './TileProviderError.js';
                 // The availability tile is available, but not loaded, so there
                 //  is still a chance that it may become available at some point
                 return {
-                    result: true,
-                    promise: requestPromise
+                    result : true,
+                    promise : requestPromise
                 };
             }
 
@@ -1028,7 +1028,7 @@ import TileProviderError from './TileProviderError.js';
         }
 
         return {
-            result: false
+            result : false
         };
     }
 

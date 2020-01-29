@@ -19,10 +19,10 @@ import { HeightReference } from '../../Source/Cesium.js';
 import { HorizontalOrigin } from '../../Source/Cesium.js';
 import { TextureAtlas } from '../../Source/Cesium.js';
 import { VerticalOrigin } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createGlobe from '../createGlobe.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/BillboardCollection', function() {
 
@@ -286,7 +286,7 @@ describe('Scene/BillboardCollection', function() {
     it('renders billboard with scaleByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
-            scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+            scaleByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0),
             image : greenImage
         });
 
@@ -300,7 +300,7 @@ describe('Scene/BillboardCollection', function() {
     it('renders billboard with translucencyByDistance', function() {
         billboards.add({
             position : Cartesian3.ZERO,
-            translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+            translucencyByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0),
             image : greenImage
         });
 
@@ -315,7 +315,7 @@ describe('Scene/BillboardCollection', function() {
         billboards.add({
             position : Cartesian3.ZERO,
             pixelOffset : new Cartesian2(1.0, 0.0),
-            pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0),
+            pixelOffsetScaleByDistance : new NearFarScalar(2.0, 0.0, 4.0, 1000.0),
             image : greenImage
         });
 
@@ -1470,7 +1470,7 @@ describe('Scene/BillboardCollection', function() {
         billboards.add({
             image : greenImage,
             position : Cartesian3.fromDegrees(-50.0, -50.0),
-            verticalOrigin: VerticalOrigin.TOP
+            verticalOrigin : VerticalOrigin.TOP
         });
         scene.renderForSpecs();
         var verticalRadius = scene.frameState.commandList[0].boundingVolume.radius;
@@ -1479,7 +1479,7 @@ describe('Scene/BillboardCollection', function() {
         billboards.add({
             image : greenImage,
             position : Cartesian3.fromDegrees(-50.0, -50.0),
-            horizontalOrigin: HorizontalOrigin.LEFT
+            horizontalOrigin : HorizontalOrigin.LEFT
         });
         scene.renderForSpecs();
         var horizontalRadius = scene.frameState.commandList[0].boundingVolume.radius;

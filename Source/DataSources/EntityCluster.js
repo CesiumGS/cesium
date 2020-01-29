@@ -509,9 +509,9 @@ import kdbush from '../ThirdParty/kdbush.js';
 
             if (!defined(entityIndices)) {
                 entityIndices = this._collectionIndicesByEntity[entity.id] = {
-                    billboardIndex: undefined,
-                    labelIndex: undefined,
-                    pointIndex: undefined
+                    billboardIndex : undefined,
+                    labelIndex : undefined,
+                    pointIndex : undefined
                 };
             }
 

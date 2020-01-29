@@ -383,7 +383,7 @@ describe('Scene/Primitive', function() {
         var primitive = new Primitive({
             geometryInstances : boxGeometryInstance,
             appearance : new PerInstanceColorAppearance({
-                closed: true
+                closed : true
             }),
             asynchronous : false,
             allowPicking : false,
@@ -518,7 +518,7 @@ describe('Scene/Primitive', function() {
             return new Primitive({
                 geometryInstances : [rectangleInstance1, rectangleInstance2],
                 appearance : new PerInstanceColorAppearance({
-                    closed: true
+                    closed : true
                 }),
                 asynchronous : false,
                 allowPicking : false,
@@ -532,7 +532,7 @@ describe('Scene/Primitive', function() {
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance({
-                closed: true
+                closed : true
             }),
             asynchronous : false,
             allowPicking : false,
@@ -618,7 +618,7 @@ describe('Scene/Primitive', function() {
             modelMatrix : primitiveModelMatrix,
             appearance : new PerInstanceColorAppearance({
                 translucent : false,
-                closed: true
+                closed : true
             }),
             asynchronous : false
         });

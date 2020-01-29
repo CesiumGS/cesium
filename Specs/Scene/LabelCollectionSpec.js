@@ -577,7 +577,7 @@ describe('Scene/LabelCollection', function() {
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
-            translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0)
+            translucencyByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0)
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
@@ -596,7 +596,7 @@ describe('Scene/LabelCollection', function() {
             text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
-            pixelOffsetScaleByDistance: new NearFarScalar(2.0, 0.0, 4.0, 1000.0)
+            pixelOffsetScaleByDistance : new NearFarScalar(2.0, 0.0, 4.0, 1000.0)
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
@@ -614,7 +614,7 @@ describe('Scene/LabelCollection', function() {
             text : solidBox,
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
-            scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0)
+            scaleByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0)
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
@@ -2355,7 +2355,7 @@ describe('Scene/LabelCollection', function() {
             spyOn(scene.camera, 'update');
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
-                text: 't',
+                text : 't',
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
             scene.renderForSpecs();
@@ -2372,7 +2372,7 @@ describe('Scene/LabelCollection', function() {
             spyOn(scene.camera, 'update');
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
-                text: 't',
+                text : 't',
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
             scene.renderForSpecs();

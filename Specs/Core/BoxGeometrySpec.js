@@ -63,7 +63,7 @@ describe('Core/BoxGeometry', function() {
             minimum : new Cartesian3(-1, -2, -3),
             maximum : new Cartesian3(1, 2, 3),
             vertexFormat : VertexFormat.POSITION_ONLY,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 8;

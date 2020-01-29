@@ -34,7 +34,7 @@ import Resource from './Resource.js';
      * @type {String|Resource}
      * @default https://api.cesium.com
      */
-    Ion.defaultServer = new Resource({ url: 'https://api.cesium.com/' });
+    Ion.defaultServer = new Resource({ url : 'https://api.cesium.com/' });
 
     Ion.getDefaultTokenCredit = function(providedKey) {
         if (providedKey !== defaultAccessToken) {

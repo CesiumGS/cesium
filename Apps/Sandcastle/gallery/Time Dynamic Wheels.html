@@ -23,7 +23,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate: true
+    shouldAnimate : true
 });
 
 //Make sure viewer is at the desired time.
@@ -80,13 +80,13 @@ var rotationProperty = new Cesium.CallbackProperty(function(time, result) {
 }, false);
 
 var wheelTransformation = new Cesium.NodeTransformationProperty({
-    rotation: rotationProperty
+    rotation : rotationProperty
 });
 
 var nodeTransformations = {
-    'Wheels': wheelTransformation,
-    'Wheels_mid': wheelTransformation,
-    'Wheels_rear': wheelTransformation
+    'Wheels' : wheelTransformation,
+    'Wheels_mid' : wheelTransformation,
+    'Wheels_rear' : wheelTransformation
 };
 
 // Add our vehicle model.
@@ -99,7 +99,7 @@ var vehicleEntity = viewer.entities.add({
         nodeTransformations : nodeTransformations
     },
     label : {
-        text: new Cesium.CallbackProperty(updateSpeedLabel, false),
+        text : new Cesium.CallbackProperty(updateSpeedLabel, false),
         font : '20px sans-serif',
         showBackground : true,
         distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 100.0),

@@ -16,8 +16,8 @@ describe('Core/loadImageFromTypedArray', function() {
     it('can load an image', function() {
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
             var options = {
-                uint8Array: new Uint8Array(arrayBuffer),
-                format: 'image/png'
+                uint8Array : new Uint8Array(arrayBuffer),
+                format : 'image/png'
             };
 
             return loadImageFromTypedArray(options).then(function(image) {
@@ -33,9 +33,9 @@ describe('Core/loadImageFromTypedArray', function() {
         }
 
         var options = {
-            uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
-            format: 'image/png',
-            flipY: true
+            uint8Array : new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
+            format : 'image/png',
+            flipY : true
         };
         spyOn(window, 'createImageBitmap').and.returnValue(when.resolve({}));
         var blob = new Blob([options.uint8Array], {
@@ -51,8 +51,8 @@ describe('Core/loadImageFromTypedArray', function() {
                 return loadImageFromTypedArray(options)
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'flipY',
-                            premultiplyAlpha: 'none'
+                            imageOrientation : 'flipY',
+                            premultiplyAlpha : 'none'
                         });
 
                          window.createImageBitmap.calls.reset();
@@ -61,8 +61,8 @@ describe('Core/loadImageFromTypedArray', function() {
                     })
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'none',
-                            premultiplyAlpha: 'none'
+                            imageOrientation : 'none',
+                            premultiplyAlpha : 'none'
                         });
                     });
             });
@@ -77,8 +77,8 @@ describe('Core/loadImageFromTypedArray', function() {
         spyOn(window, 'createImageBitmap').and.callThrough();
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
             var options = {
-                uint8Array: new Uint8Array(arrayBuffer),
-                format: 'image/png'
+                uint8Array : new Uint8Array(arrayBuffer),
+                format : 'image/png'
             };
 
             return loadImageFromTypedArray(options).then(function(image) {
@@ -91,8 +91,8 @@ describe('Core/loadImageFromTypedArray', function() {
 
     it('can not load an invalid image', function() {
         var options = {
-            uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
-            format: 'image/png'
+            uint8Array : new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
+            format : 'image/png'
         };
         return loadImageFromTypedArray(options).then(function(image) {
             fail('should not be called');
@@ -109,7 +109,7 @@ describe('Core/loadImageFromTypedArray', function() {
     it('Throws without format', function() {
         expect(function() {
             loadImageFromTypedArray({
-                uint8Array: new Uint8Array()
+                uint8Array : new Uint8Array()
             });
         }).toThrowDeveloperError();
     });

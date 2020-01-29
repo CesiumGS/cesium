@@ -467,7 +467,7 @@ import TerrainMesh from './TerrainMesh.js';
                 eastSkirtHeight : eastSkirtHeight,
                 northSkirtHeight : northSkirtHeight,
                 childTileMask : 0,
-                credits: credits,
+                credits : credits,
                 createdByUpsampling : true
             });
         });

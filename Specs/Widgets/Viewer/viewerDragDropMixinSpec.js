@@ -1,9 +1,9 @@
 import { defined } from '../../../Source/Cesium.js';
 import { TimeInterval } from '../../../Source/Cesium.js';
+import { viewerDragDropMixin } from '../../../Source/Cesium.js';
 import createViewer from '../../createViewer.js';
 import DomEventSimulator from '../../DomEventSimulator.js';
 import pollToPromise from '../../pollToPromise.js';
-import { viewerDragDropMixin } from '../../../Source/Cesium.js';
 
 describe('Widgets/Viewer/viewerDragDropMixin', function() {
 
@@ -67,7 +67,7 @@ describe('Widgets/Viewer/viewerDragDropMixin', function() {
             dropTarget : document.body,
             clearOnDrop : false,
             clampToGround : false,
-            flyToOnDrop: false
+            flyToOnDrop : false
         });
         expect(viewer.dropTarget).toBe(document.body);
         expect(viewer.dropEnabled).toEqual(true);

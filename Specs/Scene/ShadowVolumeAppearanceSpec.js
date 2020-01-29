@@ -55,7 +55,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         material : Material.fromType(Material.ImageType, {
             image : '../Data/images/Red16x16.png'
         }),
-        flat :true
+        flat : true
     });
 
     // Defines for projection extents

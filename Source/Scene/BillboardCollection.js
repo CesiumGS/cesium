@@ -69,7 +69,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         compressedAttribute3 : 8,
         textureCoordinateBoundsOrLabelTranslate : 9,
         a_batchId : 10,
-        sdf: 11
+        sdf : 11
     };
 
     var attributeLocationsInstanced = {
@@ -85,7 +85,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         compressedAttribute3 : 9,
         textureCoordinateBoundsOrLabelTranslate : 10,
         a_batchId : 11,
-        sdf: 12
+        sdf : 12
     };
 
     /**

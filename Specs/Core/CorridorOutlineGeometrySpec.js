@@ -17,7 +17,7 @@ describe('Core/CorridorOutlineGeometry', function() {
     it('throws without width', function() {
         expect(function() {
             return new CorridorOutlineGeometry({
-                positions: [new Cartesian3()]
+                positions : [new Cartesian3()]
             });
         }).toThrowDeveloperError();
     });
@@ -28,14 +28,14 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -30.0
             ]),
-            width: 10000
+            width : 10000
         }));
         expect(geometry).toBeUndefined();
 
         geometry = CorridorOutlineGeometry.createGeometry(new CorridorOutlineGeometry({
-            positions :  [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
+            positions : [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
                           new Cartesian3(-1349046.4811926484, -5062228.688739784, 3621885.0521561056)],
-            width: 10000
+            width : 10000
         }));
         expect(geometry).toBeUndefined();
     });
@@ -46,7 +46,7 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -60,9 +60,9 @@ describe('Core/CorridorOutlineGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         expect(m.attributes.position.values.length).toEqual(24 * 3); // 6 positions * 4 for a box at each position
@@ -75,9 +75,9 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 12;
@@ -96,10 +96,10 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 24;
@@ -119,10 +119,10 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 24;
@@ -142,7 +142,7 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -31.0,
                 91.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -157,7 +157,7 @@ describe('Core/CorridorOutlineGeometry', function() {
                 90.0, -31.0,
                 89.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -173,7 +173,7 @@ describe('Core/CorridorOutlineGeometry', function() {
                 89.0, -31.0,
                 89.0, -32.0
             ]),
-            cornerType: CornerType.ROUNDED,
+            cornerType : CornerType.ROUNDED,
             width : 30000
         }));
 
@@ -193,7 +193,7 @@ describe('Core/CorridorOutlineGeometry', function() {
                  89.0, -31.0,
                  89.0, -32.0
             ]),
-            cornerType: CornerType.BEVELED,
+            cornerType : CornerType.BEVELED,
             width : 30000
         }));
 
@@ -231,7 +231,7 @@ describe('Core/CorridorOutlineGeometry', function() {
     ]);
     var corridor = new CorridorOutlineGeometry({
         positions : positions,
-        cornerType: CornerType.BEVELED,
+        cornerType : CornerType.BEVELED,
         width : 30000.0,
         granularity : 0.1
     });

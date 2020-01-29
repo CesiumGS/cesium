@@ -1,6 +1,6 @@
 import { DataSourceCollection } from '../../Source/Cesium.js';
-import MockDataSource from '../MockDataSource.js';
 import { when } from '../../Source/Cesium.js';
+import MockDataSource from '../MockDataSource.js';
 
 describe('DataSources/DataSourceCollection', function() {
 

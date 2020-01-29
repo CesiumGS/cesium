@@ -84,9 +84,9 @@ import WindingOrder from './WindingOrder.js';
         cleanedBottomHeights.length = index;
 
         return {
-            positions: cleanedPositions,
-            topHeights: cleanedTopHeights,
-            bottomHeights: cleanedBottomHeights
+            positions : cleanedPositions,
+            topHeights : cleanedTopHeights,
+            bottomHeights : cleanedBottomHeights
         };
     }
 
@@ -180,9 +180,9 @@ import WindingOrder from './WindingOrder.js';
         }
 
         return {
-            bottomPositions: bottomPositions,
-            topPositions: topPositions,
-            numCorners: numCorners
+            bottomPositions : bottomPositions,
+            topPositions : topPositions,
+            numCorners : numCorners
         };
     };
 export default WallGeometryLibrary;

@@ -37,53 +37,53 @@ var scene = viewer.scene;
 var tileset;
 
 var viewModel = {
-    tilesets: [
+    tilesets : [
         {
-            name: 'Tileset',
-            resource: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+            name : 'Tileset',
+            resource : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
         }, {
-            name: 'Translucent',
-            resource: '../../SampleData/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json'
+            name : 'Translucent',
+            resource : '../../SampleData/Cesium3DTiles/Batched/BatchedTranslucent/tileset.json'
         }, {
-            name: 'Translucent/Opaque',
-            resource: '../../SampleData/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json'
+            name : 'Translucent/Opaque',
+            resource : '../../SampleData/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/tileset.json'
         }, {
-            name: 'Multi-color',
-            resource: '../../SampleData/Cesium3DTiles/Batched/BatchedColors/tileset.json'
+            name : 'Multi-color',
+            resource : '../../SampleData/Cesium3DTiles/Batched/BatchedColors/tileset.json'
         }, {
-            name: 'Request Volume',
-            resource: '../../SampleData/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/tileset.json'
+            name : 'Request Volume',
+            resource : '../../SampleData/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume/tileset.json'
         }, {
-            name: 'Batched',
-            resource: '../../SampleData/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json'
+            name : 'Batched',
+            resource : '../../SampleData/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json'
         }, {
-            name: 'Instanced',
-            resource: '../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json'
+            name : 'Instanced',
+            resource : '../../SampleData/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json'
         }, {
-            name: 'Instanced/Orientation',
-            resource: '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json'
+            name : 'Instanced/Orientation',
+            resource : '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json'
         }, {
-            name: 'Composite',
-            resource: '../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json'
+            name : 'Composite',
+            resource : '../../SampleData/Cesium3DTiles/Composite/Composite/tileset.json'
         }, {
-            name: 'PointCloud',
-            resource: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json'
+            name : 'PointCloud',
+            resource : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json'
         }, {
-            name: 'PointCloudConstantColor',
-            resource: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudConstantColor/tileset.json'
+            name : 'PointCloudConstantColor',
+            resource : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudConstantColor/tileset.json'
         }, {
-            name: 'PointCloudNormals',
-            resource: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json'
+            name : 'PointCloudNormals',
+            resource : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudNormals/tileset.json'
         }, {
-            name: 'PointCloudBatched',
-            resource: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json'
+            name : 'PointCloudBatched',
+            resource : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json'
         }, {
-            name: 'PointCloudDraco',
-            resource: '../../SampleData/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json'
+            name : 'PointCloudDraco',
+            resource : '../../SampleData/Cesium3DTiles/PointCloud/PointCloudDraco/tileset.json'
         }
     ],
-    selectedTileset: undefined,
-    shadows: true
+    selectedTileset : undefined,
+    shadows : true
 };
 
 Cesium.knockout.track(viewModel);
@@ -115,8 +115,8 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
         var properties = tileset.properties;
         if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
             tileset.style = new Cesium.Cesium3DTileStyle({
-                color: {
-                    conditions: [
+                color : {
+                    conditions : [
                         ['${Height} >= 83', "color('purple', 0.5)"],
                         ['${Height} >= 80', "color('red')"],
                         ['${Height} >= 70', "color('orange')"],

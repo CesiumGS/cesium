@@ -53,7 +53,7 @@ import Rectangle from './Rectangle.js';
          * @type {Ellipsoid}
          */
         ellipsoid : {
-            get: function() {
+            get : function() {
                 return this._ellipsoid;
             }
         },

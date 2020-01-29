@@ -14,7 +14,7 @@ describe('Core/CylinderOutlineGeometry', function() {
     it('constructor throws with no topRadius', function() {
         expect(function() {
             return new CylinderOutlineGeometry({
-                length: 1
+                length : 1
             });
         }).toThrowDeveloperError();
     });
@@ -22,8 +22,8 @@ describe('Core/CylinderOutlineGeometry', function() {
     it('constructor throws with no bottomRadius', function() {
         expect(function() {
             return new CylinderOutlineGeometry({
-                length: 1,
-                topRadius: 1
+                length : 1,
+                topRadius : 1
             });
         }).toThrowDeveloperError();
     });
@@ -31,20 +31,20 @@ describe('Core/CylinderOutlineGeometry', function() {
     it('constructor throws if slices is less than 3', function() {
         expect(function() {
             return new CylinderOutlineGeometry({
-                length: 1,
-                topRadius: 1,
-                bottomRadius: 1,
-                slices: 2
+                length : 1,
+                topRadius : 1,
+                bottomRadius : 1,
+                slices : 2
             });
         }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {
         var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3
         }));
 
         expect(m.attributes.position.values.length).toEqual(6 * 3); // 3 top + 3 bottom
@@ -53,11 +53,11 @@ describe('Core/CylinderOutlineGeometry', function() {
 
     it('computes offset attribute', function() {
         var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 6;
@@ -72,11 +72,11 @@ describe('Core/CylinderOutlineGeometry', function() {
 
     it('computes positions with no lines along the length', function() {
         var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3,
-            numberOfVerticalLines: 0
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3,
+            numberOfVerticalLines : 0
         }));
 
         var numVertices = 6; //3 top 3 bottom
@@ -88,29 +88,29 @@ describe('Core/CylinderOutlineGeometry', function() {
     it('undefined is returned if the length is less than or equal to zero or if ' +
        'both radii are equal to zero or is either radii and less than zero', function() {
         var cylinderOutline0 = new CylinderOutlineGeometry({
-            length: 0,
-            topRadius: 80000,
-            bottomRadius: 200000
+            length : 0,
+            topRadius : 80000,
+            bottomRadius : 200000
         });
         var cylinderOutline1 = new CylinderOutlineGeometry({
-            length: 200000,
-            topRadius: 0,
-            bottomRadius: 0
+            length : 200000,
+            topRadius : 0,
+            bottomRadius : 0
         });
         var cylinderOutline2 = new CylinderOutlineGeometry({
-            length: 200000,
-            topRadius: -10,
-            bottomRadius: 4
+            length : 200000,
+            topRadius : -10,
+            bottomRadius : 4
         });
         var cylinderOutline3 = new CylinderOutlineGeometry({
-            length: -200000,
-            topRadius: 100,
-            bottomRadius: 100
+            length : -200000,
+            topRadius : 100,
+            bottomRadius : 100
         });
         var cylinderOutline4 = new CylinderOutlineGeometry({
-            length: 200000,
-            topRadius: 32,
-            bottomRadius: -100
+            length : 200000,
+            topRadius : 32,
+            bottomRadius : -100
         });
 
         var geometry0 = CylinderOutlineGeometry.createGeometry(cylinderOutline0);
@@ -127,11 +127,11 @@ describe('Core/CylinderOutlineGeometry', function() {
     });
 
     var cylinder = new CylinderOutlineGeometry({
-        length: 1,
-        topRadius: 1,
-        bottomRadius: 0,
-        slices: 3,
-        numberOfVerticalLines: 0
+        length : 1,
+        topRadius : 1,
+        bottomRadius : 0,
+        slices : 3,
+        numberOfVerticalLines : 0
     });
     var packedInstance = [1.0, 1.0, 0.0, 3.0, 0.0, -1.0];
     createPackableSpecs(CylinderOutlineGeometry, cylinder, packedInstance);

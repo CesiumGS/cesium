@@ -55,17 +55,17 @@ import RenderbufferFormat from './RenderbufferFormat.js';
     }
 
     defineProperties(Renderbuffer.prototype, {
-        format: {
+        format : {
             get : function() {
                 return this._format;
             }
         },
-        width: {
+        width : {
             get : function() {
                 return this._width;
             }
         },
-        height: {
+        height : {
             get : function() {
                 return this._height;
             }

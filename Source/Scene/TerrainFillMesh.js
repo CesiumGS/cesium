@@ -450,8 +450,8 @@ import TileSelectionResult from './TileSelectionResult.js';
     }
 
     var heightRangeScratch = {
-        minimumHeight: 0.0,
-        maximumHeight: 0.0
+        minimumHeight : 0.0,
+        maximumHeight : 0.0
     };
 
     var swVertexScratch = new HeightAndNormal();
@@ -511,13 +511,13 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         if (rectangle.width > maxTileWidth && (maximumHeight - minimumHeight) <= geometricError) {
             var terrainData = new HeightmapTerrainData({
-                width: 9,
-                height: 9,
-                buffer: heightmapBuffer,
-                structure: {
+                width : 9,
+                height : 9,
+                buffer : heightmapBuffer,
+                structure : {
                     // Use the maximum as the constant height so that this tile's skirt
                     // covers any cracks with adjacent tiles.
-                    heightOffset: maximumHeight
+                    heightOffset : maximumHeight
                 }
             });
             fill.mesh = terrainData._createMeshSync(tile.tilingScheme, tile.x, tile.y, tile.level, 1.0);

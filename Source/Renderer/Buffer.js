@@ -110,11 +110,11 @@ import BufferUsage from './BufferUsage.js';
         //>>includeEnd('debug');
 
         return new Buffer({
-            context: options.context,
-            bufferTarget: WebGLConstants.ARRAY_BUFFER,
-            typedArray: options.typedArray,
-            sizeInBytes: options.sizeInBytes,
-            usage: options.usage
+            context : options.context,
+            bufferTarget : WebGLConstants.ARRAY_BUFFER,
+            typedArray : options.typedArray,
+            sizeInBytes : options.sizeInBytes,
+            usage : options.usage
         });
     };
 
@@ -191,7 +191,7 @@ import BufferUsage from './BufferUsage.js';
         var numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
 
         defineProperties(buffer, {
-            indexDatatype: {
+            indexDatatype : {
                 get : function() {
                     return indexDatatype;
                 }
@@ -218,7 +218,7 @@ import BufferUsage from './BufferUsage.js';
             }
         },
 
-        usage: {
+        usage : {
             get : function() {
                 return this._usage;
             }

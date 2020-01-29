@@ -32,7 +32,7 @@ import IonWorldImageryStyle from './IonWorldImageryStyle.js';
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var style = defaultValue(options.style, IonWorldImageryStyle.AERIAL);
         return new IonImageryProvider({
-            assetId: style
+            assetId : style
         });
     }
 export default createWorldImagery;

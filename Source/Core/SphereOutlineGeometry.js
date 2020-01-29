@@ -32,10 +32,10 @@ import EllipsoidOutlineGeometry from './EllipsoidOutlineGeometry.js';
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
-                radii: radii,
-                stackPartitions: options.stackPartitions,
-                slicePartitions: options.slicePartitions,
-                subdivisions: options.subdivisions
+                radii : radii,
+                stackPartitions : options.stackPartitions,
+                slicePartitions : options.slicePartitions,
+                subdivisions : options.subdivisions
         };
 
         this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);

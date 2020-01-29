@@ -10,9 +10,9 @@ import { PixelDatatype } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { PostProcessStage } from '../../Source/Cesium.js';
 import { PostProcessStageSampleMode } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PostProcessStage', function() {
 
@@ -230,7 +230,7 @@ describe('Scene/PostProcessStage', function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             return model;
         }).otherwise(function() {
             return when.reject(model);

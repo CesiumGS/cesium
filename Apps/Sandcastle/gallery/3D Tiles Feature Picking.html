@@ -25,7 +25,7 @@ function startup(Cesium) {
 // A simple demo of 3D Tiles feature picking with hover and select behavior
 // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -34,13 +34,13 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
 var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
 viewer.scene.camera.setView({
-    destination: initialPosition,
-    orientation: initialOrientation,
-    endTransform: Cesium.Matrix4.IDENTITY
+    destination : initialPosition,
+    orientation : initialOrientation,
+    endTransform : Cesium.Matrix4.IDENTITY
 });
 
 // Load the NYC buildings tileset
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5741) });
 viewer.scene.primitives.add(tileset);
 
 // HTML overlay for showing feature name on mouseover
@@ -57,8 +57,8 @@ nameOverlay.style.backgroundColor = 'black';
 
 // Information about the currently selected feature
 var selected = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
+    feature : undefined,
+    originalColor : new Cesium.Color()
 };
 
 // An entity object which will hold info about the currently selected feature for infobox display

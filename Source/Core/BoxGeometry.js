@@ -100,7 +100,7 @@ import VertexFormat from './VertexFormat.js';
             minimum : Cartesian3.negate(corner, new Cartesian3()),
             maximum : corner,
             vertexFormat : options.vertexFormat,
-            offsetAttribute: options.offsetAttribute
+            offsetAttribute : options.offsetAttribute
         });
     };
 
@@ -170,9 +170,9 @@ import VertexFormat from './VertexFormat.js';
     var scratchMax = new Cartesian3();
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
-        minimum: scratchMin,
-        maximum: scratchMax,
-        vertexFormat: scratchVertexFormat,
+        minimum : scratchMin,
+        maximum : scratchMax,
+        vertexFormat : scratchVertexFormat,
         offsetAttribute : undefined
     };
 
@@ -825,7 +825,7 @@ import VertexFormat from './VertexFormat.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 

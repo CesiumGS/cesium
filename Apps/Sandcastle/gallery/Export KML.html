@@ -39,7 +39,7 @@ var modelCzml = [{
     "position" : {
         "cartographicDegrees" : [-77, 37, 0]
     },
-    "model": {
+    "model" : {
         "gltf" : "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb"
     }
 }];
@@ -64,11 +64,11 @@ function reset() {
 
 // We fetch the resources that will be embedded in the KMZ file.
 var daeModelPromise = Cesium.Resource.fetchBlob({
-    url: '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae'
+    url : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae'
 });
 
 var texturePromise = Cesium.Resource.fetchBlob({
-    url: '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png'
+    url : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png'
 });
 
 // This callback allows us to set the URL of the model to use
@@ -91,8 +91,8 @@ var filenameToSave = '';
 var dataSourcePromise;
 
 Sandcastle.addToolbarMenu([{
-    text: 'Satellites',
-    onselect: function () {
+    text : 'Satellites',
+    onselect : function () {
         reset();
         filenameToSave = 'Satellites.kmz';
         dataSourcePromise = Cesium.CzmlDataSource.load('../../SampleData/simple.czml');
@@ -101,8 +101,8 @@ Sandcastle.addToolbarMenu([{
         viewer.camera.flyHome(0);
     }
 }, {
-    text: 'Model',
-    onselect: function () {
+    text : 'Model',
+    onselect : function () {
         reset();
         filenameToSave = 'Model.kmz';
         dataSourcePromise = Cesium.CzmlDataSource.load(modelCzml);
@@ -117,9 +117,9 @@ Sandcastle.addToolbarButton('Download', function() {
     dataSourcePromise
         .then(function(dataSource) {
             return Cesium.exportKml({
-                entities: dataSource.entities,
-                kmz: true,
-                modelCallback: modelCallback
+                entities : dataSource.entities,
+                kmz : true,
+                modelCallback : modelCallback
             });
         })
         .then(function(result) {

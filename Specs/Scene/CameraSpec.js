@@ -39,16 +39,16 @@ describe('Scene/Camera', function() {
 
     function FakeScene(projection) {
         this.canvas = {
-            clientWidth: 512,
-            clientHeight: 384
+            clientWidth : 512,
+            clientHeight : 384
         };
         this.drawingBufferWidth = 1024;
         this.drawingBufferHeight = 768;
         this.mapProjection = defaultValue(projection, new GeographicProjection());
         this.tweens = new TweenCollection();
         this.screenSpaceCameraController = {
-            minimumZoomDistance: 0,
-            maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
+            minimumZoomDistance : 0,
+            maximumZoomDistance : 5906376272000.0  // distance from the Sun to Pluto in meters.
         };
         this.camera = undefined;
         this.preloadFlightCamera = undefined;
@@ -212,7 +212,7 @@ describe('Scene/Camera', function() {
 
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : newHeading
             }
         });
@@ -230,7 +230,7 @@ describe('Scene/Camera', function() {
 
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : newHeading
             }
         });
@@ -252,7 +252,7 @@ describe('Scene/Camera', function() {
 
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : newHeading
             }
         });
@@ -273,7 +273,7 @@ describe('Scene/Camera', function() {
         var heading = camera.heading;
         var newHeading = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : newHeading
             }
         });
@@ -295,7 +295,7 @@ describe('Scene/Camera', function() {
         var positionCartographic = camera.positionCartographic;
 
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : CesiumMath.PI
             }
         });
@@ -305,7 +305,7 @@ describe('Scene/Camera', function() {
         expect(camera.up.z).toBeLessThan(0.0);
 
         camera.setView({
-            orientation: {
+            orientation : {
                 heading : CesiumMath.TWO_PI
             }
         });
@@ -379,7 +379,7 @@ describe('Scene/Camera', function() {
 
         var newPitch = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 pitch : newPitch
             }
         });
@@ -402,7 +402,7 @@ describe('Scene/Camera', function() {
 
         var newPitch = CesiumMath.toRadians(45.0);
         camera.setView({
-            orientation: {
+            orientation : {
                 pitch : newPitch
             }
         });
@@ -476,7 +476,7 @@ describe('Scene/Camera', function() {
         var roll = CesiumMath.toRadians(110.0);
         camera.setView({
             destination : Cartesian3.fromDegrees(-72.0, 40.0, 20.0),
-            orientation: {
+            orientation : {
                 heading : 0.0,
                 pitch : 0.0,
                 roll : roll
@@ -499,10 +499,10 @@ describe('Scene/Camera', function() {
 
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            orientation: {
-                pitch: camera.pitch,
+            orientation : {
+                pitch : camera.pitch,
                 roll : newRoll,
-                heading: camera.heading
+                heading : camera.heading
             }
         });
 
@@ -524,10 +524,10 @@ describe('Scene/Camera', function() {
 
         var newRoll = CesiumMath.PI_OVER_FOUR;
         camera.setView({
-            orientation: {
-                pitch: camera.pitch,
+            orientation : {
+                pitch : camera.pitch,
                 roll : newRoll,
-                heading: camera.heading
+                heading : camera.heading
             }
         });
 
@@ -682,7 +682,7 @@ describe('Scene/Camera', function() {
 
         camera.setView({
             destination : position,
-            orientation: {
+            orientation : {
                 heading : heading,
                 pitch : pitch,
                 roll : roll
@@ -703,7 +703,7 @@ describe('Scene/Camera', function() {
 
         camera.setView({
             destination : position,
-            orientation: {
+            orientation : {
                 heading : heading,
                 pitch : pitch,
                 roll : roll
@@ -718,8 +718,8 @@ describe('Scene/Camera', function() {
         heading =  CesiumMath.toRadians(200.0);
 
         camera.setView({
-            orientation: {
-                pitch: camera.pitch,
+            orientation : {
+                pitch : camera.pitch,
                 roll : camera.roll,
                 heading : heading
             }
@@ -739,7 +739,7 @@ describe('Scene/Camera', function() {
 
         camera.setView({
             destination : position,
-            orientation: {
+            orientation : {
                 heading : heading,
                 pitch : pitch,
                 roll : roll
@@ -754,10 +754,10 @@ describe('Scene/Camera', function() {
         pitch =  CesiumMath.toRadians(-50.0);
 
         camera.setView({
-            orientation: {
+            orientation : {
                 pitch : pitch,
                 roll : camera.roll,
-                heading: camera.heading
+                heading : camera.heading
             }
         });
 
@@ -775,7 +775,7 @@ describe('Scene/Camera', function() {
 
         camera.setView({
             destination : position,
-            orientation: {
+            orientation : {
                 heading : heading,
                 pitch : pitch,
                 roll : roll
@@ -790,10 +790,10 @@ describe('Scene/Camera', function() {
         roll =  CesiumMath.toRadians(200.0);
 
         camera.setView({
-            orientation: {
+            orientation : {
                 roll : roll,
-                heading: camera.heading,
-                pitch: camera.pitch
+                heading : camera.heading,
+                pitch : camera.pitch
             }
         });
 
@@ -1760,7 +1760,7 @@ describe('Scene/Camera', function() {
             -CesiumMath.PI_OVER_TWO,
             Math.PI,
             CesiumMath.PI_OVER_TWO);
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
@@ -1773,7 +1773,7 @@ describe('Scene/Camera', function() {
             CesiumMath.toRadians(41.23),
             CesiumMath.toRadians(21.51),
             CesiumMath.toRadians(41.38));
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(4481555.454147325, 1754498.0086281248, 4200627.581953675), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995046749050446, -0.27385124912628594, -0.6600747708691498), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.6146504879783901, -0.2406314209863035, 0.7511999047271233), CesiumMath.EPSILON10);
@@ -1786,7 +1786,7 @@ describe('Scene/Camera', function() {
             CesiumMath.toRadians(-50.0),
             CesiumMath.toRadians(157.0),
             CesiumMath.toRadians(0.0));
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-6017603.25625715, 9091606.78076493, -5075070.862292178), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.49978034145251155, -0.7550857289433265, 0.42434084442077485), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.2342094064143758, 0.35385181388649406, 0.905502538790623), CesiumMath.EPSILON10);
@@ -1799,7 +1799,7 @@ describe('Scene/Camera', function() {
             CesiumMath.toRadians(-62.0),
             CesiumMath.toRadians(174.0),
             CesiumMath.toRadians(-4.0));
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-7307919.685704952, 8116267.060310548, -7085995.891547672), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.5602119862713765, -0.6221784429103113, 0.5468605998017956), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(new Cartesian3(-0.3659211647391443, 0.40639662500016843, 0.8372236764356468), CesiumMath.EPSILON10);
@@ -1812,7 +1812,7 @@ describe('Scene/Camera', function() {
             -CesiumMath.PI_OVER_TWO,
             -0.1,
             CesiumMath.PI_OVER_TWO);
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(-14680290.639204923, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
@@ -1840,7 +1840,7 @@ describe('Scene/Camera', function() {
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1871,7 +1871,7 @@ describe('Scene/Camera', function() {
 
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
 
         expect(camera.position.x).toEqual(0);
         expect(camera.position.y).toEqual(0);
@@ -1890,7 +1890,7 @@ describe('Scene/Camera', function() {
         var projection = new GeographicProjection();
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 23137321.67119748), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2);
         expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2);
@@ -1918,7 +1918,7 @@ describe('Scene/Camera', function() {
         var projection = new GeographicProjection();
         camera._mode = SceneMode.SCENE3D;
         camera._projection = projection;
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
 
         expect(camera.position).toEqualEpsilon(new Cartesian3(4489090.849577177, 1757448.0638960265, 4207738.07588144), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.6995012374560863, -0.2738499033887593, -0.6600789719506079), CesiumMath.EPSILON10);
@@ -1947,7 +1947,7 @@ describe('Scene/Camera', function() {
         var projection = new GeographicProjection();
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
-        camera.setView({destination: rectangle});
+        camera.setView({destination : rectangle});
 
         expect(camera.position).toEqualEpsilon(new Cartesian3(2380010.713160189, 4598051.567216165, 28943.06760625122), CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON10);
@@ -2478,7 +2478,7 @@ describe('Scene/Camera', function() {
     it('flyTo uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
-            stopObject: {},
+            stopObject : {},
             duration : 0.001
         });
 
@@ -2497,9 +2497,9 @@ describe('Scene/Camera', function() {
             endTransform : new Matrix4(),
             convert : true,
             maximumHeight : 100,
-            pitchAdjustHeight:101,
-            flyOverLongitude: 1,
-            flyOverLongitudeWeight: 20,
+            pitchAdjustHeight : 101,
+            flyOverLongitude : 1,
+            flyOverLongitudeWeight : 20,
             easingFunction : function() {
             }
         };
@@ -2528,9 +2528,9 @@ describe('Scene/Camera', function() {
     it('can cancel a flight', function() {
         spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
-            stopObject: {},
+            stopObject : {},
             duration : 0.001,
-            cancelTween: jasmine.createSpy('cancelTween')
+            cancelTween : jasmine.createSpy('cancelTween')
         });
 
         var options = {
@@ -2596,7 +2596,7 @@ describe('Scene/Camera', function() {
 
         var destination = Cartesian3.fromDegrees(30, 20, 1000);
         camera.setView({
-            destination: destination
+            destination : destination
         });
         camera.flyHome(0);
         expect(camera.position).toEqualEpsilon(new Cartesian3(2515865.110478756, -19109892.759980734, 13550929.353715947), CesiumMath.EPSILON8);
@@ -2609,7 +2609,7 @@ describe('Scene/Camera', function() {
 
         var destination = Cartesian3.fromDegrees(30, 20, 1000);
         camera.setView({
-            destination: destination
+            destination : destination
         });
         camera.flyHome(0);
         expect(camera.position).toEqualEpsilon(new Cartesian3(-9183857.990445068, 3896182.1777645755, 1.0), CesiumMath.EPSILON8);
@@ -2623,7 +2623,7 @@ describe('Scene/Camera', function() {
 
         var destination = Cartesian3.fromDegrees(30, 20, 1000);
         camera.setView({
-            destination: destination
+            destination : destination
         });
         camera.flyHome(0);
         expect(camera.position).toEqualEpsilon(new Cartesian3(0, -22550119.620184112, 22550119.62018411), CesiumMath.EPSILON8);
@@ -2739,7 +2739,7 @@ describe('Scene/Camera', function() {
     it('flyToBoundingSphere uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createTween').and.returnValue({
             startObject : {},
-            stopObject: {},
+            stopObject : {},
             duration : 0.0
         });
 
@@ -2795,7 +2795,7 @@ describe('Scene/Camera', function() {
     it('flyToBoundingSphere does not modify options.offset range if it is zero ', function() {
         scene.mode = SceneMode.SCENE3D;
         var options = {
-            offset: new HeadingPitchRange(0.0, -1.5, 0.0)
+            offset : new HeadingPitchRange(0.0, -1.5, 0.0)
         };
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000.0);
@@ -3064,10 +3064,10 @@ describe('Scene/Camera', function() {
 
     it('_currentFlight is not set for a flight that doesn\'t go anywhere', function() {
         var complete = jasmine.createSpy('complete');
-        spyOn(CameraFlightPath, 'createTween').and.returnValue({ complete: complete, duration: 0 });
+        spyOn(CameraFlightPath, 'createTween').and.returnValue({ complete : complete, duration : 0 });
         spyOn(scene.tweens, 'add');
 
-        camera.flyTo({ complete: complete, destination: Cartesian3.fromDegrees(-117.16, 32.71, 5000) });
+        camera.flyTo({ complete : complete, destination : Cartesian3.fromDegrees(-117.16, 32.71, 5000) });
         expect(complete).toHaveBeenCalled();
         expect(camera._currentFlight).toBeUndefined();
     });

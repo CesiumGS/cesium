@@ -155,7 +155,7 @@ import ImageryProvider from './ImageryProvider.js';
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {

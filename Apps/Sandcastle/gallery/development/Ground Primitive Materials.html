@@ -23,12 +23,12 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var worldTerrain = Cesium.createWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true
+    requestWaterMask : true,
+    requestVertexNormals : true
 });
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: worldTerrain
+    terrainProvider : worldTerrain
 });
 
 if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
@@ -100,13 +100,13 @@ function applyColorMaterial(primitive, scene) {
 function applyCompositeMaterial(primitive, scene) {
     Sandcastle.declare(applyCompositeMaterial);    // For highlighting in Sandcastle.
     primitive.appearance.material = new Cesium.Material({
-            fabric: {
+            fabric : {
                 uniforms : {
-                    image: '../images/earthspec1k.jpg',
+                    image : '../images/earthspec1k.jpg',
                     heightField : '../images/earthbump1k.jpg'
                 },
-                materials: {
-                    bumpMap: {
+                materials : {
+                    bumpMap : {
                         type : 'BumpMap',
                         uniforms : {
                             image : '../images/earthbump1k.jpg'
@@ -182,11 +182,11 @@ function applyWaterMaterial(primitive, scene) {
         fabric : {
             type : 'Water',
             uniforms : {
-                specularMap: '../images/earthspec1k.jpg',
-                normalMap: Cesium.buildModuleUrl('Assets/Textures/waterNormals.jpg'),
-                frequency: 10000.0,
-                animationSpeed: 0.01,
-                amplitude: 1.0
+                specularMap : '../images/earthspec1k.jpg',
+                normalMap : Cesium.buildModuleUrl('Assets/Textures/waterNormals.jpg'),
+                frequency : 10000.0,
+                animationSpeed : 0.01,
+                amplitude : 1.0
             }
         }
     });
@@ -458,9 +458,9 @@ function createPrimitives(scene) {
     var initialPosition = Cesium.Cartesian3.fromRadians(-2.1344873183780484, 0.8071380277370774, 5743.394497982162);
     var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(112.99596671210358, -21.34390550872461, 0.0716951918898415);
     viewer.scene.camera.setView({
-        destination: initialPosition,
-        orientation: initialOrientation,
-        endTransform: Cesium.Matrix4.IDENTITY
+        destination : initialPosition,
+        orientation : initialOrientation,
+        endTransform : Cesium.Matrix4.IDENTITY
     });
 }
 

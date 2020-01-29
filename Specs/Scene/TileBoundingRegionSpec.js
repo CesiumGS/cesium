@@ -17,7 +17,7 @@ describe('Scene/TileBoundingRegion', function() {
     var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
     var regionBox = boundingVolumeRegion.slice(0, 4);
     var rectangle = new Rectangle(regionBox[0], regionBox[1], regionBox[2], regionBox[3]);
-    var tileBoundingRegion = new TileBoundingRegion({maximumHeight: boundingVolumeRegion[5], minimumHeight: boundingVolumeRegion[4], rectangle: rectangle});
+    var tileBoundingRegion = new TileBoundingRegion({maximumHeight : boundingVolumeRegion[5], minimumHeight : boundingVolumeRegion[4], rectangle : rectangle});
 
     var frameState;
     var camera;
@@ -36,7 +36,7 @@ describe('Scene/TileBoundingRegion', function() {
     it('can be instantiated with rectangle and heights', function() {
         var minimumHeight = boundingVolumeRegion[4];
         var maximumHeight = boundingVolumeRegion[5];
-        var tbr = new TileBoundingRegion({maximumHeight: maximumHeight, minimumHeight: minimumHeight, rectangle: rectangle});
+        var tbr = new TileBoundingRegion({maximumHeight : maximumHeight, minimumHeight : minimumHeight, rectangle : rectangle});
         expect(tbr).toBeDefined();
         expect(tbr.boundingVolume).toBeDefined();
         expect(tbr.boundingSphere).toBeDefined();
@@ -46,7 +46,7 @@ describe('Scene/TileBoundingRegion', function() {
     });
 
     it('can be instantiated with only a rectangle', function() {
-        var tbr = new TileBoundingRegion({rectangle: rectangle});
+        var tbr = new TileBoundingRegion({rectangle : rectangle});
         expect(tbr).toBeDefined();
         expect(tbr.boundingVolume).toBeDefined();
         expect(tbr.boundingSphere).toBeDefined();

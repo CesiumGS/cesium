@@ -347,17 +347,17 @@ import VertexFormat from './VertexFormat.js';
 
             if (arcType === ArcType.GEODESIC) {
                 positions = PolylinePipeline.generateCartesianArc({
-                    positions: positions,
-                    minDistance: subdivisionSize,
-                    ellipsoid: ellipsoid,
-                    height: heights
+                    positions : positions,
+                    minDistance : subdivisionSize,
+                    ellipsoid : ellipsoid,
+                    height : heights
                 });
             } else {
                 positions = PolylinePipeline.generateCartesianRhumbArc({
-                    positions: positions,
-                    granularity: subdivisionSize,
-                    ellipsoid: ellipsoid,
-                    height: heights
+                    positions : positions,
+                    granularity : subdivisionSize,
+                    ellipsoid : ellipsoid,
+                    height : heights
                 });
             }
         }

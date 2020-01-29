@@ -1372,7 +1372,7 @@ import ShadowMapShader from './ShadowMapShader.js';
         var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
         var mapUniforms = {
-            shadowMap_texture :function() {
+            shadowMap_texture : function() {
                 return shadowMap._shadowMapTexture;
             },
             shadowMap_textureCube : function() {

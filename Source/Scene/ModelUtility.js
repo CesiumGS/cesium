@@ -85,16 +85,16 @@ import Axis from './Axis.js';
                 var primitiveInfo = primitiveInfoByMaterial[materialIndex];
                 if (!defined(primitiveInfo)) {
                     primitiveInfoByMaterial[materialIndex] = {
-                        skinning: {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
                         },
-                        hasVertexColors: hasVertexColors,
-                        hasMorphTargets: hasMorphTargets,
-                        hasNormals: hasNormals,
-                        hasTangents: hasTangents,
-                        hasTexCoords: hasTexCoords
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasNormals : hasNormals,
+                        hasTangents : hasTangents,
+                        hasTexCoords : hasTexCoords
                     };
                 } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
                     (primitiveInfo.skinning.type !== type) ||
@@ -112,16 +112,16 @@ import Axis from './Axis.js';
                     materialIndex = addToArray(materials, clonedMaterial);
                     primitive.material = materialIndex;
                     primitiveInfoByMaterial[materialIndex] = {
-                        skinning: {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
+                        skinning : {
+                            skinned : isSkinned,
+                            componentType : componentType,
+                            type : type
                         },
-                        hasVertexColors: hasVertexColors,
-                        hasMorphTargets: hasMorphTargets,
-                        hasNormals: hasNormals,
-                        hasTangents: hasTangents,
-                        hasTexCoords: hasTexCoords
+                        hasVertexColors : hasVertexColors,
+                        hasMorphTargets : hasMorphTargets,
+                        hasNormals : hasNormals,
+                        hasTangents : hasTangents,
+                        hasTexCoords : hasTexCoords
                     };
                 }
             });
@@ -138,10 +138,10 @@ import Axis from './Axis.js';
     };
 
     ModelUtility.ModelState = {
-        NEEDS_LOAD: 0,
-        LOADING: 1,
-        LOADED: 2, // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
-        FAILED: 3
+        NEEDS_LOAD : 0,
+        LOADING : 1,
+        LOADED : 2, // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
+        FAILED : 3
     };
 
     ModelUtility.getFailedLoadFunction = function(model, type, path) {
@@ -162,7 +162,7 @@ import Axis from './Axis.js';
                 loadResources.buffers[bufferViewId] = buffer.extras._pipeline.source;
             } else if (defined(bufferLoad)) {
                 var bufferResource = model._resource.getDerivedResource({
-                    url: buffer.uri
+                    url : buffer.uri
                 });
                 ++loadResources.pendingBufferLoads;
                 bufferResource.fetchArrayBuffer()
@@ -290,8 +290,8 @@ import Axis from './Axis.js';
                     }
                     var attributeName = 'a_' + lowerCase;
                     technique.attributes[attributeName] = {
-                        semantic: semantic,
-                        type: accessor.componentType
+                        semantic : semantic,
+                        type : accessor.componentType
                     };
                     var pipelineExtras = vertexShader.extras._pipeline;
                     var shaderText = pipelineExtras.source;

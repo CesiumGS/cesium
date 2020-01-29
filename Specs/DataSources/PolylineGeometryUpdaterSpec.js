@@ -324,7 +324,7 @@ describe('DataSources/PolylineGeometryUpdater', function() {
             width : 4,
             clampToGround : false,
             granularity : 0.5,
-            arcType: ArcType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
 
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
@@ -338,7 +338,7 @@ describe('DataSources/PolylineGeometryUpdater', function() {
             width : 4,
             clampToGround : true,
             granularity : 0.5,
-            arcType: ArcType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
     });
 

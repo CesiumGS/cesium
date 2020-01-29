@@ -19,7 +19,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('throws without a semiMajorAxis', function() {
         expect(function() {
             return new EllipseOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMinorAxis : 1.0
             });
         }).toThrowDeveloperError();
@@ -28,7 +28,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('throws without a semiMinorAxis', function() {
         expect(function() {
             return new EllipseOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0
             });
         }).toThrowDeveloperError();
@@ -37,7 +37,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('throws with a negative granularity', function() {
         expect(function() {
             return new EllipseOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 1.0,
                 granularity : -1.0
@@ -48,7 +48,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('throws when semiMajorAxis is less than the semiMajorAxis', function() {
         expect(function() {
             return new EllipseOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 2.0
             });
@@ -58,7 +58,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes positions', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
@@ -72,7 +72,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes positions extruded', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
@@ -86,11 +86,11 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes offset attribute', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 8;
@@ -106,12 +106,12 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes offset attribute extruded for top vertices', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 5.0,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 16;
@@ -128,12 +128,12 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes offset attribute extruded for all vertices', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 5.0,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 16;
@@ -149,7 +149,7 @@ describe('Core/EllipseOutlineGeometry', function() {
     it('computes positions extruded, no lines drawn between top and bottom', function() {
         var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,

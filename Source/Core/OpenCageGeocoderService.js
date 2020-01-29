@@ -46,7 +46,7 @@ import Resource from './Resource.js';
 
         url = Resource.createIfNeeded(url);
         url.appendForwardSlash();
-        url.setQueryParameters({key: apiKey});
+        url.setQueryParameters({key : apiKey});
         this._url = url;
         this._params = defaultValue(params, {});
     }
@@ -58,8 +58,8 @@ import Resource from './Resource.js';
          * @memberof {OpenCageGeocoderService.prototype}
          * @readonly
          */
-        url: {
-            get: function () {
+        url : {
+            get : function () {
                 return this._url;
             }
         },
@@ -69,8 +69,8 @@ import Resource from './Resource.js';
          * @memberof {OpenCageGeocoderService.prototype}
          * @readonly
          */
-        params: {
-            get: function () {
+        params : {
+            get : function () {
                 return this._params;
             }
         }
@@ -88,8 +88,8 @@ import Resource from './Resource.js';
         //>>includeEnd('debug');
 
         var resource = this._url.getDerivedResource({
-            url: 'json',
-            queryParameters: combine(this._params, {q: query})
+            url : 'json',
+            queryParameters : combine(this._params, {q : query})
         });
         return resource.fetchJson()
             .then(function (response) {
@@ -106,8 +106,8 @@ import Resource from './Resource.js';
                   }
 
                   return {
-                      displayName: resultObject.formatted,
-                      destination: destination
+                      displayName : resultObject.formatted,
+                      destination : destination
                   };
                 });
             });

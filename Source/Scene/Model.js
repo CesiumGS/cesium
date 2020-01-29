@@ -1701,7 +1701,7 @@ import ShadowMode from './ShadowMode.js';
                 ++model._loadResources.pendingShaderLoads;
 
                 var shaderResource = model._resource.getDerivedResource({
-                    url: shader.uri
+                    url : shader.uri
                 });
 
                 shaderResource.fetchText()
@@ -1717,8 +1717,8 @@ import ShadowMode from './ShadowMode.js';
             if (sourceTechniques.hasOwnProperty(techniqueId)) {
                 var technique = sourceTechniques[techniqueId];
                 model._loadResources.programsToCreate.enqueue({
-                    programId: technique.program,
-                    techniqueId: techniqueId
+                    programId : technique.program,
+                    techniqueId : techniqueId
                 });
             }
         }
@@ -2479,9 +2479,9 @@ import ShadowMode from './ShadowMode.js';
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
                 loadImageFromTypedArray({
-                    uint8Array: loadResources.getBuffer(bufferView),
-                    format: gltfTexture.mimeType,
-                    flipY: false
+                    uint8Array : loadResources.getBuffer(bufferView),
+                    format : gltfTexture.mimeType,
+                    flipY : false
                 })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
@@ -2497,10 +2497,10 @@ import ShadowMode from './ShadowMode.js';
             var rendererSamplers = model._rendererResources.samplers;
             ForEach.sampler(model.gltf, function(sampler, samplerId) {
                 rendererSamplers[samplerId] = new Sampler({
-                    wrapS: sampler.wrapS,
-                    wrapT: sampler.wrapT,
-                    minificationFilter: sampler.minFilter,
-                    magnificationFilter: sampler.magFilter
+                    wrapS : sampler.wrapS,
+                    wrapT : sampler.wrapT,
+                    minificationFilter : sampler.minFilter,
+                    magnificationFilter : sampler.magFilter
                 });
             });
         }
@@ -2909,13 +2909,13 @@ import ShadowMode from './ShadowMode.js';
                             if (decodedAttributes.hasOwnProperty(attributeName)) {
                                 var decodedAttribute = decodedAttributes[attributeName];
                                 attributes.push({
-                                    index: attributeLocation,
-                                    vertexBuffer: rendererBuffers[decodedAttribute.bufferView],
-                                    componentsPerAttribute: decodedAttribute.componentsPerAttribute,
-                                    componentDatatype: decodedAttribute.componentDatatype,
-                                    normalize: decodedAttribute.normalized,
-                                    offsetInBytes: decodedAttribute.byteOffset,
-                                    strideInBytes: decodedAttribute.byteStride
+                                    index : attributeLocation,
+                                    vertexBuffer : rendererBuffers[decodedAttribute.bufferView],
+                                    componentsPerAttribute : decodedAttribute.componentsPerAttribute,
+                                    componentDatatype : decodedAttribute.componentDatatype,
+                                    normalize : decodedAttribute.normalized,
+                                    offsetInBytes : decodedAttribute.byteOffset,
+                                    strideInBytes : decodedAttribute.byteStride
                                 });
 
                                 return;
@@ -2925,13 +2925,13 @@ import ShadowMode from './ShadowMode.js';
                         var a = accessors[accessorId];
                         var normalize = defined(a.normalized) && a.normalized;
                         attributes.push({
-                            index: attributeLocation,
-                            vertexBuffer: rendererBuffers[a.bufferView],
-                            componentsPerAttribute: numberOfComponentsForType(a.type),
-                            componentDatatype: a.componentType,
-                            normalize: normalize,
-                            offsetInBytes: a.byteOffset,
-                            strideInBytes: getAccessorByteStride(gltf, a)
+                            index : attributeLocation,
+                            vertexBuffer : rendererBuffers[a.bufferView],
+                            componentsPerAttribute : numberOfComponentsForType(a.type),
+                            componentDatatype : a.componentType,
+                            normalize : normalize,
+                            offsetInBytes : a.byteOffset,
+                            strideInBytes : getAccessorByteStride(gltf, a)
                         });
                     }
                 });
@@ -2966,9 +2966,9 @@ import ShadowMode from './ShadowMode.js';
                     indexBuffer = rendererBuffers[bufferView];
                 }
                 rendererVertexArrays[meshId + '.primitive.' + primitiveId] = new VertexArray({
-                    context: context,
-                    attributes: attributes,
-                    indexBuffer: indexBuffer
+                    context : context,
+                    attributes : attributes,
+                    indexBuffer : indexBuffer
                 });
             });
         });
@@ -4600,7 +4600,7 @@ import ShadowMode from './ShadowMode.js';
                         addDefaults(gltf);
 
                         var options = {
-                            addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
+                            addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
                         };
 
                         processModelMaterialsCommon(gltf, options);
@@ -4958,8 +4958,8 @@ import ShadowMode from './ShadowMode.js';
                     if (!visitedPrograms[programId]) {
                         visitedPrograms[programId] = true;
                         recreateProgram({
-                            programId: programId,
-                            techniqueId: techniqueId
+                            programId : programId,
+                            techniqueId : techniqueId
                         }, model, frameState.context);
                     }
                 }

@@ -45,8 +45,8 @@ import Check from './Check.js';
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
                 var result = {
-                    displayName: query,
-                    destination: Cartesian3.fromDegrees(longitude, latitude, height)
+                    displayName : query,
+                    destination : Cartesian3.fromDegrees(longitude, latitude, height)
                 };
                 return when.resolve([result]);
             }

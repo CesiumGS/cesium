@@ -64,16 +64,16 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 // A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
 var tileset = viewer.scene.primitives.add(
     new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(28945),
-        pointCloudShading: {
-            attenuation: true,
-            maximumAttenuation: 2
+        url : Cesium.IonResource.fromAssetId(28945),
+        pointCloudShading : {
+            attenuation : true,
+            maximumAttenuation : 2
         }
     })
 );
@@ -85,7 +85,7 @@ viewer.camera.flyTo({
         direction : new Cesium.Cartesian3(0.63053223097472, 0.47519958296727743, -0.6136892226931869),
         up : new Cesium.Cartesian3(0.7699959023135587, -0.4824455703743441, 0.41755548379407276)
     },
-    easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+    easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
 });
 
 // Add stored views around Montreal. You can add to this list by capturing camera.position, camera.direction and camera.up.
@@ -98,7 +98,7 @@ Sandcastle.addToolbarMenu([{
                 direction : new Cesium.Cartesian3(-0.23288147105081208, 0.9376599248561527, -0.25799241415197466),
                 up : new Cesium.Cartesian3(-0.015748156073159988, 0.2616156268422992, 0.9650436567182887)
             },
-            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+            easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
         });
     }
 }, {
@@ -110,7 +110,7 @@ Sandcastle.addToolbarMenu([{
                 direction : new Cesium.Cartesian3(-0.3402460635871598, -0.46669052711538217, -0.8163532128400116),
                 up : new Cesium.Cartesian3(0.08964012922691329, -0.8802940231336787, 0.46588311846138497)
             },
-            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+            easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
         });
     }
 },
@@ -123,7 +123,7 @@ Sandcastle.addToolbarMenu([{
                 direction : new Cesium.Cartesian3(-0.735813047510908, 0.6294547560338262, 0.24973159435503312),
                 up : new Cesium.Cartesian3(-0.09796934684423217, -0.4638476756625683, 0.88048131204549)
             },
-            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+            easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
         });
     }
 },
@@ -136,7 +136,7 @@ Sandcastle.addToolbarMenu([{
                 direction : new Cesium.Cartesian3(-0.742505030107832, -0.3413204607149223, -0.5763563336703441),
                 up : new Cesium.Cartesian3(-0.04655102331027917, -0.8320643756800384, 0.5527222421370013)
             },
-            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+            easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
         });
     }
 },
@@ -149,7 +149,7 @@ Sandcastle.addToolbarMenu([{
                 direction : new Cesium.Cartesian3(0.6550952540993403, 0.7551122393690295, 0.025606913355780074),
                 up : new Cesium.Cartesian3(0.46670450470847263, -0.4310758971098583, 0.7722437932516845)
             },
-            easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT
+            easingFunction : Cesium.EasingFunction.QUADRATIC_IN_OUT
         });
     }
 }
@@ -157,50 +157,50 @@ Sandcastle.addToolbarMenu([{
 
 // Set up checkboxes for toggling the various classification settings.
 var viewModel = {
-    ground: true,
-    other: true,
-    buildings: true,
-    low_vegetation: true,
-    medium_vegetation: true,
-    high_vegetation: true
+    ground : true,
+    other : true,
+    buildings : true,
+    low_vegetation : true,
+    medium_vegetation : true,
+    high_vegetation : true
 };
 
 // Assign colors to each classification type.
 var pointStyles = {
     'unclassified' : {
-        color: "color('#808080')",
+        color : "color('#808080')",
         show : true
     },
     'not_awarded' : {
-        color: "color('#FFDEAD')",
+        color : "color('#FFDEAD')",
         show : true
     },
     'ground' : {
-        color: "color('#FFDEAD')",
+        color : "color('#FFDEAD')",
         show : true
     },
     'low_vegetation' : {
-        color: "color('#63FF7E')",
+        color : "color('#63FF7E')",
         show : true
     },
     'medium_vegetation' : {
-        color: "color('#63FF7E')",
+        color : "color('#63FF7E')",
         show : true
     },
     'high_vegetation' : {
-        color: "color('#22B33A')",
+        color : "color('#22B33A')",
         show : true
     },
     'buildings' : {
-        color: "color('#efefef')",
+        color : "color('#efefef')",
         show : true
     },
     'low_point' : {
-        color: "color('#808080')",
+        color : "color('#808080')",
         show : true
     },
     'reserved_city_diffusion' : {
-        color: "color('#808080')",
+        color : "color('#808080')",
         show : true
     }
 };
@@ -223,10 +223,10 @@ function applyStyle(tileset, styles) {
     var styleKeys = Object.keys(styles);
 
     styleObject.color = {
-        conditions: []
+        conditions : []
     };
     styleObject.show = {
-        conditions: []
+        conditions : []
     };
 
     var finalCondition;
@@ -243,8 +243,8 @@ function applyStyle(tileset, styles) {
             showCondition[0] = true;
 
             finalCondition = {
-                colorCondition: colorCondition,
-                showCondition: showCondition
+                colorCondition : colorCondition,
+                showCondition : showCondition
             };
         } else {
             styleObject.color.conditions.push(colorCondition);

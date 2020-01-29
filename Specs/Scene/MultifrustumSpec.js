@@ -22,8 +22,8 @@ import { VertexArray } from '../../Source/Cesium.js';
 import { BillboardCollection } from '../../Source/Cesium.js';
 import { BlendingState } from '../../Source/Cesium.js';
 import { TextureAtlas } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
 import { when } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/Multifrustum', function() {
 

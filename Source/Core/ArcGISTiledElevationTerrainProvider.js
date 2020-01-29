@@ -78,16 +78,16 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
                 resource.appendForwardSlash();
                 if (defined(token)) {
                     resource = resource.getDerivedResource({
-                        queryParameters: {
-                            token: token
+                        queryParameters : {
+                            token : token
                         }
                     });
                 }
                 that._resource = resource;
 
                 var metadataResource = resource.getDerivedResource({
-                    queryParameters: {
-                        f: 'pjson'
+                    queryParameters : {
+                        f : 'pjson'
                     }
                 });
 
@@ -103,7 +103,7 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
                 var wkid = defaultValue(spatialReference.latestWkid, spatialReference.wkid);
                 var extent = metadata.extent;
                 var tilingSchemeOptions = {
-                    ellipsoid: ellipsoid
+                    ellipsoid : ellipsoid
                 };
                 if (wkid === 4326) {
                     tilingSchemeOptions.rectangle = Rectangle.fromDegrees(extent.xmin, extent.ymin,
@@ -142,9 +142,9 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
                 }
 
                 that._terrainDataStructure = {
-                    elementMultiplier: 1.0,
-                    lowestEncodedHeight: metadata.minValues[0],
-                    highestEncodedHeight: metadata.maxValues[0]
+                    elementMultiplier : 1.0,
+                    lowestEncodedHeight : metadata.minValues[0],
+                    highestEncodedHeight : metadata.maxValues[0]
                 };
 
                 that._ready = true;
@@ -168,8 +168,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {Event}
          */
-        errorEvent: {
-            get: function() {
+        errorEvent : {
+            get : function() {
                 return this._errorEvent;
             }
         },
@@ -180,8 +180,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {Credit}
          */
-        credit: {
-            get: function() {
+        credit : {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
                     throw new DeveloperError('credit must not be called before ready returns true.');
@@ -197,8 +197,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {GeographicTilingScheme}
          */
-        tilingScheme: {
-            get: function() {
+        tilingScheme : {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
                     throw new DeveloperError('tilingScheme must not be called before ready returns true.');
@@ -213,8 +213,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {Boolean}
          */
-        ready: {
-            get: function() {
+        ready : {
+            get : function() {
                 return this._ready;
             }
         },
@@ -225,8 +225,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @type {Promise.<Boolean>}
          * @readonly
          */
-        readyPromise: {
-            get: function() {
+        readyPromise : {
+            get : function() {
                 return this._readyPromise;
             }
         },
@@ -239,8 +239,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {Boolean}
          */
-        hasWaterMask: {
-            get: function() {
+        hasWaterMask : {
+            get : function() {
                 return false;
             }
         },
@@ -251,8 +251,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
          * @memberof ArcGISTiledElevationTerrainProvider.prototype
          * @type {Boolean}
          */
-        hasVertexNormals: {
-            get: function() {
+        hasVertexNormals : {
+            get : function() {
                 return false;
             }
         }
@@ -279,8 +279,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         //>>includeEnd('debug');
 
         var tileResource = this._resource.getDerivedResource({
-            url: 'tile/' + level + '/' + y + '/' + x,
-            request: request
+            url : 'tile/' + level + '/' + y + '/' + x,
+            request : request
         });
 
         var hasAvailability = this._hasAvailability;
@@ -304,12 +304,12 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         return when.join(promise, availabilityPromise)
             .then(function(result) {
                 return new HeightmapTerrainData({
-                    buffer: result[0],
-                    width: that._width,
-                    height: that._height,
-                    childTileMask: hasAvailability ? tilesAvailable.computeChildMaskForTile(level, x, y) : ALL_CHILDREN,
-                    structure: that._terrainDataStructure,
-                    encoding: that._encoding
+                    buffer : result[0],
+                    width : that._width,
+                    height : that._height,
+                    childTileMask : hasAvailability ? tilesAvailable.computeChildMaskForTile(level, x, y) : ALL_CHILDREN,
+                    structure : that._terrainDataStructure,
+                    encoding : that._encoding
                 });
             })
             .otherwise(function(error) {
@@ -411,10 +411,10 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         var value = data[origin.y * width + origin.x];
         var endingIndices = [];
         var range = {
-            startX: origin.x,
-            startY: origin.y,
-            endX: 0,
-            endY: 0
+            startX : origin.x,
+            startY : origin.y,
+            endX : 0,
+            endY : 0
         };
 
         var corner = new Cartesian2(origin.x + 1, origin.y + 1);
@@ -478,9 +478,9 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         }
 
         return {
-            endingIndices: endingIndices,
-            range: range,
-            value: value
+            endingIndices : endingIndices,
+            range : range,
+            value : value
         };
     }
 
@@ -493,10 +493,10 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         if (singleValue) {
             if (data[0] === 1) {
                 ranges.push({
-                    startX: x,
-                    startY: y,
-                    endX: x + width - 1,
-                    endY: y + height - 1
+                    startX : x,
+                    startY : y,
+                    endX : x + width - 1,
+                    endY : y + height - 1
                 });
             }
 
@@ -545,14 +545,14 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         }
 
         var request = new Request({
-            throttle: true,
-            throttleByServer: true,
-            type: RequestType.TERRAIN
+            throttle : true,
+            throttleByServer : true,
+            type : RequestType.TERRAIN
         });
 
         var tilemapResource = that._resource.getDerivedResource({
-            url: url,
-            request: request
+            url : url,
+            request : request
         });
 
         var promise = tilemapResource.fetchJson();
@@ -578,8 +578,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
             });
 
         availableCache[url] = {
-            promise: promise,
-            request: request
+            promise : promise,
+            request : request
         };
 
         promise = promise
@@ -590,8 +590,8 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
             });
 
         return {
-            promise: promise,
-            request: request
+            promise : promise,
+            request : request
         };
     }
 export default ArcGISTiledElevationTerrainProvider;

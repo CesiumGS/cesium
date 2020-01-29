@@ -177,8 +177,8 @@ describe('DataSources/StaticGeometryColorBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var show = new TimeIntervalCollectionProperty();
         show.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: true
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : true
         }));
         var entity = new Entity({
             availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
@@ -187,7 +187,7 @@ describe('DataSources/StaticGeometryColorBatch', function() {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
                 extrudedHeight : 20,
-                show: show
+                show : show
             }
         });
 

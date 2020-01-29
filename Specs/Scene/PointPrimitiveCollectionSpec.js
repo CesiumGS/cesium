@@ -190,7 +190,7 @@ describe('Scene/PointPrimitiveCollection', function() {
     it('renders pointPrimitive with scaleByDistance', function() {
         pointPrimitives.add({
             position : Cartesian3.ZERO,
-            scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+            scaleByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0),
             color : Color.LIME
         });
 
@@ -204,7 +204,7 @@ describe('Scene/PointPrimitiveCollection', function() {
     it('renders pointPrimitive with translucencyByDistance', function() {
         pointPrimitives.add({
             position : Cartesian3.ZERO,
-            translucencyByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0),
+            translucencyByDistance : new NearFarScalar(2.0, 1.0, 4.0, 0.0),
             color : Color.LIME
         });
 
@@ -311,7 +311,7 @@ describe('Scene/PointPrimitiveCollection', function() {
             color : Color.BLUE
         });
 
-        expect(scene).toRender([0 , 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
 
         p.disableDepthTestDistance = Number.POSITIVE_INFINITY;
         expect(scene).toRender([0, 255, 0, 255]);

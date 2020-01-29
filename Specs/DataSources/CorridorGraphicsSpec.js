@@ -28,7 +28,7 @@ describe('DataSources/CorridorGraphics', function() {
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
             classificationType : ClassificationType.TERRAIN,
-            zIndex: 3
+            zIndex : 3
         };
 
         var corridor = new CorridorGraphics(options);

@@ -7,8 +7,8 @@ import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
 import { VRTheWorldTerrainProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Core/VRTheWorldTerrainProvider', function() {
 
@@ -234,7 +234,7 @@ describe('Core/VRTheWorldTerrainProvider', function() {
                 expect(request.url.indexOf('.tif?cesium=true')).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: imageUrl}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : imageUrl}), crossOrigin, deferred);
             };
 
             var terrainProvider = new VRTheWorldTerrainProvider({

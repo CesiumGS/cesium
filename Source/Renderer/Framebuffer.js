@@ -256,12 +256,12 @@ import PixelDatatype from './PixelDatatype.js';
                 return this._activeColorAttachments.length;
             }
         },
-        depthTexture: {
+        depthTexture : {
             get : function() {
                 return this._depthTexture;
             }
         },
-        depthRenderbuffer: {
+        depthRenderbuffer : {
             get : function() {
                 return this._depthRenderbuffer;
             }

@@ -79,7 +79,7 @@ describe('DataSources/KmlTourFlyTo', function() {
                 }
             });
         var fakeCamera = {
-            flyTo: flyFake
+            flyTo : flyFake
         };
         flyto.play(doneSpy, fakeCamera);
 
@@ -109,7 +109,7 @@ describe('DataSources/KmlTourFlyTo', function() {
                 }
             });
         var fakeCamera = {
-            flyToBoundingSphere: flyFake
+            flyToBoundingSphere : flyFake
         };
         flyto.play(doneSpy, fakeCamera);
 

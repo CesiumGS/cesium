@@ -52,7 +52,7 @@ describe('Core/Iau2006XysData', function() {
         xys = new Iau2006XysData({
             // this should be the same location as the default, but specifying the value
             // takes the code through a different code path.
-            xysFileUrlTemplate: buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json')
+            xysFileUrlTemplate : buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json')
         });
 
         return pollToPromise(function() {

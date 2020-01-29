@@ -18,11 +18,11 @@ import { ClassificationType } from '../../Source/Cesium.js';
 import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
 import { Primitive } from '../../Source/Cesium.js';
 import { StencilConstants } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
-import pollToPromise from '../pollToPromise.js';
 import { addDefaults } from '../../Source/Cesium.js';
 import { parseGlb } from '../../Source/Cesium.js';
 import { updateVersion } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/ClassificationModel', function() {
 
@@ -246,7 +246,7 @@ describe('Scene/ClassificationModel', function() {
             gltf.nodes.push({});
             expect(function() {
                 return new ClassificationModel({
-                    gltf: gltf
+                    gltf : gltf
                 });
             }).toThrowRuntimeError();
         });

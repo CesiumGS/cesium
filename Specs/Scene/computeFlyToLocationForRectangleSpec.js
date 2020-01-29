@@ -3,8 +3,8 @@ import { Rectangle } from '../../Source/Cesium.js';
 import { computeFlyToLocationForRectangle } from '../../Source/Cesium.js';
 import { Globe } from '../../Source/Cesium.js';
 import { SceneMode } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
 import { when } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/computeFlyToLocationForRectangle', function() {
 

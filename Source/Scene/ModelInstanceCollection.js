@@ -595,61 +595,61 @@ import ShadowMode from './ShadowMode.js';
 
             var instancedAttributes = {
                 czm_modelMatrixRow0 : {
-                    index                  : 0, // updated in Model
-                    vertexBuffer           : collection._vertexBuffer,
+                    index : 0, // updated in Model
+                    vertexBuffer : collection._vertexBuffer,
                     componentsPerAttribute : 4,
-                    componentDatatype      : ComponentDatatype.FLOAT,
-                    normalize              : false,
-                    offsetInBytes          : 0,
-                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
-                    instanceDivisor        : 1
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    normalize : false,
+                    offsetInBytes : 0,
+                    strideInBytes : componentSizeInBytes * vertexSizeInFloats,
+                    instanceDivisor : 1
                 },
                 czm_modelMatrixRow1 : {
-                    index                  : 0, // updated in Model
-                    vertexBuffer           : collection._vertexBuffer,
+                    index : 0, // updated in Model
+                    vertexBuffer : collection._vertexBuffer,
                     componentsPerAttribute : 4,
-                    componentDatatype      : ComponentDatatype.FLOAT,
-                    normalize              : false,
-                    offsetInBytes          : componentSizeInBytes * 4,
-                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
-                    instanceDivisor        : 1
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    normalize : false,
+                    offsetInBytes : componentSizeInBytes * 4,
+                    strideInBytes : componentSizeInBytes * vertexSizeInFloats,
+                    instanceDivisor : 1
                 },
                 czm_modelMatrixRow2 : {
-                    index                  : 0, // updated in Model
-                    vertexBuffer           : collection._vertexBuffer,
+                    index : 0, // updated in Model
+                    vertexBuffer : collection._vertexBuffer,
                     componentsPerAttribute : 4,
-                    componentDatatype      : ComponentDatatype.FLOAT,
-                    normalize              : false,
-                    offsetInBytes          : componentSizeInBytes * 8,
-                    strideInBytes          : componentSizeInBytes * vertexSizeInFloats,
-                    instanceDivisor        : 1
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    normalize : false,
+                    offsetInBytes : componentSizeInBytes * 8,
+                    strideInBytes : componentSizeInBytes * vertexSizeInFloats,
+                    instanceDivisor : 1
                 }
             };
 
             // When using a batch table, add a batch id attribute
             if (usesBatchTable) {
                 instancedAttributes.a_batchId = {
-                    index                   : 0, // updated in Model
-                    vertexBuffer            : collection._batchIdBuffer,
-                    componentsPerAttribute  : 1,
-                    componentDatatype       : ComponentDatatype.UNSIGNED_SHORT,
-                    normalize               : false,
-                    offsetInBytes           : 0,
-                    strideInBytes           : 0,
-                    instanceDivisor         : 1
+                    index : 0, // updated in Model
+                    vertexBuffer : collection._batchIdBuffer,
+                    componentsPerAttribute : 1,
+                    componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                    normalize : false,
+                    offsetInBytes : 0,
+                    strideInBytes : 0,
+                    instanceDivisor : 1
                 };
             }
 
             if (!usesBatchTable) {
                 instancedAttributes.pickColor = {
                     index : 0, // updated in Model
-                    vertexBuffer            : collection._pickIdBuffer,
-                    componentsPerAttribute  : 4,
-                    componentDatatype       : ComponentDatatype.UNSIGNED_BYTE,
-                    normalize               : true,
-                    offsetInBytes           : 0,
-                    strideInBytes           : 0,
-                    instanceDivisor         : 1
+                    vertexBuffer : collection._pickIdBuffer,
+                    componentsPerAttribute : 4,
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    normalize : true,
+                    offsetInBytes : 0,
+                    strideInBytes : 0,
+                    instanceDivisor : 1
                 };
             }
 

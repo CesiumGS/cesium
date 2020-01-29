@@ -17,12 +17,12 @@ describe('Core/parseResponseHeaders', function() {
             'Transfer-Encoding: chunked\r\n' +
             'Content-Type: text/plain; charset=utf-8';
         expect(parseResponseHeaders(headerString)).toEqual({
-            Date: 'Sun, 24 Oct 2004 04:58:38 GMT',
-            Server: 'Apache/1.3.31 (Unix)',
-            'Keep-Alive': 'timeout=15, max=99',
-            Connection: 'Keep-Alive',
-            'Transfer-Encoding': 'chunked',
-            'Content-Type': 'text/plain; charset=utf-8'
+            Date : 'Sun, 24 Oct 2004 04:58:38 GMT',
+            Server : 'Apache/1.3.31 (Unix)',
+            'Keep-Alive' : 'timeout=15, max=99',
+            Connection : 'Keep-Alive',
+            'Transfer-Encoding' : 'chunked',
+            'Content-Type' : 'text/plain; charset=utf-8'
         });
     });
 });

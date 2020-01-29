@@ -55,8 +55,8 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain({
-        requestVertexNormals: true //Needed to visualize slope
+    terrainProvider : Cesium.createWorldTerrain({
+        requestVertexNormals : true //Needed to visualize slope
     })
 });
 viewer.scene.globe.enableLighting = true;
@@ -64,66 +64,66 @@ viewer.scene.globe.enableLighting = true;
 function getElevationContourMaterial() {
     // Creates a composite material with both elevation shading and contour lines
     return new Cesium.Material({
-        fabric: {
-            type: 'ElevationColorContour',
-            materials: {
-                contourMaterial: {
-                    type: 'ElevationContour'
+        fabric : {
+            type : 'ElevationColorContour',
+            materials : {
+                contourMaterial : {
+                    type : 'ElevationContour'
                 },
-                elevationRampMaterial: {
-                    type: 'ElevationRamp'
+                elevationRampMaterial : {
+                    type : 'ElevationRamp'
                 }
             },
-            components: {
-                diffuse: 'contourMaterial.alpha == 0.0 ? elevationRampMaterial.diffuse : contourMaterial.diffuse',
-                alpha: 'max(contourMaterial.alpha, elevationRampMaterial.alpha)'
+            components : {
+                diffuse : 'contourMaterial.alpha == 0.0 ? elevationRampMaterial.diffuse : contourMaterial.diffuse',
+                alpha : 'max(contourMaterial.alpha, elevationRampMaterial.alpha)'
             }
         },
-        translucent: false
+        translucent : false
     });
 }
 
 function getSlopeContourMaterial() {
     // Creates a composite material with both slope shading and contour lines
     return new Cesium.Material({
-        fabric: {
-            type: 'SlopeColorContour',
-            materials: {
-                contourMaterial: {
-                    type: 'ElevationContour'
+        fabric : {
+            type : 'SlopeColorContour',
+            materials : {
+                contourMaterial : {
+                    type : 'ElevationContour'
                 },
-                slopeRampMaterial: {
-                    type: 'SlopeRamp'
+                slopeRampMaterial : {
+                    type : 'SlopeRamp'
                 }
             },
-            components: {
-                diffuse: 'contourMaterial.alpha == 0.0 ? slopeRampMaterial.diffuse : contourMaterial.diffuse',
-                alpha: 'max(contourMaterial.alpha, slopeRampMaterial.alpha)'
+            components : {
+                diffuse : 'contourMaterial.alpha == 0.0 ? slopeRampMaterial.diffuse : contourMaterial.diffuse',
+                alpha : 'max(contourMaterial.alpha, slopeRampMaterial.alpha)'
             }
         },
-        translucent: false
+        translucent : false
     });
 }
 
 function getAspectContourMaterial() {
     // Creates a composite material with both aspect shading and contour lines
     return new Cesium.Material({
-        fabric: {
-            type: 'AspectColorContour',
-            materials: {
-                contourMaterial: {
-                    type: 'ElevationContour'
+        fabric : {
+            type : 'AspectColorContour',
+            materials : {
+                contourMaterial : {
+                    type : 'ElevationContour'
                 },
-                aspectRampMaterial: {
-                    type: 'AspectRamp'
+                aspectRampMaterial : {
+                    type : 'AspectRamp'
                 }
             },
-            components: {
-                diffuse: 'contourMaterial.alpha == 0.0 ? aspectRampMaterial.diffuse : contourMaterial.diffuse',
-                alpha: 'max(contourMaterial.alpha, aspectRampMaterial.alpha)'
+            components : {
+                diffuse : 'contourMaterial.alpha == 0.0 ? aspectRampMaterial.diffuse : contourMaterial.diffuse',
+                alpha : 'max(contourMaterial.alpha, aspectRampMaterial.alpha)'
             }
         },
-        translucent: false
+        translucent : false
     });
 }
 
@@ -168,12 +168,12 @@ var shadingUniforms = {};
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    enableContour: false,
-    contourSpacing: 150.0,
-    contourWidth: 2.0,
-    selectedShading: 'elevation',
-    changeColor: function() {
-        contourUniforms.color = Cesium.Color.fromRandom({alpha: 1.0}, contourColor);
+    enableContour : false,
+    contourSpacing : 150.0,
+    contourWidth : 2.0,
+    selectedShading : 'elevation',
+    changeColor : function() {
+        contourUniforms.color = Cesium.Color.fromRandom({alpha : 1.0}, contourColor);
     }
 };
 
@@ -252,11 +252,11 @@ Sandcastle.addToolbarMenu([{
     text : 'Himalayas',
     onselect : function() {
         viewer.camera.setView({
-            destination: new Cesium.Cartesian3(322100.7492728492, 5917960.047024654, 3077602.646977297),
-            orientation: {
-                heading: 5.988151498702285,
-                pitch: -1.5614542839414822,
-                roll: 0
+            destination : new Cesium.Cartesian3(322100.7492728492, 5917960.047024654, 3077602.646977297),
+            orientation : {
+                heading : 5.988151498702285,
+                pitch : -1.5614542839414822,
+                roll : 0
             }
         });
         viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T04:00:00Z');
@@ -265,11 +265,11 @@ Sandcastle.addToolbarMenu([{
     text : 'Half Dome',
     onselect : function() {
         viewer.camera.setView({
-            destination: new Cesium.Cartesian3(-2495709.521843174, -4391600.804712465, 3884463.7192916023),
-            orientation: {
-                heading: 1.7183056487769202,
-                pitch: -0.06460370548034144,
-                roll: 0.0079181631783527
+            destination : new Cesium.Cartesian3(-2495709.521843174, -4391600.804712465, 3884463.7192916023),
+            orientation : {
+                heading : 1.7183056487769202,
+                pitch : -0.06460370548034144,
+                roll : 0.0079181631783527
             }
         });
         viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T18:00:00Z');
@@ -278,11 +278,11 @@ Sandcastle.addToolbarMenu([{
     text : 'Vancouver',
     onselect : function() {
         viewer.camera.setView({
-            destination: new Cesium.Cartesian3(-2301222.367751603, -3485269.915771613, 4812080.961755785),
-            orientation: {
-                heading: 0.11355958593902571,
-                pitch: -0.260011078090858,
-                roll: 0.00039019018274721873
+            destination : new Cesium.Cartesian3(-2301222.367751603, -3485269.915771613, 4812080.961755785),
+            orientation : {
+                heading : 0.11355958593902571,
+                pitch : -0.260011078090858,
+                roll : 0.00039019018274721873
             }
         });
         viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T18:00:00Z');
@@ -291,11 +291,11 @@ Sandcastle.addToolbarMenu([{
     text : 'Mount Everest',
     onselect : function() {
         viewer.camera.setView({
-            destination: new Cesium.Cartesian3(282157.6960889096, 5638892.465594703, 2978736.186473513),
-            orientation: {
-                heading: 4.747266966349747,
-                pitch: -0.2206998858596192,
-                roll: 6.280340554587955
+            destination : new Cesium.Cartesian3(282157.6960889096, 5638892.465594703, 2978736.186473513),
+            orientation : {
+                heading : 4.747266966349747,
+                pitch : -0.2206998858596192,
+                roll : 6.280340554587955
             }
         });
         viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T04:00:00Z');

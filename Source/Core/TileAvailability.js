@@ -216,8 +216,8 @@ import Rectangle from './Rectangle.js';
     }
 
     defineProperties(QuadtreeNode.prototype, {
-        nw: {
-            get: function() {
+        nw : {
+            get : function() {
                 if (!this._nw) {
                     this._nw = new QuadtreeNode(this.tilingScheme, this, this.level + 1, this.x * 2, this.y * 2);
                 }
@@ -225,8 +225,8 @@ import Rectangle from './Rectangle.js';
             }
         },
 
-        ne: {
-            get: function() {
+        ne : {
+            get : function() {
                 if (!this._ne) {
                     this._ne = new QuadtreeNode(this.tilingScheme, this, this.level + 1, this.x * 2 + 1, this.y * 2);
                 }
@@ -234,8 +234,8 @@ import Rectangle from './Rectangle.js';
             }
         },
 
-        sw: {
-            get: function() {
+        sw : {
+            get : function() {
                 if (!this._sw) {
                     this._sw = new QuadtreeNode(this.tilingScheme, this, this.level + 1, this.x * 2, this.y * 2 + 1);
                 }
@@ -243,8 +243,8 @@ import Rectangle from './Rectangle.js';
             }
         },
 
-        se: {
-            get: function() {
+        se : {
+            get : function() {
                 if (!this._se) {
                     this._se = new QuadtreeNode(this.tilingScheme, this, this.level + 1, this.x * 2 + 1, this.y * 2 + 1);
                 }

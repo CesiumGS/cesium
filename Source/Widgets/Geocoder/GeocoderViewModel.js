@@ -44,7 +44,7 @@ import getElement from '../getElement.js';
         } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
-                new IonGeocoderService({ scene: options.scene })
+                new IonGeocoderService({ scene : options.scene })
             ];
         }
 
@@ -163,7 +163,7 @@ import getElement from '../getElement.js';
         knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded', '_suggestions', '_selectedSuggestion', '_showSuggestions', '_focusTextbox']);
 
         var searchTextObservable = knockout.getObservable(this, '_searchText');
-        searchTextObservable.extend({ rateLimit: { timeout: 500 } });
+        searchTextObservable.extend({ rateLimit : { timeout : 500 } });
         this._suggestionSubscription = searchTextObservable.subscribe(function() {
             GeocoderViewModel._updateSearchSuggestions(that);
         });
@@ -376,12 +376,12 @@ import getElement from '../getElement.js';
             .always(function() {
                 // Whether terrain querying succeeded or not, fly to the destination.
                 camera.flyTo({
-                    destination: finalDestination,
-                    complete: function() {
+                    destination : finalDestination,
+                    complete : function() {
                         viewModel._complete.raiseEvent();
                     },
-                    duration: viewModel._flightDuration,
-                    endTransform: Matrix4.IDENTITY
+                    duration : viewModel._flightDuration,
+                    endTransform : Matrix4.IDENTITY
                 });
             });
     }
@@ -394,10 +394,10 @@ import getElement from '../getElement.js';
                 }
                 var nextPromise = geocoderService.geocode(query, geocodeType)
                     .then(function (result) {
-                        return {state: 'fulfilled', value: result};
+                        return {state : 'fulfilled', value : result};
                     })
                     .otherwise(function (err) {
-                        return {state: 'rejected', reason: err};
+                        return {state : 'rejected', reason : err};
                     });
 
                 return nextPromise;

@@ -1,7 +1,7 @@
 import { Ellipsoid } from '../../../Source/Cesium.js';
 import { Globe } from '../../../Source/Cesium.js';
-import createScene from '../../createScene.js';
 import { CesiumInspector } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
 
 describe('Widgets/CesiumInspector/CesiumInspector', function() {
 

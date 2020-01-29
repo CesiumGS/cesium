@@ -108,11 +108,11 @@ import Material from './Material.js';
          * @memberof Polyline.prototype
          * @type {Boolean}
          */
-        show: {
-            get: function() {
+        show : {
+            get : function() {
                 return this._show;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -138,10 +138,10 @@ import Material from './Material.js';
          * ]);
          */
         positions : {
-            get: function() {
+            get : function() {
                 return this._positions;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -178,11 +178,11 @@ import Material from './Material.js';
          * @memberof Polyline.prototype
          * @type {Material}
          */
-        material: {
-            get: function() {
+        material : {
+            get : function() {
                 return this._material;
             },
-            set: function(material) {
+            set : function(material) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(material)) {
                     throw new DeveloperError('material is required.');
@@ -201,11 +201,11 @@ import Material from './Material.js';
          * @memberof Polyline.prototype
          * @type {Number}
          */
-        width: {
-            get: function() {
+        width : {
+            get : function() {
                 return this._width;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -225,11 +225,11 @@ import Material from './Material.js';
          * @memberof Polyline.prototype
          * @type {Boolean}
          */
-        loop: {
-            get: function() {
+        loop : {
+            get : function() {
                 return this._loop;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');

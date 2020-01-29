@@ -23,12 +23,12 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var worldTerrain = Cesium.createWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true
+    requestWaterMask : true,
+    requestVertexNormals : true
 });
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: worldTerrain
+    terrainProvider : worldTerrain
 });
 
 var concavePositions = [
@@ -96,7 +96,7 @@ viewer.entities.add({
 
 // Ellipse with texture rotation and repetition
 viewer.entities.add({
-    position: Cesium.Cartesian3.fromDegrees(-121.70711316136793, 45.943757948892845, 0.0),
+    position : Cesium.Cartesian3.fromDegrees(-121.70711316136793, 45.943757948892845, 0.0),
     name : 'ellipse',
     ellipse : {
         semiMinorAxis : 15000.0,

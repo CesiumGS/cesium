@@ -38,12 +38,12 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     // Taken from crnlib.h
     var CRN_FORMAT = {
-        cCRNFmtInvalid: -1,
+        cCRNFmtInvalid : -1,
 
-        cCRNFmtDXT1: 0,
+        cCRNFmtDXT1 : 0,
         // cCRNFmtDXT3 is not currently supported when writing to CRN - only DDS.
-        cCRNFmtDXT3: 1,
-        cCRNFmtDXT5: 2
+        cCRNFmtDXT3 : 1,
+        cCRNFmtDXT5 : 2
 
         // Crunch supports more formats than this, but we can't use them here.
     };

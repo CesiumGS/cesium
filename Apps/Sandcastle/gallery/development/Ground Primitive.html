@@ -23,7 +23,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 var scene = viewer.scene;
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
@@ -56,8 +56,8 @@ function createOverlappingPolygons(withAlpha) {
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
-            attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 1'
         }),
@@ -78,8 +78,8 @@ function createOverlappingPolygons(withAlpha) {
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
-            attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 2'
         }),
@@ -100,8 +100,8 @@ function createOverlappingPolygons(withAlpha) {
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
-            attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 3'
         }),
@@ -183,7 +183,7 @@ function createBatchedInstances(color, show) {
             geometry : new Cesium.RectangleGeometry({
                 rectangle : Cesium.Rectangle.fromDegrees(west, south, east, north)
             }),
-            attributes: {
+            attributes : {
                 color : color,
                 show : show
             },
@@ -291,7 +291,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
     // Corridor Geometry
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry: new Cesium.CorridorGeometry({
+            geometry : new Cesium.CorridorGeometry({
                 positions : Cesium.Cartesian3.fromDegreesArray([
                         -112.0, 40.0,
                         -117.0, 40.0,
@@ -314,8 +314,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                 rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
                 rotation : Cesium.Math.toRadians(45)
             }),
-            attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
             },
             id : 'rectangle'
         }),
@@ -326,7 +326,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
-                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
+                polygonHierarchy : new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
                     -130, 55,
                     -100, 55,
                     -100, 45,
@@ -334,8 +334,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                 ])),
                 arcType : Cesium.ArcType.RHUMB
             }),
-            attributes: {
-                color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 0.0, 0.5))
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 0.0, 0.5))
             },
             id : 'rhumbPolygon'
         }),

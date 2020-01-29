@@ -468,9 +468,9 @@ import when from '../ThirdParty/when.js';
                 }
 
                 return loadImageFromTypedArray({
-                    uint8Array: a,
-                    format: type,
-                    flipY: true
+                    uint8Array : a,
+                    format : type,
+                    flipY : true
                 });
             });
     };
@@ -502,8 +502,8 @@ import when from '../ThirdParty/when.js';
         version = (defined(version) && version > 0) ? version : 1;
 
         return imageryProvider._metadata.resource.getDerivedResource({
-            url: 'flatfile?f1-0' + quadKey + '-i.' + version.toString(),
-            request: request
+            url : 'flatfile?f1-0' + quadKey + '-i.' + version.toString(),
+            request : request
         });
     }
 

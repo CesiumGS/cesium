@@ -223,7 +223,7 @@ describe('Core/Cartesian4', function() {
         expect(Cartesian4.minimumByComponent(first, second, r)).toEqual(result);
         second.x = 3.0;
         result.x = 2.0;
-        expect(Cartesian4.minimumByComponent(first, second,r )).toEqual(result);
+        expect(Cartesian4.minimumByComponent(first, second, r )).toEqual(result);
     });
 
     it('minimumByComponent works when first\'s or second\'s Y is lesser', function() {

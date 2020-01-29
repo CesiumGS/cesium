@@ -60,7 +60,7 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
         expect(a).toEqual(data);
     });
 
-    it('decode requires key' , function() {
+    it('decode requires key', function() {
         var data = new Uint8Array(3);
 
         expect(function() {
@@ -68,7 +68,7 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
         }).toThrowDeveloperError();
     });
 
-    it('decode requires data' , function() {
+    it('decode requires data', function() {
         var key = new Uint8Array(4);
 
         expect(function() {
@@ -76,7 +76,7 @@ describe('Core/GoogleEarthEnterpriseMetadata', function() {
         }).toThrowDeveloperError();
     });
 
-    it('decode throws if key length isn\'t greater than 0 and a multiple 4' , function() {
+    it('decode throws if key length isn\'t greater than 0 and a multiple 4', function() {
         var key;
         var data = new Uint8Array(3);
 

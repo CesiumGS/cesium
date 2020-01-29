@@ -50,11 +50,11 @@ import Property from './Property.js';
      */
     function CylinderGeometryUpdater(entity, scene) {
         GeometryUpdater.call(this, {
-            entity: entity,
-            scene: scene,
-            geometryOptions: new CylinderGeometryOptions(entity),
-            geometryPropertyName: 'cylinder',
-            observedPropertyNames: ['availability', 'position', 'orientation', 'cylinder']
+            entity : entity,
+            scene : scene,
+            geometryOptions : new CylinderGeometryOptions(entity),
+            geometryPropertyName : 'cylinder',
+            observedPropertyNames : ['availability', 'position', 'orientation', 'cylinder']
         });
 
         this._onEntityPropertyChanged(entity, 'cylinder', entity.cylinder, undefined);
@@ -72,8 +72,8 @@ import Property from './Property.js';
          * @memberof CylinderGeometryUpdater.prototype
          * @readonly
          */
-        terrainOffsetProperty: {
-            get: function() {
+        terrainOffsetProperty : {
+            get : function() {
                 return this._terrainOffsetProperty;
             }
         }
@@ -107,7 +107,7 @@ import Property from './Property.js';
             show : show,
             distanceDisplayCondition : distanceDisplayConditionAttribute,
             color : undefined,
-            offset: undefined
+            offset : undefined
         };
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;

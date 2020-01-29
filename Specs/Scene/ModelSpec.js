@@ -33,9 +33,9 @@ import { DracoLoader } from '../../Source/Cesium.js';
 import { HeightReference } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { ModelAnimationLoop } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Model', function() {
 
@@ -183,7 +183,7 @@ describe('Scene/Model', function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             return model;
         }).otherwise(function() {
             return when.reject(model);
@@ -205,7 +205,7 @@ describe('Scene/Model', function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             return model;
         });
     }
@@ -264,7 +264,7 @@ describe('Scene/Model', function() {
         var params = '?param1=1&param2=2';
         var url = texturedBoxUrl + params;
         var model = Model.fromGltf({
-            url: url
+            url : url
         });
         expect(model.basePath).toEndWith(params);
     });
@@ -273,8 +273,8 @@ describe('Scene/Model', function() {
         var url = texturedBoxBasePathUrl;
         var basePath = './Data/Models/Box-Textured-Separate/';
         var model = Model.fromGltf({
-            url: url,
-            basePath: basePath
+            url : url,
+            basePath : basePath
         });
         expect(model.basePath).toEndWith(basePath);
         expect(model._cacheKey).toEndWith(basePath);
@@ -284,14 +284,14 @@ describe('Scene/Model', function() {
         spyOn(Resource._Implementations, 'loadWithXhr').and.callThrough();
 
         var url = new Resource({
-            url: texturedBoxUrl
+            url : texturedBoxUrl
         });
         var basePath = new Resource({
-            url: './Data/Models/Box-Textured-Separate/'
+            url : './Data/Models/Box-Textured-Separate/'
         });
         var model = Model.fromGltf({
-            url: url,
-            basePath: basePath
+            url : url,
+            basePath : basePath
         });
         expect(model._resource).toEqual(basePath);
         expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(url.url);
@@ -300,8 +300,8 @@ describe('Scene/Model', function() {
     it('fromGltf takes a credit', function() {
         var url = texturedBoxBasePathUrl;
         var model = Model.fromGltf({
-            url: url,
-            credit: 'This is my model credit'
+            url : url,
+            credit : 'This is my model credit'
         });
         expect(model.credit).toBeInstanceOf(Credit);
     });
@@ -2520,7 +2520,7 @@ describe('Scene/Model', function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             fail('should not resolve');
         }).otherwise(function(e) {
             expect(e).toBeDefined();
@@ -2581,9 +2581,9 @@ describe('Scene/Model', function() {
 
         var precreatedAttributes = {
             a_color : {
-                index                  : 0, // updated in Model
+                index : 0, // updated in Model
                 componentsPerAttribute : 4,
-                value                  : [1.0, 1.0, 1.0, 1.0]
+                value : [1.0, 1.0, 1.0, 1.0]
             }
         };
 
@@ -2657,7 +2657,7 @@ describe('Scene/Model', function() {
         return pollToPromise(function() {
             scene.renderForSpecs();
             return model._state === 3; // FAILED
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             model.readyPromise.then(function (e) {
                 fail('should not resolve');
             }).otherwise(function(e) {
@@ -3202,7 +3202,7 @@ describe('Scene/Model', function() {
                     new ClippingPlane(Cartesian3.UNIT_Z, 5.0),
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ],
-                unionClippingRegions: true
+                unionClippingRegions : true
             });
 
             model.update(scene.frameState);

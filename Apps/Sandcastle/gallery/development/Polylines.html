@@ -104,13 +104,13 @@ function createPrimitives(scene) {
         }),
         width : 5,
         material : Cesium.Material.fromType(Cesium.Material.FadeType, {
-            repeat: false,
-            fadeInColor: Cesium.Color.CYAN,
-            fadeOutColor: Cesium.Color.CYAN.withAlpha(0),
-            time: new Cesium.Cartesian2(0.0, 0.0),
-            fadeDirection: {
-                x: true,
-                y: false
+            repeat : false,
+            fadeInColor : Cesium.Color.CYAN,
+            fadeOutColor : Cesium.Color.CYAN.withAlpha(0),
+            time : new Cesium.Cartesian2(0.0, 0.0),
+            fadeDirection : {
+                x : true,
+                y : false
             }
         })
     });
@@ -122,7 +122,7 @@ function createPrimitives(scene) {
             positions : Cesium.Cartesian3.fromDegreesArray([-130.0, 30.0,
                                                             -75.0, 30.0])
         }),
-        width: 5,
+        width : 5,
         material : Cesium.Material.fromType('Color', {
             color : new Cesium.Color(0.0, 1.0, 0.0, 1.0)
         })

@@ -51,8 +51,8 @@ describe('Core/loadCRN', function() {
     it('creates and sends request with custom headers with Resource', function() {
         var testUrl = 'http://example.invalid/testuri';
         var resource = new Resource({
-            url: testUrl,
-            headers: {
+            url : testUrl,
+            headers : {
                 'Accept' : 'application/json',
                 'Cache-Control' : 'no-cache'
             }
@@ -206,9 +206,9 @@ describe('Core/loadCRN', function() {
         RequestScheduler.maximumRequests = 0;
 
         var promise = loadCRN(new Resource({
-            url: 'http://example.invalid/testuri',
-            request: new Request({
-                throttle: true
+            url : 'http://example.invalid/testuri',
+            request : new Request({
+                throttle : true
             })
         }));
         expect(promise).toBeUndefined();

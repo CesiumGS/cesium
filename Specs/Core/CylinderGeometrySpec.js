@@ -15,7 +15,7 @@ describe('Core/CylinderGeometry', function() {
     it('constructor throws with no topRadius', function() {
         expect(function() {
             return new CylinderGeometry({
-                length: 1
+                length : 1
             });
         }).toThrowDeveloperError();
     });
@@ -23,8 +23,8 @@ describe('Core/CylinderGeometry', function() {
     it('constructor throws with no bottomRadius', function() {
         expect(function() {
             return new CylinderGeometry({
-                length: 1,
-                topRadius: 1
+                length : 1,
+                topRadius : 1
             });
         }).toThrowDeveloperError();
     });
@@ -32,10 +32,10 @@ describe('Core/CylinderGeometry', function() {
     it('constructor throws if slices is less than 3', function() {
         expect(function() {
             return new CylinderGeometry({
-                length: 1,
-                topRadius: 1,
-                bottomRadius: 1,
-                slices: 2
+                length : 1,
+                topRadius : 1,
+                bottomRadius : 1,
+                slices : 2
             });
         }).toThrowDeveloperError();
     });
@@ -43,10 +43,10 @@ describe('Core/CylinderGeometry', function() {
     it('computes positions', function() {
         var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3
         }));
 
         var numVertices = 12; // (3 top + 3 bottom) * 2 to duplicate for sides
@@ -58,11 +58,11 @@ describe('Core/CylinderGeometry', function() {
     it('computes offset attribute', function() {
         var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 12;
@@ -78,10 +78,10 @@ describe('Core/CylinderGeometry', function() {
     it('compute all vertex attributes', function() {
         var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.ALL,
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 1,
-            slices: 3
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 1,
+            slices : 3
         }));
 
         var numVertices = 12;
@@ -97,10 +97,10 @@ describe('Core/CylinderGeometry', function() {
     it('computes positions with topRadius equals 0', function() {
         var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            length: 1,
-            topRadius: 0,
-            bottomRadius: 1,
-            slices: 3
+            length : 1,
+            topRadius : 0,
+            bottomRadius : 1,
+            slices : 3
         }));
 
         var numVertices = 12; //(3 top 3 bottom) duplicated
@@ -112,10 +112,10 @@ describe('Core/CylinderGeometry', function() {
     it('computes positions with bottomRadius equals 0', function() {
         var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            length: 1,
-            topRadius: 1,
-            bottomRadius: 0,
-            slices: 3
+            length : 1,
+            topRadius : 1,
+            bottomRadius : 0,
+            slices : 3
         }));
 
         var numVertices = 12; //(3 top 3 bottom) duplicated
@@ -127,29 +127,29 @@ describe('Core/CylinderGeometry', function() {
     it('undefined is returned if the length is less than or equal to zero or if ' +
        'both radii are equal to zero or is either radii and less than zero', function() {
         var cylinder0 = new CylinderGeometry({
-            length: 0,
-            topRadius: 80000,
-            bottomRadius: 200000
+            length : 0,
+            topRadius : 80000,
+            bottomRadius : 200000
         });
         var cylinder1 = new CylinderGeometry({
-            length: 200000,
-            topRadius: 0,
-            bottomRadius: 0
+            length : 200000,
+            topRadius : 0,
+            bottomRadius : 0
         });
         var cylinder2 = new CylinderGeometry({
-            length: 200000,
-            topRadius: -10,
-            bottomRadius: 4
+            length : 200000,
+            topRadius : -10,
+            bottomRadius : 4
         });
         var cylinder3 = new CylinderGeometry({
-            length: -200000,
-            topRadius: 100,
-            bottomRadius: 100
+            length : -200000,
+            topRadius : 100,
+            bottomRadius : 100
         });
         var cylinder4 = new CylinderGeometry({
-            length: 200000,
-            topRadius: 0,
-            bottomRadius: -34
+            length : 200000,
+            topRadius : 0,
+            bottomRadius : -34
         });
 
         var geometry0 = CylinderGeometry.createGeometry(cylinder0);
@@ -167,10 +167,10 @@ describe('Core/CylinderGeometry', function() {
 
     var cylinder = new CylinderGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
-        length: 1,
-        topRadius: 1,
-        bottomRadius: 0,
-        slices: 3
+        length : 1,
+        topRadius : 1,
+        bottomRadius : 0,
+        slices : 3
     });
     var packedInstance = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0, -1.0];
     createPackableSpecs(CylinderGeometry, cylinder, packedInstance);

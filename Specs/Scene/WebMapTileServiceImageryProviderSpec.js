@@ -16,8 +16,8 @@ import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import { WebMapTileServiceImageryProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/WebMapTileServiceImageryProvider', function() {
 
@@ -309,7 +309,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         }).then(function() {
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider1.requestImage(0, 0, 0).then(function(image) {
@@ -336,7 +336,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         }).then(function() {
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -371,7 +371,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -400,10 +400,10 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     it('tiles preload on requestImage as we approach the next time interval', function() {
         var times = TimeIntervalCollection.fromIso8601({
-            iso8601: '2017-04-26/2017-04-30/P1D',
-            dataCallback: function(interval, index) {
+            iso8601 : '2017-04-26/2017-04-30/P1D',
+            dataCallback : function(interval, index) {
                 return {
-                    Time: JulianDate.toIso8601(interval.start)
+                    Time : JulianDate.toIso8601(interval.start)
                 };
             }
         });
@@ -422,7 +422,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         });
 
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var entry;
@@ -452,10 +452,10 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     it('tiles preload onTick event as we approach the next time interval', function() {
         var times = TimeIntervalCollection.fromIso8601({
-            iso8601: '2017-04-26/2017-04-30/P1D',
-            dataCallback: function(interval, index) {
+            iso8601 : '2017-04-26/2017-04-30/P1D',
+            dataCallback : function(interval, index) {
                 return {
-                    Time: JulianDate.toIso8601(interval.start)
+                    Time : JulianDate.toIso8601(interval.start)
                 };
             }
         });
@@ -474,7 +474,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         });
 
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var entry;
@@ -509,10 +509,10 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     it('reload is called once we cross into next interval', function() {
         var times = TimeIntervalCollection.fromIso8601({
-            iso8601: '2017-04-26/2017-04-30/P1D',
-            dataCallback: function(interval, index) {
+            iso8601 : '2017-04-26/2017-04-30/P1D',
+            dataCallback : function(interval, index) {
                 return {
-                    Time: JulianDate.toIso8601(interval.start)
+                    Time : JulianDate.toIso8601(interval.start)
                 };
             }
         });
@@ -523,7 +523,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         });
 
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -565,7 +565,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         var lastUrl;
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             lastUrl = request.url;
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -574,7 +574,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
             url : 'http://wmts.invalid/{FOO}',
             tileMatrixSetID : 'someTMS',
             dimensions : {
-                FOO: 'BAR'
+                FOO : 'BAR'
             }
         });
 
@@ -604,7 +604,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
         var lastUrl;
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             lastUrl = request.url;
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         var uri = new Uri('http://wmts.invalid/kvp');
@@ -617,9 +617,9 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
             tilematrixset : 'someTMS',
             format : 'image/jpeg',
             FOO : 'BAR',
-            service: 'WMTS',
-            version: '1.0.0',
-            request: 'GetTile'
+            service : 'WMTS',
+            version : '1.0.0',
+            request : 'GetTile'
         };
 
         var provider = new WebMapTileServiceImageryProvider({
@@ -628,7 +628,7 @@ describe('Scene/WebMapTileServiceImageryProvider', function() {
             url : uri.toString(),
             tileMatrixSetID : query.tilematrixset,
             dimensions : {
-                FOO: query.FOO
+                FOO : query.FOO
             }
         });
 

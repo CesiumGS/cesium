@@ -50,10 +50,10 @@ import VerticalOrigin from './VerticalOrigin.js';
         div.style.font = label._font;
         document.body.appendChild(div);
 
-        label._fontFamily = getCSSValue(div,'font-family');
-        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
-        label._fontStyle = getCSSValue(div,'font-style');
-        label._fontWeight = getCSSValue(div,'font-weight');
+        label._fontFamily = getCSSValue(div, 'font-family');
+        label._fontSize = getCSSValue(div, 'font-size').replace('px', '');
+        label._fontStyle = getCSSValue(div, 'font-style');
+        label._fontWeight = getCSSValue(div, 'font-weight');
 
         document.body.removeChild(div);
     }
@@ -904,7 +904,7 @@ import VerticalOrigin from './VerticalOrigin.js';
          * @type {Number}
          * @default 1.0
          */
-        totalScale: {
+        totalScale : {
             get : function() {
                 return this._scale * this._relativeSize;
             }

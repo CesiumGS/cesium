@@ -529,12 +529,12 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blending.color > 1)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    color: {
-                        red: 0.0,
-                        green: 0.0,
-                        blue: 0.0,
-                        alpha: 2.0
+                blending : {
+                    color : {
+                        red : 0.0,
+                        green : 0.0,
+                        blue : 0.0,
+                        alpha : 2.0
                     }
                 }
             });
@@ -544,8 +544,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.equationRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    equationRgb: 'invalid value'
+                blending : {
+                    equationRgb : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -554,8 +554,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.equationAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    equationAlpha: 'invalid value'
+                blending : {
+                    equationAlpha : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -564,8 +564,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.functionSourceRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    functionSourceRgb: 'invalid value'
+                blending : {
+                    functionSourceRgb : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -574,8 +574,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.functionSourceAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    functionSourceAlpha: 'invalid value'
+                blending : {
+                    functionSourceAlpha : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -584,8 +584,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.functionDestinationRgb)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    functionDestinationRgb: 'invalid value'
+                blending : {
+                    functionDestinationRgb : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -594,8 +594,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (blend.functionDestinationAlpha)', function() {
         expect(function() {
             RenderState.fromCache({
-                blending: {
-                    functionDestinationAlpha: 'invalid value'
+                blending : {
+                    functionDestinationAlpha : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -604,8 +604,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.frontFunction)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    frontFunction: 'invalid value'
+                stencilTest : {
+                    frontFunction : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -614,8 +614,8 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.backFunction)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    backFunction: 'invalid value'
+                stencilTest : {
+                    backFunction : 'invalid value'
                 }
             });
         }).toThrowDeveloperError();
@@ -624,9 +624,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.frontOperation.fail)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    frontOperation: {
-                        fail: 'invalid value'
+                stencilTest : {
+                    frontOperation : {
+                        fail : 'invalid value'
                     }
                 }
             });
@@ -636,9 +636,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.frontOperation.zFail)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    frontOperation: {
-                        zFail: 'invalid value'
+                stencilTest : {
+                    frontOperation : {
+                        zFail : 'invalid value'
                     }
                 }
             });
@@ -648,9 +648,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.frontOperation.zPass)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    frontOperation: {
-                        zPass: 'invalid value'
+                stencilTest : {
+                    frontOperation : {
+                        zPass : 'invalid value'
                     }
                 }
             });
@@ -660,9 +660,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.backOperation.fail)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    backOperation: {
-                        fail: 'invalid value'
+                stencilTest : {
+                    backOperation : {
+                        fail : 'invalid value'
                     }
                 }
             });
@@ -672,9 +672,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.backOperation.zFail)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    backOperation: {
-                        zFail: 'invalid value'
+                stencilTest : {
+                    backOperation : {
+                        zFail : 'invalid value'
                     }
                 }
             });
@@ -684,9 +684,9 @@ describe('Renderer/RenderState', function() {
     it('fails to create (stencilTest.backOperation.zPass)', function() {
         expect(function() {
             RenderState.fromCache({
-                stencilTest: {
-                    backOperation: {
-                        zPass: 'invalid value'
+                stencilTest : {
+                    backOperation : {
+                        zPass : 'invalid value'
                     }
                 }
             });

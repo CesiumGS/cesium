@@ -57,7 +57,7 @@ describe('Core/HeightmapTerrainData', function() {
                 buffer : new Uint16Array(25),
                 width : 5,
                 height : 5,
-                encoding: HeightmapEncoding.LERC
+                encoding : HeightmapEncoding.LERC
             });
 
             expect(data._encoding).toBe(HeightmapEncoding.LERC);
@@ -268,8 +268,8 @@ describe('Core/HeightmapTerrainData', function() {
                  width : 4,
                  height : 4,
                  structure : {
-                     stride: 1,
-                     elementsPerHeight: 1,
+                     stride : 1,
+                     elementsPerHeight : 1,
                      lowestEncodedHeight : 1,
                      highestEncodedHeight : 7
                  }

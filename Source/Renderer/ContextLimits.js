@@ -23,8 +23,8 @@ import defineProperties from '../Core/defineProperties.js';
         _maximumTextureFilterAnisotropy : 0,
         _maximumDrawBuffers : 0,
         _maximumColorAttachments : 0,
-        _highpFloatSupported: false,
-        _highpIntSupported: false
+        _highpFloatSupported : false,
+        _highpIntSupported : false
     };
 
     defineProperties(ContextLimits, {
@@ -38,7 +38,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_COMBINED_TEXTURE_IMAGE_UNITS</code>.
          */
         maximumCombinedTextureImageUnits : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumCombinedTextureImageUnits;
             }
         },
@@ -51,7 +51,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_CUBE_MAP_TEXTURE_SIZE</code>.
          */
         maximumCubeMapSize : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumCubeMapSize;
             }
         },
@@ -64,7 +64,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_FRAGMENT_UNIFORM_VECTORS</code>.
          */
         maximumFragmentUniformVectors : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumFragmentUniformVectors;
             }
         },
@@ -76,7 +76,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_TEXTURE_IMAGE_UNITS</code>.
          */
         maximumTextureImageUnits : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumTextureImageUnits;
             }
         },
@@ -89,7 +89,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_RENDERBUFFER_SIZE</code>.
          */
         maximumRenderbufferSize : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumRenderbufferSize;
             }
         },
@@ -102,7 +102,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_TEXTURE_SIZE</code>.
          */
         maximumTextureSize : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumTextureSize;
             }
         },
@@ -115,7 +115,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VARYING_VECTORS</code>.
          */
         maximumVaryingVectors : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumVaryingVectors;
             }
         },
@@ -127,7 +127,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_ATTRIBS</code>.
          */
         maximumVertexAttributes : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumVertexAttributes;
             }
         },
@@ -140,7 +140,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_TEXTURE_IMAGE_UNITS</code>.
          */
         maximumVertexTextureImageUnits : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumVertexTextureImageUnits;
             }
         },
@@ -153,7 +153,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VERTEX_UNIFORM_VECTORS</code>.
          */
         maximumVertexUniformVectors : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumVertexUniformVectors;
             }
         },
@@ -165,7 +165,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         minimumAliasedLineWidth : {
-            get: function () {
+            get : function () {
                 return ContextLimits._minimumAliasedLineWidth;
             }
         },
@@ -177,7 +177,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumAliasedLineWidth;
             }
         },
@@ -189,7 +189,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
          */
         minimumAliasedPointSize : {
-            get: function () {
+            get : function () {
                 return ContextLimits._minimumAliasedPointSize;
             }
         },
@@ -201,7 +201,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
          */
         maximumAliasedPointSize : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumAliasedPointSize;
             }
         },
@@ -213,7 +213,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
          */
         maximumViewportWidth : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumViewportWidth;
             }
         },
@@ -225,7 +225,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
          */
         maximumViewportHeight : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumViewportHeight;
             }
         },
@@ -236,7 +236,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @type {Number}
          */
         maximumTextureFilterAnisotropy : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumTextureFilterAnisotropy;
             }
         },
@@ -247,7 +247,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @type {Number}
          */
         maximumDrawBuffers : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumDrawBuffers;
             }
         },
@@ -258,7 +258,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @type {Number}
          */
         maximumColorAttachments : {
-            get: function () {
+            get : function () {
                 return ContextLimits._maximumColorAttachments;
             }
         },
@@ -269,7 +269,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @type {Boolean}
          */
         highpFloatSupported : {
-            get: function () {
+            get : function () {
                 return ContextLimits._highpFloatSupported;
             }
         },
@@ -280,7 +280,7 @@ import defineProperties from '../Core/defineProperties.js';
          * @type {Boolean}
          */
         highpIntSupported : {
-            get: function () {
+            get : function () {
                 return ContextLimits._highpIntSupported;
             }
         }

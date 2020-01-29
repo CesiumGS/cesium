@@ -52,7 +52,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 var layers = viewer.imageryLayers;
-var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
+var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 3812 }));
 earthAtNight.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
 
 // Sync the position of the slider with the split position

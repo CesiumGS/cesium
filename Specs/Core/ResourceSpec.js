@@ -5,9 +5,9 @@ import { Request } from '../../Source/Cesium.js';
 import { RequestErrorEvent } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
-import createCanvas from '../createCanvas.js';
 import { Uri } from '../../Source/Cesium.js';
 import { when } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
 
 describe('Core/Resource', function() {
 
@@ -28,22 +28,22 @@ describe('Core/Resource', function() {
         }
 
         var resource = new Resource({
-            url: 'http://test.com/tileset',
-            queryParameters: {
-                key1: 'value1',
-                key2: 'value2'
+            url : 'http://test.com/tileset',
+            queryParameters : {
+                key1 : 'value1',
+                key2 : 'value2'
             },
-            templateValues: {
-                key3: 'value3',
-                key4: 'value4'
+            templateValues : {
+                key3 : 'value3',
+                key4 : 'value4'
             },
-            headers: {
-                Accept: 'application/test-type'
+            headers : {
+                Accept : 'application/test-type'
             },
-            proxy: proxy,
-            retryCallback: retryFunc,
-            retryAttempts: 4,
-            request: request
+            proxy : proxy,
+            retryCallback : retryFunc,
+            retryAttempts : 4,
+            request : request
         });
 
         expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset');
@@ -52,15 +52,15 @@ describe('Core/Resource', function() {
         expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset?key1=value1&key2=value2'));
         expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset?key1=value1&key2=value2'));
         expect(resource.queryParameters).toEqual({
-            key1: 'value1',
-            key2: 'value2'
+            key1 : 'value1',
+            key2 : 'value2'
         });
         expect(resource.templateValues).toEqual({
-            key3: 'value3',
-            key4: 'value4'
+            key3 : 'value3',
+            key4 : 'value4'
         });
         expect(resource.headers).toEqual({
-            Accept: 'application/test-type'
+            Accept : 'application/test-type'
         });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
@@ -87,12 +87,12 @@ describe('Core/Resource', function() {
         RequestScheduler.maximumRequests = 0;
 
         var resource = new Resource({
-            url: 'http://example.invalid/testuri',
-            request: new Request({
-                throttle: true
+            url : 'http://example.invalid/testuri',
+            request : new Request({
+                throttle : true
             })
         });
-        var promise = resource._makeRequest({ method: 'GET' });
+        var promise = resource._makeRequest({ method : 'GET' });
         expect(promise).toBeUndefined();
 
         RequestScheduler.maximumRequests = oldMaximumRequests;
@@ -100,7 +100,7 @@ describe('Core/Resource', function() {
 
     it('appendForwardSlash appends a /', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset'
+            url : 'http://test.com/tileset'
         });
         expect(resource.url).toEqual('http://test.com/tileset');
         resource.appendForwardSlash();
@@ -109,13 +109,13 @@ describe('Core/Resource', function() {
 
     it('Setting a url with a query string sets queryParameters correctly', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset?foo=bar&baz=foo'
+            url : 'http://test.com/tileset?foo=bar&baz=foo'
         });
         expect(resource.getUrlComponent()).toEqual('http://test.com/tileset');
         expect(resource.getUrlComponent(true)).toEqual('http://test.com/tileset?foo=bar&baz=foo');
         expect(resource.queryParameters).toEqual({
-            foo: 'bar',
-            baz: 'foo'
+            foo : 'bar',
+            baz : 'foo'
         });
     });
 
@@ -125,7 +125,7 @@ describe('Core/Resource', function() {
 
     it('createIfNeeded returns Resource, if parameter is a Resource', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset'
+            url : 'http://test.com/tileset'
         });
         expect(Resource.createIfNeeded(resource)).toEqual(resource);
     });
@@ -151,7 +151,7 @@ describe('Core/Resource', function() {
         expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
 
         var derived = resource.getDerivedResource({
-            url: 'other_endpoint?a=5&b=6&a=7'
+            url : 'other_endpoint?a=5&b=6&a=7'
         });
 
         expect(derived.queryParameters.a).toEqual(['5', '7']);
@@ -168,8 +168,8 @@ describe('Core/Resource', function() {
         expect(resource.url).toEqual('http://test.com/tileset/endpoint?a=1&a=2&a=4&b=3');
 
         var derived = resource.getDerivedResource({
-            url: 'other_endpoint?a=5&b=6&a=7',
-            preserveQueryParameters: true
+            url : 'other_endpoint?a=5&b=6&a=7',
+            preserveQueryParameters : true
         });
 
         expect(derived.queryParameters.a).toEqual(['5', '7', '1', '2', '4']);
@@ -180,10 +180,10 @@ describe('Core/Resource', function() {
 
     it('replaces templateValues in the url', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset/{foo}/{bar}',
-            templateValues: {
-                foo: 'test1',
-                bar: 'test2'
+            url : 'http://test.com/tileset/{foo}/{bar}',
+            templateValues : {
+                foo : 'test1',
+                bar : 'test2'
             }
         });
 
@@ -192,10 +192,10 @@ describe('Core/Resource', function() {
 
     it('replaces numeric templateValues', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset/{0}/{1}',
-            templateValues: {
-                '0': 'test1',
-                '1': 'test2'
+            url : 'http://test.com/tileset/{0}/{1}',
+            templateValues : {
+                '0' : 'test1',
+                '1' : 'test2'
             }
         });
 
@@ -204,7 +204,7 @@ describe('Core/Resource', function() {
 
     it('leaves templateValues unchanged that are not provided', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset/{foo}/{bar}'
+            url : 'http://test.com/tileset/{foo}/{bar}'
         });
 
         expect(resource.url).toEqual('http://test.com/tileset/{foo}/{bar}');
@@ -212,10 +212,10 @@ describe('Core/Resource', function() {
 
     it('url encodes replacement templateValues in the url', function() {
         var resource = new Resource({
-            url: 'http://test.com/tileset/{foo}/{bar}',
-            templateValues: {
-                foo: 'a/b',
-                bar: 'x$y#'
+            url : 'http://test.com/tileset/{foo}/{bar}',
+            templateValues : {
+                foo : 'a/b',
+                bar : 'x$y#'
             }
         });
 
@@ -229,34 +229,34 @@ describe('Core/Resource', function() {
         }
 
         var parent = new Resource({
-            url: 'http://test.com/tileset?key=value',
-            queryParameters: {
-                foo: 'bar'
+            url : 'http://test.com/tileset?key=value',
+            queryParameters : {
+                foo : 'bar'
             },
-            templateValues: {
-                key5: 'value5',
-                key6: 'value6'
+            templateValues : {
+                key5 : 'value5',
+                key6 : 'value6'
             }
         });
         parent.appendForwardSlash();
 
         var resource = parent.getDerivedResource({
-            url: 'tileset.json',
-            queryParameters: {
-                key1: 'value1',
-                key2: 'value2'
+            url : 'tileset.json',
+            queryParameters : {
+                key1 : 'value1',
+                key2 : 'value2'
             },
-            templateValues: {
-                key3: 'value3',
-                key4: 'value4'
+            templateValues : {
+                key3 : 'value3',
+                key4 : 'value4'
             },
-            headers: {
-                Accept: 'application/test-type'
+            headers : {
+                Accept : 'application/test-type'
             },
-            proxy: proxy,
-            retryCallback: retryFunc,
-            retryAttempts: 4,
-            request: request
+            proxy : proxy,
+            retryCallback : retryFunc,
+            retryAttempts : 4,
+            request : request
         });
 
         expect(resource.getUrlComponent(false, false)).toEqual('http://test.com/tileset/tileset.json');
@@ -265,19 +265,19 @@ describe('Core/Resource', function() {
         expect(resource.getUrlComponent(true, true)).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
         expect(resource.url).toEqual(proxy.getURL('http://test.com/tileset/tileset.json?key1=value1&key2=value2&key=value&foo=bar'));
         expect(resource.queryParameters).toEqual({
-            foo: 'bar',
-            key: 'value',
-            key1: 'value1',
-            key2: 'value2'
+            foo : 'bar',
+            key : 'value',
+            key1 : 'value1',
+            key2 : 'value2'
         });
         expect(resource.templateValues).toEqual({
-            key5: 'value5',
-            key6: 'value6',
-            key3: 'value3',
-            key4: 'value4'
+            key5 : 'value5',
+            key6 : 'value6',
+            key3 : 'value3',
+            key4 : 'value4'
         });
         expect(resource.headers).toEqual({
-            Accept: 'application/test-type'
+            Accept : 'application/test-type'
         });
         expect(resource.proxy).toBe(proxy);
         expect(resource.retryCallback).toBe(retryFunc);
@@ -288,13 +288,13 @@ describe('Core/Resource', function() {
 
     it('getDerivedResource works with directory parent resource', function() {
         var parent = new Resource({
-            url: 'http://test.com/tileset/'
+            url : 'http://test.com/tileset/'
         });
 
         expect(parent.url).toEqual('http://test.com/tileset/');
 
         var resource = parent.getDerivedResource({
-            url: 'tileset.json'
+            url : 'tileset.json'
         });
 
         expect(resource.url).toEqual('http://test.com/tileset/tileset.json');
@@ -302,13 +302,13 @@ describe('Core/Resource', function() {
 
     it('getDerivedResource works with file parent resource', function() {
         var parent = new Resource({
-            url: 'http://test.com/tileset/tileset.json'
+            url : 'http://test.com/tileset/tileset.json'
         });
 
         expect(parent.url).toEqual('http://test.com/tileset/tileset.json');
 
         var resource = parent.getDerivedResource({
-            url: '0/0/0.b3dm'
+            url : '0/0/0.b3dm'
         });
 
         expect(resource.url).toEqual('http://test.com/tileset/0/0/0.b3dm');
@@ -316,16 +316,16 @@ describe('Core/Resource', function() {
 
     it('getDerivedResource works with only template values', function() {
         var parent = new Resource({
-            url: 'http://test.com/terrain/{z}/{x}/{y}.terrain'
+            url : 'http://test.com/terrain/{z}/{x}/{y}.terrain'
         });
 
         expect(parent.url).toEqual('http://test.com/terrain/{z}/{x}/{y}.terrain');
 
         var resource = parent.getDerivedResource({
-            templateValues: {
-                x: 1,
-                y: 2,
-                z: 0
+            templateValues : {
+                x : 1,
+                y : 2,
+                z : 0
             }
         });
 
@@ -334,16 +334,16 @@ describe('Core/Resource', function() {
 
     it('getDerivedResource works with only query parameters', function() {
         var parent = new Resource({
-            url: 'http://test.com/terrain'
+            url : 'http://test.com/terrain'
         });
 
         expect(parent.url).toEqual('http://test.com/terrain');
 
         var resource = parent.getDerivedResource({
-            queryParameters: {
-                x: 1,
-                y: 2,
-                z: 0
+            queryParameters : {
+                x : 1,
+                y : 2,
+                z : 0
             }
         });
 
@@ -352,184 +352,184 @@ describe('Core/Resource', function() {
 
     it('setQueryParameters with useAsDefault set to true', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            queryParameters: {
-                x: 1,
-                y: 2
+            url : 'http://test.com/terrain',
+            queryParameters : {
+                x : 1,
+                y : 2
             }
         });
 
         expect(resource.queryParameters).toEqual({
-            x: 1,
-            y: 2
+            x : 1,
+            y : 2
         });
 
         resource.setQueryParameters({
-            x: 3,
-            y: 4,
-            z: 0
+            x : 3,
+            y : 4,
+            z : 0
         }, true);
 
         expect(resource.queryParameters).toEqual({
-            x: 1,
-            y: 2,
-            z: 0
+            x : 1,
+            y : 2,
+            z : 0
         });
     });
 
     it('setQueryParameters with useAsDefault set to false', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            queryParameters: {
-                x: 1,
-                y: 2
+            url : 'http://test.com/terrain',
+            queryParameters : {
+                x : 1,
+                y : 2
             }
         });
 
         expect(resource.queryParameters).toEqual({
-            x: 1,
-            y: 2
+            x : 1,
+            y : 2
         });
 
         resource.setQueryParameters({
-            x: 3,
-            y: 4,
-            z: 0
+            x : 3,
+            y : 4,
+            z : 0
         }, false);
 
         expect(resource.queryParameters).toEqual({
-            x: 3,
-            y: 4,
-            z: 0
+            x : 3,
+            y : 4,
+            z : 0
         });
     });
 
     it('appendQueryParameters works with non-arrays', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            queryParameters: {
-                x: 1,
-                y: 2
+            url : 'http://test.com/terrain',
+            queryParameters : {
+                x : 1,
+                y : 2
             }
         });
 
         expect(resource.queryParameters).toEqual({
-            x: 1,
-            y: 2
+            x : 1,
+            y : 2
         });
 
         resource.appendQueryParameters({
-            x: 3,
-            y: 4,
-            z: 0
+            x : 3,
+            y : 4,
+            z : 0
         });
 
         expect(resource.queryParameters).toEqual({
-            x: [3, 1],
-            y: [4, 2],
-            z: 0
+            x : [3, 1],
+            y : [4, 2],
+            z : 0
         });
     });
 
     it('appendQueryParameters works with arrays/non-arrays', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            queryParameters: {
-                x: [1, 2],
-                y: 2,
-                z: [-1, -2]
+            url : 'http://test.com/terrain',
+            queryParameters : {
+                x : [1, 2],
+                y : 2,
+                z : [-1, -2]
             }
         });
 
         expect(resource.queryParameters).toEqual({
-            x: [1, 2],
-            y: 2,
-            z: [-1, -2]
+            x : [1, 2],
+            y : 2,
+            z : [-1, -2]
         });
 
         resource.appendQueryParameters({
-            x: 3,
-            y: [4, 5],
-            z: [-3, -4]
+            x : 3,
+            y : [4, 5],
+            z : [-3, -4]
         });
 
         expect(resource.queryParameters).toEqual({
-            x: [3, 1, 2],
-            y: [4, 5, 2],
-            z: [-3, -4, -1, -2]
+            x : [3, 1, 2],
+            y : [4, 5, 2],
+            z : [-3, -4, -1, -2]
         });
     });
 
     it('setTemplateValues with useAsDefault set to true', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
-            templateValues: {
-                x: 1,
-                y: 2,
-                map: 'my map'
+            url : 'http://test.com/terrain/{z}/{x}/{y}.terrain',
+            templateValues : {
+                x : 1,
+                y : 2,
+                map : 'my map'
             }
         });
 
         expect(resource.templateValues).toEqual({
-            x: 1,
-            y: 2,
-            map: 'my map'
+            x : 1,
+            y : 2,
+            map : 'my map'
         });
 
         resource.setTemplateValues({
-            x: 3,
-            y: 4,
-            z: 0,
-            style: 'my style'
+            x : 3,
+            y : 4,
+            z : 0,
+            style : 'my style'
         }, true);
 
         expect(resource.templateValues).toEqual({
-            x: 1,
-            y: 2,
-            map: 'my map',
-            z: 0,
-            style: 'my style'
+            x : 1,
+            y : 2,
+            map : 'my map',
+            z : 0,
+            style : 'my style'
         });
     });
 
     it('setTemplateValues with useAsDefault set to false', function() {
         var resource = new Resource({
-            url: 'http://test.com/terrain/{z}/{x}/{y}.terrain',
-            templateValues: {
-                x: 1,
-                y: 2,
-                map: 'my map'
+            url : 'http://test.com/terrain/{z}/{x}/{y}.terrain',
+            templateValues : {
+                x : 1,
+                y : 2,
+                map : 'my map'
             }
         });
 
         expect(resource.templateValues).toEqual({
-            x: 1,
-            y: 2,
-            map: 'my map'
+            x : 1,
+            y : 2,
+            map : 'my map'
         });
 
         resource.setTemplateValues({
-            x: 3,
-            y: 4,
-            z: 0,
-            style: 'my style'
+            x : 3,
+            y : 4,
+            z : 0,
+            style : 'my style'
         }, false);
 
         expect(resource.templateValues).toEqual({
-            x: 3,
-            y: 4,
-            map: 'my map',
-            z: 0,
-            style: 'my style'
+            x : 3,
+            y : 4,
+            map : 'my map',
+            z : 0,
+            style : 'my style'
         });
     });
 
     it('retryOnFail doesn\'t exceed retryAttempts', function() {
         var cb = jasmine.createSpy('retry').and.returnValue(true);
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            retryCallback: cb,
-            retryAttempts: 3
+            url : 'http://test.com/terrain',
+            retryCallback : cb,
+            retryAttempts : 3
         });
 
         var promises = [];
@@ -553,9 +553,9 @@ describe('Core/Resource', function() {
         });
 
         var resource = new Resource({
-            url: 'http://test.com/terrain',
-            retryCallback: cb,
-            retryAttempts: 4
+            url : 'http://test.com/terrain',
+            retryCallback : cb,
+            retryAttempts : 4
         });
 
         var promises = [];
@@ -573,13 +573,13 @@ describe('Core/Resource', function() {
 
     it('isDataUri returns correct values', function() {
         var dataResource = new Resource({
-            url: 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3'
+            url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3'
         });
 
         expect(dataResource.isDataUri).toBe(true);
 
         var resource = new Resource({
-            url: 'http://invalid.uri/tileset'
+            url : 'http://invalid.uri/tileset'
         });
 
         expect(resource.isDataUri).toBe(false);
@@ -587,13 +587,13 @@ describe('Core/Resource', function() {
 
     it('isBlobUri returns correct values', function() {
         var dataResource = new Resource({
-            url: 'blob:d3958f5c-0777-0845-9dcf-2cb28783acaf'
+            url : 'blob:d3958f5c-0777-0845-9dcf-2cb28783acaf'
         });
 
         expect(dataResource.isBlobUri).toBe(true);
 
         var resource = new Resource({
-            url: 'http://invalid.uri/tileset'
+            url : 'http://invalid.uri/tileset'
         });
 
         expect(resource.isBlobUri).toBe(false);
@@ -603,18 +603,18 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
         var resource = new Resource({
-            url: expectedUrl,
-            headers: expectedHeaders
+            url : expectedUrl,
+            headers : expectedHeaders
         });
 
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -629,11 +629,11 @@ describe('Core/Resource', function() {
         });
 
         return resource.post(expectedData, {
-            responseType: expectedResponseType,
-            headers: {
-                'X-My-Other-Header': 'My-Other-Value'
+            responseType : expectedResponseType,
+            headers : {
+                'X-My-Other-Header' : 'My-Other-Value'
             },
-            overrideMimeType: expectedMimeType
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -644,13 +644,13 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
 
@@ -665,11 +665,11 @@ describe('Core/Resource', function() {
         });
 
         return Resource.post({
-            url: expectedUrl,
-            data: expectedData,
-            responseType: expectedResponseType,
-            headers: expectedHeaders,
-            overrideMimeType: expectedMimeType
+            url : expectedUrl,
+            data : expectedData,
+            responseType : expectedResponseType,
+            headers : expectedHeaders,
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -680,18 +680,18 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
         var resource = new Resource({
-            url: expectedUrl,
-            headers: expectedHeaders
+            url : expectedUrl,
+            headers : expectedHeaders
         });
 
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -706,11 +706,11 @@ describe('Core/Resource', function() {
         });
 
         return resource.put(expectedData, {
-            responseType: expectedResponseType,
-            headers: {
-                'X-My-Other-Header': 'My-Other-Value'
+            responseType : expectedResponseType,
+            headers : {
+                'X-My-Other-Header' : 'My-Other-Value'
             },
-            overrideMimeType: expectedMimeType
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -721,13 +721,13 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
 
@@ -742,11 +742,11 @@ describe('Core/Resource', function() {
         });
 
         return Resource.put({
-            url: expectedUrl,
-            data: expectedData,
-            responseType: expectedResponseType,
-            headers: expectedHeaders,
-            overrideMimeType: expectedMimeType
+            url : expectedUrl,
+            data : expectedData,
+            responseType : expectedResponseType,
+            headers : expectedHeaders,
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -757,18 +757,18 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
         var resource = new Resource({
-            url: expectedUrl,
-            headers: expectedHeaders
+            url : expectedUrl,
+            headers : expectedHeaders
         });
 
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -783,11 +783,11 @@ describe('Core/Resource', function() {
         });
 
         return resource.patch(expectedData, {
-            responseType: expectedResponseType,
-            headers: {
-                'X-My-Other-Header': 'My-Other-Value'
+            responseType : expectedResponseType,
+            headers : {
+                'X-My-Other-Header' : 'My-Other-Value'
             },
-            overrideMimeType: expectedMimeType
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -798,13 +798,13 @@ describe('Core/Resource', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResponseType = 'json';
         var expectedData = {
-            stuff: 'myStuff'
+            stuff : 'myStuff'
         };
         var expectedHeaders = {
-            'X-My-Header': 'My-Value'
+            'X-My-Header' : 'My-Value'
         };
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
         var expectedMimeType = 'application/test-data';
 
@@ -819,11 +819,11 @@ describe('Core/Resource', function() {
         });
 
         return Resource.patch({
-            url: expectedUrl,
-            data: expectedData,
-            responseType: expectedResponseType,
-            headers: expectedHeaders,
-            overrideMimeType: expectedMimeType
+            url : expectedUrl,
+            data : expectedData,
+            responseType : expectedResponseType,
+            headers : expectedHeaders,
+            overrideMimeType : expectedMimeType
         })
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -850,7 +850,7 @@ describe('Core/Resource', function() {
         expect(result).toBe(expectedResult);
         return result
             .then(function() {
-                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'arraybuffer' });
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType : 'arraybuffer' });
             });
     });
 
@@ -871,7 +871,7 @@ describe('Core/Resource', function() {
         expect(result).toBe(expectedResult);
         return result
             .then(function() {
-                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'blob' });
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType : 'blob' });
             });
     });
 
@@ -883,7 +883,7 @@ describe('Core/Resource', function() {
         expect(result).toBe(expectedResult);
         return result
             .then(function() {
-                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'arraybuffer' });
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType : 'arraybuffer' });
             });
     });
 
@@ -913,7 +913,7 @@ describe('Core/Resource', function() {
         expect(result).toBe(expectedResult);
         return result
             .then(function() {
-                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType: 'text' });
+                expect(Resource.prototype.fetch).toHaveBeenCalledWith({ responseType : 'text' });
             });
     });
 
@@ -927,15 +927,15 @@ describe('Core/Resource', function() {
     });
 
     it('fetchJson calls fetch with expected parameters and parses result', function() {
-        var expectedResult = { x: 123 };
+        var expectedResult = { x : 123 };
         spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(JSON.stringify(expectedResult)));
         return Resource.fetchJson('url')
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
                 expect(Resource.prototype.fetch).toHaveBeenCalledWith({
-                    responseType: 'text',
-                    headers: {
-                        Accept: 'application/json,*/*;q=0.01'
+                    responseType : 'text',
+                    headers : {
+                        Accept : 'application/json,*/*;q=0.01'
                     }
                 });
             });
@@ -959,8 +959,8 @@ describe('Core/Resource', function() {
         return result
             .then(function() {
                 expect(Resource.prototype.fetch).toHaveBeenCalledWith({
-                    responseType: 'document',
-                    overrideMimeType: 'text/xml'
+                    responseType : 'document',
+                    overrideMimeType : 'text/xml'
                 });
             });
     });
@@ -986,7 +986,7 @@ describe('Core/Resource', function() {
     it('fetch calls correct method', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
 
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -995,7 +995,7 @@ describe('Core/Resource', function() {
             deferred.resolve(expectedResult);
         });
 
-        var resource = new Resource({url: expectedUrl});
+        var resource = new Resource({url : expectedUrl});
         return resource.fetch()
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -1014,7 +1014,7 @@ describe('Core/Resource', function() {
     it('delete calls correct method', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResult = {
-            status: 'success'
+            status : 'success'
         };
 
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -1023,7 +1023,7 @@ describe('Core/Resource', function() {
             deferred.resolve(expectedResult);
         });
 
-        var resource = new Resource({url: expectedUrl});
+        var resource = new Resource({url : expectedUrl});
         return resource.delete()
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -1042,10 +1042,10 @@ describe('Core/Resource', function() {
     it('head calls correct method', function() {
         var expectedUrl = 'http://test.com/endpoint';
         var expectedResult = {
-            'accept-ranges': 'bytes',
+            'accept-ranges' : 'bytes',
             'access-control-allow-headers' : 'Origin, X-Requested-With, Content-Type, Accept',
             'access-control-allow-origin' : '*',
-            'cache-control': 'public, max-age=0',
+            'cache-control' : 'public, max-age=0',
             'connection' : 'keep-alive',
             'content-length' : '883',
             'content-type' : 'image/png',
@@ -1061,7 +1061,7 @@ describe('Core/Resource', function() {
             }
         }
         var fakeXHR = {
-            status: 200,
+            status : 200,
             send : function() {
                 this.onload();
             },
@@ -1078,7 +1078,7 @@ describe('Core/Resource', function() {
             Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
         });
 
-        var resource = new Resource({url: expectedUrl});
+        var resource = new Resource({url : expectedUrl});
         return resource.head()
             .then(function(result) {
                 expect(result.date).toEqual(expectedResult.date);
@@ -1124,7 +1124,7 @@ describe('Core/Resource', function() {
             }
         }
         var fakeXHR = {
-            status: 200,
+            status : 200,
             send : function() {
                 this.onload();
             },
@@ -1141,7 +1141,7 @@ describe('Core/Resource', function() {
             Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
         });
 
-        var resource = new Resource({url: expectedUrl});
+        var resource = new Resource({url : expectedUrl});
         return resource.options()
             .then(function(result) {
                 expect(result.date).toEqual(expectedResult.date);
@@ -1210,8 +1210,8 @@ describe('Core/Resource', function() {
             }
 
             return Resource.fetchImage({
-                url: './Data/Images/Green.png',
-                preferImageBitmap: true
+                url : './Data/Images/Green.png',
+                preferImageBitmap : true
             }).then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
@@ -1227,9 +1227,9 @@ describe('Core/Resource', function() {
             var loadedImage;
 
             return Resource.fetchImage({
-                url: './Data/Images/BlueOverRed.png',
-                flipY: true,
-                preferImageBitmap: true
+                url : './Data/Images/BlueOverRed.png',
+                flipY : true,
+                preferImageBitmap : true
             }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1250,9 +1250,9 @@ describe('Core/Resource', function() {
             var loadedImage;
 
             return Resource.fetchImage({
-                url: './Data/Images/BlueOverRed.png',
-                flipY: false,
-                preferImageBitmap: true
+                url : './Data/Images/BlueOverRed.png',
+                flipY : false,
+                preferImageBitmap : true
              }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1274,8 +1274,8 @@ describe('Core/Resource', function() {
             spyOn(window, 'createImageBitmap').and.callThrough();
 
             return Resource.fetchImage({
-                url: './Data/Images/Green.png',
-                preferImageBitmap: true
+                url : './Data/Images/Green.png',
+                preferImageBitmap : true
             }).then(function(loadedImage) {
                 expect(window.createImageBitmap).not.toHaveBeenCalledWith();
             });
@@ -1287,8 +1287,8 @@ describe('Core/Resource', function() {
             }
 
             return Resource.fetchImage({
-                url: 'http://example.invalid/testuri.png',
-                preferImageBitmap: true
+                url : 'http://example.invalid/testuri.png',
+                preferImageBitmap : true
             })
                 .then(function() {
                     fail('expected promise to reject');
@@ -1304,12 +1304,12 @@ describe('Core/Resource', function() {
             }
 
             // Force the fetching of a bad blob that is not an image to trigger the error
-            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
+            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type : 'text/plain' })));
 
             return Resource.fetchImage({
-                url: 'http://example.invalid/testuri.png',
-                preferImageBitmap: true,
-                preferBlob: true
+                url : 'http://example.invalid/testuri.png',
+                preferImageBitmap : true,
+                preferBlob : true
             })
                 .then(function() {
                     fail('expected promise to reject');
@@ -1415,7 +1415,7 @@ describe('Core/Resource', function() {
         it('Calls loadWithXhr with blob response type if headers is set', function() {
             var expectedUrl = 'http://example.invalid/testuri.png';
             var expectedHeaders = {
-                'X-my-header': 'my-value'
+                'X-my-header' : 'my-value'
             };
             spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(expectedUrl);
@@ -1428,12 +1428,12 @@ describe('Core/Resource', function() {
                     array.push(binary.charCodeAt(i));
                 }
 
-                deferred.resolve(new Blob([new Uint8Array(array)], { type: 'image/png' }));
+                deferred.resolve(new Blob([new Uint8Array(array)], { type : 'image/png' }));
             });
 
             var testResource = new Resource({
-                url: expectedUrl,
-                headers: expectedHeaders
+                url : expectedUrl,
+                headers : expectedHeaders
             });
             var promise = testResource.fetchImage();
             expect(promise).toBeDefined();
@@ -1454,9 +1454,9 @@ describe('Core/Resource', function() {
             }).and.callThrough();
 
             var testResource = new Resource({
-                url: dataUri,
-                headers: {
-                    'X-my-header': 'my-value'
+                url : dataUri,
+                headers : {
+                    'X-my-header' : 'my-value'
                 }
             });
             var promise = testResource.fetchImage();
@@ -1476,9 +1476,9 @@ describe('Core/Resource', function() {
                 var cb = jasmine.createSpy('retry').and.returnValue(true);
 
                 var resource = new Resource({
-                    url: 'http://example.invalid/image.png',
-                    retryCallback: cb,
-                    retryAttempts: 1
+                    url : 'http://example.invalid/image.png',
+                    retryCallback : cb,
+                    retryAttempts : 1
                 });
 
                 var promise = resource.fetchImage();
@@ -1518,9 +1518,9 @@ describe('Core/Resource', function() {
                 var cb = jasmine.createSpy('retry').and.returnValue(false);
 
                 var resource = new Resource({
-                    url: 'http://example.invalid/image.png',
-                    retryCallback: cb,
-                    retryAttempts: 2
+                    url : 'http://example.invalid/image.png',
+                    retryCallback : cb,
+                    retryAttempts : 2
                 });
 
                 var promise = resource.fetchImage();
@@ -1556,9 +1556,9 @@ describe('Core/Resource', function() {
                 var cb = jasmine.createSpy('retry').and.returnValue(true);
 
                 var resource = new Resource({
-                    url: 'http://example.invalid/image.png',
-                    retryCallback: cb,
-                    retryAttempts: 1
+                    url : 'http://example.invalid/image.png',
+                    retryCallback : cb,
+                    retryAttempts : 1
                 });
 
                 var promise = resource.fetchImage();
@@ -1597,10 +1597,10 @@ describe('Core/Resource', function() {
         var loadWithXhr = function(options) {
             var resource = new Resource(options);
             return resource._makeRequest({
-                responseType: options.responseType,
-                overrideMimeType: options.overrideMimeType,
-                method: defaultValue(options.method, 'GET'),
-                data: options.data
+                responseType : options.responseType,
+                overrideMimeType : options.overrideMimeType,
+                method : defaultValue(options.method, 'GET'),
+                data : options.data
             });
         };
 
@@ -1883,8 +1883,8 @@ describe('Core/Resource', function() {
                     }
 
                     var promise = Resource.fetchImage({
-                        url: './Data/Images/Green.png',
-                        preferImageBitmap: true
+                        url : './Data/Images/Green.png',
+                        preferImageBitmap : true
                     });
 
                     expect(promise).toBeDefined();
@@ -2047,8 +2047,8 @@ describe('Core/Resource', function() {
 
                     var resource = new Resource({
                         url : 'http://example.invalid',
-                        retryCallback: cb,
-                        retryAttempts: 1
+                        retryCallback : cb,
+                        retryAttempts : 1
                     });
 
                     var promise = loadWithXhr(resource);
@@ -2086,8 +2086,8 @@ describe('Core/Resource', function() {
 
                     var resource = new Resource({
                         url : 'http://example.invalid',
-                        retryCallback: cb,
-                        retryAttempts: 2
+                        retryCallback : cb,
+                        retryAttempts : 2
                     });
 
                     var promise = loadWithXhr(resource);
@@ -2121,8 +2121,8 @@ describe('Core/Resource', function() {
 
                     var resource = new Resource({
                         url : 'http://example.invalid',
-                        retryCallback: cb,
-                        retryAttempts: 1
+                        retryCallback : cb,
+                        retryAttempts : 1
                     });
 
                     var promise = loadWithXhr(resource);
@@ -2180,7 +2180,7 @@ describe('Core/Resource', function() {
         it('Uses callback name specified in options', function() {
             var testUrl = 'test';
             var options = {
-                callbackParameterName: 'testCallback'
+                callbackParameterName : 'testCallback'
             };
             spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, functionName, deferred) {
                 expect(url).toContain('callback=loadJsonp');
@@ -2201,9 +2201,9 @@ describe('Core/Resource', function() {
                 });
 
                 var resource = new Resource({
-                    url: 'http://example.invalid',
-                    retryCallback: cb,
-                    retryAttempts: 1
+                    url : 'http://example.invalid',
+                    retryCallback : cb,
+                    retryAttempts : 1
                 });
 
                 var promise = resource.fetchJsonp();
@@ -2245,9 +2245,9 @@ describe('Core/Resource', function() {
                 });
 
                 var resource = new Resource({
-                    url: 'http://example.invalid',
-                    retryCallback: cb,
-                    retryAttempts: 2
+                    url : 'http://example.invalid',
+                    retryCallback : cb,
+                    retryAttempts : 2
                 });
 
                 var promise = resource.fetchJsonp();
@@ -2287,9 +2287,9 @@ describe('Core/Resource', function() {
                 });
 
                 var resource = new Resource({
-                    url: 'http://example.invalid',
-                    retryCallback: cb,
-                    retryAttempts: 1
+                    url : 'http://example.invalid',
+                    retryCallback : cb,
+                    retryAttempts : 1
                 });
 
                 var promise = resource.fetchJsonp();

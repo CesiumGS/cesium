@@ -131,7 +131,7 @@ import Resource from '../Core/Resource.js';
          * @type {Rectangle}
          * @readonly
          */
-        rectangle: {
+        rectangle : {
             get : DeveloperError.throwInstantiationError
         },
 

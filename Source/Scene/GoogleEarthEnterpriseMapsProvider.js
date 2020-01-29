@@ -137,11 +137,11 @@ import ImageryProvider from './ImageryProvider.js';
         this._readyPromise = when.defer();
 
         var metadataResource = resource.getDerivedResource({
-            url: 'query',
-            queryParameters: {
-                request: 'Json',
-                vars: 'geeServerDefs',
-                is2d: 't'
+            url : 'query',
+            queryParameters : {
+                request : 'Json',
+                vars : 'geeServerDefs',
+                is2d : 't'
             }
         });
         var that = this;
@@ -547,15 +547,15 @@ import ImageryProvider from './ImageryProvider.js';
         //>>includeEnd('debug');
 
         var resource = this._resource.getDerivedResource({
-            url: 'query',
-            request: request,
-            queryParameters: {
-                request: this._requestType,
-                channel: this._channel,
-                version: this._version,
-                x: x,
-                y: y,
-                z: level + 1 // Google Earth starts with a zoom level of 1, not 0
+            url : 'query',
+            request : request,
+            queryParameters : {
+                request : this._requestType,
+                channel : this._channel,
+                version : this._version,
+                x : x,
+                y : y,
+                z : level + 1 // Google Earth starts with a zoom level of 1, not 0
             }
         });
 
@@ -588,14 +588,14 @@ import ImageryProvider from './ImageryProvider.js';
          * @memberof GoogleEarthEnterpriseMapsProvider
          * @type {String}
          */
-        logoUrl: {
-            get: function() {
+        logoUrl : {
+            get : function() {
                 if (!defined(GoogleEarthEnterpriseMapsProvider._logoUrl)) {
                     GoogleEarthEnterpriseMapsProvider._logoUrl = buildModuleUrl('Assets/Images/google_earth_credit.png');
                 }
                 return GoogleEarthEnterpriseMapsProvider._logoUrl;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.defined('value', value);
                 //>>includeEnd('debug');

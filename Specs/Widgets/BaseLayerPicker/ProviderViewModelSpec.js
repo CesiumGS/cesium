@@ -15,7 +15,7 @@ describe('Widgets/BaseLayerPicker/ProviderViewModel', function() {
                 name : knockout.observable('name'),
                 tooltip : knockout.observable('tooltip'),
                 iconUrl : knockout.observable('iconUrl'),
-                category: 'mycategory',
+                category : 'mycategory',
                 creationFunction : createCommand(spyCreationFunction)
             };
 

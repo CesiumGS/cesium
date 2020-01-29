@@ -35,7 +35,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('resolves readyPromise', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         return provider.readyPromise.then(function (result) {
@@ -51,7 +51,7 @@ describe('Scene/MapboxImageryProvider', function() {
 
         var provider = new MapboxImageryProvider({
             url : resource,
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         return provider.readyPromise.then(function (result) {
@@ -63,7 +63,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         return pollToPromise(function() {
@@ -76,7 +76,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('supports a slash at the end of the URL', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         return pollToPromise(function() {
@@ -86,7 +86,7 @@ describe('Scene/MapboxImageryProvider', function() {
                 expect(request.url).not.toContain('//');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -99,7 +99,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('supports no slash at the endof the URL', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         return pollToPromise(function() {
@@ -109,7 +109,7 @@ describe('Scene/MapboxImageryProvider', function() {
                 expect(request.url).toContain('made/up/mapbox/server/');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -122,7 +122,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         expect(provider.url).toEqual('made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=' + MapboxApi.getAccessToken());
@@ -138,7 +138,7 @@ describe('Scene/MapboxImageryProvider', function() {
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -152,7 +152,7 @@ describe('Scene/MapboxImageryProvider', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
+            mapId : 'test-id',
             rectangle : rectangle
         });
 
@@ -170,7 +170,7 @@ describe('Scene/MapboxImageryProvider', function() {
                 expect(request.url).toContain('/0/0/0');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -183,7 +183,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('uses maximumLevel passed to constructor', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
+            mapId : 'test-id',
             maximumLevel : 5
         });
         expect(provider.maximumLevel).toEqual(5);
@@ -192,7 +192,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('uses minimumLevel passed to constructor', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
+            mapId : 'test-id',
             minimumLevel : 1
         });
         expect(provider.minimumLevel).toEqual(1);
@@ -201,7 +201,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('when no credit is supplied, the provider adds a default credit', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
         expect(provider.credit).toBe(MapboxImageryProvider._defaultCredit);
     });
@@ -210,8 +210,8 @@ describe('Scene/MapboxImageryProvider', function() {
         var creditText = 'Thanks to our awesome made up source of this imagery!';
         var providerWithCredit = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
-            credit: creditText
+            mapId : 'test-id',
+            credit : creditText
         });
         expect(providerWithCredit.credit.html).toEqual(creditText);
     });
@@ -219,7 +219,7 @@ describe('Scene/MapboxImageryProvider', function() {
     it('raises error event when image cannot be loaded', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id'
+            mapId : 'test-id'
         });
 
         var layer = new ImageryLayer(provider);
@@ -239,7 +239,7 @@ describe('Scene/MapboxImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -269,8 +269,8 @@ describe('Scene/MapboxImageryProvider', function() {
     it('appends specified format', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
-            format: '@2x.png'
+            mapId : 'test-id',
+            format : '@2x.png'
         });
 
         return pollToPromise(function() {
@@ -280,7 +280,7 @@ describe('Scene/MapboxImageryProvider', function() {
                 expect(/made\/up\/mapbox\/server\/test-id\/0\/0\/0@2x\.png\?access_token=/.test(request.url)).toBe(true);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -292,8 +292,8 @@ describe('Scene/MapboxImageryProvider', function() {
     it('adds missing period for format', function() {
         var provider = new MapboxImageryProvider({
             url : 'made/up/mapbox/server/',
-            mapId: 'test-id',
-            format: 'png'
+            mapId : 'test-id',
+            format : 'png'
         });
 
         return pollToPromise(function() {
@@ -303,7 +303,7 @@ describe('Scene/MapboxImageryProvider', function() {
                 expect(/made\/up\/mapbox\/server\/test-id\/0\/0\/0\.png\?access_token=/.test(request.url)).toBe(true);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {

@@ -11,8 +11,8 @@ import { Texture } from '../../Source/Cesium.js';
 import { TextureMagnificationFilter } from '../../Source/Cesium.js';
 import { TextureMinificationFilter } from '../../Source/Cesium.js';
 import { TextureWrap } from '../../Source/Cesium.js';
-import createContext from '../createContext.js';
 import { when } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/Texture', function() {
 
@@ -58,8 +58,8 @@ describe('Renderer/Texture', function() {
         }));
         // Load this image as an ImageBitmap
         promises.push(Resource.fetchImage({
-            url: './Data/Images/BlueOverRed.png',
-            preferImageBitmap: true
+            url : './Data/Images/BlueOverRed.png',
+            preferImageBitmap : true
         }).then(function(image) {
             blueOverRedFlippedImage = image;
         }));
@@ -1012,7 +1012,7 @@ describe('Renderer/Texture', function() {
             expect(function() {
                 texture = new Texture({
                     context : context,
-                    width :greenDXTImage.width,
+                    width : greenDXTImage.width,
                     height : greenDXTImage.height,
                     pixelFormat : greenDXTImage.internalFormat,
                     source : {
@@ -1028,7 +1028,7 @@ describe('Renderer/Texture', function() {
             expect(function() {
                 texture = new Texture({
                     context : context,
-                    width :greenPVRImage.width,
+                    width : greenPVRImage.width,
                     height : greenPVRImage.height,
                     pixelFormat : greenPVRImage.internalFormat,
                     source : {
@@ -1044,7 +1044,7 @@ describe('Renderer/Texture', function() {
             expect(function() {
                 texture = new Texture({
                     context : context,
-                    width :greenETC1Image.width,
+                    width : greenETC1Image.width,
                     height : greenETC1Image.height,
                     pixelFormat : greenETC1Image.internalFormat,
                     source : {
@@ -1060,7 +1060,7 @@ describe('Renderer/Texture', function() {
             expect(function() {
                 texture = new Texture({
                     context : context,
-                    width :greenDXTImage.width + 1,
+                    width : greenDXTImage.width + 1,
                     height : greenDXTImage.height,
                     pixelFormat : greenDXTImage.internalFormat,
                     source : {

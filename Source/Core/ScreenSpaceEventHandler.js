@@ -680,9 +680,9 @@ import ScreenSpaceEventType from './ScreenSpaceEventType.js';
     function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
         this._buttonDown = {
-            LEFT: false,
-            MIDDLE: false,
-            RIGHT: false
+            LEFT : false,
+            MIDDLE : false,
+            RIGHT : false
         };
         this._isPinching = false;
         this._isTouchHolding = false;

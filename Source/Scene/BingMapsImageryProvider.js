@@ -127,11 +127,11 @@ import ImageryProvider from './ImageryProvider.js';
         }
 
         var metadataResource = this._resource.getDerivedResource({
-            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
-            queryParameters: {
-                incl: 'ImageryProviders',
-                key: this._key,
-                uriScheme: tileProtocol
+            url : 'REST/v1/Imagery/Metadata/' + this._mapStyle,
+            queryParameters : {
+                incl : 'ImageryProviders',
+                key : this._key,
+                uriScheme : tileProtocol
             }
         });
         var that = this;
@@ -294,7 +294,7 @@ import ImageryProvider from './ImageryProvider.js';
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -623,14 +623,14 @@ import ImageryProvider from './ImageryProvider.js';
          * @memberof BingMapsImageryProvider
          * @type {String}
          */
-        logoUrl: {
-            get: function() {
+        logoUrl : {
+            get : function() {
                 if (!defined(BingMapsImageryProvider._logoUrl)) {
                     BingMapsImageryProvider._logoUrl = buildModuleUrl('Assets/Images/bing_maps_credit.png');
                 }
                 return BingMapsImageryProvider._logoUrl;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.defined('value', value);
                 //>>includeEnd('debug');
@@ -647,17 +647,17 @@ import ImageryProvider from './ImageryProvider.js';
         var subdomainIndex = (x + y + level) % subdomains.length;
 
         return imageryProvider._resource.getDerivedResource({
-            url: imageUrl,
-            request: request,
-            templateValues: {
-                quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
-                subdomain: subdomains[subdomainIndex],
-                culture: imageryProvider._culture
+            url : imageUrl,
+            request : request,
+            templateValues : {
+                quadkey : BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
+                subdomain : subdomains[subdomainIndex],
+                culture : imageryProvider._culture
             },
-            queryParameters: {
+            queryParameters : {
                 // this parameter tells the Bing servers to send a zero-length response
                 // instead of a placeholder image for missing tiles.
-                n: 'z'
+                n : 'z'
             }
         });
     }

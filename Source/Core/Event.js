@@ -113,7 +113,7 @@ import defineProperties from './defineProperties.js';
         return false;
     };
 
-    function compareNumber(a,b) {
+    function compareNumber(a, b) {
         return b - a;
     }
 

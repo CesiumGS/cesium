@@ -134,8 +134,8 @@ import WebMercatorProjection from './WebMercatorProjection.js';
          * @readonly
          * @private
          */
-        packedLength: {
-            get: function() {
+        packedLength : {
+            get : function() {
                 return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0;
             }
         }

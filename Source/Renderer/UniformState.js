@@ -857,7 +857,7 @@ import SunLight from '../Scene/SunLight.js';
          * @memberof UniformStat.prototype
          * @type {Number}
          */
-        geometricToleranceOverMeter: {
+        geometricToleranceOverMeter : {
             get : function() {
                 return this._geometricToleranceOverMeter;
             }

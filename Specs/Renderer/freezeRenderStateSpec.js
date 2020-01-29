@@ -4,11 +4,11 @@ describe('Renderer/freezeRenderState', function() {
 
     it('works as expected', function() {
         var fresh = {
-            a: 1,
-            b: {
-                c: 'c'
+            a : 1,
+            b : {
+                c : 'c'
             },
-            _applyFunctions: [function() { }]
+            _applyFunctions : [function() { }]
         };
 
         var frozen = freezeRenderState(fresh);

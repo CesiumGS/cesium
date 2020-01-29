@@ -22,7 +22,7 @@
         while (base64String.length % 4 !== 0) {
             base64String += '=';
         }
-        var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
+        var jsonString = pako.inflate(atob(base64String), { raw : true, to : 'string' });
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = '["' + jsonString + '"]';
         var json = JSON.parse(jsonString);

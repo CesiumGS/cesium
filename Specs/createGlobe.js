@@ -10,8 +10,8 @@ import { Event } from '../Source/Cesium.js';
             callback : undefined,
             removedCallback : false,
             ellipsoid : ellipsoid,
-            beginFrame: function() {},
-            endFrame: function() {},
+            beginFrame : function() {},
+            endFrame : function() {},
             update : function() {},
             render : function() {},
             getHeight : function() {

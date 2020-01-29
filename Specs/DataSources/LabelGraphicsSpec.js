@@ -15,7 +15,7 @@ describe('DataSources/LabelGraphics', function() {
         var options = {
             text : '0',
             font : '1',
-            style :LabelStyle.FILL,
+            style : LabelStyle.FILL,
             fillColor : Color.RED,
             outlineColor : Color.BLUE,
             outlineWidth : 2,

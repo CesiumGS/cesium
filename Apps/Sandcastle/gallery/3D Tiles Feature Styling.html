@@ -26,7 +26,7 @@ function startup(Cesium) {
 // Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling
 // Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 viewer.scene.globe.depthTestAgainstTerrain = true;
@@ -35,20 +35,20 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
 var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
 viewer.scene.camera.setView({
-    destination: initialPosition,
-    orientation: initialOrientation,
-    endTransform: Cesium.Matrix4.IDENTITY
+    destination : initialPosition,
+    orientation : initialOrientation,
+    endTransform : Cesium.Matrix4.IDENTITY
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5741) });
 viewer.scene.primitives.add(tileset);
 
 // Color buildings based on their height.
 function colorByHeight() {
     tileset.style = new Cesium.Cesium3DTileStyle({
-        color: {
-            conditions: [
+        color : {
+            conditions : [
                 ['${height} >= 300', 'rgba(45, 0, 75, 0.5)'],
                 ['${height} >= 200', 'rgb(102, 71, 151)'],
                 ['${height} >= 100', 'rgb(170, 162, 204)'],
@@ -65,11 +65,11 @@ function colorByHeight() {
 // Color buildings by their latitude coordinate.
 function colorByLatitude() {
     tileset.style = new Cesium.Cesium3DTileStyle({
-        defines: {
-            latitudeRadians: 'radians(${latitude})'
+        defines : {
+            latitudeRadians : 'radians(${latitude})'
         },
-        color: {
-            conditions: [
+        color : {
+            conditions : [
                 ['${latitudeRadians} >= 0.7125', "color('purple')"],
                 ['${latitudeRadians} >= 0.712', "color('red')"],
                 ['${latitudeRadians} >= 0.7115', "color('orange')"],
@@ -90,7 +90,7 @@ function colorByDistance() {
         },
         color : {
             conditions : [
-                ['${distance} > 0.0012',"color('gray')"],
+                ['${distance} > 0.0012', "color('gray')"],
                 ['${distance} > 0.0008', "mix(color('yellow'), color('red'), (${distance} - 0.008) / 0.0004)"],
                 ['${distance} > 0.0004', "mix(color('green'), color('yellow'), (${distance} - 0.0004) / 0.0004)"],
                 ['${distance} < 0.00001', "color('white')"],

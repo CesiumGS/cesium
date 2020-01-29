@@ -411,7 +411,7 @@ import TweenJS from '../ThirdParty/Tween.js';
             object : uniforms,
             property : 'offset',
             startValue : uniforms.offset,
-            stopValue :  uniforms.offset + 1,
+            stopValue : uniforms.offset + 1,
             duration : options.duration,
             delay : options.delay,
             easingFunction : options.easingFunction,

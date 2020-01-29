@@ -45,13 +45,13 @@ var uris = [
 
 function dataCallback(interval, index) {
     return {
-        uri: uris[index]
+        uri : uris[index]
     };
 }
 
 var timeIntervalCollection = Cesium.TimeIntervalCollection.fromIso8601DateArray({
-    iso8601Dates: dates,
-    dataCallback: dataCallback
+    iso8601Dates : dates,
+    dataCallback : dataCallback
 });
 
 var pointCloud = new Cesium.TimeDynamicPointCloud({

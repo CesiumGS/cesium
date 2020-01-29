@@ -281,7 +281,7 @@ import StencilOperation from './StencilOperation.js';
                     enabled : globeDepth._useScissorTest,
                     rectangle : globeDepth._scissorRectangle
                 },
-                blending: BlendingState.ALPHA_BLEND
+                blending : BlendingState.ALPHA_BLEND
             });
 
             // Copy packed depth only if the 3D Tiles bit is set

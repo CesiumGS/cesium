@@ -161,7 +161,7 @@ describe('Scene/SceneTransforms', function() {
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        var position = Cartesian3.fromDegrees(0,0);
+        var position = Cartesian3.fromDegrees(0, 0);
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
 
         expect(windowCoordinates.x).toBeGreaterThan(0.0);
@@ -184,7 +184,7 @@ describe('Scene/SceneTransforms', function() {
             destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
         });
 
-        var position = Cartesian3.fromDegrees(0,0);
+        var position = Cartesian3.fromDegrees(0, 0);
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
 
         expect(windowCoordinates.x).toBeGreaterThan(0.0);
@@ -203,7 +203,7 @@ describe('Scene/SceneTransforms', function() {
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        var position = Cartesian3.fromDegrees(0,0);
+        var position = Cartesian3.fromDegrees(0, 0);
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
 
         expect(drawingBufferCoordinates.x).toBeGreaterThan(0.0);

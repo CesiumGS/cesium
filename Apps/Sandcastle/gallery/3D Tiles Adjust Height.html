@@ -43,7 +43,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var viewModel = {
-    height: 0
+    height : 0
 };
 
 Cesium.knockout.track(viewModel);
@@ -52,7 +52,7 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
 var tileset = new Cesium.Cesium3DTileset({
-    url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+    url : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
 });
 
 tileset.readyPromise.then(function(tileset) {

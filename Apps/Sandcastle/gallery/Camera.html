@@ -79,7 +79,7 @@ function viewRectangle() {
 
     var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
     viewer.camera.setView({
-        destination: rectangle
+        destination : rectangle
     });
 
     // Show the rectangle.  Not required; just for show.
@@ -141,7 +141,7 @@ function setHeadingPitchRoll() {
     var camera = viewer.camera;
     camera.setView({
         destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
-        orientation: {
+        orientation : {
             heading : -Cesium.Math.PI_OVER_TWO,
             pitch : -Cesium.Math.PI_OVER_FOUR,
             roll : 0.0
@@ -231,19 +231,19 @@ function losAngelesToTokyo(adjustPitch) {
 
     var tokyoOptions = {
         destination : Cesium.Cartesian3.fromDegrees(139.8148, 35.7142, 20000.0),
-        orientation: {
+        orientation : {
             heading : Cesium.Math.toRadians(15.0),
             pitch : Cesium.Math.toRadians(-60),
             roll : 0.0
         },
-        duration: 20,
-        flyOverLongitude: Cesium.Math.toRadians(60.0)
+        duration : 20,
+        flyOverLongitude : Cesium.Math.toRadians(60.0)
     };
 
     var laOptions = {
         destination : Cesium.Cartesian3.fromDegrees(-117.729, 34.457, 10000.0),
-        duration: 5,
-        orientation: {
+        duration : 5,
+        orientation : {
             heading : Cesium.Math.toRadians(-15.0),
             pitch : -Cesium.Math.PI_OVER_FOUR,
             roll : 0.0

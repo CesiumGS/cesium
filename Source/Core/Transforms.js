@@ -215,7 +215,7 @@ import TimeConstants from './TimeConstants.js';
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      */
-    Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('east','north');
+    Transforms.eastNorthUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('east', 'north');
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-east-down axes
@@ -238,7 +238,7 @@ import TimeConstants from './TimeConstants.js';
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
      */
-    Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','east');
+    Transforms.northEastDownToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north', 'east');
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-up-east axes
@@ -261,7 +261,7 @@ import TimeConstants from './TimeConstants.js';
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northUpEastToFixedFrame(center);
      */
-    Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','up');
+    Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north', 'up');
 
     /**
      * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
@@ -284,7 +284,7 @@ import TimeConstants from './TimeConstants.js';
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
      */
-    Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
+    Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north', 'west');
 
     var scratchHPRQuaternion = new Quaternion();
     var scratchScale = new Cartesian3(1.0, 1.0, 1.0);

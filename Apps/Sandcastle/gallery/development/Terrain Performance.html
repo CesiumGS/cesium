@@ -42,12 +42,12 @@ function startTest() {
     flightComplete = false;
     statistics.numberOfActiveRequestsEver = 0;
     monitor = new Cesium.FrameRateMonitor({
-        scene: scene,
-        samplingWindow: 1.0,
-        quietPeriod: 0.0,
-        warmupPeriod: 0.0,
-        minimumFrameRateDuringWarmup: 0,
-        minimumFrameRateAfterWarmup: 0
+        scene : scene,
+        samplingWindow : 1.0,
+        quietPeriod : 0.0,
+        warmupPeriod : 0.0,
+        minimumFrameRateDuringWarmup : 0,
+        minimumFrameRateAfterWarmup : 0
     });
     scene.preUpdate.addEventListener(measureFrameRate);
     startTime = window.performance.now();

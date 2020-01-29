@@ -167,15 +167,15 @@ import when from '../ThirdParty/when.js';
         });
 
         var attributes = [{
-            index                  : 0,
-            vertexBuffer           : positionBuffer,
+            index : 0,
+            vertexBuffer : positionBuffer,
             componentsPerAttribute : 2,
-            componentDatatype      : ComponentDatatype.FLOAT
+            componentDatatype : ComponentDatatype.FLOAT
         }, {
-            index                  : 1,
-            vertexBuffer           : cubeMapCoordinatesBuffer,
+            index : 1,
+            vertexBuffer : cubeMapCoordinatesBuffer,
             componentsPerAttribute : 3,
-            componentDatatype      : ComponentDatatype.FLOAT
+            componentDatatype : ComponentDatatype.FLOAT
         }];
         return new VertexArray({
             context : context,

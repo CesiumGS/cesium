@@ -134,7 +134,7 @@ import SceneMode from './SceneMode.js';
             var time = value.time / duration;
 
             camera.setView({
-                orientation: {
+                orientation : {
                     heading : CesiumMath.lerp(startHeading, heading, time),
                     pitch : CesiumMath.lerp(startPitch, pitch, time),
                     roll : CesiumMath.lerp(startRoll, roll, time)
@@ -239,7 +239,7 @@ import SceneMode from './SceneMode.js';
 
                 camera.setView({
                     destination : position,
-                    orientation: {
+                    orientation : {
                         heading : CesiumMath.lerp(startHeading, heading, time),
                         pitch : pitchFunction(time),
                         roll : CesiumMath.lerp(startRoll, roll, time)
@@ -263,7 +263,7 @@ import SceneMode from './SceneMode.js';
             var time = value.time / duration;
 
             camera.setView({
-                orientation: {
+                orientation : {
                     heading : CesiumMath.lerp(startHeading, heading, time)
                 }
             });
@@ -388,7 +388,7 @@ import SceneMode from './SceneMode.js';
         if (duration <= 0.0) {
             var newOnComplete = function() {
                 var update = updateFunctions[mode](scene, 1.0, destination, heading, pitch, roll, maximumHeight, flyOverLongitude, flyOverLongitudeWeight, pitchAdjustHeight);
-                update({ time: 1.0 });
+                update({ time : 1.0 });
 
                 if (typeof complete === 'function') {
                     complete();
@@ -421,7 +421,7 @@ import SceneMode from './SceneMode.js';
             },
             update : update,
             complete : complete,
-            cancel: cancel
+            cancel : cancel
         };
     };
 export default CameraFlightPath;

@@ -84,17 +84,17 @@ describe('Scene/Scene', function() {
 
     function createRectangle(rectangle, height) {
         return new Primitive({
-            geometryInstances: new GeometryInstance({
-                geometry: new RectangleGeometry({
-                    rectangle: rectangle,
-                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    height: height
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    height : height
                 })
             }),
-            appearance: new EllipsoidSurfaceAppearance({
-                aboveGround: false
+            appearance : new EllipsoidSurfaceAppearance({
+                aboveGround : false
             }),
-            asynchronous: false
+            asynchronous : false
         });
     }
 
@@ -882,7 +882,7 @@ describe('Scene/Scene', function() {
         });
     });
 
-    it('pickPosition caches results per frame',function(){
+    it('pickPosition caches results per frame', function(){
         if (!scene.pickPositionSupported) {
             return;
         }
@@ -1222,7 +1222,7 @@ describe('Scene/Scene', function() {
         }).toThrowDeveloperError();
     });
 
-    it('converts to canvas coordinates',function(){
+    it('converts to canvas coordinates', function(){
         var mockPosition = new Cartesian3();
         spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
         scene.cartesianToCanvasCoordinates(mockPosition);
@@ -1230,7 +1230,7 @@ describe('Scene/Scene', function() {
         expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
     });
 
-    it('converts to canvas coordinates and return it in a variable',function(){
+    it('converts to canvas coordinates and return it in a variable', function(){
         var result = new Cartesian2();
         var mockPosition = new Cartesian3();
         spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
@@ -1265,7 +1265,7 @@ describe('Scene/Scene', function() {
         var scene = createScene();
         var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         scene.terrainProvider = new CesiumTerrainProvider({
-            url: '//terrain/tiles'
+            url : '//terrain/tiles'
         });
 
         expect(scene.terrainProvider).toBe(globe.terrainProvider);
@@ -1273,7 +1273,7 @@ describe('Scene/Scene', function() {
         scene.globe = undefined;
         expect(function() {
             scene.terrainProvider = new CesiumTerrainProvider({
-                url: '//newTerrain/tiles'
+                url : '//newTerrain/tiles'
             });
         }).not.toThrow();
 
@@ -1474,7 +1474,7 @@ describe('Scene/Scene', function() {
         scene.globe = globe;
 
         scene.requestRender();
-        Object.defineProperty(globe, 'tilesLoaded', { value: false });
+        Object.defineProperty(globe, 'tilesLoaded', { value : false });
         scene.renderForSpecs();
         lastFrameNumber = scene.frameState.frameNumber;
 
@@ -1677,15 +1677,15 @@ describe('Scene/Scene', function() {
         scene.primitives.add(rectanglePrimitive);
 
         scene.camera.setView({
-            destination: new Cartesian3(-588536.1057451078, -10512475.371849751, 6737159.100747835),
-            orientation: new HeadingPitchRoll(6.283185307179586, -1.5688261558859757, 0.0)
+            destination : new Cartesian3(-588536.1057451078, -10512475.371849751, 6737159.100747835),
+            orientation : new HeadingPitchRoll(6.283185307179586, -1.5688261558859757, 0.0)
         });
         scene.renderForSpecs();
         expect(getFrustumCommandsLength(scene)).toBe(1);
 
         scene.camera.setView({
-            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
-            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+            destination : new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation : new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
         });
         scene.renderForSpecs();
         expect(getFrustumCommandsLength(scene)).toBe(0);
@@ -1710,8 +1710,8 @@ describe('Scene/Scene', function() {
         rectanglePrimitive._colorCommands[0].occlude = false;
 
         scene.camera.setView({
-            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
-            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+            destination : new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation : new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
         });
         scene.renderForSpecs();
         expect(getFrustumCommandsLength(scene)).toBe(1);

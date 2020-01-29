@@ -81,16 +81,16 @@ describe('DataSources/StaticOutlineGeometryBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var color = new TimeIntervalCollectionProperty();
         color.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: Color.RED
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : Color.RED
         }));
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
             position : new Cartesian3(1234, 5678, 9101112),
-            ellipse: {
+            ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                extrudedHeight: 20,
+                extrudedHeight : 20,
                 outline : true,
                 outlineColor : color
             }
@@ -128,16 +128,16 @@ describe('DataSources/StaticOutlineGeometryBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: new DistanceDisplayCondition(1.0, 2.0)
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : new DistanceDisplayCondition(1.0, 2.0)
         }));
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
             position : new Cartesian3(1234, 5678, 9101112),
-            ellipse: {
+            ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                extrudedHeight: 20,
+                extrudedHeight : 20,
                 outline : true,
                 outlineColor : Color.RED,
                 distanceDisplayCondition : ddc
@@ -176,18 +176,18 @@ describe('DataSources/StaticOutlineGeometryBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var show = new TimeIntervalCollectionProperty();
         show.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: true
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : true
         }));
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
             position : new Cartesian3(1234, 5678, 9101112),
-            ellipse: {
+            ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                extrudedHeight: 20,
+                extrudedHeight : 20,
                 outline : true,
-                show: show
+                show : show
             }
         });
 

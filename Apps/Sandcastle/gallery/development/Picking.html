@@ -36,13 +36,13 @@ var polylines;
 var tileset;
 
 var highlighted = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
+    feature : undefined,
+    originalColor : new Cesium.Color()
 };
 
 Sandcastle.addToolbarMenu([{
     text : 'Billboard',
-    onselect: function() {
+    onselect : function() {
         var entity = viewer.entities.add({
             position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
             billboard : {
@@ -303,7 +303,7 @@ Sandcastle.addToolbarMenu([{
     text : 'Batched 3D Model',
     onselect : function() {
         tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-            url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+            url : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
         }));
 
         tileset.readyPromise.then(function() {

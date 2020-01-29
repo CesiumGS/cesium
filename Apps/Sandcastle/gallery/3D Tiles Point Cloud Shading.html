@@ -84,7 +84,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 var scene = viewer.scene;
@@ -129,15 +129,15 @@ function loadStHelens() {
     var initialPosition = Cesium.Cartesian3.fromRadians(-2.1344873183780484, 0.8071380277370774, 5743.394497982162);
     var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(112.99596671210358, -21.34390550872461, 0.0716951918898415);
     viewer.scene.camera.setView({
-        destination: initialPosition,
-        orientation: initialOrientation,
-        endTransform: Cesium.Matrix4.IDENTITY
+        destination : initialPosition,
+        orientation : initialOrientation,
+        endTransform : Cesium.Matrix4.IDENTITY
     });
 
     // Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
     // This tileset uses replacement refinement and has geometric error approximately equal to
     // the average interpoint distance in each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
+    var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5713) });
     viewer.scene.primitives.add(tileset);
 
     tileset.maximumScreenSpaceError = 16.0;
@@ -153,7 +153,7 @@ function loadStHelens() {
 function loadChurch() {
     // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
     // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(16421) });
+    var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(16421) });
     viewer.scene.primitives.add(tileset);
 
     tileset.maximumScreenSpaceError = 16.0;
@@ -164,8 +164,8 @@ function loadChurch() {
     tileset.pointCloudShading.eyeDomeLighting = true;
 
     viewer.scene.camera.setView({
-        destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
-        orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
+        destination : new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+        orientation : new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
     });
 
     tilesetToViewModel(tileset);

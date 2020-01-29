@@ -249,7 +249,7 @@ import TileProviderError from './TileProviderError.js';
             request : request
         });
         var promise = resource.fetchImage({
-            preferImageBitmap: true
+            preferImageBitmap : true
         });
         if (!defined(promise)) {
             return undefined;

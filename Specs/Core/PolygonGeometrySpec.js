@@ -23,8 +23,8 @@ describe('Core/PolygonGeometry', function() {
     it('throws with height when perPositionHeight is true', function() {
         expect(function() {
             return new PolygonGeometry({
-                height: 30,
-                perPositionHeight: true
+                height : 30,
+                perPositionHeight : true
             });
         }).toThrowDeveloperError();
     });
@@ -55,7 +55,7 @@ describe('Core/PolygonGeometry', function() {
                 positions : [Cartesian3.fromDegrees(0, 0),
                              Cartesian3.fromDegrees(1, 0),
                              Cartesian3.fromDegrees(1, 1)],
-                arcType: ArcType.NONE
+                arcType : ArcType.NONE
             });
         }).toThrowDeveloperError();
     });
@@ -78,7 +78,7 @@ describe('Core/PolygonGeometry', function() {
                 0.0, 0.0,
                 0.0, 0.0
             ]),
-            extrudedHeight: 2
+            extrudedHeight : 2
         }));
         expect(geometry).toBeUndefined();
     });
@@ -139,7 +139,7 @@ describe('Core/PolygonGeometry', function() {
             }]
         };
 
-        var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
+        var geometry = PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy, perPositionHeight : true }));
         expect(geometry).toBeDefined();
     });
 
@@ -152,7 +152,7 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            granularity: CesiumMath.RADIANS_PER_DEGREE
+            granularity : CesiumMath.RADIANS_PER_DEGREE
         }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3); // 8 around edge + 5 in the middle
@@ -197,15 +197,15 @@ describe('Core/PolygonGeometry', function() {
     it('create geometry throws if arcType is STRAIGHT', function() {
         expect(function() {
             PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
-                vertexFormat: VertexFormat.POSITION_ONLY,
-                positions: Cartesian3.fromDegreesArray([
+                vertexFormat : VertexFormat.POSITION_ONLY,
+                positions : Cartesian3.fromDegreesArray([
                     -1.0, -1.0,
                     1.0, -1.0,
                     1.0, 1.0,
                     -1.0, 1.0
                 ]),
-                granularity: CesiumMath.RADIANS_PER_DEGREE,
-                arcType: ArcType.NONE
+                granularity : CesiumMath.RADIANS_PER_DEGREE,
+                arcType : ArcType.NONE
             }));
         }).toThrowDeveloperError();
     });
@@ -539,7 +539,7 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         var numVertices = 50; // 13 top + 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -557,8 +557,8 @@ describe('Core/PolygonGeometry', function() {
                                                          1.0, 1.0,
                                                          -1.0, 1.0
                                                      ]),
-             extrudedHeight: 30000,
-             closeTop: false
+             extrudedHeight : 30000,
+             closeTop : false
          }));
 
         var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -576,8 +576,8 @@ describe('Core/PolygonGeometry', function() {
                                                          1.0, 1.0,
                                                          -1.0, 1.0
                                                      ]),
-             extrudedHeight: 30000,
-             closeBottom: false
+             extrudedHeight : 30000,
+             closeBottom : false
          }));
 
         var numVertices = 37; // 13 top + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -595,9 +595,9 @@ describe('Core/PolygonGeometry', function() {
                                                          1.0, 1.0,
                                                          -1.0, 1.0
                                                      ]),
-             extrudedHeight: 30000,
-             closeTop: false,
-             closeBottom: false
+             extrudedHeight : 30000,
+             closeTop : false,
+             closeBottom : false
          }));
 
         var numVertices = 24; // 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -615,8 +615,8 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            granularity: CesiumMath.RADIANS_PER_DEGREE,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 13;
@@ -638,8 +638,8 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 50;
@@ -663,9 +663,9 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeTop: false,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            closeTop : false,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -688,9 +688,9 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeBottom: false,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            closeBottom : false,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 37;
@@ -713,10 +713,10 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeTop: false,
-            closeBottom: false,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            closeTop : false,
+            closeBottom : false,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 24;
@@ -739,8 +739,8 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 50;
@@ -762,9 +762,9 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeTop: false,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            closeTop : false,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
@@ -786,9 +786,9 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeBottom: false,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            closeBottom : false,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 37;
@@ -810,10 +810,10 @@ describe('Core/PolygonGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
-            closeTop: false,
-            closeBottom: false,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            closeTop : false,
+            closeBottom : false,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 24;
@@ -836,7 +836,7 @@ describe('Core/PolygonGeometry', function() {
                 -1.0, 1.0,
                 -1.0, -1.0
             ]),
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         expect(p.attributes.position.values.length).toEqual(50 * 3);
@@ -852,8 +852,8 @@ describe('Core/PolygonGeometry', function() {
                                                          1.0, 1.0,
                                                          -1.0, 1.0
                                                      ]),
-            height: 0,
-            extrudedHeight: CesiumMath.EPSILON7
+            height : 0,
+            extrudedHeight : CesiumMath.EPSILON7
          }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3);
@@ -863,14 +863,14 @@ describe('Core/PolygonGeometry', function() {
     it('computes all attributes extruded', function() {
         var p = PolygonGeometry.createGeometry(new PolygonGeometry({
             vertexFormat : VertexFormat.ALL,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArray([
                     -1.0, -1.0,
                     1.0, -1.0,
                     1.0, 1.0,
                     -1.0, 1.0
                 ])},
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         var numVertices = 50;
@@ -886,15 +886,15 @@ describe('Core/PolygonGeometry', function() {
     it('computes correct texture coordinates for polygon with height', function() {
         var p = PolygonGeometry.createGeometry(new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArray([
                     -100.5, 30.0,
                     -100.0, 30.0,
                     -100.0, 30.5,
                     -100.5, 30.5
                 ])},
-            height: 150000,
-            granularity: CesiumMath.PI
+            height : 150000,
+            granularity : CesiumMath.PI
         }));
 
         var st = p.attributes.st.values;
@@ -907,14 +907,14 @@ describe('Core/PolygonGeometry', function() {
     it('computes correct texture coordinates for polygon with position heights', function() {
         var p = PolygonGeometry.createGeometry(new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -100.5, 30.0, 92,
                     -100.0, 30.0, 92,
                     -100.0, 30.5, 92,
                     -100.5, 30.5, 92
                 ])},
-            granularity: CesiumMath.PI
+            granularity : CesiumMath.PI
         }));
 
         var st = p.attributes.st.values;
@@ -954,7 +954,7 @@ describe('Core/PolygonGeometry', function() {
             vertexFormat : VertexFormat.POSITION_ONLY,
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE,
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         // (4 points * 3 rectangles * 3 to duplicate for normals) * 2 for top and bottom
@@ -978,13 +978,13 @@ describe('Core/PolygonGeometry', function() {
 
     it('computes normals for perPositionHeight', function() {
         var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
-                positions: [new Cartesian3(1333485.211963876, -4654510.505548239, 4138557.5850382405),
+                positions : [new Cartesian3(1333485.211963876, -4654510.505548239, 4138557.5850382405),
                             new Cartesian3(1333441.3994441305, -4654261.147368878, 4138322.784348336),
                             new Cartesian3(1333521.9333286814, -4654490.298890729, 4138567.564118971)],
-                extrudedHeight: 56,
-                vertexFormat: VertexFormat.POSITION_AND_NORMAL,
-                perPositionHeight: true,
-                closeBottom: false
+                extrudedHeight : 56,
+                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                perPositionHeight : true,
+                closeBottom : false
             })
         );
 
@@ -1014,7 +1014,7 @@ describe('Core/PolygonGeometry', function() {
         ]);
         var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             positions : positions,
-            extrudedHeight: 0,
+            extrudedHeight : 0,
             vertexFormat : VertexFormat.POSITION_ONLY,
             perPositionHeight : true
         }));
@@ -1035,10 +1035,10 @@ describe('Core/PolygonGeometry', function() {
         var pRhumb = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : positions,
-            extrudedHeight: 1000,
-            closeTop: false,
-            closeBottom: false,
-            arcType: ArcType.RHUMB
+            extrudedHeight : 1000,
+            closeTop : false,
+            closeBottom : false,
+            arcType : ArcType.RHUMB
         }));
 
         var numVertices = 20;
@@ -1049,10 +1049,10 @@ describe('Core/PolygonGeometry', function() {
         var pGeodesic = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : positions,
-            extrudedHeight: 1000,
-            closeTop: false,
-            closeBottom: false,
-            arcType: ArcType.GEODESIC
+            extrudedHeight : 1000,
+            closeTop : false,
+            closeBottom : false,
+            arcType : ArcType.GEODESIC
         }));
 
         numVertices = 20;
@@ -1064,14 +1064,14 @@ describe('Core/PolygonGeometry', function() {
     it('computing rectangle property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -100.5, 30.0, 92,
                     -100.0, 30.0, 92,
                     -100.0, 30.5, 92,
                     -100.5, 30.5, 92
                 ])},
-            granularity: CesiumMath.PI
+            granularity : CesiumMath.PI
         });
 
         var r = p.rectangle;
@@ -1084,14 +1084,14 @@ describe('Core/PolygonGeometry', function() {
     it('computes rectangle according to arctype', function() {
         var pGeodesic = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -90.0, 30.0, 0,
                     -80.0, 30.0, 0,
                     -80.0, 40.0, 0,
                     -90.0, 40.0, 0
                 ])},
-            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
             arcType : ArcType.GEODESIC
         });
 
@@ -1103,14 +1103,14 @@ describe('Core/PolygonGeometry', function() {
 
         var pRhumb = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -90.0, 30.0, 0,
                     -80.0, 30.0, 0,
                     -80.0, 40.0, 0,
                     -90.0, 40.0, 0
                 ])},
-            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
             arcType : ArcType.RHUMB
         });
 
@@ -1124,14 +1124,14 @@ describe('Core/PolygonGeometry', function() {
     it('computes rectangles for rhumbline polygons that cross the IDL', function() {
         var pRhumb = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArray([
                      175, 30,
                     -170, 30,
                     -170, 40,
                      175, 40
                 ])},
-            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
             arcType : ArcType.RHUMB
         });
 
@@ -1151,10 +1151,10 @@ describe('Core/PolygonGeometry', function() {
 
         var pGeodesic = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : cartesianArray
             },
-            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
             arcType : ArcType.GEODESIC
         });
 
@@ -1168,7 +1168,7 @@ describe('Core/PolygonGeometry', function() {
     it('computeRectangle', function() {
         var options = {
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -100.5, 30.0, 92,
                     -100.0, 30.0, 92,
@@ -1176,7 +1176,7 @@ describe('Core/PolygonGeometry', function() {
                     -100.5, 30.5, 92
                 ])
             },
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         };
         var geometry = new PolygonGeometry(options);
 
@@ -1188,7 +1188,7 @@ describe('Core/PolygonGeometry', function() {
 
     it('computeRectangle with result parameter', function() {
         var options = {
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArray([
                     -10.5, 25.0,
                     -10.0, 25.0,
@@ -1210,14 +1210,14 @@ describe('Core/PolygonGeometry', function() {
     it('computing textureCoordinateRotationPoints property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -10.0, -10.0, 0,
                     -10.0, 10.0, 0,
                     10.0, -10.0, 0,
                     10.0, 10.0, 0
                 ])},
-            granularity: CesiumMath.PI,
+            granularity : CesiumMath.PI,
             stRotation : CesiumMath.toRadians(90)
         });
 
@@ -1233,14 +1233,14 @@ describe('Core/PolygonGeometry', function() {
 
         p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            polygonHierarchy: {
+            polygonHierarchy : {
                 positions : Cartesian3.fromDegreesArrayHeights([
                     -10.0, -10.0, 0,
                     -10.0, 10.0, 0,
                     10.0, -10.0, 0,
                     10.0, 10.0, 0
                 ])},
-            granularity: CesiumMath.PI,
+            granularity : CesiumMath.PI,
             stRotation : CesiumMath.toRadians(0)
         });
 

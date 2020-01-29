@@ -47,7 +47,7 @@ import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
         var colorTexture = new Texture({
             context : context,
             width : 256,
-            height: 256,
+            height : 256,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : new Sampler({

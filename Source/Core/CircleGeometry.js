@@ -55,7 +55,7 @@ import VertexFormat from './VertexFormat.js';
             granularity : options.granularity,
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation,
-            shadowVolume: options.shadowVolume
+            shadowVolume : options.shadowVolume
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
@@ -99,7 +99,7 @@ import VertexFormat from './VertexFormat.js';
         stRotation : undefined,
         semiMajorAxis : undefined,
         semiMinorAxis : undefined,
-        shadowVolume: undefined
+        shadowVolume : undefined
     };
 
     /**
@@ -161,7 +161,7 @@ import VertexFormat from './VertexFormat.js';
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume : true
         });
     };
 

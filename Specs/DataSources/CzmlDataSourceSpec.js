@@ -187,7 +187,7 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('name uses source name if CZML name is undefined', function() {
         return CzmlDataSource.load(clockCzml, {
-            sourceUri: 'Gallery/simple.czml?asd=true'
+            sourceUri : 'Gallery/simple.czml?asd=true'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('simple.czml');
         });
@@ -195,7 +195,7 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('credit gets set from options', function() {
         return CzmlDataSource.load(nameCzml, {
-                credit: 'This is my credit'
+                credit : 'This is my credit'
             }).then(function(dataSource) {
                 expect(dataSource.credit).toBeInstanceOf(Credit);
             });
@@ -205,7 +205,7 @@ describe('DataSources/CzmlDataSource', function() {
         var name = 'myName';
         var dataSource = new CzmlDataSource(name);
         return dataSource.load(clockCzml, {
-            sourceUri: 'Gallery/simple.czml'
+            sourceUri : 'Gallery/simple.czml'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual(name);
         });
@@ -268,7 +268,7 @@ describe('DataSources/CzmlDataSource', function() {
     it('process loads expected data from Resource', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.process(new Resource({
-            url: simpleUrl
+            url : simpleUrl
         })).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(10);
         });
@@ -376,8 +376,8 @@ describe('DataSources/CzmlDataSource', function() {
             dataSource.changedEvent.addEventListener(spy);
 
             var newCzml = {
-                id: 'document',
-                version: '1.0',
+                id : 'document',
+                version : '1.0',
                 clock : {
                     interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
                     currentTime : '2012-03-15T10:00:00Z',
@@ -440,7 +440,7 @@ describe('DataSources/CzmlDataSource', function() {
                 image : 'image.png',
                 scale : 1.0,
                 rotation : 1.3,
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -475,7 +475,7 @@ describe('DataSources/CzmlDataSource', function() {
         };
 
         return CzmlDataSource.load(makeDocument(packet), {
-            sourceUri: sourceUri
+            sourceUri : sourceUri
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
@@ -523,16 +523,16 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can handle aligned axis expressed as a velocity reference', function() {
         var packet = {
-            position: {
-                epoch: '2016-06-17T12:00:00Z',
-                cartesian: [
+            position : {
+                epoch : '2016-06-17T12:00:00Z',
+                cartesian : [
                     0, 1, 2, 3,
                     60, 61, 122, 183
                 ]
             },
-            billboard: {
-                alignedAxis: {
-                    velocityReference: '#position'
+            billboard : {
+                alignedAxis : {
+                    velocityReference : '#position'
                 }
             }
         };
@@ -551,20 +551,20 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can handle aligned axis expressed as a velocity reference within an interval', function() {
         var packet = {
-            position: {
-                epoch: '2016-06-17T12:00:00Z',
-                cartesian: [
+            position : {
+                epoch : '2016-06-17T12:00:00Z',
+                cartesian : [
                     0, 1, 2, 3,
                     60, 61, 122, 183
                 ]
             },
-            billboard: {
-                alignedAxis: [{
-                    interval: '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
-                    unitCartesian: [0, 1, 0]
+            billboard : {
+                alignedAxis : [{
+                    interval : '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
+                    unitCartesian : [0, 1, 0]
                 }, {
-                    interval: '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
-                    velocityReference: '#position'
+                    interval : '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
+                    velocityReference : '#position'
                 }]
             }
         };
@@ -600,7 +600,7 @@ describe('DataSources/CzmlDataSource', function() {
         };
 
         return CzmlDataSource.load(makeDocument(packet), {
-            sourceUri: source
+            sourceUri : source
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var imageProperty = entity.billboard.image;
@@ -721,19 +721,19 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can constrain a constant property by sending an interval in a subsequent packet', function() {
         var constantPacket = {
-            id: 'a',
-            billboard: {
-                scale: 1.0
+            id : 'a',
+            billboard : {
+                scale : 1.0
             }
         };
 
         // loading a value with an interval makes the previously constant property into a composite.
         var intervalPacket = {
-            id: 'a',
-            billboard: {
-                scale: {
-                    interval: '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
-                    number: 2.0
+            id : 'a',
+            billboard : {
+                scale : {
+                    interval : '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                    number : 2.0
                 }
             }
         };
@@ -753,17 +753,17 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can constrain a constant position property by sending an interval in a subsequent packet', function() {
         var constantPacket = {
-            id: 'a',
-            position: {
-                cartographicDegrees: [34, 117, 0]
+            id : 'a',
+            position : {
+                cartographicDegrees : [34, 117, 0]
             }
         };
         // loading a value with an interval makes the previously constant property into a composite.
         var intervalPacket = {
-            id: 'a',
-            position: {
-                interval: '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
-                cartographicDegrees: [40, 100, 0]
+            id : 'a',
+            position : {
+                interval : '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                cartographicDegrees : [40, 100, 0]
             }
         };
 
@@ -782,10 +782,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can convert a sampled property to a composite by sending intervals in a subsequent packet', function() {
         var sampledPacket = {
-            id: 'a',
-            billboard: {
-                scale: {
-                    number: [
+            id : 'a',
+            billboard : {
+                scale : {
+                    number : [
                         '2010-01-01T00:00:00Z', 1,
                         '2010-01-01T01:00:00Z', 2,
                         '2010-01-01T02:00:00Z', 3
@@ -795,11 +795,11 @@ describe('DataSources/CzmlDataSource', function() {
         };
         // loading a value with an interval makes the property into a composite.
         var intervalPacket = {
-            id: 'a',
-            billboard: {
-                scale: [{
-                    interval: '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
-                    number: [
+            id : 'a',
+            billboard : {
+                scale : [{
+                    interval : '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
+                    number : [
                         '2010-01-01T00:20:00Z', 10,
                         '2010-01-01T00:22:00Z', 20
                     ]
@@ -827,7 +827,7 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can convert a sampled position property to a composite by sending intervals in a subsequent packet', function() {
         var sampledPacket = {
-            id: 'a',
+            id : 'a',
             position : {
                 cartographicDegrees : [
                     '2010-01-01T00:00:00Z', 34, 117, 10000,
@@ -837,10 +837,10 @@ describe('DataSources/CzmlDataSource', function() {
         };
         // loading a value with an interval makes the property into a composite.
         var intervalPacket = {
-            id: 'a',
-            position: [{
-                interval: '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
-                cartographicDegrees: [
+            id : 'a',
+            position : [{
+                interval : '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
+                cartographicDegrees : [
                     '2010-01-01T00:20:00Z', 40, 100, 10000,
                     '2010-01-01T00:22:00Z', 40, 100, 20000
                 ]
@@ -1001,8 +1001,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can handle position specified as constant cartographicsDegrees', function() {
         var packet = {
-            position: {
-                cartographicDegrees: [34, 117, 10000]
+            position : {
+                cartographicDegrees : [34, 117, 10000]
             }
         };
 
@@ -1113,10 +1113,10 @@ describe('DataSources/CzmlDataSource', function() {
             expect(entity.position.referenceFrame).toEqual(ReferenceFrame.INERTIAL);
 
             packet = {
-                position: {
-                    referenceFrame: 'FIXED',
-                    epoch: JulianDate.toIso8601(epoch),
-                    cartesian: [1.0, 2.0, 3.0]
+                position : {
+                    referenceFrame : 'FIXED',
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian : [1.0, 2.0, 3.0]
                 }
             };
 
@@ -1160,9 +1160,9 @@ describe('DataSources/CzmlDataSource', function() {
             expect(entity.position.referenceFrame).toEqual(ReferenceFrame.INERTIAL);
 
             packet = {
-                position: {
-                    epoch: JulianDate.toIso8601(epoch),
-                    cartesian: [1.0, 2.0, 3.0]
+                position : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian : [1.0, 2.0, 3.0]
                 }
             };
             return dataSource.process(packet);
@@ -1298,7 +1298,7 @@ describe('DataSources/CzmlDataSource', function() {
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 8,
+                zIndex : 8,
                 classificationType : 'TERRAIN'
             }
         };
@@ -1334,7 +1334,7 @@ describe('DataSources/CzmlDataSource', function() {
             var entity = dataSource.entities.values[0];
 
             var validTime = TimeInterval.fromIso8601({
-                iso8601: packet.ellipse.interval
+                iso8601 : packet.ellipse.interval
             }).start;
             var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1414,7 +1414,7 @@ describe('DataSources/CzmlDataSource', function() {
         };
 
         var validTime = TimeInterval.fromIso8601({
-            iso8601: packet.ellipsoid.interval
+            iso8601 : packet.ellipsoid.interval
         }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1515,7 +1515,7 @@ describe('DataSources/CzmlDataSource', function() {
         };
 
         var validTime = TimeInterval.fromIso8601({
-            iso8601: packet.label.interval
+            iso8601 : packet.label.interval
         }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1646,15 +1646,15 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can handle orientation expressed as a velocity reference', function() {
         var packet = {
-            position: {
-                epoch: '2016-06-17T12:00:00Z',
-                cartesian: [
+            position : {
+                epoch : '2016-06-17T12:00:00Z',
+                cartesian : [
                     0, 1, 2, 3,
                     60, 61, 122, 183
                 ]
             },
-            orientation: {
-                velocityReference: '#position'
+            orientation : {
+                velocityReference : '#position'
             }
         };
 
@@ -1754,22 +1754,22 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load constant custom properties', function() {
         var testObject = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray = [2, 4, 16, 'test'];
 
         var packet = {
-            properties: {
-                constant_name: 'ABC',
-                constant_height: 8,
-                constant_object: {
-                    value: testObject
+            properties : {
+                constant_name : 'ABC',
+                constant_height : 8,
+                constant_object : {
+                    value : testObject
                 },
-                constant_array: {
-                    value: testArray
+                constant_array : {
+                    value : testArray
                 }
             }
         };
@@ -1785,25 +1785,25 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load custom properties which are constant with specified type', function() {
         var testObject = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray = [2, 4, 16, 'test'];
         var packet = {
-            properties: {
-                constant_name: {
-                    string: 'ABC'
+            properties : {
+                constant_name : {
+                    string : 'ABC'
                 },
-                constant_height: {
-                    number: 8
+                constant_height : {
+                    number : 8
                 },
-                constant_object: {
-                    object: testObject
+                constant_object : {
+                    object : testObject
                 },
-                constant_array: {
-                    array: testArray
+                constant_array : {
+                    array : testArray
                 }
             }
         };
@@ -1819,10 +1819,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load custom properties with one interval', function() {
         var packet = {
-            properties: {
-                changing_name: {
-                    interval: '2012/2014',
-                    value: 'ABC'
+            properties : {
+                changing_name : {
+                    interval : '2012/2014',
+                    value : 'ABC'
                 }
             }
         };
@@ -1837,10 +1837,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load custom properties with one interval with specified type', function() {
         var packet = {
-            properties: {
-                changing_name: {
-                    interval: '2012/2014',
-                    string: 'ABC'
+            properties : {
+                changing_name : {
+                    interval : '2012/2014',
+                    string : 'ABC'
                 }
             }
         };
@@ -1857,15 +1857,15 @@ describe('DataSources/CzmlDataSource', function() {
         var array1 = [1, 2, 3];
         var array2 = [4, 5, 6];
         var packet = {
-            properties: {
-                changing_array: [
+            properties : {
+                changing_array : [
                     {
-                        interval: '2012/2013',
-                        value: array1
+                        interval : '2012/2013',
+                        value : array1
                     },
                     {
-                        interval: '2013/2014',
-                        value: array2
+                        interval : '2013/2014',
+                        value : array2
                     }
                 ]
             }
@@ -1881,20 +1881,20 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load boolean custom properties with multiple intervals', function() {
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_boolean: [
+            id : 'MyID',
+            properties : {
+                custom_boolean : [
                     {
-                        interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
-                        boolean: true
+                        interval : '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                        boolean : true
                     },
                     {
-                        interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
-                        boolean: false
+                        interval : '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                        boolean : false
                     },
                     {
-                        interval: '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
-                        boolean: true
+                        interval : '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
+                        boolean : true
                     }
                 ]
             }
@@ -1916,15 +1916,15 @@ describe('DataSources/CzmlDataSource', function() {
         var array1 = [1, 2, 3];
         var array2 = [4, 5, 6];
         var packet = {
-            properties: {
-                changing_array: [
+            properties : {
+                changing_array : [
                     {
-                        interval: '2012/2013',
-                        array: array1
+                        interval : '2012/2013',
+                        array : array1
                     },
                     {
-                        interval: '2013/2014',
-                        array: array2
+                        interval : '2013/2014',
+                        array : array2
                     }
                 ]
             }
@@ -1940,11 +1940,11 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load sampled custom properties', function() {
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_cartesian: {
-                    epoch: '2012-04-02T12:00:00Z',
-                    cartesian: [
+            id : 'MyID',
+            properties : {
+                custom_cartesian : {
+                    epoch : '2012-04-02T12:00:00Z',
+                    cartesian : [
                         0, 1, 2, 3,
                         60, 4, 5, 6,
                         120, 7, 8, 9
@@ -1973,105 +1973,105 @@ describe('DataSources/CzmlDataSource', function() {
         var interval1 = '2012/2013';
         var interval2 = '2013/2014';
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_array_constant: {
-                    array: [1, 2, 3]
+            id : 'MyID',
+            properties : {
+                custom_array_constant : {
+                    array : [1, 2, 3]
                 },
-                custom_array_interval: [{
-                    interval: interval1,
-                    array: [1, 2, 3]
+                custom_array_interval : [{
+                    interval : interval1,
+                    array : [1, 2, 3]
                 }, {
-                    interval: interval2,
-                    array: [4, 5, 6]
+                    interval : interval2,
+                    array : [4, 5, 6]
                 }],
-                custom_boolean_constant: {
-                    boolean: true
+                custom_boolean_constant : {
+                    boolean : true
                 },
-                custom_boolean_interval: [{
-                    interval: interval1,
-                    boolean: true
+                custom_boolean_interval : [{
+                    interval : interval1,
+                    boolean : true
                 }, {
-                    interval: interval2,
-                    boolean: false
+                    interval : interval2,
+                    boolean : false
                 }],
-                custom_boundingRectangle_constant: {
-                    boundingRectangle: [20, 30, 10, 11]
+                custom_boundingRectangle_constant : {
+                    boundingRectangle : [20, 30, 10, 11]
                 },
-                custom_boundingRectangle_interval: [{
-                    interval: interval1,
-                    boundingRectangle: [20, 30, 10, 11]
+                custom_boundingRectangle_interval : [{
+                    interval : interval1,
+                    boundingRectangle : [20, 30, 10, 11]
                 }, {
-                    interval: interval2,
-                    boundingRectangle: [21, 31, 11, 12]
+                    interval : interval2,
+                    boundingRectangle : [21, 31, 11, 12]
                 }],
-                custom_boundingRectangle_sampled: {
-                    epoch: '2012-06-01',
-                    boundingRectangle: [
+                custom_boundingRectangle_sampled : {
+                    epoch : '2012-06-01',
+                    boundingRectangle : [
                         0, 20, 30, 10, 11,
                         60, 21, 31, 11, 12
                     ]
                 },
-                custom_cartesian2_constant: {
-                    cartesian2: [20, 30]
+                custom_cartesian2_constant : {
+                    cartesian2 : [20, 30]
                 },
-                custom_cartesian2_interval: [{
-                    interval: interval1,
-                    cartesian2: [20, 30]
+                custom_cartesian2_interval : [{
+                    interval : interval1,
+                    cartesian2 : [20, 30]
                 }, {
-                    interval: interval2,
-                    cartesian2: [21, 31]
+                    interval : interval2,
+                    cartesian2 : [21, 31]
                 }],
-                custom_cartesian2_sampled: {
-                    epoch: '2012-06-01',
-                    cartesian2: [
+                custom_cartesian2_sampled : {
+                    epoch : '2012-06-01',
+                    cartesian2 : [
                         0, 20, 30,
                         60, 21, 31
                     ]
                 },
-                custom_cartesian_constant: {
-                    cartesian: [10, 11, 12]
+                custom_cartesian_constant : {
+                    cartesian : [10, 11, 12]
                 },
-                custom_cartesian_interval: [{
-                    interval: interval1,
-                    cartesian: [10, 11, 12]
+                custom_cartesian_interval : [{
+                    interval : interval1,
+                    cartesian : [10, 11, 12]
                 }, {
-                    interval: interval2,
-                    cartesian: [13, 14, 15]
+                    interval : interval2,
+                    cartesian : [13, 14, 15]
                 }],
-                custom_cartesian_sampled: {
-                    epoch: '2012-06-01',
-                    cartesian: [
+                custom_cartesian_sampled : {
+                    epoch : '2012-06-01',
+                    cartesian : [
                         0, 10, 11, 12,
                         60, 13, 14, 15
                     ]
                 },
-                custom_color_constant: {
-                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                custom_color_constant : {
+                    rgbaf : [0.1, 0.2, 0.3, 0.4]
                 },
-                custom_color_interval: [{
-                    interval: interval1,
-                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                custom_color_interval : [{
+                    interval : interval1,
+                    rgbaf : [0.1, 0.2, 0.3, 0.4]
                 }, {
-                    interval: interval2,
-                    rgbaf: [0.5, 0.6, 0.7, 0.8]
+                    interval : interval2,
+                    rgbaf : [0.5, 0.6, 0.7, 0.8]
                 }],
-                custom_color_sampled: {
-                    epoch: '2012-06-01',
-                    rgbaf: [
+                custom_color_sampled : {
+                    epoch : '2012-06-01',
+                    rgbaf : [
                         0, 0.1, 0.2, 0.3, 0.4,
                         60, 0.5, 0.6, 0.7, 0.8
                     ]
                 },
-                custom_date_constant: {
-                    date: '2014-06-01'
+                custom_date_constant : {
+                    date : '2014-06-01'
                 },
-                custom_date_interval: [{
-                    interval: interval1,
-                    date: '2014-06-01'
+                custom_date_interval : [{
+                    interval : interval1,
+                    date : '2014-06-01'
                 }, {
-                    interval: interval2,
-                    date: '2015-06-01'
+                    interval : interval2,
+                    date : '2015-06-01'
                 }]
             }
         };
@@ -2171,26 +2171,26 @@ describe('DataSources/CzmlDataSource', function() {
     it('can delete an entire property', function() {
         function createDataSource() {
             return CzmlDataSource.load([{
-                id: 'document',
-                version: '1.0'
+                id : 'document',
+                version : '1.0'
             }, {
-                id: 'test-constant',
-                billboard: {
-                    scale: 1
+                id : 'test-constant',
+                billboard : {
+                    scale : 1
                 }
             }, {
-                id: 'test-interval',
-                billboard: {
-                    scale: [{
-                        interval: '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-                        number: 1
+                id : 'test-interval',
+                billboard : {
+                    scale : [{
+                        interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                        number : 1
                     }]
                 }
             }, {
-                id: 'test-sampled',
-                billboard: {
-                    scale: {
-                        number: [
+                id : 'test-sampled',
+                billboard : {
+                    scale : {
+                        number : [
                             '2012-03-15T10:00:00Z', 1
                         ]
                     }
@@ -2199,50 +2199,50 @@ describe('DataSources/CzmlDataSource', function() {
         }
 
         var deletePackets = [{
-            id: 'test-constant',
-            billboard: {
-                scale: {
-                    delete: true
+            id : 'test-constant',
+            billboard : {
+                scale : {
+                    delete : true
                 }
             }
         }, {
-            id: 'test-interval',
-            billboard: {
-                scale: {
-                    delete: true
+            id : 'test-interval',
+            billboard : {
+                scale : {
+                    delete : true
                 }
             }
         }, {
-            id: 'test-sampled',
-            billboard: {
-                scale: {
-                    delete: true
+            id : 'test-sampled',
+            billboard : {
+                scale : {
+                    delete : true
                 }
             }
         }];
 
         var deleteMaxIntervalPackets = [{
-            id: 'test-constant',
-            billboard: {
-                scale: {
-                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                    delete: true
+            id : 'test-constant',
+            billboard : {
+                scale : {
+                    interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete : true
                 }
             }
         }, {
-            id: 'test-interval',
-            billboard: {
-                scale: {
-                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                    delete: true
+            id : 'test-interval',
+            billboard : {
+                scale : {
+                    interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete : true
                 }
             }
         }, {
-            id: 'test-sampled',
-            billboard: {
-                scale: {
-                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                    delete: true
+            id : 'test-sampled',
+            billboard : {
+                scale : {
+                    interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete : true
                 }
             }
         }];
@@ -2295,13 +2295,13 @@ describe('DataSources/CzmlDataSource', function() {
     it('can delete a custom property', function() {
         function createDataSource() {
             return CzmlDataSource.load([{
-                id: 'document',
-                version: '1.0'
+                id : 'document',
+                version : '1.0'
             }, {
-                id: 'test',
-                properties: {
-                    custom: {
-                        number: [
+                id : 'test',
+                properties : {
+                    custom : {
+                        number : [
                             '2012-03-15T10:00:00Z', 1
                         ]
                     }
@@ -2310,10 +2310,10 @@ describe('DataSources/CzmlDataSource', function() {
         }
 
         var deletePackets = [{
-            id: 'test',
-            properties: {
-                custom: {
-                    delete: true
+            id : 'test',
+            properties : {
+                custom : {
+                    delete : true
                 }
             }
         }];
@@ -2347,24 +2347,24 @@ describe('DataSources/CzmlDataSource', function() {
     it('can delete an entire position property', function() {
         function createDataSource() {
             return CzmlDataSource.load([{
-                id: 'document',
-                version: '1.0'
+                id : 'document',
+                version : '1.0'
             }, {
-                id: 'test-constant',
-                position: {
-                    cartographicDegrees: [34, 117, 10000]
+                id : 'test-constant',
+                position : {
+                    cartographicDegrees : [34, 117, 10000]
                 }
             }, {
-                id: 'test-interval',
-                position: [{
-                    interval: '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-                    cartographicDegrees: [34, 117, 10000]
+                id : 'test-interval',
+                position : [{
+                    interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                    cartographicDegrees : [34, 117, 10000]
                 }]
 
             }, {
-                id: 'test-sampled',
-                position: {
-                    cartographicDegrees: [
+                id : 'test-sampled',
+                position : {
+                    cartographicDegrees : [
                         '2012-03-15T10:00:00Z', 34, 117, 10000
                     ]
                 }
@@ -2372,39 +2372,39 @@ describe('DataSources/CzmlDataSource', function() {
         }
 
         var deletePackets = [{
-            id: 'test-constant',
-            position: {
-                delete: true
+            id : 'test-constant',
+            position : {
+                delete : true
             }
         }, {
-            id: 'test-interval',
-            position: {
-                delete: true
+            id : 'test-interval',
+            position : {
+                delete : true
             }
         }, {
-            id: 'test-sampled',
-            position: {
-                delete: true
+            id : 'test-sampled',
+            position : {
+                delete : true
             }
         }];
 
         var deleteMaxIntervalPackets = [{
-            id: 'test-constant',
-            position: {
-                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                delete: true
+            id : 'test-constant',
+            position : {
+                interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete : true
             }
         }, {
-            id: 'test-interval',
-            position: {
-                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                delete: true
+            id : 'test-interval',
+            position : {
+                interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete : true
             }
         }, {
-            id: 'test-sampled',
-            position: {
-                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
-                delete: true
+            id : 'test-sampled',
+            position : {
+                interval : TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete : true
             }
         }];
 
@@ -2455,10 +2455,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete samples from a sampled property', function() {
         var packet = {
-            id: 'id',
-            billboard: {
-                scale: {
-                    number: [
+            id : 'id',
+            billboard : {
+                scale : {
+                    number : [
                         '2012-03-15T10:00:00Z', 1,
                         '2012-03-15T11:00:00Z', 5,
                         '2012-03-15T12:00:00Z', 3
@@ -2480,11 +2480,11 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    billboard: {
-                        scale: {
-                            interval: '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
-                            delete: true
+                    id : 'id',
+                    billboard : {
+                        scale : {
+                            interval : '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
+                            delete : true
                         }
                     }
                 };
@@ -2503,10 +2503,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete samples from a sampled custom property', function() {
         var packet = {
-            id: 'id',
-            properties: {
-                custom: {
-                    number: [
+            id : 'id',
+            properties : {
+                custom : {
+                    number : [
                         '2012-03-15T10:00:00Z', 1,
                         '2012-03-15T11:00:00Z', 5,
                         '2012-03-15T12:00:00Z', 3
@@ -2528,11 +2528,11 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    properties: {
-                        custom: {
-                            interval: '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
-                            delete: true
+                    id : 'id',
+                    properties : {
+                        custom : {
+                            interval : '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
+                            delete : true
                         }
                     }
                 };
@@ -2551,10 +2551,10 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete samples from a sampled position property', function() {
         var packet = {
-            id: 'id',
-            position: {
-                epoch: '2016-06-17T12:00:00Z',
-                cartesian: [
+            id : 'id',
+            position : {
+                epoch : '2016-06-17T12:00:00Z',
+                cartesian : [
                     0, 1, 2, 3,
                     60, 61, 122, 183,
                     120, 3, 4, 5
@@ -2575,10 +2575,10 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    position: {
-                        interval: '2016-06-17T12:00:45Z/2016-06-17T12:01:10Z',
-                        delete: true
+                    id : 'id',
+                    position : {
+                        interval : '2016-06-17T12:00:45Z/2016-06-17T12:01:10Z',
+                        delete : true
                     }
                 };
                 return dataSource.process(deletePacket);
@@ -2596,14 +2596,14 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete interval from an interval property', function() {
         var packet = {
-            id: 'id',
-            billboard: {
-                scale: [{
-                    interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                    number: 2
+            id : 'id',
+            billboard : {
+                scale : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    number : 2
                 }, {
-                    interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                    number: 6
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    number : 6
                 }]
             }
         };
@@ -2620,11 +2620,11 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    billboard: {
-                        scale: {
-                            interval: '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
-                            delete: true
+                    id : 'id',
+                    billboard : {
+                        scale : {
+                            interval : '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
+                            delete : true
                         }
                     }
                 };
@@ -2643,13 +2643,13 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete interval from an interval position property', function() {
         var packet = {
-            id: 'id',
-            position: [{
-                interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                cartesian: [1, 2, 3]
+            id : 'id',
+            position : [{
+                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                cartesian : [1, 2, 3]
             }, {
-                interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                cartesian: [4, 5, 6]
+                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian : [4, 5, 6]
             }]
         };
 
@@ -2665,10 +2665,10 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    position: {
-                        interval: '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
-                        delete: true
+                    id : 'id',
+                    position : {
+                        interval : '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
+                        delete : true
                     }
                 };
                 return dataSource.process(deletePacket);
@@ -2686,22 +2686,22 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete samples from a composite property', function() {
         var packet = {
-            id: 'id',
-            billboard: {
-                scale: [{
-                    interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                    epoch: '2013-01-01T00:00:00Z',
-                    number: [
+            id : 'id',
+            billboard : {
+                scale : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    epoch : '2013-01-01T00:00:00Z',
+                    number : [
                         0, 1,
                         30, 6,
                         60, 3
                     ]
                 }, {
-                    interval: '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
-                    number: 33
+                    interval : '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
+                    number : 33
                 }, {
-                    interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                    number: [
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    number : [
                         '2013-01-01T01:00:00Z', 9,
                         '2013-01-01T01:00:30Z', 19,
                         '2013-01-01T01:01:00Z', 11
@@ -2727,11 +2727,11 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    billboard: {
-                        scale: {
-                            interval: '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
-                            delete: true
+                    id : 'id',
+                    billboard : {
+                        scale : {
+                            interval : '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
+                            delete : true
                         }
                     }
                 };
@@ -2753,21 +2753,21 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can delete samples from a composite position property', function() {
         var packet = {
-            id: 'id',
-            position: [{
-                interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                epoch: '2013-01-01T00:00:00Z',
-                cartesian: [
+            id : 'id',
+            position : [{
+                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                epoch : '2013-01-01T00:00:00Z',
+                cartesian : [
                     0, 1, 2, 3,
                     30, 6, 7, 8,
                     60, 3, 4, 5
                 ]
             }, {
-                interval: '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
-                cartesian: [15, 16, 17]
+                interval : '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
+                cartesian : [15, 16, 17]
             }, {
-                interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                cartesian: [
+                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian : [
                     '2013-01-01T01:00:00Z', 9, 15, 10,
                     '2013-01-01T01:00:30Z', 19, 16, 11,
                     '2013-01-01T01:01:00Z', 11, 17, 12
@@ -2792,10 +2792,10 @@ describe('DataSources/CzmlDataSource', function() {
             })
             .then(function(dataSource) {
                 var deletePacket = {
-                    id: 'id',
-                    position: {
-                        interval: '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
-                        delete: true
+                    id : 'id',
+                    position : {
+                        interval : '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
+                        delete : true
                     }
                 };
                 return dataSource.process(deletePacket);
@@ -2816,22 +2816,22 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load custom properties in a way that allows CompositeEntityCollection to work', function() {
         var testObject1 = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray1 = [2, 4, 16, 'test'];
         var packet1 = {
-            id: 'test',
-            properties: {
-                constant_name: 'ABC',
-                constant_height: 8,
-                constant_object: {
-                    value: testObject1
+            id : 'test',
+            properties : {
+                constant_name : 'ABC',
+                constant_height : 8,
+                constant_object : {
+                    value : testObject1
                 },
-                constant_array: {
-                    value: testArray1
+                constant_array : {
+                    value : testArray1
                 }
             }
         };
@@ -2851,9 +2851,9 @@ describe('DataSources/CzmlDataSource', function() {
 
         // Load a new packet into dataSource2 and it should take precedence in the composite.
         var packet2 = {
-            id: 'test',
-            properties: {
-                constant_name: 'DEF'
+            id : 'test',
+            properties : {
+                constant_name : 'DEF'
             }
         };
 
@@ -2867,18 +2867,18 @@ describe('DataSources/CzmlDataSource', function() {
 
         // Changed values should be mirrored in the composite, too.
         var testObject3 = {
-            some: 'value'
+            some : 'value'
         };
         var testArray3 = ['not', 'the', 'same', 4];
         var packet3 = {
-            id: 'test',
-            properties: {
-                constant_height: 9,
-                constant_object: {
-                    value: testObject3
+            id : 'test',
+            properties : {
+                constant_height : 9,
+                constant_object : {
+                    value : testObject3
                 },
-                constant_array: {
-                    value: testArray3
+                constant_array : {
+                    value : testArray3
                 }
             }
         };
@@ -2899,15 +2899,15 @@ describe('DataSources/CzmlDataSource', function() {
         };
 
         var packet2 = {
-            id: 'testObject',
-            availability: '2000-02-02/2001-02-02'
+            id : 'testObject',
+            availability : '2000-02-02/2001-02-02'
         };
 
         var dataSource = new CzmlDataSource();
         return dataSource.process(makeDocument(packet1)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval = TimeInterval.fromIso8601({
-                iso8601: packet1.availability
+                iso8601 : packet1.availability
             });
             expect(entity.availability.length).toEqual(1);
             expect(entity.availability.get(0)).toEqual(interval);
@@ -2916,7 +2916,7 @@ describe('DataSources/CzmlDataSource', function() {
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval = TimeInterval.fromIso8601({
-                iso8601: packet2.availability
+                iso8601 : packet2.availability
             });
             expect(entity.availability.length).toEqual(1);
             expect(entity.availability.get(0)).toEqual(interval);
@@ -2938,10 +2938,10 @@ describe('DataSources/CzmlDataSource', function() {
             var entity = dataSource.entities.values[0];
 
             var interval1 = TimeInterval.fromIso8601({
-                iso8601: packet1.availability[0]
+                iso8601 : packet1.availability[0]
             });
             var interval2 = TimeInterval.fromIso8601({
-                iso8601: packet1.availability[1]
+                iso8601 : packet1.availability[1]
             });
             expect(entity.availability.length).toEqual(2);
             expect(entity.availability.get(0)).toEqual(interval1);
@@ -2951,10 +2951,10 @@ describe('DataSources/CzmlDataSource', function() {
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval1 = TimeInterval.fromIso8601({
-                iso8601: packet2.availability[0]
+                iso8601 : packet2.availability[0]
             });
             var interval2 = TimeInterval.fromIso8601({
-                iso8601: packet2.availability[1]
+                iso8601 : packet2.availability[1]
             });
             expect(entity.availability.length).toEqual(2);
             expect(entity.availability.get(0)).toEqual(interval1);
@@ -3147,7 +3147,7 @@ describe('DataSources/CzmlDataSource', function() {
                 closeTop : false,
                 closeBottom : false,
                 shadows : 'ENABLED',
-                zIndex: 3,
+                zIndex : 3,
                 classificationType : 'TERRAIN'
             }
         };
@@ -3210,8 +3210,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load constant polygon positions', function() {
         var packet = {
-            polygon: {
-                positions: {
+            polygon : {
+                positions : {
                     cartographicDegrees : [
                         -50, 20, 0,
                         -50, 40, 0,
@@ -3245,8 +3245,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load constant polygon positions with holes', function() {
         var packet = {
-            polygon: {
-                positions: {
+            polygon : {
+                positions : {
                     cartographicDegrees : [
                         -50, 20, 0,
                         -50, 40, 0,
@@ -3254,7 +3254,7 @@ describe('DataSources/CzmlDataSource', function() {
                         -40, 20, 0
                     ]
                 },
-                holes: {
+                holes : {
                     cartographicDegrees : [
                         [
                             -48.2, 39, 0,
@@ -3288,8 +3288,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load interval polygon positions', function() {
         var packet = {
-            polygon: {
-                positions: [{
+            polygon : {
+                positions : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartographicDegrees : [
                         -50, 20, 0,
@@ -3299,7 +3299,7 @@ describe('DataSources/CzmlDataSource', function() {
                     ]
                 }, {
                     interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
-                    cartographicDegrees: [
+                    cartographicDegrees : [
                         -35, 50, 0,
                         -35, 10, 0,
                         -45, 30, 0
@@ -3327,8 +3327,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load interval polygon positions with holes expressed as degrees', function() {
         var packet = {
-            polygon: {
-                positions: [{
+            polygon : {
+                positions : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartographicDegrees : [
                         -50, 20, 0,
@@ -3338,13 +3338,13 @@ describe('DataSources/CzmlDataSource', function() {
                     ]
                 }, {
                     interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
-                    cartographicDegrees: [
+                    cartographicDegrees : [
                         -35, 50, 0,
                         -35, 10, 0,
                         -45, 30, 0
                     ]
                 }],
-                holes: [{
+                holes : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartographicDegrees : [
                         [
@@ -3361,7 +3361,7 @@ describe('DataSources/CzmlDataSource', function() {
                     ]
                 }, {
                     interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
-                    cartographicDegrees: [
+                    cartographicDegrees : [
                         [
                             -40, 34, 0,
                             -37, 26, 0,
@@ -3397,8 +3397,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load interval polygon positions with holes expressed as radians', function() {
         var packet = {
-            polygon: {
-                positions: [{
+            polygon : {
+                positions : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartographicRadians : [
                         -0.8726646259971648, 0.3490658503988659, 0,
@@ -3407,7 +3407,7 @@ describe('DataSources/CzmlDataSource', function() {
                         -0.6981317007977318, 0.3490658503988659, 0
                     ]
                 }],
-                holes: [{
+                holes : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartographicRadians : [
                         [
@@ -3441,8 +3441,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('can load interval polygon positions with holes expressed as cartesian', function() {
         var packet = {
-            polygon: {
-                positions: [{
+            polygon : {
+                positions : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartesian : [
                         -35, 50, 0,
@@ -3450,7 +3450,7 @@ describe('DataSources/CzmlDataSource', function() {
                         -45, 30, 0
                     ]
                 }],
-                holes: [{
+                holes : [{
                     interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
                     cartesian : [
                         [
@@ -3521,7 +3521,7 @@ describe('DataSources/CzmlDataSource', function() {
                         'target3#position'
                     ]
                 },
-                holes: {
+                holes : {
                     references : [
                         [
                             'target4#position',
@@ -3560,22 +3560,22 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('reports correct value of isConstant for polygon hierarchy', function() {
         var document = [{
-            id: 'document',
-            version: '1.0'
+            id : 'document',
+            version : '1.0'
         }, {
-            id: 'constantPositionsTimeVaryingHoles',
-            polygon: {
-                positions: {
-                    cartographicDegrees: [
+            id : 'constantPositionsTimeVaryingHoles',
+            polygon : {
+                positions : {
+                    cartographicDegrees : [
                         -50, 20, 0,
                         -50, 40, 0,
                         -40, 40, 0,
                         -40, 20, 0
                     ]
                 },
-                holes: [{
-                    interval: '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
-                    cartographicDegrees: [
+                holes : [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees : [
                         [
                             -45.2, 21, 0,
                             -43.5, 27, 0,
@@ -3583,8 +3583,8 @@ describe('DataSources/CzmlDataSource', function() {
                         ]
                     ]
                 }, {
-                    interval: '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
-                    cartographicDegrees: [
+                    interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees : [
                         [
                             -40, 34, 0,
                             -37, 26, 0,
@@ -3594,26 +3594,26 @@ describe('DataSources/CzmlDataSource', function() {
                 }]
             }
         }, {
-            id: 'timeVaryingPositionsConstantHoles',
-            polygon: {
-                positions: [{
-                    interval: '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
-                    cartographicDegrees: [
+            id : 'timeVaryingPositionsConstantHoles',
+            polygon : {
+                positions : [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees : [
                         -50, 20, 0,
                         -50, 40, 0,
                         -40, 40, 0,
                         -40, 20, 0
                     ]
                 }, {
-                    interval: '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
-                    cartographicDegrees: [
+                    interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees : [
                         -35, 50, 0,
                         -35, 10, 0,
                         -45, 30, 0
                     ]
                 }],
-                holes: {
-                    cartographicDegrees: [
+                holes : {
+                    cartographicDegrees : [
                         [
                             -45.2, 21, 0,
                             -43.5, 27, 0,
@@ -3843,7 +3843,7 @@ describe('DataSources/CzmlDataSource', function() {
                 gltf : './Data/Models/Box-Articulations/Box-Articulations.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
                 silhouetteColor : {
                     rgbaf : [1.0, 0.0, 0.0, 1.0]
                 },
@@ -3944,9 +3944,9 @@ describe('DataSources/CzmlDataSource', function() {
     it('can load node transformations expressed as intervals', function() {
         var packet = {
             model : {
-                interval: '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
+                interval : '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
                 nodeTransformations : [{
-                    interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                    interval : '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
                     Mesh : {
                         scale : {
                             cartesian : [1.0, 2.0, 3.0]
@@ -3959,7 +3959,7 @@ describe('DataSources/CzmlDataSource', function() {
                         }
                     }
                 }, {
-                    interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                    interval : '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
                     Mesh : {
                         scale : {
                             cartesian : [10.0, 20.0, 30.0]
@@ -4005,14 +4005,14 @@ describe('DataSources/CzmlDataSource', function() {
     it('can load articulations expressed as intervals', function() {
         var packet = {
             model : {
-                interval: '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
+                interval : '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
                 articulations : [{
-                    interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                    interval : '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
                     'SampleArticulation Yaw' : 30,
                     'SampleArticulation Pitch' : 45,
                     'SampleArticulation Roll' : 60
                 }, {
-                    interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                    interval : '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
                     'SampleArticulation Yaw' : 20,
                     'SampleArticulation Pitch' : 25,
                     'SampleArticulation Roll' : 30
@@ -4174,8 +4174,8 @@ describe('DataSources/CzmlDataSource', function() {
 
     function printInterval(startTime, stopTime) {
         return TimeInterval.toIso8601(new TimeInterval({
-            start: startTime,
-            stop: stopTime
+            start : startTime,
+            stop : stopTime
         }));
     }
 
@@ -4187,7 +4187,7 @@ describe('DataSources/CzmlDataSource', function() {
         var afterTime = JulianDate.fromIso8601('2012-03-15T12:00:01Z');
 
         var packet = {
-            id: 'obj',
+            id : 'obj',
             polygon : {
                 material : [{
                     interval : printInterval(solidTime, gridTime1),
@@ -4246,13 +4246,13 @@ describe('DataSources/CzmlDataSource', function() {
         }).then(function(dataSource) {
             // processing new data into an existing interval updates the existing material property
             secondPacket = {
-                id: 'obj',
-                polygon: {
-                    material: [{
+                id : 'obj',
+                polygon : {
+                    material : [{
                         interval : printInterval(solidTime, gridTime1),
-                        solidColor: {
-                            color: {
-                                rgba: [200, 100, 50, 255]
+                        solidColor : {
+                            color : {
+                                rgba : [200, 100, 50, 255]
                             }
                         }
                     }]
@@ -4559,8 +4559,8 @@ describe('DataSources/CzmlDataSource', function() {
                     }
                 },
                 length : 5,
-                topRadius: 6,
-                bottomRadius: 7,
+                topRadius : 6,
+                bottomRadius : 7,
                 show : true,
                 outline : true,
                 outlineColor : {
@@ -4611,7 +4611,7 @@ describe('DataSources/CzmlDataSource', function() {
                 extrudedHeight : 2,
                 granularity : 3,
                 height : 4,
-                width: 9,
+                width : 9,
                 show : true,
                 outline : true,
                 outlineColor : {
@@ -4619,7 +4619,7 @@ describe('DataSources/CzmlDataSource', function() {
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 5,
+                zIndex : 5,
                 classificationType : 'TERRAIN'
             }
         };
@@ -4893,8 +4893,8 @@ describe('DataSources/CzmlDataSource', function() {
                         color : {
                             rgbaf : [0.1, 0.2, 0.3, 0.4]
                         },
-                        dashLength: 16.0,
-                        dashPattern: 7.0
+                        dashLength : 16.0,
+                        dashPattern : 7.0
                     }
                 }
             }
@@ -4981,9 +4981,9 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('ignores color values not expressed as a known type', function() {
         var packet = {
-            billboard: {
-                color: {
-                    invalidType: 'someValue'
+            billboard : {
+                color : {
+                    invalidType : 'someValue'
                 }
             }
         };
@@ -4998,9 +4998,9 @@ describe('DataSources/CzmlDataSource', function() {
 
     it('ignores rectangle values not expressed as a known type', function() {
         var packet = {
-            rectangle: {
-                coordinates: {
-                    invalidType: 'someValue'
+            rectangle : {
+                coordinates : {
+                    invalidType : 'someValue'
                 }
             }
         };
@@ -5042,7 +5042,7 @@ describe('DataSources/CzmlDataSource', function() {
             id : 'arcType-overrides-followSurface',
             polyline : {
                 followSurface : true,
-                arcType: 'RHUMB'
+                arcType : 'RHUMB'
             }
         }];
 

@@ -209,7 +209,7 @@ import PropertyBag from './PropertyBag.js';
          * @type {Property}
          * @default Color.RED
          */
-        silhouetteColor: createPropertyDescriptor('silhouetteColor'),
+        silhouetteColor : createPropertyDescriptor('silhouetteColor'),
 
         /**
          * Gets or sets the numeric Property specifying the size of the silhouette in pixels.

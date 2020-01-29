@@ -20,7 +20,7 @@ describe('Core/CorridorGeometry', function() {
     it('throws without width', function() {
         expect(function() {
             return new CorridorGeometry({
-                positions: [new Cartesian3()]
+                positions : [new Cartesian3()]
             });
         }).toThrowDeveloperError();
     });
@@ -31,14 +31,14 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -30.0,
                 90.0, -30.0
             ]),
-            width: 10000
+            width : 10000
         }));
         expect(geometry).toBeUndefined();
 
         geometry = CorridorGeometry.createGeometry(new CorridorGeometry({
-            positions :  [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
+            positions : [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
                           new Cartesian3(-1349046.4811926484, -5062228.688739784, 3621885.0521561056)],
-            width: 10000
+            width : 10000
         }));
         expect(geometry).toBeUndefined();
     });
@@ -50,7 +50,7 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -67,7 +67,7 @@ describe('Core/CorridorGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -88,9 +88,9 @@ describe('Core/CorridorGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         var numVertices = 72; // 6 positions x 4 for a box at each position x 3 to duplicate for normals
@@ -106,9 +106,9 @@ describe('Core/CorridorGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         var numVertices = 72;
@@ -128,9 +128,9 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 12;
@@ -150,10 +150,10 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 72;
@@ -175,10 +175,10 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            extrudedHeight : 30000,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 72;
@@ -199,7 +199,7 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -31.0,
                 91.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -215,7 +215,7 @@ describe('Core/CorridorGeometry', function() {
                 90.0, -31.0,
                 89.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 30000
         }));
 
@@ -232,7 +232,7 @@ describe('Core/CorridorGeometry', function() {
                 89.0, -31.0,
                 89.0, -32.0
             ]),
-            cornerType: CornerType.ROUNDED,
+            cornerType : CornerType.ROUNDED,
             width : 30000
         }));
 
@@ -254,7 +254,7 @@ describe('Core/CorridorGeometry', function() {
                  89.0, -31.0,
                  89.0, -32.0
             ]),
-            cornerType: CornerType.BEVELED,
+            cornerType : CornerType.BEVELED,
             width : 30000
         }));
 
@@ -266,13 +266,13 @@ describe('Core/CorridorGeometry', function() {
         var m = CorridorGeometry.createGeometry(new CorridorGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : Cartesian3.fromDegreesArray([
-                 2.00571672577652,52.7781459942399,
-                 1.99188457974115,52.7764958852886,
-                 2.01325961458495,52.7674170680511,
-                 1.98708058340534,52.7733979856253,
-                 2.00634853946644,52.7650460748473
+                 2.00571672577652, 52.7781459942399,
+                 1.99188457974115, 52.7764958852886,
+                 2.01325961458495, 52.7674170680511,
+                 1.98708058340534, 52.7733979856253,
+                 2.00634853946644, 52.7650460748473
             ]),
-            cornerType: CornerType.BEVELED,
+            cornerType : CornerType.BEVELED,
             width : 100
         }));
 
@@ -288,7 +288,7 @@ describe('Core/CorridorGeometry', function() {
                 -67.655, 15.0,
                 -67.655, 20.0
             ]),
-            cornerType: CornerType.BEVELED,
+            cornerType : CornerType.BEVELED,
             width : 400000,
             granularity : Math.PI / 6.0
         }));
@@ -332,7 +332,7 @@ describe('Core/CorridorGeometry', function() {
                 -67.655, 15.0,
                 -67.655, 20.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 1,
             granularity : Math.PI / 6.0
         });
@@ -352,7 +352,7 @@ describe('Core/CorridorGeometry', function() {
                 -67.655, 15.0,
                 -67.655, 20.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 1
         };
         var geometry = new CorridorGeometry(options);
@@ -390,7 +390,7 @@ describe('Core/CorridorGeometry', function() {
                 -67.655, 15.0,
                 -67.655, 20.0
             ]),
-            cornerType: CornerType.MITERED,
+            cornerType : CornerType.MITERED,
             width : 1,
             granularity : Math.PI / 6.0
         });
@@ -413,7 +413,7 @@ describe('Core/CorridorGeometry', function() {
     var corridor = new CorridorGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         positions : positions,
-        cornerType: CornerType.BEVELED,
+        cornerType : CornerType.BEVELED,
         width : 30000.0,
         granularity : 0.1
     });

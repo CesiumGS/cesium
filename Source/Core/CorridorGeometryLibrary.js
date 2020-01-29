@@ -213,9 +213,9 @@ import Quaternion from './Quaternion.js';
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.generateArc({
-                        positions: scaleArray2,
-                        granularity: granularity,
-                        ellipsoid: ellipsoid
+                        positions : scaleArray2,
+                        granularity : granularity,
+                        ellipsoid : ellipsoid
                     });
                     calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     if (saveAttributes) {
@@ -242,9 +242,9 @@ import Quaternion from './Quaternion.js';
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.generateArc({
-                        positions: scaleArray2,
-                        granularity: granularity,
-                        ellipsoid: ellipsoid
+                        positions : scaleArray2,
+                        granularity : granularity,
+                        ellipsoid : ellipsoid
                     });
                     calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     if (saveAttributes) {
@@ -274,9 +274,9 @@ import Quaternion from './Quaternion.js';
         scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
         scaleArray2[1] = Cartesian3.clone(position, scaleArray2[1]);
         subdividedPositions = PolylinePipeline.generateArc({
-            positions: scaleArray2,
-            granularity: granularity,
-            ellipsoid: ellipsoid
+            positions : scaleArray2,
+            granularity : granularity,
+            ellipsoid : ellipsoid
         });
         calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
         if (saveAttributes) {

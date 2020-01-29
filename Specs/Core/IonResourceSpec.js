@@ -9,10 +9,10 @@ describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
-        type: '3DTILES',
-        url: 'https://assets.cesium.com/' + assetId + '/tileset.json',
-        accessToken: 'not_really_a_refresh_token',
-        attributions: []
+        type : '3DTILES',
+        url : 'https://assets.cesium.com/' + assetId + '/tileset.json',
+        accessToken : 'not_really_a_refresh_token',
+        attributions : []
     };
 
     it('constructs with expected values', function() {
@@ -23,9 +23,9 @@ describe('Core/IonResource', function() {
         expect(resource).toBeInstanceOf(Resource);
         expect(resource._ionEndpoint).toEqual(endpoint);
         expect(Resource.call).toHaveBeenCalledWith(resource, {
-            url: endpoint.url,
-            retryCallback: resource.retryCallback,
-            retryAttempts: 1
+            url : endpoint.url,
+            retryCallback : resource.retryCallback,
+            retryAttempts : 1
         });
     });
 
@@ -54,10 +54,10 @@ describe('Core/IonResource', function() {
     it('fromAssetId calls constructor for non-external endpoint with expected parameters', function() {
         var tilesAssetId = 123890213;
         var tilesEndpoint = {
-            type: '3DTILES',
-            url: 'https://assets.cesium.com/' + tilesAssetId + '/tileset.json',
-            accessToken: 'not_really_a_refresh_token',
-            attributions: []
+            type : '3DTILES',
+            url : 'https://assets.cesium.com/' + tilesAssetId + '/tileset.json',
+            accessToken : 'not_really_a_refresh_token',
+            attributions : []
         };
 
         var options = {};
@@ -89,28 +89,28 @@ describe('Core/IonResource', function() {
 
     it('fromAssetId returns basic Resource for external 3D tilesets', function() {
         return testNonImageryExternalResource({
-            type: '3DTILES',
-            externalType: '3DTILES',
-            options: { url: 'http://test.invalid/tileset.json' },
-            attributions: []
+            type : '3DTILES',
+            externalType : '3DTILES',
+            options : { url : 'http://test.invalid/tileset.json' },
+            attributions : []
         });
     });
 
     it('fromAssetId returns basic Resource for external 3D tilesets', function() {
         return testNonImageryExternalResource({
-            type: 'TERRAIN',
-            externalType: 'STK_TERRAIN_SERVER',
-            options: { url: 'http://test.invalid/world' },
-            attributions: []
+            type : 'TERRAIN',
+            externalType : 'STK_TERRAIN_SERVER',
+            options : { url : 'http://test.invalid/world' },
+            attributions : []
         });
     });
 
     it('fromAssetId rejects for external imagery', function() {
         return testNonImageryExternalResource({
-            type: 'IMAGERY',
-            externalType: 'URL_TEMPLATE',
-            url: 'http://test.invalid/world',
-            attributions: []
+            type : 'IMAGERY',
+            externalType : 'URL_TEMPLATE',
+            url : 'http://test.invalid/world',
+            attributions : []
         })
         .then(fail)
         .otherwise(function(e) {
@@ -129,7 +129,7 @@ describe('Core/IonResource', function() {
         var accessToken = 'not_a_token';
 
         var assetId = 2348234;
-        var resource = IonResource._createEndpointResource(assetId, { server: serverUrl, accessToken: accessToken });
+        var resource = IonResource._createEndpointResource(assetId, { server : serverUrl, accessToken : accessToken });
         expect(resource.url).toBe(serverUrl + 'v1/assets/' + assetId + '/endpoint?access_token=' + accessToken);
     });
 
@@ -137,7 +137,7 @@ describe('Core/IonResource', function() {
         var defaultServer = Ion.defaultServer;
         var defaultAccessToken = Ion.defaultAccessToken;
 
-        Ion.defaultServer = new Resource({ url: 'https://api.cesium.test/' });
+        Ion.defaultServer = new Resource({ url : 'https://api.cesium.test/' });
         Ion.defaultAccessToken = 'not_a_token';
 
         var assetId = 2348234;
@@ -151,8 +151,8 @@ describe('Core/IonResource', function() {
     it('Calls base _makeRequest with expected options when resource no Authorization header is defined', function() {
         var originalOptions = {};
         var expectedOptions = {
-            headers: {
-                Authorization: 'Bearer ' + endpoint.accessToken
+            headers : {
+                Authorization : 'Bearer ' + endpoint.accessToken
             }
         };
 
@@ -166,8 +166,8 @@ describe('Core/IonResource', function() {
     it('Calls base _makeRequest with expected options when resource Authorization header is already defined', function() {
         var originalOptions = {};
         var expectedOptions = {
-            headers: {
-                Authorization: 'Bearer ' + endpoint.accessToken
+            headers : {
+                Authorization : 'Bearer ' + endpoint.accessToken
             }
         };
 
@@ -181,10 +181,10 @@ describe('Core/IonResource', function() {
 
     it('Calls base _makeRequest with no changes for external assets', function() {
         var externalEndpoint = {
-            type: '3DTILES',
-            externalType: '3DTILES',
-            options: { url: 'http://test.invalid/tileset.json' },
-            attributions: []
+            type : '3DTILES',
+            externalType : '3DTILES',
+            options : { url : 'http://test.invalid/tileset.json' },
+            attributions : []
         };
         var options = {};
 
@@ -219,10 +219,10 @@ describe('Core/IonResource', function() {
 
     it('Calls base fetchImage with no changes for external assets', function() {
         var externalEndpoint = {
-            type: '3DTILES',
-            externalType: '3DTILES',
-            options: { url: 'http://test.invalid/tileset.json' },
-            attributions: []
+            type : '3DTILES',
+            externalType : '3DTILES',
+            options : { url : 'http://test.invalid/tileset.json' },
+            attributions : []
         };
 
         var fetchImage = spyOn(Resource.prototype, 'fetchImage');
@@ -242,7 +242,7 @@ describe('Core/IonResource', function() {
         var retryCallback;
 
         beforeEach(function() {
-            endpointResource = new Resource({ url: 'https://api.test.invalid', access_token: 'not_the_token' });
+            endpointResource = new Resource({ url : 'https://api.test.invalid', access_token : 'not_the_token' });
             resource = new IonResource(endpoint, endpointResource);
             retryCallback = resource.retryCallback;
         });
@@ -261,7 +261,7 @@ describe('Core/IonResource', function() {
         });
 
         it('returns false when error is event with non-Image target', function() {
-            var event = { target: {} };
+            var event = { target : {} };
             return retryCallback(resource, event).then(function(result) {
                 expect(result).toBe(false);
             });
@@ -272,9 +272,9 @@ describe('Core/IonResource', function() {
             spyOn(endpointResource, 'fetchJson').and.returnValue(deferred.promise);
 
             var newEndpoint = {
-                type: '3DTILES',
-                url: 'https://assets.cesium.com/' + assetId,
-                accessToken: 'not_not_really_a_refresh_token'
+                type : '3DTILES',
+                url : 'https://assets.cesium.com/' + assetId,
+                accessToken : 'not_not_really_a_refresh_token'
             };
 
             var promise = retryCallback(resource, event);
@@ -300,7 +300,7 @@ describe('Core/IonResource', function() {
         });
 
         it('works when error is event with Image target', function() {
-            var event = { target: new Image() };
+            var event = { target : new Image() };
             return testCallback(resource, event);
         });
 

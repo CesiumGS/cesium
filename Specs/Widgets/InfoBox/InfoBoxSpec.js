@@ -1,6 +1,6 @@
 import { defined } from '../../../Source/Cesium.js';
-import pollToPromise from '../../pollToPromise.js';
 import { InfoBox } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
 
 describe('Widgets/InfoBox/InfoBox', function() {
 

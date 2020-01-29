@@ -12,7 +12,7 @@ import freezeObject from '../Core/freezeObject.js';
         MEMBER : 5,
         FUNCTION_CALL : 6,
         ARRAY : 7,
-        REGEX: 8,
+        REGEX : 8,
         VARIABLE_IN_STRING : 9,
         LITERAL_NULL : 10,
         LITERAL_BOOLEAN : 11,

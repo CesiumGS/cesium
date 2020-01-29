@@ -189,7 +189,7 @@ import freezeObject from './freezeObject.js';
         position : true,
         normal : true,
         st : true,
-        tangent  : true,
+        tangent : true,
         bitangent : true
     }));
 

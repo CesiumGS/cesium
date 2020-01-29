@@ -65,11 +65,11 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
-    loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
-    preloadAncestors: viewer.scene.globe.preloadAncestors,
-    preloadSiblings: viewer.scene.globe.preloadSiblings,
-    fillHighlightColor: Cesium.defined(viewer.scene.globe.fillHighlightColor) ? viewer.scene.globe.fillHighlightColor.toCssColorString() : 'rgba(255, 255, 0, 0.5)',
-    fillHighlightEnabled: Cesium.defined(viewer.scene.globe.fillHighlightColor)
+    loadingDescendantLimit : viewer.scene.globe.loadingDescendantLimit,
+    preloadAncestors : viewer.scene.globe.preloadAncestors,
+    preloadSiblings : viewer.scene.globe.preloadSiblings,
+    fillHighlightColor : Cesium.defined(viewer.scene.globe.fillHighlightColor) ? viewer.scene.globe.fillHighlightColor.toCssColorString() : 'rgba(255, 255, 0, 0.5)',
+    fillHighlightEnabled : Cesium.defined(viewer.scene.globe.fillHighlightColor)
 };
 
 Cesium.knockout.track(viewModel);

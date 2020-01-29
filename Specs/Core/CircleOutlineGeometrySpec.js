@@ -16,7 +16,7 @@ describe('Core/CircleOutlineGeometry', function() {
     it('throws without a radius', function() {
         expect(function() {
             return new CircleOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0)
+                center : Cartesian3.fromDegrees(0, 0)
             });
         }).toThrowDeveloperError();
     });
@@ -24,7 +24,7 @@ describe('Core/CircleOutlineGeometry', function() {
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 radius : 1.0,
                 granularity : -1.0
             });
@@ -34,7 +34,7 @@ describe('Core/CircleOutlineGeometry', function() {
     it('computes positions', function() {
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0
         }));
@@ -47,7 +47,7 @@ describe('Core/CircleOutlineGeometry', function() {
     it('computes positions extruded', function() {
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 5
@@ -60,7 +60,7 @@ describe('Core/CircleOutlineGeometry', function() {
     it('computes positions extruded, no lines between top and bottom', function() {
         var m = CircleOutlineGeometry.createGeometry(new CircleOutlineGeometry({
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0,
             extrudedHeight : 10000,

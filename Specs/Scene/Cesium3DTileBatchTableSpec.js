@@ -257,7 +257,7 @@ describe('Scene/Cesium3DTileBatchTable', function() {
 
     it('hasProperty', function() {
         var batchTableJson = {
-            height: [0.0]
+            height : [0.0]
         };
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
         expect(batchTable.hasProperty(0, 'height')).toEqual(true);
@@ -282,7 +282,7 @@ describe('Scene/Cesium3DTileBatchTable', function() {
         expect(batchTable.getPropertyNames(0)).toEqual([]);
 
         var batchTableJson = {
-            height: [0.0],
+            height : [0.0],
             id : [0]
         };
         batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
@@ -291,7 +291,7 @@ describe('Scene/Cesium3DTileBatchTable', function() {
 
     it('getPropertyNames works with results argument', function() {
         var batchTableJson = {
-            height: [0.0],
+            height : [0.0],
             id : [0]
         };
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
@@ -326,7 +326,7 @@ describe('Scene/Cesium3DTileBatchTable', function() {
         expect(batchTable.getProperty(0, 'height')).toBeUndefined();
 
         var batchTableJson = {
-            height: [1.0]
+            height : [1.0]
         };
         batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
         expect(batchTable.getProperty(0, 'height')).toEqual(1.0);

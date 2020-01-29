@@ -14,11 +14,11 @@ import { ClippingPlane } from '../../Source/Cesium.js';
 import { ClippingPlaneCollection } from '../../Source/Cesium.js';
 import { DracoLoader } from '../../Source/Cesium.js';
 import { Expression } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createCanvas from '../createCanvas.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PointCloud3DTileContent', function() {
 
@@ -76,7 +76,7 @@ describe('Scene/PointCloud3DTileContent', function() {
 
     it('throws with invalid version', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
-            version: 2
+            version : 2
         });
         Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
@@ -780,7 +780,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             var content = tileset.root.content;
             var shaderProgram = content._pointCloud._drawCommand.shaderProgram;
             tileset.style = new Cesium3DTileStyle({
-                color:'color("red")'
+                color : 'color("red")'
             });
             scene.renderForSpecs();
             expect(content._pointCloud._drawCommand.shaderProgram).toBe(shaderProgram);
@@ -962,7 +962,7 @@ describe('Scene/PointCloud3DTileContent', function() {
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
-                unionClippingRegions: true
+                unionClippingRegions : true
             });
 
             expect(scene).notToRender(color);
@@ -990,7 +990,7 @@ describe('Scene/PointCloud3DTileContent', function() {
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
-                unionClippingRegions: true
+                unionClippingRegions : true
             });
 
             expect(scene).notToRender(color);

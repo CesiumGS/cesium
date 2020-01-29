@@ -153,7 +153,7 @@ import SceneMode from './SceneMode.js';
 
         if (!defined(command.vertexArray)) {
             command.uniformMap = {
-                u_cubeMap: function() {
+                u_cubeMap : function() {
                     return that._cubeMap;
                 }
             };

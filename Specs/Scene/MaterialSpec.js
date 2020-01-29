@@ -319,7 +319,7 @@ describe('Scene/Material', function() {
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
-                    image :  './Data/Images/Blue.png'
+                    image : './Data/Images/Blue.png'
                 }
             }
         });
@@ -332,7 +332,7 @@ describe('Scene/Material', function() {
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
-                    image :  new Resource('./Data/Images/Blue.png')
+                    image : new Resource('./Data/Images/Blue.png')
                 }
             }
         });
@@ -378,7 +378,7 @@ describe('Scene/Material', function() {
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
-                    image :  compressedUrl
+                    image : compressedUrl
                 }
             }
         });
@@ -397,7 +397,7 @@ describe('Scene/Material', function() {
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
-                    image :  compressedUrl
+                    image : compressedUrl
                 }
             }
         });

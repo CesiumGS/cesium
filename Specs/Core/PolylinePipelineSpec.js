@@ -55,8 +55,8 @@ describe('Core/PolylinePipeline', function() {
         var height = [30];
 
         var newPositions = PolylinePipeline.generateArc({
-            positions: positions,
-            height: height
+            positions : positions,
+            height : height
         });
 
         expect(newPositions.length).toEqual(3);
@@ -70,9 +70,9 @@ describe('Core/PolylinePipeline', function() {
         var positions = [p1, p2];
 
         var newPositions = PolylinePipeline.generateArc({
-            positions: positions,
-            granularity: CesiumMath.PI_OVER_TWO/2,
-            ellipsoid: Ellipsoid.WGS84
+            positions : positions,
+            granularity : CesiumMath.PI_OVER_TWO/2,
+            ellipsoid : Ellipsoid.WGS84
         });
 
         expect(newPositions.length).toEqual(3*3);
@@ -86,7 +86,7 @@ describe('Core/PolylinePipeline', function() {
 
     it('generateArc works with empty array', function() {
         var newPositions = PolylinePipeline.generateArc({
-            positions: []
+            positions : []
         });
 
         expect(newPositions.length).toEqual(0);
@@ -94,12 +94,12 @@ describe('Core/PolylinePipeline', function() {
 
     it('generateArc works one position', function() {
         var newPositions = PolylinePipeline.generateArc({
-            positions: [Cartesian3.UNIT_Z],
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            positions : [Cartesian3.UNIT_Z],
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         });
 
         expect(newPositions.length).toEqual(3);
-        expect(newPositions).toEqual([0,0,1]);
+        expect(newPositions).toEqual([0, 0, 1]);
     });
 
     it('generateRhumbArc throws without positions', function() {
@@ -113,8 +113,8 @@ describe('Core/PolylinePipeline', function() {
         var height = [30];
 
         var newPositions = PolylinePipeline.generateRhumbArc({
-            positions: positions,
-            height: height
+            positions : positions,
+            height : height
         });
 
         expect(newPositions.length).toEqual(3);
@@ -128,9 +128,9 @@ describe('Core/PolylinePipeline', function() {
         var positions = [p1, p2];
 
         var newPositions = PolylinePipeline.generateRhumbArc({
-            positions: positions,
-            granularity: CesiumMath.PI_OVER_FOUR,
-            ellipsoid: Ellipsoid.WGS84
+            positions : positions,
+            granularity : CesiumMath.PI_OVER_FOUR,
+            ellipsoid : Ellipsoid.WGS84
         });
 
         expect(newPositions.length).toEqual(3*3);
@@ -144,7 +144,7 @@ describe('Core/PolylinePipeline', function() {
 
     it('generateRhumbArc works with empty array', function() {
         var newPositions = PolylinePipeline.generateRhumbArc({
-            positions: []
+            positions : []
         });
 
         expect(newPositions.length).toEqual(0);
@@ -152,11 +152,11 @@ describe('Core/PolylinePipeline', function() {
 
     it('generateRhumbArc works one position', function() {
         var newPositions = PolylinePipeline.generateRhumbArc({
-            positions: [Cartesian3.UNIT_Z],
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            positions : [Cartesian3.UNIT_Z],
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         });
 
         expect(newPositions.length).toEqual(3);
-        expect(newPositions).toEqual([0,0,1]);
+        expect(newPositions).toEqual([0, 0, 1]);
     });
 });

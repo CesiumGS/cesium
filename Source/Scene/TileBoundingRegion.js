@@ -338,7 +338,7 @@ import SceneMode from './SceneMode.js';
         var geometry = new RectangleOutlineGeometry({
             rectangle : this.rectangle,
             height : this.minimumHeight,
-            extrudedHeight: this.maximumHeight
+            extrudedHeight : this.maximumHeight
         });
         var instance = new GeometryInstance({
             geometry : geometry,

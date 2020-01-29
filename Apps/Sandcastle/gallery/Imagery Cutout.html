@@ -66,7 +66,7 @@ layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
 }));
 
 // Add an Earth at Night layer and a "traveling" cutout
-var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
+var earthAtNight = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 3812 }));
 earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(-100, 10, -60, 50);
 earthAtNight.alpha = 0.9;
 

@@ -1,11 +1,11 @@
-import createTileKey from './createTileKey.js';
-import runLater from './runLater.js';
 import { defined } from '../Source/Cesium.js';
 import { GeographicTilingScheme } from '../Source/Cesium.js';
 import { HeightmapTerrainData } from '../Source/Cesium.js';
 import { RuntimeError } from '../Source/Cesium.js';
 import { TerrainProvider } from '../Source/Cesium.js';
 import { when } from '../Source/Cesium.js';
+import createTileKey from './createTileKey.js';
+import runLater from './runLater.js';
 
     function MockTerrainProvider() {
         this.tilingScheme = new GeographicTilingScheme();
@@ -78,8 +78,8 @@ import { when } from '../Source/Cesium.js';
 
     MockTerrainProvider.prototype.willHaveWaterMask = function(includeLand, includeWater, xOrTile, y, level) {
         this._willHaveWaterMask[createTileKey(xOrTile, y, level)] = includeLand || includeWater ? {
-            includeLand: includeLand,
-            includeWater: includeWater
+            includeLand : includeLand,
+            includeWater : includeWater
         } : undefined;
         return this;
     };
@@ -139,10 +139,10 @@ import { when } from '../Source/Cesium.js';
 
         if (!defined(terrainData)) {
             var options = {
-                width: 5,
-                height: 5,
-                buffer: new Float32Array(25),
-                createdByUpsampling: upsampled
+                width : 5,
+                height : 5,
+                buffer : new Float32Array(25),
+                createdByUpsampling : upsampled
             };
 
             var willHaveWaterMask = terrainProvider._willHaveWaterMask[createTileKey(x, y, level)];

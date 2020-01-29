@@ -201,9 +201,9 @@ import WallGraphics from './WallGraphics.js';
 
     DeferredLoading.prototype.addNodes = function(nodes, processingData) {
         this._stack.push({
-            nodes: nodes,
-            index: 0,
-            processingData: processingData
+            nodes : nodes,
+            index : 0,
+            processingData : processingData
         });
         this._used = true;
     };
@@ -600,7 +600,7 @@ import WallGraphics from './WallGraphics.js';
             var blob = uriResolver[href];
             if (defined(blob)) {
                 resource = new Resource({
-                    url: blob
+                    url : blob
                 });
             } else {
                 // Needed for multiple levels of KML files in a KMZ
@@ -609,7 +609,7 @@ import WallGraphics from './WallGraphics.js';
                 blob = uriResolver[uri.resolve(baseUri)];
                 if (defined(blob)) {
                     resource = new Resource({
-                        url: blob
+                        url : blob
                     });
                 }
             }
@@ -617,7 +617,7 @@ import WallGraphics from './WallGraphics.js';
 
         if (!defined(resource)) {
             resource = sourceResource.getDerivedResource({
-                url: href
+                url : href
             });
         }
 
@@ -1023,7 +1023,7 @@ import WallGraphics from './WallGraphics.js';
                 var tokens = externalStyle.split('#');
                 var uri = tokens[0];
                 var resource = sourceResource.getDerivedResource({
-                    url: uri
+                    url : uri
                 });
 
                 id = resource.getUrlComponent() + '#' + tokens[1];
@@ -1140,7 +1140,7 @@ import WallGraphics from './WallGraphics.js';
                 if (tokens.length === 2) {
                     var uri = tokens[0];
                     var resource = sourceResource.getDerivedResource({
-                        url: uri
+                        url : uri
                     });
 
                     promises.push(processExternalStyles(dataSource, resource, styleCollection));
@@ -1835,11 +1835,11 @@ import WallGraphics from './WallGraphics.js';
     }
 
     var playlistNodeProcessors = {
-        FlyTo: processTourFlyTo,
-        Wait: processTourWait,
-        SoundCue: processTourUnsupportedNode,
-        AnimatedUpdate: processTourUnsupportedNode,
-        TourControl: processTourUnsupportedNode
+        FlyTo : processTourFlyTo,
+        Wait : processTourWait,
+        SoundCue : processTourUnsupportedNode,
+        AnimatedUpdate : processTourUnsupportedNode,
+        TourControl : processTourUnsupportedNode
     };
 
     function processTour(dataSource, node, processingData, deferredLoading) {
@@ -1885,7 +1885,7 @@ import WallGraphics from './WallGraphics.js';
         var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
         var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
 
-        var t = {kml: {}};
+        var t = {kml : {}};
 
         processLookAt(entryNode, t, ellipsoid);
         processCamera(entryNode, t, ellipsoid);
@@ -2217,7 +2217,7 @@ import WallGraphics from './WallGraphics.js';
                     // So if sourceUri isn't the kmz file, then its another kml in the archive, so resolve it
                     if (!/\.kmz/i.test(sourceResource.getUrlComponent())) {
                         newSourceUri = sourceResource.getDerivedResource({
-                            url: newSourceUri
+                            url : newSourceUri
                         });
                     }
                 } else {
@@ -2374,12 +2374,12 @@ import WallGraphics from './WallGraphics.js';
             }
 
             var processingData = {
-                parentEntity: undefined,
-                entityCollection: entityCollection,
-                styleCollection: styleCollection,
-                sourceResource: sourceResource,
-                uriResolver: uriResolver,
-                context: context
+                parentEntity : undefined,
+                entityCollection : entityCollection,
+                styleCollection : styleCollection,
+                sourceResource : sourceResource,
+                uriResolver : uriResolver,
+                context : context
             };
 
             entityCollection.suspendEvents();

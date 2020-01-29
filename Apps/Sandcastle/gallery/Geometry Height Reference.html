@@ -71,31 +71,31 @@ function addGeometry(i, j) {
     var type = Math.floor(Math.random() * 3);
     if (type === 0) {
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            position : Cesium.Cartesian3.fromDegrees(west, north, 0.0),
             box : {
                 dimensions : new Cesium.Cartesian3(40.0, 30.0, 50.0),
                 material : Cesium.Color.fromRandom({alpha : 1.0}),
-                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
     } else if (type === 1) {
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            position : Cesium.Cartesian3.fromDegrees(west, north, 0.0),
             cylinder : {
-                length :50.0,
+                length : 50.0,
                 topRadius : 20.0,
                 bottomRadius : 20.0,
                 material : Cesium.Color.fromRandom({alpha : 1.0}),
-                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
     } else {
         viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(west, north, 0.0),
+            position : Cesium.Cartesian3.fromDegrees(west, north, 0.0),
             ellipsoid : {
                 radii : new Cesium.Cartesian3(20.0, 15.0, 25.0),
                 material : Cesium.Color.fromRandom({alpha : 1.0}),
-                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+                heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
             }
         });
     }

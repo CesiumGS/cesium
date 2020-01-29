@@ -1,8 +1,8 @@
 import { GeocodeType } from '../../Source/Cesium.js';
 import { Ion } from '../../Source/Cesium.js';
 import { IonGeocoderService } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
 import { when } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Core/IonGeocoderService', function() {
 
@@ -16,7 +16,7 @@ describe('Core/IonGeocoderService', function() {
     });
 
     it('Creates with default parameters', function() {
-        var service = new IonGeocoderService({ scene: scene });
+        var service = new IonGeocoderService({ scene : scene });
 
         expect(service._accessToken).toEqual(Ion.defaultAccessToken);
         expect(service._server.url).toEqual(Ion.defaultServer.url);
@@ -27,9 +27,9 @@ describe('Core/IonGeocoderService', function() {
         var server = 'http://not.ion.invalid/';
 
         var service = new IonGeocoderService({
-            accessToken: accessToken,
-            server: server,
-            scene: scene
+            accessToken : accessToken,
+            server : server,
+            scene : scene
         });
 
         expect(service._accessToken).toEqual(accessToken);
@@ -37,7 +37,7 @@ describe('Core/IonGeocoderService', function() {
     });
 
     it('calls inner geocoder and returns result', function () {
-        var service = new IonGeocoderService({ scene: scene });
+        var service = new IonGeocoderService({ scene : scene });
 
         var expectedResult = when.resolve();
         spyOn(service._pelias, 'geocode').and.returnValue(expectedResult);

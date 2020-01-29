@@ -35,7 +35,7 @@ var clock = new Cesium.Clock({
 var viewer = new Cesium.Viewer('cesiumContainer', {
     clockViewModel : new Cesium.ClockViewModel(clock),
     selectionIndicator : false,
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
@@ -108,7 +108,7 @@ var upwardsView = {
 
 viewer.scene.camera.flyTo({
     destination : frontView.destination,
-    orientation :  frontView.orientation,
+    orientation : frontView.orientation,
     duration : 5.0,
     pitchAdjustHeight : 20
 });

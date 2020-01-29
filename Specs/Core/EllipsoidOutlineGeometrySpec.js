@@ -10,7 +10,7 @@ describe('Core/EllipsoidOutlineGeometry', function() {
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
-                stackPartitions: 0
+                stackPartitions : 0
             });
         }).toThrowDeveloperError();
     });
@@ -18,7 +18,7 @@ describe('Core/EllipsoidOutlineGeometry', function() {
     it('constructor throws if slicePartitions less than 0', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
-                slicePartitions: -1
+                slicePartitions : -1
             });
         }).toThrowDeveloperError();
     });
@@ -26,7 +26,7 @@ describe('Core/EllipsoidOutlineGeometry', function() {
     it('constructor throws if subdivisions less than 0', function() {
         expect(function() {
             return new EllipsoidOutlineGeometry({
-                subdivisions: -2
+                subdivisions : -2
             });
         }).toThrowDeveloperError();
     });
@@ -34,43 +34,43 @@ describe('Core/EllipsoidOutlineGeometry', function() {
     it('constructor throws if offset attribute is equal to GeometryOffsetAttribute.TOP', function () {
         expect(function() {
             return new EllipsoidOutlineGeometry({
-                offsetAttribute: GeometryOffsetAttribute.TOP
+                offsetAttribute : GeometryOffsetAttribute.TOP
             });
         }).toThrowDeveloperError();
     });
 
     it('constructor rounds floating-point slicePartitions', function() {
         var m = new EllipsoidOutlineGeometry({
-            slicePartitions: 3.5,
-            stackPartitions: 3,
-            subdivisions: 3
+            slicePartitions : 3.5,
+            stackPartitions : 3,
+            subdivisions : 3
         });
         expect(m._slicePartitions).toEqual(4);
     });
 
     it('constructor rounds floating-point stackPartitions', function() {
         var m = new EllipsoidOutlineGeometry({
-            slicePartitions: 3,
-            stackPartitions: 3.5,
-            subdivisions: 3
+            slicePartitions : 3,
+            stackPartitions : 3.5,
+            subdivisions : 3
         });
         expect(m._stackPartitions).toEqual(4);
     });
 
     it('constructor rounds floating-point subdivisions', function() {
         var m = new EllipsoidOutlineGeometry({
-            slicePartitions: 3,
-            stackPartitions: 3,
-            subdivisions: 3.5
+            slicePartitions : 3,
+            stackPartitions : 3,
+            subdivisions : 3.5
         });
         expect(m._subdivisions).toEqual(4);
     });
 
     it('computes positions', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
-            stackPartitions: 3,
-            slicePartitions: 3,
-            subdivisions: 3
+            stackPartitions : 3,
+            slicePartitions : 3,
+            subdivisions : 3
         }));
 
         expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -80,14 +80,14 @@ describe('Core/EllipsoidOutlineGeometry', function() {
 
     it('computes positions for partial ellipsoid', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
-            innerRadii: new Cartesian3(0.5, 0.5, 0.5),
-            minimumClock: CesiumMath.toRadians(90.0),
-            maximumClock: CesiumMath.toRadians(270.0),
-            minimumCone: CesiumMath.toRadians(30.0),
-            maximumCone: CesiumMath.toRadians(120.0),
-            stackPartitions: 3,
-            slicePartitions: 3,
-            subdivisions: 3
+            innerRadii : new Cartesian3(0.5, 0.5, 0.5),
+            minimumClock : CesiumMath.toRadians(90.0),
+            maximumClock : CesiumMath.toRadians(270.0),
+            minimumCone : CesiumMath.toRadians(30.0),
+            maximumCone : CesiumMath.toRadians(120.0),
+            stackPartitions : 3,
+            slicePartitions : 3,
+            subdivisions : 3
         }));
 
         expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -98,9 +98,9 @@ describe('Core/EllipsoidOutlineGeometry', function() {
     it('computes offset attribute', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
             stackPartitions : 3,
-            slicePartitions: 3,
-            subdivisions: 3,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            slicePartitions : 3,
+            subdivisions : 3,
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 24;
@@ -115,7 +115,7 @@ describe('Core/EllipsoidOutlineGeometry', function() {
 
     it('computes partitions to default to 2 if less than 2', function() {
         var geometry = new EllipsoidOutlineGeometry({
-            radii: new Cartesian3(0.5, 0.5, 0.5)
+            radii : new Cartesian3(0.5, 0.5, 0.5)
         });
 
         geometry._slicePartitions = 0;
@@ -206,7 +206,7 @@ describe('Core/EllipsoidOutlineGeometry', function() {
         maximumCone : 0.4,
         slicePartitions : 3,
         stackPartitions : 3,
-        subdivisions: 3
+        subdivisions : 3
     });
     var packedInstance = [
         1.0, 2.0, 3.0,

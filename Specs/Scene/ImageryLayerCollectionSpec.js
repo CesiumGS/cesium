@@ -12,9 +12,9 @@ import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryLayerCollection } from '../../Source/Cesium.js';
 import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/ImageryLayerCollection', function() {
 

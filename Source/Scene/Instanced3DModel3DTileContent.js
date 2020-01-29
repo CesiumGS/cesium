@@ -126,8 +126,8 @@ import ModelInstanceCollection from './ModelInstanceCollection.js';
             }
         },
 
-        url: {
-            get: function() {
+        url : {
+            get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
@@ -264,7 +264,7 @@ import ModelInstanceCollection from './ModelInstanceCollection.js';
             // This removes all white space and null characters from the end of the string.
             gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
             collectionOptions.url = content._resource.getDerivedResource({
-                url: gltfUrl
+                url : gltfUrl
             });
         } else {
             collectionOptions.gltf = gltfView;

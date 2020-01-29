@@ -27,12 +27,12 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var worldTerrain = Cesium.createWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true
+    requestWaterMask : true,
+    requestVertexNormals : true
 });
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: worldTerrain
+    terrainProvider : worldTerrain
 });
 
 // set lighting to true

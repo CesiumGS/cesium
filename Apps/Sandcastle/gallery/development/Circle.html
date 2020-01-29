@@ -45,9 +45,9 @@ var redCircleInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: redCircleInstance,
-    appearance: new Cesium.PerInstanceColorAppearance({
-        closed: true
+    geometryInstances : redCircleInstance,
+    appearance : new Cesium.PerInstanceColorAppearance({
+        closed : true
     })
 }));
 
@@ -58,7 +58,7 @@ scene.primitives.add(new Cesium.Primitive({
 circleGeometry = new Cesium.CircleGeometry({
     center : Cesium.Cartesian3.fromDegrees(-90.0, 50.0),
     radius : 250000.0,
-    extrudedHeight: 300000.0,
+    extrudedHeight : 300000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
 // Create a geometry instance using the circle geometry
 // created above. Set the color attribute to a
@@ -71,9 +71,9 @@ var greenCircleInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: greenCircleInstance,
-    appearance: new Cesium.PerInstanceColorAppearance({
-        closed: true
+    geometryInstances : greenCircleInstance,
+    appearance : new Cesium.PerInstanceColorAppearance({
+        closed : true
     })
 }));
 
@@ -97,9 +97,9 @@ var blueCircleInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: blueCircleInstance,
-    appearance: new Cesium.PerInstanceColorAppearance({
-        closed: true,
+    geometryInstances : blueCircleInstance,
+    appearance : new Cesium.PerInstanceColorAppearance({
+        closed : true,
         translucent : false
     })
 }));

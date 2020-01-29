@@ -30,10 +30,10 @@ var czml = [{
     "id" : "document",
     "name" : "CZML Custom Properties",
     "version" : "1.0",
-    "clock": {
-        "interval": "1970/2010",
-        "currentTime": "1970",
-        "multiplier": 500000000
+    "clock" : {
+        "interval" : "1970/2010",
+        "currentTime" : "1970",
+        "multiplier" : 500000000
     }
 }, {
     "id" : "custom_property_object",
@@ -41,20 +41,20 @@ var czml = [{
     "properties" : {
         "constant_property" : true,
         "population_intervals" : [{
-            "interval": "1970/1980",
-            "number": 2209600
+            "interval" : "1970/1980",
+            "number" : 2209600
         }, {
-            "interval": "1980/2090",
-            "number": 2889700
+            "interval" : "1980/2090",
+            "number" : 2889700
         }, {
             "interval" : "1990/2000",
-            "number": 3307600
+            "number" : 3307600
         }, {
             "interval" : "2000/2010",
             "number" : 4326900
         }],
         "population_sampled" : {
-            "number": [
+            "number" : [
                 "1970", 2209600,
                 "1980", 2889700,
                 "1990", 3307600,
@@ -83,7 +83,7 @@ var czml = [{
             }
         },
         "height" : 0,
-        "extrudedHeight": 0
+        "extrudedHeight" : 0
     }
 }];
 
@@ -117,13 +117,13 @@ function setExtrudedHeight(propertyName) {
 
 // Custom properties can be used as the value of graphical properties:
 Sandcastle.addToolbarMenu([{
-    text: 'Use interval data',
-    onselect: function () {
+    text : 'Use interval data',
+    onselect : function () {
         setExtrudedHeight('population_intervals');
     }
 }, {
-    text: 'Use sampled data',
-    onselect: function () {
+    text : 'Use sampled data',
+    onselect : function () {
         setExtrudedHeight('population_sampled');
     }
 }], 'propertiesMenu');

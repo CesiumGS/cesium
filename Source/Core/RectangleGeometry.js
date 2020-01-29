@@ -906,7 +906,7 @@ import VertexFormat from './VertexFormat.js';
         stRotation : undefined,
         extrudedHeight : undefined,
         shadowVolume : undefined,
-        offsetAttribute: undefined
+        offsetAttribute : undefined
     };
 
     /**
@@ -1062,7 +1062,7 @@ import VertexFormat from './VertexFormat.js';
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
 

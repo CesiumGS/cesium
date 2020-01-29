@@ -874,7 +874,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
                     new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
                     new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
                 ],
-                unionClippingRegions: true
+                unionClippingRegions : true
             });
 
             expect(scene).notToRender(result);

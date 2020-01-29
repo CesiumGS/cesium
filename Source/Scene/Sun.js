@@ -169,7 +169,7 @@ import SceneTransforms from './SceneTransforms.js';
 
             this._commands.computeCommand = new ComputeCommand({
                 fragmentShaderSource : SunTextureFS,
-                outputTexture  : this._texture,
+                outputTexture : this._texture,
                 uniformMap : uniformMap,
                 persists : false,
                 owner : this,

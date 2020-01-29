@@ -117,8 +117,8 @@ import ModelUtility from './ModelUtility.js';
             }
         },
 
-        url: {
-            get: function() {
+        url : {
+            get : function() {
                 return this._resource.getUrlComponent(true);
             }
         },
@@ -339,11 +339,11 @@ import ModelUtility from './ModelUtility.js';
                 opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix: content._contentModelMatrix,
+                modelMatrix : content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
                 forwardAxis : Axis.X,
-                shadows: tileset.shadows,
-                debugWireframe: tileset.debugWireframe,
+                shadows : tileset.shadows,
+                debugWireframe : tileset.debugWireframe,
                 incrementallyLoadTextures : false,
                 vertexShaderLoaded : getVertexShaderCallback(content),
                 fragmentShaderLoaded : getFragmentShaderCallback(content),
@@ -365,7 +365,7 @@ import ModelUtility from './ModelUtility.js';
                 cull : false,           // The model is already culled by 3D Tiles
                 basePath : resource,
                 requestType : RequestType.TILES3D,
-                modelMatrix: content._contentModelMatrix,
+                modelMatrix : content._contentModelMatrix,
                 upAxis : tileset._gltfUpAxis,
                 forwardAxis : Axis.X,
                 debugWireframe : tileset.debugWireframe,

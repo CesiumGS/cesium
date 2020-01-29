@@ -224,14 +224,14 @@ import TimeDynamicImagery from './TimeDynamicImagery.js';
         var resource;
         if (!imageryProvider._useKvp) {
             var templateValues = {
-                TileMatrix: tileMatrix,
-                TileRow: row.toString(),
-                TileCol: col.toString(),
-                s: subdomains[(col + row + level) % subdomains.length]
+                TileMatrix : tileMatrix,
+                TileRow : row.toString(),
+                TileCol : col.toString(),
+                s : subdomains[(col + row + level) % subdomains.length]
             };
 
             resource = imageryProvider._resource.getDerivedResource({
-                request: request
+                request : request
             });
             resource.setTemplateValues(templateValues);
 
@@ -261,8 +261,8 @@ import TimeDynamicImagery from './TimeDynamicImagery.js';
                 query = combine(query, dynamicIntervalData);
             }
             resource = imageryProvider._resource.getDerivedResource({
-                queryParameters: query,
-                request: request
+                queryParameters : query,
+                request : request
             });
         }
 

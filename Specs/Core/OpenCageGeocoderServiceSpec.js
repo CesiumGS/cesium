@@ -24,21 +24,21 @@ describe('Core/OpenCageGeocoderService', function() {
 
         var query = '-22.6792,+14.5272';
         var data = {
-            results: [{
-                bounds: {
-                  northeast: {
-                    lat: -22.6790826,
-                    lng: 14.5269016
+            results : [{
+                bounds : {
+                  northeast : {
+                    lat : -22.6790826,
+                    lng : 14.5269016
                   },
-                  southwest: {
-                    lat: -22.6792826,
-                    lng: 14.5267016
+                  southwest : {
+                    lat : -22.6792826,
+                    lng : 14.5267016
                   }
                 },
-                formatted: 'Beryl\'s Restaurant, Woermann St, Swakopmund, Namibia',
-                geometry: {
-                  lat: -22.6795394,
-                  lng: 14.5276006
+                formatted : 'Beryl\'s Restaurant, Woermann St, Swakopmund, Namibia',
+                geometry : {
+                  lat : -22.6795394,
+                  lng : 14.5276006
                 }
             }]
         };
@@ -56,7 +56,7 @@ describe('Core/OpenCageGeocoderService', function() {
         var service = new OpenCageGeocoderService(endpoint, apiKey);
 
         var query = '';
-        var data = { results: [] };
+        var data = { results : [] };
         spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
 
         return service.geocode(query)

@@ -26,7 +26,7 @@ import DeveloperError from './DeveloperError.js';
          * @memberof TilingScheme.prototype
          * @type {Ellipsoid}
          */
-        ellipsoid: {
+        ellipsoid : {
             get : DeveloperError.throwInstantiationError
         },
 

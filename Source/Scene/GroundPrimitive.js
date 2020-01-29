@@ -20,7 +20,7 @@ import SceneMode from './SceneMode.js';
 import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
 
     var GroundPrimitiveUniformMap = {
-        u_globeMinimumAltitude: function() {
+        u_globeMinimumAltitude : function() {
             return 55000.0;
         }
     };

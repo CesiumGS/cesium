@@ -10,8 +10,8 @@ import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Core/CesiumTerrainProvider', function() {
 
@@ -80,7 +80,7 @@ describe('Core/CesiumTerrainProvider', function() {
         var terrainProvider = new CesiumTerrainProvider({
             url : 'made/up/url',
             requestVertexNormals : requestNormals,
-            requestWaterMask: requestWaterMask
+            requestWaterMask : requestWaterMask
         });
 
         return pollToPromise(function() {
@@ -155,7 +155,7 @@ describe('Core/CesiumTerrainProvider', function() {
     it('rejects readyPromise when url rejects', function() {
         var error = new Error();
         var provider = new CesiumTerrainProvider({
-            url: when.reject(error)
+            url : when.reject(error)
         });
         return provider.readyPromise
             .then(function() {
@@ -463,7 +463,7 @@ describe('Core/CesiumTerrainProvider', function() {
 
     it('The undefined availability tile is returned at level 0', function() {
         var layer = {
-            availabilityLevels: 10
+            availabilityLevels : 10
         };
 
         expect(CesiumTerrainProvider._getAvailabilityTile(layer, 0, 0, 0)).toBeUndefined();
@@ -472,36 +472,36 @@ describe('Core/CesiumTerrainProvider', function() {
 
     it('The correct availability tile is computed in first level', function() {
         var layer = {
-            availabilityLevels: 10
+            availabilityLevels : 10
         };
 
         expect(CesiumTerrainProvider._getAvailabilityTile(layer, 1, 1, 1)).toEqual({
-            level: 0,
-            x: 0,
-            y: 0
+            level : 0,
+            x : 0,
+            y : 0
         });
         expect(CesiumTerrainProvider._getAvailabilityTile(layer, 4, 2, 2)).toEqual({
-            level: 0,
-            x: 1,
-            y: 0
+            level : 0,
+            x : 1,
+            y : 0
         });
 
         expect(CesiumTerrainProvider._getAvailabilityTile(layer, 80, 50, 10)).toEqual({
-            level: 0,
-            x: 0,
-            y: 0
+            level : 0,
+            x : 0,
+            y : 0
         });
     });
 
     it('The correct availability tile is computed in second level', function() {
         var layer = {
-            availabilityLevels: 10
+            availabilityLevels : 10
         };
 
         var expected = {
-            level: 10,
-            x: 80,
-            y: 50
+            level : 10,
+            x : 80,
+            y : 50
         };
 
         var xs = [expected.x, expected.x];
@@ -712,14 +712,14 @@ describe('Core/CesiumTerrainProvider', function() {
             }).then(function() {
                 expect(terrainProvider.hasMetadata).toBe(true);
                 expect(terrainProvider._layers[0].availabilityLevels).toBe(10);
-                expect(terrainProvider.availability.isTileAvailable(0,0,0)).toBe(true);
-                expect(terrainProvider.availability.isTileAvailable(0,1,0)).toBe(true);
-                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(false);
+                expect(terrainProvider.availability.isTileAvailable(0, 0, 0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(0, 1, 0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(false);
 
                 return terrainProvider.requestTileGeometry(0, 0, 0);
             }).then(function(loadedData) {
                 expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
-                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(1, 0, 0)).toBe(true);
             });
         });
 
@@ -811,12 +811,12 @@ describe('Core/CesiumTerrainProvider', function() {
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                expect(terrainProvider.getTileDataAvailable(0,0,0)).toBe(true);
-                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBeUndefined();
+                expect(terrainProvider.getTileDataAvailable(0, 0, 0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBeUndefined();
 
                 return terrainProvider.requestTileGeometry(0, 0, 0);
             }).then(function() {
-                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0, 0, 1)).toBe(true);
             });
         });
 
@@ -835,9 +835,9 @@ describe('Core/CesiumTerrainProvider', function() {
 
         it('Uses query parameter extensions for ion resource', function() {
             var terrainProvider = new CesiumTerrainProvider({
-                url: IonResource.fromAssetId(1),
-                requestVertexNormals: true,
-                requestWaterMask: true
+                url : IonResource.fromAssetId(1),
+                requestVertexNormals : true,
+                requestWaterMask : true
             });
 
             return pollToPromise(function() {

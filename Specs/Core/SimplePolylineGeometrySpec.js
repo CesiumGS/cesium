@@ -38,7 +38,7 @@ describe('Core/SimplePolylineGeometry', function() {
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.position.values).toEqualEpsilon([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], CesiumMath.EPSILON10);
@@ -54,10 +54,10 @@ describe('Core/SimplePolylineGeometry', function() {
             60, 60
         ]);
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
-            positions: positions,
-            granularity: Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE,
-            arcType: ArcType.RHUMB
+            positions : positions,
+            granularity : Math.PI,
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            arcType : ArcType.RHUMB
         }));
 
         var cartesian3Array = [];
@@ -76,7 +76,7 @@ describe('Core/SimplePolylineGeometry', function() {
             positions : positions,
             colors : colors,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -93,7 +93,7 @@ describe('Core/SimplePolylineGeometry', function() {
             colors : colors,
             colorsPerVertex : true,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -106,7 +106,7 @@ describe('Core/SimplePolylineGeometry', function() {
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
-            arcType: ArcType.NONE
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);

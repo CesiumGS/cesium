@@ -17,7 +17,7 @@ describe('DataSources/BillboardGraphics', function() {
             rotation : 1,
             alignedAxis : Cartesian3.UNIT_Z,
             color : Color.RED,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
+            heightReference : HeightReference.CLAMP_TO_GROUND,
             horizontalOrigin : HorizontalOrigin.LEFT,
             verticalOrigin : VerticalOrigin.BOTTOM,
             eyeOffset : new Cartesian3(5, 6, 7),

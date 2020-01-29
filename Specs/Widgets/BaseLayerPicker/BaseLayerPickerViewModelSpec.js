@@ -77,7 +77,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat1',
+                category : 'cat1',
                 creationFunction : function() {
                     return testProvider;
                 }
@@ -86,7 +86,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat1',
+                category : 'cat1',
                 creationFunction : function() {
                     return testProvider;
                 }
@@ -95,7 +95,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat2',
+                category : 'cat2',
                 creationFunction : function() {
                     return testProvider;
                 }
@@ -106,7 +106,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat1',
+                category : 'cat1',
                 creationFunction : function() {
                     return testProvider;
                 }
@@ -115,7 +115,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat2',
+                category : 'cat2',
                 creationFunction : function() {
                     return testProvider;
                 }
@@ -124,7 +124,7 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
                 name : 'name',
                 tooltip : 'tooltip',
                 iconUrl : 'url',
-                category: 'cat2',
+                category : 'cat2',
                 creationFunction : function() {
                     return testProvider;
                 }

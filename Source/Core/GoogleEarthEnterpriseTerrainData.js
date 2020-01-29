@@ -159,8 +159,8 @@ import TerrainMesh from './TerrainMesh.js';
             skirtHeight : this._skirtHeight,
             exaggeration : exaggeration,
             includeWebMercatorT : true,
-            negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
-            negativeElevationThreshold: this._negativeElevationThreshold
+            negativeAltitudeExponentBias : this._negativeAltitudeExponentBias,
+            negativeElevationThreshold : this._negativeElevationThreshold
         });
 
         if (!defined(verticesPromise)) {

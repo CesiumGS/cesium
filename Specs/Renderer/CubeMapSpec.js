@@ -12,8 +12,8 @@ import { Texture } from '../../Source/Cesium.js';
 import { TextureMagnificationFilter } from '../../Source/Cesium.js';
 import { TextureMinificationFilter } from '../../Source/Cesium.js';
 import { TextureWrap } from '../../Source/Cesium.js';
-import createContext from '../createContext.js';
 import { when } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/CubeMap', function() {
 

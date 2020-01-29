@@ -22,8 +22,8 @@ describe('DataSources/PolylineDashMaterialProperty', function() {
         var options = {
             color : Color.RED,
             gapColor : Color.YELLOW,
-            dashLength: 10.0,
-            dashPattern: 7.0
+            dashLength : 10.0,
+            dashPattern : 7.0
         };
 
         var property = new PolylineDashMaterialProperty(options);
@@ -101,7 +101,7 @@ describe('DataSources/PolylineDashMaterialProperty', function() {
             color : Color.YELLOW.clone(),
             gapColor : Color.RED.clone(),
             dashLength : 1.0,
-            dashPattern: 2.0
+            dashPattern : 2.0
         };
         var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);

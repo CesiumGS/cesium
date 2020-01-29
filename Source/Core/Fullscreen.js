@@ -231,7 +231,7 @@ import defineProperties from './defineProperties.js';
             return;
         }
 
-        element[_names.requestFullscreen]({ vrDisplay: vrDevice });
+        element[_names.requestFullscreen]({ vrDisplay : vrDevice });
     };
 
     /**

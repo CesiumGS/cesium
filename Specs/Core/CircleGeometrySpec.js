@@ -18,7 +18,7 @@ describe('Core/CircleGeometry', function() {
     it('throws without a radius', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Cartesian3.fromDegrees(0,0)
+                center : Cartesian3.fromDegrees(0, 0)
             });
         }).toThrowDeveloperError();
     });
@@ -26,7 +26,7 @@ describe('Core/CircleGeometry', function() {
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 radius : 1.0,
                 granularity : -1.0
             });
@@ -37,7 +37,7 @@ describe('Core/CircleGeometry', function() {
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0
         }));
@@ -53,7 +53,7 @@ describe('Core/CircleGeometry', function() {
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0
         }));
@@ -72,10 +72,10 @@ describe('Core/CircleGeometry', function() {
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0,
-            extrudedHeight: 10000
+            extrudedHeight : 10000
         }));
 
         var numVertices = 48; // 16 top circle + 16 bottom circle + 8 top edge + 8 bottom edge
@@ -88,10 +88,10 @@ describe('Core/CircleGeometry', function() {
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0,
-            extrudedHeight: 10000
+            extrudedHeight : 10000
         }));
 
         var numVertices = 48;
@@ -108,7 +108,7 @@ describe('Core/CircleGeometry', function() {
         var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             radius : 1.0,
             stRotation : CesiumMath.PI_OVER_TWO
@@ -176,7 +176,7 @@ describe('Core/CircleGeometry', function() {
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
-    var center = Cartesian3.fromDegrees(0,0);
+    var center = Cartesian3.fromDegrees(0, 0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new CircleGeometry({
         vertexFormat : VertexFormat.POSITION_AND_ST,

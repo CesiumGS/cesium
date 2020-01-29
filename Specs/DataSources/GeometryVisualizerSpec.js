@@ -486,7 +486,7 @@ describe('DataSources/GeometryVisualizer', function() {
 
         var destroySpy = jasmine.createSpy('destroy');
         visualizer._updaterSets.set('test', {
-            destroy: destroySpy
+            destroy : destroySpy
         });
 
         expect(visualizer._updaterSets.values.length).toBe(1);

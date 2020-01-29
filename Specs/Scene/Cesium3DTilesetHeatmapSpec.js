@@ -13,7 +13,7 @@ describe('Scene/Cesium3DTilesetHeatmap', function() {
         refine : 'REPLACE',
         children : [],
         boundingVolume : {
-            sphere: [0.0, 0.0, 0.0, 5.0]
+            sphere : [0.0, 0.0, 0.0, 5.0]
         }
     };
 

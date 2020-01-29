@@ -268,7 +268,7 @@ import TileImagery from './TileImagery.js';
          * @readonly
          */
         imageryProvider : {
-            get: function() {
+            get : function() {
                 return this._imageryProvider;
             }
         },
@@ -280,8 +280,8 @@ import TileImagery from './TileImagery.js';
          * @type {Rectangle}
          * @readonly
          */
-        rectangle: {
-            get: function() {
+        rectangle : {
+            get : function() {
                 return this._rectangle;
             }
         }
@@ -1099,7 +1099,7 @@ import TileImagery from './TileImagery.js';
                         usage : BufferUsage.STATIC_DRAW
                     }),
                     componentsPerAttribute : 2
-                },{
+                }, {
                     index : reprojectAttributeIndices.webMercatorT,
                     vertexBuffer : Buffer.createVertexBuffer({
                         context : context,

@@ -40,8 +40,8 @@ import Resource from './Resource.js';
          * @memberof PeliasGeocoderService.prototype
          * @readonly
          */
-        url: {
-            get: function () {
+        url : {
+            get : function () {
                 return this._url;
             }
         }
@@ -60,9 +60,9 @@ import Resource from './Resource.js';
         //>>includeEnd('debug');
 
         var resource = this._url.getDerivedResource({
-            url: type === GeocodeType.AUTOCOMPLETE ? 'autocomplete' : 'search',
-            queryParameters: {
-                text: query
+            url : type === GeocodeType.AUTOCOMPLETE ? 'autocomplete' : 'search',
+            queryParameters : {
+                text : query
             }
         });
 
@@ -81,8 +81,8 @@ import Resource from './Resource.js';
                     }
 
                     return {
-                        displayName: resultObject.properties.label,
-                        destination: destination
+                        displayName : resultObject.properties.label,
+                        destination : destination
                     };
                 });
             });

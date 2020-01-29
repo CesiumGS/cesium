@@ -463,7 +463,7 @@ import WindingOrder from './WindingOrder.js';
             ellipsoid : options.ellipsoid,
             granularity : options.granularity,
             perPositionHeight : options.perPositionHeight,
-            arcType: options.arcType,
+            arcType : options.arcType,
             offsetAttribute : options.offsetAttribute
         };
         return new PolygonOutlineGeometry(newOptions);
@@ -532,7 +532,7 @@ import WindingOrder from './WindingOrder.js';
                     geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                         componentsPerAttribute : 1,
-                        values: applyOffset
+                        values : applyOffset
                     });
                 }
 

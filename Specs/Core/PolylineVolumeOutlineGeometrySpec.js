@@ -22,23 +22,23 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
     it('throws without shape positions', function() {
         expect(function() {
             return new PolylineVolumeOutlineGeometry({
-                polylinePositions: [new Cartesian3()]
+                polylinePositions : [new Cartesian3()]
             });
         }).toThrowDeveloperError();
     });
 
     it('createGeometry returnes undefined without 2 unique polyline positions', function() {
         var geometry = PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
-            polylinePositions: [new Cartesian3()],
-            shapePositions: shape
+            polylinePositions : [new Cartesian3()],
+            shapePositions : shape
         }));
         expect(geometry).toBeUndefined();
     });
 
     it('createGeometry returnes undefined without 3 unique shape positions', function() {
         var geometry = PolylineVolumeOutlineGeometry.createGeometry(new PolylineVolumeOutlineGeometry({
-            polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
+            polylinePositions : [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            shapePositions : [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
         }));
         expect(geometry).toBeUndefined();
     });
@@ -49,8 +49,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            shapePositions: shape,
-            cornerType: CornerType.MITERED
+            shapePositions : shape,
+            cornerType : CornerType.MITERED
         }));
 
         expect(m.attributes.position.values.length).toEqual(24 * 3); // 6 polyline positions * 4 box positions
@@ -63,8 +63,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            shapePositions: shape.reverse(),
-            cornerType: CornerType.MITERED
+            shapePositions : shape.reverse(),
+            cornerType : CornerType.MITERED
         }));
 
         expect(m.attributes.position.values.length).toEqual(24 * 3);
@@ -78,8 +78,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                 90.0, -31.0,
                 91.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         expect(m.attributes.position.values.length).toEqual(20 * 3); // (2 ends + 3 corner positions) * 4 box positions
@@ -93,8 +93,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                 90.0, -31.0,
                 89.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         expect(m.attributes.position.values.length).toEqual(20 * 3);
@@ -109,8 +109,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                 89.0, -31.0,
                 89.0, -32.0
             ]),
-            cornerType: CornerType.ROUNDED,
-            shapePositions: shape
+            cornerType : CornerType.ROUNDED,
+            shapePositions : shape
         }));
 
         var corners = 36 * 4;
@@ -128,8 +128,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
                  89.0, -31.0,
                  89.0, -32.0
             ]),
-            cornerType: CornerType.BEVELED,
-            shapePositions: shape
+            cornerType : CornerType.BEVELED,
+            shapePositions : shape
         }));
 
         expect(m.attributes.position.values.length).toEqual(40 * 3); // 10 positions * 4 for shape
@@ -140,8 +140,8 @@ describe('Core/PolylineVolumeOutlineGeometry', function() {
     var volumeShape = [new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)];
     var volume = new PolylineVolumeOutlineGeometry({
         polylinePositions : positions,
-        cornerType: CornerType.BEVELED,
-        shapePositions: volumeShape,
+        cornerType : CornerType.BEVELED,
+        shapePositions : volumeShape,
         ellipsoid : Ellipsoid.UNIT_SPHERE,
         granularity : 0.1
     });

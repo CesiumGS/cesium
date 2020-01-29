@@ -3,22 +3,22 @@
 /*global gallery_demos, has_new_gallery_demos, hello_world_index, VERSION*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
-    baseUrl: '../../Source',
-    packages: [{
-        name: 'dojo',
-        location: '../ThirdParty/dojo-release-1.10.4/dojo'
+    baseUrl : '../../Source',
+    packages : [{
+        name : 'dojo',
+        location : '../ThirdParty/dojo-release-1.10.4/dojo'
     }, {
-        name: 'dijit',
-        location: '../ThirdParty/dojo-release-1.10.4/dijit'
+        name : 'dijit',
+        location : '../ThirdParty/dojo-release-1.10.4/dijit'
     }, {
-        name: 'Sandcastle',
-        location: '../Apps/Sandcastle'
+        name : 'Sandcastle',
+        location : '../Apps/Sandcastle'
     }, {
-        name: 'CodeMirror',
-        location: '../ThirdParty/codemirror-4.6'
+        name : 'CodeMirror',
+        location : '../ThirdParty/codemirror-4.6'
     }, {
-        name: 'ThirdParty',
-        location: '../Apps/Sandcastle/ThirdParty'
+        name : 'ThirdParty',
+        location : '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
         'CodeMirror/lib/codemirror',
@@ -712,7 +712,7 @@ require({
             var json, code, html;
             if (defined(queryObject.gist)) {
                 dojoscript.get('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60', {
-                    jsonp: 'callback'
+                    jsonp : 'callback'
                 }).then(function(data) {
                     var files = data.data.files;
                     var code = files['Cesium-Sandcastle.js'].content;
@@ -910,7 +910,7 @@ require({
         var jsonString = JSON.stringify(data);
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = jsonString.substr(2, jsonString.length - 4);
-        var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
+        var base64String = btoa(pako.deflate(jsonString, { raw : true, to : 'string', level : 9 }));
         base64String = base64String.replace(/\=+$/, ''); // remove padding
 
         return base64String;
@@ -1012,7 +1012,7 @@ require({
         var data = makeCompressedBase64String([code, html, baseHref]);
 
         var url = getBaseUrl();
-        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
+        url = url.replace('index.html', '') + 'standalone.html' + '#c=' + data;
 
         window.open(url, '_blank');
         window.focus();
@@ -1047,9 +1047,9 @@ require({
 
     function requestDemo(name) {
         return xhr.get({
-            url: 'gallery/' + name + '.html',
-            handleAs: 'text',
-            error: function(error) {
+            url : 'gallery/' + name + '.html',
+            handleAs : 'text',
+            error : function(error) {
                 loadFromGallery(gallery_demos[hello_world_index]).then(function() {
                     deferredLoadError = true;
                 });
@@ -1251,9 +1251,9 @@ require({
         if (has_new_gallery_demos) {
             var name = 'New in ' + VERSION;
             subtabs[name] = new ContentPane({
-                content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
-                title: name,
-                onShow: function() {
+                content : '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
+                title : name,
+                onShow : function() {
                     setSubtab(this.title);
                 }
             }).placeAt('innerPanel');

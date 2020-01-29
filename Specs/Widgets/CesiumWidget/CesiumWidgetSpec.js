@@ -9,10 +9,10 @@ import { Scene } from '../../../Source/Cesium.js';
 import { SceneMode } from '../../../Source/Cesium.js';
 import { SkyBox } from '../../../Source/Cesium.js';
 import { TileCoordinatesImageryProvider } from '../../../Source/Cesium.js';
+import { CesiumWidget } from '../../../Source/Cesium.js';
 import DomEventSimulator from '../../DomEventSimulator.js';
 import getWebGLStub from '../../getWebGLStub.js';
 import pollToPromise from '../../pollToPromise.js';
-import { CesiumWidget } from '../../../Source/Cesium.js';
 
 describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
@@ -192,7 +192,7 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
             antialias : false,
             premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true,
-            powerPreference: 'low-power'
+            powerPreference : 'low-power'
         };
         var contextOptions = {
             allowTextureFilterAnisotropic : false,

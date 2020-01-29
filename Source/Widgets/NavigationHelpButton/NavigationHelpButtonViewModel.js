@@ -70,7 +70,7 @@ import createCommand from '../createCommand.js';
          * @type {Command}
          */
         showTouch : {
-            get: function() {
+            get : function() {
                 return this._showTouch;
             }
         }

@@ -59,7 +59,7 @@ describe('Scene/ImageryLayer', function() {
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -123,7 +123,7 @@ describe('Scene/ImageryLayer', function() {
         };
 
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -264,13 +264,13 @@ describe('Scene/ImageryLayer', function() {
 
     it('assigns texture property when reprojection is skipped because the tile is very small', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red256x256.png'}), crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red256x256.png'}), crossOrigin, deferred);
         };
 
         var provider = new UrlTemplateImageryProvider({
             url : 'http://example.com/{z}/{x}/{y}.png',
             minimumLevel : 13,
-            maximumLevel: 19,
+            maximumLevel : 19,
             rectangle : Rectangle.fromDegrees(13.39657249732205, 52.49127999816725, 13.42722986993895, 52.50998943590507)
         });
         var layer = new ImageryLayer(provider);
@@ -367,8 +367,8 @@ describe('Scene/ImageryLayer', function() {
 
         // change to NEAREST
         layer = new ImageryLayer(provider, {
-            minificationFilter: TextureMinificationFilter.NEAREST,
-            magnificationFilter: TextureMagnificationFilter.NEAREST
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
         });
         expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
         expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);

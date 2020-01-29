@@ -11,9 +11,9 @@ import { Transforms } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { ModelInstanceCollection } from '../../Source/Cesium.js';
 import { ShadowMode } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/ModelInstanceCollection', function() {
 
@@ -177,8 +177,8 @@ describe('Scene/ModelInstanceCollection', function() {
         return loadModel(boxUrl).then(function(model) {
             expect(function() {
                 return new ModelInstanceCollection({
-                    url: boxUrl,
-                    gltf: model.gltf
+                    url : boxUrl,
+                    gltf : model.gltf
                 });
             }).toThrowDeveloperError();
         });
@@ -327,7 +327,7 @@ describe('Scene/ModelInstanceCollection', function() {
         scene.context._instancedArrays = undefined;
 
         return loadCollection({
-            url: boxUrl,
+            url : boxUrl,
             instances : createInstances(4)
         }).then(function(collection) {
             expectRender(collection);

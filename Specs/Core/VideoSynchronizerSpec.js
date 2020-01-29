@@ -55,7 +55,7 @@ describe('Core/VideoSynchronizer', function() {
             clock : clock,
             element : element,
             epoch : epoch,
-            tolerance: tolerance
+            tolerance : tolerance
         });
 
         expect(videoSynchronizer.clock).toBe(clock);

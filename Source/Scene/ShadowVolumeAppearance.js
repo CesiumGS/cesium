@@ -374,9 +374,9 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         var maxXCorner = Cartesian2.unpack(textureCoordinateRotationPoints, 4, points2D[2]);
 
         attributes.uMaxVmax = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : [maxYCorner.x, maxYCorner.y, maxXCorner.x, maxXCorner.y]
         });
 
@@ -384,9 +384,9 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         var inverseExtentY = 1.0 / pointLineDistance(minXYCorner, maxXCorner, maxYCorner);
 
         attributes.uvMinAndExtents = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : [minXYCorner.x, minXYCorner.y, inverseExtentX, inverseExtentY]
         });
     }
@@ -407,9 +407,9 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         }
 
         attributes[valueName] = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : [d12, d34, d56, d78]
         });
     }
@@ -430,9 +430,9 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         }
 
         attributes[valueName] = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : [d12, d34, d56, d78]
         });
     }
@@ -453,9 +453,9 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         }
 
         attributes[valueName] = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : [d12, d34, d56, d78]
         });
     }
@@ -529,16 +529,16 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         valuesLow[3] = encoded.low;
 
         attributes.planes2D_HIGH = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : valuesHigh
         });
 
         attributes.planes2D_LOW = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 4,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 4,
+            normalize : false,
             value : valuesLow
         });
     }
@@ -703,27 +703,27 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         }
 
         attributes.southWest_HIGH = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            normalize : false,
             value : Cartesian3.pack(encoded.high, [0, 0, 0])
         });
         attributes.southWest_LOW = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            normalize : false,
             value : Cartesian3.pack(encoded.low, [0, 0, 0])
         });
         attributes.eastward = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            normalize : false,
             value : Cartesian3.pack(eastward, [0, 0, 0])
         });
         attributes.northward = new GeometryInstanceAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            normalize: false,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            normalize : false,
             value : Cartesian3.pack(northward, [0, 0, 0])
         });
 
@@ -813,15 +813,15 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
 
         var attributes = {
             sphericalExtents : new GeometryInstanceAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 4,
-                normalize: false,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 4,
+                normalize : false,
                 value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
             }),
             longitudeRotation : new GeometryInstanceAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 1,
-                normalize: false,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1,
+                normalize : false,
                 value : [rotationRadians]
             })
         };

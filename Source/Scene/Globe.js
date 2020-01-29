@@ -74,7 +74,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this._oceanNormalMapResourceDirty = true;
         this._oceanNormalMapResource = new Resource({
-            url: buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
+            url : buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
         });
 
         /**
@@ -332,8 +332,8 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @type {Boolean}
          * @readonly
          */
-        tilesLoaded: {
-            get: function() {
+        tilesLoaded : {
+            get : function() {
                 if (!defined(this._surface)) {
                     return true;
                 }
@@ -393,11 +393,11 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @type {String}
          * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
          */
-        oceanNormalMapUrl: {
-            get: function() {
+        oceanNormalMapUrl : {
+            get : function() {
                 return this._oceanNormalMapResource.url;
             },
-            set: function(value) {
+            set : function(value) {
                 this._oceanNormalMapResource.url = value;
                 this._oceanNormalMapResourceDirty = true;
             }
@@ -432,7 +432,7 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @readonly
          */
         terrainProviderChanged : {
-            get: function() {
+            get : function() {
                 return this._terrainProviderChanged;
             }
         },
@@ -444,7 +444,7 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @type {Event}
          */
         tileLoadProgressEvent : {
-            get: function() {
+            get : function() {
                 return this._surface.tileLoadProgressEvent;
             }
         },
@@ -455,11 +455,11 @@ import TileSelectionResult from './TileSelectionResult.js';
          * @memberof Globe.prototype
          * @type {Material}
          */
-        material: {
-            get: function() {
+        material : {
+            get : function() {
                 return this._material;
             },
-            set: function(material) {
+            set : function(material) {
                 if (this._material !== material) {
                     this._material = material;
                     makeShadersDirty(this);

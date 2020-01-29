@@ -20,14 +20,14 @@ describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {
-            type: 'IMAGERY',
-            url: 'http://test.invalid/layer',
-            accessToken: 'not_really_a_refresh_token',
-            attributions: []
+            type : 'IMAGERY',
+            url : 'http://test.invalid/layer',
+            accessToken : 'not_really_a_refresh_token',
+            attributions : []
         });
 
         var assetId = 12335;
-        var options = { assetId: assetId };
+        var options = { assetId : assetId };
         var endpointResource = IonResource._createEndpointResource(assetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
 
@@ -56,10 +56,10 @@ describe('Scene/IonImageryProvider', function() {
 
     it('readyPromise rejects with non-imagery asset', function(done) {
         var provider = createTestProvider({
-            type: '3DTILES',
-            url: 'http://test.invalid/layer',
-            accessToken: 'not_really_a_refresh_token',
-            attributions: []
+            type : '3DTILES',
+            url : 'http://test.invalid/layer',
+            accessToken : 'not_really_a_refresh_token',
+            attributions : []
         });
 
         return provider.readyPromise
@@ -74,10 +74,10 @@ describe('Scene/IonImageryProvider', function() {
 
     it('readyPromise rejects with unknown external asset type', function(done) {
         var provider = createTestProvider({
-            type: 'IMAGERY',
-            externalType: 'TUBELCANE',
-            options: { url: 'http://test.invalid/layer' },
-            attributions: []
+            type : 'IMAGERY',
+            externalType : 'TUBELCANE',
+            options : { url : 'http://test.invalid/layer' },
+            attributions : []
         });
 
         return provider.readyPromise
@@ -102,14 +102,14 @@ describe('Scene/IonImageryProvider', function() {
 
     it('Uses previously fetched endpoint cache', function() {
         var endpointData = {
-            type: 'IMAGERY',
-            url: 'http://test.invalid/layer',
-            accessToken: 'not_really_a_refresh_token',
-            attributions: []
+            type : 'IMAGERY',
+            url : 'http://test.invalid/layer',
+            accessToken : 'not_really_a_refresh_token',
+            attributions : []
         };
 
         var assetId = 12335;
-        var options = { assetId: assetId, accessToken: 'token', server: 'http://test.invalid' };
+        var options = { assetId : assetId, accessToken : 'token', server : 'http://test.invalid' };
         var endpointResource = IonResource._createEndpointResource(assetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
         spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
@@ -123,7 +123,7 @@ describe('Scene/IonImageryProvider', function() {
                 expect(endpointResource.fetchJson.calls.count()).toBe(1);
 
                 // Same as options but in a different order to verify cache is order independant.
-                var options2 = { accessToken: 'token', server: 'http://test.invalid', assetId: assetId };
+                var options2 = { accessToken : 'token', server : 'http://test.invalid', assetId : assetId };
                 provider2 = new IonImageryProvider(options2);
                 return provider2.readyPromise;
             })
@@ -215,38 +215,38 @@ describe('Scene/IonImageryProvider', function() {
 
     function testExternalImagery(type, options, ImageryClass) {
         var provider = createTestProvider({
-            type: 'IMAGERY',
-            externalType: type,
-            options: options,
-            attributions: []
+            type : 'IMAGERY',
+            externalType : type,
+            options : options,
+            attributions : []
         });
         expect(provider._imageryProvider).toBeInstanceOf(ImageryClass);
     }
 
     it('createImageryProvider works with ARCGIS_MAPSERVER', function() {
         spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
-            deffered.resolve({ resourceSets: [{ resources: [{ imageUrl: '', imageUrlSubdomains: [], zoomMax: 0 }] }] });
+            deffered.resolve({ resourceSets : [{ resources : [{ imageUrl : '', imageUrlSubdomains : [], zoomMax : 0 }] }] });
         });
-        return testExternalImagery('ARCGIS_MAPSERVER', { url: 'http://test.invalid' }, ArcGisMapServerImageryProvider);
+        return testExternalImagery('ARCGIS_MAPSERVER', { url : 'http://test.invalid' }, ArcGisMapServerImageryProvider);
     });
 
     it('createImageryProvider works with BING', function() {
         spyOn(Resource._Implementations, 'loadAndExecuteScript').and.callFake(function(url, name, deffered) {
-            deffered.resolve({ resourceSets: [{ resources: [{ imageUrl: '', imageUrlSubdomains: [], zoomMax: 0 }] }] });
+            deffered.resolve({ resourceSets : [{ resources : [{ imageUrl : '', imageUrlSubdomains : [], zoomMax : 0 }] }] });
         });
-        return testExternalImagery('BING', { url: 'http://test.invalid' }, BingMapsImageryProvider);
+        return testExternalImagery('BING', { url : 'http://test.invalid' }, BingMapsImageryProvider);
     });
 
     it('createImageryProvider works with GOOGLE_EARTH', function() {
         spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            deferred.resolve(JSON.stringify({ layers: [{ id: 0, version: '' }] }));
+            deferred.resolve(JSON.stringify({ layers : [{ id : 0, version : '' }] }));
         });
 
-        return testExternalImagery('GOOGLE_EARTH', { url: 'http://test.invalid', channel: 0 }, GoogleEarthEnterpriseMapsProvider);
+        return testExternalImagery('GOOGLE_EARTH', { url : 'http://test.invalid', channel : 0 }, GoogleEarthEnterpriseMapsProvider);
     });
 
     it('createImageryProvider works with MAPBOX', function() {
-        return testExternalImagery('MAPBOX', { url: 'http://test.invalid', mapId: 1 }, MapboxImageryProvider);
+        return testExternalImagery('MAPBOX', { url : 'http://test.invalid', mapId : 1 }, MapboxImageryProvider);
     });
 
     it('createImageryProvider works with SINGLE_TILE', function() {
@@ -254,22 +254,22 @@ describe('Scene/IonImageryProvider', function() {
             deferred.resolve({});
         });
 
-        return testExternalImagery('SINGLE_TILE', { url: 'http://test.invalid' }, SingleTileImageryProvider);
+        return testExternalImagery('SINGLE_TILE', { url : 'http://test.invalid' }, SingleTileImageryProvider);
     });
 
     it('createImageryProvider works with TMS', function() {
-        return testExternalImagery('TMS', { url: 'http://test.invalid' }, UrlTemplateImageryProvider);
+        return testExternalImagery('TMS', { url : 'http://test.invalid' }, UrlTemplateImageryProvider);
     });
 
     it('createImageryProvider works with URL_TEMPLATE', function() {
-        return testExternalImagery('URL_TEMPLATE', { url: 'http://test.invalid' }, UrlTemplateImageryProvider);
+        return testExternalImagery('URL_TEMPLATE', { url : 'http://test.invalid' }, UrlTemplateImageryProvider);
     });
 
     it('createImageryProvider works with WMS', function() {
-        return testExternalImagery('WMS', { url: 'http://test.invalid', layers: [] }, WebMapServiceImageryProvider);
+        return testExternalImagery('WMS', { url : 'http://test.invalid', layers : [] }, WebMapServiceImageryProvider);
     });
 
     it('createImageryProvider works with WMTS', function() {
-        return testExternalImagery('WMTS', { url: 'http://test.invalid', layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
+        return testExternalImagery('WMTS', { url : 'http://test.invalid', layer : '', style : '', tileMatrixSetID : 1 }, WebMapTileServiceImageryProvider);
     });
 });

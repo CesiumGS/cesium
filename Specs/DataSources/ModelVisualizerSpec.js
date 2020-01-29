@@ -125,7 +125,7 @@ describe('DataSources/ModelVisualizer', function() {
         model.nodeTransformations = nodeTransforms;
 
         var clippingPlanes = new ClippingPlaneCollection({
-            planes: [
+            planes : [
                 new ClippingPlane(Cartesian3.UNIT_X, 0.0)
             ]
         });
@@ -231,7 +231,7 @@ describe('DataSources/ModelVisualizer', function() {
         var model = new ModelGraphics();
         model.show = new ConstantProperty(true);
         model.uri = new ConstantProperty(new Resource({
-            url: boxUrl
+            url : boxUrl
         }));
 
         var testObject = entityCollection.getOrCreateEntity('test');

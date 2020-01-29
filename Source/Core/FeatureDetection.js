@@ -238,8 +238,8 @@ import Fullscreen from './Fullscreen.js';
         return supportsWebPDeferred.promise;
     };
     defineProperties(supportsWebP, {
-        initialized: {
-            get: function() {
+        initialized : {
+            get : function() {
                 return defined(supportsWebP._result);
             }
         }
@@ -280,10 +280,10 @@ import Fullscreen from './Fullscreen.js';
         isWindows : isWindows,
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
-        supportsImageRenderingPixelated: supportsImageRenderingPixelated,
-        supportsWebP: supportsWebP,
-        imageRenderingValue: imageRenderingValue,
-        typedArrayTypes: typedArrayTypes
+        supportsImageRenderingPixelated : supportsImageRenderingPixelated,
+        supportsWebP : supportsWebP,
+        imageRenderingValue : imageRenderingValue,
+        typedArrayTypes : typedArrayTypes
     };
 
     /**

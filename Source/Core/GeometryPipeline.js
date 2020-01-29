@@ -2038,7 +2038,7 @@ import Tipsify from './Tipsify.js';
         tangent : true,
         st : true,
         extrudeDirection : true,
-        applyOffset: true
+        applyOffset : true
     };
     function splitLongitudeTriangles(instance) {
         var geometry = instance.geometry;

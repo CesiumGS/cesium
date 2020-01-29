@@ -831,8 +831,8 @@ import VertexFormat from './VertexFormat.js';
         height : undefined,
         granularity : undefined,
         extrudedHeight : undefined,
-        shadowVolume: undefined,
-        offsetAttribute: undefined
+        shadowVolume : undefined,
+        offsetAttribute : undefined
     };
 
     /**
@@ -982,7 +982,7 @@ import VertexFormat from './VertexFormat.js';
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
         }
@@ -1017,7 +1017,7 @@ import VertexFormat from './VertexFormat.js';
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume : true
         });
     };
 

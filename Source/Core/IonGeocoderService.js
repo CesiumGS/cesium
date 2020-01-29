@@ -36,11 +36,11 @@ import Resource from './Resource.js';
         }
 
         var searchEndpoint = server.getDerivedResource({
-            url: 'v1/geocode'
+            url : 'v1/geocode'
         });
 
         if (defined(accessToken)) {
-            searchEndpoint.appendQueryParameters({ access_token: accessToken });
+            searchEndpoint.appendQueryParameters({ access_token : accessToken });
         }
 
         this._accessToken = accessToken;

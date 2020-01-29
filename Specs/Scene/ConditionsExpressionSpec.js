@@ -21,8 +21,8 @@ describe('Scene/ConditionsExpression', function() {
     };
 
     var defines = {
-        halfHeight: '${Height}/2',
-        quarterHeight: '${Height}/4'
+        halfHeight : '${Height}/2',
+        quarterHeight : '${Height}/4'
     };
 
     var jsonExpWithDefines = {

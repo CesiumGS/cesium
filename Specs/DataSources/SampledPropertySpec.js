@@ -153,8 +153,8 @@ describe('DataSources/SampledProperty', function() {
         property.definitionChanged.addEventListener(listener);
 
         property.removeSamples(new TimeInterval({
-            start: times[1],
-            stop: times[3]
+            start : times[1],
+            stop : times[3]
         }));
 
         expect(listener).toHaveBeenCalledWith(property);
@@ -174,8 +174,8 @@ describe('DataSources/SampledProperty', function() {
 
         // remove using a start time just after a sample
         property.removeSamples(new TimeInterval({
-            start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
-            stop: times[3]
+            start : JulianDate.addSeconds(times[1], 4, new JulianDate()),
+            stop : times[3]
         }));
 
         expect(listener).toHaveBeenCalledWith(property);
@@ -190,8 +190,8 @@ describe('DataSources/SampledProperty', function() {
 
         // remove using a stop time just before a sample
         property.removeSamples(new TimeInterval({
-            start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
-            stop: JulianDate.addSeconds(times[3], -4, new JulianDate())
+            start : JulianDate.addSeconds(times[1], 4, new JulianDate()),
+            stop : JulianDate.addSeconds(times[3], -4, new JulianDate())
         }));
 
         expect(listener).toHaveBeenCalledWith(property);
@@ -221,10 +221,10 @@ describe('DataSources/SampledProperty', function() {
         property.definitionChanged.addEventListener(listener);
 
         property.removeSamples(new TimeInterval({
-            start: times[1],
-            stop: times[3],
-            isStartIncluded: false,
-            isStopIncluded: true
+            start : times[1],
+            stop : times[3],
+            isStartIncluded : false,
+            isStopIncluded : true
         }));
 
         expect(listener).toHaveBeenCalledWith(property);
@@ -237,10 +237,10 @@ describe('DataSources/SampledProperty', function() {
         property.definitionChanged.addEventListener(listener);
 
         property.removeSamples(new TimeInterval({
-            start: times[1],
-            stop: times[3],
-            isStartIncluded: true,
-            isStopIncluded: false
+            start : times[1],
+            stop : times[3],
+            isStartIncluded : true,
+            isStopIncluded : false
         }));
 
         expect(listener).toHaveBeenCalledWith(property);
@@ -253,10 +253,10 @@ describe('DataSources/SampledProperty', function() {
         property.definitionChanged.addEventListener(listener);
 
         property.removeSamples(new TimeInterval({
-            start: times[1],
-            stop: times[3],
-            isStartIncluded: false,
-            isStopIncluded: false
+            start : times[1],
+            stop : times[3],
+            isStartIncluded : false,
+            isStopIncluded : false
         }));
 
         expect(listener).toHaveBeenCalledWith(property);

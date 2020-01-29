@@ -228,8 +228,8 @@ import TimeStandard from './TimeStandard.js';
         var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
         if (defined(xysFileUrlTemplate)) {
             chunkUrl = xysFileUrlTemplate.getDerivedResource({
-                templateValues: {
-                    '0': chunkIndex
+                templateValues : {
+                    '0' : chunkIndex
                 }
             });
         } else {

@@ -1,39 +1,39 @@
 /*eslint-env node*/
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var os = require('os');
 var child_process = require('child_process');
 var crypto = require('crypto');
-var zlib = require('zlib');
+var fs = require('fs');
+var os = require('os');
+var path = require('path');
 var readline = require('readline');
-var request = require('request');
-
+var zlib = require('zlib');
+var AWS = require('aws-sdk');
+var Promise = require('bluebird');
 var globby = require('globby');
-var gulpTap = require('gulp-tap');
-var gulpUglify = require('gulp-uglify');
-var open = require('open');
-var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
-var mkdirp = require('mkdirp');
-var mergeStream = require('merge-stream');
-var streamToPromise = require('stream-to-promise');
 var gulp = require('gulp');
+var cleanCSS = require('gulp-clean-css');
 var gulpInsert = require('gulp-insert');
-var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var Promise = require('bluebird');
+var gulpTap = require('gulp-tap');
+var gulpUglify = require('gulp-uglify');
+var gulpZip = require('gulp-zip');
 var Karma = require('karma');
-var yargs = require('yargs');
-var AWS = require('aws-sdk');
+var mergeStream = require('merge-stream');
 var mime = require('mime');
+var mkdirp = require('mkdirp');
+var open = require('open');
+var request = require('request');
+
+var rimraf = require('rimraf');
 var rollup = require('rollup');
-var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginExternalGlobals = require('rollup-plugin-external-globals');
+var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginUglify = require('rollup-plugin-uglify');
-var cleanCSS = require('gulp-clean-css');
+var streamToPromise = require('stream-to-promise');
+var yargs = require('yargs');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -131,13 +131,13 @@ function createWorkers() {
     ]);
 
     return rollup.rollup({
-        input: workers,
-        onwarn: rollupWarning
+        input : workers,
+        onwarn : rollupWarning
     }).then(function(bundle) {
         return bundle.write({
-            dir: 'Build/createWorkers',
-            banner: '/* This file is automatically rebuilt by the Cesium build process. */',
-            format: 'amd'
+            dir : 'Build/createWorkers',
+            banner : '/* This file is automatically rebuilt by the Cesium build process. */',
+            format : 'amd'
         });
     }).then(function(){
         return streamToPromise(
@@ -170,46 +170,46 @@ gulp.task('buildApps', function() {
 
 gulp.task('build-specs', function buildSpecs() {
     var externalCesium = rollupPluginExternalGlobals({
-        '../Source/Cesium.js': 'Cesium',
-        '../../Source/Cesium.js': 'Cesium',
-        '../../../Source/Cesium.js': 'Cesium',
-        '../../../../Source/Cesium.js': 'Cesium'
+        '../Source/Cesium.js' : 'Cesium',
+        '../../Source/Cesium.js' : 'Cesium',
+        '../../../Source/Cesium.js' : 'Cesium',
+        '../../../../Source/Cesium.js' : 'Cesium'
     });
 
     var removePragmas = rollupPluginStripPragma({
-        pragmas: ['debug']
+        pragmas : ['debug']
     });
 
     var promise = Promise.join(
         rollup.rollup({
-            input: 'Specs/SpecList.js',
-            plugins: [externalCesium],
-            onwarn: rollupWarning
+            input : 'Specs/SpecList.js',
+            plugins : [externalCesium],
+            onwarn : rollupWarning
         }).then(function(bundle) {
             return bundle.write({
-                file: 'Build/Specs/Specs.js',
-                format: 'iife'
+                file : 'Build/Specs/Specs.js',
+                format : 'iife'
             });
         }).then(function(){
             return rollup.rollup({
-                input: 'Specs/spec-main.js',
-                plugins: [removePragmas, externalCesium]
+                input : 'Specs/spec-main.js',
+                plugins : [removePragmas, externalCesium]
             }).then(function(bundle) {
                 return bundle.write({
-                    file: 'Build/Specs/spec-main.js',
-                    format: 'iife'
+                    file : 'Build/Specs/spec-main.js',
+                    format : 'iife'
                 });
             });
         }).then(function(){
             return rollup.rollup({
-                input: 'Specs/karma-main.js',
-                plugins: [removePragmas, externalCesium],
-                onwarn: rollupWarning
+                input : 'Specs/karma-main.js',
+                plugins : [removePragmas, externalCesium],
+                onwarn : rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
-                    file: 'Build/Specs/karma-main.js',
-                    name: 'karmaMain',
-                    format: 'iife'
+                    file : 'Build/Specs/karma-main.js',
+                    name : 'karmaMain',
+                    format : 'iife'
                 });
             });
         })
@@ -269,9 +269,9 @@ gulp.task('cloc', gulp.series('clean', cloc));
 function combine() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
-        removePragmas: false,
-        optimizer: 'none',
-        outputDirectory: outputDirectory
+        removePragmas : false,
+        optimizer : 'none',
+        outputDirectory : outputDirectory
     });
 }
 
@@ -281,9 +281,9 @@ gulp.task('default', gulp.series('combine'));
 function combineRelease() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
-        removePragmas: true,
-        optimizer: 'none',
-        outputDirectory: outputDirectory
+        removePragmas : true,
+        optimizer : 'none',
+        outputDirectory : outputDirectory
     });
 }
 
@@ -377,9 +377,9 @@ gulp.task('minify', gulp.series('build', function() {
 
 function minifyRelease() {
     return combineJavaScript({
-        removePragmas: true,
-        optimizer: 'uglify2',
-        outputDirectory: path.join('Build', 'Cesium')
+        removePragmas : true,
+        optimizer : 'uglify2',
+        outputDirectory : path.join('Build', 'Cesium')
     });
 }
 
@@ -410,8 +410,8 @@ gulp.task('deploy-s3', function(done) {
     }
 
     var iface = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
+        input : process.stdin,
+        output : process.stdout
     });
 
     // prompt for confirmation
@@ -507,8 +507,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
                     // get file info
                     return s3.headObject({
-                            Bucket: bucketName,
-                            Key: blobName
+                            Bucket : bucketName,
+                            Key : blobName
                         }).promise().then(function(data) {
                             if (data.ETag !== ('"' + hash + '"') ||
                                 data.CacheControl !== cacheControl ||
@@ -578,9 +578,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
                 return Promise.map(batches, function(objects) {
                     return s3.deleteObjects({
-                        Bucket: bucketName,
-                        Delete: {
-                            Objects: objects
+                        Bucket : bucketName,
+                        Delete : {
+                            Objects : objects
                         }
                     }).promise().then(function() {
                         if (verbose) {
@@ -613,22 +613,22 @@ function getMimeType(filename) {
         if (mimeType === 'image/svg+xml') {
             compress = true;
         }
-        return { type: mimeType, compress: compress };
+        return { type : mimeType, compress : compress };
     }
 
     //Non-standard mime types not handled by mime
     if (/\.(glsl|LICENSE|config|state)$/i.test(filename)) {
-        return { type: 'text/plain', compress: true };
+        return { type : 'text/plain', compress : true };
     } else if (/\.(czml|topojson)$/i.test(filename)) {
-        return { type: 'application/json', compress: true };
+        return { type : 'application/json', compress : true };
     } else if (/\.(crn|tgz)$/i.test(filename)) {
-        return { type: 'application/octet-stream', compress: false };
+        return { type : 'application/octet-stream', compress : false };
     }
 
     // Handle dotfiles, such as .jshintrc
     var baseName = path.basename(filename);
     if (baseName[0] === '.' || baseName.indexOf('.') === -1) {
-        return { type: 'text/plain', compress: true };
+        return { type : 'text/plain', compress : true };
     }
 
     // Everything else can be octet-stream compressed but print a warning
@@ -637,16 +637,16 @@ function getMimeType(filename) {
         console.log('Unknown mime type for ' + filename);
     }
 
-    return { type: 'application/octet-stream', compress: true };
+    return { type : 'application/octet-stream', compress : true };
 }
 
 // get all files currently in bucket asynchronously
 function listAll(s3, bucketName, prefix, files, marker) {
     return s3.listObjects({
-        Bucket: bucketName,
-        MaxKeys: 1000,
-        Prefix: prefix,
-        Marker: marker
+        Bucket : bucketName,
+        MaxKeys : 1000,
+        Prefix : prefix,
+        Marker : marker
     }).promise().then(function(data) {
         var items = data.Contents;
         for (var i = 0; i < items.length; i++) {
@@ -700,17 +700,17 @@ function setStatus(state, targetUrl, description, context) {
 
     var requestPost = Promise.promisify(request.post);
     return requestPost({
-         url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
-         json: true,
-         headers: {
-             'Authorization': 'token ' + process.env.TOKEN,
-             'User-Agent': 'Cesium'
+         url : 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+         json : true,
+         headers : {
+             'Authorization' : 'token ' + process.env.TOKEN,
+             'User-Agent' : 'Cesium'
          },
-         body: {
-             state: state,
-             target_url: targetUrl,
-             description: description,
-             context: context
+         body : {
+             state : state,
+             target_url : targetUrl,
+             description : description,
+             context : context
          }
      });
 }
@@ -728,38 +728,38 @@ gulp.task('coverage', function(done) {
     }
 
     var karma = new Karma.Server({
-        configFile: karmaConfigFile,
-        browsers: browsers,
-        specReporter: {
-            suppressErrorSummary: false,
-            suppressFailed: false,
-            suppressPassed: suppressPassed,
-            suppressSkipped: true
+        configFile : karmaConfigFile,
+        browsers : browsers,
+        specReporter : {
+            suppressErrorSummary : false,
+            suppressFailed : false,
+            suppressPassed : suppressPassed,
+            suppressSkipped : true
         },
-        preprocessors: {
-            'Source/Core/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/DataSources/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/Renderer/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/Scene/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/Shaders/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/Widgets/**/*.js': ['karma-coverage-istanbul-instrumenter'],
-            'Source/Workers/**/*.js': ['karma-coverage-istanbul-instrumenter']
+        preprocessors : {
+            'Source/Core/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/DataSources/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/Renderer/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/Scene/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/Shaders/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/Widgets/**/*.js' : ['karma-coverage-istanbul-instrumenter'],
+            'Source/Workers/**/*.js' : ['karma-coverage-istanbul-instrumenter']
         },
-        coverageIstanbulInstrumenter: {
-            esModules: true
+        coverageIstanbulInstrumenter : {
+            esModules : true
         },
-        reporters: ['spec', 'coverage'],
-        coverageReporter: {
-            dir: 'Build/Coverage',
-            subdir: function(browserName) {
+        reporters : ['spec', 'coverage'],
+        coverageReporter : {
+            dir : 'Build/Coverage',
+            subdir : function(browserName) {
                 folders.push(browserName);
                 return browserName;
             },
-            includeAllSources: true
+            includeAllSources : true
         },
-        client: {
-            captureConsole: verbose,
-            args: [undefined, undefined, undefined, webglStub, undefined]
+        client : {
+            captureConsole : verbose,
+            args : [undefined, undefined, undefined, webglStub, undefined]
         }
     }, function(e) {
         var html = '<!doctype html><html><body><ul>';
@@ -797,48 +797,48 @@ gulp.task('test', function(done) {
     }
 
     var files = [
-        { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
-        { pattern: 'Source/**', included: false, type: 'module' },
-        { pattern: 'Specs/*.js', included: true, type: 'module' },
-        { pattern: 'Specs/Core/**', included: true, type: 'module' },
-        { pattern: 'Specs/Data/**', included: false },
-        { pattern: 'Specs/DataSources/**', included: true, type: 'module' },
-        { pattern: 'Specs/Renderer/**', included: true, type: 'module' },
-        { pattern: 'Specs/Scene/**', included: true, type: 'module' },
-        { pattern: 'Specs/ThirdParty/**', included: true, type: 'module' },
-        { pattern: 'Specs/Widgets/**', included: true, type: 'module' },
-        { pattern: 'Specs/TestWorkers/**', included: false }
+        { pattern : 'Specs/karma-main.js', included : true, type : 'module' },
+        { pattern : 'Source/**', included : false, type : 'module' },
+        { pattern : 'Specs/*.js', included : true, type : 'module' },
+        { pattern : 'Specs/Core/**', included : true, type : 'module' },
+        { pattern : 'Specs/Data/**', included : false },
+        { pattern : 'Specs/DataSources/**', included : true, type : 'module' },
+        { pattern : 'Specs/Renderer/**', included : true, type : 'module' },
+        { pattern : 'Specs/Scene/**', included : true, type : 'module' },
+        { pattern : 'Specs/ThirdParty/**', included : true, type : 'module' },
+        { pattern : 'Specs/Widgets/**', included : true, type : 'module' },
+        { pattern : 'Specs/TestWorkers/**', included : false }
     ];
 
     if (release) {
         files = [
-            { pattern: 'Specs/Data/**', included: false },
-            { pattern: 'Specs/ThirdParty/**', included: true, type: 'module' },
-            { pattern: 'Specs/TestWorkers/**', included: false },
-            { pattern: 'Build/Cesium/Cesium.js', included: true },
-            { pattern: 'Build/Cesium/**', included: false },
-            { pattern: 'Build/Specs/karma-main.js', included: true },
-            { pattern: 'Build/Specs/Specs.js', included: true }
+            { pattern : 'Specs/Data/**', included : false },
+            { pattern : 'Specs/ThirdParty/**', included : true, type : 'module' },
+            { pattern : 'Specs/TestWorkers/**', included : false },
+            { pattern : 'Build/Cesium/Cesium.js', included : true },
+            { pattern : 'Build/Cesium/**', included : false },
+            { pattern : 'Build/Specs/karma-main.js', included : true },
+            { pattern : 'Build/Specs/Specs.js', included : true }
         ];
     }
 
     var karma = new Karma.Server({
-        configFile: karmaConfigFile,
-        browsers: browsers,
-        specReporter: {
-            suppressErrorSummary: false,
-            suppressFailed: false,
-            suppressPassed: suppressPassed,
-            suppressSkipped: true
+        configFile : karmaConfigFile,
+        browsers : browsers,
+        specReporter : {
+            suppressErrorSummary : false,
+            suppressFailed : false,
+            suppressPassed : suppressPassed,
+            suppressSkipped : true
         },
-        detectBrowsers: {
-            enabled: enableAllBrowsers
+        detectBrowsers : {
+            enabled : enableAllBrowsers
         },
-        logLevel: verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
-        files: files,
-        client: {
-            captureConsole: verbose,
-            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
+        logLevel : verbose ? Karma.constants.LOG_INFO : Karma.constants.LOG_ERROR,
+        files : files,
+        client : {
+            captureConsole : verbose,
+            args : [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
@@ -982,7 +982,7 @@ function combineCesium(debug, optimizer, combineOutput) {
 
     if (!debug) {
         plugins.push(rollupPluginStripPragma({
-            pragmas: ['debug']
+            pragmas : ['debug']
         }));
     }
     if (optimizer === 'uglify2') {
@@ -990,14 +990,14 @@ function combineCesium(debug, optimizer, combineOutput) {
     }
 
     return rollup.rollup({
-        input: 'Source/Cesium.js',
-        plugins: plugins,
-        onwarn: rollupWarning
+        input : 'Source/Cesium.js',
+        plugins : plugins,
+        onwarn : rollupWarning
     }).then(function(bundle) {
         return bundle.write({
-            format: 'umd',
-            name: 'Cesium',
-            file: path.join(combineOutput, 'Cesium.js')
+            format : 'umd',
+            name : 'Cesium',
+            file : path.join(combineOutput, 'Cesium.js')
         });
     });
 }
@@ -1007,7 +1007,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
     // Copy files that are already minified
     return globby(['Source/ThirdParty/Workers/draco*.js'])
         .then(function(files) {
-            var stream = gulp.src(files, { base: 'Source' })
+            var stream = gulp.src(files, { base : 'Source' })
                 .pipe(gulp.dest(combineOutput));
             return streamToPromise(stream);
         })
@@ -1033,7 +1033,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
 
             if (!debug) {
                 plugins.push(rollupPluginStripPragma({
-                    pragmas: ['debug']
+                    pragmas : ['debug']
                 }));
             }
             if (optimizer === 'uglify2') {
@@ -1041,13 +1041,13 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }
 
             return rollup.rollup({
-                input: files,
-                plugins: plugins,
-                onwarn: rollupWarning
+                input : files,
+                plugins : plugins,
+                onwarn : rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
-                    dir: path.join(combineOutput, 'Workers'),
-                    format: 'amd'
+                    dir : path.join(combineOutput, 'Workers'),
+                    format : 'amd'
                 });
             });
         });
@@ -1097,7 +1097,7 @@ function combineJavaScript(options) {
             everythingElse.push('!**/*.css');
         }
 
-        stream = gulp.src(everythingElse, { nodir: true }).pipe(gulp.dest(outputDirectory));
+        stream = gulp.src(everythingElse, { nodir : true }).pipe(gulp.dest(outputDirectory));
         promises.push(streamToPromise(stream));
 
         return Promise.all(promises).then(function() {
@@ -1189,7 +1189,7 @@ export default "' + contents + '";\n';
     //generate the JS file for Built-in GLSL Functions, Structs, and Constants
     var contents = {
         imports : [],
-        builtinLookup: []
+        builtinLookup : []
     };
     generateBuiltinContents(contents, builtinConstants, 'Constants');
     generateBuiltinContents(contents, builtinStructs, 'Structs');
@@ -1253,7 +1253,7 @@ function createGalleryList() {
     // This includes newly staged local demos as well.
     var newDemos = [];
     try {
-        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio : ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
     } catch (e) {
         // On a Cesium fork, tags don't exist so we can't generate the list.
     }
@@ -1264,7 +1264,7 @@ function createGalleryList() {
 
         var demoObject = {
             name : demo,
-            isNew: newDemos.includes(file)
+            isNew : newDemos.includes(file)
         };
 
         if (fs.existsSync(file.replace('.html', '') + '.jpg')) {
@@ -1348,8 +1348,8 @@ function buildSandcastle() {
             'Apps/Sandcastle/gallery/**.jpg',
             'Apps/Sandcastle/images/**'
         ], {
-            base: 'Apps/Sandcastle',
-            buffer: false
+            base : 'Apps/Sandcastle',
+            buffer : false
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
@@ -1370,21 +1370,21 @@ function buildCesiumViewer() {
 
     var promise = Promise.join(
         rollup.rollup({
-            input: 'Apps/CesiumViewer/CesiumViewer.js',
-            treeshake: {
-                moduleSideEffects: false
+            input : 'Apps/CesiumViewer/CesiumViewer.js',
+            treeshake : {
+                moduleSideEffects : false
             },
-            plugins: [
+            plugins : [
                 rollupPluginStripPragma({
-                    pragmas: ['debug']
+                    pragmas : ['debug']
                 }),
                 rollupPluginUglify.uglify()
             ],
-            onwarn: rollupWarning
+            onwarn : rollupWarning
         }).then(function(bundle) {
             return bundle.write({
-                file: 'Build/Apps/CesiumViewer/CesiumViewer.js',
-                format: 'iife'
+                file : 'Build/Apps/CesiumViewer/CesiumViewer.js',
+                format : 'iife'
             });
         })
     );

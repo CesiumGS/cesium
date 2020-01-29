@@ -22,7 +22,7 @@ describe('DataSources/GeometryUpdater', function() {
                 scene : scene,
                 geometryOptions : {},
                 geometryPropertyName : 'box',
-                observedPropertyNames  : ['availability', 'box']
+                observedPropertyNames : ['availability', 'box']
             });
         }).toThrowDeveloperError();
     });
@@ -34,7 +34,7 @@ describe('DataSources/GeometryUpdater', function() {
                 scene : undefined,
                 geometryOptions : {},
                 geometryPropertyName : 'box',
-                observedPropertyNames  : ['availability', 'box']
+                observedPropertyNames : ['availability', 'box']
             });
         }).toThrowDeveloperError();
     });
@@ -46,7 +46,7 @@ describe('DataSources/GeometryUpdater', function() {
                 scene : scene,
                 geometryOptions : undefined,
                 geometryPropertyName : 'box',
-                observedPropertyNames  : ['availability', 'box']
+                observedPropertyNames : ['availability', 'box']
             });
         }).toThrowDeveloperError();
     });
@@ -58,7 +58,7 @@ describe('DataSources/GeometryUpdater', function() {
                 scene : scene,
                 geometryOptions : {},
                 geometryPropertyName : undefined,
-                observedPropertyNames  : ['availability', 'box']
+                observedPropertyNames : ['availability', 'box']
             });
         }).toThrowDeveloperError();
     });
@@ -70,7 +70,7 @@ describe('DataSources/GeometryUpdater', function() {
                 scene : scene,
                 geometryOptions : {},
                 geometryPropertyName : 'box',
-                observedPropertyNames  : undefined
+                observedPropertyNames : undefined
             });
         }).toThrowDeveloperError();
     });
@@ -81,7 +81,7 @@ describe('DataSources/GeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         expect(function() {
             return updater.createDynamicUpdater(new PrimitiveCollection(), new PrimitiveCollection());
@@ -94,7 +94,7 @@ describe('DataSources/GeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         updater._dynamic = true;
         expect(function() {
@@ -108,7 +108,7 @@ describe('DataSources/GeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         updater._dynamic = true;
         expect(function() {

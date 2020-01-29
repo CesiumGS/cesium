@@ -5,45 +5,45 @@ describe('Scene/TileImagery', function() {
 
     it('does not use ancestor ready imagery that needs to be reprojected', function() {
         var imageryLayer = {
-            _calculateTextureTranslationAndScale: function() {}
+            _calculateTextureTranslationAndScale : function() {}
         };
 
         var grandparentImagery = {
-            imageryLayer: imageryLayer,
-            level: 0,
-            x: 0,
-            y: 0,
-            state: ImageryState.READY,
-            texture: {},
-            textureWebMercator: {},
-            addReference: function() {}
+            imageryLayer : imageryLayer,
+            level : 0,
+            x : 0,
+            y : 0,
+            state : ImageryState.READY,
+            texture : {},
+            textureWebMercator : {},
+            addReference : function() {}
         };
 
         var parentImagery = {
-            imageryLayer: imageryLayer,
-            parent: grandparentImagery,
-            level: 1,
-            x: 0,
-            y: 0,
-            state: ImageryState.READY,
-            texture: undefined,
-            textureWebMercator: {},
-            processStateMachine: function() {
+            imageryLayer : imageryLayer,
+            parent : grandparentImagery,
+            level : 1,
+            x : 0,
+            y : 0,
+            state : ImageryState.READY,
+            texture : undefined,
+            textureWebMercator : {},
+            processStateMachine : function() {
                 ++this.processStateMachineCalls;
             },
-            processStateMachineCalls: 0,
-            addReference: function() {}
+            processStateMachineCalls : 0,
+            addReference : function() {}
         };
 
         var thisImagery = {
-            imageryLayer: imageryLayer,
-            parent: parentImagery,
-            level: 2,
-            x: 0,
-            y: 0,
-            state: ImageryState.FAILED,
-            processStateMachine: function() {},
-            addReference: function() {}
+            imageryLayer : imageryLayer,
+            parent : parentImagery,
+            level : 2,
+            x : 0,
+            y : 0,
+            state : ImageryState.FAILED,
+            processStateMachine : function() {},
+            addReference : function() {}
         };
 
         // This TileImagery needs reprojected imagery, and:

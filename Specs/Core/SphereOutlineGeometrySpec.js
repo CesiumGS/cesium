@@ -1,13 +1,13 @@
 import { SphereOutlineGeometry } from '../../Source/Cesium.js';
-import createPackableSpecs from '../createPackableSpecs.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/SphereOutlineGeometry', function() {
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
             return new SphereOutlineGeometry({
-                stackPartitions: 0
+                stackPartitions : 0
             });
         }).toThrowDeveloperError();
     });
@@ -15,7 +15,7 @@ describe('Core/SphereOutlineGeometry', function() {
     it('constructor throws if slicePartitions less than 0', function() {
         expect(function() {
             return new SphereOutlineGeometry({
-                slicePartitions: -1
+                slicePartitions : -1
             });
         }).toThrowDeveloperError();
     });
@@ -23,7 +23,7 @@ describe('Core/SphereOutlineGeometry', function() {
     it('constructor throws if subdivisions less than 0', function() {
         expect(function() {
             return new SphereOutlineGeometry({
-                subdivisions: -2
+                subdivisions : -2
             });
         }).toThrowDeveloperError();
     });
@@ -31,8 +31,8 @@ describe('Core/SphereOutlineGeometry', function() {
     it('computes positions', function() {
         var m = SphereOutlineGeometry.createGeometry(new SphereOutlineGeometry({
             stackPartitions : 2,
-            slicePartitions: 2,
-            subdivisions: 2
+            slicePartitions : 2,
+            subdivisions : 2
         }));
 
         expect(m.attributes.position.values.length).toEqual(12 * 3);
@@ -53,8 +53,8 @@ describe('Core/SphereOutlineGeometry', function() {
     var sphere = new SphereOutlineGeometry({
         radius : 1,
         stackPartitions : 3,
-        slicePartitions: 3,
-        subdivisions: 2
+        slicePartitions : 3,
+        subdivisions : 2
     });
     var packedInstance = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, 2.0, -1.0 ];
     createPackableSpecs(SphereOutlineGeometry, sphere, packedInstance);

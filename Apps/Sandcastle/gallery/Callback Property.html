@@ -81,7 +81,7 @@ var label = viewer.entities.add({
     position : new Cesium.CallbackProperty(getMidpoint, isConstant),
     label : {
         // This callback updates the length to print each frame.
-        text: new Cesium.CallbackProperty(getLength, isConstant),
+        text : new Cesium.CallbackProperty(getLength, isConstant),
         font : '20px sans-serif',
         pixelOffset : new Cesium.Cartesian2(0.0, 20)
     }

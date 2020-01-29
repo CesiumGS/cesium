@@ -303,8 +303,8 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
                     }
 
                     return {
-                        kml: kmlString,
-                        externalFiles: externalFileHandler.files
+                        kml : kmlString,
+                        externalFiles : externalFileHandler.files
                     };
                 });
         }
@@ -321,7 +321,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
                     .then(function() {
                         writer.close(function(blob) {
                             deferred.resolve({
-                                kmz: blob
+                                kmz : blob
                             });
                         });
                     });
@@ -389,16 +389,16 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
 
             var kmlDoc = document.implementation.createDocument(kmlNamespace, 'kml');
             return {
-                kmlDoc: kmlDoc,
-                ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
-                idManager: new IdManager(),
-                styleCache: styleCache,
-                externalFileHandler: externalFileHandler,
-                time: time,
-                valueGetter: new ValueGetter(time),
-                sampleDuration: sampleDuration,
+                kmlDoc : kmlDoc,
+                ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+                idManager : new IdManager(),
+                styleCache : styleCache,
+                externalFileHandler : externalFileHandler,
+                time : time,
+                valueGetter : new ValueGetter(time),
+                sampleDuration : sampleDuration,
                 // Wrap it in a TimeIntervalCollection because that is what entity.availability is
-                defaultAvailability: new TimeIntervalCollection([defaultAvailability])
+                defaultAvailability : new TimeIntervalCollection([defaultAvailability])
             };
         };
 

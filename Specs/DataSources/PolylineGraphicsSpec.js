@@ -23,7 +23,7 @@ describe('DataSources/PolylineGraphics', function() {
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             classificationType : ClassificationType.TERRAIN,
-            arcType: ArcType.GEODESIC,
+            arcType : ArcType.GEODESIC,
             zIndex : 0
         };
 

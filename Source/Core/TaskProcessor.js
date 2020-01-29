@@ -123,13 +123,13 @@ import RuntimeError from './RuntimeError.js';
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {
-            loaderConfig: {
-                paths: {
-                    'Workers': buildModuleUrl('Workers')
+            loaderConfig : {
+                paths : {
+                    'Workers' : buildModuleUrl('Workers')
                 },
-                baseUrl: buildModuleUrl.getCesiumBaseUrl().url
+                baseUrl : buildModuleUrl.getCesiumBaseUrl().url
             },
-            workerModule: TaskProcessor._workerModulePrefix + processor._workerName
+            workerModule : TaskProcessor._workerModulePrefix + processor._workerName
         };
 
         worker.postMessage(bootstrapMessage);
@@ -161,7 +161,7 @@ import RuntimeError from './RuntimeError.js';
         config.wasmBinaryFile = buildModuleUrl(wasmOptions.wasmBinaryFile);
 
         return Resource.fetchArrayBuffer({
-            url: config.wasmBinaryFile
+            url : config.wasmBinaryFile
         }).then(function (arrayBuffer) {
             config.wasmBinary = arrayBuffer;
             return config;

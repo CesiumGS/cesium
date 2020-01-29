@@ -33,10 +33,10 @@ import VertexFormat from './VertexFormat.js';
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
-                radii: radii,
-                stackPartitions: options.stackPartitions,
-                slicePartitions: options.slicePartitions,
-                vertexFormat: options.vertexFormat
+                radii : radii,
+                stackPartitions : options.stackPartitions,
+                slicePartitions : options.slicePartitions,
+                vertexFormat : options.vertexFormat
         };
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);

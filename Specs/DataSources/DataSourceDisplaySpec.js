@@ -8,9 +8,9 @@ import { DataSourceDisplay } from '../../Source/Cesium.js';
 import { Entity } from '../../Source/Cesium.js';
 import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
 import { GroundPrimitive } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import MockDataSource from '../MockDataSource.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/DataSourceDisplay', function() {
 

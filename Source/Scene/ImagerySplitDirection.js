@@ -22,7 +22,7 @@ import freezeObject from '../Core/freezeObject.js';
          * @type {Number}
          * @constant
          */
-        NONE: 0.0,
+        NONE : 0.0,
 
         /**
          * Display the ImageryLayer to the right of the {@link Scene#imagerySplitPosition}.

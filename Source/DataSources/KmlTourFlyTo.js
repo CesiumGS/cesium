@@ -70,7 +70,7 @@ import EasingFunction from '../Core/EasingFunction.js';
      */
     KmlTourFlyTo.prototype.getCameraOptions = function(cameraOptions) {
         var options = {
-            duration: this.duration
+            duration : this.duration
         };
 
         if (defined(this.activeCallback)) {

@@ -354,8 +354,8 @@ import TileProviderError from './TileProviderError.js';
                 buffer : buffer,
                 childTileMask : computeChildMask(quadKey, info, metadata),
                 credits : defined(credit) ? [credit] : undefined,
-                negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
-                negativeElevationThreshold: metadata.negativeAltitudeThreshold
+                negativeAltitudeExponentBias : metadata.negativeAltitudeExponentBias,
+                negativeElevationThreshold : metadata.negativeAltitudeThreshold
             }));
         }
 
@@ -476,8 +476,8 @@ import TileProviderError from './TileProviderError.js';
                         buffer : buffer,
                         childTileMask : computeChildMask(quadKey, info, metadata),
                         credits : defined(credit) ? [credit] : undefined,
-                        negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
-                        negativeElevationThreshold: metadata.negativeAltitudeThreshold
+                        negativeAltitudeExponentBias : metadata.negativeAltitudeExponentBias,
+                        negativeElevationThreshold : metadata.negativeAltitudeThreshold
                     });
                 }
 
@@ -574,8 +574,8 @@ import TileProviderError from './TileProviderError.js';
     function buildTerrainResource(terrainProvider, quadKey, version, request) {
         version = (defined(version) && version > 0) ? version : 1;
         return terrainProvider._metadata.resource.getDerivedResource({
-            url: 'flatfile?f1c-0' + quadKey + '-t.' + version.toString(),
-            request: request
+            url : 'flatfile?f1c-0' + quadKey + '-t.' + version.toString(),
+            request : request
         });
     }
 export default GoogleEarthEnterpriseTerrainProvider;

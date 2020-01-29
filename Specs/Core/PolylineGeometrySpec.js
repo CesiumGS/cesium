@@ -38,7 +38,7 @@ describe('Core/PolylineGeometry', function() {
             width : -1.0,
             vertexFormat : VertexFormat.ALL,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line).toBeUndefined();
@@ -51,7 +51,7 @@ describe('Core/PolylineGeometry', function() {
             width : 10.0,
             vertexFormat : VertexFormat.ALL,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.position).toBeDefined();
@@ -108,7 +108,7 @@ describe('Core/PolylineGeometry', function() {
             width : 10.0,
             vertexFormat : VertexFormat.ALL,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -127,7 +127,7 @@ describe('Core/PolylineGeometry', function() {
             width : 10.0,
             vertexFormat : VertexFormat.ALL,
             granularity : Math.PI,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         }));
 
         expect(line.attributes.color).toBeDefined();

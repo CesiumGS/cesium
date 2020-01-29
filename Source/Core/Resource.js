@@ -257,7 +257,7 @@ import TrustedServers from './TrustedServers.js';
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         if (typeof options === 'string') {
             options = {
-                url: options
+                url : options
             };
         }
 
@@ -330,7 +330,7 @@ import TrustedServers from './TrustedServers.js';
             //  are managed outside of the providers, by the tile loading code, we want to keep the request property the same so if it is changed
             //  in the underlying tiling code the requests for this resource will use it.
             return  resource.getDerivedResource({
-                request: resource.request
+                request : resource.request
             });
         }
 
@@ -339,7 +339,7 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return new Resource({
-            url: resource
+            url : resource
         });
     };
 
@@ -371,8 +371,8 @@ import TrustedServers from './TrustedServers.js';
         })
             .then(function(blob) {
                 return createImageBitmap(blob, {
-                    imageOrientation: 'flipY',
-                    premultiplyAlpha: 'none'
+                    imageOrientation : 'flipY',
+                    premultiplyAlpha : 'none'
                 });
             })
             .then(function(imageBitmap) {
@@ -410,8 +410,8 @@ import TrustedServers from './TrustedServers.js';
          *
          * @readonly
          */
-        queryParameters: {
-            get: function() {
+        queryParameters : {
+            get : function() {
                 return this._queryParameters;
             }
         },
@@ -424,8 +424,8 @@ import TrustedServers from './TrustedServers.js';
          *
          * @readonly
          */
-        templateValues: {
-            get: function() {
+        templateValues : {
+            get : function() {
                 return this._templateValues;
             }
         },
@@ -436,11 +436,11 @@ import TrustedServers from './TrustedServers.js';
          * @memberof Resource.prototype
          * @type {String}
          */
-        url: {
-            get: function() {
+        url : {
+            get : function() {
                 return this.getUrlComponent(true, true);
             },
-            set: function(value) {
+            set : function(value) {
                 var uri = new Uri(value);
 
                 parseQuery(uri, this, false);
@@ -460,8 +460,8 @@ import TrustedServers from './TrustedServers.js';
          *
          * @readonly
          */
-        extension: {
-            get: function() {
+        extension : {
+            get : function() {
                 return getExtensionFromUri(this._url);
             }
         },
@@ -472,8 +472,8 @@ import TrustedServers from './TrustedServers.js';
          * @memberof Resource.prototype
          * @type {Boolean}
          */
-        isDataUri: {
-            get: function() {
+        isDataUri : {
+            get : function() {
                 return isDataUri(this._url);
             }
         },
@@ -484,8 +484,8 @@ import TrustedServers from './TrustedServers.js';
          * @memberof Resource.prototype
          * @type {Boolean}
          */
-        isBlobUri: {
-            get: function() {
+        isBlobUri : {
+            get : function() {
                 return isBlobUri(this._url);
             }
         },
@@ -496,8 +496,8 @@ import TrustedServers from './TrustedServers.js';
          * @memberof Resource.prototype
          * @type {Boolean}
          */
-        isCrossOriginUrl: {
-            get: function() {
+        isCrossOriginUrl : {
+            get : function() {
                 return isCrossOriginUrl(this._url);
             }
         },
@@ -508,8 +508,8 @@ import TrustedServers from './TrustedServers.js';
          * @memberof Resource.prototype
          * @type {Boolean}
          */
-        hasHeaders: {
-            get: function() {
+        hasHeaders : {
+            get : function() {
                 return (Object.keys(this.headers).length > 0);
             }
         }
@@ -851,9 +851,9 @@ import TrustedServers from './TrustedServers.js';
         // 4. It doesn't have request headers and we preferBlob is false
         if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
             return fetchImage({
-                resource: this,
-                flipY: flipY,
-                preferImageBitmap: preferImageBitmap
+                resource : this,
+                flipY : flipY,
+                preferImageBitmap : preferImageBitmap
             });
         }
 
@@ -879,19 +879,19 @@ import TrustedServers from './TrustedServers.js';
                 generatedBlob = blob;
                 if (useImageBitmap) {
                     return Resource.createImageBitmapFromBlob(blob, {
-                        flipY: flipY,
-                        premultiplyAlpha: false
+                        flipY : flipY,
+                        premultiplyAlpha : false
                     });
                 }
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
-                    url: blobUrl
+                    url : blobUrl
                 });
 
                 return fetchImage({
-                    resource: generatedBlobResource,
-                    flipY: flipY,
-                    preferImageBitmap: false
+                    resource : generatedBlobResource,
+                    flipY : flipY,
+                    preferImageBitmap : false
                 });
             })
             .then(function(image) {
@@ -976,9 +976,9 @@ import TrustedServers from './TrustedServers.js';
                             request.deferred = undefined;
 
                             return fetchImage({
-                                resource: resource,
-                                flipY: flipY,
-                                preferImageBitmap: preferImageBitmap
+                                resource : resource,
+                                flipY : flipY,
+                                preferImageBitmap : preferImageBitmap
                             });
                         }
 
@@ -1007,9 +1007,9 @@ import TrustedServers from './TrustedServers.js';
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
         return resource.fetchImage({
-            flipY: options.flipY,
-            preferBlob: options.preferBlob,
-            preferImageBitmap: options.preferImageBitmap
+            flipY : options.flipY,
+            preferBlob : options.preferBlob,
+            preferImageBitmap : options.preferImageBitmap
         });
     };
 
@@ -1089,7 +1089,7 @@ import TrustedServers from './TrustedServers.js';
     Resource.prototype.fetchJson = function() {
         var promise = this.fetch({
             responseType : 'text',
-            headers: {
+            headers : {
                 Accept : 'application/json,*/*;q=0.01'
             }
         });
@@ -1433,8 +1433,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.fetch({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1490,9 +1490,9 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.delete({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType,
-            data: options.data
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType,
+            data : options.data
         });
     };
 
@@ -1547,8 +1547,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.head({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1603,8 +1603,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.options({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1665,8 +1665,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.post(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1726,8 +1726,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.put(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1787,8 +1787,8 @@ import TrustedServers from './TrustedServers.js';
         var resource = new Resource(options);
         return resource.patch(options.data, {
             // Make copy of just the needed fields because headers can be passed to both the constructor and to post
-            responseType: options.responseType,
-            overrideMimeType: options.overrideMimeType
+            responseType : options.responseType,
+            overrideMimeType : options.overrideMimeType
         });
     };
 
@@ -1863,8 +1863,8 @@ import TrustedServers from './TrustedServers.js';
                     }
 
                     return Resource.createImageBitmapFromBlob(blob, {
-                        flipY: flipY,
-                        premultiplyAlpha: false
+                        flipY : flipY,
+                        premultiplyAlpha : false
                     });
                 }).then(deferred.resolve);
             })
@@ -1882,8 +1882,8 @@ import TrustedServers from './TrustedServers.js';
         Check.typeOf.bool('options.premultiplyAlpha', options.premultiplyAlpha);
 
         return createImageBitmap(blob, {
-            imageOrientation: options.flipY ? 'flipY' : 'none',
-            premultiplyAlpha: options.premultiplyAlpha ? 'premultiply' : 'none'
+            imageOrientation : options.flipY ? 'flipY' : 'none',
+            premultiplyAlpha : options.premultiplyAlpha ? 'premultiply' : 'none'
         });
     };
 
@@ -2069,7 +2069,7 @@ import TrustedServers from './TrustedServers.js';
      * @constant
      */
     Resource.DEFAULT = freezeObject(new Resource({
-        url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
+        url : (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
 
     /**

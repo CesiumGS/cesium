@@ -609,7 +609,7 @@ import VertexFormat from './VertexFormat.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 
@@ -878,8 +878,8 @@ import VertexFormat from './VertexFormat.js';
         extrudedHeight : undefined,
         cornerType : undefined,
         granularity : undefined,
-        shadowVolume: undefined,
-        offsetAttribute: undefined
+        shadowVolume : undefined,
+        offsetAttribute : undefined
     };
 
     /**
@@ -1002,7 +1002,7 @@ import VertexFormat from './VertexFormat.js';
             width : width,
             cornerType : corridorGeometry._cornerType,
             granularity : corridorGeometry._granularity,
-            saveAttributes: true
+            saveAttributes : true
         };
         var attr;
         if (extrude) {
@@ -1024,7 +1024,7 @@ import VertexFormat from './VertexFormat.js';
                 attr.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
         }
@@ -1062,7 +1062,7 @@ import VertexFormat from './VertexFormat.js';
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true
+            shadowVolume : true
         });
     };
 

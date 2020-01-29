@@ -67,8 +67,8 @@ import RequestState from './RequestState.js';
      * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
      */
     RequestScheduler.requestsByServer = {
-        'api.cesium.com:443': 18,
-        'assets.cesium.com:443': 18
+        'api.cesium.com:443' : 18,
+        'assets.cesium.com:443' : 18
     };
 
     /**

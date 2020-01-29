@@ -44,7 +44,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         var blurX = new PostProcessStage({
             name : name + '_x_direction',
             fragmentShader : blurShader,
-            uniforms: {
+            uniforms : {
                 delta : delta,
                 sigma : sigma,
                 stepSize : stepSize,
@@ -55,7 +55,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         var blurY = new PostProcessStage({
             name : name + '_y_direction',
             fragmentShader : blurShader,
-            uniforms: {
+            uniforms : {
                 delta : delta,
                 sigma : sigma,
                 stepSize : stepSize,

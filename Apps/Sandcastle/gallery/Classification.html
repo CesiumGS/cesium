@@ -48,7 +48,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 var scene = viewer.scene;
@@ -197,14 +197,14 @@ function updateAlpha(value) {
     scene.invertClassificationColor.alpha = parseFloat(value);
 }
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(40866) });
+var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(40866) });
 scene.primitives.add(tileset);
 
 var viewModel = {
-    inverted: viewer.scene.invertClassification,
-    invertedAlpha: viewer.scene.invertClassificationColor.alpha,
-    highlightBuilding: highlightBuilding,
-    highlightTrees: highlightTrees
+    inverted : viewer.scene.invertClassification,
+    invertedAlpha : viewer.scene.invertClassificationColor.alpha,
+    highlightBuilding : highlightBuilding,
+    highlightTrees : highlightTrees
 };
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');

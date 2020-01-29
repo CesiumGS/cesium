@@ -1,8 +1,8 @@
 import { defined } from '../../../Source/Cesium.js';
 import { getTimestamp } from '../../../Source/Cesium.js';
 import { FrameRateMonitor } from '../../../Source/Cesium.js';
-import createScene from '../../createScene.js';
 import { PerformanceWatchdogViewModel } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
 
 describe('Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel', function() {
 

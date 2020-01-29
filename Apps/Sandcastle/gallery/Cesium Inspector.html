@@ -27,7 +27,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 var scene = viewer.scene;
@@ -51,7 +51,7 @@ scene.primitives.add(new Cesium.Primitive({
         }
     }),
     appearance : new Cesium.PerInstanceColorAppearance({
-        closed: true
+        closed : true
     })
 }));
 
@@ -59,7 +59,7 @@ scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
             rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
-            height: 100000,
+            height : 100000,
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {

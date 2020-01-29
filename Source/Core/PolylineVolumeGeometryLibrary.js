@@ -322,9 +322,9 @@ import Transforms from './Transforms.js';
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
                     subdividedHeights = subdivideHeights(scratch2Array, h0 + heightOffset, h1 + heightOffset, granularity);
                     subdividedPositions = PolylinePipeline.generateArc({
-                        positions: scratch2Array,
-                        granularity: granularity,
-                        ellipsoid: ellipsoid
+                        positions : scratch2Array,
+                        granularity : granularity,
+                        ellipsoid : ellipsoid
                     });
                     finalPositions = addPositions(subdividedPositions, left, shapeForSides, finalPositions, ellipsoid, subdividedHeights, 1);
                     left = Cartesian3.cross(surfaceNormal, forward, left);
@@ -344,9 +344,9 @@ import Transforms from './Transforms.js';
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
                     subdividedHeights = subdivideHeights(scratch2Array, h0 + heightOffset, h1 + heightOffset, granularity);
                     subdividedPositions = PolylinePipeline.generateArc({
-                        positions: scratch2Array,
-                        granularity: granularity,
-                        ellipsoid: ellipsoid
+                        positions : scratch2Array,
+                        granularity : granularity,
+                        ellipsoid : ellipsoid
                     });
                     finalPositions = addPositions(subdividedPositions, left, shapeForSides, finalPositions, ellipsoid, subdividedHeights, 1);
                     left = Cartesian3.cross(surfaceNormal, forward, left);
@@ -373,9 +373,9 @@ import Transforms from './Transforms.js';
         scratch2Array[1] = Cartesian3.clone(position, scratch2Array[1]);
         subdividedHeights = subdivideHeights(scratch2Array, h0 + heightOffset, h1 + heightOffset, granularity);
         subdividedPositions = PolylinePipeline.generateArc({
-            positions: scratch2Array,
-            granularity: granularity,
-            ellipsoid: ellipsoid
+            positions : scratch2Array,
+            granularity : granularity,
+            ellipsoid : ellipsoid
         });
         finalPositions = addPositions(subdividedPositions, left, shapeForSides, finalPositions, ellipsoid, subdividedHeights, 1);
         if (duplicatePoints) {

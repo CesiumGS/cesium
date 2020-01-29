@@ -20,23 +20,23 @@ import ImageryProvider from './ImageryProvider.js';
     var templateRegex = /{[^}]+}/g;
 
     var tags = {
-        'x': xTag,
-        'y': yTag,
-        'z': zTag,
-        's': sTag,
-        'reverseX': reverseXTag,
-        'reverseY': reverseYTag,
-        'reverseZ': reverseZTag,
-        'westDegrees': westDegreesTag,
-        'southDegrees': southDegreesTag,
-        'eastDegrees': eastDegreesTag,
-        'northDegrees': northDegreesTag,
-        'westProjected': westProjectedTag,
-        'southProjected': southProjectedTag,
-        'eastProjected': eastProjectedTag,
-        'northProjected': northProjectedTag,
-        'width': widthTag,
-        'height': heightTag
+        'x' : xTag,
+        'y' : yTag,
+        'z' : zTag,
+        's' : sTag,
+        'reverseX' : reverseXTag,
+        'reverseY' : reverseYTag,
+        'reverseZ' : reverseZTag,
+        'westDegrees' : westDegreesTag,
+        'southDegrees' : southDegreesTag,
+        'eastDegrees' : eastDegreesTag,
+        'northDegrees' : northDegreesTag,
+        'westProjected' : westProjectedTag,
+        'southProjected' : southProjectedTag,
+        'eastProjected' : eastProjectedTag,
+        'northProjected' : northProjectedTag,
+        'width' : widthTag,
+        'height' : heightTag
     };
 
     var pickFeaturesTags = combine(tags, {
@@ -347,7 +347,7 @@ import ImageryProvider from './ImageryProvider.js';
          * @readonly
          * @default 256
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
@@ -691,7 +691,7 @@ import ImageryProvider from './ImageryProvider.js';
                 return resource.fetchText().then(format.callback).otherwise(doRequest);
             }
             return resource.fetch({
-                responseType: format.format
+                responseType : format.format
             }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
@@ -723,8 +723,8 @@ import ImageryProvider from './ImageryProvider.js';
         }
 
         return resource.getDerivedResource({
-            request: request,
-            templateValues: templateValues
+            request : request,
+            templateValues : templateValues
         });
     }
 
@@ -753,7 +753,7 @@ import ImageryProvider from './ImageryProvider.js';
         }
 
         return resource.getDerivedResource({
-            templateValues: templateValues
+            templateValues : templateValues
         });
     }
 

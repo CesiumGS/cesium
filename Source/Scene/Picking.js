@@ -52,9 +52,9 @@ import  View from './View.js';
         var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
         var pickOffscreenCamera = new Camera(scene);
         pickOffscreenCamera.frustum = new OrthographicFrustum({
-            width: offscreenDefaultWidth,
-            aspectRatio: 1.0,
-            near: 0.1
+            width : offscreenDefaultWidth,
+            aspectRatio : 1.0,
+            near : 0.1
         });
 
         this._pickOffscreenView = new View(scene, pickOffscreenCamera, pickOffscreenViewport);
@@ -696,7 +696,7 @@ import  View from './View.js';
         }
         //>>includeEnd('debug');
 
-        return drillPickFromRay(this, scene, ray, limit, objectsToExclude, width,false, false);
+        return drillPickFromRay(this, scene, ray, limit, objectsToExclude, width, false, false);
     };
 
     Picking.prototype.pickFromRayMostDetailed = function(scene, ray, objectsToExclude, width) {

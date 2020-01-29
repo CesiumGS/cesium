@@ -12,7 +12,7 @@ import freezeObject from '../Core/freezeObject.js';
          * @type {Number}
          * @constant
          */
-        SEARCH: 0,
+        SEARCH : 0,
 
         /**
          * Perform an auto-complete using partial input, typically
@@ -21,6 +21,6 @@ import freezeObject from '../Core/freezeObject.js';
          * @type {Number}
          * @constant
          */
-        AUTOCOMPLETE: 1
+        AUTOCOMPLETE : 1
     };
 export default freezeObject(GeocodeType);

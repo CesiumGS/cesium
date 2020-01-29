@@ -137,7 +137,7 @@ import Primitive from './Primitive.js';
         Check.defined('color', color);
         //>>includeEnd('debug');
         var geometry = new SphereOutlineGeometry({
-            radius: this.radius
+            radius : this.radius
         });
         var modelMatrix = Matrix4.fromTranslation(this.center, new Matrix4.clone(Matrix4.IDENTITY));
         var instance = new GeometryInstance({

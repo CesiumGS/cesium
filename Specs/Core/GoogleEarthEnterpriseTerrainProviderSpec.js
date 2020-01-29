@@ -10,8 +10,8 @@ import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { TerrainProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
 

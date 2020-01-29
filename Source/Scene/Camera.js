@@ -1009,7 +1009,7 @@ import SceneMode from './SceneMode.js';
         camera._adjustOrthographicFrustum(true);
     }
 
-    function setViewCV(camera, position,hpr, convert) {
+    function setViewCV(camera, position, hpr, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -2832,7 +2832,7 @@ import SceneMode from './SceneMode.js';
             if (!defined(preloadFlightCamera)) {
                 preloadFlightCamera = Camera.clone(this);
             }
-            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+            preloadFlightCamera.setView({ destination : destination, orientation : orientation });
 
             this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
         }

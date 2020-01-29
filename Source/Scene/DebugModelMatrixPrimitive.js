@@ -130,7 +130,7 @@ import Primitive from './Primitive.js';
                         Color.RED,
                         Color.RED
                     ],
-                    arcType: ArcType.NONE
+                    arcType : ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -148,7 +148,7 @@ import Primitive from './Primitive.js';
                         Color.GREEN,
                         Color.GREEN
                     ],
-                    arcType: ArcType.NONE
+                    arcType : ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -166,7 +166,7 @@ import Primitive from './Primitive.js';
                         Color.BLUE,
                         Color.BLUE
                     ],
-                    arcType: ArcType.NONE
+                    arcType : ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,

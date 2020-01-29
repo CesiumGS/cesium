@@ -57,7 +57,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    sceneModePicker:false
+    sceneModePicker : false
 });
 var scene = viewer.scene;
 var skyAtmosphere = scene.skyAtmosphere;
@@ -65,9 +65,9 @@ var globe = scene.globe;
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    hueShift: 0.0,
-    saturationShift: 0.0,
-    brightnessShift: 0.0
+    hueShift : 0.0,
+    saturationShift : 0.0,
+    brightnessShift : 0.0
 };
 // Convert the viewModel members into knockout observables.
 Cesium.knockout.track(viewModel);
@@ -101,7 +101,7 @@ Sandcastle.addToggleButton('Fog', scene.fog.enabled, function(checked) {
 var camera = viewer.camera;
 camera.setView({
     destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
-    orientation: {
+    orientation : {
         heading : -Cesium.Math.PI_OVER_TWO,
         pitch : 0.2,
         roll : 0.0

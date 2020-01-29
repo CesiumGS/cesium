@@ -3,8 +3,8 @@ import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { TileCoordinatesImageryProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/TileCoordinatesImageryProvider', function() {
 

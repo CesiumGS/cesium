@@ -545,7 +545,7 @@ describe('Core/Transforms', function() {
         expect(actualUp).toEqual(expectedUp);
         expect(actualTranslation).toEqual(origin);
 
-        var UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator('west','south'); // up north east
+        var UNEFixedFrameConverter = Transforms.localFrameToFixedFrameGenerator('west', 'south'); // up north east
         returnedResult = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, UNEFixedFrameConverter, result);
         actualEast = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4())); // east
         actualEast.y = -actualEast.y;
@@ -620,7 +620,7 @@ describe('Core/Transforms', function() {
         var pitch = CesiumMath.toRadians(30.0);
         var roll = CesiumMath.toRadians(40.0);
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
-        var fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator('west','south');
+        var fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator('west', 'south');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform);
         var expected = Matrix4.getMatrix3(transform, new Matrix3());
@@ -699,8 +699,8 @@ describe('Core/Transforms', function() {
         function preloadTransformationData(start, stop, eopDescription) {
             Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
             var preloadInterval = new TimeInterval({
-                start: start,
-                stop: stop
+                start : start,
+                stop : stop
             });
 
             return Transforms.preloadIcrfFixed(preloadInterval);
@@ -726,7 +726,7 @@ describe('Core/Transforms', function() {
                 var stop = JulianDate.fromIso8601(componentsData[componentsData.length - 1].date);
 
                 return preloadTransformationData(start, stop, {
-                    url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
                 }).then(function() {
                     for (var i = 0; i < componentsData.length; ++i) {
                         var time = JulianDate.fromIso8601(componentsData[i].date);
@@ -760,7 +760,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -800,7 +800,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 86395);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -822,7 +822,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 10);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -850,7 +850,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
             }).then(function() {
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
@@ -918,7 +918,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-Invalid.json'
+                url : 'Data/EarthOrientationParameters/EOP-Invalid.json'
             }).then(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
@@ -931,7 +931,7 @@ describe('Core/Transforms', function() {
             var time = new JulianDate(2455745, 43200);
 
             return preloadTransformationData(time, time, {
-                url: 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
+                url : 'Data/EarthOrientationParameters/EOP-DoesNotExist.json'
             }).then(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
@@ -952,7 +952,7 @@ describe('Core/Transforms', function() {
             return preloadTransformationData(time, time).then(function() {
                 expect(Transforms.computeIcrfToFixedMatrix(time)).toBeDefined();
                 Transforms.earthOrientationParameters = new EarthOrientationParameters({
-                    url: 'Data/EarthOrientationParameters/EOP-2011-July.json'
+                    url : 'Data/EarthOrientationParameters/EOP-2011-July.json'
                 });
                 expect(Transforms.computeIcrfToFixedMatrix(time)).toBeUndefined();
             });
@@ -963,15 +963,15 @@ describe('Core/Transforms', function() {
     var height = 768.0;
     var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0, new Matrix4());
     var vpTransform = Matrix4.computeViewportTransformation({
-        width: width,
-        height: height
+        width : width,
+        height : height
     }, 0, 1, new Matrix4());
 
     it('pointToGLWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up: Cartesian3.UNIT_Z
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -982,9 +982,9 @@ describe('Core/Transforms', function() {
 
     it('pointToGLWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up: Cartesian3.UNIT_Z
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -1019,9 +1019,9 @@ describe('Core/Transforms', function() {
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up: Cartesian3.UNIT_Z
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 
@@ -1032,9 +1032,9 @@ describe('Core/Transforms', function() {
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            position: Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            direction: Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
-            up: Cartesian3.UNIT_Z
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
+            up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
 

@@ -19,8 +19,8 @@ describe('Core/PolygonOutlineGeometry', function() {
     it('throws with height when perPositionHeight is true', function() {
         expect(function() {
             return new PolygonOutlineGeometry({
-                height: 30,
-                perPositionHeight: true
+                height : 30,
+                perPositionHeight : true
             });
         }).toThrowDeveloperError();
     });
@@ -51,7 +51,7 @@ describe('Core/PolygonOutlineGeometry', function() {
                 positions : [Cartesian3.fromDegrees(0, 0),
                              Cartesian3.fromDegrees(1, 0),
                              Cartesian3.fromDegrees(1, 1)],
-                arcType: ArcType.NONE
+                arcType : ArcType.NONE
             });
         }).toThrowDeveloperError();
     });
@@ -74,7 +74,7 @@ describe('Core/PolygonOutlineGeometry', function() {
                 0.0, 0.0,
                 0.0, 0.0
             ]),
-            extrudedHeight: 2
+            extrudedHeight : 2
         }));
         expect(geometry).toBeUndefined();
     });
@@ -135,7 +135,7 @@ describe('Core/PolygonOutlineGeometry', function() {
             }]
         };
 
-        var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
+        var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy, perPositionHeight : true }));
         expect(geometry).toBeDefined();
     });
 
@@ -190,14 +190,14 @@ describe('Core/PolygonOutlineGeometry', function() {
     it('create geometry throws if arcType is STRAIGHT', function() {
         expect(function() {
             PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
-                positions: Cartesian3.fromDegreesArray([
+                positions : Cartesian3.fromDegreesArray([
                     -1.0, -1.0,
                     1.0, -1.0,
                     1.0, 1.0,
                     -1.0, 1.0
                 ]),
-                granularity: CesiumMath.RADIANS_PER_DEGREE,
-                arcType: ArcType.NONE
+                granularity : CesiumMath.RADIANS_PER_DEGREE,
+                arcType : ArcType.NONE
             }));
         }).toThrowDeveloperError();
     });
@@ -257,7 +257,7 @@ describe('Core/PolygonOutlineGeometry', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             perPositionHeight : true,
-            extrudedHeight: extrudedHeight
+            extrudedHeight : extrudedHeight
         }));
 
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(maxHeight, CesiumMath.EPSILON6);
@@ -436,7 +436,7 @@ describe('Core/PolygonOutlineGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         expect(p.attributes.position.values.length).toEqual(16 * 3); // 8 top + 8 bottom
@@ -472,7 +472,7 @@ describe('Core/PolygonOutlineGeometry', function() {
         var p = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE,
-            extrudedHeight: 30000
+            extrudedHeight : 30000
         }));
 
         expect(p.attributes.position.values.length).toEqual(24 * 3); // 12 top + 12 bottom
@@ -507,7 +507,7 @@ describe('Core/PolygonOutlineGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
+            extrudedHeight : 30000,
             offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
@@ -530,7 +530,7 @@ describe('Core/PolygonOutlineGeometry', function() {
                 1.0, 1.0,
                 -1.0, 1.0
             ]),
-            extrudedHeight: 30000,
+            extrudedHeight : 30000,
             offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 

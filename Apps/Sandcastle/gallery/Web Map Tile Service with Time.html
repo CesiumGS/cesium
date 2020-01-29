@@ -35,16 +35,16 @@ function dataCallback(interval, index) {
     }
 
     return {
-        Time: time
+        Time : time
     };
 }
 
 var times = Cesium.TimeIntervalCollection.fromIso8601({
-    iso8601: '2015-07-30/2017-06-16/P1D',
-    leadingInterval: true,
-    trailingInterval: true,
-    isStopIncluded: false, // We want stop time to be part of the trailing interval
-    dataCallback: dataCallback
+    iso8601 : '2015-07-30/2017-06-16/P1D',
+    leadingInterval : true,
+    trailingInterval : true,
+    isStopIncluded : false, // We want stop time to be part of the trailing interval
+    dataCallback : dataCallback
 });
 
 // Add a WMTS imagery layer
@@ -55,8 +55,8 @@ var provider = new Cesium.WebMapTileServiceImageryProvider({
     tileMatrixSetID : '2km',
     maximumLevel : 5,
     format : 'image/png',
-    clock: viewer.clock,
-    times: times,
+    clock : viewer.clock,
+    times : times,
     credit : 'NASA Global Imagery Browse Services for EOSDIS'
 });
 var imageryLayers = viewer.imageryLayers;

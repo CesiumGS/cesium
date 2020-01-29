@@ -234,8 +234,8 @@ import PrimitiveType from './PrimitiveType.js';
     var scratchArray2 = new Array(2);
     var generateArcOptionsScratch = {
         positions : scratchArray1,
-        height: scratchArray2,
-        ellipsoid: undefined,
+        height : scratchArray2,
+        ellipsoid : undefined,
         minDistance : undefined,
         granularity : undefined
     };

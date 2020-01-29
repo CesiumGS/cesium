@@ -22,9 +22,9 @@ import Resource from './Resource.js';
         this._key = BingMapsApi.getKey(key);
 
         this._resource = new Resource({
-            url: url,
-            queryParameters: {
-                key: this._key
+            url : url,
+            queryParameters : {
+                key : this._key
             }
         });
     }
@@ -67,8 +67,8 @@ import Resource from './Resource.js';
         //>>includeEnd('debug');
 
         var resource = this._resource.getDerivedResource({
-            queryParameters: {
-                query: query
+            queryParameters : {
+                query : query
             }
         });
 
@@ -86,8 +86,8 @@ import Resource from './Resource.js';
                 var north = bbox[2];
                 var east = bbox[3];
                 return {
-                    displayName: resource.name,
-                    destination: Rectangle.fromDegrees(west, south, east, north)
+                    displayName : resource.name,
+                    destination : Rectangle.fromDegrees(west, south, east, north)
                 };
             });
         });

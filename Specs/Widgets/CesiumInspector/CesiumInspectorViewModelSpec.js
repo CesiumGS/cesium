@@ -9,8 +9,8 @@ import { Globe } from '../../../Source/Cesium.js';
 import { GlobeSurfaceTile } from '../../../Source/Cesium.js';
 import { Primitive } from '../../../Source/Cesium.js';
 import { QuadtreeTile } from '../../../Source/Cesium.js';
-import createScene from '../../createScene.js';
 import { CesiumInspectorViewModel } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
 
 describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {
 
@@ -19,15 +19,15 @@ describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {
 
     function createRectangle(rectangle, rotation) {
         return new Primitive({
-            geometryInstances: new GeometryInstance({
-                geometry: new RectangleGeometry({
-                    rectangle: rectangle,
-                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    rotation: rotation
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    rotation : rotation
                 })
             }),
-            appearance: new EllipsoidSurfaceAppearance({
-                aboveGround: false
+            appearance : new EllipsoidSurfaceAppearance({
+                aboveGround : false
             })
         });
     }
@@ -130,8 +130,8 @@ describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {
         viewModel.primitive = p;
         viewModel.filterPrimitive = true;
         expect(defined(scene.debugCommandFilter)).toEqual(true);
-        expect(scene.debugCommandFilter({owner: p})).toEqual(true);
-        expect(scene.debugCommandFilter({owner: q})).toEqual(false);
+        expect(scene.debugCommandFilter({owner : p})).toEqual(true);
+        expect(scene.debugCommandFilter({owner : q})).toEqual(false);
 
         viewModel.filterPrimitive = false;
         expect(defined(scene.debugCommandFilter)).toEqual(false);

@@ -1,9 +1,9 @@
-import createTileKey from './createTileKey.js';
-import runLater from './runLater.js';
 import { GeographicTilingScheme } from '../Source/Cesium.js';
 import { Resource } from '../Source/Cesium.js';
 import { RuntimeError } from '../Source/Cesium.js';
 import { when } from '../Source/Cesium.js';
+import createTileKey from './createTileKey.js';
+import runLater from './runLater.js';
 
     function MockImageryProvider() {
         this.tilingScheme = new GeographicTilingScheme();

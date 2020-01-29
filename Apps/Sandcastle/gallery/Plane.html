@@ -26,7 +26,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var bluePlane = viewer.entities.add({
     name : 'Blue plane',
-    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    position : Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
     plane : {
         plane : new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0),
         dimensions : new Cesium.Cartesian2(400000.0, 300000.0),
@@ -36,7 +36,7 @@ var bluePlane = viewer.entities.add({
 
 var redPlane = viewer.entities.add({
     name : 'Red plane with black outline',
-    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+    position : Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
     plane : {
         plane : new Cesium.Plane(Cesium.Cartesian3.UNIT_Y, 0.0),
         dimensions : new Cesium.Cartesian2(400000.0, 300000.0),
@@ -48,7 +48,7 @@ var redPlane = viewer.entities.add({
 
 var outlineOnly = viewer.entities.add({
     name : 'Yellow plane outline',
-    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    position : Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
     plane : {
         plane : new Cesium.Plane(Cesium.Cartesian3.UNIT_Z, 0.0),
         dimensions : new Cesium.Cartesian2(400000.0, 300000.0),

@@ -270,7 +270,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
     it('credit gets set from options', function() {
         return GeoJsonDataSource.load(point, {
-                credit: 'This is my credit'
+                credit : 'This is my credit'
             }).then(function(dataSource) {
                 expect(dataSource.credit).toBeInstanceOf(Credit);
             });
@@ -371,7 +371,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         var dataSource = new GeoJsonDataSource();
         var options = {
-            describe: testDescribe
+            describe : testDescribe
         };
         return dataSource.load(featureWithProperties, options).then(function() {
             var entityCollection = dataSource.entities;
@@ -418,7 +418,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         var dataSource = new GeoJsonDataSource();
         var options = {
-            describe: testDescribeProperty
+            describe : testDescribeProperty
         };
         return dataSource.load(featureWithProperties, options).then(function() {
             var entityCollection = dataSource.entities;
@@ -554,7 +554,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('Works with point geometry clamped to ground', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(point, {
-            clampToGround: true
+            clampToGround : true
         }).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
@@ -680,7 +680,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('Works with lineString geometry clamped to ground', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(lineString, {
-            clampToGround: true
+            clampToGround : true
         }).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
@@ -711,7 +711,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('Works with multiLineString geometry clamped to ground', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(multiLineString, {
-            clampToGround: true
+            clampToGround : true
         }).then(function() {
             var entityCollection = dataSource.entities;
             var entities = entityCollection.values;
@@ -746,7 +746,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('Works with polygon geometry clamped to ground', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(polygon, {
-            clampToGround: true
+            clampToGround : true
         }).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];

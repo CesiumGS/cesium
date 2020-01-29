@@ -89,7 +89,7 @@ import PrimitiveType from './PrimitiveType.js';
         return new BoxOutlineGeometry({
             minimum : Cartesian3.negate(corner, new Cartesian3()),
             maximum : corner,
-            offsetAttribute: options.offsetAttribute
+            offsetAttribute : options.offsetAttribute
         });
     };
 
@@ -286,7 +286,7 @@ import PrimitiveType from './PrimitiveType.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 

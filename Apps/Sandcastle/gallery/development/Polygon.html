@@ -43,8 +43,8 @@ var redPolygonInstance = new Cesium.GeometryInstance({
         positions : positions,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
     }
 });
 
@@ -91,8 +91,8 @@ var bluePolygonInstance = new Cesium.GeometryInstance({
         polygonHierarchy : polygonHierarchy,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
     }
 });
 
@@ -108,11 +108,11 @@ positions = Cesium.Cartesian3.fromDegreesArray([
 var greenPolygonInstance = new Cesium.GeometryInstance({
     geometry : Cesium.PolygonGeometry.fromPositions({
         positions : positions,
-        extrudedHeight: 500000.0,
+        extrudedHeight : 500000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
     }
 });
 
@@ -132,12 +132,12 @@ positions = Cesium.Cartesian3.fromDegreesArrayHeights([
 var orangePolygonInstance = new Cesium.GeometryInstance({
     geometry : Cesium.PolygonGeometry.fromPositions({
         positions : positions,
-        extrudedHeight: 0,
+        extrudedHeight : 0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         perPositionHeight : true
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE)
     }
 });
 

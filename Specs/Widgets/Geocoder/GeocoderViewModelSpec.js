@@ -1,9 +1,9 @@
 import { Cartesian3 } from '../../../Source/Cesium.js';
 import { Rectangle } from '../../../Source/Cesium.js';
-import createScene from '../../createScene.js';
-import pollToPromise from '../../pollToPromise.js';
 import { when } from '../../../Source/Cesium.js';
 import { GeocoderViewModel } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import pollToPromise from '../../pollToPromise.js';
 
 describe('Widgets/Geocoder/GeocoderViewModel', function() {
 
@@ -11,39 +11,39 @@ describe('Widgets/Geocoder/GeocoderViewModel', function() {
     var mockDestination = new Cartesian3(1.0, 2.0, 3.0);
 
     var geocoderResults1 = [{
-        displayName: 'a',
-        destination: mockDestination
+        displayName : 'a',
+        destination : mockDestination
     }, {
-        displayName: 'b',
-        destination: mockDestination
+        displayName : 'b',
+        destination : mockDestination
     }, {
-        displayName: 'c',
-        destination: mockDestination
+        displayName : 'c',
+        destination : mockDestination
     }];
     var customGeocoderOptions = {
-        autoComplete: true,
-        geocode: function (input) {
+        autoComplete : true,
+        geocode : function (input) {
             return when.resolve(geocoderResults1);
         }
     };
 
     var geocoderResults2 = [{
-        displayName: '1',
-        destination: mockDestination
+        displayName : '1',
+        destination : mockDestination
     }, {
-        displayName: '2',
-        destination: mockDestination
+        displayName : '2',
+        destination : mockDestination
     }];
     var customGeocoderOptions2 = {
-        autoComplete: true,
-        geocode: function (input) {
+        autoComplete : true,
+        geocode : function (input) {
             return when.resolve(geocoderResults2);
         }
     };
 
     var noResultsGeocoder = {
-        autoComplete: true,
-        geocode: function (input) {
+        autoComplete : true,
+        geocode : function (input) {
             return when.resolve([]);
         }
     };
@@ -177,7 +177,7 @@ describe('Widgets/Geocoder/GeocoderViewModel', function() {
             geocoderServices : [customGeocoderOptions]
         });
 
-        var suggestion = { displayName: 'a', destination: destination };
+        var suggestion = { displayName : 'a', destination : destination };
         geocoder._selectedSuggestion = suggestion;
         geocoder.activateSuggestion(suggestion);
         expect(geocoder._searchText).toEqual('a');
@@ -215,7 +215,7 @@ describe('Widgets/Geocoder/GeocoderViewModel', function() {
         var geocoder = new GeocoderViewModel({
             scene : scene,
             geocoderServices : [noResultsGeocoder, customGeocoderOptions2],
-            destinationFound: destinationFound
+            destinationFound : destinationFound
         });
         geocoder._searchText = 'sthsnth'; // an empty query will prevent geocoding
         geocoder.search();

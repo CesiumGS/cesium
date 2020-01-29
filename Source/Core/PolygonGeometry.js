@@ -132,7 +132,7 @@ import WindingOrder from './WindingOrder.js';
 
                 if (vertexFormat.st) {
                     var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
-                    p = ellipsoid.scaleToGeodeticSurface(p,p);
+                    p = ellipsoid.scaleToGeodeticSurface(p, p);
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
 
@@ -916,18 +916,18 @@ import WindingOrder from './WindingOrder.js';
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var options = {
-            perPositionHeight: perPositionHeight,
-            vertexFormat: vertexFormat,
-            geometry: undefined,
-            tangentPlane: tangentPlane,
-            boundingRectangle: boundingRectangle,
-            ellipsoid: ellipsoid,
-            stRotation: stRotation,
-            bottom: false,
-            top: true,
-            wall: false,
-            extrude: false,
-            arcType: arcType
+            perPositionHeight : perPositionHeight,
+            vertexFormat : vertexFormat,
+            geometry : undefined,
+            tangentPlane : tangentPlane,
+            boundingRectangle : boundingRectangle,
+            ellipsoid : ellipsoid,
+            stRotation : stRotation,
+            bottom : false,
+            top : true,
+            wall : false,
+            extrude : false,
+            arcType : arcType
         };
 
         var i;
@@ -986,7 +986,7 @@ import WindingOrder from './WindingOrder.js';
                     geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                         componentsPerAttribute : 1,
-                        values: applyOffset
+                        values : applyOffset
                     });
                 }
 
@@ -1033,7 +1033,7 @@ import WindingOrder from './WindingOrder.js';
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true,
+            shadowVolume : true,
             arcType : polygonGeometry._arcType
         });
     };

@@ -827,7 +827,7 @@ import PolylineGraphics from './PolylineGraphics.js';
         }
 
         options = {
-            describe: defaultValue(options.describe, defaultDescribeProperty),
+            describe : defaultValue(options.describe, defaultDescribeProperty),
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),

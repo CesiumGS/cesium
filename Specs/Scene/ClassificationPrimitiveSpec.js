@@ -758,8 +758,8 @@ describe('Scene/ClassificationPrimitive', function() {
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
                 }),
-                attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }),
             compressVertices : false
@@ -788,8 +788,8 @@ describe('Scene/ClassificationPrimitive', function() {
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
                 }),
-                attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }),
             asynchronous : false,

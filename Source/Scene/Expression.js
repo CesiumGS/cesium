@@ -234,7 +234,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
         log2 : getEvaluateUnaryComponentwise(log2),
         fract : getEvaluateUnaryComponentwise(fract),
         length : length,
-        normalize: normalize
+        normalize : normalize
     };
 
     var binaryFunctions = {
@@ -257,7 +257,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
     }
 
     function exp2(exponent) {
-        return Math.pow(2.0,exponent);
+        return Math.pow(2.0, exponent);
     }
 
     function log2(number) {

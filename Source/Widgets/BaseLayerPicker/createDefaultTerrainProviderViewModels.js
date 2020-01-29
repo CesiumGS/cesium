@@ -12,7 +12,7 @@ import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
             name : 'WGS84 Ellipsoid',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/Ellipsoid.png'),
             tooltip : 'WGS84 standard ellipsoid, also known as EPSG:4326',
-            category: 'Cesium ion',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return new EllipsoidTerrainProvider();
             }
@@ -22,11 +22,11 @@ import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
             name : 'Cesium World Terrain',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/CesiumWorldTerrain.png'),
             tooltip : 'High-resolution global terrain tileset curated from several datasources and hosted by Cesium ion',
-            category: 'Cesium ion',
+            category : 'Cesium ion',
             creationFunction : function(){
                 return createWorldTerrain({
-                    requestWaterMask: true,
-                    requestVertexNormals: true
+                    requestWaterMask : true,
+                    requestVertexNormals : true
                 });
             }
         }));

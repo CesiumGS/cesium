@@ -31,10 +31,10 @@ import { Cesium3DTileStyle } from '../../Source/Cesium.js';
 import { ClippingPlane } from '../../Source/Cesium.js';
 import { ClippingPlaneCollection } from '../../Source/Cesium.js';
 import { CullFace } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Cesium3DTileset', function() {
 
@@ -250,7 +250,7 @@ describe('Scene/Cesium3DTileset', function() {
 
     it('Constructor works with promise to resource', function() {
         var resource = new Resource({
-            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
+            url : 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
         });
 
         // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
@@ -267,7 +267,7 @@ describe('Scene/Cesium3DTileset', function() {
 
     it('Constructor works with file resource', function() {
         var resource = new Resource({
-            url: 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
+            url : 'Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json'
         });
 
         // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
@@ -346,14 +346,14 @@ describe('Scene/Cesium3DTileset', function() {
 
     it('loads tileset with extras', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset.extras).toEqual({ 'name': 'Sample Tileset' });
+            expect(tileset.extras).toEqual({ 'name' : 'Sample Tileset' });
             expect(tileset.root.extras).toBeUndefined();
 
             var length = tileset.root.children.length;
             var taggedChildren = 0;
             for (var i = 0; i < length; ++i) {
                 if (defined(tileset.root.children[i].extras)) {
-                    expect(tileset.root.children[i].extras).toEqual({ 'id': 'Special Tile' });
+                    expect(tileset.root.children[i].extras).toEqual({ 'id' : 'Special Tile' });
                     ++taggedChildren;
                 }
             }
@@ -382,7 +382,7 @@ describe('Scene/Cesium3DTileset', function() {
 
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(tileset.root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl.replace('tileset.json','parent.b3dm?v=1.2.3')));
+            expect(tileset.root.content._resource.url).toEqual(getAbsoluteUri(tilesetUrl.replace('tileset.json', 'parent.b3dm?v=1.2.3')));
         });
     });
 
@@ -2052,16 +2052,16 @@ describe('Scene/Cesium3DTileset', function() {
     it('applies style when tile is selected after new style is applied', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var feature = tileset.root.content.getFeature(0);
-            tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("red")'});
             scene.renderForSpecs();
             expect(feature.color).toEqual(Color.RED);
 
-            tileset.style = new Cesium3DTileStyle({color: 'color("blue")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("blue")'});
             scene.renderForSpecs();
             expect(feature.color).toEqual(Color.BLUE);
 
             viewNothing();
-            tileset.style = new Cesium3DTileStyle({color: 'color("lime")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("lime")'});
             scene.renderForSpecs();
             expect(feature.color).toEqual(Color.BLUE); // Hasn't been selected yet
 
@@ -2083,7 +2083,7 @@ describe('Scene/Cesium3DTileset', function() {
 
     it('does not reapply style during pick pass', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("red")'});
             scene.renderForSpecs();
             expect(tileset._statisticsPerPass[Cesium3DTilePass.RENDER].numberOfTilesStyled).toBe(1);
             scene.pickForSpecs();

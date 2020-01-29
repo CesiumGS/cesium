@@ -107,8 +107,8 @@ import Property from './Property.js';
          * @type {String}
          * @readonly
          */
-        id: {
-            get: function() {
+        id : {
+            get : function() {
                 return this._id;
             }
         },
@@ -311,8 +311,8 @@ import Property from './Property.js';
          * @memberof PolylineGeometryUpdater.prototype
          * @readonly
          */
-        zIndex: {
-            get: function() {
+        zIndex : {
+            get : function() {
                 return this._zIndex;
             }
         }

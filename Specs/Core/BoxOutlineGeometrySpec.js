@@ -37,7 +37,7 @@ describe('Core/BoxOutlineGeometry', function() {
         var m = BoxOutlineGeometry.createGeometry(new BoxOutlineGeometry({
             minimum : new Cartesian3(-1, -2, -3),
             maximum : new Cartesian3(1, 2, 3),
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 8;

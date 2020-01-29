@@ -15,8 +15,8 @@ import { Imagery } from '../../Source/Cesium.js';
 import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/TileMapServiceImageryProvider', function() {
 
@@ -190,7 +190,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
                 expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -212,7 +212,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
                 expect(request.url).toContain('made/up/tms/server/');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -235,7 +235,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
                 expect(request.url).toStartWith(getAbsoluteUri(baseUrl));
                 expect(request.url).toContain('?a=some&b=query');
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -262,7 +262,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -337,7 +337,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
                 expect(request.url).toContain('/0/0/0');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -382,7 +382,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

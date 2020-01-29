@@ -96,8 +96,8 @@ import Resource from './Resource.js';
         minTerrainHeight = Math.max(ApproximateTerrainHeights._defaultMinTerrainHeight, minTerrainHeight);
 
         return {
-            minimumTerrainHeight: minTerrainHeight,
-            maximumTerrainHeight: maxTerrainHeight
+            minimumTerrainHeight : minTerrainHeight,
+            maximumTerrainHeight : maxTerrainHeight
         };
     };
 
@@ -192,8 +192,8 @@ import Resource from './Resource.js';
          * @readonly
          * @memberof ApproximateTerrainHeights
          */
-        initialized: {
-            get: function() {
+        initialized : {
+            get : function() {
                 return defined(ApproximateTerrainHeights._terrainHeights);
             }
         }

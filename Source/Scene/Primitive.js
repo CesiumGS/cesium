@@ -697,7 +697,7 @@ import ShadowMode from './ShadowMode.js';
     function cloneInstance(instance, geometry) {
         return {
             geometry : geometry,
-            attributes: instance.attributes,
+            attributes : instance.attributes,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
             pickPrimitive : instance.pickPrimitive,
             id : instance.id

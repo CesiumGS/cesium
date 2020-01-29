@@ -749,8 +749,8 @@ describe('Core/Matrix3', function() {
           0.0, 6.0, 0.0,
           0.0, 0.0, 1.0);
         var result = {
-            unitary: new Matrix3(),
-            diagonal: new Matrix3()
+            unitary : new Matrix3(),
+            diagonal : new Matrix3()
         };
 
         var decomposition = Matrix3.computeEigenDecomposition(a, result);

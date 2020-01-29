@@ -233,7 +233,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
          * @type {ConstantProperty}
          * @default 0
          */
-        zIndex: createPropertyDescriptor('zIndex')
+        zIndex : createPropertyDescriptor('zIndex')
     });
 
     /**

@@ -52,7 +52,7 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         zIndex = defaultValue(zIndex, 0);
         var collection = this._collections[zIndex];
         if (!defined(collection)) {
-            collection = new PrimitiveCollection({ destroyPrimitives: false });
+            collection = new PrimitiveCollection({ destroyPrimitives : false });
             collection._zIndex = zIndex;
             this._collections[zIndex] = collection;
             var array = this._collectionsArray;

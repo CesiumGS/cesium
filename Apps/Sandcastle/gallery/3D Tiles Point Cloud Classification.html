@@ -29,7 +29,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(16421)
+    url : Cesium.IonResource.fromAssetId(16421)
 });
 viewer.scene.primitives.add(tileset);
 
@@ -37,8 +37,8 @@ viewer.scene.primitives.add(tileset);
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/Geometry
 var classificationTileset = new Cesium.Cesium3DTileset({
-    url: '../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json',
-    classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+    url : '../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json',
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
 });
 viewer.scene.primitives.add(classificationTileset);
 
@@ -57,14 +57,14 @@ classificationTileset.style = new Cesium.Cesium3DTileStyle({
 });
 
 viewer.scene.camera.setView({
-    destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
-    orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
+    destination : new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+    orientation : new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
 });
 
 // Information about the currently highlighted feature
 var highlighted = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
+    feature : undefined,
+    originalColor : new Cesium.Color()
 };
 
 // Color a feature yellow on hover.

@@ -57,8 +57,8 @@ import Visibility from './Visibility.js';
          * @memberof Occluder.prototype
          * @type {Cartesian3}
          */
-        position: {
-            get: function() {
+        position : {
+            get : function() {
                 return this._occluderPosition;
             }
         },
@@ -68,8 +68,8 @@ import Visibility from './Visibility.js';
          * @memberof Occluder.prototype
          * @type {Number}
          */
-        radius: {
-            get: function() {
+        radius : {
+            get : function() {
                 return this._occluderRadius;
             }
         },
@@ -79,8 +79,8 @@ import Visibility from './Visibility.js';
          * @memberof Occluder.prototype
          * @type {Cartesian3}
          */
-        cameraPosition: {
-            set: function(cameraPosition) {
+        cameraPosition : {
+            set : function(cameraPosition) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(cameraPosition)) {
                     throw new DeveloperError('cameraPosition is required.');

@@ -1024,8 +1024,8 @@ import knockout from '../../ThirdParty/knockout.js';
          * @type {Scene}
          * @readonly
          */
-        scene: {
-            get: function() {
+        scene : {
+            get : function() {
                 return this._scene;
             }
         },
@@ -1035,8 +1035,8 @@ import knockout from '../../ThirdParty/knockout.js';
          * @type {HTMLElement}
          * @readonly
          */
-        performanceContainer: {
-            get: function() {
+        performanceContainer : {
+            get : function() {
                 return this._performanceContainer;
             }
         },

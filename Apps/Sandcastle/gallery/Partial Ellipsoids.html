@@ -27,7 +27,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var saturnPosition = Cesium.Cartesian3.fromDegrees(-95.0, 45.0, 300000.0);
 viewer.entities.add({
     name : 'Saturn',
-    position: saturnPosition,
+    position : saturnPosition,
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         material : new Cesium.Color(0.95, 0.82, 0.49)
@@ -36,7 +36,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : "Saturn's inner ring",
-    position: saturnPosition,
+    position : saturnPosition,
     orientation : Cesium.Transforms.headingPitchRollQuaternion(
         saturnPosition,
         new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(30.0), Cesium.Math.toRadians(30.0), 0.0)
@@ -52,7 +52,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : "Saturn's outer ring",
-    position: saturnPosition,
+    position : saturnPosition,
     orientation : Cesium.Transforms.headingPitchRollQuaternion(
         saturnPosition,
         new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(30.0), Cesium.Math.toRadians(30.0), 0.0)
@@ -68,7 +68,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Dome',
-    position: Cesium.Cartesian3.fromDegrees(-120.0, 40.0),
+    position : Cesium.Cartesian3.fromDegrees(-120.0, 40.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         maximumCone : Cesium.Math.PI_OVER_TWO,
@@ -79,7 +79,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Dome with inner radius',
-    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0),
+    position : Cesium.Cartesian3.fromDegrees(-114.0, 40.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(250000.0, 200000.0, 150000.0),
         innerRadii : new Cesium.Cartesian3(100000.0, 80000.0, 60000.0),
@@ -91,7 +91,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Dome with top cut out',
-    position: Cesium.Cartesian3.fromDegrees(-108.0, 40.0),
+    position : Cesium.Cartesian3.fromDegrees(-108.0, 40.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
@@ -104,7 +104,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Top and bottom cut out',
-    position: Cesium.Cartesian3.fromDegrees(-102.0, 40.0, 140000.0),
+    position : Cesium.Cartesian3.fromDegrees(-102.0, 40.0, 140000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
@@ -117,7 +117,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Bowl',
-    position: Cesium.Cartesian3.fromDegrees(-96.0, 39.5, 200000.0),
+    position : Cesium.Cartesian3.fromDegrees(-96.0, 39.5, 200000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(180000.0, 180000.0, 180000.0),
@@ -129,7 +129,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Clock cutout',
-    position: Cesium.Cartesian3.fromDegrees(-90.0, 39.0),
+    position : Cesium.Cartesian3.fromDegrees(-90.0, 39.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(150000.0, 150000.0, 150000.0),
@@ -144,7 +144,7 @@ viewer.entities.add({
 
 viewer.entities.add({
     name : 'Partial dome',
-    position: Cesium.Cartesian3.fromDegrees(-84.0, 38.5),
+    position : Cesium.Cartesian3.fromDegrees(-84.0, 38.5),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         minimumClock : Cesium.Math.toRadians(-90.0),

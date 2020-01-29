@@ -8,8 +8,8 @@ import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import { SingleTileImageryProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/SingleTileImageryProvider', function() {
 
@@ -185,7 +185,7 @@ describe('Scene/SingleTileImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

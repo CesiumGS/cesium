@@ -34,9 +34,9 @@ import IonResource from './IonResource.js';
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         return new CesiumTerrainProvider({
-            url: IonResource.fromAssetId(1),
-            requestVertexNormals: defaultValue(options.requestVertexNormals, false),
-            requestWaterMask: defaultValue(options.requestWaterMask, false)
+            url : IonResource.fromAssetId(1),
+            requestVertexNormals : defaultValue(options.requestVertexNormals, false),
+            requestWaterMask : defaultValue(options.requestWaterMask, false)
         });
     }
 export default createWorldTerrain;

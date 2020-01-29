@@ -96,7 +96,7 @@ import ImageryProvider from './ImageryProvider.js';
 
         if (defined(options.token)) {
             resource.setQueryParameters({
-                token: options.token
+                token : options.token
             });
         }
 
@@ -207,8 +207,8 @@ import ImageryProvider from './ImageryProvider.js';
 
         function requestMetadata() {
             var resource = that._resource.getDerivedResource({
-                queryParameters: {
-                    f: 'json'
+                queryParameters : {
+                    f : 'json'
                 }
             });
             var metadata = resource.fetchJsonp();
@@ -227,19 +227,19 @@ import ImageryProvider from './ImageryProvider.js';
         var resource;
         if (imageryProvider._useTiles) {
             resource = imageryProvider._resource.getDerivedResource({
-                url: 'tile/' + level + '/' + y + '/' + x,
-                request: request
+                url : 'tile/' + level + '/' + y + '/' + x,
+                request : request
             });
         } else {
             var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
             var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
 
             var query = {
-                bbox: bbox,
-                size: imageryProvider._tileWidth + ',' + imageryProvider._tileHeight,
-                format: 'png',
-                transparent: true,
-                f: 'image'
+                bbox : bbox,
+                size : imageryProvider._tileWidth + ',' + imageryProvider._tileHeight,
+                format : 'png',
+                transparent : true,
+                f : 'image'
             };
 
             if (imageryProvider._tilingScheme.projection instanceof GeographicProjection) {
@@ -254,9 +254,9 @@ import ImageryProvider from './ImageryProvider.js';
             }
 
             resource = imageryProvider._resource.getDerivedResource({
-                url: 'export',
-                request: request,
-                queryParameters: query
+                url : 'export',
+                request : request,
+                queryParameters : query
             });
         }
 
@@ -326,7 +326,7 @@ import ImageryProvider from './ImageryProvider.js';
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -622,19 +622,19 @@ import ImageryProvider from './ImageryProvider.js';
         }
 
         var query = {
-            f: 'json',
-            tolerance: 2,
-            geometryType: 'esriGeometryPoint',
-            geometry: horizontal + ',' + vertical,
-            mapExtent: rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north,
-            imageDisplay: this._tileWidth + ',' + this._tileHeight + ',96',
-            sr: sr,
-            layers: layers
+            f : 'json',
+            tolerance : 2,
+            geometryType : 'esriGeometryPoint',
+            geometry : horizontal + ',' + vertical,
+            mapExtent : rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north,
+            imageDisplay : this._tileWidth + ',' + this._tileHeight + ',96',
+            sr : sr,
+            layers : layers
         };
 
         var resource = this._resource.getDerivedResource({
-            url: 'identify',
-            queryParameters: query
+            url : 'identify',
+            queryParameters : query
         });
 
         return resource.fetchJson().then(function(json) {

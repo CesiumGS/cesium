@@ -350,9 +350,9 @@ import VertexFormat from './VertexFormat.js';
         var attributes = new GeometryAttributes();
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.DOUBLE,
-                componentsPerAttribute: 3,
-                values: positions
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : positions
             });
         }
 
@@ -401,7 +401,7 @@ import VertexFormat from './VertexFormat.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 

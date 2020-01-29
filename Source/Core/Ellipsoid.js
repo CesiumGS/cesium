@@ -91,7 +91,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
          * @readonly
          */
         radii : {
-            get: function() {
+            get : function() {
                 return this._radii;
             }
         },

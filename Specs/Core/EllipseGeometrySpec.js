@@ -22,7 +22,7 @@ describe('Core/EllipseGeometry', function() {
     it('throws without a semiMajorAxis', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMinorAxis : 1.0
             });
         }).toThrowDeveloperError();
@@ -31,7 +31,7 @@ describe('Core/EllipseGeometry', function() {
     it('throws without a semiMinorAxis', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0
             });
         }).toThrowDeveloperError();
@@ -40,7 +40,7 @@ describe('Core/EllipseGeometry', function() {
     it('throws with a negative granularity', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 1.0,
                 granularity : -1.0
@@ -51,7 +51,7 @@ describe('Core/EllipseGeometry', function() {
     it('throws when semiMajorAxis is less than the semiMajorAxis', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.fromDegrees(0,0),
+                center : Cartesian3.fromDegrees(0, 0),
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 2.0
             });
@@ -62,7 +62,7 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
@@ -77,7 +77,7 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
@@ -97,7 +97,7 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
@@ -122,7 +122,7 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
@@ -139,11 +139,11 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 16;
@@ -160,12 +160,12 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
-            offsetAttribute: GeometryOffsetAttribute.TOP
+            offsetAttribute : GeometryOffsetAttribute.TOP
         }));
 
         var numVertices = 48;
@@ -184,12 +184,12 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
-            offsetAttribute: GeometryOffsetAttribute.ALL
+            offsetAttribute : GeometryOffsetAttribute.ALL
         }));
 
         var numVertices = 48;
@@ -206,7 +206,7 @@ describe('Core/EllipseGeometry', function() {
         var m = EllipseGeometry.createGeometry(new EllipseGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : Ellipsoid.WGS84,
-            center : Cartesian3.fromDegrees(0,0),
+            center : Cartesian3.fromDegrees(0, 0),
             granularity : 0.1,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
@@ -332,9 +332,9 @@ describe('Core/EllipseGeometry', function() {
             center : Cartesian3.fromDegrees(-30, 33),
             semiMajorAxis : 2000.0,
             semiMinorAxis : 1000.0,
-            rotation: CesiumMath.PI_OVER_TWO,
-            granularity: 0.5,
-            ellipsoid: Ellipsoid.UNIT_SPHERE
+            rotation : CesiumMath.PI_OVER_TWO,
+            granularity : 0.5,
+            ellipsoid : Ellipsoid.UNIT_SPHERE
         };
         var geometry = new EllipseGeometry(options);
 
@@ -396,7 +396,7 @@ describe('Core/EllipseGeometry', function() {
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
 
-    var center = Cartesian3.fromDegrees(0,0);
+    var center = Cartesian3.fromDegrees(0, 0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new EllipseGeometry({
         vertexFormat : VertexFormat.POSITION_AND_ST,

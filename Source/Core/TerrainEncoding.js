@@ -71,7 +71,7 @@ import TerrainQuantization from './TerrainQuantization.js';
 
             var translationMatrix = Matrix4.fromTranslation(minimum, matrix4Scratch);
             var scaleMatrix =  Matrix4.fromScale(dimensions, matrix4Scratch2);
-            var st = Matrix4.multiply(translationMatrix, scaleMatrix,matrix4Scratch);
+            var st = Matrix4.multiply(translationMatrix, scaleMatrix, matrix4Scratch);
 
             Matrix4.multiply(fromENU, st, fromENU);
             Matrix4.multiply(matrix, st, matrix);

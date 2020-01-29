@@ -88,8 +88,8 @@ import defineProperties from './defineProperties.js';
          * @type {HTMLElement}
          * @readonly
          */
-        element: {
-            get: function() {
+        element : {
+            get : function() {
                 if (!defined(this._element)) {
                     var html = DOMPurify.sanitize(this._html);
 

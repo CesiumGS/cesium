@@ -80,8 +80,8 @@ import createCommand from '../createCommand.js';
             for (i = 0; i < allCategoryNames.length; i++) {
                 var name = allCategoryNames[i];
                 result.push({
-                    name: name,
-                    providers: categories[name]
+                    name : name,
+                    providers : categories[name]
                 });
             }
             return result;
@@ -108,8 +108,8 @@ import createCommand from '../createCommand.js';
             for (i = 0; i < allCategoryNames.length; i++) {
                 var name = allCategoryNames[i];
                 result.push({
-                    name: name,
-                    providers: categories[name]
+                    name : name,
+                    providers : categories[name]
                 });
             }
             return result;

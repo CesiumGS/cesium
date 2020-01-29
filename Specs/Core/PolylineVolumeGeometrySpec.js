@@ -23,23 +23,23 @@ describe('Core/PolylineVolumeGeometry', function() {
     it('throws without shape positions', function() {
         expect(function() {
             return new PolylineVolumeGeometry({
-                polylinePositions: [new Cartesian3()]
+                polylinePositions : [new Cartesian3()]
             });
         }).toThrowDeveloperError();
     });
 
     it('createGeometry returnes undefined without 2 unique polyline positions', function() {
         var geometry = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
-            polylinePositions: [new Cartesian3()],
-            shapePositions: shape
+            polylinePositions : [new Cartesian3()],
+            shapePositions : shape
         }));
         expect(geometry).toBeUndefined();
     });
 
     it('createGeometry returnes undefined without 3 unique shape positions', function() {
         var geometry = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
-            polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
+            polylinePositions : [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
+            shapePositions : [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
         }));
         expect(geometry).toBeUndefined();
     });
@@ -51,8 +51,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         // 6 positions * 4 box positions * 2 to duplicate for normals + 4 positions * 2 ends
@@ -68,8 +68,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape.reverse()
+            cornerType : CornerType.MITERED,
+            shapePositions : shape.reverse()
         }));
 
         expect(m.attributes.position.values.length).toEqual(56 * 3);
@@ -83,8 +83,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                 90.0, -30.0,
                 90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         var numVertices = 56;
@@ -103,8 +103,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                  90.0, -30.0,
                  90.0, -35.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         var numVertices = 56;
@@ -125,8 +125,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                 90.0, -31.0,
                 91.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         // (3 duplicates * 2 ends + 2 duplicates * 2 middle points + 4 duplicates * 1 corner) * 4 box positions
@@ -143,8 +143,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                 90.0, -31.0,
                 89.0, -31.0
             ]),
-            cornerType: CornerType.MITERED,
-            shapePositions: shape
+            cornerType : CornerType.MITERED,
+            shapePositions : shape
         }));
 
         expect(m.attributes.position.values.length).toEqual(56 * 3);
@@ -160,8 +160,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                 89.0, -31.0,
                 89.0, -32.0
             ]),
-            cornerType: CornerType.ROUNDED,
-            shapePositions: shape
+            cornerType : CornerType.ROUNDED,
+            shapePositions : shape
         }));
 
         var corners = 36 * 4 * 4; // positions * 4 for shape * 4 for normal duplication
@@ -180,8 +180,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                  89.0, -31.0,
                  89.0, -32.0
             ]),
-            cornerType: CornerType.BEVELED,
-            shapePositions: shape
+            cornerType : CornerType.BEVELED,
+            shapePositions : shape
         }));
 
         var corners = 4 * 4; // 4 for shape * 4 for normal duplication
@@ -201,8 +201,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                  1.98708058340534, 52.7733979856253, 500,
                  2.00634853946644, 52.7650460748473, 500
             ]),
-            cornerType: CornerType.BEVELED,
-            shapePositions: shape
+            cornerType : CornerType.BEVELED,
+            shapePositions : shape
         }));
 
         // (8 positions * 3 duplications + 1 duplication * 6 corners) * 4 for shape
@@ -219,8 +219,8 @@ describe('Core/PolylineVolumeGeometry', function() {
                 -67.655, 15.0,
                 -67.655, 20.0
             ]),
-            cornerType: CornerType.BEVELED,
-            shapePositions: shape,
+            cornerType : CornerType.BEVELED,
+            shapePositions : shape,
             granularity : Math.PI / 6.0
         }));
 
@@ -233,8 +233,8 @@ describe('Core/PolylineVolumeGeometry', function() {
     var volume = new PolylineVolumeGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         polylinePositions : positions,
-        cornerType: CornerType.BEVELED,
-        shapePositions: volumeShape,
+        cornerType : CornerType.BEVELED,
+        shapePositions : volumeShape,
         ellipsoid : Ellipsoid.UNIT_SPHERE,
         granularity : 0.1
     });

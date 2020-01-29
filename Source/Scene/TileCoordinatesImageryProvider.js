@@ -67,7 +67,7 @@ import when from '../ThirdParty/when.js';
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 return this._tileHeight;
             }

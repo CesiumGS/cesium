@@ -84,7 +84,7 @@ describe('DataSources/DataSourceClock', function() {
         }).toThrowDeveloperError();
     });
 
-    it('gets value as a clock instance',function () {
+    it('gets value as a clock instance', function () {
           var source = new DataSourceClock();
           source.startTime = JulianDate.now();
           source.stopTime = JulianDate.now();

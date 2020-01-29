@@ -363,12 +363,12 @@ describe('Core/GroundPolylineGeometry', function() {
         var rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            arcType: ArcType.RHUMB
+            arcType : ArcType.RHUMB
         });
         var geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            arcType: ArcType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
 
         var rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);
@@ -388,12 +388,12 @@ describe('Core/GroundPolylineGeometry', function() {
         rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            arcType: ArcType.RHUMB
+            arcType : ArcType.RHUMB
         });
         geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            arcType: ArcType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
 
         rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);

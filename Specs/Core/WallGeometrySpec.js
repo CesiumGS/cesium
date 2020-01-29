@@ -60,7 +60,7 @@ describe('Core/WallGeometry', function() {
                 49.0, 18.0,
                 49.0, 18.0
             ]),
-            maximumHeights: [0, 0, 0]
+            maximumHeights : [0, 0, 0]
         }));
         expect(geometry).toBeUndefined();
     });
@@ -68,9 +68,9 @@ describe('Core/WallGeometry', function() {
     it('does not throw when positions are unique but close', function() {
         WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArray([
-                -47.93121266896352,-15.771192496304398,
-                -47.93119792786269,-15.771148001875085
+            positions : Cartesian3.fromDegreesArray([
+                -47.93121266896352, -15.771192496304398,
+                -47.93119792786269, -15.771148001875085
             ])
         }));
     });
@@ -78,7 +78,7 @@ describe('Core/WallGeometry', function() {
     it('creates positions relative to ellipsoid', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0
             ])
@@ -100,7 +100,7 @@ describe('Core/WallGeometry', function() {
     it('creates positions with minimum and maximum heights', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0
             ]),
@@ -130,7 +130,7 @@ describe('Core/WallGeometry', function() {
     it('cleans positions with duplicates', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 49.0, 18.0, 2000.0,
                 50.0, 18.0, 1000.0,
@@ -164,7 +164,7 @@ describe('Core/WallGeometry', function() {
         ]);
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : inputPositions
+            positions : inputPositions
         }));
         expect(w).toBeDefined();
 
@@ -174,7 +174,7 @@ describe('Core/WallGeometry', function() {
         ]);
         var expectedW = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : expectedPositions
+            positions : expectedPositions
         }));
         var positions = w.attributes.position.values;
         expect(positions.length).toEqual(expectedW.attributes.position.values.length);
@@ -183,7 +183,7 @@ describe('Core/WallGeometry', function() {
     it('cleans selects maximum height from duplicates', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0,
                 50.0, 18.0, 6000.0,
@@ -208,7 +208,7 @@ describe('Core/WallGeometry', function() {
     it('creates all attributes', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.ALL,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0,
                 51.0, 18.0, 1000.0
@@ -228,7 +228,7 @@ describe('Core/WallGeometry', function() {
     it('creates correct texture coordinates', function() {
         var w = WallGeometry.createGeometry(new WallGeometry({
             vertexFormat : VertexFormat.ALL,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0,
                 51.0, 18.0, 1000.0
@@ -260,7 +260,7 @@ describe('Core/WallGeometry', function() {
 
         var w = WallGeometry.createGeometry(WallGeometry.fromConstantHeights({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0
             ]),
@@ -292,7 +292,7 @@ describe('Core/WallGeometry', function() {
         positions : positions,
         vertexFormat : VertexFormat.POSITION_ONLY,
         granularity : 0.01,
-        ellipsoid: Ellipsoid.UNIT_SPHERE
+        ellipsoid : Ellipsoid.UNIT_SPHERE
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01];
     createPackableSpecs(WallGeometry, wall, packedInstance);

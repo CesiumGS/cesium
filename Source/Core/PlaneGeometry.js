@@ -63,7 +63,7 @@ import VertexFormat from './VertexFormat.js';
 
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
-        vertexFormat: scratchVertexFormat
+        vertexFormat : scratchVertexFormat
     };
 
     /**

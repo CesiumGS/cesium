@@ -614,10 +614,10 @@ describe('Core/TimeIntervalCollection', function() {
 
         function createTimeInterval(startDays, stopDays, isStartIncluded, isStopIncluded) {
             return new TimeInterval({
-                start: new JulianDate(startDays, 0.0, TimeStandard.TAI),
-                stop: new JulianDate(stopDays, 0.0, TimeStandard.TAI),
-                isStartIncluded: isStartIncluded,
-                isStopIncluded: isStopIncluded
+                start : new JulianDate(startDays, 0.0, TimeStandard.TAI),
+                stop : new JulianDate(stopDays, 0.0, TimeStandard.TAI),
+                isStartIncluded : isStartIncluded,
+                isStopIncluded : isStopIncluded
             });
         }
 
@@ -757,18 +757,18 @@ describe('Core/TimeIntervalCollection', function() {
     it('removeInterval removes the first interval correctly', function() {
         var intervals = new TimeIntervalCollection();
         var from1To3 = new TimeInterval({
-            start: new JulianDate(1),
-            stop: new JulianDate(3),
-            isStopIncluded: true,
-            isStartIncluded: true,
-            data: '1-to-3'
+            start : new JulianDate(1),
+            stop : new JulianDate(3),
+            isStopIncluded : true,
+            isStartIncluded : true,
+            data : '1-to-3'
         });
         var from3To6 = new TimeInterval({
-            start: new JulianDate(3),
-            stop: new JulianDate(6),
-            isStopIncluded: true,
-            isStartIncluded: true,
-            data: '3-to-6'
+            start : new JulianDate(3),
+            stop : new JulianDate(6),
+            isStopIncluded : true,
+            isStartIncluded : true,
+            data : '3-to-6'
         });
 
         intervals.addInterval(from1To3);
@@ -787,11 +787,11 @@ describe('Core/TimeIntervalCollection', function() {
         expect(intervals.get(1).data).toEqual('3-to-6');
 
         var toRemove = new TimeInterval({
-            start: new JulianDate(1),
-            stop: new JulianDate(3),
-            isStopIncluded: true,
-            isStartIncluded: true,
-            data: undefined
+            start : new JulianDate(1),
+            stop : new JulianDate(3),
+            isStopIncluded : true,
+            isStartIncluded : true,
+            data : undefined
         });
 
         expect(intervals.removeInterval(toRemove)).toEqual(true);
@@ -812,11 +812,11 @@ describe('Core/TimeIntervalCollection', function() {
         function intervalFromSeconds(seconds, data) {
             // make all intervals a few seconds in length
             return new TimeInterval({
-                start: new JulianDate(CONST_DAY_NUM, seconds),
-                stop: new JulianDate(CONST_DAY_NUM, seconds + 4),
-                isStartIncluded: true,
-                isStopIncluded: true,
-                data: data
+                start : new JulianDate(CONST_DAY_NUM, seconds),
+                stop : new JulianDate(CONST_DAY_NUM, seconds + 4),
+                isStartIncluded : true,
+                isStopIncluded : true,
+                data : data
             });
         }
 
@@ -828,11 +828,11 @@ describe('Core/TimeIntervalCollection', function() {
 
         function removeInterval(collection, fromSecond, toSecond) {
             collection.removeInterval(new TimeInterval({
-                start: new JulianDate(CONST_DAY_NUM, fromSecond),
-                stop: new JulianDate(CONST_DAY_NUM, toSecond),
-                isStartIncluded: true,
-                isStopIncluded: true,
-                data: undefined
+                start : new JulianDate(CONST_DAY_NUM, fromSecond),
+                stop : new JulianDate(CONST_DAY_NUM, toSecond),
+                isStartIncluded : true,
+                isStopIncluded : true,
+                data : undefined
             }));
         }
 
@@ -862,79 +862,79 @@ describe('Core/TimeIntervalCollection', function() {
         addIntervals(
             collection,
             [
-                { sec: 0, data: 0 },
-                { sec: 2, data: 2 },
-                { sec: 4, data: 4 },
-                { sec: 6, data: 6 }
+                { sec : 0, data : 0 },
+                { sec : 2, data : 2 },
+                { sec : 4, data : 4 },
+                { sec : 6, data : 6 }
             ]
         );
         expectCollection(
             collection,
             4,
             [
-                { sec: 0, data: 0 },
-                { sec: 1, data: 0 },
-                { sec: 2, data: 2 },
-                { sec: 3, data: 2 },
-                { sec: 4, data: 4 },
-                { sec: 5, data: 4 },
-                { sec: 6, data: 6 },
-                { sec: 7, data: 6 },
-                { sec: 8, data: 6 },
-                { sec: 9, data: 6 },
-                { sec: 10, data: 6 },
-                { sec: 11, data: null }
+                { sec : 0, data : 0 },
+                { sec : 1, data : 0 },
+                { sec : 2, data : 2 },
+                { sec : 3, data : 2 },
+                { sec : 4, data : 4 },
+                { sec : 5, data : 4 },
+                { sec : 6, data : 6 },
+                { sec : 7, data : 6 },
+                { sec : 8, data : 6 },
+                { sec : 9, data : 6 },
+                { sec : 10, data : 6 },
+                { sec : 11, data : null }
             ]
         );
 
         addIntervals(
             collection,
             [
-                { sec: 1, data: 1 },
-                { sec: 3, data: 3 }
+                { sec : 1, data : 1 },
+                { sec : 3, data : 3 }
             ]
         );
         expectCollection(
             collection,
             4,
             [
-                { sec: 0, data: 0 },
-                { sec: 1, data: 1 },
-                { sec: 2, data: 1 },
-                { sec: 3, data: 3 },
-                { sec: 4, data: 3 },
-                { sec: 5, data: 3 },
-                { sec: 6, data: 3 },
-                { sec: 7, data: 3 },
-                { sec: 8, data: 6 },
-                { sec: 9, data: 6 },
-                { sec: 10, data: 6 },
-                { sec: 11, data: null }
+                { sec : 0, data : 0 },
+                { sec : 1, data : 1 },
+                { sec : 2, data : 1 },
+                { sec : 3, data : 3 },
+                { sec : 4, data : 3 },
+                { sec : 5, data : 3 },
+                { sec : 6, data : 3 },
+                { sec : 7, data : 3 },
+                { sec : 8, data : 6 },
+                { sec : 9, data : 6 },
+                { sec : 10, data : 6 },
+                { sec : 11, data : null }
             ]
         );
 
         addIntervals(
             collection,
             [
-                { sec: 3, data: 31 }
+                { sec : 3, data : 31 }
             ]
         );
         expectCollection(
             collection,
             4,
             [
-                { sec: 0, data: 0 },
-                { sec: 1, data: 1 },
-                { sec: 2, data: 1 },
-                { sec: 3, data: 31 },
-                { sec: 4, data: 31 },
-                { sec: 5, data: 31 },
-                { sec: 6, data: 31 },
-                { sec: 7, data: 31 },
-                { sec: 8, data: 6 },
-                { sec: 9, data: 6 },
-                { sec: 10, data: 6 },
-                { sec: 11, data: null }
+                { sec : 0, data : 0 },
+                { sec : 1, data : 1 },
+                { sec : 2, data : 1 },
+                { sec : 3, data : 31 },
+                { sec : 4, data : 31 },
+                { sec : 5, data : 31 },
+                { sec : 6, data : 31 },
+                { sec : 7, data : 31 },
+                { sec : 8, data : 6 },
+                { sec : 9, data : 6 },
+                { sec : 10, data : 6 },
+                { sec : 11, data : null }
             ]
         );
 
@@ -943,18 +943,18 @@ describe('Core/TimeIntervalCollection', function() {
             collection,
             3,
             [
-                { sec: 0, data: 0 },
-                { sec: 1, data: 1 },
-                { sec: 2, data: 1 },
-                { sec: 3, data: null },
-                { sec: 4, data: null },
-                { sec: 5, data: null },
-                { sec: 6, data: null },
-                { sec: 7, data: null },
-                { sec: 8, data: null },
-                { sec: 9, data: 6 },
-                { sec: 10, data: 6 },
-                { sec: 11, data: null }
+                { sec : 0, data : 0 },
+                { sec : 1, data : 1 },
+                { sec : 2, data : 1 },
+                { sec : 3, data : null },
+                { sec : 4, data : null },
+                { sec : 5, data : null },
+                { sec : 6, data : null },
+                { sec : 7, data : null },
+                { sec : 8, data : null },
+                { sec : 9, data : 6 },
+                { sec : 10, data : 6 },
+                { sec : 11, data : null }
             ]
         );
 
@@ -963,18 +963,18 @@ describe('Core/TimeIntervalCollection', function() {
             collection,
             2,
             [
-                { sec: 0, data: null },
-                { sec: 1, data: null },
-                { sec: 2, data: 1 },
-                { sec: 3, data: null },
-                { sec: 4, data: null },
-                { sec: 5, data: null },
-                { sec: 6, data: null },
-                { sec: 7, data: null },
-                { sec: 8, data: null },
-                { sec: 9, data: 6 },
-                { sec: 10, data: 6 },
-                { sec: 11, data: null }
+                { sec : 0, data : null },
+                { sec : 1, data : null },
+                { sec : 2, data : 1 },
+                { sec : 3, data : null },
+                { sec : 4, data : null },
+                { sec : 5, data : null },
+                { sec : 6, data : null },
+                { sec : 7, data : null },
+                { sec : 8, data : null },
+                { sec : 9, data : 6 },
+                { sec : 10, data : 6 },
+                { sec : 11, data : null }
             ]
         );
 
@@ -983,40 +983,40 @@ describe('Core/TimeIntervalCollection', function() {
             collection,
             0,
             [
-                { sec: 0, data: null },
-                { sec: 11, data: null }
+                { sec : 0, data : null },
+                { sec : 11, data : null }
             ]
         );
 
         addIntervals(
             collection,
             [
-                { sec: 1, data: 1 },
-                { sec: 12, data: 12 }
+                { sec : 1, data : 1 },
+                { sec : 12, data : 12 }
             ]
         );
         expectCollection(
             collection,
             2,
             [
-                { sec: 0, data: null },
-                { sec: 1, data: 1 },
-                { sec: 2, data: 1 },
-                { sec: 3, data: 1 },
-                { sec: 4, data: 1 },
-                { sec: 5, data: 1 },
-                { sec: 6, data: null },
-                { sec: 7, data: null },
-                { sec: 8, data: null },
-                { sec: 9, data: null },
-                { sec: 10, data: null },
-                { sec: 11, data: null },
-                { sec: 12, data: 12 },
-                { sec: 13, data: 12 },
-                { sec: 14, data: 12 },
-                { sec: 15, data: 12 },
-                { sec: 16, data: 12 },
-                { sec: 17, data: null }
+                { sec : 0, data : null },
+                { sec : 1, data : 1 },
+                { sec : 2, data : 1 },
+                { sec : 3, data : 1 },
+                { sec : 4, data : 1 },
+                { sec : 5, data : 1 },
+                { sec : 6, data : null },
+                { sec : 7, data : null },
+                { sec : 8, data : null },
+                { sec : 9, data : null },
+                { sec : 10, data : null },
+                { sec : 11, data : null },
+                { sec : 12, data : 12 },
+                { sec : 13, data : 12 },
+                { sec : 14, data : 12 },
+                { sec : 15, data : 12 },
+                { sec : 16, data : 12 },
+                { sec : 17, data : null }
             ]
         );
 
@@ -1025,18 +1025,18 @@ describe('Core/TimeIntervalCollection', function() {
             collection,
             2,
             [
-                { sec: 0, data: null },
-                { sec: 1, data: null },
-                { sec: 2, data: null },
-                { sec: 3, data: null },
-                { sec: 4, data: 1 },
-                { sec: 5, data: 1 },
-                { sec: 6, data: null },
-                { sec: 7, data: null },
-                { sec: 8, data: null },
-                { sec: 12, data: 12 },
-                { sec: 16, data: 12 },
-                { sec: 17, data: null }
+                { sec : 0, data : null },
+                { sec : 1, data : null },
+                { sec : 2, data : null },
+                { sec : 3, data : null },
+                { sec : 4, data : 1 },
+                { sec : 5, data : 1 },
+                { sec : 6, data : null },
+                { sec : 7, data : null },
+                { sec : 8, data : null },
+                { sec : 12, data : 12 },
+                { sec : 16, data : 12 },
+                { sec : 17, data : null }
             ]
         );
     });
@@ -1495,7 +1495,7 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1D',
-            isStartIncluded: false
+            isStartIncluded : false
         });
 
         checkIntervals(intervals, julianDates, false, true);
@@ -1507,7 +1507,7 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y2M3D',
-            isStopIncluded: false
+            isStopIncluded : false
         });
 
         checkIntervals(intervals, julianDates, true, false);
@@ -1519,7 +1519,7 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1H',
-            isStartIncluded: false
+            isStartIncluded : false
         });
 
         checkIntervals(intervals, julianDates, false, true);
@@ -1531,7 +1531,7 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
-            isStopIncluded: false
+            isStopIncluded : false
         });
 
         checkIntervals(intervals, julianDates, true, false);
@@ -1543,8 +1543,8 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1S',
-            isStartIncluded: false,
-            isStopIncluded: false
+            isStartIncluded : false,
+            isStopIncluded : false
         });
 
         checkIntervals(intervals, julianDates, false, false);
@@ -1608,7 +1608,7 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y2M3DT1H2M3.5S',
-            dataCallback: dataSpy
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(3);
@@ -1626,10 +1626,10 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
-            isStartIncluded: true,
-            isStopIncluded: false,
-            leadingInterval: true,
-            dataCallback: dataSpy
+            isStartIncluded : true,
+            isStopIncluded : false,
+            leadingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(4);
@@ -1655,10 +1655,10 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
-            isStartIncluded: false,
-            isStopIncluded: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            isStartIncluded : false,
+            isStopIncluded : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(4);
@@ -1684,11 +1684,11 @@ describe('Core/TimeIntervalCollection', function() {
 
         var intervals = TimeIntervalCollection.fromIso8601({
             iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
-            isStartIncluded: false,
-            isStopIncluded: false,
-            leadingInterval: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            isStartIncluded : false,
+            isStopIncluded : false,
+            leadingInterval : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(5);
@@ -1722,11 +1722,11 @@ describe('Core/TimeIntervalCollection', function() {
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
         var intervals = TimeIntervalCollection.fromIso8601DateArray({
-            iso8601Dates: iso8601Dates,
-            isStartIncluded: true,
-            isStopIncluded: false,
-            leadingInterval: true,
-            dataCallback: dataSpy
+            iso8601Dates : iso8601Dates,
+            isStartIncluded : true,
+            isStopIncluded : false,
+            leadingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(4);
@@ -1751,11 +1751,11 @@ describe('Core/TimeIntervalCollection', function() {
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
         var intervals = TimeIntervalCollection.fromIso8601DateArray({
-            iso8601Dates: iso8601Dates,
-            isStartIncluded: false,
-            isStopIncluded: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            iso8601Dates : iso8601Dates,
+            isStartIncluded : false,
+            isStopIncluded : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(4);
@@ -1780,12 +1780,12 @@ describe('Core/TimeIntervalCollection', function() {
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
         var intervals = TimeIntervalCollection.fromIso8601DateArray({
-            iso8601Dates: iso8601Dates,
-            isStartIncluded: false,
-            isStopIncluded: false,
-            leadingInterval: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            iso8601Dates : iso8601Dates,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            leadingInterval : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(5);
@@ -1820,14 +1820,14 @@ describe('Core/TimeIntervalCollection', function() {
         var iso8601Durations = ['PT0M', 'PT1M', 'PT2M', 'PT3M'];
 
         var intervals = TimeIntervalCollection.fromIso8601DurationArray({
-            epoch: julianDates[0],
-            iso8601Durations: iso8601Durations,
-            relativeToPrevious: false,
-            isStartIncluded: false,
-            isStopIncluded: false,
-            leadingInterval: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            epoch : julianDates[0],
+            iso8601Durations : iso8601Durations,
+            relativeToPrevious : false,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            leadingInterval : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(5);
@@ -1862,14 +1862,14 @@ describe('Core/TimeIntervalCollection', function() {
         var iso8601Durations = ['PT0M', 'PT1M', 'PT1M', 'PT1M'];
 
         var intervals = TimeIntervalCollection.fromIso8601DurationArray({
-            epoch: julianDates[0],
-            iso8601Durations: iso8601Durations,
-            relativeToPrevious: true,
-            isStartIncluded: false,
-            isStopIncluded: false,
-            leadingInterval: true,
-            trailingInterval: true,
-            dataCallback: dataSpy
+            epoch : julianDates[0],
+            iso8601Durations : iso8601Durations,
+            relativeToPrevious : true,
+            isStartIncluded : false,
+            isStopIncluded : false,
+            leadingInterval : true,
+            trailingInterval : true,
+            dataCallback : dataSpy
         });
 
         expect(dataSpy.calls.count()).toEqual(5);

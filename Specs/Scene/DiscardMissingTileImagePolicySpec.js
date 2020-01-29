@@ -1,8 +1,8 @@
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/DiscardMissingTileImagePolicy', function() {
 
@@ -50,7 +50,7 @@ describe('Scene/DiscardMissingTileImagePolicy', function() {
                     Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);
-                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             });
 

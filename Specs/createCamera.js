@@ -7,8 +7,8 @@ import { Camera } from '../Source/Cesium.js';
 
     function MockScene(canvas) {
         canvas = defaultValue(canvas, {
-            clientWidth: 512,
-            clientHeight: 384
+            clientWidth : 512,
+            clientHeight : 384
         });
 
         this.canvas = canvas;

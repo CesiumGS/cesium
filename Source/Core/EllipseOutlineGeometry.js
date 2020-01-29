@@ -26,7 +26,7 @@ import PrimitiveType from './PrimitiveType.js';
         var positions = EllipseGeometryLibrary.computeEllipsePositions(options, false, true).outerPositions;
 
         var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
+            position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : EllipseGeometryLibrary.raisePositionsToHeight(positions, options, false)
@@ -64,7 +64,7 @@ import PrimitiveType from './PrimitiveType.js';
 
         var positions = EllipseGeometryLibrary.computeEllipsePositions(options, false, true).outerPositions;
         var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
+            position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : EllipseGeometryLibrary.raisePositionsToHeight(positions, options, true)
@@ -87,7 +87,7 @@ import PrimitiveType from './PrimitiveType.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 
@@ -257,7 +257,7 @@ import PrimitiveType from './PrimitiveType.js';
         granularity : undefined,
         extrudedHeight : undefined,
         numberOfVerticalLines : undefined,
-        offsetAttribute: undefined
+        offsetAttribute : undefined
     };
 
     /**
@@ -361,7 +361,7 @@ import PrimitiveType from './PrimitiveType.js';
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
         }

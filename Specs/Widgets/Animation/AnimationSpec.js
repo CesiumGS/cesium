@@ -1,8 +1,8 @@
 import { defined } from '../../../Source/Cesium.js';
-import pollToPromise from '../../pollToPromise.js';
 import { Animation } from '../../../Source/Cesium.js';
 import { AnimationViewModel } from '../../../Source/Cesium.js';
 import { ClockViewModel } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
 
 describe('Widgets/Animation/Animation', function() {
 

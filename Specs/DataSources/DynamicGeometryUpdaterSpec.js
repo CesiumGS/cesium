@@ -28,7 +28,7 @@ describe('DataSources/DynamicGeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         expect(function() {
             return new DynamicGeometryUpdater(updater, undefined, new PrimitiveCollection());
@@ -41,7 +41,7 @@ describe('DataSources/DynamicGeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         expect(function() {
             return new DynamicGeometryUpdater(updater, undefined, new PrimitiveCollection());
@@ -54,7 +54,7 @@ describe('DataSources/DynamicGeometryUpdater', function() {
             scene : scene,
             geometryOptions : {},
             geometryPropertyName : 'box',
-            observedPropertyNames  : ['availability', 'box']
+            observedPropertyNames : ['availability', 'box']
         });
         var dynamicUpdater = new DynamicGeometryUpdater(updater, new PrimitiveCollection(), new PrimitiveCollection());
         expect(function() {

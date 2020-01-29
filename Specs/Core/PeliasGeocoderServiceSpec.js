@@ -17,14 +17,14 @@ describe('Core/PeliasGeocoderService', function() {
 
         var query = 'some query';
         var data = {
-            features: [{
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [-75.172489, 39.927828]
+            features : [{
+                type : 'Feature',
+                geometry : {
+                    type : 'Point',
+                    coordinates : [-75.172489, 39.927828]
                 },
-                properties: {
-                    label: '1826 S 16th St, Philadelphia, PA, USA'
+                properties : {
+                    label : '1826 S 16th St, Philadelphia, PA, USA'
                 }
             }]
         };
@@ -42,7 +42,7 @@ describe('Core/PeliasGeocoderService', function() {
         var service = new PeliasGeocoderService('http://test.invalid/v1/');
 
         var query = 'some query';
-        var data = { features: [] };
+        var data = { features : [] };
         spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
 
         return service.geocode(query)
@@ -55,15 +55,15 @@ describe('Core/PeliasGeocoderService', function() {
         var service = new PeliasGeocoderService('http://test.invalid/v1/');
 
         var query = 'some query';
-        var data = { features: [] };
+        var data = { features : [] };
         spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
         var getDerivedResource = spyOn(service._url, 'getDerivedResource').and.callThrough();
 
         service.geocode(query, GeocodeType.SEARCH);
         expect(getDerivedResource).toHaveBeenCalledWith({
-            url: 'search',
-            queryParameters: {
-                text: query
+            url : 'search',
+            queryParameters : {
+                text : query
             }
         });
     });
@@ -72,15 +72,15 @@ describe('Core/PeliasGeocoderService', function() {
         var service = new PeliasGeocoderService('http://test.invalid/v1/');
 
         var query = 'some query';
-        var data = { features: [] };
+        var data = { features : [] };
         spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
         var getDerivedResource = spyOn(service._url, 'getDerivedResource').and.callThrough();
 
         service.geocode(query, GeocodeType.AUTOCOMPLETE);
         expect(getDerivedResource).toHaveBeenCalledWith({
-            url: 'autocomplete',
-            queryParameters: {
-                text: query
+            url : 'autocomplete',
+            queryParameters : {
+                text : query
             }
         });
     });

@@ -40,7 +40,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 var scene = viewer.scene;
@@ -51,8 +51,8 @@ if (!scene.pickPositionSupported) {
 scene.globe.depthTestAgainstTerrain = true;
 
 var viewModel = {
-    rightClickAction: 'annotate',
-    middleClickAction: 'hide'
+    rightClickAction : 'annotate',
+    middleClickAction : 'hide'
 };
 
 Cesium.knockout.track(viewModel);
@@ -66,17 +66,17 @@ var annotations = scene.primitives.add(new Cesium.LabelCollection());
 var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
 scene.camera.setView({
-    destination: initialPosition,
-    orientation: initialOrientation,
-    endTransform: Cesium.Matrix4.IDENTITY
+    destination : initialPosition,
+    orientation : initialOrientation,
+    endTransform : Cesium.Matrix4.IDENTITY
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5741) });
 scene.primitives.add(tileset);
 tileset.style = new Cesium.Cesium3DTileStyle({
-    meta: {
-        description: "'Building id ${id} has height ${height}.'"
+    meta : {
+        description : "'Building id ${id} has height ${height}.'"
     }
 });
 

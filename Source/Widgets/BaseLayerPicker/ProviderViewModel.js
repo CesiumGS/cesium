@@ -91,7 +91,7 @@ import createCommand from '../createCommand.js';
          * @readonly
          */
         category : {
-            get: function() {
+            get : function() {
                 return this._category;
             }
         }

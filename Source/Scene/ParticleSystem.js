@@ -559,7 +559,7 @@ import Particle from './Particle.js';
         var g = CesiumMath.lerp(particle.startColor.green, particle.endColor.green, particle.normalizedAge);
         var b = CesiumMath.lerp(particle.startColor.blue, particle.endColor.blue, particle.normalizedAge);
         var a = CesiumMath.lerp(particle.startColor.alpha, particle.endColor.alpha, particle.normalizedAge);
-        billboard.color = new Color(r,g,b,a);
+        billboard.color = new Color(r, g, b, a);
 
         // Update the scale
         billboard.scale = CesiumMath.lerp(particle.startScale, particle.endScale, particle.normalizedAge);

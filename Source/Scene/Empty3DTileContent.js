@@ -82,8 +82,8 @@ import destroyObject from '../Core/destroyObject.js';
             }
         },
 
-        url: {
-            get: function() {
+        url : {
+            get : function() {
                 return undefined;
             }
         },

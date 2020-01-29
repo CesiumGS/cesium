@@ -39,9 +39,9 @@ import ModelUtility from './ModelUtility.js';
         }
 
         gltf.extensions.KHR_techniques_webgl = {
-            programs: [],
-            shaders: [],
-            techniques: []
+            programs : [],
+            shaders : [],
+            techniques : []
         };
 
         gltf.extensionsUsed.push('KHR_techniques_webgl');
@@ -242,8 +242,8 @@ import ModelUtility from './ModelUtility.js';
         var alphaMode = material.alphaMode;
         if (defined(alphaMode) && alphaMode === 'MASK') {
             techniqueUniforms.u_alphaCutoff = {
-                semantic: 'ALPHACUTOFF',
-                type: WebGLConstants.FLOAT
+                semantic : 'ALPHACUTOFF',
+                type : WebGLConstants.FLOAT
             };
         }
 
@@ -446,7 +446,7 @@ import ModelUtility from './ModelUtility.js';
 
         if (hasVertexColors) {
             techniqueAttributes.a_vertexColor = {
-                semantic: 'COLOR_0'
+                semantic : 'COLOR_0'
             };
             vertexShader += 'attribute vec4 a_vertexColor;\n';
             vertexShader += 'varying vec4 v_vertexColor;\n';
@@ -456,7 +456,7 @@ import ModelUtility from './ModelUtility.js';
 
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = {
-                semantic: '_BATCHID'
+                semantic : '_BATCHID'
             };
             vertexShader += 'attribute float a_batchId;\n';
         }

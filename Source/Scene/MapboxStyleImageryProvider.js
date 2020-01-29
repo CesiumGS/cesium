@@ -75,7 +75,7 @@ function MapboxStyleImageryProvider(options) {
     resource.url = templateUrl;
 
     resource.setQueryParameters({
-        access_token: accessToken
+        access_token : accessToken
     });
 
     var credit;
@@ -90,12 +90,12 @@ function MapboxStyleImageryProvider(options) {
 
     this._resource = resource;
     this._imageryProvider = new UrlTemplateImageryProvider({
-        url: resource,
-        credit: credit,
-        ellipsoid: options.ellipsoid,
-        minimumLevel: options.minimumLevel,
-        maximumLevel: options.maximumLevel,
-        rectangle: options.rectangle
+        url : resource,
+        credit : credit,
+        ellipsoid : options.ellipsoid,
+        minimumLevel : options.minimumLevel,
+        maximumLevel : options.maximumLevel,
+        rectangle : options.rectangle
     });
 }
 
@@ -143,7 +143,7 @@ defineProperties(MapboxStyleImageryProvider.prototype, {
      * @type {Rectangle}
      * @readonly
      */
-    rectangle: {
+    rectangle : {
         get : function() {
             return this._imageryProvider.rectangle;
         }

@@ -31,11 +31,11 @@ import DeveloperError from './DeveloperError.js';
          * @type {Number}
          * @default 0.0
          */
-        near: {
-            get: function() {
+        near : {
+            get : function() {
                 return this._near;
             },
-            set: function(value) {
+            set : function(value) {
                 this._near = value;
             }
         },
@@ -45,11 +45,11 @@ import DeveloperError from './DeveloperError.js';
          * @type {Number}
          * @default Number.MAX_VALUE
          */
-        far: {
-            get: function() {
+        far : {
+            get : function() {
                 return this._far;
             },
-            set: function(value) {
+            set : function(value) {
                 this._far = value;
             }
         }

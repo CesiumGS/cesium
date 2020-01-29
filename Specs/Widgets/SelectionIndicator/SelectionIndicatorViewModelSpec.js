@@ -1,7 +1,7 @@
 import { Cartesian2 } from '../../../Source/Cesium.js';
 import { Cartesian3 } from '../../../Source/Cesium.js';
-import createScene from '../../createScene.js';
 import { SelectionIndicatorViewModel } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
 
 describe('Widgets/SelectionIndicator/SelectionIndicatorViewModel', function() {
 

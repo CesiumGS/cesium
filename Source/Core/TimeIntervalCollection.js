@@ -352,19 +352,19 @@ import TimeInterval from './TimeInterval.js';
                     // Overlapping intervals have the same data, so combine them
                     if (JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)) {
                         interval = new TimeInterval({
-                            start: intervals[index - 1].start,
-                            stop: interval.stop,
-                            isStartIncluded: intervals[index - 1].isStartIncluded,
-                            isStopIncluded: interval.isStopIncluded,
-                            data: interval.data
+                            start : intervals[index - 1].start,
+                            stop : interval.stop,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : interval.isStopIncluded,
+                            data : interval.data
                         });
                     } else {
                         interval = new TimeInterval({
-                            start: intervals[index - 1].start,
-                            stop: intervals[index - 1].stop,
-                            isStartIncluded: intervals[index - 1].isStartIncluded,
-                            isStopIncluded: intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
-                            data: interval.data
+                            start : intervals[index - 1].start,
+                            stop : intervals[index - 1].stop,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
+                            data : interval.data
                         });
                     }
                     intervals.splice(index - 1, 1);
@@ -379,19 +379,19 @@ import TimeInterval from './TimeInterval.js';
                         (comparison === 0 && intervals[index - 1].isStopIncluded && !interval.isStopIncluded)) {
 
                         intervals.splice(index, 0, new TimeInterval({
-                            start: interval.stop,
-                            stop: intervals[index - 1].stop,
-                            isStartIncluded: !interval.isStopIncluded,
-                            isStopIncluded: intervals[index - 1].isStopIncluded,
-                            data: intervals[index - 1].data
+                            start : interval.stop,
+                            stop : intervals[index - 1].stop,
+                            isStartIncluded : !interval.isStopIncluded,
+                            isStopIncluded : intervals[index - 1].isStopIncluded,
+                            data : intervals[index - 1].data
                         }));
                     }
                     intervals[index - 1] = new TimeInterval({
-                        start: intervals[index - 1].start,
-                        stop: interval.start,
-                        isStartIncluded: intervals[index - 1].isStartIncluded,
-                        isStopIncluded: !interval.isStartIncluded,
-                        data: intervals[index - 1].data
+                        start : intervals[index - 1].start,
+                        stop : interval.start,
+                        isStartIncluded : intervals[index - 1].isStartIncluded,
+                        isStopIncluded : !interval.isStartIncluded,
+                        data : intervals[index - 1].data
                     });
                 }
             }
@@ -406,22 +406,22 @@ import TimeInterval from './TimeInterval.js';
                 if (defined(dataComparer) ? dataComparer(intervals[index].data, interval.data) : intervals[index].data === interval.data) {
                     // Overlapping intervals have the same data, so combine them
                     interval = new TimeInterval({
-                        start: interval.start,
-                        stop: JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
-                        isStartIncluded: interval.isStartIncluded,
-                        isStopIncluded: JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
-                        data: interval.data
+                        start : interval.start,
+                        stop : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
+                        isStartIncluded : interval.isStartIncluded,
+                        isStopIncluded : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
+                        data : interval.data
                     });
                     intervals.splice(index, 1);
                 } else {
                     // Overlapping intervals have different data.  The new interval
                     // being added 'wins' so truncate the next interval.
                     intervals[index] = new TimeInterval({
-                        start: interval.stop,
-                        stop: intervals[index].stop,
-                        isStartIncluded: !interval.isStopIncluded,
-                        isStopIncluded: intervals[index].isStopIncluded,
-                        data: intervals[index].data
+                        start : interval.stop,
+                        stop : intervals[index].stop,
+                        isStartIncluded : !interval.isStopIncluded,
+                        isStopIncluded : intervals[index].isStopIncluded,
+                        data : intervals[index].data
                     });
 
                     if (intervals[index].isEmpty) {
@@ -481,19 +481,19 @@ import TimeInterval from './TimeInterval.js';
                 (intervals[index - 1].isStopIncluded && !interval.isStopIncluded && intervals[index - 1].stop.equals(interval.stop))) {
                 // Break the existing interval into two pieces
                 intervals.splice(index, 0, new TimeInterval({
-                    start: interval.stop,
-                    stop: intervals[index - 1].stop,
-                    isStartIncluded: !interval.isStopIncluded,
-                    isStopIncluded: intervals[index - 1].isStopIncluded,
-                    data: intervals[index - 1].data
+                    start : interval.stop,
+                    stop : intervals[index - 1].stop,
+                    isStartIncluded : !interval.isStopIncluded,
+                    isStopIncluded : intervals[index - 1].isStopIncluded,
+                    data : intervals[index - 1].data
                 }));
             }
             intervals[index - 1] = new TimeInterval({
-                start: intervals[index - 1].start,
-                stop: interval.start,
-                isStartIncluded: intervals[index - 1].isStartIncluded,
-                isStopIncluded: !interval.isStartIncluded,
-                data: intervals[index - 1].data
+                start : intervals[index - 1].start,
+                stop : interval.start,
+                isStartIncluded : intervals[index - 1].isStartIncluded,
+                isStopIncluded : !interval.isStartIncluded,
+                data : intervals[index - 1].data
             });
         }
 
@@ -507,11 +507,11 @@ import TimeInterval from './TimeInterval.js';
             result = true;
 
             intervals.splice(index, 0, new TimeInterval({
-                start: intervals[index].start,
-                stop: intervals[index].start,
-                isStartIncluded: true,
-                isStopIncluded: true,
-                data: intervals[index].data
+                start : intervals[index].start,
+                stop : intervals[index].start,
+                isStartIncluded : true,
+                isStopIncluded : true,
+                data : intervals[index].data
             }));
             ++index;
         }
@@ -536,19 +536,19 @@ import TimeInterval from './TimeInterval.js';
                     // Combine single point with the next interval
                     intervals.splice(index, 1);
                     intervals[index] = new TimeInterval({
-                        start: intervals[index].start,
-                        stop: intervals[index].stop,
-                        isStartIncluded: true,
-                        isStopIncluded: intervals[index].isStopIncluded,
-                        data: intervals[index].data
+                        start : intervals[index].start,
+                        stop : intervals[index].stop,
+                        isStartIncluded : true,
+                        isStopIncluded : intervals[index].isStopIncluded,
+                        data : intervals[index].data
                     });
                 } else {
                     intervals[index] = new TimeInterval({
-                        start: interval.stop,
-                        stop: interval.stop,
-                        isStartIncluded: true,
-                        isStopIncluded: true,
-                        data: intervals[index].data
+                        start : interval.stop,
+                        stop : interval.stop,
+                        isStartIncluded : true,
+                        isStopIncluded : true,
+                        data : intervals[index].data
                     });
                 }
             } else {
@@ -564,11 +564,11 @@ import TimeInterval from './TimeInterval.js';
 
             result = true;
             intervals[index] = new TimeInterval({
-                start: interval.stop,
-                stop: intervals[index].stop,
-                isStartIncluded: !interval.isStopIncluded,
-                isStopIncluded: intervals[index].isStopIncluded,
-                data: intervals[index].data
+                start : interval.stop,
+                stop : intervals[index].stop,
+                isStartIncluded : !interval.isStopIncluded,
+                isStopIncluded : intervals[index].isStopIncluded,
+                data : intervals[index].data
             });
         }
 

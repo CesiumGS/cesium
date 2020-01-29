@@ -12,7 +12,7 @@ import freezeObject from './freezeObject.js';
          * @type {Number}
          * @constant
          */
-        NONE: 0,
+        NONE : 0,
 
         /**
          * LERC encoding
@@ -22,6 +22,6 @@ import freezeObject from './freezeObject.js';
          *
          * @see {@link https://github.com/Esri/lerc|The LERC specification}
          */
-        LERC: 1
+        LERC : 1
     };
 export default freezeObject(HeightmapEncoding);

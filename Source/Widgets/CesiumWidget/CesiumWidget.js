@@ -244,7 +244,7 @@ import getElement from '../getElement.js';
                 canvas : canvas,
                 contextOptions : options.contextOptions,
                 creditContainer : innerCreditContainer,
-                creditViewport: creditViewport,
+                creditViewport : creditViewport,
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
@@ -382,7 +382,7 @@ import getElement from '../getElement.js';
          *
          * @type {Element}
          */
-        creditContainer: {
+        creditContainer : {
             get : function() {
                 return this._creditContainer;
             }
@@ -394,8 +394,8 @@ import getElement from '../getElement.js';
          *
          * @type {Element}
          */
-        creditViewport: {
-            get: function() {
+        creditViewport : {
+            get : function() {
                 return this._creditViewport;
             }
         },

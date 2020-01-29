@@ -49,10 +49,10 @@ function OpenStreetMapNominatimGeocoder() {
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
     var endpoint = 'https://nominatim.openstreetmap.org/search';
     var resource = new Cesium.Resource({
-        url: endpoint,
-        queryParameters: {
-            format: 'json',
-            q: input
+        url : endpoint,
+        queryParameters : {
+            format : 'json',
+            q : input
         }
     });
 
@@ -62,8 +62,8 @@ OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
             return results.map(function (resultObject) {
                 bboxDegrees = resultObject.boundingbox;
                 return {
-                    displayName: resultObject.display_name,
-                    destination: Cesium.Rectangle.fromDegrees(
+                    displayName : resultObject.display_name,
+                    destination : Cesium.Rectangle.fromDegrees(
                         bboxDegrees[2],
                         bboxDegrees[0],
                         bboxDegrees[3],
@@ -75,7 +75,7 @@ OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
 };
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    geocoder: new OpenStreetMapNominatimGeocoder()
+    geocoder : new OpenStreetMapNominatimGeocoder()
 });
 
 //Sandcastle_End

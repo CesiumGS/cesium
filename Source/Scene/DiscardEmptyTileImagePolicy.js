@@ -41,8 +41,8 @@ import defineProperties from '../Core/defineProperties.js';
          * @readonly
          * @memberof DiscardEmptyTileImagePolicy
          */
-        EMPTY_IMAGE: {
-            get: function() {
+        EMPTY_IMAGE : {
+            get : function() {
                 if (!defined(emptyImage)) {
                     emptyImage = new Image();
                     // load a blank data URI with a 1x1 transparent pixel.

@@ -23,7 +23,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 var geocoder = viewer.geocoder.viewModel;
@@ -34,17 +34,17 @@ geocoder.search();
 // Vector 3D Tiles are experimental and the format is subject to change in the future.
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5737) });
+var tileset = new Cesium.Cesium3DTileset({ url : Cesium.IonResource.fromAssetId(5737) });
 viewer.scene.primitives.add(tileset);
 
 tileset.style = new Cesium.Cesium3DTileStyle({
-    color: 'rgba(255, 255, 255, 0.5)'
+    color : 'rgba(255, 255, 255, 0.5)'
 });
 
 // Information about the currently highlighted feature
 var highlighted = {
-    feature: undefined,
-    originalColor: new Cesium.Color()
+    feature : undefined,
+    originalColor : new Cesium.Color()
 };
 
 // Color a feature yellow on hover.

@@ -525,8 +525,8 @@ describe('DataSources/PolylineVisualizer', function() {
         var entity = new Entity({
             id : 'test',
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
-                material: Color.ORANGE
+                positions : [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
+                material : Color.ORANGE
             }
         });
         objects.add(entity);
@@ -538,7 +538,7 @@ describe('DataSources/PolylineVisualizer', function() {
                 id : 'test',
                 position : Cartesian3.fromDegrees(0, 0, 0),
                 polyline : {
-                    positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
+                    positions : [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                     material : Color.BLUE
                 }
             });
@@ -567,7 +567,7 @@ describe('DataSources/PolylineVisualizer', function() {
 
         var entity = entities.add({
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
+                positions : [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });
@@ -599,7 +599,7 @@ describe('DataSources/PolylineVisualizer', function() {
         var entity = entities.add({
             position : new Cartesian3(1234, 5678, 9101112),
             polyline : {
-                positions: [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
+                positions : [Cartesian3.fromDegrees(0.0, 0.0), Cartesian3.fromDegrees(0.0, 0.000001)],
                 material : new PolylineArrowMaterialProperty(createDynamicProperty(Color.BLUE))
             }
         });

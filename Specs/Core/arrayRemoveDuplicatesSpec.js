@@ -42,17 +42,17 @@ describe('Core/arrayRemoveDuplicates', function() {
 
     it('removeDuplicates to remove duplicates with anonymous types', function() {
         var positions = [
-            {x:1.0, y:1.0, z:1.0},
-            {x:1.0, y:1.0, z:1.0},
-            {x:1.0, y:1.0, z:1.0},
-            {x:1.0, y:1.0, z:1.0},
-            {x:2.0, y:2.0, z:2.0},
-            {x:3.0, y:3.0, z:3.0},
-            {x:3.0, y:3.0, z:3.0}];
+            {x : 1.0, y : 1.0, z : 1.0},
+            {x : 1.0, y : 1.0, z : 1.0},
+            {x : 1.0, y : 1.0, z : 1.0},
+            {x : 1.0, y : 1.0, z : 1.0},
+            {x : 2.0, y : 2.0, z : 2.0},
+            {x : 3.0, y : 3.0, z : 3.0},
+            {x : 3.0, y : 3.0, z : 3.0}];
         var expectedPositions = [
-            {x:1.0, y:1.0, z:1.0},
-            {x:2.0, y:2.0, z:2.0},
-            {x:3.0, y:3.0, z:3.0}];
+            {x : 1.0, y : 1.0, z : 1.0},
+            {x : 2.0, y : 2.0, z : 2.0},
+            {x : 3.0, y : 3.0, z : 3.0}];
         var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });

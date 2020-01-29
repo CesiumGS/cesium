@@ -32,8 +32,8 @@ describe('DataSources/PolygonGraphics', function() {
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             classificationType : ClassificationType.TERRAIN,
-            arcType: ArcType.GEODESIC,
-            zIndex: 22
+            arcType : ArcType.GEODESIC,
+            zIndex : 22
         };
 
         var polygon = new PolygonGraphics(options);
@@ -273,7 +273,7 @@ describe('DataSources/PolygonGraphics', function() {
         ];
 
         var graphics = new PolygonGraphics({
-            hierarchy: positions
+            hierarchy : positions
         });
 
         expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);

@@ -1,7 +1,7 @@
 import { FeatureDetection } from '../../../Source/Cesium.js';
+import { SceneModePicker } from '../../../Source/Cesium.js';
 import createScene from '../../createScene.js';
 import DomEventSimulator from '../../DomEventSimulator.js';
-import { SceneModePicker } from '../../../Source/Cesium.js';
 
 describe('Widgets/SceneModePicker/SceneModePicker', function() {
 

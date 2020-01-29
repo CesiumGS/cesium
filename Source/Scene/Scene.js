@@ -911,11 +911,11 @@ import View from './View.js';
          * @type {Globe}
          */
         globe : {
-            get: function() {
+            get : function() {
                 return this._globe;
             },
 
-            set: function(globe) {
+            set : function(globe) {
                 this._globe = this._globe && this._globe.destroy();
                 this._globe = globe;
 
@@ -1038,7 +1038,7 @@ import View from './View.js';
          * @default new GeographicProjection()
          */
         mapProjection : {
-            get: function() {
+            get : function() {
                 return this._mapProjection;
             }
         },
@@ -1052,7 +1052,7 @@ import View from './View.js';
          * @private
          */
         jobScheduler : {
-            get: function() {
+            get : function() {
                 return this._jobScheduler;
             }
         },
@@ -1068,7 +1068,7 @@ import View from './View.js';
          * @private
          */
         frameState : {
-            get: function() {
+            get : function() {
                 return this._frameState;
             }
         },
@@ -1083,7 +1083,7 @@ import View from './View.js';
          * @private
          */
         environmentState : {
-            get: function() {
+            get : function() {
                 return this._environmentState;
             }
         },
@@ -1462,10 +1462,10 @@ import View from './View.js';
          * @type {Number}
          */
         imagerySplitPosition : {
-            get: function() {
+            get : function() {
                 return this._frameState.imagerySplitPosition;
             },
-            set: function(value) {
+            set : function(value) {
                 this._frameState.imagerySplitPosition = value;
             }
         },
@@ -1566,12 +1566,12 @@ import View from './View.js';
          * @type {Cartesian3}
          * @default Cartesian3(1.8, 1.85, 2.0)
          */
-        sunColor: {
-            get: function() {
+        sunColor : {
+            get : function() {
                 deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
                 return this.light.color;
             },
-            set: function(value) {
+            set : function(value) {
                 deprecationWarning('sun-color-removed', 'scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead.');
                 var maximumComponent = Cartesian3.maximumComponent(value);
                 var sunColor = Cartesian4.fromElements(value.x, value.y, value.z, 1.0, scratchSunColor);
@@ -1594,11 +1594,11 @@ import View from './View.js';
          * @default 1.0
          * @private
          */
-        pixelRatio: {
-            get: function() {
+        pixelRatio : {
+            get : function() {
                 return this._frameState.pixelRatio;
             },
-            set: function(value) {
+            set : function(value) {
                 this._frameState.pixelRatio = value;
             }
         },
@@ -2934,8 +2934,8 @@ import View from './View.js';
         if (scene.debugShowFrustumPlanes !== scene._debugShowFrustumPlanes) {
             if (scene.debugShowFrustumPlanes) {
                 scene._debugFrustumPlanes = new DebugCameraPrimitive({
-                    camera: scene.camera,
-                    updateOnChange: false
+                    camera : scene.camera,
+                    updateOnChange : false
                 });
             } else {
                 scene._debugFrustumPlanes = scene._debugFrustumPlanes && scene._debugFrustumPlanes.destroy();
@@ -3213,7 +3213,7 @@ import View from './View.js';
                 performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
                 var container = scene._canvas.parentNode;
                 container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                var performanceDisplay = new PerformanceDisplay({container : performanceContainer});
                 scene._performanceDisplay = performanceDisplay;
                 scene._performanceContainer = performanceContainer;
             }

@@ -20,8 +20,8 @@ import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/ArcGisMapServerImageryProvider', function() {
 
@@ -198,7 +198,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -276,7 +276,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -337,7 +337,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                 expect(params.size).toEqual('256,256');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -357,13 +357,13 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
-            token: token,
-            tileWidth: 128,
-            tileHeight: 512,
-            tilingScheme: new WebMercatorTilingScheme(),
-            rectangle: Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0),
-            layers: 'foo,bar',
-            enablePickFeatures: false
+            token : token,
+            tileWidth : 128,
+            tileHeight : 512,
+            tilingScheme : new WebMercatorTilingScheme(),
+            rectangle : Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0),
+            layers : 'foo,bar',
+            enablePickFeatures : false
         });
 
         expect(provider.url).toEqual(baseUrl);
@@ -401,7 +401,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                 expect(params.token).toEqual(token);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -422,7 +422,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
         });
 
         var expectedTileUrl = getAbsoluteUri(baseUrl + 'tile/0/0/0?' + objectToQuery({
-            token: token
+            token : token
         }));
 
         expect(provider.url).toEqual(baseUrl);
@@ -450,7 +450,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                     expect(url).toEqual(expectedTileUrl);
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -576,7 +576,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -694,7 +694,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                 }]
             },
             fullExtent : {
-                'xmin' :  -2.0037507067161843E7,
+                'xmin' : -2.0037507067161843E7,
                 'ymin' : -1.4745615008589065E7,
                 'xmax' : 2.0037507067161843E7,
                 'ymax' : 3.0240971958386205E7,

@@ -107,6 +107,6 @@ describe('Core/Tipsify', function() {
         expect(Tipsify.tipsify({indices : indices,
                                 cacheSize : 6})).toEqual(Tipsify.tipsify({indices : indices,
                                                                           maximumIndex : 28,
-                                                                          cacheSize: 6}));
+                                                                          cacheSize : 6}));
     });
 });

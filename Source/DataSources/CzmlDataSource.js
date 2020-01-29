@@ -7,8 +7,8 @@ import ClockRange from '../Core/ClockRange.js';
 import ClockStep from '../Core/ClockStep.js';
 import Color from '../Core/Color.js';
 import CornerType from '../Core/CornerType.js';
-import Credit from '../Core/Credit.js';
 import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
@@ -172,7 +172,7 @@ import WallGraphics from './WallGraphics.js';
         var uri = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
             return sourceUri.getDerivedResource({
-                url: uri
+                url : uri
             });
         }
 

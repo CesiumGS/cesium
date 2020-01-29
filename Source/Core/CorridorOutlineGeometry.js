@@ -276,7 +276,7 @@ import PrimitiveType from './PrimitiveType.js';
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 
@@ -406,7 +406,7 @@ import PrimitiveType from './PrimitiveType.js';
         extrudedHeight : undefined,
         cornerType : undefined,
         granularity : undefined,
-        offsetAttribute: undefined
+        offsetAttribute : undefined
     };
 
     /**
@@ -513,7 +513,7 @@ import PrimitiveType from './PrimitiveType.js';
                 attr.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
         }

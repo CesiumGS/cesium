@@ -59,7 +59,7 @@ describe('Core/WallOutlineGeometry', function() {
                 49.0, 18.0,
                 49.0, 18.0
             ]),
-            maximumHeights: [0, 0, 0]
+            maximumHeights : [0, 0, 0]
         }));
         expect(geometry).toBeUndefined();
     });
@@ -86,7 +86,7 @@ describe('Core/WallOutlineGeometry', function() {
 
     it('creates positions with minimum and maximum heights', function() {
         var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0
             ]),
@@ -114,7 +114,7 @@ describe('Core/WallOutlineGeometry', function() {
 
     it('cleans positions with duplicates', function() {
         var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 49.0, 18.0, 2000.0,
                 50.0, 18.0, 1000.0,
@@ -147,7 +147,7 @@ describe('Core/WallOutlineGeometry', function() {
         var max = 2000.0;
 
         var w = WallOutlineGeometry.createGeometry(WallOutlineGeometry.fromConstantHeights({
-            positions    : Cartesian3.fromDegreesArrayHeights([
+            positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
                 50.0, 18.0, 1000.0
             ]),
@@ -176,7 +176,7 @@ describe('Core/WallOutlineGeometry', function() {
     var wall = new WallOutlineGeometry({
         positions : positions,
         granularity : 0.01,
-        ellipsoid: Ellipsoid.UNIT_SPHERE
+        ellipsoid : Ellipsoid.UNIT_SPHERE
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
     createPackableSpecs(WallOutlineGeometry, wall, packedInstance);

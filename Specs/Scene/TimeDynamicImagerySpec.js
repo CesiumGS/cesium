@@ -16,10 +16,10 @@ describe('Scene/TimeDynamicImagery', function() {
     });
 
     var times = TimeIntervalCollection.fromIso8601({
-        iso8601: '2017-04-26/2017-04-30/P1D',
-        dataCallback: function(interval, index) {
+        iso8601 : '2017-04-26/2017-04-30/P1D',
+        dataCallback : function(interval, index) {
             return {
-                Time: JulianDate.toIso8601(interval.start)
+                Time : JulianDate.toIso8601(interval.start)
             };
         }
     });
@@ -32,10 +32,10 @@ describe('Scene/TimeDynamicImagery', function() {
     it('clock is required', function() {
         expect(function() {
             return new TimeDynamicImagery({
-                times: times,
-                requestImageFunction: function() {
+                times : times,
+                requestImageFunction : function() {
                 },
-                reloadFunction: function() {
+                reloadFunction : function() {
                 }
             });
         }).toThrowDeveloperError();
@@ -44,10 +44,10 @@ describe('Scene/TimeDynamicImagery', function() {
     it('times is required', function() {
         expect(function() {
             return new TimeDynamicImagery({
-                clock: clock,
-                requestImageFunction: function() {
+                clock : clock,
+                requestImageFunction : function() {
                 },
-                reloadFunction: function() {
+                reloadFunction : function() {
                 }
             });
         }).toThrowDeveloperError();
@@ -56,9 +56,9 @@ describe('Scene/TimeDynamicImagery', function() {
     it('requestImageFunction is required', function() {
         expect(function() {
             return new TimeDynamicImagery({
-                clock: clock,
-                times: times,
-                reloadFunction: function() {
+                clock : clock,
+                times : times,
+                reloadFunction : function() {
                 }
             });
         }).toThrowDeveloperError();
@@ -67,9 +67,9 @@ describe('Scene/TimeDynamicImagery', function() {
     it('reloadFunction is required', function() {
         expect(function() {
             return new TimeDynamicImagery({
-                clock: clock,
-                times: times,
-                requestImageFunction: function() {
+                clock : clock,
+                times : times,
+                requestImageFunction : function() {
                 }
             });
         }).toThrowDeveloperError();
@@ -77,11 +77,11 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('initialization', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: function() {
+            clock : clock,
+            times : times,
+            requestImageFunction : function() {
             },
-            reloadFunction: function() {
+            reloadFunction : function() {
             }
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
@@ -98,11 +98,11 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('changing clock causes reload', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: function() {
+            clock : clock,
+            times : times,
+            requestImageFunction : function() {
             },
-            reloadFunction: jasmine.createSpy()
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
         timeDynamicImagery.clock = new Clock();
@@ -111,11 +111,11 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('changing times causes reload', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: function() {
+            clock : clock,
+            times : times,
+            requestImageFunction : function() {
             },
-            reloadFunction: jasmine.createSpy()
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
         timeDynamicImagery.times = new TimeIntervalCollection();
@@ -124,10 +124,10 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('clock.tick() causes reload', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: jasmine.createSpy(),
-            reloadFunction: jasmine.createSpy()
+            clock : clock,
+            times : times,
+            requestImageFunction : jasmine.createSpy(),
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
         var request = new Request();
@@ -142,10 +142,10 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('clock.tick() causes preload', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
-            reloadFunction: jasmine.createSpy()
+            clock : clock,
+            times : times,
+            requestImageFunction : jasmine.createSpy().and.returnValue(when()),
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
         options.reloadFunction.calls.reset(); // Constructor calls reload
@@ -167,10 +167,10 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('checkApproachingInterval causes preload', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
-            reloadFunction: jasmine.createSpy()
+            clock : clock,
+            times : times,
+            requestImageFunction : jasmine.createSpy().and.returnValue(when()),
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
         options.reloadFunction.calls.reset(); // Constructor calls reload
@@ -191,10 +191,10 @@ describe('Scene/TimeDynamicImagery', function() {
 
     it('checkApproachingInterval limits number of requests', function() {
         var options = {
-            clock: clock,
-            times: times,
-            requestImageFunction: jasmine.createSpy().and.returnValue(when()),
-            reloadFunction: jasmine.createSpy()
+            clock : clock,
+            times : times,
+            requestImageFunction : jasmine.createSpy().and.returnValue(when()),
+            reloadFunction : jasmine.createSpy()
         };
         var timeDynamicImagery = new TimeDynamicImagery(options);
 

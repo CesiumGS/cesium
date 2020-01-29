@@ -159,8 +159,8 @@ import TaskProcessor from './TaskProcessor.js';
          * @type {Resource}
          * @readonly
          */
-        resource: {
-            get: function() {
+        resource : {
+            get : function() {
                 return this._resource;
             }
         },
@@ -312,7 +312,7 @@ import TaskProcessor from './TaskProcessor.js';
                     buffer : metadata,
                     quadKey : quadKey,
                     type : 'Metadata',
-                    key: key
+                    key : key
                 }, [metadata]);
 
                 return decodePromise
@@ -468,8 +468,8 @@ import TaskProcessor from './TaskProcessor.js';
 
     function getMetadataResource(that, quadKey, version, request) {
         return that._resource.getDerivedResource({
-            url: 'flatfile?q2-0' + quadKey + '-q.' + version.toString(),
-            request: request
+            url : 'flatfile?q2-0' + quadKey + '-q.' + version.toString(),
+            request : request
         });
     }
 
@@ -477,9 +477,9 @@ import TaskProcessor from './TaskProcessor.js';
     var dbrootParserPromise;
     function requestDbRoot(that) {
         var resource = that._resource.getDerivedResource({
-            url: 'dbRoot.v5',
-            queryParameters: {
-                output: 'proto'
+            url : 'dbRoot.v5',
+            queryParameters : {
+                output : 'proto'
             }
         });
 
@@ -514,7 +514,7 @@ import TaskProcessor from './TaskProcessor.js';
                 return taskProcessor.scheduleTask({
                     buffer : dbRootCompressed,
                     type : 'DbRoot',
-                    key: key
+                    key : key
                 }, [dbRootCompressed]);
             })
             .then(function(result) {

@@ -816,7 +816,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
             resource.setQueryParameters({
-                expired: this.expireDate.toString()
+                expired : this.expireDate.toString()
             });
         }
 

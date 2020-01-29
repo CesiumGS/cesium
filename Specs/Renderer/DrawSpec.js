@@ -53,8 +53,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -112,8 +112,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0,
+            attributeLocations : {
+                position : 0,
                 intensity : 1
             }
         });
@@ -166,8 +166,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0,
+            attributeLocations : {
+                position : 0,
                 intensity : 1
             }
         });
@@ -215,8 +215,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -275,8 +275,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -345,8 +345,8 @@ describe('Renderer/Draw', function() {
             context : cxt,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -416,8 +416,8 @@ describe('Renderer/Draw', function() {
             context : cxt,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -481,8 +481,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -541,8 +541,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -601,8 +601,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -663,8 +663,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -723,8 +723,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -766,8 +766,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -811,8 +811,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -860,8 +860,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -921,8 +921,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -1007,8 +1007,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -1090,8 +1090,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -1149,9 +1149,9 @@ describe('Renderer/Draw', function() {
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations: {
-                    position: 0,
-                    color: 1
+                attributeLocations : {
+                    position : 0,
+                    color : 1
                 }
             });
 
@@ -1289,8 +1289,8 @@ describe('Renderer/Draw', function() {
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations: {
-                position: 0
+            attributeLocations : {
+                position : 0
             }
         });
 
@@ -1327,8 +1327,8 @@ describe('Renderer/Draw', function() {
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations: {
-                    position: 0
+                attributeLocations : {
+                    position : 0
                 }
             });
 

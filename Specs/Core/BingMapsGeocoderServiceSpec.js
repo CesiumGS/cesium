@@ -11,7 +11,7 @@ describe('Core/BingMapsGeocoderService', function() {
     it('returns geocoder results', function (done) {
         var query = 'some query';
         var data = {
-            resourceSets: [{
+            resourceSets : [{
                 resources : [{
                     name : 'a',
                     bbox : [32.0, 3.0, 3.0, 4.0]
@@ -33,7 +33,7 @@ describe('Core/BingMapsGeocoderService', function() {
     it('returns no geocoder results if Bing has no results', function (done) {
         var query = 'some query';
         var data = {
-            resourceSets: []
+            resourceSets : []
         };
         Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
@@ -48,8 +48,8 @@ describe('Core/BingMapsGeocoderService', function() {
     it('returns no geocoder results if Bing has results but no resources', function (done) {
         var query = 'some query';
         var data = {
-            resourceSets: [{
-                resources: []
+            resourceSets : [{
+                resources : []
             }]
         };
         Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {

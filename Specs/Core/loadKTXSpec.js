@@ -412,9 +412,9 @@ describe('Core/loadKTX', function() {
         RequestScheduler.maximumRequests = 0;
 
         var promise = loadKTX(new Resource({
-            url: 'http://example.invalid/testuri',
-            request: new Request({
-                throttle: true
+            url : 'http://example.invalid/testuri',
+            request : new Request({
+                throttle : true
             })
         }));
         expect(promise).toBeUndefined();

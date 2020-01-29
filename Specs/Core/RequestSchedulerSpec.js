@@ -822,7 +822,7 @@ describe('Core/RequestScheduler', function() {
         expect(promise).toBeDefined();
 
         deferred.reject({
-            error: 'error'
+            error : 'error'
         });
         RequestScheduler.update();
 
@@ -864,20 +864,20 @@ describe('Core/RequestScheduler', function() {
 
         for (var i = 0; i < 23; i++) {
             promise = RequestScheduler.request(new Request({
-                url: 'http://test.invalid/1',
-                throttle: true,
-                throttleByServer: true,
-                requestFunction: function() { return when.defer(); }
+                url : 'http://test.invalid/1',
+                throttle : true,
+                throttleByServer : true,
+                requestFunction : function() { return when.defer(); }
             }));
             RequestScheduler.update();
             expect(promise).toBeDefined();
         }
 
         promise = RequestScheduler.request(new Request({
-            url: 'http://test.invalid/1',
-            throttle: true,
-            throttleByServer: true,
-            requestFunction: function() { return when.defer(); }
+            url : 'http://test.invalid/1',
+            throttle : true,
+            throttleByServer : true,
+            requestFunction : function() { return when.defer(); }
         }));
         expect(promise).toBeUndefined();
     });

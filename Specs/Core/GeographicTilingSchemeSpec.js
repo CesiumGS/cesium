@@ -43,8 +43,8 @@ describe('Core/GeographicTilingScheme', function() {
 
         it('tiles are numbered from the northwest corner.', function() {
             var tilingScheme = new GeographicTilingScheme({
-                numberOfLevelZeroTilesX: 2,
-                numberOfLevelZeroTilesY: 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
             var northwest = tilingScheme.tileXYToRectangle(0, 0, 1);
             var northeast = tilingScheme.tileXYToRectangle(1, 0, 1);
@@ -74,8 +74,8 @@ describe('Core/GeographicTilingScheme', function() {
 
         it('adjacent tiles have overlapping coordinates', function() {
             var tilingScheme = new GeographicTilingScheme({
-                numberOfLevelZeroTilesX: 2,
-                numberOfLevelZeroTilesY: 2
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
             });
             var northwest = tilingScheme.tileXYToRectangle(0, 0, 1);
             var northeast = tilingScheme.tileXYToRectangle(1, 0, 1);

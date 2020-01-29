@@ -37,13 +37,13 @@ import RuntimeError from './RuntimeError.js';
 
         if (!isExternal) {
             options = {
-                url: endpoint.url,
-                retryAttempts: 1,
-                retryCallback: retryCallback
+                url : endpoint.url,
+                retryAttempts : 1,
+                retryCallback : retryCallback
             };
         } else if (externalType === '3DTILES' || externalType === 'STK_TERRAIN_SERVER') {
             // 3D Tiles and STK Terrain Server external assets can still be represented as an IonResource
-            options = { url: endpoint.options.url };
+            options = { url : endpoint.options.url };
         } else {
             //External imagery assets have additional configuration that can't be represented as a Resource
             throw new RuntimeError('Ion.createResource does not support external imagery assets; use IonImageryProvider instead.');
@@ -109,8 +109,8 @@ import RuntimeError from './RuntimeError.js';
          * @type {Credit[]}
          * @readonly
          */
-        credits: {
-            get: function() {
+        credits : {
+            get : function() {
                 // Only we're not the root, return its credits;
                 if (defined(this._ionRoot)) {
                     return this._ionRoot.credits;
@@ -197,11 +197,11 @@ import RuntimeError from './RuntimeError.js';
         server = Resource.createIfNeeded(server);
 
         var resourceOptions = {
-            url: 'v1/assets/' + assetId + '/endpoint'
+            url : 'v1/assets/' + assetId + '/endpoint'
         };
 
         if (defined(accessToken)) {
-            resourceOptions.queryParameters = { access_token: accessToken };
+            resourceOptions.queryParameters = { access_token : accessToken };
         }
 
         return server.getDerivedResource(resourceOptions);

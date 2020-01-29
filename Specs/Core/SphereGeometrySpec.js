@@ -27,7 +27,7 @@ describe('Core/SphereGeometry', function() {
             vertexFormat : VertexFormat.POSITION_ONLY,
             radius : 1,
             stackPartitions : 3,
-            slicePartitions: 3
+            slicePartitions : 3
         }));
 
         // The vertices are 6x6 because an additional slice and stack are added
@@ -44,7 +44,7 @@ describe('Core/SphereGeometry', function() {
             vertexFormat : VertexFormat.ALL,
             radius : 1,
             stackPartitions : 3,
-            slicePartitions: 3
+            slicePartitions : 3
         }));
 
         var numVertices = 36;
@@ -62,7 +62,7 @@ describe('Core/SphereGeometry', function() {
             vertexFormat : VertexFormat.ALL,
             radius : 1,
             stackPartitions : 3,
-            slicePartitions: 3
+            slicePartitions : 3
         }));
 
         var positions = m.attributes.position.values;
@@ -98,7 +98,7 @@ describe('Core/SphereGeometry', function() {
         vertexFormat : VertexFormat.POSITION_ONLY,
         radius : 1,
         stackPartitions : 3,
-        slicePartitions: 3
+        slicePartitions : 3
     });
     // Adding TWO_PI and PI here for maximum clock/cone and other options from partial ellipsoids
     var packedInstance = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, -1.0];

@@ -1,6 +1,3 @@
-import MockImageryProvider from '../MockImageryProvider.js';
-import MockTerrainProvider from '../MockTerrainProvider.js';
-import TerrainTileProcessor from '../TerrainTileProcessor.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Cartesian4 } from '../../Source/Cesium.js';
 import { createWorldTerrain } from '../../Source/Cesium.js';
@@ -13,8 +10,11 @@ import { ImageryLayerCollection } from '../../Source/Cesium.js';
 import { QuadtreeTile } from '../../Source/Cesium.js';
 import { QuadtreeTileLoadState } from '../../Source/Cesium.js';
 import { TerrainState } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
 import { when } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import MockImageryProvider from '../MockImageryProvider.js';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
 
 describe('Scene/GlobeSurfaceTile', function() {
 
@@ -28,8 +28,8 @@ describe('Scene/GlobeSurfaceTile', function() {
 
     beforeEach(function() {
         frameState = {
-            context: {
-                cache: {}
+            context : {
+                cache : {}
             }
         };
 
@@ -286,8 +286,8 @@ describe('Scene/GlobeSurfaceTile', function() {
 
         it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = createWorldTerrain({
-                requestVertexNormals: true,
-                requestWaterMask: false
+                requestVertexNormals : true,
+                requestWaterMask : false
             });
 
             var tile = new QuadtreeTile({

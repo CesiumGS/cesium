@@ -9,6 +9,7 @@ import DeveloperError from '../Core/DeveloperError.js';
 import Matrix4 from '../Core/Matrix4.js';
 import writeTextToCanvas from '../Core/writeTextToCanvas.js';
 import bitmapSDF from '../ThirdParty/bitmap-sdf.js';
+import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 import BillboardCollection from './BillboardCollection.js';
 import BlendOption from './BlendOption.js';
 import HeightReference from './HeightReference.js';
@@ -18,7 +19,6 @@ import LabelStyle from './LabelStyle.js';
 import SDFSettings from './SDFSettings.js';
 import TextureAtlas from './TextureAtlas.js';
 import VerticalOrigin from './VerticalOrigin.js';
-import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into
@@ -200,8 +200,8 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 
                 if (canvas.width > 0 && canvas.height > 0) {
                     var sdfValues = bitmapSDF(canvas, {
-                        cutoff: SDFSettings.CUTOFF,
-                        radius: SDFSettings.RADIUS
+                        cutoff : SDFSettings.CUTOFF,
+                        radius : SDFSettings.RADIUS
                     });
 
                     var ctx = canvas.getContext('2d');

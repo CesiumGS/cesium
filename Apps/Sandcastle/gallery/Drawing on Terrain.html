@@ -50,7 +50,7 @@ function createPoint(worldPosition) {
         point : {
             color : Cesium.Color.WHITE,
             pixelSize : 5,
-            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+            heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
         }
     });
     return point;
@@ -69,9 +69,9 @@ function drawShape(positionData) {
     }
     else if (drawingMode === 'polygon') {
         shape = viewer.entities.add({
-            polygon: {
-                hierarchy: positionData,
-                material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
+            polygon : {
+                hierarchy : positionData,
+                material : new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
             }
         });
     }

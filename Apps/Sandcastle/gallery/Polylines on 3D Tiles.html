@@ -28,8 +28,8 @@ var scene = viewer.scene;
 
 var powerplant = scene.primitives.add(
     new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(8564),
-        show: false
+        url : Cesium.IonResource.fromAssetId(8564),
+        show : false
     })
 );
 var pipes = viewer.entities.add({
@@ -42,17 +42,17 @@ var pipes = viewer.entities.add({
         width : 6,
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.YELLOW,
-            dashLength: 20.0
+            dashLength : 20.0
         }),
-        show: false,
+        show : false,
         clampToGround : true,
-        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }
 });
 
 var building = viewer.scene.primitives.add(
     new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(40866)
+        url : Cesium.IonResource.fromAssetId(40866)
     })
 );
 var route = viewer.entities.add({
@@ -68,9 +68,9 @@ var route = viewer.entities.add({
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.YELLOW
         }),
-        show: false,
+        show : false,
         clampToGround : true,
-        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }
 });
 
@@ -82,11 +82,11 @@ Sandcastle.addToolbarMenu([{
         powerplant.show = true;
         pipes.polyline.show = true;
         scene.camera.setView({
-            destination: new Cesium.Cartesian3(1234151.4883992162, -5086036.79436967, 3633328.4278331124),
-            orientation: {
-                heading: 5.593695742186853,
-                pitch: -1.0786797635545216,
-                roll: 6.27892466154778
+            destination : new Cesium.Cartesian3(1234151.4883992162, -5086036.79436967, 3633328.4278331124),
+            orientation : {
+                heading : 5.593695742186853,
+                pitch : -1.0786797635545216,
+                roll : 6.27892466154778
             }
         });
     }
@@ -98,11 +98,11 @@ Sandcastle.addToolbarMenu([{
         powerplant.show = false;
         pipes.polyline.show = false;
         scene.camera.setView({
-            destination: new Cesium.Cartesian3(1216596.5376729995, -4736445.416889214, 4081406.990364228),
-            orientation: {
-                heading: 5.153176564030707,
-                pitch: -0.9701972964526693,
-                roll: 6.277883257569513
+            destination : new Cesium.Cartesian3(1216596.5376729995, -4736445.416889214, 4081406.990364228),
+            orientation : {
+                heading : 5.153176564030707,
+                pitch : -0.9701972964526693,
+                roll : 6.277883257569513
             }
         });
     }

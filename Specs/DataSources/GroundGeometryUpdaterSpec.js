@@ -105,17 +105,17 @@ describe('DataSources/GroundGeometryUpdater', function() {
 
     it('Overridden version of destroy is called', function() {
         var options = {
-            scene: {
-                frameState: {
-                    context: {
-                        depthTexture: true
+            scene : {
+                frameState : {
+                    context : {
+                        depthTexture : true
                     }
                 }
             },
-            entity: {},
-            geometryOptions: {},
-            geometryPropertyName: '',
-            observedPropertyNames: []
+            entity : {},
+            geometryOptions : {},
+            geometryPropertyName : '',
+            observedPropertyNames : []
         };
 
         var groundGeometryUpdater = new GroundGeometryUpdater(options);
@@ -123,7 +123,7 @@ describe('DataSources/GroundGeometryUpdater', function() {
         // Just make the terrain propery a dummy object with a destroy method
         var destroySpy = jasmine.createSpy('destroy');
         groundGeometryUpdater._terrainOffsetProperty = {
-            destroy: destroySpy
+            destroy : destroySpy
         };
 
         groundGeometryUpdater.destroy();

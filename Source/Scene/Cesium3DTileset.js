@@ -186,8 +186,8 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
         this._requestedTilesInFlight = [];
 
-        this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
-        this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
+        this._maximumPriority = { foveatedFactor : -Number.MAX_VALUE, depth : -Number.MAX_VALUE, distance : -Number.MAX_VALUE, reverseScreenSpaceError : -Number.MAX_VALUE };
+        this._minimumPriority = { foveatedFactor : Number.MAX_VALUE, depth : Number.MAX_VALUE, distance : Number.MAX_VALUE, reverseScreenSpaceError : Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         /**
@@ -1514,7 +1514,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         if (defined(tilesetVersion)) {
             // Append the tileset version to the resource
             this._basePath += '?v=' + tilesetVersion;
-            resource.setQueryParameters({ v: tilesetVersion });
+            resource.setQueryParameters({ v : tilesetVersion });
         }
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.

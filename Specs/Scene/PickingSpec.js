@@ -19,11 +19,11 @@ import { Globe } from '../../Source/Cesium.js';
 import { PointPrimitiveCollection } from '../../Source/Cesium.js';
 import { Primitive } from '../../Source/Cesium.js';
 import { SceneMode } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createCanvas from '../createCanvas.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Pick', function() {
 
@@ -85,18 +85,18 @@ describe('Scene/Pick', function() {
 
     function createRectangle(height, rectangle) {
         var e = new Primitive({
-            geometryInstances: new GeometryInstance({
-                geometry: new RectangleGeometry({
-                    rectangle: rectangle,
-                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    granularity: CesiumMath.toRadians(20.0),
-                    height: height
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    granularity : CesiumMath.toRadians(20.0),
+                    height : height
                 })
             }),
-            appearance: new EllipsoidSurfaceAppearance({
-                aboveGround: false
+            appearance : new EllipsoidSurfaceAppearance({
+                aboveGround : false
             }),
-            asynchronous: false
+            asynchronous : false
         });
 
         primitives.add(e);

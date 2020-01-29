@@ -63,7 +63,7 @@
         var reqUrl = url.parse(req.url, true);
         var filePath = reqUrl.pathname.substring(1);
 
-        var readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+        var readStream = fs.createReadStream(filePath, { start : 0, end : 2 });
         readStream.on('error', function(err) {
             next();
         });

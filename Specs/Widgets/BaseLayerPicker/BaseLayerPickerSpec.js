@@ -1,8 +1,8 @@
 import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
 import { FeatureDetection } from '../../../Source/Cesium.js';
 import { ImageryLayerCollection } from '../../../Source/Cesium.js';
-import DomEventSimulator from '../../DomEventSimulator.js';
 import { BaseLayerPicker } from '../../../Source/Cesium.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
 
 describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
 

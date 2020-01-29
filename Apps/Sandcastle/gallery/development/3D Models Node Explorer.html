@@ -115,7 +115,7 @@ var viewModel = {
     showTranslation : false,
     showRotation : false,
     showScale : false,
-    transformations: {}
+    transformations : {}
 };
 
 Cesium.knockout.track(viewModel);
@@ -144,10 +144,10 @@ Cesium.knockout.defineProperty(viewModel, 'transformation', function() {
 // these writable computed properties produce individual values for use in the UI
 ['translationX', 'translationY', 'translationZ', 'rotationHeading', 'rotationPitch', 'rotationRoll', 'scaleX', 'scaleY', 'scaleZ'].forEach(function(p) {
     Cesium.knockout.defineProperty(viewModel, p, {
-        get: function() {
+        get : function() {
             return viewModel.transformation[p];
         },
-        set: function(value) {
+        set : function(value) {
             // coerce values to number
             viewModel.transformation[p] = +value;
         }

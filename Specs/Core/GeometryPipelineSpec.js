@@ -1242,7 +1242,7 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal throws when geometry.attributes.position is undefined', function() {
         var geometry = new Geometry({
-            attributes: {},
+            attributes : {},
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -1253,10 +1253,10 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal throws when geometry.indices is undefined', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
@@ -1270,10 +1270,10 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal throws when geometry.indices.length is not a multiple of 3', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
@@ -1287,15 +1287,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal throws when primitive type is not triangle', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLE_STRIP
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
         expect(function() {
@@ -1305,15 +1305,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal computes normal for one triangle', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1324,15 +1324,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal computes normal for two triangles', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 1, 3, 2],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1352,15 +1352,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal computes normal for six triangles', function() {
         var geometry = new Geometry ({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1389,15 +1389,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal computes normal of (0,0,1) for a degenerate triangle', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 0],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1408,15 +1408,15 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeNormal takes first normal for two coplanar triangles with opposite winding orders', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 1, 1, 1, 1],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 2, 1, 0],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1439,21 +1439,21 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when position is undefined', function() {
         var geometry = new Geometry({
-            attributes: {
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                normal : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLE_STRIP
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
         expect(function() {
@@ -1463,21 +1463,21 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when normal is undefined', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLE_STRIP
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
         expect(function() {
@@ -1487,22 +1487,22 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when st is undefined', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+                normal : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLE_STRIP
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
         expect(function() {
@@ -1512,21 +1512,21 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when geometry.indices is undefined', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 }),
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+                normal : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
@@ -1540,27 +1540,27 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when indices is not a multiple of 3', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+                normal : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 3, 4],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         expect(function() {
@@ -1570,27 +1570,27 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent throws when primitive type is not triangle', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+                normal : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
 
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLE_STRIP
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
         expect(function() {
@@ -1600,20 +1600,20 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent computes tangent and bitangent for one triangle', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 0, 0, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 0, 0, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1625,20 +1625,20 @@ describe('Core/GeometryPipeline', function() {
 
     it('computeTangentAndBitangent computes tangent and bitangent for two triangles', function() {
         var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
-                    componentsPerAttribute: 3,
+            attributes : {
+                position : new GeometryAttribute({
+                    values : [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
+                    componentsPerAttribute : 3,
                     componentDatatype : ComponentDatatype.FLOAT
                 }),
-                st: new GeometryAttribute({
-                    values: [0, 0, 1, 0, 1, 1, 0, 1],
-                    componentsPerAttribute: 2,
+                st : new GeometryAttribute({
+                    values : [0, 0, 1, 0, 1, 1, 0, 1],
+                    componentsPerAttribute : 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 1, 3, 2],
-            primitiveType: PrimitiveType.TRIANGLES
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1668,7 +1668,7 @@ describe('Core/GeometryPipeline', function() {
         var actualBitangents = geometry.attributes.bitangent.values;
 
         var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
-            vertexFormat: VertexFormat.ALL,
+            vertexFormat : VertexFormat.ALL,
             maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
             minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
@@ -1889,25 +1889,25 @@ describe('Core/GeometryPipeline', function() {
                         componentsPerAttribute : 3,
                         values : positions
                     }),
-                    vec4s: new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute: 4,
-                        values: vec4s
+                    vec4s : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 4,
+                        values : vec4s
                     }),
-                    vec3s: new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute: 3,
-                        values: vec3s
+                    vec3s : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 3,
+                        values : vec3s
                     }),
-                    vec2s: new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute: 2,
-                        values: vec2s
+                    vec2s : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 2,
+                        values : vec2s
                     }),
-                    scalars: new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute: 1,
-                        values: scalars
+                    scalars : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 1,
+                        values : scalars
                     })
                 },
                 indices : new Uint16Array([0, 1, 2]),

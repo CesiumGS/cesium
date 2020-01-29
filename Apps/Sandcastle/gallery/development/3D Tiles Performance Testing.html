@@ -52,8 +52,8 @@ var referenceMaximum = new Cesium.JulianDate();
 var heatmapTileProperty = '_foveatedFactor';
 
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(5741),
-    debugHeatmapTilePropertyName: heatmapTileProperty
+    url : Cesium.IonResource.fromAssetId(5741),
+    debugHeatmapTilePropertyName : heatmapTileProperty
 });
 
 function updateReferenceMinMax() {
@@ -79,7 +79,7 @@ destinationFunctions[0] = function(){
             up : new Cartesian3(0.27688172689171486, -0.4686726309748134, 0.8388578391411791)
         },
         duration : 0,
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE
+        easingFunction : Cesium.EasingFunction.LINEAR_NONE
     });
     startTimer();
 };
@@ -93,7 +93,7 @@ destinationFunctions[1] = function(){
             up : new Cartesian3(0.12792976837875633, -0.48927851021971713, 0.8626937543530335)
         },
         duration : flightDuration,
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        easingFunction : Cesium.EasingFunction.LINEAR_NONE,
         maximumHeight : 100
     });
     startTimer();
@@ -108,7 +108,7 @@ destinationFunctions[2] = function(){
             up : new Cartesian3(0.12789117766285887, -0.48903793608573193, 0.8628358730054139)
         },
         duration : flightDuration,
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+        easingFunction : Cesium.EasingFunction.LINEAR_NONE,
         maximumHeight : 100
     });
     startTimer();

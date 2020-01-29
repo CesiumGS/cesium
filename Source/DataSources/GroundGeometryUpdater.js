@@ -44,8 +44,8 @@ import TerrainOffsetProperty from './TerrainOffsetProperty.js';
          * @memberof GroundGeometryUpdater.prototype
          * @readonly
          */
-        zIndex: {
-            get: function() {
+        zIndex : {
+            get : function() {
                 return this._zIndex;
             }
         },
@@ -56,8 +56,8 @@ import TerrainOffsetProperty from './TerrainOffsetProperty.js';
          * @memberof GroundGeometryUpdater.prototype
          * @readonly
          */
-        terrainOffsetProperty: {
-            get: function() {
+        terrainOffsetProperty : {
+            get : function() {
                 return this._terrainOffsetProperty;
             }
         }

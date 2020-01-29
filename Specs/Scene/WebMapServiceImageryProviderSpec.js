@@ -20,8 +20,8 @@ import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
 import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/WebMapServiceImageryProvider', function() {
 
@@ -119,7 +119,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             parameters : {
                 something : 'foo',
                 another : false,
-                version: '1.3.0'
+                version : '1.3.0'
             }
         });
 
@@ -150,7 +150,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             layers : 'someLayer',
             crs : 'CRS:27',
             parameters : {
-                version: '1.3.0'
+                version : '1.3.0'
             }
         });
 
@@ -180,7 +180,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             layers : 'someLayer',
             crs : 'CRS:27',
             parameters : {
-                version: '1.1.0'
+                version : '1.1.0'
             }
         });
 
@@ -210,7 +210,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             layers : 'someLayer',
             srs : 'IAU2000:30118',
             parameters : {
-                version: '1.1.0'
+                version : '1.1.0'
             }
         });
 
@@ -237,7 +237,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
     it('supports subdomains string in URL', function() {
         var provider = new WebMapServiceImageryProvider({
             url : '{s}',
-            subdomains: '123',
+            subdomains : '123',
             layers : ''
         });
 
@@ -250,7 +250,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
     it('supports subdomains array in URL', function() {
         var provider = new WebMapServiceImageryProvider({
             url : '{s}',
-            subdomains: ['foo', 'bar'],
+            subdomains : ['foo', 'bar'],
             layers : ''
         });
 
@@ -382,7 +382,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -422,7 +422,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -438,8 +438,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             url : 'made/up/wms/server',
             layers : 'someLayer',
             tilingScheme : tilingScheme,
-            parameters: {
-              version: '1.3.0'
+            parameters : {
+              version : '1.3.0'
             }
         });
 
@@ -465,7 +465,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -505,7 +505,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -521,8 +521,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             url : 'made/up/wms/server',
             layers : 'someLayer',
             tilingScheme : tilingScheme,
-            parameters: {
-              version: '1.1.0'
+            parameters : {
+              version : '1.1.0'
             }
         });
 
@@ -548,7 +548,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -564,8 +564,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             url : 'made/up/wms/server',
             layers : 'someLayer',
             tilingScheme : tilingScheme,
-            parameters: {
-              version: '1.3.0'
+            parameters : {
+              version : '1.3.0'
             }
         });
 
@@ -591,7 +591,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -607,8 +607,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             url : 'made/up/wms/server',
             layers : 'someLayer',
             tilingScheme : tilingScheme,
-            parameters: {
-              version: '1.3.1'
+            parameters : {
+              version : '1.3.1'
             }
         });
 
@@ -634,7 +634,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 var rect = tilingScheme.tileXYToNativeRectangle(0, 0, 0);
                 expect(params.bbox).toEqual(rect.west + ',' + rect.south + ',' + rect.east + ',' + rect.north);
 
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -664,7 +664,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
                 expect(params.format).not.toEqual('image/jpeg');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -780,7 +780,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
                 if (tries === 2) {
                     // Succeed after 2 tries
-                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 } else {
                     // fail
                     setTimeout(function() {
@@ -807,8 +807,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
     describe('pickFeatures', function() {
         it('works with GeoJSON responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -833,8 +833,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with MapInfo MXP responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -858,8 +858,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with Esri WMS responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -883,8 +883,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with THREDDS XML format', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -908,8 +908,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with msGMLOutput format', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -933,8 +933,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with unknown XML responses', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -958,8 +958,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('resolves to undefined on a ServiceException', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -978,9 +978,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('returns undefined if list of feature info formats is empty', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                getFeatureInfoFormats: []
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : []
             });
 
             return pollToPromise(function () {
@@ -992,9 +992,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('returns undefined if enablePickFeatures is false', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                enablePickFeatures: false
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : false
             });
 
             expect(provider.enablePickFeatures).toBe(false);
@@ -1008,9 +1008,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('returns undefined if enablePickFeatures is set to false after initialization', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                enablePickFeatures: true
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : true
             });
 
             provider.enablePickFeatures = false;
@@ -1025,9 +1025,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('does not return undefined if enablePickFeatures is set to true after initialization as false', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                enablePickFeatures: false
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                enablePickFeatures : false
             });
 
             provider.enablePickFeatures = true;
@@ -1042,9 +1042,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('requests XML exclusively if specified in getFeatureInfoFormats', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                getFeatureInfoFormats: [
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
                     new GetFeatureInfoFormat('xml')
                 ]
             });
@@ -1071,9 +1071,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('requests GeoJSON exclusively if specified in getFeatureInfoFormats', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                getFeatureInfoFormats: [
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
                     new GetFeatureInfoFormat('json')
                 ]
             });
@@ -1109,9 +1109,9 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             }
 
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer',
-                getFeatureInfoFormats: [
+                url : 'made/up/wms/server',
+                layers : 'someLayer',
+                getFeatureInfoFormats : [
                     new GetFeatureInfoFormat('foo', 'application/foo', fooProcessor)
                 ]
             });
@@ -1138,8 +1138,8 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('works with HTML response', function () {
             var provider = new WebMapServiceImageryProvider({
-                url: 'made/up/wms/server',
-                layers: 'someLayer'
+                url : 'made/up/wms/server',
+                layers : 'someLayer'
             });
 
             Resource._Implementations.loadWithXhr = function (url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -1180,10 +1180,10 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('tiles preload on requestImage as we approach the next time interval', function() {
             var times = TimeIntervalCollection.fromIso8601({
-                iso8601: '2017-04-26/2017-04-30/P1D',
-                dataCallback: function(interval, index) {
+                iso8601 : '2017-04-26/2017-04-30/P1D',
+                dataCallback : function(interval, index) {
                     return {
-                        Time: JulianDate.toIso8601(interval.start)
+                        Time : JulianDate.toIso8601(interval.start)
                     };
                 }
             });
@@ -1201,7 +1201,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             });
 
             Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             var entry;
@@ -1231,10 +1231,10 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('tiles preload onTick event as we approach the next time interval', function() {
             var times = TimeIntervalCollection.fromIso8601({
-                iso8601: '2017-04-26/2017-04-30/P1D',
-                dataCallback: function(interval, index) {
+                iso8601 : '2017-04-26/2017-04-30/P1D',
+                dataCallback : function(interval, index) {
                     return {
-                        Time: JulianDate.toIso8601(interval.start)
+                        Time : JulianDate.toIso8601(interval.start)
                     };
                 }
             });
@@ -1252,7 +1252,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             });
 
             Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             var entry;
@@ -1287,10 +1287,10 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('reload is called once we cross into next interval', function() {
             var times = TimeIntervalCollection.fromIso8601({
-                iso8601: '2017-04-26/2017-04-30/P1D',
-                dataCallback: function(interval, index) {
+                iso8601 : '2017-04-26/2017-04-30/P1D',
+                dataCallback : function(interval, index) {
                     return {
-                        Time: JulianDate.toIso8601(interval.start)
+                        Time : JulianDate.toIso8601(interval.start)
                     };
                 }
             });
@@ -1301,7 +1301,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             });
 
             Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             var provider = new WebMapServiceImageryProvider({
@@ -1340,11 +1340,11 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
         it('Data in request comes from the time interval collection', function() {
             var times = TimeIntervalCollection.fromIso8601({
-                iso8601: '2017-04-26/2017-04-30/P1D',
-                dataCallback: function(interval, index) {
+                iso8601 : '2017-04-26/2017-04-30/P1D',
+                dataCallback : function(interval, index) {
                     return {
-                        Time: JulianDate.toIso8601(interval.start),
-                        Test: 'testValue'
+                        Time : JulianDate.toIso8601(interval.start),
+                        Test : 'testValue'
                     };
                 }
             });
@@ -1355,7 +1355,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
             });
 
             Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             var provider = new WebMapServiceImageryProvider({

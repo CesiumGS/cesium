@@ -163,7 +163,7 @@ describe('Core/RectangleGeometry', function() {
         var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             rectangle : rectangle,
-            rotation: angle,
+            rotation : angle,
             stRotation : angle,
             granularity : 1.0
         }));
@@ -462,8 +462,8 @@ describe('Core/RectangleGeometry', function() {
             vertexFormat : VertexFormat.POSITION_ONLY,
             rectangle : new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0),
             granularity : 1.0,
-            ellipsoid: Ellipsoid.UNIT_SPHERE,
-            rotation: CesiumMath.PI
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            rotation : CesiumMath.PI
         };
         var geometry = new RectangleGeometry(options);
 
@@ -508,8 +508,8 @@ describe('Core/RectangleGeometry', function() {
         );
 
         var geometry = new RectangleGeometry({
-            rectangle: rectangle,
-            rotation: 0.5
+            rectangle : rectangle,
+            rotation : 0.5
         });
 
         expect(function() {

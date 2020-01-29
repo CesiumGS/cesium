@@ -9,10 +9,10 @@ import RuntimeError from '../Core/RuntimeError.js';
 import when from '../ThirdParty/when.js';
 import ArcGisMapServerImageryProvider from './ArcGisMapServerImageryProvider.js';
 import BingMapsImageryProvider from './BingMapsImageryProvider.js';
-import TileMapServiceImageryProvider from './TileMapServiceImageryProvider.js';
 import GoogleEarthEnterpriseMapsProvider from './GoogleEarthEnterpriseMapsProvider.js';
 import MapboxImageryProvider from './MapboxImageryProvider.js';
 import SingleTileImageryProvider from './SingleTileImageryProvider.js';
+import TileMapServiceImageryProvider from './TileMapServiceImageryProvider.js';
 import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 import WebMapServiceImageryProvider from './WebMapServiceImageryProvider.js';
 import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider.js';
@@ -26,15 +26,15 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
     // These values are the list of supported external imagery
     // assets in the Cesium ion beta. They are subject to change.
     var ImageryProviderMapping = {
-        ARCGIS_MAPSERVER: createFactory(ArcGisMapServerImageryProvider),
-        BING: createFactory(BingMapsImageryProvider),
-        GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
-        MAPBOX: createFactory(MapboxImageryProvider),
-        SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createFactory(TileMapServiceImageryProvider),
-        URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
-        WMS: createFactory(WebMapServiceImageryProvider),
-        WMTS: createFactory(WebMapTileServiceImageryProvider)
+        ARCGIS_MAPSERVER : createFactory(ArcGisMapServerImageryProvider),
+        BING : createFactory(BingMapsImageryProvider),
+        GOOGLE_EARTH : createFactory(GoogleEarthEnterpriseMapsProvider),
+        MAPBOX : createFactory(MapboxImageryProvider),
+        SINGLE_TILE : createFactory(SingleTileImageryProvider),
+        TMS : createFactory(TileMapServiceImageryProvider),
+        URL_TEMPLATE : createFactory(UrlTemplateImageryProvider),
+        WMS : createFactory(WebMapServiceImageryProvider),
+        WMTS : createFactory(WebMapTileServiceImageryProvider)
     };
 
     /**
@@ -155,7 +155,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
                     imageryProvider = new TileMapServiceImageryProvider({
-                        url: new IonResource(endpoint, endpointResource)
+                        url : new IonResource(endpoint, endpointResource)
                     });
                 } else {
                     var factory = ImageryProviderMapping[externalType];
@@ -191,7 +191,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         ready : {
-            get: function() {
+            get : function() {
                 return this._ready;
             }
         },
@@ -203,7 +203,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         readyPromise : {
-            get: function() {
+            get : function() {
                 return this._readyPromise;
             }
         },
@@ -215,8 +215,8 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @type {Rectangle}
          * @readonly
          */
-        rectangle: {
-            get: function() {
+        rectangle : {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
@@ -234,7 +234,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         tileWidth : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
@@ -252,7 +252,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         tileHeight : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
@@ -270,7 +270,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         maximumLevel : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
@@ -292,7 +292,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         minimumLevel : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
@@ -310,7 +310,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         tilingScheme : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
@@ -330,7 +330,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         tileDiscardPolicy : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
@@ -349,7 +349,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         errorEvent : {
-            get: function() {
+            get : function() {
                 return this._errorEvent;
             }
         },
@@ -363,7 +363,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @readonly
          */
         credit : {
-            get: function() {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('credit must not be called before the imagery provider is ready.');
@@ -383,8 +383,8 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
          * @type {Boolean}
          * @readonly
          */
-        hasAlphaChannel: {
-            get: function() {
+        hasAlphaChannel : {
+            get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
                     throw new DeveloperError('hasAlphaChannel must not be called before the imagery provider is ready.');

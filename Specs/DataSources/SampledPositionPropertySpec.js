@@ -159,8 +159,8 @@ describe('DataSources/SampledPositionProperty', function() {
         property.definitionChanged.addEventListener(listener);
 
         property.removeSamples(new TimeInterval({
-            start: times[1],
-            stop: times[2]
+            start : times[1],
+            stop : times[2]
         }));
 
         expect(listener).toHaveBeenCalledWith(property);

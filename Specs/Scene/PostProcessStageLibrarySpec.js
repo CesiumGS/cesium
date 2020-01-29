@@ -5,11 +5,11 @@ import { Matrix4 } from '../../Source/Cesium.js';
 import { Transforms } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { PostProcessStageLibrary } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createCanvas from '../createCanvas.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 import ViewportPrimitive from '../ViewportPrimitive.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PostProcessStageLibrary', function() {
 
@@ -53,7 +53,7 @@ describe('Scene/PostProcessStageLibrary', function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, { timeout : 10000 }).then(function() {
             return model;
         }).otherwise(function() {
             return when.reject(model);

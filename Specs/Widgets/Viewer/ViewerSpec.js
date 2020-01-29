@@ -25,10 +25,6 @@ import { ImageryLayerCollection } from '../../../Source/Cesium.js';
 import { SceneMode } from '../../../Source/Cesium.js';
 import { ShadowMode } from '../../../Source/Cesium.js';
 import { TimeDynamicPointCloud } from '../../../Source/Cesium.js';
-import createViewer from '../../createViewer.js';
-import DomEventSimulator from '../../DomEventSimulator.js';
-import MockDataSource from '../../MockDataSource.js';
-import pollToPromise from '../../pollToPromise.js';
 import { Animation } from '../../../Source/Cesium.js';
 import { BaseLayerPicker } from '../../../Source/Cesium.js';
 import { ProviderViewModel } from '../../../Source/Cesium.js';
@@ -41,6 +37,10 @@ import { NavigationHelpButton } from '../../../Source/Cesium.js';
 import { SceneModePicker } from '../../../Source/Cesium.js';
 import { SelectionIndicator } from '../../../Source/Cesium.js';
 import { Timeline } from '../../../Source/Cesium.js';
+import createViewer from '../../createViewer.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import MockDataSource from '../../MockDataSource.js';
+import pollToPromise from '../../pollToPromise.js';
 
 describe('Widgets/Viewer/Viewer', function() {
 
@@ -433,7 +433,7 @@ describe('Widgets/Viewer/Viewer', function() {
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            powerPreference: 'low-power',
+            powerPreference : 'low-power',
             premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
@@ -1142,13 +1142,13 @@ describe('Widgets/Viewer/Viewer', function() {
 
         function dataCallback() {
             return {
-                uri: uri
+                uri : uri
             };
         }
 
         var timeIntervalCollection = TimeIntervalCollection.fromIso8601DateArray({
-            iso8601Dates: dates,
-            dataCallback: dataCallback
+            iso8601Dates : dates,
+            dataCallback : dataCallback
         });
 
         var pointCloud = new TimeDynamicPointCloud({

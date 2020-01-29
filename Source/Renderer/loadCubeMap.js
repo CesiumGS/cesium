@@ -59,7 +59,7 @@ import CubeMap from './CubeMap.js';
         // ideally, we would do it in the primitive's update function.
         var flipOptions = {
             flipY : true,
-            preferImageBitmap: true
+            preferImageBitmap : true
         };
 
         var facePromises = [

@@ -140,10 +140,10 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         pickFeatureResource.setQueryParameters(parameters, true);
 
         var pickFeatureParams = {
-            query_layers: options.layers,
-            x: '{i}',
-            y: '{j}',
-            info_format: '{format}'
+            query_layers : options.layers,
+            x : '{i}',
+            y : '{j}',
+            info_format : '{format}'
         };
         pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
@@ -161,11 +161,11 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
             tileHeight : options.tileHeight,
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
-            subdomains: options.subdomains,
+            subdomains : options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
             getFeatureInfoFormats : defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats),
-            enablePickFeatures: options.enablePickFeatures
+            enablePickFeatures : options.enablePickFeatures
         });
     }
 

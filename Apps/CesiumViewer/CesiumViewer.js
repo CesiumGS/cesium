@@ -62,8 +62,8 @@ function main() {
             viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
         } else {
             viewer.terrainProvider = createWorldTerrain({
-                requestWaterMask: true,
-                requestVertexNormals: true
+                requestWaterMask : true,
+                requestVertexNormals : true
             });
         }
     } catch (exception) {
@@ -122,8 +122,8 @@ function main() {
             loadPromise = GeoJsonDataSource.load(source);
         } else if (sourceType === 'kml') {
             loadPromise = KmlDataSource.load(source, {
-                camera: scene.camera,
-                canvas: scene.canvas
+                camera : scene.camera,
+                canvas : scene.canvas
             });
         } else {
             showLoadError(source, 'Unknown format.');
@@ -175,11 +175,11 @@ function main() {
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
             viewer.camera.setView({
-                destination: Cartesian3.fromDegrees(longitude, latitude, height),
-                orientation: {
-                    heading: heading,
-                    pitch: pitch,
-                    roll: roll
+                destination : Cartesian3.fromDegrees(longitude, latitude, height),
+                orientation : {
+                    heading : heading,
+                    pitch : pitch,
+                    roll : roll
                 }
             });
         }

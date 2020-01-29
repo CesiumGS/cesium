@@ -11,9 +11,9 @@ import { Imagery } from '../../Source/Cesium.js';
 import { ImageryLayer } from '../../Source/Cesium.js';
 import { ImageryProvider } from '../../Source/Cesium.js';
 import { ImageryState } from '../../Source/Cesium.js';
-import pollToPromise from '../pollToPromise.js';
 import { Uri } from '../../Source/Cesium.js';
 import { when } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/BingMapsImageryProvider', function() {
 
@@ -189,7 +189,7 @@ describe('Scene/BingMapsImageryProvider', function() {
                     }
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 
@@ -254,8 +254,8 @@ describe('Scene/BingMapsImageryProvider', function() {
                 installFakeMetadataRequest(url, mapStyle);
                 installFakeImageRequest();
                 provider2 = new BingMapsImageryProvider({
-                    url: url,
-                    mapStyle: mapStyle
+                    url : url,
+                    mapStyle : mapStyle
                 });
                 return provider2.readyPromise;
             })
@@ -269,8 +269,8 @@ describe('Scene/BingMapsImageryProvider', function() {
                 installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
                 installFakeImageRequest();
                 provider3 = new BingMapsImageryProvider({
-                    url: url,
-                    mapStyle: BingMapsStyle.AERIAL
+                    url : url,
+                    mapStyle : BingMapsStyle.AERIAL
                 });
                 return provider3.readyPromise;
             })
@@ -384,7 +384,7 @@ describe('Scene/BingMapsImageryProvider', function() {
         var provider = new BingMapsImageryProvider({
             url : url,
             mapStyle : mapStyle,
-            key: 'fake Key'
+            key : 'fake Key'
         });
 
         expect(provider.url).toStartWith(url);
@@ -434,8 +434,8 @@ describe('Scene/BingMapsImageryProvider', function() {
             return provider.ready;
         }).then(function() {
             installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg', {
-                g: '3031',
-                mkt: 'ja-jp'
+                g : '3031',
+                mkt : 'ja-jp'
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -497,7 +497,7 @@ describe('Scene/BingMapsImageryProvider', function() {
                 Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url : 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -551,7 +551,7 @@ describe('Scene/BingMapsImageryProvider', function() {
 
         // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
         var e = new Error();
-        e.blob = {size: 0};
+        e.blob = {size : 0};
         var errorPromise = when.reject(e);
 
         spyOn(ImageryProvider, 'loadImage').and.returnValue(errorPromise);

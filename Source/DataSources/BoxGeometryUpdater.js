@@ -68,8 +68,8 @@ import Property from './Property.js';
          * @memberof BoxGeometryUpdater.prototype
          * @readonly
          */
-        terrainOffsetProperty: {
-            get: function() {
+        terrainOffsetProperty : {
+            get : function() {
                 return this._terrainOffsetProperty;
             }
         }
@@ -103,7 +103,7 @@ import Property from './Property.js';
             show : show,
             distanceDisplayCondition : distanceDisplayConditionAttribute,
             color : undefined,
-            offset: undefined
+            offset : undefined
         };
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor;

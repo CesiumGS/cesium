@@ -119,14 +119,14 @@ describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
         var color = new TimeIntervalCollectionProperty();
         color.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: Color.RED
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : Color.RED
         }));
         var polyline = createGroundPolyline();
         polyline.material = new ColorMaterialProperty(color);
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
-            polyline: polyline
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            polyline : polyline
         });
 
         batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
@@ -165,15 +165,15 @@ describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: new DistanceDisplayCondition(1.0, 2.0)
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : new DistanceDisplayCondition(1.0, 2.0)
         }));
 
         var polyline = createGroundPolyline();
         polyline.distanceDisplayCondition = ddc;
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
-            polyline: polyline
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            polyline : polyline
         });
 
         batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, ClassificationType.BOTH, false);
@@ -213,14 +213,14 @@ describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
         var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var show = new TimeIntervalCollectionProperty();
         show.intervals.addInterval(TimeInterval.fromIso8601({
-            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
-            data: true
+            iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data : true
         }));
         var polyline = createGroundPolyline();
         polyline.show = show;
         var entity = new Entity({
-            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
-            polyline: polyline
+            availability : new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601 : '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            polyline : polyline
         });
 
         batch = new StaticGroundPolylinePerMaterialBatch(scene.groundPrimitives, false);

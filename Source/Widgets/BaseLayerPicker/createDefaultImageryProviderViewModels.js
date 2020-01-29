@@ -17,7 +17,7 @@ import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
             name : 'Bing Maps Aerial',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
             tooltip : 'Bing Maps aerial imagery, provided by Cesium ion',
-            category: 'Cesium ion',
+            category : 'Cesium ion',
             creationFunction : function() {
                 return createWorldImagery({
                     style : IonWorldImageryStyle.AERIAL
@@ -50,37 +50,37 @@ import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name: 'Mapbox Satellite',
-            tooltip: 'Mapbox satellite imagery https://www.mapbox.com/maps/',
-            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
+            name : 'Mapbox Satellite',
+            tooltip : 'Mapbox satellite imagery https://www.mapbox.com/maps/',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
             category : 'Other',
-            creationFunction: function() {
+            creationFunction : function() {
                 return new MapboxStyleImageryProvider({
-                    styleId: 'satellite-v9'
+                    styleId : 'satellite-v9'
                 });
             }
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name: 'Mapbox Streets',
-            tooltip: 'Mapbox streets imagery https://www.mapbox.com/maps/',
-            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
+            name : 'Mapbox Streets',
+            tooltip : 'Mapbox streets imagery https://www.mapbox.com/maps/',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
             category : 'Other',
-            creationFunction: function() {
+            creationFunction : function() {
                 return new MapboxStyleImageryProvider({
-                    styleId: 'satellite-streets-v11'
+                    styleId : 'satellite-streets-v11'
                 });
             }
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name: 'Mapbox Streets Classic',
-            tooltip: 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
-            iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
+            name : 'Mapbox Streets Classic',
+            tooltip : 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             category : 'Other',
-            creationFunction: function() {
+            creationFunction : function() {
                 return new MapboxStyleImageryProvider({
-                    styleId: 'streets-v11'
+                    styleId : 'streets-v11'
                 });
             }
         }));
@@ -184,7 +184,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).',
             category : 'Cesium ion',
             creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3954 });
+                return new IonImageryProvider({ assetId : 3954 });
             }
         }));
 
@@ -194,7 +194,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'Blue Marble Next Generation July, 2004 imagery from NASA.',
             category : 'Cesium ion',
             creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3845 });
+                return new IonImageryProvider({ assetId : 3845 });
             }
         }));
 
@@ -204,7 +204,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.',
             category : 'Cesium ion',
             creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3812 });
+                return new IonImageryProvider({ assetId : 3812 });
             }
         }));
 

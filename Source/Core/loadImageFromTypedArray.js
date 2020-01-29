@@ -26,15 +26,15 @@ import Resource from './Resource.js';
             .then(function(result) {
                 if (result) {
                     return when(Resource.createImageBitmapFromBlob(blob, {
-                        flipY: flipY,
-                        premultiplyAlpha: false
+                        flipY : flipY,
+                        premultiplyAlpha : false
                     }));
                 }
 
                 blobUrl = window.URL.createObjectURL(blob);
                 var resource = new Resource({
-                    url: blobUrl,
-                    request: request
+                    url : blobUrl,
+                    request : request
                 });
 
                 return resource.fetchImage({

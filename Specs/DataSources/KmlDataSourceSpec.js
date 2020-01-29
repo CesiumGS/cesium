@@ -35,9 +35,9 @@ import { HeightReference } from '../../Source/Cesium.js';
 import { HorizontalOrigin } from '../../Source/Cesium.js';
 import { LabelStyle } from '../../Source/Cesium.js';
 import { SceneMode } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createCamera from '../createCamera.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/KmlDataSource', function() {
 
@@ -84,14 +84,14 @@ describe('DataSources/KmlDataSource', function() {
     var uberIconHeading = CesiumMath.toRadians(-45);
     var uberIconHotspot = new Cartesian2(45, -42);
     var uberIconHref = Resource.DEFAULT.getDerivedResource({
-        url: 'test.png'
+        url : 'test.png'
     }).url;
 
     var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
     var uberLabelScale = 4;
 
     var expectedRefreshLinkHref = Resource.DEFAULT.getDerivedResource({
-        url: './Data/KML/refresh.kml'
+        url : './Data/KML/refresh.kml'
     }).url;
 
     var options = {
@@ -113,7 +113,7 @@ describe('DataSources/KmlDataSource', function() {
             clientWidth : 512,
             clientHeight : 512
         },
-        credit: 'This is my credit'
+        credit : 'This is my credit'
     };
     options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
     options.camera.frustum.aspectRatio = 1.0;
@@ -212,7 +212,7 @@ describe('DataSources/KmlDataSource', function() {
     it('load works with a KML Resource', function() {
         var dataSource = new KmlDataSource(options);
         var resource = new Resource({
-            url: 'Data/KML/simple.kml'
+            url : 'Data/KML/simple.kml'
         });
         return dataSource.load(resource, options).then(function(source) {
             expect(source).toBe(dataSource);
@@ -239,7 +239,7 @@ describe('DataSources/KmlDataSource', function() {
     it('load works with a KMZ Resource', function() {
         var dataSource = new KmlDataSource(options);
         var resource = new Resource({
-            url: 'Data/KML/simple.kmz'
+            url : 'Data/KML/simple.kmz'
         });
         return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
@@ -1713,7 +1713,7 @@ describe('DataSources/KmlDataSource', function() {
           </Placemark>';
 
         var expectedIconHref = Resource.DEFAULT.getDerivedResource({
-            url: 'whiteShapes.png'
+            url : 'whiteShapes.png'
         }).url;
 
         return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
@@ -3868,7 +3868,7 @@ describe('DataSources/KmlDataSource', function() {
             var entities = dataSource.entities.values;
             expect(entities.length).toBe(3);
             expect(entities[1].billboard).not.toBeNull();
-            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
+            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
 
             // The root network link is loaded, then the children
             //  since its done recursively the lowest level entities
@@ -4395,13 +4395,13 @@ describe('DataSources/KmlDataSource', function() {
           </NetworkLink>';
 
         var camera = createCamera({
-            offset: Cartesian3.fromDegrees(-110, 30, 1000)
+            offset : Cartesian3.fromDegrees(-110, 30, 1000)
         });
         Camera.clone(options.camera, camera);
 
         var kmlOptions = {
-            camera: camera,
-            canvas: options.canvas
+            camera : camera,
+            canvas : options.canvas
         };
 
         camera._mode = SceneMode.MORPHING;
@@ -4411,7 +4411,7 @@ describe('DataSources/KmlDataSource', function() {
         });
     });
 
-    it('when clampToGround is false, height isn\'t set if the polygon is extrudable' , function() {
+    it('when clampToGround is false, height isn\'t set if the polygon is extrudable', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Polygon>\
@@ -4426,7 +4426,7 @@ describe('DataSources/KmlDataSource', function() {
         });
     });
 
-    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable' , function() {
+    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Polygon>\

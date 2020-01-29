@@ -252,7 +252,7 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
                 this._sampler = sampler;
             }
         },
-        pixelFormat: {
+        pixelFormat : {
             get : function() {
                 return this._pixelFormat;
             }

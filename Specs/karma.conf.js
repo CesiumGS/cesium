@@ -13,10 +13,10 @@ module.exports = function(config) {
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks : ['jasmine', 'detectBrowsers'],
 
-        client: {
-            captureConsole: false,
-            jasmine: {
-                random: false
+        client : {
+            captureConsole : false,
+            jasmine : {
+                random : false
             }
         },
 
@@ -27,17 +27,17 @@ module.exports = function(config) {
 
         // list of files / patterns to load in the browser
         files : [
-            { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
-            { pattern: 'Source/**', included: false, type: 'module' },
-            { pattern: 'Specs/*.js', included: true, type: 'module' },
-            { pattern: 'Specs/Core/**', included: true, type: 'module' },
-            { pattern: 'Specs/Data/**', included: false },
-            { pattern: 'Specs/DataSources/**', included: true, type: 'module' },
-            { pattern: 'Specs/Renderer/**', included: true, type: 'module' },
-            { pattern: 'Specs/Scene/**', included: true, type: 'module' },
-            { pattern: 'Specs/ThirdParty/**', included: true, type: 'module' },
-            { pattern: 'Specs/Widgets/**', included: true, type: 'module' },
-            { pattern: 'Specs/TestWorkers/**', included: false }
+            { pattern : 'Specs/karma-main.js', included : true, type : 'module' },
+            { pattern : 'Source/**', included : false, type : 'module' },
+            { pattern : 'Specs/*.js', included : true, type : 'module' },
+            { pattern : 'Specs/Core/**', included : true, type : 'module' },
+            { pattern : 'Specs/Data/**', included : false },
+            { pattern : 'Specs/DataSources/**', included : true, type : 'module' },
+            { pattern : 'Specs/Renderer/**', included : true, type : 'module' },
+            { pattern : 'Specs/Scene/**', included : true, type : 'module' },
+            { pattern : 'Specs/ThirdParty/**', included : true, type : 'module' },
+            { pattern : 'Specs/Widgets/**', included : true, type : 'module' },
+            { pattern : 'Specs/TestWorkers/**', included : false }
         ],
 
         proxies : {
@@ -46,7 +46,7 @@ module.exports = function(config) {
         },
 
         // list of files to exclude
-        exclude: [
+        exclude : [
             'Specs/SpecList.js',
             'Specs/SpecRunner.js',
             'Specs/spec-main.js'
@@ -80,20 +80,20 @@ module.exports = function(config) {
         browsers : ['Chrome'],
 
         //In Travis, we need to run with the no-sandbox flag
-        customLaunchers: {
-            ChromeCI: {
-                base: 'ChromeHeadless',
-                flags: [
+        customLaunchers : {
+            ChromeCI : {
+                base : 'ChromeHeadless',
+                flags : [
                     '--no-sandbox'
                 ]
             }
         },
 
         // Rediculous large values because travis is slow.
-        captureTimeout: 120000,
-        browserDisconnectTolerance: 3,
-        browserDisconnectTimeout: 120000,
-        browserNoActivityTimeout: 120000,
+        captureTimeout : 120000,
+        browserDisconnectTolerance : 3,
+        browserDisconnectTimeout : 120000,
+        browserNoActivityTimeout : 120000,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits

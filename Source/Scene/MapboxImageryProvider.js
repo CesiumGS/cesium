@@ -70,7 +70,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         resource.url = templateUrl;
 
         resource.setQueryParameters({
-            access_token: accessToken
+            access_token : accessToken
         });
 
         var credit;
@@ -85,12 +85,12 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
         this._resource = resource;
         this._imageryProvider = new UrlTemplateImageryProvider({
-            url: resource,
-            credit: credit,
-            ellipsoid: options.ellipsoid,
-            minimumLevel: options.minimumLevel,
-            maximumLevel: options.maximumLevel,
-            rectangle: options.rectangle
+            url : resource,
+            credit : credit,
+            ellipsoid : options.ellipsoid,
+            minimumLevel : options.minimumLevel,
+            maximumLevel : options.maximumLevel,
+            rectangle : options.rectangle
         });
     }
 
@@ -138,7 +138,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
          * @type {Rectangle}
          * @readonly
          */
-        rectangle: {
+        rectangle : {
             get : function() {
                 return this._imageryProvider.rectangle;
             }

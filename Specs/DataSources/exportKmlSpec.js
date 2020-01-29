@@ -98,11 +98,11 @@ describe('DataSources/exportKml', function() {
         function createEntity(properties) {
             ++counter;
             var options = {
-                id: 'e' + counter,
-                name: 'entity' + counter,
-                show: true,
-                description: 'This is entity number ' + counter,
-                position: pointPosition
+                id : 'e' + counter,
+                name : 'entity' + counter,
+                show : true,
+                description : 'This is entity number ' + counter,
+                position : pointPosition
             };
 
             if (defined(properties)) {
@@ -118,20 +118,20 @@ describe('DataSources/exportKml', function() {
 
         function createExpectResult(entity) {
             return {
-                Document: {
-                    Style: {
-                        _: {
-                            id: 'style-1'
+                Document : {
+                    Style : {
+                        _ : {
+                            id : 'style-1'
                         }
                     },
-                    Placemark: {
-                        _: {
-                            id: entity.id
+                    Placemark : {
+                        _ : {
+                            id : entity.id
                         },
-                        name: entity.name,
-                        visibility: entity.show ? 1 : 0,
-                        description: entity.description,
-                        styleUrl: '#style-1'
+                        name : entity.name,
+                        visibility : entity.show ? 1 : 0,
+                        description : entity.description,
+                        styleUrl : '#style-1'
                     }
                 }
             };
@@ -159,18 +159,18 @@ describe('DataSources/exportKml', function() {
 
         it('Hierarchy', function() {
             var entity1 = createEntity({
-                show: false,
-                position: undefined
+                show : false,
+                position : undefined
             });
 
             var entity2 = createEntity({
-                position: undefined,
-                parent: entity1
+                position : undefined,
+                parent : entity1
             });
 
             var entity3 = createEntity({
-                parent: entity2,
-                point: {}
+                parent : entity2,
+                point : {}
             });
 
             var entities = new EntityCollection();
@@ -179,39 +179,39 @@ describe('DataSources/exportKml', function() {
             entities.add(entity3);
 
             var hierarchy = {
-                Document: {
-                    Style: {
-                        _: {
-                            id: 'style-1'
+                Document : {
+                    Style : {
+                        _ : {
+                            id : 'style-1'
                         },
-                        IconStyle: {}
+                        IconStyle : {}
                     },
-                    Folder: {
-                        _: {
-                            id: entity1.id
+                    Folder : {
+                        _ : {
+                            id : entity1.id
                         },
-                        name: entity1.name,
-                        visibility: '0',
-                        description: entity1.description,
-                        Folder: {
-                            _: {
-                                id: entity2.id
+                        name : entity1.name,
+                        visibility : '0',
+                        description : entity1.description,
+                        Folder : {
+                            _ : {
+                                id : entity2.id
                             },
-                            name: entity2.name,
-                            visibility: true,
-                            description: entity2.description,
-                            Placemark: {
-                                _: {
-                                    id: entity3.id
+                            name : entity2.name,
+                            visibility : true,
+                            description : entity2.description,
+                            Placemark : {
+                                _ : {
+                                    id : entity3.id
                                 },
-                                Point: {
-                                    altitudeMode: 'absolute',
-                                    coordinates: checkPointCoord
+                                Point : {
+                                    altitudeMode : 'absolute',
+                                    coordinates : checkPointCoord
                                 },
-                                name: entity3.name,
-                                visibility: true,
-                                description: entity3.description,
-                                styleUrl: '#style-1'
+                                name : entity3.name,
+                                visibility : true,
+                                description : entity3.description,
+                                styleUrl : '#style-1'
                             }
                         }
                     }
@@ -224,10 +224,10 @@ describe('DataSources/exportKml', function() {
         describe('Point Geometry', function() {
             it('Point with constant position', function() {
                 var entity1 = createEntity({
-                    point: {
-                        color: Color.LINEN,
-                        pixelSize: 3,
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    point : {
+                        color : Color.LINEN,
+                        pixelSize : 3,
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     }
                 });
 
@@ -236,13 +236,13 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    color: 'ffe6f0fa',
-                    colorMode: 'normal',
-                    scale: 3 / 32
+                    color : 'ffe6f0fa',
+                    colorMode : 'normal',
+                    scale : 3 / 32
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'clampToGround',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -250,15 +250,15 @@ describe('DataSources/exportKml', function() {
 
             it('Point with label', function() {
                 var entity1 = createEntity({
-                    point: {
-                        color: Color.LINEN,
-                        pixelSize: 3,
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    point : {
+                        color : Color.LINEN,
+                        pixelSize : 3,
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     },
-                    label: {
-                        text: 'Im a label',
-                        color: Color.ORANGE,
-                        scale: 2
+                    label : {
+                        text : 'Im a label',
+                        color : Color.ORANGE,
+                        scale : 2
                     }
                 });
 
@@ -267,19 +267,19 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    color: 'ffe6f0fa',
-                    colorMode: 'normal',
-                    scale: 3 / 32
+                    color : 'ffe6f0fa',
+                    colorMode : 'normal',
+                    scale : 3 / 32
                 };
                 expectedResult.Document.Style.LabelStyle = {
-                    color: 'ff00a5ff',
-                    colorMode: 'normal',
-                    scale: 2
+                    color : 'ff00a5ff',
+                    colorMode : 'normal',
+                    scale : 2
                 };
                 expectedResult.Document.Placemark.name = 'Im a label';
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'clampToGround',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -287,19 +287,19 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with constant position', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        image: 'http://test.invalid/image.jpg',
-                        imageSubRegion: new BoundingRectangle(12,0,24,36),
-                        color: Color.LINEN,
-                        scale: 2,
-                        pixelOffset: new Cartesian2(2, 3),
-                        width: 24,
-                        height: 36,
-                        horizontalOrigin: HorizontalOrigin.LEFT,
-                        verticalOrigin: VerticalOrigin.BOTTOM,
-                        rotation: CesiumMath.toRadians(10),
-                        alignedAxis: Cartesian3.UNIT_Z,
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    billboard : {
+                        image : 'http://test.invalid/image.jpg',
+                        imageSubRegion : new BoundingRectangle(12, 0, 24, 36),
+                        color : Color.LINEN,
+                        scale : 2,
+                        pixelOffset : new Cartesian2(2, 3),
+                        width : 24,
+                        height : 36,
+                        horizontalOrigin : HorizontalOrigin.LEFT,
+                        verticalOrigin : VerticalOrigin.BOTTOM,
+                        rotation : CesiumMath.toRadians(10),
+                        alignedAxis : Cartesian3.UNIT_Z,
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     }
                 });
 
@@ -308,29 +308,29 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    Icon: {
-                        href: 'http://test.invalid/image.jpg',
-                        x: 12,
-                        y: 0,
-                        w: 24,
-                        h: 36
+                    Icon : {
+                        href : 'http://test.invalid/image.jpg',
+                        x : 12,
+                        y : 0,
+                        w : 24,
+                        h : 36
                     },
-                    color: 'ffe6f0fa',
-                    colorMode: 'normal',
-                    scale: 2,
-                    hotSpot: {
-                        _: {
-                            x: -2 / 2,
-                            y: 3 / 2,
-                            xunits: 'pixels',
-                            yunits: 'pixels'
+                    color : 'ffe6f0fa',
+                    colorMode : 'normal',
+                    scale : 2,
+                    hotSpot : {
+                        _ : {
+                            x : -2 / 2,
+                            y : 3 / 2,
+                            xunits : 'pixels',
+                            yunits : 'pixels'
                         }
                     },
-                    heading: -10
+                    heading : -10
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'clampToGround',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -338,9 +338,9 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with AlignedAxis not Z', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        rotation: CesiumMath.toRadians(10),
-                        alignedAxis: Cartesian3.UNIT_Y
+                    billboard : {
+                        rotation : CesiumMath.toRadians(10),
+                        alignedAxis : Cartesian3.UNIT_Y
                     }
                 });
 
@@ -350,8 +350,8 @@ describe('DataSources/exportKml', function() {
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'absolute',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -359,9 +359,9 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with 0 degree heading should be 360', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        rotation: CesiumMath.toRadians(0),
-                        alignedAxis: Cartesian3.UNIT_Z
+                    billboard : {
+                        rotation : CesiumMath.toRadians(0),
+                        alignedAxis : Cartesian3.UNIT_Z
                     }
                 });
 
@@ -370,11 +370,11 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    heading: 360
+                    heading : 360
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'absolute',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -382,12 +382,12 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with HotSpot at the center', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        pixelOffset: new Cartesian2(2, 3),
-                        width: 24,
-                        height: 36,
-                        horizontalOrigin: HorizontalOrigin.CENTER,
-                        verticalOrigin: VerticalOrigin.CENTER
+                    billboard : {
+                        pixelOffset : new Cartesian2(2, 3),
+                        width : 24,
+                        height : 36,
+                        horizontalOrigin : HorizontalOrigin.CENTER,
+                        verticalOrigin : VerticalOrigin.CENTER
                     }
                 });
 
@@ -396,18 +396,18 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    hotSpot: {
-                        _: {
-                            x: -(2 - 12),
-                            y: 3 + 18,
-                            xunits: 'pixels',
-                            yunits: 'pixels'
+                    hotSpot : {
+                        _ : {
+                            x : -(2 - 12),
+                            y : 3 + 18,
+                            xunits : 'pixels',
+                            yunits : 'pixels'
                         }
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'absolute',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -415,12 +415,12 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with HotSpot at the TopRight', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        pixelOffset: new Cartesian2(2, 3),
-                        width: 24,
-                        height: 36,
-                        horizontalOrigin: HorizontalOrigin.RIGHT,
-                        verticalOrigin: VerticalOrigin.TOP
+                    billboard : {
+                        pixelOffset : new Cartesian2(2, 3),
+                        width : 24,
+                        height : 36,
+                        horizontalOrigin : HorizontalOrigin.RIGHT,
+                        verticalOrigin : VerticalOrigin.TOP
                     }
                 });
 
@@ -429,18 +429,18 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    hotSpot: {
-                        _: {
-                            x: -(2 - 24),
-                            y: 3 + 36,
-                            xunits: 'pixels',
-                            yunits: 'pixels'
+                    hotSpot : {
+                        _ : {
+                            x : -(2 - 24),
+                            y : 3 + 36,
+                            xunits : 'pixels',
+                            yunits : 'pixels'
                         }
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'absolute',
+                    coordinates : checkPointCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -448,8 +448,8 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with a Canvas image', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        image: document.createElement('canvas')
+                    billboard : {
+                        image : document.createElement('canvas')
                     }
                 });
 
@@ -458,13 +458,13 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
-                    Icon: {
-                        href: 'texture_1.png'
+                    Icon : {
+                        href : 'texture_1.png'
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkPointCoord
+                    altitudeMode : 'absolute',
+                    coordinates : checkPointCoord
                 };
 
                 return checkKmlDoc(entities, expectedResult)
@@ -477,8 +477,8 @@ describe('DataSources/exportKml', function() {
 
             it('Billboard with a Canvas image as KMZ', function() {
                 var entity1 = createEntity({
-                    billboard: {
-                        image: document.createElement('canvas')
+                    billboard : {
+                        image : document.createElement('canvas')
                     }
                 });
 
@@ -486,8 +486,8 @@ describe('DataSources/exportKml', function() {
                 entities.add(entity1);
 
                 return exportKml({
-                        entities: entities,
-                        kmz: true
+                        entities : entities,
+                        kmz : true
                     })
                     .then(function(result) {
                         expect(result.kml).toBeUndefined();
@@ -554,9 +554,9 @@ describe('DataSources/exportKml', function() {
                 position.addSamples(times, positions);
 
                 var entity1 = createEntity({
-                    position: position,
-                    point: {
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    position : position,
+                    point : {
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     }
                 });
 
@@ -566,9 +566,9 @@ describe('DataSources/exportKml', function() {
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Placemark.Track = {
-                    altitudeMode: 'clampToGround',
-                    when: checkWhen,
-                    coord: checkCoord
+                    altitudeMode : 'clampToGround',
+                    when : checkWhen,
+                    coord : checkCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -584,8 +584,8 @@ describe('DataSources/exportKml', function() {
                 }, false);
 
                 var entity1 = createEntity({
-                    position: position,
-                    point: {}
+                    position : position,
+                    point : {}
                 });
 
                 var entities = new EntityCollection();
@@ -594,17 +594,17 @@ describe('DataSources/exportKml', function() {
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Placemark.Track = {
-                    altitudeMode: 'absolute',
-                    when: checkWhen,
-                    coord: checkCoord
+                    altitudeMode : 'absolute',
+                    when : checkWhen,
+                    coord : checkCoord
                 };
 
                 checkKmlDoc(entities, expectedResult, {
-                    defaultAvailability: new TimeInterval({
-                        start: times[0],
-                        stop: times[2]
+                    defaultAvailability : new TimeInterval({
+                        start : times[0],
+                        stop : times[2]
                     }),
-                    sampleDuration: JulianDate.secondsDifference(times[1], times[0])
+                    sampleDuration : JulianDate.secondsDifference(times[1], times[0])
                 });
             });
 
@@ -613,9 +613,9 @@ describe('DataSources/exportKml', function() {
                 position.addSamples(times, positions);
 
                 var entity1 = createEntity({
-                    position: position,
-                    model: {
-                        uri: 'http://test.invalid/test'
+                    position : position,
+                    model : {
+                        uri : 'http://test.invalid/test'
                     }
                 });
 
@@ -624,19 +624,19 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Placemark.Track = {
-                    altitudeMode: 'absolute',
-                    when: checkWhen,
-                    coord: checkCoord,
-                    Model: {
-                        Link: {
-                            href: 'http://test.invalid/test'
+                    altitudeMode : 'absolute',
+                    when : checkWhen,
+                    coord : checkCoord,
+                    Model : {
+                        Link : {
+                            href : 'http://test.invalid/test'
                         }
                     }
                 };
 
-                var blob = new Blob([new Uint8Array([])], { type: 'model/vnd.collada+xml' });
+                var blob = new Blob([new Uint8Array([])], { type : 'model/vnd.collada+xml' });
                 return checkKmlDoc(entities, expectedResult, {
-                    modelCallback: function(model, time, externalFiles) {
+                    modelCallback : function(model, time, externalFiles) {
                         externalFiles['test.dae'] = blob;
                         return model.uri;
                     }
@@ -651,13 +651,13 @@ describe('DataSources/exportKml', function() {
                 position.addSamples(times, positions);
 
                 var entity1 = createEntity({
-                    position: position,
-                    point: {
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    position : position,
+                    point : {
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     },
-                    path: {
-                        width: 2,
-                        material: new ColorMaterialProperty(Color.GREEN)
+                    path : {
+                        width : 2,
+                        material : new ColorMaterialProperty(Color.GREEN)
                     }
                 });
 
@@ -667,14 +667,14 @@ describe('DataSources/exportKml', function() {
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    width: 2
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    width : 2
                 };
                 expectedResult.Document.Placemark.Track = {
-                    altitudeMode: 'clampToGround',
-                    when: checkWhen,
-                    coord: checkCoord
+                    altitudeMode : 'clampToGround',
+                    when : checkWhen,
+                    coord : checkCoord
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -711,12 +711,12 @@ describe('DataSources/exportKml', function() {
 
             it('Clamped to ground', function() {
                 var entity1 = createEntity({
-                    polyline: {
-                        positions: positions,
-                        clampToGround: true,
-                        material: new ColorMaterialProperty(Color.GREEN),
-                        width: 5,
-                        zIndex: 2
+                    polyline : {
+                        positions : positions,
+                        clampToGround : true,
+                        material : new ColorMaterialProperty(Color.GREEN),
+                        width : 5,
+                        zIndex : 2
                     }
                 });
 
@@ -725,15 +725,15 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    width: 5
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    width : 5
                 };
                 expectedResult.Document.Placemark.LineString = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: checkCoords,
-                    tessellate: true,
-                    drawOrder: 2
+                    altitudeMode : 'clampToGround',
+                    coordinates : checkCoords,
+                    tessellate : true,
+                    drawOrder : 2
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -741,12 +741,12 @@ describe('DataSources/exportKml', function() {
 
             it('Not clamped to ground', function() {
                 var entity1 = createEntity({
-                    polyline: {
-                        positions: positions,
-                        clampToGround: false,
-                        material: new ColorMaterialProperty(Color.GREEN),
-                        width: 5,
-                        zIndex: 2
+                    polyline : {
+                        positions : positions,
+                        clampToGround : false,
+                        material : new ColorMaterialProperty(Color.GREEN),
+                        width : 5,
+                        zIndex : 2
                     }
                 });
 
@@ -755,14 +755,14 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    width: 5
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    width : 5
                 };
                 expectedResult.Document.Placemark.LineString = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkCoords,
-                    drawOrder: 2
+                    altitudeMode : 'absolute',
+                    coordinates : checkCoords,
+                    drawOrder : 2
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -770,15 +770,15 @@ describe('DataSources/exportKml', function() {
 
             it('With outline', function() {
                 var entity1 = createEntity({
-                    polyline: {
-                        positions: positions,
-                        clampToGround: false,
-                        material: new PolylineOutlineMaterialProperty({
-                            color: Color.GREEN,
-                            outlineColor: Color.BLUE,
-                            outlineWidth: 2
+                    polyline : {
+                        positions : positions,
+                        clampToGround : false,
+                        material : new PolylineOutlineMaterialProperty({
+                            color : Color.GREEN,
+                            outlineColor : Color.BLUE,
+                            outlineWidth : 2
                         }),
-                        width: 5
+                        width : 5
                     }
                 });
 
@@ -787,15 +787,15 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    width: 5,
-                    outerColor: 'ffff0000',
-                    outerWidth: 2
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    width : 5,
+                    outerColor : 'ffff0000',
+                    outerWidth : 2
                 };
                 expectedResult.Document.Placemark.LineString = {
-                    altitudeMode: 'absolute',
-                    coordinates: checkCoords
+                    altitudeMode : 'absolute',
+                    coordinates : checkCoords
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -838,18 +838,18 @@ describe('DataSources/exportKml', function() {
 
             it('Polygon with outline', function(){
                 var entity1 = createEntity({
-                    polygon: {
-                        hierarchy: positions,
-                        height: 10,
-                        perPositionHeight: false,
-                        heightReference: HeightReference.CLAMP_TO_GROUND,
-                        extrudedHeight: 0,
-                        fill: true,
-                        material: new ColorMaterialProperty(Color.GREEN),
-                        outline: true,
-                        outlineWidth: 5,
-                        outlineColor: Color.BLUE,
-                        zIndex: 2
+                    polygon : {
+                        hierarchy : positions,
+                        height : 10,
+                        perPositionHeight : false,
+                        heightReference : HeightReference.CLAMP_TO_GROUND,
+                        extrudedHeight : 0,
+                        fill : true,
+                        material : new ColorMaterialProperty(Color.GREEN),
+                        outline : true,
+                        outlineWidth : 5,
+                        outlineColor : Color.BLUE,
+                        zIndex : 2
                     }
                 });
 
@@ -858,21 +858,21 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    fill: true,
-                    outline: true
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    fill : true,
+                    outline : true
                 };
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ffff0000',
-                    colorMode: 'normal',
-                    width: 5
+                    color : 'ffff0000',
+                    colorMode : 'normal',
+                    width : 5
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'clampToGround',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(10)
+                    altitudeMode : 'clampToGround',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(10)
                         }
                     }
                 };
@@ -882,11 +882,11 @@ describe('DataSources/exportKml', function() {
 
             it('Polygon with extrusion', function(){
                 var entity1 = createEntity({
-                    polygon: {
-                        hierarchy: positions,
-                        height: 10,
-                        perPositionHeight: false,
-                        extrudedHeight: 20
+                    polygon : {
+                        hierarchy : positions,
+                        height : 10,
+                        perPositionHeight : false,
+                        extrudedHeight : 20
                     }
                 });
 
@@ -897,13 +897,13 @@ describe('DataSources/exportKml', function() {
                 expectedResult.Document.Style.PolyStyle = {
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'absolute',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(20) // We use extrudedHeight
+                    altitudeMode : 'absolute',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(20) // We use extrudedHeight
                         }
                     },
-                    extrude: true
+                    extrude : true
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -911,11 +911,11 @@ describe('DataSources/exportKml', function() {
 
             it('Polygon with extrusion and perPositionHeights', function(){
                 var entity1 = createEntity({
-                    polygon: {
-                        hierarchy: positions,
-                        height: 10,
-                        perPositionHeight: true,
-                        extrudedHeight: 20
+                    polygon : {
+                        hierarchy : positions,
+                        height : 10,
+                        perPositionHeight : true,
+                        extrudedHeight : 20
                     }
                 });
 
@@ -926,13 +926,13 @@ describe('DataSources/exportKml', function() {
                 expectedResult.Document.Style.PolyStyle = {
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'absolute',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords() // Use per position height
+                    altitudeMode : 'absolute',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords() // Use per position height
                         }
                     },
-                    extrude: true
+                    extrude : true
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -940,9 +940,9 @@ describe('DataSources/exportKml', function() {
 
             it('Polygon with holes', function() {
                 var entity1 = createEntity({
-                    polygon: {
-                        hierarchy: new PolygonHierarchy(positions, [new PolygonHierarchy(positions)]),
-                        height: 10
+                    polygon : {
+                        hierarchy : new PolygonHierarchy(positions, [new PolygonHierarchy(positions)]),
+                        height : 10
                     }
                 });
 
@@ -953,15 +953,15 @@ describe('DataSources/exportKml', function() {
                 expectedResult.Document.Style.PolyStyle = {
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'absolute',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(10)
+                    altitudeMode : 'absolute',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(10)
                         }
                     },
-                    innerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(10)
+                    innerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(10)
                         }
                     }
                 };
@@ -971,18 +971,18 @@ describe('DataSources/exportKml', function() {
 
             it('Rectangle extruded', function(){
                 var entity1 = createEntity({
-                    rectangle: {
-                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
-                        height: 10,
-                        perPositionHeight: false,
-                        heightReference: HeightReference.CLAMP_TO_GROUND,
-                        extrudedHeight: 20,
-                        fill: true,
-                        material: new ColorMaterialProperty(Color.GREEN),
-                        outline: true,
-                        outlineWidth: 5,
-                        outlineColor: Color.BLUE,
-                        zIndex: 2
+                    rectangle : {
+                        coordinates : Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height : 10,
+                        perPositionHeight : false,
+                        heightReference : HeightReference.CLAMP_TO_GROUND,
+                        extrudedHeight : 20,
+                        fill : true,
+                        material : new ColorMaterialProperty(Color.GREEN),
+                        outline : true,
+                        outlineWidth : 5,
+                        outlineColor : Color.BLUE,
+                        zIndex : 2
                     }
                 });
 
@@ -991,24 +991,24 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal',
-                    fill: true,
-                    outline: true
+                    color : 'ff008000',
+                    colorMode : 'normal',
+                    fill : true,
+                    outline : true
                 };
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ffff0000',
-                    colorMode: 'normal',
-                    width: 5
+                    color : 'ffff0000',
+                    colorMode : 'normal',
+                    width : 5
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'clampToGround',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(20)
+                    altitudeMode : 'clampToGround',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(20)
                         }
                     },
-                    extrude: true
+                    extrude : true
                 };
 
                 checkKmlDoc(entities, expectedResult);
@@ -1016,11 +1016,11 @@ describe('DataSources/exportKml', function() {
 
             it('Rectangle not extruded', function(){
                 var entity1 = createEntity({
-                    rectangle: {
-                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
-                        height: 10,
-                        heightReference: HeightReference.CLAMP_TO_GROUND,
-                        material: new ColorMaterialProperty(Color.GREEN)
+                    rectangle : {
+                        coordinates : Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height : 10,
+                        heightReference : HeightReference.CLAMP_TO_GROUND,
+                        material : new ColorMaterialProperty(Color.GREEN)
                     }
                 });
 
@@ -1029,14 +1029,14 @@ describe('DataSources/exportKml', function() {
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff008000',
-                    colorMode: 'normal'
+                    color : 'ff008000',
+                    colorMode : 'normal'
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'clampToGround',
-                    outerBoundaryIs: {
-                        LinearRing: {
-                            coordinates: getCheckCoords(10)
+                    altitudeMode : 'clampToGround',
+                    outerBoundaryIs : {
+                        LinearRing : {
+                            coordinates : getCheckCoords(10)
                         }
                     }
                 };
@@ -1048,10 +1048,10 @@ describe('DataSources/exportKml', function() {
         describe('Models', function() {
             it('Model with constant position', function() {
                 var entity1 = createEntity({
-                    model: {
-                        uri: 'http://test.invalid/test.glb',
-                        scale: 3,
-                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    model : {
+                        uri : 'http://test.invalid/test.glb',
+                        scale : 3,
+                        heightReference : HeightReference.CLAMP_TO_GROUND
                     }
                 });
 
@@ -1061,24 +1061,24 @@ describe('DataSources/exportKml', function() {
                 var cartographic = Cartographic.fromCartesian(pointPosition);
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Placemark.Model = {
-                    altitudeMode: 'clampToGround',
-                    Location: {
-                        longitude: CesiumMath.toDegrees(cartographic.longitude),
-                        latitude: CesiumMath.toDegrees(cartographic.latitude),
-                        altitude: cartographic.height
+                    altitudeMode : 'clampToGround',
+                    Location : {
+                        longitude : CesiumMath.toDegrees(cartographic.longitude),
+                        latitude : CesiumMath.toDegrees(cartographic.latitude),
+                        altitude : cartographic.height
                     },
-                    Link: {
-                        href: 'http://test.invalid/test.dae'
+                    Link : {
+                        href : 'http://test.invalid/test.dae'
                     },
-                    scale: {
-                        x: 3,
-                        y: 3,
-                        z: 3
+                    scale : {
+                        x : 3,
+                        y : 3,
+                        z : 3
                     }
                 };
 
                 checkKmlDoc(entities, expectedResult, {
-                    modelCallback: function(model, time) {
+                    modelCallback : function(model, time) {
                         return model.uri.getValue(time).replace('.glb', '.dae');
                     }
                 });
@@ -1088,13 +1088,13 @@ describe('DataSources/exportKml', function() {
         describe('GroundOverlays', function() {
             it('Rectangle', function(){
                 var entity = createEntity({
-                    rectangle: {
-                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
-                        height: 10,
-                        heightReference: HeightReference.CLAMP_TO_GROUND,
-                        material: new ImageMaterialProperty({
-                            image: '../images/logo.jpg',
-                            color: Color.GREEN
+                    rectangle : {
+                        coordinates : Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height : 10,
+                        heightReference : HeightReference.CLAMP_TO_GROUND,
+                        material : new ImageMaterialProperty({
+                            image : '../images/logo.jpg',
+                            color : Color.GREEN
                         })
                     }
                 });
@@ -1103,26 +1103,26 @@ describe('DataSources/exportKml', function() {
                 entities.add(entity);
 
                 var expectedResult = {
-                    Document: {
-                        GroundOverlay: {
-                            _: {
-                                id: entity.id
+                    Document : {
+                        GroundOverlay : {
+                            _ : {
+                                id : entity.id
                             },
-                            name: entity.name,
-                            visibility: entity.show ? 1 : 0,
-                            description: entity.description,
-                            altitude: 10,
-                            altitudeMode: 'clampToGround',
-                            LatLonBox: {
-                                north: 1,
-                                south: -1,
-                                east: 1,
-                                west: -1
+                            name : entity.name,
+                            visibility : entity.show ? 1 : 0,
+                            description : entity.description,
+                            altitude : 10,
+                            altitudeMode : 'clampToGround',
+                            LatLonBox : {
+                                north : 1,
+                                south : -1,
+                                east : 1,
+                                west : -1
                             },
-                            Icon: {
-                                href: '../images/logo.jpg'
+                            Icon : {
+                                href : '../images/logo.jpg'
                             },
-                            color: 'ff008000'
+                            color : 'ff008000'
                         }
                     }
                 };
@@ -1165,10 +1165,10 @@ describe('DataSources/exportKml', function() {
 
             it('Polygon and Point', function(){
                 var entity1 = createEntity({
-                    polygon: {
-                        hierarchy: positions
+                    polygon : {
+                        hierarchy : positions
                     },
-                    point: {}
+                    point : {}
                 });
 
                 var entities = new EntityCollection();
@@ -1180,18 +1180,18 @@ describe('DataSources/exportKml', function() {
                 expectedResult.Document.Style.PolyStyle = {
                 };
                 expectedResult.Document.Placemark.MultiGeometry = {
-                    Point: {
-                        altitudeMode: 'absolute',
-                        coordinates: checkPointCoord
+                    Point : {
+                        altitudeMode : 'absolute',
+                        coordinates : checkPointCoord
                     },
-                    Polygon: {
-                        altitudeMode: 'absolute',
-                        outerBoundaryIs: {
-                            LinearRing: {
-                                coordinates: getCheckCoords()
+                    Polygon : {
+                        altitudeMode : 'absolute',
+                        outerBoundaryIs : {
+                            LinearRing : {
+                                coordinates : getCheckCoords()
                             }
                         },
-                        extrude: true
+                        extrude : true
                     }
                 };
 

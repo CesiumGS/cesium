@@ -71,8 +71,8 @@ import ModelUtility from './ModelUtility.js';
                 }
 
                 material.extensions.KHR_techniques_webgl = {
-                    technique: technique,
-                    values: materialValues
+                    technique : technique,
+                    values : materialValues
                 };
 
                 material.alphaMode = 'OPAQUE';
@@ -137,69 +137,69 @@ import ModelUtility from './ModelUtility.js';
                         case 'ambient':
                             var ambient = light.ambient;
                             result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: ambient.color
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : ambient.color
                             };
                             break;
                         case 'directional':
                             var directional = light.directional;
                             result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: directional.color
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : directional.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
+                                    node : light.node,
+                                    semantic : 'MODELVIEW',
+                                    type : WebGLConstants.FLOAT_MAT4
                                 };
                             }
                             break;
                         case 'point':
                             var point = light.point;
                             result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: point.color
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : point.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
+                                    node : light.node,
+                                    semantic : 'MODELVIEW',
+                                    type : WebGLConstants.FLOAT_MAT4
                                 };
                             }
                             result[lightBaseName + 'Attenuation'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: [point.constantAttenuation, point.linearAttenuation, point.quadraticAttenuation]
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : [point.constantAttenuation, point.linearAttenuation, point.quadraticAttenuation]
                             };
                             break;
                         case 'spot':
                             var spot = light.spot;
                             result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: spot.color
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : spot.color
                             };
                             if (defined(light.node)) {
                                 result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
+                                    node : light.node,
+                                    semantic : 'MODELVIEW',
+                                    type : WebGLConstants.FLOAT_MAT4
                                 };
                                 result[lightBaseName + 'InverseTransform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEWINVERSE',
-                                    type: WebGLConstants.FLOAT_MAT4,
-                                    useInFragment: true
+                                    node : light.node,
+                                    semantic : 'MODELVIEWINVERSE',
+                                    type : WebGLConstants.FLOAT_MAT4,
+                                    useInFragment : true
                                 };
                             }
                             result[lightBaseName + 'Attenuation'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: [spot.constantAttenuation, spot.linearAttenuation, spot.quadraticAttenuation]
+                                type : WebGLConstants.FLOAT_VEC3,
+                                value : [spot.constantAttenuation, spot.linearAttenuation, spot.quadraticAttenuation]
                             };
 
                             result[lightBaseName + 'FallOff'] = {
-                                type: WebGLConstants.FLOAT_VEC2,
-                                value: [spot.fallOffAngle, spot.fallOffExponent]
+                                type : WebGLConstants.FLOAT_VEC2,
+                                value : [spot.fallOffAngle, spot.fallOffExponent]
                             };
                             break;
                     }
@@ -247,28 +247,28 @@ import ModelUtility from './ModelUtility.js';
 
         // Add techniques
         var techniqueUniforms = {
-            u_modelViewMatrix: {
-                semantic: hasExtension(gltf, 'CESIUM_RTC') ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
-                type: WebGLConstants.FLOAT_MAT4
+            u_modelViewMatrix : {
+                semantic : hasExtension(gltf, 'CESIUM_RTC') ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
+                type : WebGLConstants.FLOAT_MAT4
             },
-            u_projectionMatrix: {
-                semantic: 'PROJECTION',
-                type: WebGLConstants.FLOAT_MAT4
+            u_projectionMatrix : {
+                semantic : 'PROJECTION',
+                type : WebGLConstants.FLOAT_MAT4
             }
         };
 
         if (hasNormals) {
             techniqueUniforms.u_normalMatrix = {
-                semantic: 'MODELVIEWINVERSETRANSPOSE',
-                type: WebGLConstants.FLOAT_MAT3
+                semantic : 'MODELVIEWINVERSETRANSPOSE',
+                type : WebGLConstants.FLOAT_MAT3
             };
         }
 
         if (hasSkinning) {
             techniqueUniforms.u_jointMatrix = {
-                count: jointCount,
-                semantic: 'JOINTMATRIX',
-                type: WebGLConstants.FLOAT_MAT4
+                count : jointCount,
+                semantic : 'JOINTMATRIX',
+                type : WebGLConstants.FLOAT_MAT4
             };
         }
 
@@ -356,7 +356,7 @@ import ModelUtility from './ModelUtility.js';
 
         // Add position always
         var techniqueAttributes = {
-            a_position: {
+            a_position : {
                 semantic : 'POSITION'
             }
         };
@@ -374,7 +374,7 @@ import ModelUtility from './ModelUtility.js';
         // Add normal if we don't have constant lighting
         if (hasNormals) {
             techniqueAttributes.a_normal = {
-                semantic: 'NORMAL'
+                semantic : 'NORMAL'
             };
             vertexShader += 'attribute vec3 a_normal;\n';
             vertexShader += 'varying vec3 v_normal;\n';
@@ -391,7 +391,7 @@ import ModelUtility from './ModelUtility.js';
         var v_texcoord;
         if (hasTexCoords) {
             techniqueAttributes.a_texcoord_0 = {
-                semantic: 'TEXCOORD_0'
+                semantic : 'TEXCOORD_0'
             };
 
             v_texcoord = 'v_texcoord_0';
@@ -405,10 +405,10 @@ import ModelUtility from './ModelUtility.js';
         if (hasSkinning) {
             var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
             techniqueAttributes.a_joint = {
-                semantic: 'JOINT'
+                semantic : 'JOINT'
             };
             techniqueAttributes.a_weight = {
-                semantic: 'WEIGHT'
+                semantic : 'WEIGHT'
             };
 
             vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
@@ -417,7 +417,7 @@ import ModelUtility from './ModelUtility.js';
 
         if (hasVertexColors) {
             techniqueAttributes.a_vertexColor = {
-                semantic: 'COLOR_0'
+                semantic : 'COLOR_0'
             };
             vertexShader += 'attribute vec4 a_vertexColor;\n';
             vertexShader += 'varying vec4 v_vertexColor;\n';
@@ -427,7 +427,7 @@ import ModelUtility from './ModelUtility.js';
 
         if (addBatchIdToGeneratedShaders) {
             techniqueAttributes.a_batchId = {
-                semantic: '_BATCHID'
+                semantic : '_BATCHID'
             };
             vertexShader += 'attribute float a_batchId;\n';
         }
@@ -631,35 +631,35 @@ import ModelUtility from './ModelUtility.js';
 
         // Add shaders
         var vertexShaderId = addToArray(shaders, {
-            type: WebGLConstants.VERTEX_SHADER,
-            extras: {
-                _pipeline: {
-                    source: vertexShader,
-                    extension: '.glsl'
+            type : WebGLConstants.VERTEX_SHADER,
+            extras : {
+                _pipeline : {
+                    source : vertexShader,
+                    extension : '.glsl'
                 }
             }
         });
 
         var fragmentShaderId = addToArray(shaders, {
-            type: WebGLConstants.FRAGMENT_SHADER,
-            extras: {
-                _pipeline: {
-                    source: fragmentShader,
-                    extension: '.glsl'
+            type : WebGLConstants.FRAGMENT_SHADER,
+            extras : {
+                _pipeline : {
+                    source : fragmentShader,
+                    extension : '.glsl'
                 }
             }
         });
 
         // Add program
         var programId = addToArray(programs, {
-            fragmentShader: fragmentShaderId,
-            vertexShader: vertexShaderId
+            fragmentShader : fragmentShaderId,
+            vertexShader : vertexShaderId
         });
 
         var techniqueId = addToArray(techniques, {
-            attributes: techniqueAttributes,
-            program: programId,
-            uniforms: techniqueUniforms
+            attributes : techniqueAttributes,
+            program : programId,
+            uniforms : techniqueUniforms
         });
 
         return techniqueId;

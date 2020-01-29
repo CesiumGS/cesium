@@ -26,16 +26,16 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(19365)
+    url : Cesium.IonResource.fromAssetId(19365)
 });
 viewer.scene.primitives.add(tileset);
 
 var initialPosition = new Cesium.Cartesian3(-1111583.3721328347, -5855888.151574568, 2262561.444696748);
 var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(100.0, -15.0, 0.0);
 viewer.scene.camera.setView({
-    destination: initialPosition,
-    orientation: initialOrientation,
-    endTransform: Cesium.Matrix4.IDENTITY
+    destination : initialPosition,
+    orientation : initialOrientation,
+    endTransform : Cesium.Matrix4.IDENTITY
 });
 //Sandcastle_End
 Sandcastle.finishedLoading();

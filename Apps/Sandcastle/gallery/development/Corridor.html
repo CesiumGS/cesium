@@ -42,7 +42,7 @@ var corridorGeometry = new Cesium.CorridorGeometry({
 // created above. We can also specify a color attribute,
 // in this case, we're creating a translucent red color.
 var redCorridorInstance = new Cesium.GeometryInstance({
-    geometry: corridorGeometry,
+    geometry : corridorGeometry,
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
     }
@@ -67,16 +67,16 @@ corridorGeometry = new Cesium.CorridorGeometry({
         -95.0, 40.0,
         -95.0, 35.0
     ]),
-    height: 100000.0,
+    height : 100000.0,
     width : 200000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    cornerType: Cesium.CornerType.MITERED
+    cornerType : Cesium.CornerType.MITERED
 });
 // Create a geometry instance using the corridor geometry
 // created above. Set the color attribute to a
 // solid green.
 var greenCorridorInstance = new Cesium.GeometryInstance({
-    geometry: corridorGeometry,
+    geometry : corridorGeometry,
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
     }
@@ -106,12 +106,12 @@ corridorGeometry = new Cesium.CorridorGeometry({
     extrudedHeight : 100000.0,
     width : 200000.0,
     vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-    cornerType: Cesium.CornerType.BEVELED
+    cornerType : Cesium.CornerType.BEVELED
 });
 // Create a geometry instance using the corridor geometry
 // created above.
 var blueCorridorInstance = new Cesium.GeometryInstance({
-    geometry: corridorGeometry,
+    geometry : corridorGeometry,
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
     }

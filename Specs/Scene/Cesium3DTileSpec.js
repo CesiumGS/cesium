@@ -20,7 +20,7 @@ describe('Scene/Cesium3DTile', function() {
         refine : 'REPLACE',
         children : [],
         boundingVolume : {
-            sphere: [0.0, 0.0, 0.0, 5.0]
+            sphere : [0.0, 0.0, 0.0, 5.0]
         }
     };
 
@@ -30,12 +30,12 @@ describe('Scene/Cesium3DTile', function() {
         content : {
             url : '0/0.b3dm',
             boundingVolume : {
-                sphere: [0.0, 0.0, 1.0, 5.0]
+                sphere : [0.0, 0.0, 1.0, 5.0]
             }
         },
         children : [],
         boundingVolume : {
-            sphere: [0.0, 0.0, 1.0, 5.0]
+            sphere : [0.0, 0.0, 1.0, 5.0]
         }
     };
 
@@ -43,7 +43,7 @@ describe('Scene/Cesium3DTile', function() {
         geometricError : 1,
         refine : 'REPLACE',
         children : [],
-        boundingVolume: {
+        boundingVolume : {
             region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
         }
     };
@@ -58,7 +58,7 @@ describe('Scene/Cesium3DTile', function() {
                 region : [-1.2, -1.2, 0, 0, -30, -34]
             }
         },
-        boundingVolume: {
+        boundingVolume : {
             region : [-1.2, -1.2, 0, 0, -30, -34]
         }
     };
@@ -67,7 +67,7 @@ describe('Scene/Cesium3DTile', function() {
         geometricError : 1,
         refine : 'REPLACE',
         children : [],
-        boundingVolume: {
+        boundingVolume : {
             box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         }
     };
@@ -82,7 +82,7 @@ describe('Scene/Cesium3DTile', function() {
                 box : [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0]
             }
         },
-        boundingVolume: {
+        boundingVolume : {
             box : [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0]
         }
     };
@@ -91,7 +91,7 @@ describe('Scene/Cesium3DTile', function() {
         geometricError : 1,
         refine : 'REPLACE',
         children : [],
-        boundingVolume: {
+        boundingVolume : {
             box : [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0]
         },
         viewerRequestVolume : {
@@ -196,7 +196,7 @@ describe('Scene/Cesium3DTile', function() {
             var minimumHeight = tileWithBoundingRegion.boundingVolume.region[4];
             var maximumHeight = tileWithBoundingRegion.boundingVolume.region[5];
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            var tbr = new TileBoundingRegion({rectangle: rectangle, minimumHeight: minimumHeight, maximumHeight: maximumHeight});
+            var tbr = new TileBoundingRegion({rectangle : rectangle, minimumHeight : minimumHeight, maximumHeight : maximumHeight});
             expect(tile.boundingVolume).toBeDefined();
             expect(tile.boundingVolume).toEqual(tbr);
         });
@@ -206,9 +206,9 @@ describe('Scene/Cesium3DTile', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithContentBoundingRegion, undefined);
             expect(tile.contentBoundingVolume).toBeDefined();
             var tbb = new TileBoundingRegion({
-                rectangle: new Rectangle(region[0], region[1], region[2], region[3]),
-                minimumHeight: region[4],
-                maximumHeight: region[5]
+                rectangle : new Rectangle(region[0], region[1], region[2], region[3]),
+                minimumHeight : region[4],
+                maximumHeight : region[5]
             });
             expect(tile.contentBoundingVolume).toEqual(tbb);
         });
@@ -385,8 +385,8 @@ describe('Scene/Cesium3DTile', function() {
         tile2._depth = 1.0;
         tile2._priorityProgressiveResolution = true;
 
-        mockTileset._minimumPriority = { depth: 0.0, distance: 0.0, foveatedFactor: 0.0 };
-        mockTileset._maximumPriority = { depth: 1.0, distance: 1.0, foveatedFactor: 1.0 };
+        mockTileset._minimumPriority = { depth : 0.0, distance : 0.0, foveatedFactor : 0.0 };
+        mockTileset._maximumPriority = { depth : 1.0, distance : 1.0, foveatedFactor : 1.0 };
 
         tile1.updatePriority();
         tile2.updatePriority();

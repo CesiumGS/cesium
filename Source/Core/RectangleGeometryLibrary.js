@@ -100,10 +100,10 @@ import Rectangle from './Rectangle.js';
         var west = Math.min(longitude, longitude0, longitude1, longitude2);
 
         return {
-            north: north,
-            south: south,
-            east: east,
-            west: west,
+            north : north,
+            south : south,
+            east : east,
+            west : west,
             granYCos : granYCos,
             granYSin : granYSin,
             granXCos : granXCos,
@@ -171,10 +171,10 @@ import Rectangle from './Rectangle.js';
             granXSin : granXSin,
             nwCorner : nwCorner,
             boundingRectangle : boundingRectangle,
-            width: width,
-            height: height,
-            northCap: northCap,
-            southCap: southCap
+            width : width,
+            height : height,
+            northCap : northCap,
+            southCap : southCap
         };
 
         if (rotation !== 0) {

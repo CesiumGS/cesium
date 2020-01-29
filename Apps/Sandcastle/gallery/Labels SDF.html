@@ -65,10 +65,10 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
-    outlineWidth: 1.0,
-    scale: 1.0,
-    outlineColor: 'Red',
-    outlineColors: ['Red', 'Green', 'Blue', 'Yellow', 'Gray', 'Black']
+    outlineWidth : 1.0,
+    scale : 1.0,
+    outlineColor : 'Red',
+    outlineColors : ['Red', 'Green', 'Blue', 'Yellow', 'Gray', 'Black']
 };
 
 // Convert the viewModel members into knockout observables.
@@ -80,24 +80,24 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 // Create a label collection with two labels
 var labels = viewer.scene.primitives.add(new Cesium.LabelCollection());
 var label = labels.add({
-    position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-    text: 'Philadelphia',
-    fillColor: Cesium.Color.WHITE,
-    outlineColor: getColor(viewModel.outlineColor, 1.0),
-    font: '48px Calibri',
-    outlineWidth: 1.0,
-    scale: viewModel.scale,
-    style: Cesium.LabelStyle.FILL_AND_OUTLINE
+    position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+    text : 'Philadelphia',
+    fillColor : Cesium.Color.WHITE,
+    outlineColor : getColor(viewModel.outlineColor, 1.0),
+    font : '48px Calibri',
+    outlineWidth : 1.0,
+    scale : viewModel.scale,
+    style : Cesium.LabelStyle.FILL_AND_OUTLINE
 });
 
 var morgantown = labels.add({
-    position: Cesium.Cartesian3.fromDegrees(-79.9559, 39.6295),
-    text: 'Morgantown',
-    fillColor: Cesium.Color.YELLOW,
-    font: '24px Calibri',
-    outlineColor: Cesium.Color.BLUE,
-    outlineWidth: 2.0,
-    style: Cesium.LabelStyle.FILL_AND_OUTLINE
+    position : Cesium.Cartesian3.fromDegrees(-79.9559, 39.6295),
+    text : 'Morgantown',
+    fillColor : Cesium.Color.YELLOW,
+    font : '24px Calibri',
+    outlineColor : Cesium.Color.BLUE,
+    outlineWidth : 2.0,
+    style : Cesium.LabelStyle.FILL_AND_OUTLINE
 });
 
 Cesium.knockout.getObservable(viewModel, 'outlineWidth').subscribe(function(newValue) {

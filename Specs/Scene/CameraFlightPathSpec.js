@@ -59,7 +59,7 @@ describe('Scene/CameraFlightPath', function() {
             destination : destination,
             duration : duration,
             complete : complete,
-            cancel: cancel
+            cancel : cancel
         });
 
         expect(flight.duration).toEqual(duration);
@@ -201,7 +201,7 @@ describe('Scene/CameraFlightPath', function() {
             destination : startPosition,
             heading : startHeading,
             pitch : startPitch,
-            roll: startRoll,
+            roll : startRoll,
             duration : duration
         });
 
@@ -263,10 +263,10 @@ describe('Scene/CameraFlightPath', function() {
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.setView({
-            orientation: {
-                heading: 0,
-                pitch: -CesiumMath.PI_OVER_TWO,
-                roll: 0
+            orientation : {
+                heading : 0,
+                pitch : -CesiumMath.PI_OVER_TWO,
+                roll : 0
             }
         });
         camera.frustum = createOrthographicFrustum();
@@ -284,10 +284,10 @@ describe('Scene/CameraFlightPath', function() {
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.setView({
-            orientation: {
-                heading: 0,
-                pitch: -CesiumMath.PI_OVER_TWO,
-                roll: 0
+            orientation : {
+                heading : 0,
+                pitch : -CesiumMath.PI_OVER_TWO,
+                roll : 0
             }
         });
 
@@ -384,7 +384,7 @@ describe('Scene/CameraFlightPath', function() {
         var overLonFlight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : 1.0,
-            flyOverLongitude: CesiumMath.toRadians(0.0)
+            flyOverLongitude : CesiumMath.toRadians(0.0)
         });
 
         var directFlight = CameraFlightPath.createTween(scene, {
@@ -422,15 +422,15 @@ describe('Scene/CameraFlightPath', function() {
         var overLonFlightSmallWeight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : 1.0,
-            flyOverLongitude: CesiumMath.toRadians(0.0),
-            flyOverLongitudeWeight: 2
+            flyOverLongitude : CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight : 2
         });
 
         var overLonFlightBigWeight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : 1.0,
-            flyOverLongitude: CesiumMath.toRadians(0.0),
-            flyOverLongitudeWeight: 20
+            flyOverLongitude : CesiumMath.toRadians(0.0),
+            flyOverLongitudeWeight : 20
         });
 
         overLonFlightBigWeight.update({ time : 0.3 });
@@ -454,7 +454,7 @@ describe('Scene/CameraFlightPath', function() {
 
         camera.setView({
             destination : Cartesian3.fromDegrees(-20.0, 0.0, 1000.0),
-            orientation: {
+            orientation : {
                 heading : CesiumMath.toRadians(0.0),
                 pitch : CesiumMath.toRadians(-15.0),
                 roll : 0.0
@@ -468,10 +468,10 @@ describe('Scene/CameraFlightPath', function() {
             destination : Cartesian3.fromDegrees(60.0, 0.0, 2000.0),
             pitch : endPitch,
             duration : duration,
-            pitchAdjustHeight: 2000
+            pitchAdjustHeight : 2000
         });
 
-        flight.update({ time: 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.pitch).toEqualEpsilon(startPitch, CesiumMath.EPSILON6);
 
         flight.update({ time : duration });
@@ -497,13 +497,13 @@ describe('Scene/CameraFlightPath', function() {
         var outsideTwoPiFlight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : duration,
-            flyOverLongitude: CesiumMath.toRadians(0.0)
+            flyOverLongitude : CesiumMath.toRadians(0.0)
         });
 
         var prevLon = startLonDegrees;
         var crossedDateChangesLine = 0;
         for(var t = 1; t < duration; t++) {
-            outsideTwoPiFlight.update({ time: t });
+            outsideTwoPiFlight.update({ time : t });
             projection.ellipsoid.cartesianToCartographic(camera.position, position);
             var lon = CesiumMath.toDegrees(position.longitude);
             var d = lon - prevLon;
@@ -534,12 +534,12 @@ describe('Scene/CameraFlightPath', function() {
         var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : duration,
-            flyOverLongitude: CesiumMath.toRadians(0.0)
+            flyOverLongitude : CesiumMath.toRadians(0.0)
         });
 
         var prevLon = startLonDegrees;
         for(var t = 1; t < duration; t++) {
-            flight.update({ time: t });
+            flight.update({ time : t });
             projection.ellipsoid.cartesianToCartographic(camera.position, position);
             var lon = CesiumMath.toDegrees(position.longitude);
             var d = lon - prevLon;

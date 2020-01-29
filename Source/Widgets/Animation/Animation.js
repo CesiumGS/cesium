@@ -217,8 +217,8 @@ import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
         //to include the binding information directly.
 
         this._subscriptions = [//
-        subscribeAndEvaluate(viewModel, 'toggled', this.setToggled, this),//
-        subscribeAndEvaluate(viewModel, 'tooltip', this.setTooltip, this),//
+        subscribeAndEvaluate(viewModel, 'toggled', this.setToggled, this), //
+        subscribeAndEvaluate(viewModel, 'tooltip', this.setTooltip, this), //
         subscribeAndEvaluate(viewModel.command, 'canExecute', this.setEnabled, this)];
     }
 

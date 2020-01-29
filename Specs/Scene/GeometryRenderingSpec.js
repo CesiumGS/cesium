@@ -347,7 +347,7 @@ describe('Scene/GeometryRenderingSpec', function() {
                     ]),
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 }),
-                id: 'coplanar polygon',
+                id : 'coplanar polygon',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
                 }
@@ -382,12 +382,12 @@ describe('Scene/GeometryRenderingSpec', function() {
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new CylinderGeometry({
-                    length: 5,
-                    topRadius: 3,
-                    bottomRadius: 5,
+                    length : 5,
+                    topRadius : 3,
+                    bottomRadius : 5,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 }),
-                id: 'cylinder',
+                id : 'cylinder',
                 modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                         Cartesian3.fromDegrees(-90.0, 45.0)), new Cartesian3(0.0, 0.0, 500000.0), new Matrix4()), 90000.0, new Matrix4()),
                 attributes : {
@@ -957,8 +957,8 @@ describe('Scene/GeometryRenderingSpec', function() {
                         1.0, 1.0,
                         -1.0, 1.0
                     ]),
-                    height: geometryHeight,
-                    extrudedHeight: extrudedHeight
+                    height : geometryHeight,
+                    extrudedHeight : extrudedHeight
                 }),
                 id : 'extrudedPolygon',
                 attributes : {
@@ -1049,7 +1049,7 @@ describe('Scene/GeometryRenderingSpec', function() {
                         -108.0, -30.0, 500000
                     ]),
                     perPositionHeight : true,
-                    extrudedHeight: 0
+                    extrudedHeight : 0
                 }),
                 id : 'extrudedPolygon',
                 attributes : {
@@ -1141,9 +1141,9 @@ describe('Scene/GeometryRenderingSpec', function() {
                 geometry : new CorridorGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    positions: positions,
-                    width: width,
-                    cornerType: CornerType.MITERED
+                    positions : positions,
+                    width : width,
+                    cornerType : CornerType.MITERED
                 }),
                 id : 'corridor',
                 attributes : {
@@ -1179,10 +1179,10 @@ describe('Scene/GeometryRenderingSpec', function() {
                 geometry : new CorridorGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    positions: positions,
-                    width: width,
-                    cornerType: CornerType.MITERED,
-                    height: 100000
+                    positions : positions,
+                    width : width,
+                    cornerType : CornerType.MITERED,
+                    height : 100000
                 }),
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
@@ -1211,11 +1211,11 @@ describe('Scene/GeometryRenderingSpec', function() {
                 geometry : new CorridorGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    positions: positions,
-                    width: width,
-                    cornerType: CornerType.MITERED,
-                    height: geometryHeight,
-                    extrudedHeight: extrudedHeight
+                    positions : positions,
+                    width : width,
+                    cornerType : CornerType.MITERED,
+                    height : geometryHeight,
+                    extrudedHeight : extrudedHeight
                 }),
                 id : 'extrudedCorridor',
                 attributes : {
@@ -1311,10 +1311,10 @@ describe('Scene/GeometryRenderingSpec', function() {
                 geometry : new PolylineVolumeGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    polylinePositions: positions,
-                    shapePositions: shape,
-                    cornerType: CornerType.MITERED,
-                    height: geometryHeight
+                    polylinePositions : positions,
+                    shapePositions : shape,
+                    cornerType : CornerType.MITERED,
+                    height : geometryHeight
                 }),
                 id : 'polylineVolume',
                 attributes : {
@@ -1573,7 +1573,7 @@ describe('Scene/GeometryRenderingSpec', function() {
                         primitiveType : PrimitiveType.TRIANGLES
                     }),
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                        Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
+                        Cartesian3.fromDegrees(0, 0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
                     id : 'customWithIndices',
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
@@ -1623,7 +1623,7 @@ describe('Scene/GeometryRenderingSpec', function() {
                         primitiveType : PrimitiveType.TRIANGLES
                     }),
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                        Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
+                        Cartesian3.fromDegrees(0, 0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
                     id : 'customWithoutIndices',
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
@@ -1672,7 +1672,7 @@ describe('Scene/GeometryRenderingSpec', function() {
                         primitiveType : PrimitiveType.TRIANGLES
                     }),
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                        Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
+                        Cartesian3.fromDegrees(0, 0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
                     id : 'customWithIndices',
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)

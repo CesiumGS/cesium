@@ -34,7 +34,7 @@ import PrimitiveType from './PrimitiveType.js';
         }
 
         var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
+            position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : flatPositions

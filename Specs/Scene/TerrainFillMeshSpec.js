@@ -1,5 +1,3 @@
-import MockTerrainProvider from '../MockTerrainProvider.js';
-import TerrainTileProcessor from '../TerrainTileProcessor.js';
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { GeographicProjection } from '../../Source/Cesium.js';
@@ -14,6 +12,8 @@ import { SceneMode } from '../../Source/Cesium.js';
 import { TerrainFillMesh } from '../../Source/Cesium.js';
 import { TileBoundingRegion } from '../../Source/Cesium.js';
 import { TileSelectionResult } from '../../Source/Cesium.js';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
 
 describe('Scene/TerrainFillMesh', function() {
 
@@ -40,30 +40,30 @@ describe('Scene/TerrainFillMesh', function() {
 
     beforeEach(function() {
         scene = {
-            mapProjection: new GeographicProjection(),
-            drawingBufferWidth: 1000,
-            drawingBufferHeight: 1000
+            mapProjection : new GeographicProjection(),
+            drawingBufferWidth : 1000,
+            drawingBufferHeight : 1000
         };
 
         camera = new Camera(scene);
 
         frameState = {
-            frameNumber: 0,
-            passes: {
-                render: true
+            frameNumber : 0,
+            passes : {
+                render : true
             },
-            camera: camera,
-            fog: {
-                enabled: false
+            camera : camera,
+            fog : {
+                enabled : false
             },
-            context: {
-                drawingBufferWidth: scene.drawingBufferWidth,
-                drawingBufferHeight: scene.drawingBufferHeight
+            context : {
+                drawingBufferWidth : scene.drawingBufferWidth,
+                drawingBufferHeight : scene.drawingBufferHeight
             },
-            mode: SceneMode.SCENE3D,
-            commandList: [],
-            cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-            afterRender: []
+            mode : SceneMode.SCENE3D,
+            commandList : [],
+            cullingVolume : jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
+            afterRender : []
         };
 
         frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
@@ -72,12 +72,12 @@ describe('Scene/TerrainFillMesh', function() {
         surfaceShaderSet = jasmine.createSpyObj('SurfaceShaderSet', ['getShaderProgram']);
         mockTerrain = new MockTerrainProvider();
         tileProvider = new GlobeSurfaceTileProvider({
-            terrainProvider: mockTerrain,
-            imageryLayers: imageryLayerCollection,
-            surfaceShaderSet: surfaceShaderSet
+            terrainProvider : mockTerrain,
+            imageryLayers : imageryLayerCollection,
+            surfaceShaderSet : surfaceShaderSet
         });
         quadtree = new QuadtreePrimitive({
-            tileProvider: tileProvider
+            tileProvider : tileProvider
         });
 
         processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
@@ -97,10 +97,10 @@ describe('Scene/TerrainFillMesh', function() {
         northeast = east.findTileToNorth(rootTiles);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 15.0, 16.0, 17.0,
                 22.0, 23.0, 24.0,
                 29.0, 30.0, 31.0
@@ -108,10 +108,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), west).createMeshWillSucceed(west);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 31.0, 32.0, 33.0,
                 38.0, 39.0, 40.0,
                 45.0, 46.0, 47.0
@@ -119,10 +119,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), south).createMeshWillSucceed(south);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 19.0, 20.0, 21.0,
                 26.0, 27.0, 28.0,
                 33.0, 34.0, 35.0
@@ -130,10 +130,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), east).createMeshWillSucceed(east);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 3.0, 4.0, 5.0,
                 10.0, 11.0, 12.0,
                 17.0, 18.0, 19.0
@@ -141,10 +141,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), north).createMeshWillSucceed(north);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 29.0, 30.0, 31.0,
                 36.0, 37.0, 38.0,
                 43.0, 44.0, 45.0
@@ -152,10 +152,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), southwest).createMeshWillSucceed(southwest);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 33.0, 34.0, 35.0,
                 40.0, 41.0, 42.0,
                 47.0, 48.0, 49.0
@@ -163,10 +163,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), southeast).createMeshWillSucceed(southeast);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 1.0, 2.0, 3.0,
                 8.0, 9.0, 10.0,
                 15.0, 16.0, 17.0
@@ -174,10 +174,10 @@ describe('Scene/TerrainFillMesh', function() {
         }), northwest).createMeshWillSucceed(northwest);
 
         mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-            width: 3,
-            height: 3,
-            createdByUpsampling: false,
-            buffer: new Float32Array([
+            width : 3,
+            height : 3,
+            createdByUpsampling : false,
+            buffer : new Float32Array([
                 5.0, 6.0, 7.0,
                 12.0, 13.0, 14.0,
                 19.0, 20.0, 21.0
@@ -436,10 +436,10 @@ describe('Scene/TerrainFillMesh', function() {
 
                 // Now load the south tile.
                 mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                    width: 3,
-                    height: 3,
-                    createdByUpsampling: false,
-                    buffer: new Float32Array([
+                    width : 3,
+                    height : 3,
+                    createdByUpsampling : false,
+                    buffer : new Float32Array([
                         31.0, 32.0, 33.0,
                         38.0, 39.0, 40.0,
                         45.0, 46.0, 47.0
@@ -501,10 +501,10 @@ describe('Scene/TerrainFillMesh', function() {
         it('puts a middle height at the four corners and center when there are no adjacent tiles', function() {
             return processor.process([center]).then(function() {
                 center.data.tileBoundingRegion = new TileBoundingRegion({
-                    rectangle: center.rectangle,
-                    minimumHeight: 1.0,
-                    maximumHeight: 3.0,
-                    computeBoundingVolumes: false
+                    rectangle : center.rectangle,
+                    minimumHeight : 1.0,
+                    maximumHeight : 3.0,
+                    computeBoundingVolumes : false
                 });
 
                 var fill = center.data.fill = new TerrainFillMesh(center);
@@ -730,80 +730,80 @@ describe('Scene/TerrainFillMesh', function() {
             var southE = south.northeastChild.northwestChild;
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     1.0, 1.0,
                     1.5, 1.5
                 ])
             }), westN).createMeshWillSucceed(westN);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     1.5, 1.5,
                     2.0, 2.0
                 ])
             }), westS).createMeshWillSucceed(westS);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     3.0, 3.0,
                     3.5, 3.5
                 ])
             }), eastN).createMeshWillSucceed(eastN);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     3.5, 3.5,
                     4.0, 4.0
                 ])
             }), eastS).createMeshWillSucceed(eastS);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     5.0, 5.5,
                     5.0, 5.5
                 ])
             }), northW).createMeshWillSucceed(northW);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     5.5, 6.0,
                     6.5, 6.0
                 ])
             }), northE).createMeshWillSucceed(northE);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     7.0, 7.5,
                     7.0, 7.5
                 ])
             }), southW).createMeshWillSucceed(southW);
 
             mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                width: 2,
-                height: 2,
-                createdByUpsampling: false,
-                buffer: new Float32Array([
+                width : 2,
+                height : 2,
+                createdByUpsampling : false,
+                buffer : new Float32Array([
                     7.5, 8.0,
                     7.5, 8.0
                 ])
@@ -855,10 +855,10 @@ describe('Scene/TerrainFillMesh', function() {
             it('western hemisphere to eastern hemisphere', function() {
                 mockTerrain.requestTileGeometryWillDefer(easternHemisphere);
                 mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                    width: 3,
-                    height: 3,
-                    createdByUpsampling: false,
-                    buffer: new Float32Array([
+                    width : 3,
+                    height : 3,
+                    createdByUpsampling : false,
+                    buffer : new Float32Array([
                         1.0, 2.0, 3.0,
                         4.0, 5.0, 6.0,
                         7.0, 8.0, 9.0
@@ -882,10 +882,10 @@ describe('Scene/TerrainFillMesh', function() {
 
             it('eastern hemisphere to western hemisphere', function() {
                 mockTerrain.requestTileGeometryWillSucceedWith(new HeightmapTerrainData({
-                    width: 3,
-                    height: 3,
-                    createdByUpsampling: false,
-                    buffer: new Float32Array([
+                    width : 3,
+                    height : 3,
+                    createdByUpsampling : false,
+                    buffer : new Float32Array([
                         10.0, 11.0, 12.0,
                         13.0, 14.0, 15.0,
                         16.0, 17.0, 18.0

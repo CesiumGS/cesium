@@ -27,9 +27,9 @@ import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
 import { Primitive } from '../../Source/Cesium.js';
 import { ShadowMap } from '../../Source/Cesium.js';
 import { ShadowMode } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
-import { when } from '../../Source/Cesium.js';
 
 describe('Scene/ShadowMap', function() {
 

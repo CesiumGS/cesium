@@ -16,7 +16,10 @@ import Matrix3 from '../Core/Matrix3.js';
 import Matrix4 from '../Core/Matrix4.js';
 import Resource from '../Core/Resource.js';
 import CubeMap from '../Renderer/CubeMap.js';
+import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import AspectRampMaterial from '../Shaders/Materials/AspectRampMaterial.js';
 import BumpMapMaterial from '../Shaders/Materials/BumpMapMaterial.js';
 import CheckerboardMaterial from '../Shaders/Materials/CheckerboardMaterial.js';
@@ -31,11 +34,8 @@ import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
 import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
 import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
 import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
-import Sampler from '../Renderer/Sampler.js';
 import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
 import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import WaterMaterial from '../Shaders/Materials/Water.js';
 import when from '../ThirdParty/when.js';
 
@@ -822,14 +822,14 @@ import when from '../ThirdParty/when.js';
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
-                            id: uniformId,
-                            image: image
+                            id : uniformId,
+                            image : image
                         });
                     });
                 } else if (uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
                     material._loadedImages.push({
-                        id: uniformId,
-                        image: uniformValue
+                        id : uniformId,
+                        image : uniformValue
                     });
                 }
 
@@ -1130,7 +1130,7 @@ import when from '../ThirdParty/when.js';
             uniforms : {
                 image : Material.DefaultImageId,
                 repeat : new Cartesian2(1.0, 1.0),
-                color: new Color(1.0, 1.0, 1.0, 1.0)
+                color : new Color(1.0, 1.0, 1.0, 1.0)
             },
             components : {
                 diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb * color.rgb',
@@ -1524,9 +1524,9 @@ import when from '../ThirdParty/when.js';
         fabric : {
             type : Material.ElevationContourType,
             uniforms : {
-                spacing: 100.0,
-                color: new Color(1.0, 0.0, 0.0, 1.0),
-                width: 1.0
+                spacing : 100.0,
+                color : new Color(1.0, 0.0, 0.0, 1.0),
+                width : 1.0
             },
             source : ElevationContourMaterial
         },
@@ -1543,9 +1543,9 @@ import when from '../ThirdParty/when.js';
         fabric : {
             type : Material.ElevationRampType,
             uniforms : {
-                image: Material.DefaultImageId,
-                minimumHeight: 0.0,
-                maximumHeight: 10000.0
+                image : Material.DefaultImageId,
+                minimumHeight : 0.0,
+                maximumHeight : 10000.0
             },
             source : ElevationRampMaterial
         },
@@ -1576,7 +1576,7 @@ import when from '../ThirdParty/when.js';
      */
     Material.AspectRampMaterialType = 'AspectRamp';
     Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
-        fabric: {
+        fabric : {
             type : Material.AspectRampMaterialType,
             uniforms : {
                 image : Material.DefaultImageId

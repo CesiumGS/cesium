@@ -28,7 +28,7 @@ describe('DataSources/RectangleGraphics', function() {
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             classificationType : ClassificationType.TERRAIN,
-            zIndex: 5
+            zIndex : 5
         };
 
         var rectangle = new RectangleGraphics(options);

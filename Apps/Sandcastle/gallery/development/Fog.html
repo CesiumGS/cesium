@@ -39,7 +39,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
@@ -81,10 +81,10 @@ viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
 Sandcastle.addToolbarButton('Horizon high altitude', function() {
     viewer.camera.setView({
-        destination: new Cesium.Cartesian3(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
-        orientation: {
-            heading: 4.492211521856625,
-            pitch: -0.2687139437696304
+        destination : new Cesium.Cartesian3(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
+        orientation : {
+            heading : 4.492211521856625,
+            pitch : -0.2687139437696304
         }
     });
 });

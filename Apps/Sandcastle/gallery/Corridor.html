@@ -45,9 +45,9 @@ var greenCorridor = viewer.entities.add({
                                                         -95.0, 40.0,
                                                         -95.0, 35.0
                                                     ]),
-                                                    height: 100000.0,
+                                                    height : 100000.0,
                                                     width : 200000.0,
-        cornerType: Cesium.CornerType.MITERED,
+        cornerType : Cesium.CornerType.MITERED,
         material : Cesium.Color.GREEN,
         outline : true // height required for outlines to display
     }
@@ -64,7 +64,7 @@ var blueCorridor = viewer.entities.add({
         height : 200000.0,
         extrudedHeight : 100000.0,
         width : 200000.0,
-        cornerType: Cesium.CornerType.BEVELED,
+        cornerType : Cesium.CornerType.BEVELED,
         material : Cesium.Color.BLUE.withAlpha(0.5),
         outline : true, // height or extrudedHeight must be set for outlines to display
         outlineColor : Cesium.Color.WHITE

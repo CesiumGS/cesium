@@ -524,7 +524,7 @@ import WebMercatorProjection from '../Core/WebMercatorProjection.js';
                 boundingSphereCV : boundingSphereCV,
                 indices : indices,
                 attributes : attributes,
-                offsetAttribute: offsetAttribute
+                offsetAttribute : offsetAttribute
             });
         }
 
@@ -695,7 +695,7 @@ import WebMercatorProjection from '../Core/WebMercatorProjection.js';
             attributeLocations : results.attributeLocations,
             modelMatrix : results.modelMatrix,
             pickOffsets : results.pickOffsets,
-            offsetInstanceExtend: results.offsetInstanceExtend,
+            offsetInstanceExtend : results.offsetInstanceExtend,
             boundingSpheres : packedBoundingSpheres,
             boundingSpheresCV : packedBoundingSpheresCV
         };
@@ -710,7 +710,7 @@ import WebMercatorProjection from '../Core/WebMercatorProjection.js';
             attributeLocations : packedResult.attributeLocations,
             modelMatrix : packedResult.modelMatrix,
             pickOffsets : packedResult.pickOffsets,
-            offsetInstanceExtend: packedResult.offsetInstanceExtend,
+            offsetInstanceExtend : packedResult.offsetInstanceExtend,
             boundingSpheres : unpackBoundingSpheres(packedResult.boundingSpheres),
             boundingSpheresCV : unpackBoundingSpheres(packedResult.boundingSpheresCV)
         };

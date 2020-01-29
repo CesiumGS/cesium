@@ -101,7 +101,7 @@ describe('Scene/SkyAtmosphere', function() {
 
         scene.camera.setView({
             destination : Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
-            orientation: {
+            orientation : {
                 heading : -CesiumMath.PI_OVER_TWO,
                 pitch : 0.2,
                 roll : 0.0

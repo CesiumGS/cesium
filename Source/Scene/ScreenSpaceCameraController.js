@@ -420,7 +420,7 @@ import TweenCollection from './TweenCollection.js';
     var scratchCartesianTwo = new Cartesian3();
     var scratchCartesianThree = new Cartesian3();
     var scratchZoomViewOptions = {
-      orientation: new HeadingPitchRoll()
+      orientation : new HeadingPitchRoll()
     };
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {

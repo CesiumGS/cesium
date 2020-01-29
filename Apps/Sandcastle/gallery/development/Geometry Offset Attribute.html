@@ -37,30 +37,30 @@ center1 = ellipsoid.cartographicToCartesian(center1);
 var offset = Cesium.Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center1), 100000, new Cesium.Cartesian3());
 
 var i1 = new Cesium.GeometryInstance({
-    id: id1,
+    id : id1,
     geometry : new Cesium.RectangleGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.TOP
+        offsetAttribute : Cesium.GeometryOffsetAttribute.TOP
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5)),
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
     }
 });
 var o1 = new Cesium.GeometryInstance({
-    id: id1,
+    id : id1,
     geometry : new Cesium.RectangleOutlineGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.TOP
+        offsetAttribute : Cesium.GeometryOffsetAttribute.TOP
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
     }
 });
 
@@ -69,30 +69,30 @@ var center2 = Cesium.Rectangle.center(rectangle);
 center2 = ellipsoid.cartographicToCartesian(center2);
 
 var i2 = new Cesium.GeometryInstance({
-    id: id2,
+    id : id2,
     geometry : new Cesium.RectangleGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.TOP
+        offsetAttribute : Cesium.GeometryOffsetAttribute.TOP
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5)),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(Cesium.Cartesian3.ZERO)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5)),
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(Cesium.Cartesian3.ZERO)
     }
 });
 var o2 = new Cesium.GeometryInstance({
-    id: id2,
+    id : id2,
     geometry : new Cesium.RectangleOutlineGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.TOP
+        offsetAttribute : Cesium.GeometryOffsetAttribute.TOP
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(Cesium.Cartesian3.ZERO)
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(Cesium.Cartesian3.ZERO)
     }
 });
 
@@ -101,31 +101,31 @@ var center3 = Cesium.Rectangle.center(rectangle);
 center3 = ellipsoid.cartographicToCartesian(center3);
 offset = Cesium.Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center3), 100000, new Cesium.Cartesian3());
 var i3 = new Cesium.GeometryInstance({
-    id: id3,
+    id : id3,
     geometry : new Cesium.RectangleGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.ALL
+        offsetAttribute : Cesium.GeometryOffsetAttribute.ALL
 
     }),
-    attributes: {
-        color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5)),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+    attributes : {
+        color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5)),
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
     }
 });
 var o3 = new Cesium.GeometryInstance({
-    id: id3,
+    id : id3,
     geometry : new Cesium.RectangleOutlineGeometry({
         rectangle : rectangle,
         extrudedHeight : 30000.0,
         height : 10000.0,
-        offsetAttribute: Cesium.GeometryOffsetAttribute.ALL
+        offsetAttribute : Cesium.GeometryOffsetAttribute.ALL
     }),
     attributes : {
         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE),
-        offset: Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
+        offset : Cesium.OffsetGeometryInstanceAttribute.fromCartesian3(offset)
     }
 });
 

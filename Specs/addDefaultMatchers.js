@@ -1,4 +1,3 @@
-import equals from './equals.js';
 import { Cartesian2 } from '../Source/Cesium.js';
 import { defaultValue } from '../Source/Cesium.js';
 import { defined } from '../Source/Cesium.js';
@@ -13,6 +12,7 @@ import { ClearCommand } from '../Source/Cesium.js';
 import { DrawCommand } from '../Source/Cesium.js';
 import { ShaderProgram } from '../Source/Cesium.js';
 import { VertexArray } from '../Source/Cesium.js';
+import equals from './equals.js';
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
@@ -768,8 +768,8 @@ import { VertexArray } from '../Source/Cesium.js';
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
-                attributeLocations: {
-                    position: 0
+                attributeLocations : {
+                    position : 0
                 }
             });
         }

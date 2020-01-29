@@ -23,7 +23,7 @@ describe('DataSources/ImageMaterialProperty', function() {
             image : 'test.invalid',
             repeat : new Cartesian2(1, 2),
             color : Color.RED.withAlpha(0.5),
-            transparent: true
+            transparent : true
         };
 
         var property = new ImageMaterialProperty(options);

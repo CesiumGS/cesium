@@ -83,14 +83,14 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         }
 
         UrlTemplateImageryProvider.call(this, {
-            url: resource,
-            credit: credit,
-            tilingScheme: tilingScheme,
-            tileWidth: tileWidth,
-            tileHeight: tileHeight,
-            minimumLevel: minimumLevel,
-            maximumLevel: maximumLevel,
-            rectangle: rectangle
+            url : resource,
+            credit : credit,
+            tilingScheme : tilingScheme,
+            tileWidth : tileWidth,
+            tileHeight : tileHeight,
+            minimumLevel : minimumLevel,
+            maximumLevel : maximumLevel,
+            rectangle : rectangle
         });
     }
 

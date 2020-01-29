@@ -29,7 +29,7 @@ describe('DataSources/EllipseGraphics', function() {
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             classificationType : ClassificationType.TERRAIN,
-            zIndex: 3
+            zIndex : 3
         };
 
         var ellipse = new EllipseGraphics(options);

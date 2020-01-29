@@ -39,11 +39,11 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    infoBox: false,
-    selectionIndicator: false,
+    infoBox : false,
+    selectionIndicator : false,
     shouldAnimate : true,
     projectionPicker : true,
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider : Cesium.createWorldTerrain()
 });
 
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
@@ -132,8 +132,8 @@ function computePlanes() {
 function createClippingPlanes(modelMatrix) {
     modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
         modelMatrix : Cesium.defined(modelMatrix) ? modelMatrix : Cesium.Matrix4.IDENTITY,
-        edgeWidth: 2.0,
-        edgeColor: Cesium.Color.WHITE,
+        edgeWidth : 2.0,
+        edgeColor : Cesium.Color.WHITE,
         unionClippingRegions : clippingModeUnion,
         enabled : enabled
     });

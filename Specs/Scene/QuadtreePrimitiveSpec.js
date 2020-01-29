@@ -1,5 +1,3 @@
-import MockTerrainProvider from '../MockTerrainProvider.js';
-import TerrainTileProcessor from '../TerrainTileProcessor.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Cartographic } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
@@ -17,9 +15,11 @@ import { ImageryLayerCollection } from '../../Source/Cesium.js';
 import { QuadtreePrimitive } from '../../Source/Cesium.js';
 import { QuadtreeTileLoadState } from '../../Source/Cesium.js';
 import { SceneMode } from '../../Source/Cesium.js';
-import createScene from '../createScene.js';
-import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import pollToPromise from '../pollToPromise.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
 
 describe('Scene/QuadtreePrimitive', function() {
 
@@ -37,31 +37,31 @@ describe('Scene/QuadtreePrimitive', function() {
 
         beforeEach(function() {
             scene = {
-                mapProjection: new GeographicProjection(),
-                drawingBufferWidth: 1000,
-                drawingBufferHeight: 1000
+                mapProjection : new GeographicProjection(),
+                drawingBufferWidth : 1000,
+                drawingBufferHeight : 1000
             };
 
             camera = new Camera(scene);
 
             frameState = {
-                frameNumber: 0,
-                passes: {
-                    render: true
+                frameNumber : 0,
+                passes : {
+                    render : true
                 },
-                camera: camera,
-                fog: {
-                    enabled: false
+                camera : camera,
+                fog : {
+                    enabled : false
                 },
-                context: {
-                    drawingBufferWidth: scene.drawingBufferWidth,
-                    drawingBufferHeight: scene.drawingBufferHeight
+                context : {
+                    drawingBufferWidth : scene.drawingBufferWidth,
+                    drawingBufferHeight : scene.drawingBufferHeight
                 },
-                mode: SceneMode.SCENE3D,
-                commandList: [],
-                cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-                afterRender: [],
-                pixelRatio: 1.0
+                mode : SceneMode.SCENE3D,
+                commandList : [],
+                cullingVolume : jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
+                afterRender : [],
+                pixelRatio : 1.0
             };
 
             frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
@@ -70,12 +70,12 @@ describe('Scene/QuadtreePrimitive', function() {
             surfaceShaderSet = jasmine.createSpyObj('SurfaceShaderSet', ['getShaderProgram']);
             mockTerrain = new MockTerrainProvider();
             tileProvider = new GlobeSurfaceTileProvider({
-                terrainProvider: mockTerrain,
-                imageryLayers: imageryLayerCollection,
-                surfaceShaderSet: surfaceShaderSet
+                terrainProvider : mockTerrain,
+                imageryLayers : imageryLayerCollection,
+                surfaceShaderSet : surfaceShaderSet
             });
             quadtree = new QuadtreePrimitive({
-                tileProvider: tileProvider
+                tileProvider : tileProvider
             });
 
             processor = new TerrainTileProcessor(frameState, mockTerrain, imageryLayerCollection);
@@ -815,7 +815,7 @@ describe('Scene/QuadtreePrimitive', function() {
                     pick : function() {
                         return currentPosition;
                     },
-                    mesh: {}
+                    mesh : {}
                 };
             });
 

@@ -164,11 +164,11 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
     it('Creates geometry with expected properties', function() {
         var options = {
             radii : new Cartesian3(1, 2, 3),
-            innerRadii: new Cartesian3(0.5, 1, 1.5),
-            minimumClock: CesiumMath.toRadians(90.0),
-            maximumClock: CesiumMath.toRadians(270.0),
-            minimumCone: CesiumMath.toRadians(45.0),
-            maximumCone: CesiumMath.toRadians(90.0),
+            innerRadii : new Cartesian3(0.5, 1, 1.5),
+            minimumClock : CesiumMath.toRadians(90.0),
+            maximumClock : CesiumMath.toRadians(270.0),
+            minimumCone : CesiumMath.toRadians(45.0),
+            maximumCone : CesiumMath.toRadians(90.0),
             stackPartitions : 32,
             slicePartitions : 64,
             subdivisions : 15

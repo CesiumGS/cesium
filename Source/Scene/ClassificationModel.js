@@ -619,12 +619,12 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
             if (defined(attributeLocation)) {
                 var a = accessors[accessorId];
                 attributes[attributeName] = {
-                    index: attributeLocation,
-                    vertexBuffer: rendererBuffers[a.bufferView],
-                    componentsPerAttribute: numberOfComponentsForType(a.type),
-                    componentDatatype: a.componentType,
-                    offsetInBytes: a.byteOffset,
-                    strideInBytes: getAccessorByteStride(gltf, a)
+                    index : attributeLocation,
+                    vertexBuffer : rendererBuffers[a.bufferView],
+                    componentsPerAttribute : numberOfComponentsForType(a.type),
+                    componentDatatype : a.componentType,
+                    offsetInBytes : a.byteOffset,
+                    strideInBytes : getAccessorByteStride(gltf, a)
                 };
             }
         });

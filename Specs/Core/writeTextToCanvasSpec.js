@@ -101,7 +101,7 @@ describe('Core/writeTextToCanvas', function() {
 
         var context = canvas.getContext('2d');
         var pixel = context.getImageData(0, 0, 1, 1).data;
-        expect(pixel).toEqual([0,0,0,0]);
+        expect(pixel).toEqual([0, 0, 0, 0]);
     });
 
     it('background can be set', function() {
@@ -112,7 +112,7 @@ describe('Core/writeTextToCanvas', function() {
 
         var context = canvas.getContext('2d');
         var pixel = context.getImageData(0, 0, 1, 1).data;
-        expect(pixel).toEqual([255,0,0,255]);
+        expect(pixel).toEqual([255, 0, 0, 255]);
     });
 
     it('border can be set', function() {

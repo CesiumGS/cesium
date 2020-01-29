@@ -58,9 +58,9 @@ function startup(Cesium) {
 var modelUrl = 'https://assets.agi.com/models/launchvehicle.glb';
 
 var viewModel = {
-    articulations: [],
-    stages: [],
-    selectedArticulation: undefined
+    articulations : [],
+    stages : [],
+    selectedArticulation : undefined
 };
 
 Cesium.knockout.track(viewModel);
@@ -100,20 +100,20 @@ model.readyPromise.then(function(model) {
 
     viewModel.articulations = Object.keys(model._runtime.articulationsByName).map(function(articulationName) {
         return {
-            name: articulationName,
-            stages: model._runtime.articulationsByName[articulationName].stages.map(function(stage) {
+            name : articulationName,
+            stages : model._runtime.articulationsByName[articulationName].stages.map(function(stage) {
                 var stageModel = {
-                    name: stage.name,
-                    minimum: stage.minimumValue,
-                    maximum: stage.maximumValue,
-                    current: stage.currentValue
+                    name : stage.name,
+                    minimum : stage.minimumValue,
+                    maximum : stage.maximumValue,
+                    current : stage.currentValue
                 };
                 Cesium.knockout.track(stageModel);
                 Cesium.knockout.defineProperty(stageModel, 'currentText', {
-                    get: function() {
+                    get : function() {
                         return stageModel.current.toString();
                     },
-                    set: function(value) {
+                    set : function(value) {
                         // coerce values to number
                         stageModel.current = +value;
                     }

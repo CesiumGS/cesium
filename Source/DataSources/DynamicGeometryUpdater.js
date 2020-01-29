@@ -91,7 +91,7 @@ import Property from './Property.js';
             var closed = geometryUpdater._getIsClosed(options);
             if (isColorAppearance) {
                 appearance = new PerInstanceColorAppearance({
-                    closed: closed,
+                    closed : closed,
                     flat : onTerrain && !geometryUpdater._supportsMaterialsforEntitiesOnTerrain
                 });
             } else {
