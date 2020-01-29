@@ -1,4 +1,5 @@
 import defined from './defined.js';
+import deprecationWarning from './deprecationWarning.js';
 
     /**
      * Tests an object to see if it is an array.
@@ -15,4 +16,9 @@ import defined from './defined.js';
             return Object.prototype.toString.call(value) === '[object Array]';
         };
     }
-export default isArray;
+
+    function isArrayFunction(value) {
+        deprecationWarning('isArray', 'isArray will be removed in Cesium 1.69. Use the native `Array.isArray` function instead.');
+        return isArray(value);
+    }
+export default isArrayFunction;
