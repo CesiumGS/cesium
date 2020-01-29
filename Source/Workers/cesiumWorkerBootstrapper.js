@@ -63,6 +63,10 @@ var requirejs, require, define;
         return ostring.call(it) === '[object Function]';
     }
 
+    function isArray(it) {
+        return ostring.call(it) === '[object Array]';
+    }
+
     /**
      * @private
      * Helper function for iterating over an array. If the func returns
@@ -130,7 +134,7 @@ var requirejs, require, define;
             eachProp(source, function (value, prop) {
                 if (force || !hasProp(target, prop)) {
                     if (deepStringMixin && typeof value === 'object' && value &&
-                        !Array.isArray(value) && !isFunction(value) &&
+                        !isArray(value) && !isFunction(value) &&
                         !(value instanceof RegExp)) {
 
                         if (!target[prop]) {
@@ -391,7 +395,7 @@ var requirejs, require, define;
 
         function hasPathFallback(id) {
             var pathConfig = getOwn(config.paths, id);
-            if (pathConfig && Array.isArray(pathConfig) && pathConfig.length > 1) {
+            if (pathConfig && isArray(pathConfig) && pathConfig.length > 1) {
                 //Pop off the first array value, since it failed, and
                 //retry
                 pathConfig.shift();
@@ -1341,7 +1345,7 @@ var requirejs, require, define;
                 if (cfg.shim) {
                     eachProp(cfg.shim, function (value, id) {
                         //Normalize the structure
-                        if (Array.isArray(value)) {
+                        if (isArray(value)) {
                             value = {
                                 deps: value
                             };
@@ -1674,7 +1678,7 @@ var requirejs, require, define;
                         if (parentPath) {
                             //If an array, it means there are a few choices,
                             //Choose the one that is desired
-                            if (Array.isArray(parentPath)) {
+                            if (isArray(parentPath)) {
                                 parentPath = parentPath[0];
                             }
                             syms.splice(0, i, parentPath);
@@ -1770,10 +1774,10 @@ var requirejs, require, define;
             contextName = defContextName;
 
         // Determine if have config object in the call.
-        if (!Array.isArray(deps) && typeof deps !== 'string') {
+        if (!isArray(deps) && typeof deps !== 'string') {
             // deps is a config object
             config = deps;
-            if (Array.isArray(callback)) {
+            if (isArray(callback)) {
                 // Adjust args if there are dependencies
                 deps = callback;
                 callback = errback;
@@ -2062,7 +2066,7 @@ var requirejs, require, define;
         }
 
         //This module may not have dependencies
-        if (!Array.isArray(deps)) {
+        if (!isArray(deps)) {
             callback = deps;
             deps = null;
         }
