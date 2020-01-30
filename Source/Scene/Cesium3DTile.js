@@ -776,8 +776,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         }
     }
 
-    function getContentFailedFunction(tile) {
+    function getContentFailedFunction(tile, tileset) {
         return function(error) {
+            if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+                --tileset.statistics.numberOfTilesProcessing;
+            } else {
+                --tileset.statistics.numberOfPendingRequests;
+            }
             tile._contentState = Cesium3DTileContentState.FAILED;
             tile._contentReadyPromise.reject(error);
             tile._contentReadyToProcessPromise.reject(error);
@@ -841,7 +846,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             this.expireDate = undefined;
         }
 
-        var contentFailedFunction = getContentFailedFunction(this);
+        var contentFailedFunction = getContentFailedFunction(this, tileset);
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
