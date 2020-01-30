@@ -1,4 +1,4 @@
-Copyright 2011-2019 CesiumJS Contributors
+Copyright 2011-2020 CesiumJS Contributors
 
                                  Apache License
                            Version 2.0, January 2004
@@ -188,7 +188,7 @@ Copyright 2011-2019 CesiumJS Contributors
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2011-2018 CesiumJS Contributors
+   Copyright 2011-2020 CesiumJS Contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

@@ -47,7 +47,8 @@ var groundVehicle = viewer.entities.add({
     name : 'Ground Vehicle',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb'
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
+        heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
     }
 });
 
@@ -55,7 +56,8 @@ var cesiumMan = viewer.entities.add({
     name : 'Cesium Man',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb'
+        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+        heightReference : Cesium.HeightReference.CLAMP_TO_GROUND
     }
 });
 
@@ -63,7 +65,7 @@ var woodTower = viewer.entities.add({
     name : 'Wood Tower',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/WoodTower/Wood_Tower.gltf'
+        uri : '../../SampleData/models/WoodTower/Wood_Tower.glb'
     }
 });
 
@@ -71,7 +73,7 @@ var simpleCity = viewer.entities.add({
     name : 'Simple City',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf'
+        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.glb'
     }
 });
 

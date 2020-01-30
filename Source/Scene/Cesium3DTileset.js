@@ -1768,14 +1768,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     function handleTileFailure(tileset, tile) {
         return function(error) {
-            if (tileset._processingQueue.indexOf(tile) >= 0) {
-                // Failed during processing
-                --tileset._statistics.numberOfTilesProcessing;
-            } else {
-                // Failed when making request
-                --tileset._statistics.numberOfPendingRequests;
-            }
-
             var url = tile._contentResource.url;
             var message = defined(error.message) ? error.message : error.toString();
             if (tileset.tileFailed.numberOfListeners > 0) {

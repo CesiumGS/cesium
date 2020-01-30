@@ -316,7 +316,7 @@ describe('Scene/PolylineCollection', function() {
         expect(polylines.length).toEqual(0);
     });
 
-    it('removes a polyline from the updated list when removed', function() {
+    it('removal of polyline from polyLinesToUpdate is deferred until scene is updated', function() {
         var firstPolyline = polylines.add();
         var secondPolyline = polylines.add();
 
@@ -324,23 +324,24 @@ describe('Scene/PolylineCollection', function() {
         secondPolyline.width = 5;
 
         expect(polylines._polylinesToUpdate.length).toEqual(2);
-
         polylines.remove(secondPolyline);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
 
-    it('only adds polyline to the update list once', function() {
+    it('removal of polyline from polylinesToUpdate after polyline is made dirty multiple times', function() {
         var firstPolyline = polylines.add();
         var secondPolyline = polylines.add();
 
         firstPolyline.width = 4;
         secondPolyline.width = 5;
-        secondPolyline.width = 7;
+        secondPolyline.width = 7; // Making the polyline dirty twice shouldn't affect the length of `_polylinesToUpdate`
 
         expect(polylines._polylinesToUpdate.length).toEqual(2);
 
         polylines.remove(secondPolyline);
+        polylines.update(scene.frameState);
 
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });

@@ -257,13 +257,6 @@ import SceneMode from './SceneMode.js';
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
-            this._polylines[polyline._index] = undefined; // Removed later
-
-            var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
-            if (polylineUpdateIndex !== -1) {
-                this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
-            }
-
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             this._createBatchTable = true;
@@ -1049,19 +1042,23 @@ import SceneMode from './SceneMode.js';
     function removePolylines(collection) {
         if (collection._polylinesRemoved) {
             collection._polylinesRemoved = false;
-
-            var polylines = [];
+            var definedPolylines = [];
+            var definedPolylinesToUpdate = [];
+            var polyIndex = 0;
+            var polyline;
 
             var length = collection._polylines.length;
-            for ( var i = 0, j = 0; i < length; ++i) {
-                var polyline = collection._polylines[i];
-                if (defined(polyline)) {
-                    polyline._index = j++;
-                    polylines.push(polyline);
+            for (var i = 0; i < length; ++i) {
+                polyline = collection._polylines[i];
+                if (!polyline.isDestroyed) {
+                    polyline._index = polyIndex++;
+                    definedPolylinesToUpdate.push(polyline);
+                    definedPolylines.push(polyline);
                 }
             }
 
-            collection._polylines = polylines;
+            collection._polylines = definedPolylines;
+            collection._polylinesToUpdate = definedPolylinesToUpdate;
         }
     }
 
@@ -1069,7 +1066,7 @@ import SceneMode from './SceneMode.js';
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (defined(polylines[i])) {
+            if (!polylines[i].isDestroyed) {
                 var bucket = polylines[i]._bucket;
                 if (defined(bucket)) {
                     bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
@@ -1098,7 +1095,7 @@ import SceneMode from './SceneMode.js';
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (defined(polylines[i])) {
+            if (!polylines[i].isDestroyed) {
                 polylines[i]._destroy();
             }
         }
