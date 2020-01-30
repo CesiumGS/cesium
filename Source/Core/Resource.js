@@ -1900,9 +1900,9 @@ import TrustedServers from './TrustedServers.js';
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = require('url').parse(url);
-        var http = URL.protocol === 'https:' ? require('https') : require('http');
-        var zlib = require('zlib');
+        var URL = require('url').parse(url); // eslint-disable-line
+        var http = URL.protocol === 'https:' ? require('https') : require('http'); // eslint-disable-line
+        var zlib = require('zlib'); // eslint-disable-line
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,
