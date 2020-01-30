@@ -35,7 +35,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {TimeIntervalCollection} options.intervals A {@link TimeIntervalCollection} with its data property being an object containing a <code>uri</code> to a 3D Tiles Point Cloud tile and an optional <code>transform</code>.
      * @param {Boolean} [options.show=true] Determines if the point cloud will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the point cloud.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from light sources.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
      * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
      * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
@@ -66,7 +66,7 @@ import ShadowMode from './ShadowMode.js';
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
-         * Determines whether the point cloud casts or receives shadows from each light source.
+         * Determines whether the point cloud casts or receives shadows from light sources.
          * <p>
          * Enabling shadows has a performance impact. A point cloud that casts shadows must be rendered twice, once from the camera and again from the light's point of view.
          * </p>

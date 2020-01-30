@@ -80,7 +80,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -281,7 +281,7 @@ import ShadowMode from './ShadowMode.js';
         //>>includeEnd('debug');
 
         /**
-         * Determines whether this primitive casts or receives shadows from each light source.
+         * Determines whether this primitive casts or receives shadows from light sources.
          *
          * @type {ShadowMode}
          *

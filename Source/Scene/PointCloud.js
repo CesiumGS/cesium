@@ -190,7 +190,7 @@ import StencilConstants from './StencilConstants.js';
                 }
             },
             set : function(value) {
-                this._boundingSphere = BoundingSphere.clone(value);
+                this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);
             }
         }
     });
@@ -1112,9 +1112,9 @@ import StencilConstants from './StencilConstants.js';
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
-                  '    color.xyz *= diffuseStrength; \n';
+                  '    color.xyz *= diffuseStrength * czm_lightColor; \n';
         }
 
         vs += '    v_color = color; \n' +
@@ -1127,8 +1127,8 @@ import StencilConstants from './StencilConstants.js';
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n' +
-                  '    gl_PointSize *= show; \n';
+            vs += '    gl_Position.w *= float(show); \n' +
+                  '    gl_PointSize *= float(show); \n';
         }
 
         vs += '} \n';

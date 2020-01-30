@@ -30,6 +30,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(-180.0, -23.43687, 180.0, 23.43687);
 
 viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
+viewer.scene.globe.showSkirts = false;
 viewer.scene.skyAtmosphere.show = false;
 
 // Add rectangles to show bounds

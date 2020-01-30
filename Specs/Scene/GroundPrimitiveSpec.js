@@ -134,7 +134,6 @@ describe('Scene/GroundPrimitive', function() {
 
     beforeEach(function() {
         scene.morphTo3D(0);
-        scene.render(); // clear any afterRender commands
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 
@@ -270,11 +269,9 @@ describe('Scene/GroundPrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
-        frameState.commandList.length = 0;
-
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.groundPrimitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('does not render when show is false', function() {
@@ -287,21 +284,13 @@ describe('Scene/GroundPrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toBeGreaterThan(0);
 
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.afterRender.length).toEqual(1);
-
-        frameState.afterRender[0]();
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toBeGreaterThan(0);
-
-        frameState.commandList.length = 0;
         primitive.show = false;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('becomes ready when show is false', function() {
@@ -321,7 +310,7 @@ describe('Scene/GroundPrimitive', function() {
         });
 
         return pollToPromise(function() {
-            scene.render();
+            scene.renderForSpecs();
             return ready;
         }).then(function() {
             expect(ready).toEqual(true);
@@ -533,7 +522,7 @@ describe('Scene/GroundPrimitive', function() {
         });
 
         function verifyLargerScene(groundPrimitive, expectedColor, destination) {
-            largeScene.render();
+            largeScene.renderForSpecs();
 
             largeScene.postProcessStages.fxaa.enabled = false;
             largeScene.camera.setView({destination : destination});
@@ -1081,13 +1070,10 @@ describe('Scene/GroundPrimitive', function() {
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
+        scene.groundPrimitives.add(primitive);
+
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
-            primitive.update(frameState);
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -1115,13 +1101,10 @@ describe('Scene/GroundPrimitive', function() {
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
+        scene.groundPrimitives.add(primitive);
+
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
-            primitive.update(frameState);
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -1236,13 +1219,10 @@ describe('Scene/GroundPrimitive', function() {
             allowPicking : false
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             var attributes = primitive.getGeometryInstanceAttributes('rectangle');
@@ -1311,29 +1291,40 @@ describe('Scene/GroundPrimitive', function() {
             geometryInstances : rectangleInstance
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
+            // verifyGroundPrimitiveRender adds the primitive, so remove it to avoid being added twice.
+            scene.groundPrimitives.destroyPrimitives = false;
+            scene.groundPrimitives.removeAll();
+            scene.groundPrimitives.destroyPrimitives = true;
+
             verifyGroundPrimitiveRender(primitive, rectColor);
         });
     });
 
-    it('destroy before asynchonous pipeline is complete', function() {
+    it('destroy before asynchronous pipeline is complete', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance
         });
 
-        var frameState = scene.frameState;
-        primitive.update(frameState);
+        scene.groundPrimitives.add(primitive);
 
+        scene.renderForSpecs();
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
+
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
+        scene.groundPrimitives.destroyPrimitives = false;
+        scene.groundPrimitives.removeAll();
+        scene.groundPrimitives.destroyPrimitives = true;
     });
 
     it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
@@ -1348,9 +1339,11 @@ describe('Scene/GroundPrimitive', function() {
             asynchronous : false
         });
 
+        scene.groundPrimitives.add(primitive);
+
         if (GroundPrimitive.isSupported(scene)) {
             expect(function() {
-                primitive.update(scene.frameState);
+                scene.renderForSpecs();
             }).toThrowDeveloperError();
         }
 

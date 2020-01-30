@@ -1024,18 +1024,18 @@ describe('Scene/ScreenSpaceCameraController', function() {
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController();
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(direction);
-        expect(camera.up).toEqual(up);
-        expect(camera.right).toEqual(right);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON7);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON7);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON7);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON7);
 
         controller.enableRotate = true;
         updateController();
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(direction);
-        expect(camera.up).toEqual(up);
-        expect(camera.right).toEqual(right);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON7);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON7);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON7);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON7);
     });
 
     it('can set input type to undefined', function() {
@@ -1101,12 +1101,17 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.setView({
-            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 
-        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON5);
     });
 
     it('camera does not go below the terrain in CV', function() {
@@ -1116,8 +1121,13 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.setView({
-            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 
@@ -1135,6 +1145,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
             destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.positionCartographic.height).toBeLessThan(controller.minimumZoomDistance);
@@ -1151,6 +1166,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
             destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.position.z).toBeLessThan(controller.minimumZoomDistance);
@@ -1164,6 +1184,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
 
         camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.positionCartographic.height).toBeGreaterThanOrEqualTo(controller.minimumZoomDistance);
@@ -1176,6 +1201,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 

@@ -204,7 +204,7 @@ import Property from './Property.js';
         },
         /**
          * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof PolylineGeometryUpdater.prototype
          *
          * @type {Property}
