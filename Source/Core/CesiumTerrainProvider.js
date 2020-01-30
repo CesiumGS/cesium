@@ -193,22 +193,22 @@ import TileProviderError from './TileProviderError.js';
             overallMaxZoom = Math.max(overallMaxZoom, maxZoom);
             // Keeps track of which of the availablity containing tiles have been loaded
 
-            if (!data.tilingScheme || data.tilingScheme === 'GlobalGeodetic') {
+            if (!data.projection || data.projection === 'EPSG:4326') {
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 1,
                   ellipsoid : that._ellipsoid
               });
-            } else if (data.tilingScheme === 'WebMercator') {
+            } else if (data.projection === 'EPSG:3857') {
               that._tilingScheme = new WebMercatorTilingScheme({
                   numberOfLevelZeroTilesX : 1,
                   numberOfLevelZeroTilesY : 1,
                   ellipsoid : that._ellipsoid
               });
             } else {
-                message = 'The layer.json tilingScheme "' + data.tilingScheme + '" is invalid or not supported.';
-                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
-                return;
+              message = 'The projection "' + data.projection + '" is invalid or not supported.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
+              return;
             }
 
             that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(
@@ -216,6 +216,13 @@ import TileProviderError from './TileProviderError.js';
                 that._heightmapWidth,
                 that._tilingScheme.getNumberOfXTilesAtLevel(0)
             );
+            if (!data.scheme || data.scheme === 'tms' || data.scheme === 'slippyMap') {
+              that._scheme = data.scheme;
+            } else {
+              message = 'The scheme "' + data.scheme + '" is invalid or not supported.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestLayerJson);
+              return;
+            }
 
             var availabilityTilesLoaded;
 
@@ -652,7 +659,8 @@ import TileProviderError from './TileProviderError.js';
             return undefined;
         }
 
-        if (provider._tilingScheme instanceof GeographicTilingScheme) {
+        // The TileMapService scheme counts from the bottom left
+        if (!provider._scheme || provider._scheme === 'tms') {
           var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
           y = (yTiles - y - 1);
         }
