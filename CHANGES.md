@@ -48,6 +48,7 @@ Change Log
 * Fixed a crash when calling `camera.lookAt` with the origin as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
 * Fixed a bug where `camera.viewBoundingSphere` was modifying the `offset` parameter [#8438](https://github.com/AnalyticalGraphicsInc/cesium/pull/8438)
 * Fixed a crash when creating a plane with both position and normal on the Z-axis. [#8576](https://github.com/AnalyticalGraphicsInc/cesium/pull/8576)
+
 ### 1.65.0 - 2020-01-06
 
 ##### Breaking Changes :mega:
