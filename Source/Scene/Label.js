@@ -17,6 +17,7 @@ import SDFSettings from './SDFSettings.js';
 import VerticalOrigin from './VerticalOrigin.js';
 
     var fontInfoCache = {};
+    var fontInfoCacheLength = 0;
     var fontInfoCacheMaxSize = 256;
 
     var textTypes = freezeObject({
@@ -63,8 +64,9 @@ import VerticalOrigin from './VerticalOrigin.js';
             };
 
             document.body.removeChild(div);
-            if (Object.keys(fontInfoCache).length < fontInfoCacheMaxSize) {
+            if (fontInfoCacheLength < fontInfoCacheMaxSize) {
                 fontInfoCache[label._font] = fontInfo;
+                fontInfoCacheLength++;
             }
         }
         label._fontFamily = fontInfo.family;
