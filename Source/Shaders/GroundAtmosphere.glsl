@@ -67,7 +67,7 @@ float scale(float fCos)
     return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
 }
 
-AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool useSunLighting)
+AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLighting, vec3 lightDirectionWC)
 {
 	vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
 
@@ -91,11 +91,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool useSunLighting
     fFar -= fNear;
     float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);
 
-    // The light angle based on the sun position would be:
-    //    dot(czm_sunDirectionWC, v3Pos) / length(v3Pos);
+    // The light angle based on the scene's light source would be:
+    //    dot(lightDirectionWC, v3Pos) / length(v3Pos);
     // When we want the atmosphere to be uniform over the globe so it is set to 1.0.
 
-    float fLightAngle = czm_branchFreeTernary(useSunLighting, dot(czm_sunDirectionWC, v3Pos) / length(v3Pos), 1.0);
+    float fLightAngle = czm_branchFreeTernary(dynamicLighting, dot(lightDirectionWC, v3Pos) / length(v3Pos), 1.0);
     float fCameraAngle = dot(-v3Ray, v3Pos) / length(v3Pos);
     float fCameraScale = scale(fCameraAngle);
     float fLightScale = scale(fLightAngle);

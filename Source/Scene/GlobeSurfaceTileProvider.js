@@ -84,6 +84,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
+        this.dynamicAtmosphereLighting = false;
+        this.dynamicAtmosphereLightingFromSun = false;
         this.showGroundAtmosphere = false;
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
@@ -101,6 +103,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.saturationShift = 0.0;
         this.brightnessShift = 0.0;
 
+        this.showSkirts = true;
         this.backFaceCulling = true;
 
         this._quadtree = undefined;
@@ -1494,6 +1497,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         showReflectiveOcean : undefined,
         showOceanWaves : undefined,
         enableLighting : undefined,
+        dynamicAtmosphereLighting : undefined,
+        dynamicAtmosphereLightingFromSun : undefined,
         showGroundAtmosphere : undefined,
         perFragmentGroundAtmosphere : undefined,
         hasVertexNormals : undefined,
@@ -1657,6 +1662,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         surfaceShaderSetOptions.showReflectiveOcean = showReflectiveOcean;
         surfaceShaderSetOptions.showOceanWaves = showOceanWaves;
         surfaceShaderSetOptions.enableLighting = tileProvider.enableLighting;
+        surfaceShaderSetOptions.dynamicAtmosphereLighting = tileProvider.dynamicAtmosphereLighting;
+        surfaceShaderSetOptions.dynamicAtmosphereLightingFromSun = tileProvider.dynamicAtmosphereLightingFromSun;
         surfaceShaderSetOptions.showGroundAtmosphere = showGroundAtmosphere;
         surfaceShaderSetOptions.perFragmentGroundAtmosphere = perFragmentGroundAtmosphere;
         surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
@@ -1914,12 +1921,18 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
+            var count = surfaceTile.renderedMesh.indices.length;
+            if (!tileProvider.showSkirts) {
+                count = surfaceTile.renderedMesh.indexCountWithoutSkirts;
+            }
+
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray || surfaceTile.fill.vertexArray;
+            command.count = count;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
 
@@ -1928,6 +1941,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 if (defined(surfaceTile.wireframeVertexArray)) {
                     command.vertexArray = surfaceTile.wireframeVertexArray;
                     command.primitiveType = PrimitiveType.LINES;
+                    command.count = count * 2;
                 }
             }
 
