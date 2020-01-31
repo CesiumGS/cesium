@@ -1527,11 +1527,18 @@ import TweenCollection from './TweenCollection.js';
         var ellipsoid = controller._ellipsoid;
         var scene = controller._scene;
         var camera = scene.camera;
-        var canvas = scene.canvas;
 
-        var windowPosition = zoomCVWindowPos;
-        windowPosition.x = canvas.clientWidth / 2;
-        windowPosition.y = canvas.clientHeight / 2;
+        var windowPosition;
+
+        if (scene.frameState.cameraUnderground) {
+            var windowPosition = startPosition;
+        } else {
+            var canvas = scene.canvas;
+            var windowPosition = zoomCVWindowPos;
+            windowPosition.x = canvas.clientWidth / 2;
+            windowPosition.y = canvas.clientHeight / 2;
+        }
+
         var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
         var intersection;
