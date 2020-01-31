@@ -534,7 +534,7 @@ import TweenCollection from './TweenCollection.js';
                 }
             } else if (mode === SceneMode.SCENE3D) {
                 var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
-                if (camera.positionCartographic.height < 3000.0 && Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) < 0.6) {
+                if (scene.frameState.cameraUnderground || camera.positionCartographic.height < 3000.0 && Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) < 0.6) {
                     zoomOnVector = true;
                 } else {
                     var canvas = scene.canvas;
@@ -662,6 +662,7 @@ import TweenCollection from './TweenCollection.js';
         if ((!sameStartPosition && zoomOnVector) || zoomingOnVector) {
             var ray;
             var zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset);
+
             if (mode !== SceneMode.COLUMBUS_VIEW && Cartesian2.equals(startPosition, object._zoomMouseStart) && defined(zoomMouseStart)) {
                 ray = camera.getPickRay(zoomMouseStart, scratchZoomPickRay);
             } else {
@@ -680,7 +681,9 @@ import TweenCollection from './TweenCollection.js';
             camera.zoomIn(distance);
         }
 
-        camera.setView(scratchZoomViewOptions);
+        if (!scene.frameState.cameraUnderground) {
+            camera.setView(scratchZoomViewOptions);
+        }
     }
 
     var translate2DStart = new Ray();
@@ -1335,7 +1338,7 @@ import TweenCollection from './TweenCollection.js';
 
         if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
             if (defined(mousePos)) {
-                if (Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
+                if (scene.frameState.cameraUnderground || Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)) {
                     Cartesian3.clone(mousePos, controller._strafeStartPosition);
 
                     controller._strafing = true;
