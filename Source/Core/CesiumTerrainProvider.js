@@ -660,9 +660,12 @@ import TileProviderError from './TileProviderError.js';
         }
 
         // The TileMapService scheme counts from the bottom left
+        var terrainY;
         if (!provider._scheme || provider._scheme === 'tms') {
           var yTiles = provider._tilingScheme.getNumberOfYTilesAtLevel(level);
-          y = (yTiles - y - 1);
+          terrainY = (yTiles - y - 1);
+        } else {
+          terrainY = y;
         }
 
         var extensionList = [];
@@ -678,7 +681,8 @@ import TileProviderError from './TileProviderError.js';
 
         var headers;
         var query;
-        var url = urlTemplates[(x + y + level) % urlTemplates.length];
+        var url = urlTemplates[(x + terrainY + level) % urlTemplates.length];
+
         var resource = layerToUse.resource;
         if (defined(resource._ionEndpoint) && !defined(resource._ionEndpoint.externalType)) {
             // ion uses query paremeters to request extensions
@@ -697,7 +701,7 @@ import TileProviderError from './TileProviderError.js';
                 version: layerToUse.version,
                 z: level,
                 x: x,
-                y: y
+                y: terrainY
             },
             queryParameters: query,
             headers: headers,
