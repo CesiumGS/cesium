@@ -809,13 +809,16 @@ import TweenCollection from './TweenCollection.js';
             return undefined;
         }
 
+        var cameraUnderground = scene.frameState.cameraUnderground;
+        var cullBackFaces = !cameraUnderground || globe.depthTestAgainstTerrain;
+
         var depthIntersection;
         if (scene.pickPositionSupported) {
             depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
         }
 
         var ray = camera.getPickRay(mousePosition, pickGlobeScratchRay);
-        var rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
+        var rayIntersection = globe.pickWorldCoordinates(ray, scene, cullBackFaces, scratchRayIntersection);
 
         var pickDistance = defined(depthIntersection) ? Cartesian3.distance(depthIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;
         var rayDistance = defined(rayIntersection) ? Cartesian3.distance(rayIntersection, camera.positionWC) : Number.POSITIVE_INFINITY;

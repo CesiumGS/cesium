@@ -959,7 +959,7 @@ import SceneMode from './SceneMode.js';
             mousePosition.y = scene.drawingBufferHeight / 2.0;
 
             var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-            rayIntersection = globe.pickWorldCoordinates(ray, scene, scratchRayIntersection);
+            rayIntersection = globe.pickWorldCoordinates(ray, scene, true, scratchRayIntersection);
 
             if (scene.pickPositionSupported) {
                 depthIntersection = scene.pickPositionWorldCoordinates(mousePosition, scratchDepthIntersection);
