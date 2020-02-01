@@ -666,7 +666,6 @@ import TweenCollection from './TweenCollection.js';
         if ((!sameStartPosition && zoomOnVector) || zoomingOnVector) {
             var ray;
             var zoomMouseStart = SceneTransforms.wgs84ToWindowCoordinates(scene, object._zoomWorldPosition, scratchZoomOffset);
-
             if (mode !== SceneMode.COLUMBUS_VIEW && Cartesian2.equals(startPosition, object._zoomMouseStart) && defined(zoomMouseStart)) {
                 ray = camera.getPickRay(zoomMouseStart, scratchZoomPickRay);
             } else {
@@ -1539,7 +1538,7 @@ import TweenCollection from './TweenCollection.js';
         backwardsRay.origin = Cartesian3.clone(ray.origin, backwardsRay.origin);
         backwardsRay.direction = Cartesian3.negate(ray.direction, backwardsRay.direction);
         var backwardsIntersection = IntersectionTests.rayEllipsoid(backwardsRay, controller._expandedEllipsoid);
-        if (defined(backwardsIntersection) && backwardsIntersection.start == 0.0) {
+        if (defined(backwardsIntersection) && backwardsIntersection.start === 0.0) {
             return backwardsIntersection.stop;
         }
         return undefined;
@@ -1556,14 +1555,14 @@ import TweenCollection from './TweenCollection.js';
         var ellipsoid = controller._ellipsoid;
         var scene = controller._scene;
         var camera = scene.camera;
+        var canvas = scene.canvas;
 
         var windowPosition;
 
         if (scene.frameState.cameraUnderground) {
-            var windowPosition = startPosition;
+            windowPosition = startPosition;
         } else {
-            var canvas = scene.canvas;
-            var windowPosition = zoomCVWindowPos;
+            windowPosition = zoomCVWindowPos;
             windowPosition.x = canvas.clientWidth / 2;
             windowPosition.y = canvas.clientHeight / 2;
         }
