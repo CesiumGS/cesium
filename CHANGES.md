@@ -28,7 +28,6 @@ Change Log
     * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun direction instead of the scene's light direction when `Globe.dynamicAtmosphereLighting` is enabled. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
     * Primitives and the globe are now shaded with the scene light's color.
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
-* Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
 * Update [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
 
@@ -48,6 +47,7 @@ Change Log
 * Fixed a crash when calling `camera.lookAt` with the origin as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
 * Fixed a bug where `camera.viewBoundingSphere` was modifying the `offset` parameter [#8438](https://github.com/AnalyticalGraphicsInc/cesium/pull/8438)
 * Fixed a crash when creating a plane with both position and normal on the Z-axis. [#8576](https://github.com/AnalyticalGraphicsInc/cesium/pull/8576)
+* Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 
 ### 1.65.0 - 2020-01-06
 
