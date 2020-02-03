@@ -27,14 +27,14 @@ Change Log
     * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog, such as day/night transitions. It is true by default but may be set to false if the atmosphere should stay unchanged regardless of the scene's light direction.
     * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun direction instead of the scene's light direction when `Globe.dynamicAtmosphereLighting` is enabled. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
     * Primitives and the globe are now shaded with the scene light's color.
+* Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
-* Update [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
+* Updated [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
 * Added a font cache to improve label performance. [#8537](https://github.com/AnalyticalGraphicsInc/cesium/pull/8537)
 
 ##### Fixes :wrench:
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
-* Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
 * Fixed a bug where rapidly updating a `PolylineCollection` could result in an `instanceIndex` is out of range error. [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
 * Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
 * Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js`. [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
