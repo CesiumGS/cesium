@@ -99,7 +99,7 @@ import SceneMode from './SceneMode.js';
 
         var vertexLogDepth = 0;
         var vertexLogDepthDefine = '';
-        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
+        if (/*true ||*/ !defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
             vertexLogDepth = 1;
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }

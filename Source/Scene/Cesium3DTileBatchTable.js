@@ -1213,7 +1213,7 @@ import StencilOperation from './StencilOperation.js';
         var tile = this._content._tile;
         var finalResolution = tile._finalResolution;
         var tileset = tile.tileset;
-        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = false; //tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
@@ -1376,7 +1376,7 @@ import StencilOperation from './StencilOperation.js';
         derivedCommand.receiveShadows = false;
         // Disable the depth writes in the fragment shader. The back face commands were causing the higher resolution
         // tiles to disappear.
-        derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
+        // derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
         return derivedCommand;
     }
 

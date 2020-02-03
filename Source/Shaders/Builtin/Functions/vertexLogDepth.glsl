@@ -5,23 +5,24 @@ varying vec3 v_logPositionEC;
 #endif
 #endif
 
+varying float v_debug;
+
 void czm_updatePositionDepth() {
-#if defined(LOG_DEPTH) && !defined(DISABLE_GL_POSITION_LOG_DEPTH)
-    vec3 logPositionEC = (czm_inverseProjection * gl_Position).xyz;
+#if defined(LOG_DEPTH)
 
 #ifdef SHADOW_MAP
+    vec3 logPositionEC = (czm_inverseProjection * gl_Position).xyz;
     v_logPositionEC = logPositionEC;
 #endif
 
-#ifdef ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT
-    if (length(logPositionEC) < 2.0e6)
-    {
-        return;
-    }
-#endif
-
-    gl_Position.z = log2(max(1e-6, 1.0 + gl_Position.w)) * czm_log2FarDistance - 1.0;
-    gl_Position.z *= gl_Position.w;
+    // With the very high far/near ratios used with the logarithmic depth
+    // buffer, floating point rounding errors can cause linear depth values
+    // to end up on the wrong side of the far plane, even for vertices that
+    // are really nowhere near it. Since we always write a correct logarithmic
+    // depth value in the fragment shader anyway, we just need to make sure
+    // such errors don't cause the primitive to be clipped entirely before
+    // we even get to the fragment shader.
+    gl_Position.z = clamp(gl_Position.z / gl_Position.w, -1.0, 1.0) * gl_Position.w;
 #endif
 }
 

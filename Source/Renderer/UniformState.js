@@ -1112,7 +1112,7 @@ import SunLight from '../Scene/SunLight.js';
 
         this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
         this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near);
+        this._log2NearDistance = CesiumMath.log2(frustum.near + 1.0);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
