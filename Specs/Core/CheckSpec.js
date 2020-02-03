@@ -3,6 +3,33 @@ import { Check } from '../../Source/Cesium.js';
 describe('Core/Check', function() {
 
     describe('type checks', function () {
+        it('Check.typeOf.array does not throw when passed an array', function () {
+            expect(function () {
+                Check.typeOf.array('array', []);
+            }).not.toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.array('array', ['foo', 'bar']);
+            }).not.toThrowDeveloperError();
+        });
+
+        it('Check.typeOf.array throws when passed a non-array', function () {
+            expect(function () {
+                Check.typeOf.array('mockName', {});
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.array('mockName', false);
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.array('mockName', 1);
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.array('mockName', 'snth');
+            }).toThrowDeveloperError();
+            expect(function () {
+                Check.typeOf.array('mockName', function () {return true;});
+            }).toThrowDeveloperError();
+        });
+
         it('Check.typeOf.bool does not throw when passed a boolean', function () {
             expect(function () {
                 Check.typeOf.bool('bool', true);

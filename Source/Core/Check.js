@@ -35,6 +35,19 @@ import DeveloperError from './DeveloperError.js';
     };
 
     /**
+     * Throws if test is not an array
+     *
+     * @param {String} name The name of the variable being tested
+     * @param {*} test The value to test
+     * @exception {DeveloperError} test must be an array
+     */
+    Check.typeOf.array = function (name, test) {
+        if (!Array.isArray(test)) {
+            throw new DeveloperError(getFailedTypeErrorMessage(typeof test, 'array', name));
+        }
+    };
+
+    /**
      * Throws if test is not typeof 'function'
      *
      * @param {String} name The name of the variable being tested
