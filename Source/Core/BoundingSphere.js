@@ -1101,7 +1101,14 @@ import Rectangle from './Rectangle.js';
         var center = sphere.center;
         var radius = sphere.radius;
 
-        var normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormalScratch);
+        var normal;
+        if (Cartesian3.equals(center, Cartesian3.ZERO)) {
+            // Bounding sphere is at the center. The geodetic surface normal is not
+            // defined here so pick the x-axis as a fallback.
+            normal = Cartesian3.clone(Cartesian3.UNIT_X, projectTo2DNormalScratch);
+        } else {
+            normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormalScratch);
+        }
         var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal, projectTo2DEastScratch);
         Cartesian3.normalize(east, east);
         var north = Cartesian3.cross(normal, east, projectTo2DNorthScratch);

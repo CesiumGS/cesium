@@ -251,6 +251,7 @@ import VertexArray from './VertexArray.js';
         this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
 
         this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
+        this._floatBlend = !!getExtension(gl, ['EXT_float_blend']);
         this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
@@ -497,6 +498,19 @@ import VertexArray from './VertexArray.js';
         standardDerivatives : {
             get : function() {
                 return this._standardDerivatives || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_float_blend extension is supported. This
+         * extension enables blending with 32-bit float values.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/}
+         */
+        floatBlend : {
+            get : function() {
+                return this._floatBlend;
             }
         },
 

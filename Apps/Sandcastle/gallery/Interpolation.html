@@ -31,7 +31,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
 });
 
-//Enable lighting based on sun/moon positions
+//Enable lighting based on the sun position
 viewer.scene.globe.enableLighting = true;
 
 //Enable depth testing so things behind the terrain disappear.

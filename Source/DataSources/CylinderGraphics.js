@@ -26,7 +26,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
@@ -172,7 +172,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the cylinder
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED
