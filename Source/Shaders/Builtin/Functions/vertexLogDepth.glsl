@@ -7,11 +7,11 @@ varying vec3 v_logPositionEC;
 
 varying float v_debug;
 
-void czm_updatePositionDepth() {
+vec4 czm_updatePositionDepth(vec4 coords) {
 #if defined(LOG_DEPTH)
 
 #ifdef SHADOW_MAP
-    vec3 logPositionEC = (czm_inverseProjection * gl_Position).xyz;
+    vec3 logPositionEC = (czm_inverseProjection * coords).xyz;
     v_logPositionEC = logPositionEC;
 #endif
 
@@ -22,8 +22,10 @@ void czm_updatePositionDepth() {
     // depth value in the fragment shader anyway, we just need to make sure
     // such errors don't cause the primitive to be clipped entirely before
     // we even get to the fragment shader.
-    gl_Position.z = clamp(gl_Position.z / gl_Position.w, -1.0, 1.0) * gl_Position.w;
+    coords.z = clamp(coords.z / coords.w, -1.0, 1.0) * coords.w;
 #endif
+
+    return coords;
 }
 
 /**
@@ -36,7 +38,7 @@ void czm_vertexLogDepth()
 {
 #ifdef LOG_DEPTH
     v_logZ = 1.0 + gl_Position.w;
-    czm_updatePositionDepth();
+    gl_Position = czm_updatePositionDepth(gl_Position);
 #endif
 }
 
@@ -58,6 +60,6 @@ void czm_vertexLogDepth(vec4 clipCoords)
 {
 #ifdef LOG_DEPTH
     v_logZ = 1.0 + clipCoords.w;
-    czm_updatePositionDepth();
+    czm_updatePositionDepth(clipCoords);
 #endif
 }

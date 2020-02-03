@@ -199,7 +199,8 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
-                '    gl_FragData[1] = czm_packDepth(gl_FragCoord.z); \n' +
+                '    czm_writeLogDepth();\n' +
+                '    gl_FragData[1] = czm_packDepth(gl_FragDepthEXT); \n' +
                 '}');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
