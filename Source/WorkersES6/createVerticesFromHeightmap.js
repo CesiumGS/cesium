@@ -26,14 +26,6 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             parameters.height = result.height;
         }
 
-        var arrayWidth = parameters.width;
-        var arrayHeight = parameters.height;
-
-        if (parameters.skirtHeight > 0.0) {
-            arrayWidth += 2;
-            arrayHeight += 2;
-        }
-
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
@@ -46,8 +38,8 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             numberOfAttributes : statistics.encoding.getStride(),
             minimumHeight : statistics.minimumHeight,
             maximumHeight : statistics.maximumHeight,
-            gridWidth : arrayWidth,
-            gridHeight : arrayHeight,
+            gridWidth : parameters.width,
+            gridHeight : parameters.height,
             boundingSphere3D : statistics.boundingSphere3D,
             orientedBoundingBox : statistics.orientedBoundingBox,
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,

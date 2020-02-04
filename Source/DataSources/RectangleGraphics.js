@@ -29,7 +29,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.outline=false] A boolean Property specifying whether the rectangle is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the rectangle casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the rectangle casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this rectangle will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this rectangle will classify terrain, 3D Tiles, or both when on the ground.
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry.  Only has an effect if the rectangle is constant and neither height or extrudedHeight are specified.
@@ -206,7 +206,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the rectangle
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof RectangleGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED

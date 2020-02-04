@@ -595,6 +595,8 @@ import WallGraphics from './WallGraphics.js';
 
         var resource;
         if (defined(uriResolver)) {
+            // To resolve issues with KML sources defined in Windows style paths.
+            href = href.replace(/\\/g, '/');
             var blob = uriResolver[href];
             if (defined(blob)) {
                 resource = new Resource({

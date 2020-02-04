@@ -32,7 +32,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
@@ -227,7 +227,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the ellipse
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED

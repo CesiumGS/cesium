@@ -1,7 +1,9 @@
+import Cartesian3 from '../../Core/Cartesian3.js';
 import defined from '../../Core/defined.js';
 import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
+import Ray from '../../Core/Ray.js';
 import Rectangle from '../../Core/Rectangle.js';
 import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
 import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
@@ -47,6 +49,9 @@ import createCommand from '../createCommand.js';
         bounded = Math.max(bounded, lower);
         return bounded;
     }
+
+    var scratchPickRay = new Ray();
+    var scratchPickCartesian = new Cartesian3();
 
     /**
      * The view model for {@link CesiumInspector}.
@@ -502,10 +507,9 @@ import createCommand from '../createCommand.js';
         function selectTile(e) {
             var selectedTile;
             var ellipsoid = globe.ellipsoid;
-            var cartesian = that._scene.camera.pickEllipsoid({
-                x : e.position.x,
-                y : e.position.y
-            }, ellipsoid);
+
+            var ray = that._scene.camera.getPickRay(e.position, scratchPickRay);
+            var cartesian = globe.pick(ray, that._scene, scratchPickCartesian);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);

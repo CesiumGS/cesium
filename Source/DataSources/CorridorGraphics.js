@@ -29,7 +29,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.outline=false] A boolean Property specifying whether the corridor is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex] A Property specifying the zIndex of the corridor, used for ordering.  Only has an effect if height and extrudedHeight are undefined, and if the corridor is static.
@@ -205,7 +205,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the corridor
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED

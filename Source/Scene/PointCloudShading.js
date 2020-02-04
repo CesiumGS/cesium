@@ -14,7 +14,7 @@ import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
      * @param {Number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
      * @param {Number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
      * @param {Boolean} [options.backFaceCulling=false] Determines whether back-facing points are hidden. This option works only if data has normals included.
-     * @param {Boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded based on the sun direction.
+     * @param {Boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded by the scene's light source.
      *
      * @alias PointCloudShading
      * @constructor
@@ -84,7 +84,7 @@ import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
         this.backFaceCulling = defaultValue(pointCloudShading.backFaceCulling, false);
 
         /**
-         * Determines whether a point cloud that contains normals is shaded based on the sun direction.
+         * Determines whether a point cloud that contains normals is shaded by the scene's light source.
          *
          * @type {Boolean}
          * @default true
