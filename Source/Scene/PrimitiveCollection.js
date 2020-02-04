@@ -142,7 +142,7 @@ import DeveloperError from '../Core/DeveloperError.js';
      *
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-     * scene.primitives.remove(p);  // Returns true
+     * scene.primitives.remove(billboards);  // Returns true
      *
      * @see PrimitiveCollection#destroyPrimitives
      */

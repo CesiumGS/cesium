@@ -197,7 +197,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
@@ -211,7 +211,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -424,7 +424,7 @@ import ShadowMode from './ShadowMode.js';
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
-         * Determines whether the model casts or receives shadows from each light source.
+         * Determines whether the model casts or receives shadows from light sources.
          *
          * @type {ShadowMode}
          *
@@ -1068,7 +1068,7 @@ import ShadowMode from './ShadowMode.js';
         },
 
         /**
-         * The color and intensity of the sunlight used to shade the model.
+         * The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
@@ -1263,7 +1263,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from light sources.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.

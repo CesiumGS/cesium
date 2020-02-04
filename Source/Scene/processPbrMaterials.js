@@ -602,7 +602,8 @@ import ModelUtility from './ModelUtility.js';
                 fragmentShader += '    vec3 n = ng;\n';
             }
             if (material.doubleSided) {
-                fragmentShader += '    if (!gl_FrontFacing)\n';
+                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/AnalyticalGraphicsInc/cesium/pull/8494.
+                fragmentShader += '    if (gl_FrontFacing == false)\n';
                 fragmentShader += '    {\n';
                 fragmentShader += '        n = -n;\n';
                 fragmentShader += '    }\n';
@@ -687,13 +688,12 @@ import ModelUtility from './ModelUtility.js';
             fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
             // Generate fragment shader's lighting block
-            // The Sun is brighter than your average light source, and has a yellowish tint balanced by the Earth's ambient blue.
             fragmentShader += '#ifndef USE_CUSTOM_LIGHT_COLOR \n';
-            fragmentShader += '    vec3 lightColor = vec3(1.5, 1.4, 1.2);\n';
+            fragmentShader += '    vec3 lightColorHdr = czm_lightColorHdr;\n';
             fragmentShader += '#else \n';
-            fragmentShader += '    vec3 lightColor = gltf_lightColor;\n';
+            fragmentShader += '    vec3 lightColorHdr = gltf_lightColor;\n';
             fragmentShader += '#endif \n';
-            fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentShader += '    vec3 l = normalize(czm_lightDirectionEC);\n';
             fragmentShader += '    vec3 h = normalize(v + l);\n';
             fragmentShader += '    float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
             fragmentShader += '    float NdotV = abs(dot(n, v)) + 0.001;\n';
@@ -723,7 +723,7 @@ import ModelUtility from './ModelUtility.js';
 
             fragmentShader += '    vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(diffuseColor);\n';
             fragmentShader += '    vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
-            fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
+            fragmentShader += '    vec3 color = NdotL * lightColorHdr * (diffuseContribution + specularContribution);\n';
 
             // Use the procedural IBL if there are no environment maps
             fragmentShader += '#if defined(USE_IBL_LIGHTING) && !defined(DIFFUSE_IBL) && !defined(SPECULAR_IBL) \n';
@@ -782,6 +782,10 @@ import ModelUtility from './ModelUtility.js';
 
             fragmentShader += '    vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor * gltf_iblFactor.x) + (specularIrradiance * SRGBtoLINEAR3(specularColor * brdfLut.x + brdfLut.y) * gltf_iblFactor.y);\n';
+
+            fragmentShader += '    float maximumComponent = max(max(lightColorHdr.x, lightColorHdr.y), lightColorHdr.z);\n';
+            fragmentShader += '    vec3 lightColor = lightColorHdr / max(maximumComponent, 1.0);\n';
+            fragmentShader += '    IBLColor *= lightColor;\n';
 
             fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
             fragmentShader += '    color += IBLColor * luminance;\n';

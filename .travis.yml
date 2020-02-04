@@ -1,14 +1,9 @@
 language: node_js
 node_js:
-  - "8"
-sudo: false
+  - "10"
 addons:
   chrome: stable
   firefox: latest
-services:
-  - xvfb
-before_script:
-  - export DISPLAY=:99.0
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'

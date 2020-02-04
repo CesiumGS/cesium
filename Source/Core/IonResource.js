@@ -175,21 +175,10 @@ import RuntimeError from './RuntimeError.js';
             return Resource.prototype._makeRequest.call(this, options);
         }
 
-        var acceptToken = '*/*;access_token=' + this._ionEndpoint.accessToken;
-        var existingAccept = acceptToken;
-
-        var oldHeaders = this.headers;
-        if (defined(oldHeaders) && defined(oldHeaders.Accept)) {
-            existingAccept = oldHeaders.Accept + ',' + acceptToken;
-        }
-
         if (!defined(options.headers)) {
-            options.headers = { Accept: existingAccept };
-        } else if (!defined(options.headers.Accept)) {
-            options.headers.Accept = existingAccept;
-        } else {
-            options.headers.Accept = options.headers.Accept + ',' + acceptToken;
+            options.headers = {};
         }
+        options.headers.Authorization = 'Bearer ' + this._ionEndpoint.accessToken;
 
         return Resource.prototype._makeRequest.call(this, options);
     };

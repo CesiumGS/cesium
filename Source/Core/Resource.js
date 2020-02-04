@@ -344,7 +344,7 @@ import TrustedServers from './TrustedServers.js';
             //  be modified outside of a class that holds it (eg. an imagery or terrain provider). Since the Request objects
             //  are managed outside of the providers, by the tile loading code, we want to keep the request property the same so if it is changed
             //  in the underlying tiling code the requests for this resource will use it.
-            return resource.getDerivedResource({
+            return  resource.getDerivedResource({
                 request: resource.request
             });
         }
@@ -714,10 +714,10 @@ import TrustedServers from './TrustedServers.js';
 
         var that = this;
         return when(retryCallback(this, error)).then(function(result) {
-            ++that._retryCount;
+                ++that._retryCount;
 
-            return result;
-        });
+                return result;
+            });
     };
 
     /**
@@ -1013,27 +1013,27 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return promise.otherwise(function(e) {
-            // Don't retry cancelled or otherwise aborted requests
-            if (request.state !== RequestState.FAILED) {
-                return when.reject(e);
-            }
-
-            return resource.retryOnError(e).then(function(retry) {
-                if (retry) {
-                    // Reset request so it can try again
-                    request.state = RequestState.UNISSUED;
-                    request.deferred = undefined;
-
-                    return fetchImage({
-                        resource: resource,
-                        flipY: flipY,
-                        preferImageBitmap: preferImageBitmap
-                    });
+                // Don't retry cancelled or otherwise aborted requests
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
                 }
 
-                return when.reject(e);
+            return resource.retryOnError(e).then(function(retry) {
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
+
+                            return fetchImage({
+                                resource: resource,
+                                flipY: flipY,
+                                preferImageBitmap: preferImageBitmap
+                            });
+                        }
+
+                        return when.reject(e);
+                    });
             });
-        });
     }
 
     /**
@@ -1148,11 +1148,11 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return promise.then(function(value) {
-            if (!defined(value)) {
-                return;
-            }
-            return JSON.parse(value);
-        });
+                if (!defined(value)) {
+                    return;
+                }
+                return JSON.parse(value);
+            });
     };
 
     /**
@@ -1293,26 +1293,26 @@ import TrustedServers from './TrustedServers.js';
         }
 
         return promise.otherwise(function(e) {
-            if (request.state !== RequestState.FAILED) {
-                return when.reject(e);
-            }
+                if (request.state !== RequestState.FAILED) {
+                    return when.reject(e);
+                }
 
             return resource.retryOnError(e).then(function(retry) {
-                if (retry) {
-                    // Reset request so it can try again
-                    request.state = RequestState.UNISSUED;
-                    request.deferred = undefined;
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
 
                     return fetchJsonp(
                         resource,
                         callbackParameterName,
                         functionName
                     );
-                }
+                        }
 
-                return when.reject(e);
+                        return when.reject(e);
+                    });
             });
-        });
     }
 
     /**
@@ -1462,16 +1462,16 @@ import TrustedServers from './TrustedServers.js';
                 }
 
                 return resource.retryOnError(e).then(function(retry) {
-                    if (retry) {
-                        // Reset request so it can try again
-                        request.state = RequestState.UNISSUED;
-                        request.deferred = undefined;
+                        if (retry) {
+                            // Reset request so it can try again
+                            request.state = RequestState.UNISSUED;
+                            request.deferred = undefined;
 
-                        return resource.fetch(options);
-                    }
+                            return resource.fetch(options);
+                        }
 
-                    return when.reject(e);
-                });
+                        return when.reject(e);
+                    });
             });
     };
 
@@ -2018,13 +2018,7 @@ import TrustedServers from './TrustedServers.js';
         image.src = url;
     }
 
-    Resource._Implementations.createImage = function(
-        request,
-        crossOrigin,
-        deferred,
-        flipY,
-        preferImageBitmap
-    ) {
+    Resource._Implementations.createImage = function(request, crossOrigin, deferred, flipY, preferImageBitmap) {
         var url = request.url;
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
@@ -2039,8 +2033,8 @@ import TrustedServers from './TrustedServers.js';
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
-                var responseType = "blob";
-                var method = "GET";
+                var responseType = 'blob';
+                var method = 'GET';
                 var xhrDeferred = when.defer();
                 var xhr = Resource._Implementations.loadWithXhr(
                     url,
@@ -2092,12 +2086,12 @@ import TrustedServers from './TrustedServers.js';
 
     function decodeResponse(loadWithHttpResponse, responseType) {
         switch (responseType) {
-            case 'text':
-                return loadWithHttpResponse.toString('utf8');
-            case 'json':
-                return JSON.parse(loadWithHttpResponse.toString('utf8'));
-            default:
-                return new Uint8Array(loadWithHttpResponse).buffer;
+          case 'text':
+              return loadWithHttpResponse.toString('utf8');
+          case 'json':
+              return JSON.parse(loadWithHttpResponse.toString('utf8'));
+          default:
+              return new Uint8Array(loadWithHttpResponse).buffer;
         }
     }
 

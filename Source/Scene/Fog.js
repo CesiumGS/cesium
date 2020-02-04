@@ -40,7 +40,7 @@ import SceneMode from './SceneMode.js';
          * The minimum brightness of the fog color from lighting. A value of 0.0 can cause the fog to be completely black. A value of 1.0 will not affect
          * the brightness at all.
          * @type {Number}
-         * @default 0.1
+         * @default 0.03
          */
         this.minimumBrightness = 0.03;
     }

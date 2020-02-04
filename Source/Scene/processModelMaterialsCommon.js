@@ -517,9 +517,19 @@ import ModelUtility from './ModelUtility.js';
         }
 
         if (!hasNonAmbientLights && (lightingModel !== 'CONSTANT')) {
-            fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
+            fragmentShader += '#ifdef USE_CUSTOM_LIGHT_COLOR \n';
+            fragmentShader += 'uniform vec3 gltf_lightColor; \n';
+            fragmentShader += '#endif \n';
+
+            fragmentLightingBlock += '#ifndef USE_CUSTOM_LIGHT_COLOR \n';
+            fragmentLightingBlock += '    vec3 lightColor = czm_lightColor;\n';
+            fragmentLightingBlock += '#else \n';
+            fragmentLightingBlock += '    vec3 lightColor = gltf_lightColor;\n';
+            fragmentLightingBlock += '#endif \n';
+
+            fragmentLightingBlock += '  vec3 l = normalize(czm_lightDirectionEC);\n';
             var minimumLighting = '0.2'; // Use strings instead of values as 0.0 -> 0 when stringified
-            fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
+            fragmentLightingBlock += '  diffuseLight += lightColor * max(dot(normal,l), ' + minimumLighting + ');\n';
 
             if (hasSpecular) {
                 if (lightingModel === 'BLINN') {
@@ -530,7 +540,7 @@ import ModelUtility from './ModelUtility.js';
                     fragmentLightingBlock += '  float specularIntensity = max(0., pow(max(dot(reflectDir, viewDir), 0.), u_shininess));\n';
                 }
 
-                fragmentLightingBlock += '  specularLight += vec3(1.0, 1.0, 1.0) * specularIntensity;\n';
+                fragmentLightingBlock += '  specularLight += lightColor * specularIntensity;\n';
             }
         }
 
@@ -543,6 +553,7 @@ import ModelUtility from './ModelUtility.js';
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
             if (khrMaterialsCommon.doubleSided) {
+                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/AnalyticalGraphicsInc/cesium/pull/8494.
                 fragmentShader += '  if (gl_FrontFacing == false)\n';
                 fragmentShader += '  {\n';
                 fragmentShader += '    normal = -normal;\n';

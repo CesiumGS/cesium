@@ -1,5 +1,6 @@
 import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
@@ -167,15 +168,16 @@ describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.credit).toBeInstanceOf(Object);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -285,13 +287,14 @@ describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
