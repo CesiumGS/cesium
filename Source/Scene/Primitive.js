@@ -1021,7 +1021,11 @@ import ShadowMode from './ShadowMode.js';
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
             '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
-            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '    #if defined(LOG_DEPTH)\n' +
+            '        czm_writeLogDepth();\n' +
+            '    #else\n' +
+            '        gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '    #endif\n' +
             '#endif\n' +
             '}\n';
         modifiedFS =

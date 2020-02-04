@@ -19,13 +19,19 @@ varying float v_logZ;
 void czm_writeLogDepth(float logZ)
 {
 #if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)
-    float halfLogFarDistance = czm_log2FarDistance * 0.5;
+    if (logZ == 0.0) {
+        // Put the fragment on the near plane
+        gl_FragDepthEXT = 0.0;
+        return;
+    }
+
     float depth = log2(logZ);
     if (depth < czm_log2NearDistance || depth > czm_log2FarPlusOne) {
         // Fragment is not between the near and far planes.
         discard;
     }
-    gl_FragDepthEXT = depth * halfLogFarDistance;
+
+    gl_FragDepthEXT = depth * czm_log2FarDistance * 0.5;
 #endif
 }
 
