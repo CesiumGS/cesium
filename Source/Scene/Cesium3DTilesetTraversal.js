@@ -164,11 +164,9 @@ import Cesium3DTileRefine from './Cesium3DTileRefine.js';
             return;
         }
 
-        // If this tile is not loaded attempt to select its ancestor instead
-        var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
-        if (defined(loadedTile)) {
+        if (tile.contentAvailable) {
             // Tiles will actually be selected in traverseAndSelect
-            loadedTile._shouldSelect = true;
+            selectTile(tileset, tile, frameState);
         } else {
             // If no ancestors are ready traverse down and select tiles to minimize empty regions.
             // This happens often for immediatelyLoadDesiredLevelOfDetail where parent tiles are not necessarily loaded before zooming out.
