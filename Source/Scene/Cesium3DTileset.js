@@ -1959,7 +1959,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         var i;
         var tile;
 
-        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && selectedLength > 0;
+        var bivariateVisibilityTest = false;//tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && selectedLength > 0;
 
         tileset._backfaceCommands.length = 0;
 

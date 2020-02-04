@@ -1213,7 +1213,7 @@ import StencilOperation from './StencilOperation.js';
         var tile = this._content._tile;
         var finalResolution = tile._finalResolution;
         var tileset = tile.tileset;
-        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = false;//tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
