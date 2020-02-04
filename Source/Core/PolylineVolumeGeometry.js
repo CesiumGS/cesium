@@ -21,6 +21,7 @@ import PolylineVolumeGeometryLibrary from './PolylineVolumeGeometryLibrary.js';
 import PrimitiveType from './PrimitiveType.js';
 import VertexFormat from './VertexFormat.js';
 import WindingOrder from './WindingOrder.js';
+import Check from './Check.js';
 
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();
@@ -242,9 +243,7 @@ import WindingOrder from './WindingOrder.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -300,9 +299,7 @@ import WindingOrder from './WindingOrder.js';
      */
     PolylineVolumeGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

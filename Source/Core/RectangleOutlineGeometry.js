@@ -17,6 +17,7 @@ import PolygonPipeline from './PolygonPipeline.js';
 import PrimitiveType from './PrimitiveType.js';
 import Rectangle from './Rectangle.js';
 import RectangleGeometryLibrary from './RectangleGeometryLibrary.js';
+import Check from './Check.js';
 
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
@@ -273,9 +274,7 @@ import RectangleGeometryLibrary from './RectangleGeometryLibrary.js';
             throw new DeveloperError('value is required');
         }
 
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -317,9 +316,7 @@ import RectangleGeometryLibrary from './RectangleGeometryLibrary.js';
      */
     RectangleOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

@@ -18,6 +18,7 @@ import PolygonPipeline from './PolygonPipeline.js';
 import PolylineVolumeGeometryLibrary from './PolylineVolumeGeometryLibrary.js';
 import PrimitiveType from './PrimitiveType.js';
 import WindingOrder from './WindingOrder.js';
+import Check from './Check.js';
 
     function computeAttributes(positions, shape) {
         var attributes = new GeometryAttributes();
@@ -149,9 +150,7 @@ import WindingOrder from './WindingOrder.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -203,9 +202,7 @@ import WindingOrder from './WindingOrder.js';
      */
     PolylineVolumeOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

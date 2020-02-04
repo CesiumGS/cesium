@@ -2,6 +2,7 @@ import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
+import Check from './Check.js';
 
     /**
      * Determines visibility based on the distance to the camera.
@@ -75,9 +76,7 @@ import DeveloperError from './DeveloperError.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -98,9 +97,7 @@ import DeveloperError from './DeveloperError.js';
      */
     DistanceDisplayCondition.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

@@ -2,6 +2,7 @@ import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
 import freezeObject from './freezeObject.js';
+import Check from './Check.js';
 
     /**
      * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided
@@ -227,9 +228,7 @@ import freezeObject from './freezeObject.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -254,9 +253,7 @@ import freezeObject from './freezeObject.js';
      */
     VertexFormat.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

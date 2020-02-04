@@ -12,6 +12,7 @@ import IndexDatatype from './IndexDatatype.js';
 import CesiumMath from './Math.js';
 import PrimitiveType from './PrimitiveType.js';
 import WallGeometryLibrary from './WallGeometryLibrary.js';
+import Check from './Check.js';
 
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
@@ -110,9 +111,7 @@ import WallGeometryLibrary from './WallGeometryLibrary.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -174,9 +173,7 @@ import WallGeometryLibrary from './WallGeometryLibrary.js';
      */
     WallOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

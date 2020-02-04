@@ -14,6 +14,7 @@ import IndexDatatype from './IndexDatatype.js';
 import CesiumMath from './Math.js';
 import PolylinePipeline from './PolylinePipeline.js';
 import PrimitiveType from './PrimitiveType.js';
+import Check from './Check.js';
 
     function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
         var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
@@ -134,9 +135,7 @@ import PrimitiveType from './PrimitiveType.js';
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -179,9 +178,7 @@ import PrimitiveType from './PrimitiveType.js';
      */
     SimplePolylineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.array('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
