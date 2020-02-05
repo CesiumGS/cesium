@@ -86,7 +86,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -642,7 +642,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
 
         /**
-         * The light color when shading models. When <code>undefined</code> the scene's light color are used instead.
+         * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
