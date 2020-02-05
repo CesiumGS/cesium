@@ -340,7 +340,7 @@ import getElement from '../getElement.js';
                     var title = 'An error occurred while rendering.  Rendering has stopped.';
                     that.showErrorPanel(title, undefined, error);
                 }
-            }
+            };
             scene.renderError.addEventListener(this._onRenderError);
         } catch (error) {
             if (showRenderLoopErrors) {
@@ -673,7 +673,7 @@ import getElement from '../getElement.js';
      */
     CesiumWidget.prototype.destroy = function() {
         if (this._scene) {
-            this._scene.renderError.removeEventListener(this._onRenderError);   
+            this._scene.renderError.removeEventListener(this._onRenderError);
         }
         this._scene = this._scene && this._scene.destroy();
         this._container.removeChild(this._element);
