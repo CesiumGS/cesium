@@ -39,7 +39,10 @@ import RequestState from './RequestState.js';
     var requestCompletedEvent = new Event();
 
     /**
-     * Tracks the number of active requests and prioritizes incoming requests.
+     * The RequestScheduler is used to track and constrain the number of active requests in order to prioritize incoming requests. The ability
+     * to retain control over the number of requests in Cesium is important because due to events such as changes in the camera position,
+     * a lot of new requests may be generated and a lot of in-flight requests may become redundant. RequestScheduler manually constrains the
+     * number of requests so that newer requests need to wait a shorter queue and don't have to compete for bandwidth with requests that have expired.
      *
      * @exports RequestScheduler
      *
@@ -65,6 +68,12 @@ import RequestState from './RequestState.js';
 
     /**
      * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
+     *
+     * @example
+     * RequestScheduler.requestsByServer = {
+     *   'api.cesium.com:443': 18,
+     *   'assets.cesium.com:443': 18
+     * };
      */
     RequestScheduler.requestsByServer = {
         'api.cesium.com:443': 18,
