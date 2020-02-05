@@ -140,6 +140,7 @@ import TerrainState from './TerrainState.js';
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
+    var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
         var mesh = this.renderedMesh;
