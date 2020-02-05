@@ -361,7 +361,7 @@ if (lengthSq < disableDepthTestDistance) {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
 #ifdef LOG_DEPTH
-            v_logZ = 0.0;
+            v_depthFromNearPlusOne = 1.0;
 #endif
         }
     }

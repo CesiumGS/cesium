@@ -1213,7 +1213,7 @@ import StencilOperation from './StencilOperation.js';
         var tile = this._content._tile;
         var finalResolution = tile._finalResolution;
         var tileset = tile.tileset;
-        var bivariateVisibilityTest = false; //tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = tileset._skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
@@ -1337,6 +1337,7 @@ import StencilOperation from './StencilOperation.js';
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
             fs.defines.push('DISABLE_LOG_DEPTH_FRAGMENT_WRITE');
 
+            fs.sources.unshift('#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n');
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
@@ -1376,7 +1377,7 @@ import StencilOperation from './StencilOperation.js';
         derivedCommand.receiveShadows = false;
         // Disable the depth writes in the fragment shader. The back face commands were causing the higher resolution
         // tiles to disappear.
-        // derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
+        derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
         return derivedCommand;
     }
 

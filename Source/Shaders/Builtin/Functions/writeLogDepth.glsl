@@ -1,5 +1,5 @@
 #ifdef LOG_DEPTH
-varying float v_logZ;
+varying float v_depthFromNearPlusOne;
 #endif
 
 /**
@@ -18,20 +18,29 @@ varying float v_logZ;
  */
 void czm_writeLogDepth(float logZ)
 {
-#if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)
-    if (logZ == 0.0) {
-        // Put the fragment on the near plane
-        gl_FragDepthEXT = 0.0;
-        return;
-    }
+#if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH)
+    float farDepth = 1.0 - czm_currentFrustum.x + czm_currentFrustum.y;
 
-    float depth = log2(logZ);
-    if (depth < czm_log2NearDistance || depth > czm_log2FarPlusOne) {
-        // Fragment is not between the near and far planes.
+    // Discard the vertex if it's not between the near and far planes.
+    // We allow a bit of epsilon on the near plane comparison because a 1.0
+    // from the vertex shader (indicating the vertex should be _on_ the near
+    // plane) will not necessarily come here as exactly 1.0.
+    if (logZ <= 0.9999999 || logZ > farDepth) {
         discard;
     }
 
-    gl_FragDepthEXT = depth * czm_log2FarDistance * 0.5;
+    gl_FragDepthEXT = log2(logZ) / log2(farDepth);
+
+#ifdef DISABLE_LOG_DEPTH_FRAGMENT_WRITE
+    // Polygon offset: m * factor + r * units
+    // m = sqrt(dZdX^2 + dZdY^2);
+    float x = dFdx(logZ);
+    float y = dFdx(logZ);
+    float m = sqrt(x * x + y * y);
+    float offset = m * 5.0 + 5.0 * 1e-7;
+    gl_FragDepthEXT += offset;
+#endif
+
 #endif
 }
 
@@ -46,6 +55,6 @@ void czm_writeLogDepth(float logZ)
  */
 void czm_writeLogDepth() {
 #ifdef LOG_DEPTH
-    czm_writeLogDepth(v_logZ);
+    czm_writeLogDepth(v_depthFromNearPlusOne);
 #endif
 }

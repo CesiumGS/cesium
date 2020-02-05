@@ -1,5 +1,6 @@
 #ifdef LOG_DEPTH
-varying float v_logZ;
+// 1.0 at the near plane, increasing linearly from there.
+varying float v_depthFromNearPlusOne;
 #ifdef SHADOW_MAP
 varying vec3 v_logPositionEC;
 #endif
@@ -37,7 +38,7 @@ vec4 czm_updatePositionDepth(vec4 coords) {
 void czm_vertexLogDepth()
 {
 #ifdef LOG_DEPTH
-    v_logZ = 1.0 + gl_Position.w;
+    v_depthFromNearPlusOne = 1.0 - czm_currentFrustum.x + gl_Position.w;
     gl_Position = czm_updatePositionDepth(gl_Position);
 #endif
 }
@@ -59,7 +60,7 @@ void czm_vertexLogDepth()
 void czm_vertexLogDepth(vec4 clipCoords)
 {
 #ifdef LOG_DEPTH
-    v_logZ = 1.0 + clipCoords.w;
+    v_depthFromNearPlusOne = 1.0 - czm_currentFrustum.x + clipCoords.w;
     czm_updatePositionDepth(clipCoords);
 #endif
 }
