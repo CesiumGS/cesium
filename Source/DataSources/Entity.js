@@ -369,7 +369,7 @@ import WallGraphics from './WallGraphics.js';
         /**
          * Gets or sets the tileset.
          * @memberof Entity.prototype
-         * @type {TilesetGraphics}
+         * @type {Cesium3DTilesetGraphics}
          */
         tileset : createPropertyTypeDescriptor('tileset', Cesium3DTilesetGraphics),
         /**
