@@ -5,7 +5,7 @@ Change Log
 
 ##### Fixes :wrench:
 
-* Fixed a bug where tiles would not load if the camera was tracking a moving tileset.
+* Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/AnalyticalGraphicsInc/cesium/pull/8598)
 
 ### 1.66.0 - 2020-02-03
 
