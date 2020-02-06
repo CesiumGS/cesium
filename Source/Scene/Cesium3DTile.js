@@ -842,10 +842,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._contentReadyToProcessPromise = when.defer();
         this._contentReadyPromise = when.defer();
 
-        if (expired) {
-            this.expireDate = undefined;
-        }
-
         var contentFailedFunction = getContentFailedFunction(this, tileset);
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
@@ -867,6 +863,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 // The content may be json instead
                 content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasTilesetContent = true;
+            }
+
+            if (expired) {
+                that.expireDate = undefined;
             }
 
             that._content = content;
