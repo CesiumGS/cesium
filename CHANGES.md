@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.67.0 - 2020-03-02
+
+##### Fixes :wrench:
+
+* Fixed a bug where tiles would not load if the camera was tracking a moving tileset.
+
 ### 1.66.0 - 2020-02-03
 
 ##### Deprecated :hourglass_flowing_sand:
