@@ -1132,6 +1132,51 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
+         * Gets the far plane's distance from the near plane, plus 1.0.
+         *
+         * @alias czm_farDepthFromNearPlusOne
+         * @namespace
+         * @glslUniform
+         */
+        czm_farDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.farDepthFromNearPlusOne;
+            }
+        }),
+
+        /**
+         * Gets the log2 of {@link AutomaticUniforms#czm_farDepthFromNearPlusOne}.
+         *
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
+         * @namespace
+         * @glslUniform
+         */
+        czm_log2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.log2FarDepthFromNearPlusOne;
+            }
+        }),
+
+        /**
+         * Gets 1.0 divided by {@link AutomaticUniforms#czm_log2FarDepthFromNearPlusOne}.
+         *
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
+         * @namespace
+         * @glslUniform
+         */
+        czm_oneOverLog2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.oneOverLog2FarDepthFromNearPlusOne;
+            }
+        }),
+
+        /**
          * The log2 of the current frustums far plane. Used for computing the log depth.
          *
          * @alias czm_log2FarDistance
