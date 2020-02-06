@@ -1,5 +1,10 @@
 #ifdef LOG_DEPTH
 varying float v_depthFromNearPlusOne;
+
+#ifdef POLYGON_OFFSET
+uniform vec2 u_polygonOffset;
+#endif
+
 #endif
 
 /**
@@ -11,12 +16,13 @@ varying float v_depthFromNearPlusOne;
  * @name czm_writeLogDepth
  * @glslFunction
  *
- * @param {float} logZ The w coordinate of the vertex in clip coordinates plus 1.0.
+ * @param {float} depth The depth coordinate, where 1.0 is on the near plane and
+ *                      depth increases in eye-space units from there
  *
  * @example
  * czm_writeLogDepth((czm_projection * v_positionEyeCoordinates).w + 1.0);
  */
-void czm_writeLogDepth(float logZ)
+void czm_writeLogDepth(float depth)
 {
 #if defined(GL_EXT_frag_depth) && defined(LOG_DEPTH)
     float farDepth = 1.0 - czm_currentFrustum.x + czm_currentFrustum.y;
@@ -25,20 +31,33 @@ void czm_writeLogDepth(float logZ)
     // We allow a bit of epsilon on the near plane comparison because a 1.0
     // from the vertex shader (indicating the vertex should be _on_ the near
     // plane) will not necessarily come here as exactly 1.0.
-    if (logZ <= 0.9999999 || logZ > farDepth) {
+    if (depth <= 0.9999999 || depth > farDepth) {
         discard;
     }
 
-    gl_FragDepthEXT = log2(logZ) / log2(farDepth);
-
-#ifdef DISABLE_LOG_DEPTH_FRAGMENT_WRITE
+#ifdef POLYGON_OFFSET
     // Polygon offset: m * factor + r * units
+    float factor = u_polygonOffset[0];
+    float units = u_polygonOffset[1];
+
+    // If we can't compute derivatives, just leave out the factor I guess?
+#ifdef GL_OES_standard_derivatives
     // m = sqrt(dZdX^2 + dZdY^2);
-    float x = dFdx(logZ);
-    float y = dFdx(logZ);
+    float x = dFdx(depth);
+    float y = dFdy(depth);
     float m = sqrt(x * x + y * y);
-    float offset = m * 5.0 + 5.0 * 1e-7;
-    gl_FragDepthEXT += offset;
+
+    // Apply the factor before computing the log depth.
+    depth += m * factor;
+#endif
+
+#endif
+
+    gl_FragDepthEXT = log2(depth) / log2(farDepth);
+
+#ifdef POLYGON_OFFSET
+    // Apply the units after the log depth.
+    gl_FragDepthEXT += czm_epsilon7 * units;
 #endif
 
 #endif
