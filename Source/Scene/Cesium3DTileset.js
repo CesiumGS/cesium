@@ -60,7 +60,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
-     * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+     * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
      * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
@@ -158,6 +158,9 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
         this._updatedVisibilityFrame = 0;
+        this._updatedModelMatrixFrame = 0;
+        this._modelMatrixChanged = false;
+        this._previousModelMatrix = undefined;
         this._extras = undefined;
         this._credits = undefined;
 
@@ -191,12 +194,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         /**
-         * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+         * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
          *
          * @type {Boolean}
          * @default true
          */
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
+        this._cullRequestsWhileMoving = false;
 
         /**
          * Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
@@ -2159,6 +2163,14 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
     }
 
+    function detectModelMatrixChanged(tileset, frameState) {
+        if (frameState.frameNumber !== tileset._updatedModelMatrixFrame || !defined(tileset._previousModelMatrix)) {
+            tileset._updatedModelMatrixFrame = frameState.frameNumber;
+            tileset._modelMatrixChanged = !Matrix4.equals(tileset.modelMatrix, tileset._previousModelMatrix);
+            tileset._previousModelMatrix = Matrix4.clone(tileset.modelMatrix, tileset._previousModelMatrix);
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function update(tileset, frameState, passStatistics, passOptions) {
@@ -2180,6 +2192,9 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
+
+        detectModelMatrixChanged(tileset, frameState);
+        tileset._cullRequestsWhileMoving = tileset.cullRequestsWhileMoving && !tileset._modelMatrixChanged;
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
@@ -2224,7 +2239,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
             (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || (!this.show && !this.preloadWhenHidden))) ||
-            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this._cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
             return;
         }
 
