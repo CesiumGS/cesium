@@ -203,7 +203,7 @@ import Cesium3DTileRefine from './Cesium3DTileRefine.js';
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
         // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
-        if (!tileset.cullRequestsWhileMoving) {
+        if (!tileset._cullRequestsWhileMoving) {
             return true;
         }
 

@@ -3,8 +3,14 @@ Change Log
 
 ### 1.67.0 - 2020-03-02
 
+##### Additions :tada:
+
 * Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
 * Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
+
+##### Fixes :wrench:
+
+* Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/AnalyticalGraphicsInc/cesium/pull/8598)
 
 ### 1.66.0 - 2020-02-03
 
@@ -13,7 +19,7 @@ Change Log
 
 ##### Additions :tada:
 
-* `useBrowserRecommendedResolution` flag in `Viewer` and `CesiumWidget` now defaults to `true`. This ensures Cesium rendering is fast and smooth by default across all devices. Set it to `false` to always render at native device resolution instead at the cost of performance on under-powered devices.
+* `useBrowserRecommendedResolution` flag in `Viewer` and `CesiumWidget` now defaults to `true`. This ensures Cesium rendering is fast and smooth by default across all devices. Set it to `false` to always render at native device resolution instead at the cost of performance on under-powered devices. [#8548](https://github.com/AnalyticalGraphicsInc/cesium/pull/8548)
 * Cesium now creates a WebGL context with a `powerPreference` value of `high-performance`. Some browsers use this setting to enable a second, more powerful, GPU.  You can set it back to `default`, or opt-in to `low-power` mode, by passing the context option when creating a `Viewer` or `CesiumWidget` instance:
 
 ```js
@@ -26,32 +32,34 @@ Change Log
     });
 ```
 
-* Add more customization to Cesium's lighting system [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
+* Added more customization to Cesium's lighting system. [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
     * Added `Light`, `DirectionalLight`, and `SunLight` classes for creating custom light sources.
     * Added `Scene.light` for setting the scene's light source, which defaults to a `SunLight`.
     * Added `Globe.dynamicAtmosphereLighting` for enabling lighting effects on atmosphere and fog, such as day/night transitions. It is true by default but may be set to false if the atmosphere should stay unchanged regardless of the scene's light direction.
     * Added `Globe.dynamicAtmosphereLightingFromSun` for using the sun direction instead of the scene's light direction when `Globe.dynamicAtmosphereLighting` is enabled. See the moonlight example in the [Lighting Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Lighting.html).
     * Primitives and the globe are now shaded with the scene light's color.
+* Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
-* Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
-* Update [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
+* Updated [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
+* Added a font cache to improve label performance. [#8537](https://github.com/AnalyticalGraphicsInc/cesium/pull/8537)
 
 ##### Fixes :wrench:
-* Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
-* Fixed a bug where files with backslashes were not loaded in KMZ files. [#8533](https://github.com/AnalyticalGraphicsInc/cesium/pull/8533)
+* Fixed a bug where rapidly updating a `PolylineCollection` could result in an `instanceIndex` is out of range error. [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
+* Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
 * Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js`. [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
+* Fixed a bug where files with backslashes were not loaded in KMZ files. [#8533](https://github.com/AnalyticalGraphicsInc/cesium/pull/8533)
 * Fixed WebGL warning message about `EXT_float_blend` being implicitly enabled. [#8534](https://github.com/AnalyticalGraphicsInc/cesium/pull/8534)
-* Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
 * Fixed a bug where toggling point cloud classification visibility would result in a grey screen on Linux / Nvidia. [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
-* Fixed a bug where a point in a `PointPrimitiveCollection` is rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
+* Fixed a bug where a point in a `PointPrimitiveCollection` was rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
 * Fixed a crash when deleting and re-creating polylines from CZML. `ReferenceProperty` now returns undefined when the target entity or property does not exist, instead of throwing. [#8544](https://github.com/AnalyticalGraphicsInc/cesium/pull/8544)
 * Fixed terrain tile picking in the Cesium Inspector. [#8567](https://github.com/AnalyticalGraphicsInc/cesium/pull/8567)
-* Fixed a bug where rapidly updating a `PolylineCollection` could result in an instanceIndex is out of range error. [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
 * Fixed a crash that could occur when an entity was deleted while the corresponding `Primitive` was being created asynchronously. [#8569](https://github.com/AnalyticalGraphicsInc/cesium/pull/8569)
-* Fixed a crash when calling `camera.lookAt` with the origin as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
-* Fixed a bug where `camera.viewBoundingSphere` was modifying the `offset` parameter [#8438](https://github.com/AnalyticalGraphicsInc/cesium/pull/8438)
+* Fixed a crash when calling `camera.lookAt` with the origin (0, 0, 0) as the target. This could happen when looking at a tileset with the origin as its center. [#8571](https://github.com/AnalyticalGraphicsInc/cesium/pull/8571)
+* Fixed a bug where `camera.viewBoundingSphere` was modifying the `offset` parameter. [#8438](https://github.com/AnalyticalGraphicsInc/cesium/pull/8438)
+* Fixed a crash when creating a plane with both position and normal on the Z-axis. [#8576](https://github.com/AnalyticalGraphicsInc/cesium/pull/8576)
+* Fixed `BoundingSphere.projectTo2D` when the bounding sphere’s center is at the origin. [#8482](https://github.com/AnalyticalGraphicsInc/cesium/pull/8482)
 
 ### 1.65.0 - 2020-01-06
 
