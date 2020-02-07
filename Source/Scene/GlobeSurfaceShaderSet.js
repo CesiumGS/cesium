@@ -97,13 +97,6 @@ import SceneMode from './SceneMode.js';
             quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
-        var vertexLogDepth = 0;
-        var vertexLogDepthDefine = '';
-        if (/*true ||*/ !defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
-            vertexLogDepth = 1;
-            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
-        }
-
         var cartographicLimitRectangleFlag = 0;
         var cartographicLimitRectangleDefine = '';
         if (clippedByBoundaries) {
@@ -139,12 +132,11 @@ import SceneMode from './SceneMode.js';
                     (quantization << 18) |
                     (applySplit << 19) |
                     (enableClippingPlanes << 20) |
-                    (vertexLogDepth << 21) |
-                    (cartographicLimitRectangleFlag << 22) |
-                    (imageryCutoutFlag << 23) |
-                    (colorCorrect << 24) |
-                    (highlightFillTile << 25) |
-                    (colorToAlpha << 26);
+                    (cartographicLimitRectangleFlag << 21) |
+                    (imageryCutoutFlag << 22) |
+                    (colorCorrect << 23) |
+                    (highlightFillTile << 24) |
+                    (colorToAlpha << 25);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -176,7 +168,7 @@ import SceneMode from './SceneMode.js';
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {
