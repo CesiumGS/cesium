@@ -60,7 +60,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
-     * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+     * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
      * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
@@ -86,7 +86,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -158,6 +158,9 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
         this._updatedVisibilityFrame = 0;
+        this._updatedModelMatrixFrame = 0;
+        this._modelMatrixChanged = false;
+        this._previousModelMatrix = undefined;
         this._extras = undefined;
         this._credits = undefined;
 
@@ -191,12 +194,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         /**
-         * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+         * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
          *
          * @type {Boolean}
          * @default true
          */
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
+        this._cullRequestsWhileMoving = false;
 
         /**
          * Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
@@ -642,7 +646,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
 
         /**
-         * The light color when shading models. When <code>undefined</code> the scene's light color are used instead.
+         * The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
@@ -879,6 +883,18 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     }
 
     defineProperties(Cesium3DTileset.prototype, {
+        /**
+         * NOTE: This getter exists so that `Picking.js` can differentiate between
+         *       PrimitiveCollection and Cesium3DTileset objects without inflating
+         *       the size of the module via `instanceof Cesium3DTileset`
+         * @private
+         */
+        isCesium3DTileset : {
+            get : function() {
+                return true;
+            }
+        },
+
         /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
@@ -1756,14 +1772,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     function handleTileFailure(tileset, tile) {
         return function(error) {
-            if (tileset._processingQueue.indexOf(tile) >= 0) {
-                // Failed during processing
-                --tileset._statistics.numberOfTilesProcessing;
-            } else {
-                // Failed when making request
-                --tileset._statistics.numberOfPendingRequests;
-            }
-
             var url = tile._contentResource.url;
             var message = defined(error.message) ? error.message : error.toString();
             if (tileset.tileFailed.numberOfListeners > 0) {
@@ -2155,6 +2163,14 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
     }
 
+    function detectModelMatrixChanged(tileset, frameState) {
+        if (frameState.frameNumber !== tileset._updatedModelMatrixFrame || !defined(tileset._previousModelMatrix)) {
+            tileset._updatedModelMatrixFrame = frameState.frameNumber;
+            tileset._modelMatrixChanged = !Matrix4.equals(tileset.modelMatrix, tileset._previousModelMatrix);
+            tileset._previousModelMatrix = Matrix4.clone(tileset.modelMatrix, tileset._previousModelMatrix);
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function update(tileset, frameState, passStatistics, passOptions) {
@@ -2176,6 +2192,9 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
+
+        detectModelMatrixChanged(tileset, frameState);
+        tileset._cullRequestsWhileMoving = tileset.cullRequestsWhileMoving && !tileset._modelMatrixChanged;
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
@@ -2220,7 +2239,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
             (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || (!this.show && !this.preloadWhenHidden))) ||
-            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this._cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
             return;
         }
 
