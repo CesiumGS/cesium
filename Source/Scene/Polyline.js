@@ -286,6 +286,19 @@ import Material from './Material.js';
         },
 
         /**
+         * Gets the destruction status of this polyline
+         * @memberof Polyline.prototype
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        isDestroyed : {
+            get : function() {
+                return !defined(this._polylineCollection);
+            }
+        },
+
+        /**
          * Gets or sets the condition specifying at what distance from the camera that this polyline will be displayed.
          * @memberof Polyline.prototype
          * @type {DistanceDisplayCondition}

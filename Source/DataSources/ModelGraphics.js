@@ -47,7 +47,7 @@ import PropertyBag from './PropertyBag.js';
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Property} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
-     * @param {Property} [options.lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Property} [options.lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
      * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
@@ -253,7 +253,7 @@ import PropertyBag from './PropertyBag.js';
         imageBasedLightingFactor : createPropertyDescriptor('imageBasedLightingFactor'),
 
         /**
-         * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+         * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
          * @memberOf ModelGraphics.prototype
          * @type {Property}
          */

@@ -329,7 +329,7 @@ import RequestState from './RequestState.js';
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+        if (RequestScheduler.throttleRequests && request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
             // Server is saturated. Try again later.
             return undefined;
         }
