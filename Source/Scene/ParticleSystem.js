@@ -65,7 +65,7 @@ import Particle from './Particle.js';
          * @default true
          */
         this.show = defaultValue(options.show, true);
-        
+
         /**
          * A boolean Property specifying whether this billboard's size should be measured in meters.
          * @type {Boolean}
@@ -506,7 +506,7 @@ import Particle from './Particle.js';
             var particle = new Particle();
             particle._billboard = billboardCollection.add({
                 image : image,
-                sizeInMeters: this.sizeInMeters
+                sizeInMeters: system.sizeInMeters
             });
             particlePool.push(particle);
         }
