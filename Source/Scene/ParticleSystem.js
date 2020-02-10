@@ -24,6 +24,7 @@ import Particle from './Particle.js';
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
+     * @param {Boolean} [options.sizeInMeters=false] A boolean Property specifying whether this billboard's size should be measured in meters.
      * @param {ParticleSystem~updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
@@ -64,6 +65,13 @@ import Particle from './Particle.js';
          * @default true
          */
         this.show = defaultValue(options.show, true);
+        
+        /**
+         * A boolean Property specifying whether this billboard's size should be measured in meters.
+         * @type {Boolean}
+         * @default false
+         */
+        this.sizeInMeters = defaultValue(options.sizeInMeters, false);
 
         /**
          * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
@@ -497,7 +505,8 @@ import Particle from './Particle.js';
         for (var j = 0; j < numToAdd; ++j) {
             var particle = new Particle();
             particle._billboard = billboardCollection.add({
-                image : image
+                image : image,
+                sizeInMeters: this.sizeInMeters
             });
             particlePool.push(particle);
         }
