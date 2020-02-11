@@ -51,7 +51,7 @@ import Material from './Material.js';
          * @type {String}
          * @default buildModuleUrl('Assets/Textures/moonSmall.jpg')
          */
-        this.textureUrl = url;
+    this.textureUrl = url;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
 

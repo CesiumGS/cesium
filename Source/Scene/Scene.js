@@ -2145,6 +2145,7 @@ import View from './View.js';
     function executeCommands(scene, passState) {
         var camera = scene.camera;
         var context = scene.context;
+        var frameState = scene.frameState;
         var us = context.uniformState;
 
         us.updateCamera(camera);
@@ -2168,7 +2169,7 @@ import View from './View.js';
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
-        var passes = scene._frameState.passes;
+        var passes = frameState.passes;
         var picking = passes.pick;
         var environmentState = scene._environmentState;
         var view = scene._view;
@@ -2250,7 +2251,7 @@ import View from './View.js';
                 camera.position.z = height2D - frustumCommands.near + 1.0;
                 frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
                 frustum.near = 1.0;
-                us.update(scene.frameState);
+                us.update(frameState);
                 us.updateFrustum(frustum);
             } else {
                 // Avoid tearing artifacts between adjacent frustums in the opaque passes
@@ -2306,6 +2307,10 @@ import View from './View.js';
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
                 if (useDepthPlane) {
+                    // Update the depth plane that is rendered in 3D when the primitives are
+                    // not depth tested against terrain so primitives on the backface
+                    // of the globe are not picked.
+                    depthPlane.update(frameState);
                     depthPlane.execute(context, passState);
                 }
             }
@@ -2401,7 +2406,7 @@ import View from './View.js';
 
                 // Fullscreen pass to copy classified fragments
                 scene._invertClassification.executeClassified(context, passState);
-                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (frameState.invertClassificationColor.alpha === 1.0) {
                     // Fullscreen pass to copy unclassified fragments when alpha == 1.0
                     scene._invertClassification.executeUnclassified(context, passState);
                 }
@@ -2438,7 +2443,7 @@ import View from './View.js';
             }
 
             var invertClassification;
-            if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+            if (!picking && environmentState.useInvertClassification && frameState.invertClassificationColor.alpha < 1.0) {
                 // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
@@ -2888,13 +2893,7 @@ import View from './View.js';
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D);
-        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D;
-        if (useDepthPlane) {
-            // Update the depth plane that is rendered in 3D when the primitives are
-            // not depth tested against terrain so primitives on the backface
-            // of the globe are not picked.
-            this._depthPlane.update(frameState);
-        }
+        environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D;
 
         environmentState.renderTranslucentDepthForPick = false;
         environmentState.useWebVR = this._useWebVR && this.mode !== SceneMode.SCENE2D  && !offscreenPass;
