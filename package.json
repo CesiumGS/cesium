@@ -63,7 +63,7 @@
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
     "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^2.0.0",
+    "karma-jasmine": "^3.1.1",
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
