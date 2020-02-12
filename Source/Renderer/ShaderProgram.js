@@ -19,7 +19,7 @@ import createUniformArray from './createUniformArray.js';
         var vertexShaderText = options.vertexShaderText;
         var fragmentShaderText = options.fragmentShaderText;
 
-        if (window.spector) {
+        if (typeof spector !== 'undefined') {
             // The #line statements common in Cesium shaders interfere with the ability of the
             // SpectorJS to show errors on the correct line. So remove them when SpectorJS
             // is active.
@@ -472,7 +472,7 @@ import createUniformArray from './createUniformArray.js';
 
         // If SpectorJS is active, add the hook to make the shader editor work.
         // https://github.com/BabylonJS/Spector.js/blob/master/documentation/extension.md#shader-editor
-        if (window.spector) {
+        if (typeof spector !== 'undefined') {
             shader._program.__SPECTOR_rebuildProgram = function(
                 vertexSourceCode, // The new vertex shader source
                 fragmentSourceCode, // The new fragment shader source
