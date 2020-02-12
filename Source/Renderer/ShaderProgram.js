@@ -20,7 +20,7 @@ import createUniformArray from './createUniformArray.js';
         var fragmentShaderText = options.fragmentShaderText;
 
         if (window.spector) {
-            // The #line statements common Cesium shaders interfere with the ability of the
+            // The #line statements common in Cesium shaders interfere with the ability of the
             // SpectorJS to show errors on the correct line. So remove them when SpectorJS
             // is active.
             vertexShaderText = vertexShaderText.replace(/^#line/mg, '//#line');
@@ -448,7 +448,7 @@ import createUniformArray from './createUniformArray.js';
     }
 
     function reinitialize(shader) {
-        const oldProgram = shader._program;
+        var oldProgram = shader._program;
 
         var gl = shader._gl;
         var program = createAndLinkProgram(gl, shader, shader._debugShaders);
@@ -484,7 +484,7 @@ import createUniformArray from './createUniformArray.js';
 
                 // SpectorJS likes to replace `!=` with `! =` for unknown reasons,
                 // and that causes glsl compile failures. So fix that up.
-                const regex = / ! = /g;
+                var regex = / ! = /g;
                 shader._vertexShaderText = vertexSourceCode.replace(regex, ' != ');
                 shader._fragmentShaderText = fragmentSourceCode.replace(regex, ' != ');
 
@@ -497,7 +497,7 @@ import createUniformArray from './createUniformArray.js';
 
                     // Only pass on the WebGL error:
                     var errorMatcher = /(?:Compile|Link) error: ([^]*)/;
-                    const match = errorMatcher.exec(e.message);
+                    var match = errorMatcher.exec(e.message);
                     if (match) {
                         onError(match[1]);
                     } else {
