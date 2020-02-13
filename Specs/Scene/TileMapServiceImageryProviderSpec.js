@@ -738,21 +738,44 @@ describe('Scene/TileMapServiceImageryProvider', function() {
         });
     });
 
-    it('rejects readyPromise if the tilemapresource.xml request fails', function (done) {
+    it('forces minimum detail level to zero if the tilemapresource.xml request fails and the constructor minimum level is too high', function () {
         patchRequestSchedulerToRejectRequest();
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/',
             maximumLevel : 10
         });
 
+        // we expect that our minimum detail level was forced to 0, even though we requested 10.
+        //  this is because, our rectangle has been set to the entire world (the default), so a minimum
+        //  detail level of 10 would hang the browser with too many tile requests.
+        // Forcing detail level to zero to is safe.
         return provider.readyPromise.then(function() {
-            // we don't want to resolve this promise because the tilemapresource.xml data is required!
-            // if we start assuming default values for the xml and combined those defaults with passed in options from the constructor.
-            // we can end up with unintended and unexpected configurations that can hang the browser.
-            done.fail('Should not resolve.');
-        }).otherwise(function(error) {
-            expect(error.message).toContain('An error occurred while accessing');
-            expect(error.message).toContain('/made/up/tms/server/tilemapresource.xml.');
+            expect(provider.minimumLevel).toBe(0);
+        });
+    });
+
+    it('allows the constructor minimum detail level if the tilemapresource.xml request fails but the constructor rectangle is small enough', function () {
+        patchRequestSchedulerToRejectRequest();
+        var provider = new TileMapServiceImageryProvider({
+            url: 'made/up/tms/server/',
+            // a high minimum detail level
+            maximumLevel: 12,
+            // and a very small rectangle
+            rectangle: new Rectangle(
+                CesiumMath.toRadians(131.020889),
+                CesiumMath.toRadians(-25.354730),
+                CesiumMath.toRadians(131.054363),
+                CesiumMath.toRadians(-25.335803)
+            )
+        });
+
+        // we expect that our minimum detail level remains at 12, which is quite high, but that's okay
+        //  because our rectangle is still small enough that it's not too many tiles.
+        return provider.readyPromise.then(function() {
+            expect(provider.minimumLevel).toBe(12);
+            // just make sure we're actually still using a small rectangle
+            expect(provider.rectangle.width).toBeLessThan(0.001);
+            expect(provider.rectangle.height).toBeLessThan(0.001);
         });
     });
 });
