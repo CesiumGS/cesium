@@ -133,14 +133,12 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
     }
 
     function calculateSafeMinimumDetailLevel(tilingScheme, rectangle, minimumLevel) {
-        console.log(`checking safe minimum detail for ${minimumLevel}`, rectangle);
         // Check the number of tiles at the minimum level.  If it's more than four,
         // try requesting the lower levels anyway, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
         var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
         var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-        console.log(`tile count was ${tileCount}`, tileCount < 4);
         if (tileCount > 4) {
             return 0;
         }
