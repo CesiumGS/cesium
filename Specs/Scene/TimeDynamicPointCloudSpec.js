@@ -672,7 +672,7 @@ describe('Scene/TimeDynamicPointCloud', function() {
 
     it('frame failed event is raised from request failure', function() {
         var pointCloud = createTimeDynamicPointCloud();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(request, responseType, method, data, headers, deferred, overrideMimeType) {
             deferred.reject('404');
         });
         var spyUpdate = jasmine.createSpy('listener');

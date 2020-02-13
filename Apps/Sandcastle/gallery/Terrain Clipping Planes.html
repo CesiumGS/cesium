@@ -105,6 +105,8 @@ function loadCesiumMan() {
         edgeColor: Cesium.Color.WHITE,
         enabled : clippingPlanesEnabled
     });
+    globe.backFaceCulling = true;
+    globe.showSkirts = true;
 
     viewer.trackedEntity = entity;
 }
@@ -156,6 +158,8 @@ function loadStHelens() {
         edgeColor: Cesium.Color.WHITE,
         enabled : clippingPlanesEnabled
     });
+    globe.backFaceCulling = true;
+    globe.showSkirts = true;
 
     // Load tileset
     tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
@@ -201,6 +205,8 @@ function loadGrandCanyon(){
         ],
         unionClippingRegions : true
     });
+    globe.backFaceCulling = false;
+    globe.showSkirts = false;
 
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.5, boundingSphere.radius * 5.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

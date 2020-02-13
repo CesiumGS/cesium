@@ -8,6 +8,7 @@ import { getAbsoluteUri } from '../../Source/Cesium.js';
 import { objectToQuery } from '../../Source/Cesium.js';
 import { queryToObject } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { WebMercatorProjection } from '../../Source/Cesium.js';
@@ -189,14 +190,15 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url)) {
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -265,15 +267,16 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -317,8 +320,8 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             expect(provider.usingPrecachedTiles).toEqual(false);
             expect(provider.enablePickFeatures).toBe(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                var uri = new Uri(url);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var uri = new Uri(request.url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
@@ -334,7 +337,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                 expect(params.size).toEqual('256,256');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -379,8 +382,8 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             expect(provider.enablePickFeatures).toBe(false);
             expect(provider.layers).toEqual('foo,bar');
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                var uri = new Uri(url);
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var uri = new Uri(request.url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
@@ -398,7 +401,7 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
                 expect(params.token).toEqual(token);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
@@ -438,15 +441,16 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual(expectedTileUrl);
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             };
 
@@ -569,10 +573,10 @@ describe('Scene/ArcGisMapServerImageryProvider', function() {
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

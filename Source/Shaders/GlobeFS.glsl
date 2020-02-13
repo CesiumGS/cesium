@@ -72,7 +72,7 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
-#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
 
@@ -321,12 +321,12 @@ void main()
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+    vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
-    vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
+    vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #else
     vec4 finalColor = color;
 #endif
@@ -354,9 +354,15 @@ void main()
 #endif
 #endif
 
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN)
+    vec3 atmosphereLightDirection = czm_sunDirectionWC;
+#else
+    vec3 atmosphereLightDirection = czm_lightDirectionWC;
+#endif
+
 #ifdef FOG
-#if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+#if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
 
@@ -375,7 +381,7 @@ void main()
         return;
     }
 
-#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
+#if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
@@ -389,7 +395,7 @@ void main()
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
-    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
+    AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true, atmosphereLightDirection);
 
     vec3 groundAtmosphereColor = colorCorrect(atmosColor.mie) + finalColor.rgb * colorCorrect(atmosColor.rayleigh);
 #ifndef HDR
@@ -455,7 +461,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float positionToEyeECLength = length(positionToEyeEC);
 
     // The double normalize below works around a bug in Firefox on Android devices.
-    vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
+    vec3 normalizedPositionToEyeEC = normalize(normalize(positionToEyeEC));
 
     // Fade out the waves as the camera moves far from the surface.
     float waveIntensity = waveFade(70000.0, 1000000.0, positionToEyeECLength);
@@ -491,7 +497,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
 
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * maskValue;
+    float diffuseIntensity = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * maskValue;
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity * (1.0 - fade);
 
 #ifdef SHOW_OCEAN_WAVES
@@ -504,7 +510,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = czm_getSpecular(czm_lightDirectionEC, normalizedPositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
 

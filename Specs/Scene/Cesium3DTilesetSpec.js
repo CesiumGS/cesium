@@ -1887,24 +1887,32 @@ describe('Scene/Cesium3DTileset', function() {
     });
 
     it('renders with imageBaseLightingFactor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).notToRender(rgba);
+                expect(renderOptions).notToRender(rgba);
             });
         });
     });
 
     it('renders with lightColor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
+                expect(renderOptions).toRenderAndCall(function(rgba2) {
                     expect(rgba2).not.toEqual(rgba);
                     tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
+                    expect(renderOptions).notToRender(rgba2);
                 });
             });
         });
@@ -3657,6 +3665,17 @@ describe('Scene/Cesium3DTileset', function() {
             viewAllTiles();
             scene.renderForSpecs();
             expect(tileset._requestedTilesInFlight.length).toEqual(0); // Big camera delta so no fetches should occur.
+        });
+    });
+
+    it('does not apply cullRequestWhileMoving optimization if tileset is moving', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            tileset.cullRequestsWhileMoving = true;
+            tileset.modelMatrix[12] += 1.0;
+            viewAllTiles();
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toEqual(2);
         });
     });
 

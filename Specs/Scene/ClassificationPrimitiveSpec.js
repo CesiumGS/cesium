@@ -120,7 +120,6 @@ describe('Scene/ClassificationPrimitive', function() {
 
     beforeEach(function() {
         scene.morphTo3D(0);
-        scene.render(); // clear any afterRender commands
 
         // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
@@ -148,7 +147,6 @@ describe('Scene/ClassificationPrimitive', function() {
 
     afterEach(function() {
         scene.primitives.removeAll();
-        scene.groundPrimitives.removeAll();
         primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
         globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
         tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
@@ -208,7 +206,7 @@ describe('Scene/ClassificationPrimitive', function() {
         });
 
         expect(primitive.geometryInstances).toBeDefined();
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         scene.renderForSpecs();
         expect(primitive.geometryInstances).not.toBeDefined();
     });
@@ -225,7 +223,7 @@ describe('Scene/ClassificationPrimitive', function() {
         });
 
         expect(primitive.geometryInstances).toBeDefined();
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         scene.renderForSpecs();
         expect(primitive.geometryInstances).toBeDefined();
     });
@@ -241,7 +239,7 @@ describe('Scene/ClassificationPrimitive', function() {
             asynchronous : false
         });
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         scene.renderForSpecs();
 
         return primitive.readyPromise.then(function(param) {
@@ -260,11 +258,9 @@ describe('Scene/ClassificationPrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
-        frameState.commandList.length = 0;
-
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('does not render when show is false', function() {
@@ -277,21 +273,13 @@ describe('Scene/ClassificationPrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toBeGreaterThan(0);
 
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.afterRender.length).toEqual(1);
-
-        frameState.afterRender[0]();
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toBeGreaterThan(0);
-
-        frameState.commandList.length = 0;
         primitive.show = false;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('becomes ready when show is false', function() {
@@ -299,7 +287,7 @@ describe('Scene/ClassificationPrimitive', function() {
             return;
         }
 
-        primitive = scene.groundPrimitives.add(new ClassificationPrimitive({
+        primitive = scene.primitives.add(new ClassificationPrimitive({
             geometryInstances : boxInstance
         }));
         primitive.show = false;
@@ -310,7 +298,7 @@ describe('Scene/ClassificationPrimitive', function() {
         });
 
         return pollToPromise(function() {
-            scene.render();
+            scene.renderForSpecs();
             return ready;
         }).then(function() {
             expect(ready).toEqual(true);
@@ -354,7 +342,7 @@ describe('Scene/ClassificationPrimitive', function() {
 
         expectRenderBlank();
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
 
         primitive.classificationType = ClassificationType.BOTH;
         globePrimitive.show = false;
@@ -511,7 +499,7 @@ describe('Scene/ClassificationPrimitive', function() {
         scene.primitives.add(tilesetPrimitive);
         expect(scene).toRender(invertedColor);
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         expect(scene).toRender(boxColor);
 
         primitive.getGeometryInstanceAttributes('box').show = [0];
@@ -550,7 +538,7 @@ describe('Scene/ClassificationPrimitive', function() {
         scene.primitives.add(tilesetPrimitive);
         expect(scene).toRender(invertedColor);
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         expect(scene).toRender(boxColor);
 
         primitive.getGeometryInstanceAttributes('box').show = [0];
@@ -570,7 +558,7 @@ describe('Scene/ClassificationPrimitive', function() {
             debugShowBoundingVolume : true
         });
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         scene.camera.setView({ destination : rectangle });
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
@@ -591,7 +579,7 @@ describe('Scene/ClassificationPrimitive', function() {
             debugShowShadowVolume : true
         });
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         scene.camera.setView({ destination : rectangle });
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[1]).toBeGreaterThanOrEqualTo(0);
@@ -633,9 +621,9 @@ describe('Scene/ClassificationPrimitive', function() {
         scene.primitives.removeAll();
         scene.primitives.destroyPrimitives = true;
 
-        scene.groundPrimitives.destroyPrimitives = false;
-        scene.groundPrimitives.removeAll();
-        scene.groundPrimitives.destroyPrimitives = true;
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
 
         var newColor = [255, 255, 255, 255];
         var attributes = primitive.getGeometryInstanceAttributes('box');
@@ -663,9 +651,9 @@ describe('Scene/ClassificationPrimitive', function() {
         scene.primitives.removeAll();
         scene.primitives.destroyPrimitives = true;
 
-        scene.groundPrimitives.destroyPrimitives = false;
-        scene.groundPrimitives.removeAll();
-        scene.groundPrimitives.destroyPrimitives = true;
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
 
         var attributes = primitive.getGeometryInstanceAttributes('box');
         expect(attributes.show).toBeDefined();
@@ -777,13 +765,10 @@ describe('Scene/ClassificationPrimitive', function() {
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
+        scene.primitives.add(primitive);
+
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
-            primitive.update(frameState);
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -811,20 +796,11 @@ describe('Scene/ClassificationPrimitive', function() {
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
-        return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-                return true;
-            }
-            primitive.update(frameState);
-            return false;
-        }).then(function() {
-            return primitive.readyPromise.then(function(arg) {
-                expect(arg).toBe(primitive);
-                expect(primitive.ready).toBe(true);
-            });
+        scene.primitives.add(primitive);
+        scene.renderForSpecs();
+        return primitive.readyPromise.then(function(arg) {
+            expect(arg).toBe(primitive);
+            expect(primitive.ready).toBe(true);
         });
     });
 
@@ -1026,7 +1002,7 @@ describe('Scene/ClassificationPrimitive', function() {
             expect(rgba[0]).toEqual(0);
         });
 
-        scene.groundPrimitives.add(primitive);
+        scene.primitives.add(primitive);
         expect(scene).toRender([255, 255, 0, 255]);
 
         // become incompatible
@@ -1067,13 +1043,10 @@ describe('Scene/ClassificationPrimitive', function() {
             allowPicking : false
         });
 
-        var frameState = scene.frameState;
+        scene.primitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             var attributes = primitive.getGeometryInstanceAttributes('box');
@@ -1142,29 +1115,40 @@ describe('Scene/ClassificationPrimitive', function() {
             geometryInstances : boxInstance
         });
 
-        var frameState = scene.frameState;
+        scene.primitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
+            // verifyClassificationPrimitiveRender adds the primitive, so remove it to avoid being added twice.
+            scene.primitives.destroyPrimitives = false;
+            scene.primitives.removeAll();
+            scene.primitives.destroyPrimitives = true;
+
             verifyClassificationPrimitiveRender(primitive, boxColor);
         });
     });
 
-    it('destroy before asynchonous pipeline is complete', function() {
+    it('destroy before asynchronous pipeline is complete', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
         primitive = new ClassificationPrimitive({
             geometryInstances : boxInstance
         });
 
-        var frameState = scene.frameState;
-        primitive.update(frameState);
+        scene.primitives.add(primitive);
 
+        scene.renderForSpecs();
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
+
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
     });
 
 }, 'WebGL');
