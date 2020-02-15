@@ -16,6 +16,9 @@ import VertexArray from '../Renderer/VertexArray.js';
 import SceneMode from './SceneMode.js';
 import CullFace from './CullFace.js';
 import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
+import DepthPlaneFS from '../Shaders/DepthPlaneFS.js';
+import DepthPlaneVS from '../Shaders/DepthPlaneVS.js';
+
 
     /**
      * @private
@@ -48,12 +51,12 @@ import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
                 depthTest : {
                     enabled : true
                 },
-                /*colorMask : {
+                colorMask : {
                     red : false,
                     green : false,
                     blue : false,
                     alpha : false
-                }*/
+                }
             });
 
             this._command = new DrawCommand({
@@ -66,7 +69,7 @@ import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
 
         var minimumHeight = Math.min(frameState.minimumTerrainHeight, 0.0);
         var scale = ellipsoid.maximumRadius;// + minimumHeight;
-        var axesScale = new Cartesian3(scale, scale, scale * 0.025);
+        var axesScale = new Cartesian3(scale * 2, scale * 2, scale * 0.025);
         //var axis = Cartesian3.normalize(frameState.camera.positionWC, new Cartesian3());
         var quaternion = Quaternion.fromRotationMatrix(context.uniformState.inverseViewRotation3D);
         //var quaternion = Quaternion.IDENTITY;
@@ -90,10 +93,10 @@ import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
             '}\n';
 
             var vs = new ShaderSource({
-                sources : [depthEllipsoidVS]
+                sources : [DepthPlaneVS]
             });
             var fs = new ShaderSource({
-                sources : [depthEllipsoidFS]
+                sources : [DepthPlaneFS]
             });
 
             this._sp = ShaderProgram.replaceCache({
