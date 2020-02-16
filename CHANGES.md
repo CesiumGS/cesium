@@ -7,6 +7,7 @@ Change Log
 
 * Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
 * Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
+* Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/AnalyticalGraphicsInc/cesium/pull/8607)
 
 ##### Fixes :wrench:
 
