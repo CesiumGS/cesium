@@ -16,6 +16,7 @@ import VertexArray from '../Renderer/VertexArray.js';
 import DepthPlaneFS from '../Shaders/DepthPlaneFS.js';
 import DepthPlaneVS from '../Shaders/DepthPlaneVS.js';
 import SceneMode from './SceneMode.js';
+import DepthFunction from './DepthFunction.js';
 
     /**
      * @private
@@ -29,7 +30,7 @@ import SceneMode from './SceneMode.js';
         this._useLogDepth = false;
     }
 
-    var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
+    var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(15) : [];
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
@@ -79,6 +80,8 @@ import SceneMode from './SceneMode.js';
         Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
         Cartesian3.pack(lowerRight, depthQuadScratch, 9);
 
+        Cartesian3.pack(Cartesian3.ZERO, depthQuadScratch, 12);
+
         return depthQuadScratch;
     }
 
@@ -98,14 +101,15 @@ import SceneMode from './SceneMode.js';
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.ALWAYS
                 },
-                colorMask : {
+                /*colorMask : {
                     red : false,
                     green : false,
                     blue : false,
                     alpha : false
-                }
+                }*/
             });
 
             this._command = new DrawCommand({
@@ -151,7 +155,11 @@ import SceneMode from './SceneMode.js';
         }
 
         // update depth plane
-        var depthQuad = computeDepthQuad(ellipsoid, frameState);
+        //var depthQuad = depthQuadScratch;
+        //if (this._reset || this._reset === undefined) {
+        //    this._reset = false;
+            var depthQuad = computeDepthQuad(ellipsoid, frameState);
+        //}
 
         // depth plane
         if (!defined(this._va)) {
@@ -163,7 +171,8 @@ import SceneMode from './SceneMode.js';
                         values : depthQuad
                     })
                 },
-                indices : [0, 1, 2, 2, 1, 3],
+                //indices : [0, 1, 2, 2, 1, 3],
+                indices : [0, 1, 4, 0, 4, 2, 2, 4, 3, 3, 4, 1],
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
