@@ -136,6 +136,14 @@ import SceneMode from './SceneMode.js';
         this.cameraUnderground = false;
 
         /**
+         * Whether the globe is translucent.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.globeTranslucent = false;
+
+        /**
          * The culling volume.
          *
          * @type {CullingVolume}

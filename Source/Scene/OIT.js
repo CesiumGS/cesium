@@ -515,7 +515,7 @@ import BlendFunction from './BlendFunction.js';
         return result;
     };
 
-    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands, invertClassification) {
+    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands, invertClassification, globeTranslucencyCommand) {
         var command;
         var derivedCommand;
         var j;
@@ -566,10 +566,14 @@ import BlendFunction from './BlendFunction.js';
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
+        if (defined(globeTranslucencyCommand)) {
+            executeFunction(globeTranslucencyCommand, scene, context, passState, debugFramebuffer);
+        }
+
         passState.framebuffer = framebuffer;
     }
 
-    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification) {
+    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification, globeTranslucencyCommand) {
         var context = scene.context;
         var useLogDepth = scene.frameState.useLogDepth;
         var useHdr = scene._hdr;
@@ -601,16 +605,24 @@ import BlendFunction from './BlendFunction.js';
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
+        if (defined(globeTranslucencyCommand)) {
+            command = globeTranslucencyCommand;
+            var derivedCommands = command.derivedCommands;
+            derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+            derivedCommand = command.derivedCommands.oit.translucentCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
         passState.framebuffer = framebuffer;
     }
 
-    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands, invertClassification) {
+    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands, invertClassification, globeTranslucencyCommand) {
         if (this._translucentMRTSupport) {
-            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands, invertClassification);
+            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands, invertClassification, globeTranslucencyCommand);
             return;
         }
 
-        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands, invertClassification);
+        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands, invertClassification, globeTranslucencyCommand);
     };
 
     OIT.prototype.execute = function(context, passState) {

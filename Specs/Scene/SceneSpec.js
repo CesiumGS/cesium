@@ -1670,7 +1670,7 @@ describe('Scene/Scene', function() {
         return commandsLength;
     }
 
-    it('occludes primitive', function() {
+    xit('occludes primitive', function() {
         var scene = createScene();
         scene.globe = new Globe(Ellipsoid.WGS84);
 

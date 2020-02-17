@@ -28,8 +28,11 @@ varying float v_aspect;
 varying float v_height;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(GLOBE_TRANSLUCENT)
 varying float v_distance;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogMieColor;
 varying vec3 v_fogRayleighColor;
 #endif
@@ -172,6 +175,9 @@ void main()
     AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false, vec3(0.0));
     v_fogMieColor = atmosFogColor.mie;
     v_fogRayleighColor = atmosFogColor.rayleigh;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(GLOBE_TRANSLUCENT)
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
 #endif
 

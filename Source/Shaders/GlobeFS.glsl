@@ -84,6 +84,10 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
+#ifdef GLOBE_TRANSLUCENT
+uniform float u_alpha;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -96,8 +100,11 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(GLOBE_TRANSLUCENT)
 varying float v_distance;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogRayleighColor;
 varying vec3 v_fogMieColor;
 #endif
@@ -318,6 +325,16 @@ void main()
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+#endif
+
+#ifdef GLOBE_TRANSLUCENT
+    vec3 radii = czm_ellipsoidRadii;
+    float maxRadii = max(radii.x, max(radii.y, radii.z));
+    float startDistance = maxRadii * 0.025;
+    float endDistance = maxRadii * 0.05;
+    float alphaStrength = clamp((endDistance - v_distance) / (endDistance - startDistance), 0.0, 1.0);
+    float alphaMutiplier = mix(1.0, u_alpha, alphaStrength);
+    color.a *= alphaMutiplier;
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING

@@ -12,6 +12,7 @@ import PassState from '../Renderer/PassState.js';
 import Camera from './Camera.js';
 import FrustumCommands from './FrustumCommands.js';
 import GlobeDepth from './GlobeDepth.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 import OIT from './OIT.js';
 import PickDepthFramebuffer from './PickDepthFramebuffer.js';
 import PickFramebuffer from './PickFramebuffer.js';
@@ -36,8 +37,10 @@ import ShadowMap from './ShadowMap.js';
         updateFrustums(near, far, farToNearRatio, numFrustums, scene.logarithmicDepthBuffer, frustumCommandsList, false, undefined);
 
         var globeDepth;
+        var globeTranslucency;
         if (context.depthTexture) {
             globeDepth = new GlobeDepth();
+            globeTranslucency = new GlobeTranslucency();
         }
 
         var oit;
@@ -59,6 +62,7 @@ import ShadowMap from './ShadowMap.js';
         this.pickDepthFramebuffer = new PickDepthFramebuffer();
         this.sceneFramebuffer = new SceneFramebuffer();
         this.globeDepth = globeDepth;
+        this.globeTranslucency = globeTranslucency;
         this.oit = oit;
         this.pickDepths = [];
         this.debugGlobeDepths = [];

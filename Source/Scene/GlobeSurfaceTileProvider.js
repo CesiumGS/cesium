@@ -37,6 +37,7 @@ import VertexArray from '../Renderer/VertexArray.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
@@ -104,6 +105,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this.showSkirts = true;
         this.backFaceCulling = true;
+        this.alpha = 1.0;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -443,6 +445,15 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
     };
 
+    function pushCommand(command, frameState) {
+        if (frameState.globeTranslucent) {
+            frameState.commandList.push(command.derivedCommands.globeTranslucency.backFaceCommand);
+            frameState.commandList.push(command.derivedCommands.globeTranslucency.frontFaceCommand);
+        } else {
+            frameState.commandList.push(command);
+        }
+    }
+
     /**
      * Adds draw commands for tiles rendered in the previous frame for a pick pass.
      *
@@ -452,7 +463,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         // Add the tile pick commands from the tiles drawn last frame.
         var drawCommands = this._drawCommands;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
-            frameState.commandList.push(drawCommands[i]);
+            pushCommand(drawCommands[i], frameState);
         }
     };
 
@@ -549,7 +560,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        if (frameState.fog.enabled && !frameState.cameraUnderground) {
+        if (frameState.fog.enabled && !frameState.cameraUnderground && !frameState.globeTranslucent) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
@@ -611,7 +622,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders) && !frameState.cameraUnderground) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders) && !frameState.cameraUnderground && !frameState.globeTranslucent) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -1295,6 +1306,9 @@ import TileSelectionResult from './TileSelectionResult.js';
             u_colorsToAlpha : function() {
                 return this.properties.colorsToAlpha;
             },
+            u_alpha : function() {
+                return this.properties.alpha;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1338,7 +1352,9 @@ import TileSelectionResult from './TileSelectionResult.js';
                 clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0,
 
-                localizedCartographicLimitRectangle : new Cartesian4()
+                localizedCartographicLimitRectangle : new Cartesian4(),
+
+                alpha: 1.0
             }
         };
 
@@ -1543,12 +1559,13 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var cameraUnderground = frameState.cameraUnderground;
+        var globeTranslucent = frameState.globeTranslucent;
 
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
-        var enableFog = frameState.fog.enabled && !cameraUnderground;
+        var enableFog = frameState.fog.enabled && !cameraUnderground && !globeTranslucent;
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
@@ -1673,8 +1690,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var showSkirts = tileProvider.showSkirts && !cameraUnderground;
-        var backFaceCulling = tileProvider.backFaceCulling && !cameraUnderground;
+        var showSkirts = tileProvider.showSkirts && !cameraUnderground && !globeTranslucent;
+        var backFaceCulling = tileProvider.backFaceCulling && !cameraUnderground && !globeTranslucent;
         var firstPassRenderState = backFaceCulling ? tileProvider._renderState : tileProvider._disableCullingRenderState;
         var otherPassesRenderState = backFaceCulling ? tileProvider._blendRenderState : tileProvider._disableCullingBlendRenderState;
         var renderState = firstPassRenderState;
@@ -1733,6 +1750,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             uniformMapProperties.nightFadeDistance.x = tileProvider.nightFadeOutDistance;
             uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
+            uniformMapProperties.alpha = tileProvider.alpha;
 
             var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;
             if (highlightFillTile) {
@@ -1921,6 +1939,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
+            surfaceShaderSetOptions.globeTranslucent = globeTranslucent;
 
             var count = surfaceTile.renderedMesh.indices.length;
             if (!showSkirts) {
@@ -1963,7 +1982,12 @@ import TileSelectionResult from './TileSelectionResult.js';
             }
 
             command.dirty = true;
-            frameState.commandList.push(command);
+
+            if (globeTranslucent) {
+                GlobeTranslucency.updateDerivedCommand(command, context);
+            }
+
+            pushCommand(command, frameState);
 
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
