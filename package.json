@@ -11,7 +11,7 @@
   "contributors": [
     {
       "name": "CesiumJS community",
-      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
     }
   ],
   "keywords": [
@@ -23,10 +23,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
+    "url": "https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
+    "url": "https://github.com/CesiumGS/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
   "main": "index.js",

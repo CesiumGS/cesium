@@ -1831,7 +1831,7 @@ import TrustedServers from './TrustedServers.js';
         Resource.supportsImageBitmapOptions()
             .then(function(supportsImageBitmap) {
                 // We can only use ImageBitmap if we can flip on decode.
-                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                // See: https://github.com/CesiumGS/cesium/pull/7579#issuecomment-466146898
                 if (!(supportsImageBitmap && preferImageBitmap)) {
                     loadImageElement(url, crossOrigin, deferred);
                     return;

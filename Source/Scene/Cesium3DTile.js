@@ -420,7 +420,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          *
          * @type {*}
          * @readonly
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
          */
         extras : {
             get : function() {
