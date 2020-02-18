@@ -8,6 +8,7 @@ Change Log
 * Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
 * Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
 * Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/AnalyticalGraphicsInc/cesium/pull/8607)
+* `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/AnalyticalGraphicsInc/cesium/pull/8563)
 
 ##### Fixes :wrench:
 
