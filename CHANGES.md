@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+### 1.67.0 - 2020-03-02
+
+##### Additions :tada:
+
+* Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
+* Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
+* Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/AnalyticalGraphicsInc/cesium/pull/8607)
+
+##### Fixes :wrench:
+
+* Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/AnalyticalGraphicsInc/cesium/pull/8598)
+
 ### 1.66.0 - 2020-02-03
 
 ##### Deprecated :hourglass_flowing_sand:

@@ -3668,6 +3668,17 @@ describe('Scene/Cesium3DTileset', function() {
         });
     });
 
+    it('does not apply cullRequestWhileMoving optimization if tileset is moving', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            tileset.cullRequestsWhileMoving = true;
+            tileset.modelMatrix[12] += 1.0;
+            viewAllTiles();
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toEqual(2);
+        });
+    });
+
     it('loads tiles when preloadWhenHidden is true', function() {
         var options = {
             show : false,
