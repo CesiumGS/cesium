@@ -245,3 +245,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [André Borud](https://github.com/andreborud)
 * [Nathan Schulte](https://github.com/nmschulte)
 * [Jan Wąsak](https://github.com/jhnwsk)
+* [Julian Fell](https://github.com/jtfell)

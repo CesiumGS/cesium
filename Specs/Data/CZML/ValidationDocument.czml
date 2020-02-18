@@ -696,7 +696,8 @@
           83,22,249,147
         ]
       },
-      "environmentIntersectionWidth":13317
+      "environmentIntersectionWidth":13317,
+      "showThroughEllipsoid":true
     },
     "agi_customPatternSensor":{
       "show":true,
@@ -772,7 +773,8 @@
           134,29,12,55
         ]
       },
-      "environmentIntersectionWidth":53576
+      "environmentIntersectionWidth":53576,
+      "showThroughEllipsoid":true
     },
     "agi_rectangularSensor":{
       "show":true,
@@ -844,7 +846,8 @@
           84,60,81,144
         ]
       },
-      "environmentIntersectionWidth":64839
+      "environmentIntersectionWidth":64839,
+      "showThroughEllipsoid":true
     },
     "agi_fan":{
       "show":true,
@@ -8151,6 +8154,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#conicSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#conicSensor.showThroughEllipsoid"
       }
     },
     "agi_customPatternSensor":{
@@ -8233,6 +8239,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#customPatternSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#customPatternSensor.showThroughEllipsoid"
       }
     },
     "agi_rectangularSensor":{
@@ -8321,6 +8330,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#rectangularSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#rectangularSensor.showThroughEllipsoid"
       }
     },
     "agi_fan":{
