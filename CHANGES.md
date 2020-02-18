@@ -8,6 +8,7 @@ Change Log
 * Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
 * Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
 * Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/AnalyticalGraphicsInc/cesium/pull/8607)
+* `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/AnalyticalGraphicsInc/cesium/pull/8563)
 
 ##### Fixes :wrench:
 
@@ -42,7 +43,6 @@ Change Log
 * Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
 * Added `Globe.showSkirts` to support the ability to hide terrain skirts when viewing terrain from below the surface. [#8489](https://github.com/AnalyticalGraphicsInc/cesium/pull/8489)
 * Added `minificationFilter` and `magnificationFilter` options to `Material` to control texture filtering. [#8473](https://github.com/AnalyticalGraphicsInc/cesium/pull/8473)
-* `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/AnalyticalGraphicsInc/cesium/pull/8563)
 * Updated [earcut](https://github.com/mapbox/earcut) to 2.2.1. [#8528](https://github.com/AnalyticalGraphicsInc/cesium/pull/8528)
 * Added a font cache to improve label performance. [#8537](https://github.com/AnalyticalGraphicsInc/cesium/pull/8537)
 
