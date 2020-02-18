@@ -3,7 +3,7 @@ import freezeObject from '../Core/freezeObject.js';
     /**
      * The refinement approach for a tile.
      * <p>
-     * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#refinement|Refinement}
+     * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#refinement|Refinement}
      * in the 3D Tiles spec.
      * </p>
      *

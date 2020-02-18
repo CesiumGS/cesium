@@ -168,7 +168,7 @@ import Fullscreen from './Fullscreen.js';
             //that rely on it, such as the Windows WebBrowser control which defines
             //PointerEvent but sets navigator.pointerEnabled to false.
 
-            //Firefox disabled because of https://github.com/AnalyticalGraphicsInc/cesium/issues/6372
+            //Firefox disabled because of https://github.com/CesiumGS/cesium/issues/6372
             hasPointerEvents = !isFirefox() && typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;

@@ -1025,18 +1025,18 @@ import TileImagery from './TileImagery.js';
         // output pixel.  So we used a grid of 256x256 vertices, because most of our imagery
         // tiles are 256x256.  Fortunately the grid could be created and uploaded to the GPU just once and
         // re-used for all reprojections, so the performance was virtually unchanged from our original fragment
-        // shader approach.  See https://github.com/AnalyticalGraphicsInc/cesium/pull/714.
+        // shader approach.  See https://github.com/CesiumGS/cesium/pull/714.
         //
-        // Over a year later, we noticed (https://github.com/AnalyticalGraphicsInc/cesium/issues/2110)
+        // Over a year later, we noticed (https://github.com/CesiumGS/cesium/issues/2110)
         // that our reprojection code was creating a rare but severe artifact on some GPUs (Intel HD 4600
         // for one).  The problem was that the GLSL sin function on these GPUs had a discontinuity at fine scales in
         // a few places.
         //
         // We solved this by implementing a more reliable sin function based on the CORDIC algorithm
-        // (https://github.com/AnalyticalGraphicsInc/cesium/pull/2111).  Even though this was a fair
+        // (https://github.com/CesiumGS/cesium/pull/2111).  Even though this was a fair
         // amount of code to be executing per vertex, the performance seemed to be pretty good on most GPUs.
         // Unfortunately, on some GPUs, the performance was absolutely terrible
-        // (https://github.com/AnalyticalGraphicsInc/cesium/issues/2258).
+        // (https://github.com/CesiumGS/cesium/issues/2258).
         //
         // So that brings us to our current solution, the one you see here.  Effectively, we compute the Web
         // Mercator texture coordinates on the CPU and store the T coordinate with each vertex (the S coordinate

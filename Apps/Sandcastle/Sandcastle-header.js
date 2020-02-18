@@ -100,7 +100,7 @@
 
     if (window.location.protocol === 'file:') {
         if (window.confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+            window.location = 'https://github.com/CesiumGS/cesium/wiki/Contributor%27s-Guide';
         }
     }
 }());
