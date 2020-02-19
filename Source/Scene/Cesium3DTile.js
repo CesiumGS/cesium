@@ -1321,7 +1321,6 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @private
      */
     Cesium3DTile.prototype.update = function(tileset, frameState, passOptions) {
-        console.log(passOptions);
         var initCommandLength = frameState.commandList.length;
         updateClippingPlanes(this, tileset);
         applyDebugSettings(this, tileset, frameState, passOptions);
