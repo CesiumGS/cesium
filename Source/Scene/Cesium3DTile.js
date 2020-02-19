@@ -1211,8 +1211,8 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this.geometricError = this._geometricError * uniformScale;
     };
 
-    function applyDebugSettings(tile, tileset, frameState) {
-        if (!frameState.passes.render) {
+    function applyDebugSettings(tile, tileset, frameState, passOptions) {
+        if (!passOptions.isRender) {
             return;
         }
 
@@ -1320,10 +1320,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      *
      * @private
      */
-    Cesium3DTile.prototype.update = function(tileset, frameState) {
+    Cesium3DTile.prototype.update = function(tileset, frameState, passOptions) {
         var initCommandLength = frameState.commandList.length;
         updateClippingPlanes(this, tileset);
-        applyDebugSettings(this, tileset, frameState);
+        applyDebugSettings(this, tileset, frameState, passOptions);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
 

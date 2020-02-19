@@ -1949,9 +1949,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         tileset._tileDebugLabels.update(frameState);
     }
 
-    function updateTiles(tileset, frameState, isRender) {
-        tileset._styleEngine.applyStyle(tileset, frameState);
+    function updateTiles(tileset, frameState, passOptions) {
+        tileset._styleEngine.applyStyle(tileset, passOptions);
 
+        var isRender = passOptions.isRender;
         var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
@@ -1988,13 +1989,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             if (isRender) {
                 tileVisible.raiseEvent(tile);
             }
-            tile.update(tileset, frameState);
+            tile.update(tileset, frameState, passOptions);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
         }
         for (i = 0; i < emptyLength; ++i) {
             tile = emptyTiles[i];
-            tile.update(tileset, frameState);
+            tile.update(tileset, frameState, passOptions);
         }
 
         var addedCommandsLength = commandList.length - lengthBeforeUpdate;
@@ -2202,7 +2203,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             requestTiles(tileset);
         }
 
-        updateTiles(tileset, frameState, isRender);
+        updateTiles(tileset, frameState, passOptions);
 
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);

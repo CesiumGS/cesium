@@ -14,6 +14,7 @@ Change Log
 ##### Fixes :wrench:
 
 * Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/CesiumGS/cesium/pull/8598)
+* Fixed a bug where applying a new 3D Tiles style during a flight would not update all existing tiles. [#8622](https://github.com/CesiumGS/cesium/pull/8622)
 
 ### 1.66.0 - 2020-02-03
 
