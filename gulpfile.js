@@ -323,7 +323,7 @@ gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocume
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
 
     var builtSrc = gulp.src([

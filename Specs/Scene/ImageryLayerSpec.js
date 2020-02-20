@@ -501,7 +501,7 @@ describe('Scene/ImageryLayer', function() {
         });
 
         it('does not get confused when base layer imagery overlaps in one direction but not the other', function() {
-            // This is a pretty specific test targeted at https://github.com/AnalyticalGraphicsInc/cesium/issues/2815
+            // This is a pretty specific test targeted at https://github.com/CesiumGS/cesium/issues/2815
             // It arranges for tileImageryBoundsScratch to be a rectangle that is invalid in the WebMercator projection.
             // Then, it triggers issue #2815 where that stale data is used in a later call.  Prior to the fix this
             // triggers an exception (use of an undefined reference).

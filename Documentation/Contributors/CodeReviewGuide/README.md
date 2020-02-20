@@ -14,9 +14,9 @@ This guide describes best practices for code reviewers.
 
 * It is ultimately the responsibility of the pull request opener to get their changes merged. They should champion their code being merged and should bump the PR or `@mention` a specific developer if it is not getting the necessary attention.
 * GitHub has great [tools for code reviews in pull requests](https://help.github.com/articles/using-pull-requests/#reviewing-proposed-changes) that you should become familiar with.
-* We need a CLA for any contribution. If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), the Cesium Concierge will ask for one. If you receive no updates, politely ask for one before reviewing the pull request ([example](https://github.com/AnalyticalGraphicsInc/cesium/pull/2918#issuecomment-127805425)).
+* We need a CLA for any contribution. If we don't have a CLA for the contributor who opened the pull request (or, more precisely, any contributor to the branch), the Cesium Concierge will ask for one. If you receive no updates, politely ask for one before reviewing the pull request ([example](https://github.com/CesiumGS/cesium/pull/2918#issuecomment-127805425)).
 * Most pull requests require additional work, minor or major, before being merged. Sometime pull requests are submitted incomplete for early feedback. Include a [task list](https://github.com/blog/1375%0A-task-lists-in-gfm-issues-pulls-comments) covering the steps that must be completed before merging.
-* Anyone is encouraged to review any pull request that interests them.  However, someone familiar with the changed code should ultimately merge it. 
+* Anyone is encouraged to review any pull request that interests them.  However, someone familiar with the changed code should ultimately merge it.
 * It's OK to provide a few comments without taking responsibility for the final merge, for example commenting on the state of the public API or a Sandcastle example. However, be explicit that you will not be reviewing again.  This sometimes happens when a reviewer wants to take a quick look at the public API or code examples but not all the implementation details.
 
 ## Reviewing
@@ -61,7 +61,7 @@ This guide describes best practices for code reviewers.
 Sometimes it is useful to clean up the pull request. Here are some scenarios and how to tackle them.
 The tips below will use the following keywords:
 * **origin** will refer to the user fork, ie. `git@github.com/username/cesium.git`.
-* **upstream** will refer to the AGI repo, ie. `git@github.com/AnalyticalGraphicsInc/cesium.git`.
+* **upstream** will refer to the CesiumGS repo, ie. `git@github.com/CesiumGS/cesium.git`.
 * **mybranch** will refer to your local branch name.
 * **target** will refer to the target branch the PR is to be merged into (and also the source for `mybranch`).
 
@@ -120,16 +120,16 @@ git push -f origin mybranch # Requires force push as it is changing existing his
 
 GitHub's [hub](https://hub.github.com) makes checking-out PR's simple. For example, run:
 
- ```hub checkout https://github.com/AnalyticalGraphicsInc/cesium/pull/3941```
- 
+ ```hub checkout https://github.com/CesiumGS/cesium/pull/3941```
+
  This will create a new branch with the contents of the pull request. Also, you can easily add remote
  forks with:
- 
+
  ```hub fetch boomer_jones,pjcozzi```
- 
+
  which will automatically add these repos as remotes and fetch them. See the hub [open-source maintainer section](https://hub.github.com/#maintainer)
  for more info.
- 
+
 ## Resources
 
 * [Practice Conspicuous Code Review](http://producingoss.com/en/producingoss.html#code-review) in [Producing Open Source Software](http://producingoss.com/).

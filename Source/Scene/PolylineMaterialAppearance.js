@@ -29,7 +29,7 @@ import Material from './Material.js';
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -63,7 +63,7 @@ import Material from './Material.js';
          *
          * @default {@link Material.ColorType}
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
