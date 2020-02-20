@@ -7,6 +7,7 @@ import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -683,6 +684,7 @@ import SunLight from '../Scene/SunLight.js';
          */
         log2FarDistance : {
             get : function() {
+                deprecationWarning('log2FarDistance', '(czm_)log2FarDistance will be removed in Cesium 1.69.');
                 return this._log2FarDistance;
             }
         },
@@ -694,6 +696,7 @@ import SunLight from '../Scene/SunLight.js';
          */
         log2FarPlusOne : {
             get : function() {
+                deprecationWarning('log2FarPlusOne', '(czm_)log2FarPlusOne will be removed in Cesium 1.69.');
                 return this._log2FarPlusOne;
             }
         },
@@ -705,6 +708,7 @@ import SunLight from '../Scene/SunLight.js';
          */
         log2NearDistance : {
             get : function() {
+                deprecationWarning('log2NearDistance', '(czm_)log2NearDistance will be removed in Cesium 1.69.');
                 return this._log2NearDistance;
             }
         },
@@ -1155,7 +1159,7 @@ import SunLight from '../Scene/SunLight.js';
 
         this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
         this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near + 1.0);
+        this._log2NearDistance = CesiumMath.log2(frustum.near);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
