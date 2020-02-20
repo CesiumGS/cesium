@@ -1020,7 +1020,7 @@ import ShadowMode from './ShadowMode.js';
             'varying float v_WindowZ;\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
-            '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
+            '#if defined(GL_EXT_frag_depth)\n' +
             '    #if defined(LOG_DEPTH)\n' +
             '        czm_writeLogDepth();\n' +
             '    #else\n' +
