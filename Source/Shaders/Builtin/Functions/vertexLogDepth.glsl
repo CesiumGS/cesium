@@ -6,8 +6,6 @@ varying vec3 v_logPositionEC;
 #endif
 #endif
 
-varying float v_debug;
-
 vec4 czm_updatePositionDepth(vec4 coords) {
 #if defined(LOG_DEPTH)
 
