@@ -2881,7 +2881,9 @@ import View from './View.js';
                     environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
                 }
                 environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
-                this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
+                if (defined(environmentState.skyAtmosphereCommand)) {
+                    this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
+                }
             }
 
             environmentState.skyBoxCommand = defined(this.skyBox) ? this.skyBox.update(frameState, this._hdr) : undefined;
