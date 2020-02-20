@@ -15,7 +15,7 @@ require({
         location: '../Apps/Sandcastle'
     }, {
         name: 'CodeMirror',
-        location: '../ThirdParty/codemirror-4.6'
+        location: '../ThirdParty/codemirror-5.52.0'
     }, {
         name: 'ThirdParty',
         location: '../Apps/Sandcastle/ThirdParty'
