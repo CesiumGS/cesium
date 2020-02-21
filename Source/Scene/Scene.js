@@ -2884,6 +2884,8 @@ import View from './View.js';
                 if (defined(environmentState.skyAtmosphereCommand)) {
                     this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
                 }
+            } else {
+                environmentState.skyAtmosphereCommand = undefined;
             }
 
             environmentState.skyBoxCommand = defined(this.skyBox) ? this.skyBox.update(frameState, this._hdr) : undefined;
