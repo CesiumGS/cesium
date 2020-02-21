@@ -579,6 +579,11 @@
       "classificationType":"TERRAIN",
       "zIndex":445
     },
+    "tileset":{
+      "show":true,
+      "uri":"http://example.com/6864",
+      "maximumScreenSpaceError":51767
+    },
     "wall":{
       "show":true,
       "positions":{
@@ -8011,6 +8016,17 @@
         "reference":"Constant#rectangle.zIndex"
       }
     },
+    "tileset":{
+      "show":{
+        "reference":"Constant#tileset.show"
+      },
+      "uri":{
+        "reference":"Constant#tileset.uri"
+      },
+      "maximumScreenSpaceError":{
+        "reference":"Constant#tileset.maximumScreenSpaceError"
+      }
+    },
     "wall":{
       "show":{
         "reference":"Constant#wall.show"
@@ -11914,6 +11930,15 @@
         "number":[
           0,27256,
           3600,53581
+        ]
+      }
+    },
+    "tileset":{
+      "maximumScreenSpaceError":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,17401,
+          3600,7930
         ]
       }
     },
