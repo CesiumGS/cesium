@@ -1317,6 +1317,7 @@ function createJsHintOptions() {
     primary.jasmine = false;
     primary.predef = gallery.predef;
     primary.unused = gallery.unused;
+    primary.esversion = gallery.esversion;
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
