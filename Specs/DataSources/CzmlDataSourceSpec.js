@@ -5304,6 +5304,9 @@ describe('DataSources/CzmlDataSource', function() {
             expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(21388, 23379));
             expect(e.rectangle.classificationType.getValue(date)).toEqual(ClassificationType.TERRAIN);
             expect(e.rectangle.zIndex.getValue(date)).toEqual(445);
+            expect(e.tileset.show.getValue(date)).toEqual(true);
+            expect(e.tileset.uri.getValue(date).url).toEqual('http://example.com/6864');
+            expect(e.tileset.maximumScreenSpaceError.getValue(date)).toEqual(51767.0);
             expect(e.wall.show.getValue(date)).toEqual(true);
             expect(e.wall.positions.getValue(date)).toEqual([ new Cartesian3(21681, 40276, 30621), new Cartesian3(3959, 61967, 19442) ]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([ 49466, 44737 ]);
@@ -6290,6 +6293,9 @@ describe('DataSources/CzmlDataSource', function() {
             expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(constant.rectangle.distanceDisplayCondition.getValue(date));
             expect(e.rectangle.classificationType.getValue(date)).toEqual(constant.rectangle.classificationType.getValue(date));
             expect(e.rectangle.zIndex.getValue(date)).toEqual(constant.rectangle.zIndex.getValue(date));
+            expect(e.tileset.show.getValue(date)).toEqual(constant.tileset.show.getValue(date));
+            expect(e.tileset.uri.getValue(date)).toEqual(constant.tileset.uri.getValue(date));
+            expect(e.tileset.maximumScreenSpaceError.getValue(date)).toEqual(constant.tileset.maximumScreenSpaceError.getValue(date));
             expect(e.wall.show.getValue(date)).toEqual(constant.wall.show.getValue(date));
             expect(e.wall.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([dataSource.entities.getById('ConstantDouble1').billboard.scale.getValue(date), dataSource.entities.getById('ConstantDouble2').billboard.scale.getValue(date)]);
@@ -6902,6 +6908,8 @@ describe('DataSources/CzmlDataSource', function() {
             expect(e.rectangle.distanceDisplayCondition.getValue(documentStopDate)).toEqual(new DistanceDisplayCondition(34617, 40071));
             expect(e.rectangle.zIndex.getValue(documentStartDate)).toEqual(27256);
             expect(e.rectangle.zIndex.getValue(documentStopDate)).toEqual(53581);
+            expect(e.tileset.maximumScreenSpaceError.getValue(documentStartDate)).toEqual(17401.0);
+            expect(e.tileset.maximumScreenSpaceError.getValue(documentStopDate)).toEqual(7930.0);
             expect(e.wall.granularity.getValue(documentStartDate)).toEqual(64428.0);
             expect(e.wall.granularity.getValue(documentStopDate)).toEqual(25333.0);
             expect(e.wall.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(31, 188, 250, 46));
