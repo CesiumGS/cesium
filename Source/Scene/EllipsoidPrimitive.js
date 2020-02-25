@@ -348,7 +348,7 @@ import SceneMode from './SceneMode.js';
                 fs.defines.push('WRITE_DEPTH');
             }
             if (this._useLogDepth) {
-                vs.defines.push('LOG_DEPTH', 'DISABLE_GL_POSITION_LOG_DEPTH');
+                vs.defines.push('LOG_DEPTH');
                 fs.defines.push('LOG_DEPTH');
                 fs.sources.push(logDepthExtension);
             }

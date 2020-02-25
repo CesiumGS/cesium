@@ -1330,13 +1330,14 @@ import StencilOperation from './StencilOperation.js';
         return derivedCommand;
     }
 
-    function getDisableLogDepthFragmentShaderProgram(context, shaderProgram) {
+    function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth');
         if (!defined(shader)) {
             var fs = shaderProgram.fragmentShaderSource.clone();
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
-            fs.defines.push('DISABLE_LOG_DEPTH_FRAGMENT_WRITE');
+            fs.defines.push('POLYGON_OFFSET');
 
+            fs.sources.unshift('#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n');
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
@@ -1374,9 +1375,17 @@ import StencilOperation from './StencilOperation.js';
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
-        // Disable the depth writes in the fragment shader. The back face commands were causing the higher resolution
+        derivedCommand.uniformMap = clone(command.uniformMap);
+
+        var polygonOffset = new Cartesian2(5.0, 5.0);
+        derivedCommand.uniformMap.u_polygonOffset = function() {
+            return polygonOffset;
+        };
+
+        // Make the log depth depth fragment write account for the polygon offset, too.
+        // Otherwise, the back face commands will cause the higher resolution
         // tiles to disappear.
-        derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
+        derivedCommand.shaderProgram = getLogDepthPolygonOffsetFragmentShaderProgram(context, command.shaderProgram);
         return derivedCommand;
     }
 

@@ -2875,11 +2875,19 @@ import View from './View.js';
             environmentState.sunComputeCommand = undefined;
             environmentState.moonCommand = undefined;
         } else {
-            if (defined(skyAtmosphere) && defined(globe)) {
-                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
-                environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+            if (defined(skyAtmosphere)) {
+                if (defined(globe)) {
+                    skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
+                    environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+                }
+                environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
+                if (defined(environmentState.skyAtmosphereCommand)) {
+                    this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
+                }
+            } else {
+                environmentState.skyAtmosphereCommand = undefined;
             }
-            environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
+
             environmentState.skyBoxCommand = defined(this.skyBox) ? this.skyBox.update(frameState, this._hdr) : undefined;
             var sunCommands = defined(this.sun) ? this.sun.update(frameState, view.passState, this._hdr) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
