@@ -40,7 +40,6 @@ describe('Scene/Vector3DTilePolygons', function() {
         c.destroyForSpecs();
     }
 
-
     function createPolygonSpecs(contextOptions) {
         var webglMessage = contextOptions.requestWebgl2 ? ': WebGL 2' : '';
 
