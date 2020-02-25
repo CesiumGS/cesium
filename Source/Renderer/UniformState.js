@@ -7,7 +7,6 @@ import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
-import deprecationWarning from '../Core/deprecationWarning.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -48,9 +47,6 @@ import SunLight from '../Scene/SunLight.js';
         this._farDepthFromNearPlusOne = undefined;
         this._log2FarDepthFromNearPlusOne = undefined;
         this._oneOverLog2FarDepthFromNearPlusOne = undefined;
-        this._log2FarDistance = undefined;
-        this._log2FarPlusOne = undefined;
-        this._log2NearDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -678,42 +674,6 @@ import SunLight from '../Scene/SunLight.js';
         },
 
         /**
-         * The log2 of the current frustum's far distance. Used to compute the log depth.
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        log2FarDistance : {
-            get : function() {
-                deprecationWarning('log2FarDistance', '(czm_)log2FarDistance will be removed in Cesium 1.69.');
-                return this._log2FarDistance;
-            }
-        },
-
-        /**
-         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        log2FarPlusOne : {
-            get : function() {
-                deprecationWarning('log2FarPlusOne', '(czm_)log2FarPlusOne will be removed in Cesium 1.69.');
-                return this._log2FarPlusOne;
-            }
-        },
-
-        /**
-         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
-         * @memberof UniformState.prototype
-         * @type {Number}
-         */
-        log2NearDistance : {
-            get : function() {
-                deprecationWarning('log2NearDistance', '(czm_)log2NearDistance will be removed in Cesium 1.69.');
-                return this._log2NearDistance;
-            }
-        },
-
-        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -1156,10 +1116,6 @@ import SunLight from '../Scene/SunLight.js';
         this._farDepthFromNearPlusOne = (frustum.far - frustum.near) + 1.0;
         this._log2FarDepthFromNearPlusOne = CesiumMath.log2(this._farDepthFromNearPlusOne);
         this._oneOverLog2FarDepthFromNearPlusOne = 1.0 / this._log2FarDepthFromNearPlusOne;
-
-        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
-        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near);
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;

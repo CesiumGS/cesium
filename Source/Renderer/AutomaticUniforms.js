@@ -1177,55 +1177,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
-         * The log2 of the current frustums far plane. Used for computing the log depth.
-         *
-         * @alias czm_log2FarDistance
-         * @namespace
-         * @glslUniform
-         *
-         * @private
-         */
-        czm_log2FarDistance : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.log2FarDistance;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform containing log2 of the far distance + 1.0.
-         * This is used when reversing log depth computations.
-         *
-         * @alias czm_log2FarPlusOne
-         * @namespace
-         * @glslUniform
-         */
-        czm_log2FarPlusOne : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.log2FarPlusOne;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform containing log2 of the near distance.
-         * This is used when writing log depth in the fragment shader.
-         *
-         * @alias czm_log2NearDistance
-         * @namespace
-         * @glslUniform
-         */
-        czm_log2NearDistance : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.log2NearDistance;
-            }
-        }),
-
-        /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *
          * @alias czm_sunPositionWC
