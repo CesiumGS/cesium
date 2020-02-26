@@ -1,46 +1,23 @@
-define([
-        './arrayRemoveDuplicates',
-        './BoundingRectangle',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './CornerType',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './IndexDatatype',
-        './Math',
-        './PolygonPipeline',
-        './PolylineVolumeGeometryLibrary',
-        './PrimitiveType',
-        './WindingOrder'
-    ], function(
-        arrayRemoveDuplicates,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        CornerType,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        IndexDatatype,
-        CesiumMath,
-        PolygonPipeline,
-        PolylineVolumeGeometryLibrary,
-        PrimitiveType,
-        WindingOrder) {
-    'use strict';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingRectangle from './BoundingRectangle.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import CornerType from './CornerType.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PolylineVolumeGeometryLibrary from './PolylineVolumeGeometryLibrary.js';
+import PrimitiveType from './PrimitiveType.js';
+import WindingOrder from './WindingOrder.js';
 
     function computeAttributes(positions, shape) {
         var attributes = new GeometryAttributes();
@@ -298,6 +275,4 @@ define([
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry, false);
         return computeAttributes(computedPositions, shape2D);
     };
-
-    return PolylineVolumeOutlineGeometry;
-});
+export default PolylineVolumeOutlineGeometry;

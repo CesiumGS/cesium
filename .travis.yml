@@ -1,14 +1,9 @@
 language: node_js
 node_js:
-  - "8"
-sudo: false
+  - "10"
 addons:
   chrome: stable
   firefox: latest
-services:
-  - xvfb
-before_script:
-  - export DISPLAY=:99.0
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -26,6 +21,7 @@ script:
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed
 
+  - npm --silent run build-specs
   - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
 # Various Node.js smoke-screen tests

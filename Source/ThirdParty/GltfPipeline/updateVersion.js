@@ -1,46 +1,23 @@
-define([
-        './addExtensionsUsed',
-        './addToArray',
-        './findAccessorMinMax',
-        './ForEach',
-        './getAccessorByteStride',
-        './numberOfComponentsForType',
-        './moveTechniqueRenderStates',
-        './moveTechniquesToExtension',
-        './removeUnusedElements',
-        './updateAccessorComponentTypes',
-        '../../Core/Cartesian3',
-        '../../Core/Cartesian4',
-        '../../Core/clone',
-        '../../Core/ComponentDatatype',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/isArray',
-        '../../Core/Matrix4',
-        '../../Core/Quaternion',
-        '../../Core/WebGLConstants'
-    ], function(
-        addExtensionsUsed,
-        addToArray,
-        findAccessorMinMax,
-        ForEach,
-        getAccessorByteStride,
-        numberOfComponentsForType,
-        moveTechniqueRenderStates,
-        moveTechniquesToExtension,
-        removeUnusedElements,
-        updateAccessorComponentTypes,
-        Cartesian3,
-        Cartesian4,
-        clone,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        isArray,
-        Matrix4,
-        Quaternion,
-        WebGLConstants) {
-    'use strict';
+import addExtensionsUsed from './addExtensionsUsed.js'
+import addToArray from './addToArray.js'
+import findAccessorMinMax from './findAccessorMinMax.js'
+import ForEach from './ForEach.js'
+import getAccessorByteStride from './getAccessorByteStride.js'
+import numberOfComponentsForType from './numberOfComponentsForType.js'
+import moveTechniqueRenderStates from './moveTechniqueRenderStates.js'
+import moveTechniquesToExtension from './moveTechniquesToExtension.js'
+import removeUnusedElements from './removeUnusedElements.js'
+import updateAccessorComponentTypes from './updateAccessorComponentTypes.js'
+import Cartesian3 from '../../Core/Cartesian3.js'
+import Cartesian4 from '../../Core/Cartesian4.js'
+import clone from '../../Core/clone.js'
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
+import defaultValue from '../../Core/defaultValue.js'
+import defined from '../../Core/defined.js'
+import isArray from '../../Core/isArray.js'
+import Matrix4 from '../../Core/Matrix4.js'
+import Quaternion from '../../Core/Quaternion.js'
+import WebGLConstants from '../../Core/WebGLConstants.js'
 
     var updateFunctions = {
         '0.8': glTF08to10,
@@ -73,13 +50,13 @@ define([
         version = defaultValue(version, gltf.asset.version).toString();
 
         // Invalid version
-        if (!updateFunctions.hasOwnProperty(version)) {
+        if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
             // Try truncating trailing version numbers, could be a number as well if it is 0.8
             if (defined(version)) {
                 version = version.substring(0, 3);
             }
             // Default to 1.0 if it cannot be determined
-            if (!updateFunctions.hasOwnProperty(version)) {
+            if (!Object.prototype.hasOwnProperty.call(updateFunctions, version)) {
                 version = '1.0';
             }
         }
@@ -100,7 +77,7 @@ define([
     function updateInstanceTechniques(gltf) {
         var materials = gltf.materials;
         for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
+            if (Object.prototype.hasOwnProperty.call(materials, materialId)) {
                 var material = materials[materialId];
                 var instanceTechnique = material.instanceTechnique;
                 if (defined(instanceTechnique)) {
@@ -115,7 +92,7 @@ define([
     function setPrimitiveModes(gltf) {
         var meshes = gltf.meshes;
         for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
+            if (Object.prototype.hasOwnProperty.call(meshes, meshId)) {
                 var mesh = meshes[meshId];
                 var primitives = mesh.primitives;
                 if (defined(primitives)) {
@@ -136,7 +113,7 @@ define([
         var axis = new Cartesian3();
         var quat = new Quaternion();
         for (var nodeId in nodes) {
-            if (nodes.hasOwnProperty(nodeId)) {
+            if (Object.prototype.hasOwnProperty.call(nodes, nodeId)) {
                 var node = nodes[nodeId];
                 if (defined(node.rotation)) {
                     var rotation = node.rotation;
@@ -164,7 +141,7 @@ define([
         var axis = new Cartesian3();
         var quat = new Quaternion();
         for (var animationId in animations) {
-            if (animations.hasOwnProperty(animationId)) {
+            if (Object.prototype.hasOwnProperty.call(animations, animationId)) {
                 var animation = animations[animationId];
                 var channels = animation.channels;
                 var parameters = animation.parameters;
@@ -207,12 +184,12 @@ define([
     function removeTechniquePasses(gltf) {
         var techniques = gltf.techniques;
         for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
+            if (Object.prototype.hasOwnProperty.call(techniques, techniqueId)) {
                 var technique = techniques[techniqueId];
                 var passes = technique.passes;
                 if (defined(passes)) {
                     var passName = defaultValue(technique.pass, 'defaultPass');
-                    if (passes.hasOwnProperty(passName)) {
+                    if (Object.prototype.hasOwnProperty.call(passes, passName)) {
                         var pass = passes[passName];
                         var instanceProgram = pass.instanceProgram;
                         technique.attributes = defaultValue(technique.attributes, instanceProgram.attributes);
@@ -279,13 +256,13 @@ define([
     function removeAnimationSamplersIndirection(gltf) {
         var animations = gltf.animations;
         for (var animationId in animations) {
-            if (animations.hasOwnProperty(animationId)) {
+            if (Object.prototype.hasOwnProperty.call(animations, animationId)) {
                 var animation = animations[animationId];
                 var parameters = animation.parameters;
                 if (defined(parameters)) {
                     var samplers = animation.samplers;
                     for (var samplerId in samplers) {
-                        if (samplers.hasOwnProperty(samplerId)) {
+                        if (Object.prototype.hasOwnProperty.call(samplers, samplerId)) {
                             var sampler = samplers[samplerId];
                             sampler.input = parameters[sampler.input];
                             sampler.output = parameters[sampler.output];
@@ -300,7 +277,7 @@ define([
     function objectToArray(object, mapping) {
         var array = [];
         for (var id in object) {
-            if (object.hasOwnProperty(id)) {
+            if (Object.prototype.hasOwnProperty.call(object, id)) {
                 var value = object[id];
                 mapping[id] = array.length;
                 array.push(value);
@@ -338,7 +315,7 @@ define([
         var jointNameToId = {};
         var nodes = gltf.nodes;
         for (var id in nodes) {
-            if (nodes.hasOwnProperty(id)) {
+            if (Object.prototype.hasOwnProperty.call(nodes, id)) {
                 jointName = nodes[id].jointName;
                 if (defined(jointName)) {
                     jointNameToId[jointName] = id;
@@ -348,7 +325,7 @@ define([
 
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId) && defined(globalMapping[topLevelId])) {
+            if (Object.prototype.hasOwnProperty.call(gltf, topLevelId) && defined(globalMapping[topLevelId])) {
                 var objectMapping = {};
                 var object = gltf[topLevelId];
                 gltf[topLevelId] = objectToArray(object, objectMapping);
@@ -358,7 +335,7 @@ define([
 
         // Remap joint names to array indexes
         for (jointName in jointNameToId) {
-            if (jointNameToId.hasOwnProperty(jointName)) {
+            if (Object.prototype.hasOwnProperty.call(jointNameToId, jointName)) {
                 jointNameToId[jointName] = globalMapping.nodes[jointNameToId[jointName]];
             }
         }
@@ -588,7 +565,7 @@ define([
 
     function removeEmptyArrays(gltf) {
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId)) {
+            if (Object.prototype.hasOwnProperty.call(gltf, topLevelId)) {
                 var array = gltf[topLevelId];
                 if (isArray(array) && array.length === 0) {
                     delete gltf[topLevelId];
@@ -709,7 +686,7 @@ define([
                     }
                 });
                 for (var semantic in mappedSemantics) {
-                    if (mappedSemantics.hasOwnProperty(semantic)) {
+                    if (Object.prototype.hasOwnProperty.call(mappedSemantics, semantic)) {
                         var mappedSemantic = mappedSemantics[semantic];
                         var accessorId = primitive.attributes[semantic];
                         if (defined(accessorId)) {
@@ -792,7 +769,7 @@ define([
 
         // Split accessors with different byte strides
         for (var bufferViewId in bufferViewMap) {
-            if (bufferViewMap.hasOwnProperty(bufferViewId)) {
+            if (Object.prototype.hasOwnProperty.call(bufferViewMap, bufferViewId)) {
                 bufferView = bufferViews[bufferViewId];
                 var accessors = bufferViewMap[bufferViewId];
                 accessors.sort(function(a, b) {
@@ -832,7 +809,7 @@ define([
         }
 
         // Remove unused buffer views
-        removeUnusedElements(gltf);
+        removeUnusedElements(gltf, ['accessor', 'bufferView', 'buffer']);
     }
 
     function requirePositionAccessorMinMax(gltf) {
@@ -957,5 +934,4 @@ define([
         removeEmptyArrays(gltf);
     }
 
-    return updateVersion;
-});
+    export default updateVersion;

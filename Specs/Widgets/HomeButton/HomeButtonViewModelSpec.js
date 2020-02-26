@@ -1,14 +1,7 @@
-define([
-        'Core/Ellipsoid',
-        'Scene/Globe',
-        'Specs/createScene',
-        'Widgets/HomeButton/HomeButtonViewModel'
-    ], function(
-        Ellipsoid,
-        Globe,
-        createScene,
-        HomeButtonViewModel) {
-        'use strict';
+import { Ellipsoid } from '../../../Source/Cesium.js';
+import { Globe } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { HomeButtonViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/HomeButton/HomeButtonViewModel', function() {
 
@@ -65,4 +58,3 @@ describe('Widgets/HomeButton/HomeButtonViewModel', function() {
         viewModel.command();
     });
 }, 'WebGL');
-});

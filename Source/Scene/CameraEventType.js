@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Enumerates the available input for interacting with the camera.
@@ -50,6 +46,4 @@ define([
          */
         PINCH : 4
     };
-
-    return freezeObject(CameraEventType);
-});
+export default freezeObject(CameraEventType);

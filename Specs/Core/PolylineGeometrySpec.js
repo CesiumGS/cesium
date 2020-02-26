@@ -1,20 +1,10 @@
-define([
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/PolylineGeometry',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        ArcType,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        PolylineGeometry,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PolylineGeometry', function() {
 
@@ -208,5 +198,4 @@ describe('Core/PolylineGeometry', function() {
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'rhumb line');
-});
 });

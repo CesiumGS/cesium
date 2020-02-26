@@ -1,10 +1,5 @@
-define([
-        'Core/Cartesian2',
-        'Core/pointInsideTriangle'
-    ], function(
-        Cartesian2,
-        pointInsideTriangle) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { pointInsideTriangle } from '../../Source/Cesium.js';
 
 describe('Core/pointInsideTriangle', function() {
 
@@ -55,5 +50,4 @@ describe('Core/pointInsideTriangle', function() {
             pointInsideTriangle(new Cartesian2(), new Cartesian2(), new Cartesian2());
         }).toThrowDeveloperError();
     });
-});
 });

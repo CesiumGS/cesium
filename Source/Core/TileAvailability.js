@@ -1,18 +1,8 @@
-define([
-        './binarySearch',
-        './Cartographic',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Rectangle'
-    ], function(
-        binarySearch,
-        Cartographic,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Rectangle) {
-    'use strict';
+import binarySearch from './binarySearch.js';
+import Cartographic from './Cartographic.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * Reports the availability of tiles in a {@link TilingScheme}.
@@ -443,6 +433,4 @@ define([
 
         return result;
     }
-
-    return TileAvailability;
-});
+export default TileAvailability;

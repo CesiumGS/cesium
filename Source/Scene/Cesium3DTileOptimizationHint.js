@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Hint defining optimization support for a 3D tile
@@ -16,6 +12,4 @@ define([
         USE_OPTIMIZATION: 1,
         SKIP_OPTIMIZATION: 0
     };
-
-    return freezeObject(Cesium3DTileOptimizationHint);
-});
+export default freezeObject(Cesium3DTileOptimizationHint);

@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
@@ -36,7 +26,7 @@ define([
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
@@ -182,7 +172,7 @@ define([
 
         /**
          * Get or sets the enum Property specifying whether the cylinder
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED
@@ -252,6 +242,4 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return CylinderGraphics;
-});
+export default CylinderGraphics;

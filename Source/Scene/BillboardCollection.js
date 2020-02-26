@@ -1,78 +1,39 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EncodedCartesian3',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArrayFacade',
-        '../Shaders/BillboardCollectionFS',
-        '../Shaders/BillboardCollectionVS',
-        './Billboard',
-        './BlendingState',
-        './BlendOption',
-        './HeightReference',
-        './HorizontalOrigin',
-        './SceneMode',
-        './SDFSettings',
-        './TextureAtlas',
-        './VerticalOrigin'
-    ], function(
-        AttributeCompression,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EncodedCartesian3,
-        IndexDatatype,
-        CesiumMath,
-        Matrix4,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArrayFacade,
-        BillboardCollectionFS,
-        BillboardCollectionVS,
-        Billboard,
-        BlendingState,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        SceneMode,
-        SDFSettings,
-        TextureAtlas,
-        VerticalOrigin) {
-    'use strict';
+import AttributeCompression from '../Core/AttributeCompression.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArrayFacade from '../Renderer/VertexArrayFacade.js';
+import BillboardCollectionFS from '../Shaders/BillboardCollectionFS.js';
+import BillboardCollectionVS from '../Shaders/BillboardCollectionVS.js';
+import Billboard from './Billboard.js';
+import BlendingState from './BlendingState.js';
+import BlendOption from './BlendOption.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import SceneMode from './SceneMode.js';
+import SDFSettings from './SDFSettings.js';
+import TextureAtlas from './TextureAtlas.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -162,7 +123,7 @@ define([
      * @see Billboard
      * @see LabelCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      *
      * @example
      * // Create a billboard collection with two billboards
@@ -2024,6 +1985,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return BillboardCollection;
-});
+export default BillboardCollection;

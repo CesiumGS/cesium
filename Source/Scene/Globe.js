@@ -1,64 +1,32 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/buildModuleUrl',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidTerrainProvider',
-        '../Core/Event',
-        '../Core/IntersectionTests',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Shaders/GlobeFS',
-        '../Shaders/GlobeVS',
-        '../Shaders/GroundAtmosphere',
-        '../ThirdParty/when',
-        './GlobeSurfaceShaderSet',
-        './GlobeSurfaceTileProvider',
-        './ImageryLayerCollection',
-        './QuadtreePrimitive',
-        './SceneMode',
-        './ShadowMode',
-        './TileSelectionResult'
-    ], function(
-        BoundingSphere,
-        buildModuleUrl,
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidTerrainProvider,
-        Event,
-        IntersectionTests,
-        Ray,
-        Rectangle,
-        Resource,
-        ShaderSource,
-        Texture,
-        GlobeFS,
-        GlobeVS,
-        GroundAtmosphere,
-        when,
-        GlobeSurfaceShaderSet,
-        GlobeSurfaceTileProvider,
-        ImageryLayerCollection,
-        QuadtreePrimitive,
-        SceneMode,
-        ShadowMode,
-        TileSelectionResult) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidTerrainProvider from '../Core/EllipsoidTerrainProvider.js';
+import Event from '../Core/Event.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import GlobeFS from '../Shaders/GlobeFS.js';
+import GlobeVS from '../Shaders/GlobeVS.js';
+import GroundAtmosphere from '../Shaders/GroundAtmosphere.js';
+import when from '../ThirdParty/when.js';
+import GlobeSurfaceShaderSet from './GlobeSurfaceShaderSet.js';
+import GlobeSurfaceTileProvider from './GlobeSurfaceTileProvider.js';
+import ImageryLayerCollection from './ImageryLayerCollection.js';
+import QuadtreePrimitive from './QuadtreePrimitive.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -172,7 +140,7 @@ define([
         this.fillHighlightColor = undefined;
 
         /**
-         * Enable lighting the globe with the sun as a light source.
+         * Enable lighting the globe with the scene's light source.
          *
          * @type {Boolean}
          * @default false
@@ -180,9 +148,28 @@ define([
         this.enableLighting = false;
 
         /**
+         * Enable dynamic lighting effects on atmosphere and fog. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.dynamicAtmosphereLighting = true;
+
+        /**
+         * Whether dynamic atmosphere lighting uses the sun direction instead of the scene's
+         * light direction. This only takes effect when <code>enableLighting</code> and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.dynamicAtmosphereLightingFromSun = false;
+
+        /**
          * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
          *
          * @type {Boolean}
          * @default true
@@ -209,7 +196,8 @@ define([
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades out to a lit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 10000000.0
@@ -218,7 +206,8 @@ define([
 
         /**
          * The distance where the darkness of night from the ground atmosphere fades in to an unlit ground atmosphere.
-         * This only takes effect when <code>showGroundAtmosphere</code> and <code>enableLighting</code> are <code>true</code>.
+         * This only takes effect when <code>showGroundAtmosphere</code>, <code>enableLighting</code>, and
+         * <code>dynamicAtmosphereLighting</code> are <code>true</code>.
          *
          * @type {Number}
          * @default 50000000.0
@@ -249,7 +238,7 @@ define([
         this.depthTestAgainstTerrain = false;
 
         /**
-         * Determines whether the globe casts or receives shadows from each light source. Setting the globe
+         * Determines whether the globe casts or receives shadows from light sources. Setting the globe
          * to cast shadows may impact performance since the terrain is rendered again from the light's perspective.
          * Currently only terrain that is in view casts shadows. By default the globe does not cast shadows.
          *
@@ -281,6 +270,23 @@ define([
          * @default 0.0
          */
         this.atmosphereBrightnessShift = 0.0;
+
+        /**
+         * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
+         * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.showSkirts = true;
+
+        /**
+         * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.backFaceCulling = true;
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = undefined;
@@ -445,7 +451,7 @@ define([
 
         /**
          * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Globe.prototype
          * @type {Material}
          */
@@ -642,19 +648,26 @@ define([
             return undefined;
         }
 
+        var tileWithMesh = tile;
+
         while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
             tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
                    tileIfContainsCartographic(tile.southeastChild, cartographic) ||
                    tileIfContainsCartographic(tile.northwestChild, cartographic) ||
                    tile.northeastChild;
+            if (defined(tile.data) && defined(tile.data.renderedMesh)) {
+                tileWithMesh = tile;
+            }
         }
+
+        tile = tileWithMesh;
 
         // This tile was either rendered or culled.
         // It is sometimes useful to get a height from a culled tile,
         // e.g. when we're getting a height in order to place a billboard
         // on terrain, and the camera is looking at that same billboard.
         // The culled tile must have a valid mesh, though.
-        if (!defined(tile.data) || !defined(tile.data.renderedMesh)) {
+        if (!defined(tile)) {
             // Tile was not rendered (culled).
             return undefined;
         }
@@ -765,13 +778,16 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.dynamicAtmosphereLighting = this.dynamicAtmosphereLighting;
+            tileProvider.dynamicAtmosphereLightingFromSun = this.dynamicAtmosphereLightingFromSun;
             tileProvider.showGroundAtmosphere = this.showGroundAtmosphere;
             tileProvider.shadows = this.shadows;
             tileProvider.hueShift = this.atmosphereHueShift;
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
             tileProvider.fillHighlightColor = this.fillHighlightColor;
-
+            tileProvider.showSkirts = this.showSkirts;
+            tileProvider.backFaceCulling = this.backFaceCulling;
             surface.beginFrame(frameState);
         }
     };
@@ -840,6 +856,4 @@ define([
         this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
         return destroyObject(this);
     };
-
-    return Globe;
-});
+export default Globe;

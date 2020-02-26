@@ -1,8 +1,4 @@
-define([
-        'Core/ComponentDatatype'
-    ], function(
-        ComponentDatatype) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
 
 describe('Core/ComponentDatatype', function() {
 
@@ -167,5 +163,4 @@ describe('Core/ComponentDatatype', function() {
             ComponentDatatype.fromName();
         }).toThrowDeveloperError();
     });
-});
 });

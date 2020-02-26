@@ -1,12 +1,6 @@
-define([
-        '../Core/freezeObject',
-        './BlendEquation',
-        './BlendFunction'
-    ], function(
-        freezeObject,
-        BlendEquation,
-        BlendFunction) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import BlendEquation from './BlendEquation.js';
+import BlendFunction from './BlendFunction.js';
 
     /**
      * The blending state combines {@link BlendEquation} and {@link BlendFunction} and the
@@ -40,7 +34,7 @@ define([
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
             functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
         }),
@@ -72,11 +66,9 @@ define([
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE,
             functionDestinationAlpha : BlendFunction.ONE
         })
     };
-
-    return freezeObject(BlendingState);
-});
+export default freezeObject(BlendingState);

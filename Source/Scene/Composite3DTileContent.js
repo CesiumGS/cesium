@@ -1,33 +1,15 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/FeatureDetection',
-        '../Core/getMagic',
-        '../Core/RuntimeError',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        FeatureDetection,
-        getMagic,
-        RuntimeError,
-        when) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import getMagic from '../Core/getMagic.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
+     * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -278,6 +260,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return Composite3DTileContent;
-});
+export default Composite3DTileContent;

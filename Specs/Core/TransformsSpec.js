@@ -1,38 +1,19 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/EarthOrientationParameters',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/HeadingPitchRoll',
-        'Core/Iau2006XysData',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/Resource',
-        'Core/TimeInterval',
-        'Core/Transforms'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        EarthOrientationParameters,
-        Ellipsoid,
-        GeographicProjection,
-        HeadingPitchRoll,
-        Iau2006XysData,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        Resource,
-        TimeInterval,
-        Transforms) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { EarthOrientationParameters } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Iau2006XysData } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
 
 describe('Core/Transforms', function() {
 
@@ -88,6 +69,17 @@ describe('Core/Transforms', function() {
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
+    it('eastNorthUpToFixedFrame works at the origin', function() {
+        var origin = Cartesian3.ZERO;
+        var expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+        var returnedResult = Transforms.eastNorthUpToFixedFrame(origin, Ellipsoid.WGS84);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
     it('northEastDownToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
@@ -133,6 +125,17 @@ describe('Core/Transforms', function() {
         expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_X); // north
         expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(Cartesian4.UNIT_Y); // east
         expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // down
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
+    it('northEastDownToFixedFrame works at the origin', function() {
+        var origin = Cartesian3.ZERO;
+        var expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+        var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(negativeZ); // down
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
@@ -184,6 +187,17 @@ describe('Core/Transforms', function() {
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
+    it('northUpEastToFixedFrame works at the origin', function() {
+        var origin = Cartesian3.ZERO;
+        var expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+        var returnedResult = Transforms.northUpEastToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // up
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
     it('northWestUpToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
@@ -229,6 +243,17 @@ describe('Core/Transforms', function() {
         expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(Cartesian4.UNIT_X); // north
         expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
         expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(negativeZ); // up
+        expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
+    });
+
+    it('northWestUpToFixedFrame works at the origin', function() {
+        var origin = Cartesian3.ZERO;
+        var expectedTranslation = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+        var returnedResult = Transforms.northWestUpToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
+        expect(Matrix4.getColumn(returnedResult, 0, new Cartesian4())).toEqual(negativeX); // north
+        expect(Matrix4.getColumn(returnedResult, 1, new Cartesian4())).toEqual(negativeY); // west
+        expect(Matrix4.getColumn(returnedResult, 2, new Cartesian4())).toEqual(Cartesian4.UNIT_Z); // up
         expect(Matrix4.getColumn(returnedResult, 3, new Cartesian4())).toEqual(expectedTranslation); // translation
     });
 
@@ -548,7 +573,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame);
         var actual = Matrix3.fromQuaternion(quaternion);
@@ -563,7 +588,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame, result);
@@ -580,7 +605,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, undefined, result);
@@ -598,7 +623,7 @@ describe('Core/Transforms', function() {
         var fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator('west','south');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform, result);
@@ -1075,13 +1100,13 @@ describe('Core/Transforms', function() {
         var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
-        var rotation2D = Matrix4.getRotation(modelMatrix2D, new Matrix3());
+        var rotation2D = Matrix4.getMatrix3(modelMatrix2D, new Matrix3());
 
         var enu = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         var enuInverse = Matrix4.inverseTransformation(enu, enu);
 
         var hprPlusTranslate = Matrix4.multiply(enuInverse, modelMatrix, new Matrix4());
-        var hpr2 = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
+        var hpr2 = Matrix4.getMatrix3(hprPlusTranslate, new Matrix3());
 
         var row0 = Matrix3.getRow(hpr2, 0, new Cartesian3());
         var row1 = Matrix3.getRow(hpr2, 1, new Cartesian3());
@@ -1104,8 +1129,8 @@ describe('Core/Transforms', function() {
         var expected = Matrix4.fromTranslation(origin);
         Transforms.basisTo2D(projection, expected, expected);
 
-        var actualRotation = Matrix4.getRotation(actual, new Matrix3());
-        var expectedRotation = Matrix4.getRotation(expected, new Matrix3());
+        var actualRotation = Matrix4.getMatrix3(actual, new Matrix3());
+        var expectedRotation = Matrix4.getMatrix3(expected, new Matrix3());
         expect(actualRotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
 
         var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, new Matrix4());
@@ -1229,5 +1254,4 @@ describe('Core/Transforms', function() {
             Transforms.wgs84To2DModelMatrix(new GeographicProjection(), Cartesian3.UNIT_X, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

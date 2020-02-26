@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
-        './Appearance',
-        './Material'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        VertexFormat,
-        EllipsoidSurfaceAppearanceFS,
-        EllipsoidSurfaceAppearanceVS,
-        Appearance,
-        Material) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import EllipsoidSurfaceAppearanceFS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js';
+import EllipsoidSurfaceAppearanceVS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS.js';
+import Appearance from './Appearance.js';
+import Material from './Material.js';
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
@@ -38,7 +27,7 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -67,7 +56,7 @@ define([
          *
          * @default {@link Material.ColorType}
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 
@@ -276,6 +265,4 @@ define([
      * @returns {Object} The render state.
      */
     EllipsoidSurfaceAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return EllipsoidSurfaceAppearance;
-});
+export default EllipsoidSurfaceAppearance;

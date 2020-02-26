@@ -1,54 +1,27 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Clock',
-        'Core/ClockStep',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/Resource',
-        'Core/TimeIntervalCollection',
-        'Core/Transforms',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/DracoLoader',
-        'Scene/PointCloudEyeDomeLighting',
-        'Scene/ShadowMode',
-        'Scene/TimeDynamicPointCloud',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Clock,
-        ClockStep,
-        defaultValue,
-        defined,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        JulianDate,
-        Matrix4,
-        Resource,
-        TimeIntervalCollection,
-        Transforms,
-        Cesium3DTileStyle,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        DracoLoader,
-        PointCloudEyeDomeLighting,
-        ShadowMode,
-        TimeDynamicPointCloud,
-        createCanvas,
-        createScene,
-        pollToPromise,
-        when) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { DracoLoader } from '../../Source/Cesium.js';
+import { PointCloudEyeDomeLighting } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import { TimeDynamicPointCloud } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/TimeDynamicPointCloud', function() {
 
@@ -699,7 +672,7 @@ describe('Scene/TimeDynamicPointCloud', function() {
 
     it('frame failed event is raised from request failure', function() {
         var pointCloud = createTimeDynamicPointCloud();
-        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        spyOn(Resource._Implementations, 'loadWithXhr').and.callFake(function(request, responseType, method, data, headers, deferred, overrideMimeType) {
             deferred.reject('404');
         });
         var spyUpdate = jasmine.createSpy('listener');
@@ -787,4 +760,3 @@ describe('Scene/TimeDynamicPointCloud', function() {
     });
 
 }, 'WebGL');
-});

@@ -1,38 +1,20 @@
-define([
-        '../MockImageryProvider',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/createWorldTerrain',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Ray',
-        'Scene/GlobeSurfaceTile',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileLoadState',
-        'Scene/TerrainState',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], function(
-        MockImageryProvider,
-        MockTerrainProvider,
-        TerrainTileProcessor,
-        Cartesian3,
-        Cartesian4,
-        createWorldTerrain,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Ray,
-        GlobeSurfaceTile,
-        ImageryLayerCollection,
-        QuadtreeTile,
-        QuadtreeTileLoadState,
-        TerrainState,
-        createScene,
-        when) {
-        'use strict';
+import MockImageryProvider from '../MockImageryProvider.js';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { createWorldTerrain } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+import { QuadtreeTileLoadState } from '../../Source/Cesium.js';
+import { TerrainState } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/GlobeSurfaceTile', function() {
 
@@ -327,6 +309,56 @@ describe('Scene/GlobeSurfaceTile', function() {
                 expect(cartographic.height).toBeGreaterThan(-500.0);
             });
         });
+
+        it('gets correct result when a closer triangle is processed after a farther triangle', function() {
+            // Pick root tile (level=0, x=0, y=0) from the east side towards the west.
+            // Based on heightmap triangle processing order the west triangle will be tested first, followed
+            // by the east triangle. But since the east triangle is closer we expect it to be the pick result.
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 0,
+                x : 0,
+                y : 0
+            });
+
+            processor.frameState = scene.frameState;
+            processor.terrainProvider = terrainProvider;
+
+            return processor.process([tile]).then(function() {
+                var origin = new Cartesian3(50000000.0, -1.0, 0.0);
+                var direction = new Cartesian3(-1.0, 0.0, 0.0);
+                var ray = new Ray(origin, direction);
+                var cullBackFaces = false;
+                var pickResult = tile.data.pick(ray, undefined, undefined, cullBackFaces);
+                expect(pickResult.x).toBeGreaterThan(0.0);
+            });
+        });
+
+        it('ignores triangles that are behind the ray', function() {
+            // Pick root tile (level=0, x=0, y=0) from the center towards the east side (+X).
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 0,
+                x : 0,
+                y : 0
+            });
+
+            processor.frameState = scene.frameState;
+            processor.terrainProvider = terrainProvider;
+
+            return processor.process([tile]).then(function() {
+                var origin = new Cartesian3(0.0, -1.0, 0.0);
+                var direction = new Cartesian3(1.0, 0.0, 0.0);
+                var ray = new Ray(origin, direction);
+                var cullBackFaces = false;
+                var pickResult = tile.data.pick(ray, undefined, undefined, cullBackFaces);
+                expect(pickResult.x).toBeGreaterThan(0.0);
+            });
+        });
     }, 'WebGL');
 
     describe('eligibleForUnloading', function() {
@@ -398,5 +430,4 @@ describe('Scene/GlobeSurfaceTile', function() {
             });
         });
     });
-});
 });

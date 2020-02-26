@@ -1,36 +1,18 @@
-define([
-        '../ThirdParty/when',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        when,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -107,6 +89,7 @@ define([
      *
      * @see TerrainData
      * @see HeightmapTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
@@ -318,8 +301,8 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
-            var vertexCount = that._quantizedVertices.length / 3;
-            vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
+            var vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+            var vertexCount = vertexCountWithoutSkirts + that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
             var vertices = new Float32Array(result.vertices);
@@ -328,12 +311,9 @@ define([
             var maximumHeight = result.maximumHeight;
             var boundingSphere = defaultValue(BoundingSphere.clone(result.boundingSphere), that._boundingSphere);
             var obb = defaultValue(OrientedBoundingBox.clone(result.orientedBoundingBox), that._orientedBoundingBox);
-            var occlusionPoint = Cartesian3.clone(that._horizonOcclusionPoint);
+            var occludeePointInScaledSpace = defaultValue(Cartesian3.clone(result.occludeePointInScaledSpace), that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
-
-            that._skirtIndex = result.skirtIndex;
-            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
             // Clone complex result objects because the transfer from the web worker
             // has stripped them down to JSON-style objects.
@@ -341,10 +321,12 @@ define([
                     rtc,
                     vertices,
                     indicesTypedArray,
+                    result.indexCountWithoutSkirts,
+                    vertexCountWithoutSkirts,
                     minimumHeight,
                     maximumHeight,
                     boundingSphere,
-                    occlusionPoint,
+                    occludeePointInScaledSpace,
                     stride,
                     obb,
                     terrainEncoding,
@@ -431,9 +413,9 @@ define([
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
@@ -642,6 +624,4 @@ define([
     QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function() {
         return this._createdByUpsampling;
     };
-
-    return QuantizedMeshTerrainData;
-});
+export default QuantizedMeshTerrainData;

@@ -1,22 +1,11 @@
-define([
-        'Core/BoundingSphere',
-        'Core/JulianDate',
-        'Core/Math',
-        'DataSources/BoundingSphereState',
-        'DataSources/EllipsoidGeometryUpdater',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicProperty',
-        'Specs/pollToPromise'
-    ], function(
-        BoundingSphere,
-        JulianDate,
-        CesiumMath,
-        BoundingSphereState,
-        EllipsoidGeometryUpdater,
-        PrimitiveCollection,
-        createDynamicProperty,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { Math as CesiumMath } from '../Source/Cesium.js';
+import { BoundingSphereState } from '../Source/Cesium.js';
+import { EllipsoidGeometryUpdater } from '../Source/Cesium.js';
+import { PrimitiveCollection } from '../Source/Cesium.js';
+import createDynamicProperty from './createDynamicProperty.js';
+import pollToPromise from './pollToPromise.js';
 
     function createDynamicGeometryUpdaterSpecs(Updater, geometryPropertyName, createDynamicEntity, getScene) {
         var time = JulianDate.now();
@@ -151,6 +140,4 @@ define([
             scene.primitives.removeAll();
         });
     }
-
-    return createDynamicGeometryUpdaterSpecs;
-});
+export default createDynamicGeometryUpdaterSpecs;

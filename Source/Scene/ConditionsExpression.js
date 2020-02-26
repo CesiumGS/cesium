@@ -1,20 +1,13 @@
-define([
-        '../Core/clone',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './Expression'
-    ], function(
-        clone,
-        defined,
-        defineProperties,
-        Expression) {
-    'use strict';
+import clone from '../Core/clone.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Expression from './Expression.js';
 
     /**
      * An expression for a style applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates a conditions expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      * <p>
      * Implements the {@link StyleExpression} interface.
@@ -89,7 +82,7 @@ define([
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -180,6 +173,4 @@ define([
 
         return shaderFunction;
     };
-
-    return ConditionsExpression;
-});
+export default ConditionsExpression;

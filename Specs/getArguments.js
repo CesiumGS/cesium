@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     // Jasmine 2.1 requires that objects be constructed with the same constructor in
     // order to be considered equal.  The 'arguments' keyword looks like an array, but
@@ -19,6 +17,4 @@ define([], function() {
     function getArguments() {
         return arguments;
     }
-
-    return getArguments;
-});
+export default getArguments;

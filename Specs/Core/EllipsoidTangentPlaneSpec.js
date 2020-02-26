@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/EllipsoidTangentPlane'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        EllipsoidTangentPlane) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidTangentPlane } from '../../Source/Cesium.js';
 
 describe('Core/EllipsoidTangentPlane', function() {
 
@@ -285,5 +278,4 @@ describe('Core/EllipsoidTangentPlane', function() {
         expect(positionsBack[0].y).toBeCloseTo(points[0].y);
         expect(positionsBack[0].z).toBeCloseTo(points[0].z);
     });
-});
 });

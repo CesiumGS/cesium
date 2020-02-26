@@ -1,10 +1,5 @@
-define([
-        'Core/CubicRealPolynomial',
-        'Core/Math'
-    ], function(
-        CubicRealPolynomial,
-        CesiumMath) {
-        'use strict';
+import { CubicRealPolynomial } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/CubicRealPolynomial', function() {
 
@@ -134,5 +129,4 @@ describe('Core/CubicRealPolynomial', function() {
         expect(roots.length).toEqual(1);
         expect(roots[0]).toEqual(0.0);
     });
-});
 });

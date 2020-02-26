@@ -1,52 +1,26 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Core/Cartesian3',
-        '../../Core/Clock',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Ellipsoid',
-        '../../Core/FeatureDetection',
-        '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
-        '../../Core/ScreenSpaceEventHandler',
-        '../../Scene/createWorldImagery',
-        '../../Scene/Globe',
-        '../../Scene/Moon',
-        '../../Scene/Scene',
-        '../../Scene/SceneMode',
-        '../../Scene/ShadowMode',
-        '../../Scene/SkyAtmosphere',
-        '../../Scene/SkyBox',
-        '../../Scene/Sun',
-        '../getElement'
-    ], function(
-        buildModuleUrl,
-        Cartesian3,
-        Clock,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        formatError,
-        requestAnimationFrame,
-        ScreenSpaceEventHandler,
-        createWorldImagery,
-        Globe,
-        Moon,
-        Scene,
-        SceneMode,
-        ShadowMode,
-        SkyAtmosphere,
-        SkyBox,
-        Sun,
-        getElement) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import Cartesian3 from '../../Core/Cartesian3.js';
+import Clock from '../../Core/Clock.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Ellipsoid from '../../Core/Ellipsoid.js';
+import FeatureDetection from '../../Core/FeatureDetection.js';
+import formatError from '../../Core/formatError.js';
+import requestAnimationFrame from '../../Core/requestAnimationFrame.js';
+import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
+import createWorldImagery from '../../Scene/createWorldImagery.js';
+import Globe from '../../Scene/Globe.js';
+import Moon from '../../Scene/Moon.js';
+import Scene from '../../Scene/Scene.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import ShadowMode from '../../Scene/ShadowMode.js';
+import SkyAtmosphere from '../../Scene/SkyAtmosphere.js';
+import SkyBox from '../../Scene/SkyBox.js';
+import Sun from '../../Scene/Sun.js';
+import getElement from '../getElement.js';
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');
@@ -95,27 +69,27 @@ define([
         requestAnimationFrame(render);
     }
 
-    function configureSceneResolution(widget) {
-        var devicePixelRatio = window.devicePixelRatio;
-        var resolutionScale = widget._resolutionScale * devicePixelRatio;
+    function configurePixelRatio(widget) {
+        var pixelRatio = widget._useBrowserRecommendedResolution ? 1.0 : window.devicePixelRatio;
+        pixelRatio *= widget._resolutionScale;
         if (defined(widget._scene)) {
-            widget._scene.pixelRatio = resolutionScale;
+            widget._scene.pixelRatio = pixelRatio;
         }
 
-        return resolutionScale;
+        return pixelRatio;
     }
 
     function configureCanvasSize(widget) {
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var resolutionScale = configureSceneResolution(widget);
+        var pixelRatio = configurePixelRatio(widget);
 
-        widget._canvasWidth = width;
-        widget._canvasHeight = height;
+        widget._canvasClientWidth = width;
+        widget._canvasClientHeight = height;
 
-        width *= resolutionScale;
-        height *= resolutionScale;
+        width *= pixelRatio;
+        height *= pixelRatio;
 
         canvas.width = width;
         canvas.height = height;
@@ -158,6 +132,7 @@ define([
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
@@ -165,15 +140,15 @@ define([
      *        to the bottom of the widget itself.
      * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
+     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
@@ -182,11 +157,10 @@ define([
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps imagery provider and Cesium World Terrain.
+     * //Widget with ion imagery and Cesium World Terrain.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createWorldImagery(),
      *     terrainProvider : Cesium.createWorldTerrain(),
-     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
      *         sources : {
      *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
@@ -243,11 +217,13 @@ define([
 
         var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
 
+        var useBrowserRecommendedResolution = defaultValue(options.useBrowserRecommendedResolution, true);
+
         this._element = element;
         this._container = container;
         this._canvas = canvas;
-        this._canvasWidth = 0;
-        this._canvasHeight = 0;
+        this._canvasClientWidth = 0;
+        this._canvasClientHeight = 0;
         this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
@@ -256,6 +232,7 @@ define([
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = showRenderLoopErrors;
         this._resolutionScale = 1.0;
+        this._useBrowserRecommendedResolution = useBrowserRecommendedResolution;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
@@ -280,7 +257,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
-            configureSceneResolution(this);
+            configurePixelRatio(this);
             configureCameraFrustum(this);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
@@ -572,8 +549,34 @@ define([
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
                 //>>includeEnd('debug');
-                this._resolutionScale = value;
-                this._forceResize = true;
+                if (this._resolutionScale !== value) {
+                    this._resolutionScale = value;
+                    this._forceResize = true;
+                }
+            }
+        },
+
+        /**
+        * Boolean flag indicating if the browser's recommended resolution is used.
+        * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
+        * effectively rendering based on CSS pixels instead of device pixels. This can improve
+        * performance on less powerful devices that have high pixel density. When false, rendering
+        * will be in device pixels. {@link CesiumWidget#resolutionScale} will still take effect whether
+        * this flag is true or false.
+        * @memberof CesiumWidget.prototype
+        *
+        * @type {Boolean}
+        * @default false
+        */
+        useBrowserRecommendedResolution : {
+            get : function() {
+                return this._useBrowserRecommendedResolution;
+            },
+            set : function(value) {
+                if (this._useBrowserRecommendedResolution !== value) {
+                    this._useBrowserRecommendedResolution = value;
+                    this._forceResize = true;
+                }
             }
         }
     });
@@ -680,9 +683,7 @@ define([
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._lastDevicePixelRatio === window.devicePixelRatio) {
+        if (!this._forceResize && this._canvasClientWidth === canvas.clientWidth && this._canvasClientHeight === canvas.clientHeight && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;
@@ -706,6 +707,4 @@ define([
             this._clock.tick();
         }
     };
-
-    return CesiumWidget;
-});
+export default CesiumWidget;

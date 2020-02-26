@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './FeatureDetection',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        FeatureDetection,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import FeatureDetection from './FeatureDetection.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     function hue2rgb(m1, m2, h) {
         if (h < 0) {
@@ -811,6 +802,30 @@ define([
         result.green = left.green % right.green;
         result.blue = left.blue % right.blue;
         result.alpha = left.alpha % right.alpha;
+        return result;
+    };
+
+    /**
+     * Computes the linear interpolation or extrapolation at t between the provided colors.
+     *
+     * @param {Color} start The color corresponding to t at 0.0.
+     * @param {Color} end The color corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.lerp = function(start, end, t, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result.red = CesiumMath.lerp(start.red, end.red, t);
+        result.green = CesiumMath.lerp(start.green, end.green, t);
+        result.blue = CesiumMath.lerp(start.blue, end.blue, t);
+        result.alpha = CesiumMath.lerp(start.alpha, end.alpha, t);
         return result;
     };
 
@@ -2179,6 +2194,4 @@ define([
      * @type {Color}
      */
     Color.TRANSPARENT = freezeObject(new Color(0, 0, 0, 0));
-
-    return Color;
-});
+export default Color;

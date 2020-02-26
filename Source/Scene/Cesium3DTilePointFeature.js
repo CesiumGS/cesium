@@ -1,18 +1,9 @@
-define([
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './createBillboardPointCallback'
-    ], function(
-        Cartographic,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        createBillboardPointCallback) {
-    'use strict';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import createBillboardPointCallback from './createBillboardPointCallback.js';
 
     /**
      * A point feature of a {@link Cesium3DTileset}.
@@ -681,7 +672,7 @@ define([
      * Returns whether the feature contains this property. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {Boolean} Whether the feature contains this property.
@@ -694,7 +685,7 @@ define([
      * Returns an array of property names for the feature. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String[]} results An array into which to store the results.
      * @returns {String[]} The names of the feature's properties.
@@ -707,7 +698,7 @@ define([
      * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
@@ -801,6 +792,4 @@ define([
     Cesium3DTilePointFeature.prototype.getExactClassName = function() {
         return this._content.batchTable.getExactClassName(this._batchId);
     };
-
-    return Cesium3DTilePointFeature;
-});
+export default Cesium3DTilePointFeature;

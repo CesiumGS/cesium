@@ -1,34 +1,17 @@
-define([
-        'Core/CesiumTerrainProvider',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/HeightmapTerrainData',
-        'Core/IonResource',
-        'Core/Math',
-        'Core/QuantizedMeshTerrainData',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/TerrainProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        CesiumTerrainProvider,
-        Ellipsoid,
-        GeographicTilingScheme,
-        getAbsoluteUri,
-        HeightmapTerrainData,
-        IonResource,
-        CesiumMath,
-        QuantizedMeshTerrainData,
-        Request,
-        RequestScheduler,
-        Resource,
-        TerrainProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { QuantizedMeshTerrainData } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { TerrainProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/CesiumTerrainProvider', function() {
 
@@ -223,13 +206,19 @@ describe('Core/CesiumTerrainProvider', function() {
     });
 
     it('returns reasonable geometric error for various levels', function() {
+        returnQuantizedMeshTileJson();
+
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
 
-        expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
-        expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(provider.getLevelMaximumGeometricError(1) * 2.0, CesiumMath.EPSILON10);
-        expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(provider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
+            expect(provider.getLevelMaximumGeometricError(0)).toEqualEpsilon(provider.getLevelMaximumGeometricError(1) * 2.0, CesiumMath.EPSILON10);
+            expect(provider.getLevelMaximumGeometricError(1)).toEqualEpsilon(provider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
+        });
     });
 
     it('logo is undefined if credit is not provided', function() {
@@ -867,5 +856,4 @@ describe('Core/CesiumTerrainProvider', function() {
             });
         });
     });
-});
 });

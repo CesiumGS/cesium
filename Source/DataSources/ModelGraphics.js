@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './NodeTransformationProperty',
-        './PropertyBag'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createPropertyDescriptor,
-        NodeTransformationProperty,
-        PropertyBag) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import NodeTransformationProperty from './NodeTransformationProperty.js';
+import PropertyBag from './PropertyBag.js';
 
     function createNodeTransformationProperty(value) {
         return new NodeTransformationProperty(value);
@@ -50,7 +39,7 @@ define([
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
-     * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from light sources.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
      * @param {Property} [options.silhouetteSize=0.0] A numeric Property specifying the size of the silhouette in pixels.
@@ -58,14 +47,14 @@ define([
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Property} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
-     * @param {Property} [options.lightColor] A property specifying the light color to use when shading the model. The default sun light color will be used when <code>undefined</code>.
+     * @param {Property} [options.lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
      * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
-     * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+     * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
     function ModelGraphics(options) {
         this._definitionChanged = new Event();
@@ -199,7 +188,7 @@ define([
 
         /**
          * Get or sets the enum Property specifying whether the model
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          * @default ShadowMode.ENABLED
@@ -264,7 +253,7 @@ define([
         imageBasedLightingFactor : createPropertyDescriptor('imageBasedLightingFactor'),
 
         /**
-         * A property specifying the {@link Cartesian3} color of the light source when shading the model.
+         * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
          * @memberOf ModelGraphics.prototype
          * @type {Property}
          */
@@ -388,6 +377,4 @@ define([
             }
         }
     };
-
-    return ModelGraphics;
-});
+export default ModelGraphics;

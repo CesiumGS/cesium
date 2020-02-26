@@ -1,34 +1,17 @@
-define([
-        '../../Core/Check',
-        '../../Core/Color',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType',
-        '../../Scene/Cesium3DTileColorBlendMode',
-        '../../Scene/Cesium3DTileFeature',
-        '../../Scene/Cesium3DTilePass',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/Cesium3DTileStyle',
-        '../../Scene/PerformanceDisplay',
-        '../../ThirdParty/knockout'
-    ], function(
-        Check,
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        Cesium3DTileColorBlendMode,
-        Cesium3DTileFeature,
-        Cesium3DTilePass,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        PerformanceDisplay,
-        knockout) {
-    'use strict';
+import Check from '../../Core/Check.js';
+import Color from '../../Core/Color.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
+import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
+import Cesium3DTileColorBlendMode from '../../Scene/Cesium3DTileColorBlendMode.js';
+import Cesium3DTileFeature from '../../Scene/Cesium3DTileFeature.js';
+import Cesium3DTilePass from '../../Scene/Cesium3DTilePass.js';
+import Cesium3DTileset from '../../Scene/Cesium3DTileset.js';
+import Cesium3DTileStyle from '../../Scene/Cesium3DTileStyle.js';
+import PerformanceDisplay from '../../Scene/PerformanceDisplay.js';
+import knockout from '../../ThirdParty/knockout.js';
 
     function getPickTileset(viewModel) {
         return function(e) {
@@ -1144,7 +1127,7 @@ define([
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
-                        this[setting] = this[setting];
+                        this[setting] = this[setting]; // eslint-disable-line no-self-assign
                     }
 
                     // update view model with existing tileset settings
@@ -1469,6 +1452,4 @@ define([
      * @returns {String} The formatted statistics
      */
     Cesium3DTilesInspectorViewModel.getStatistics = getStatistics;
-
-    return Cesium3DTilesInspectorViewModel;
-});
+export default Cesium3DTilesInspectorViewModel;

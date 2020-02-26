@@ -1,28 +1,16 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Transforms',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/Model',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], 'Scene/Instanced3DModel3DTileContent', function(
-        Cartesian3,
-        Color,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Transforms,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        Model,
-        Cesium3DTilesTester,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Instanced3DModel3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -298,6 +286,7 @@ describe('Core/Cartesian3', function() {
             var tile = tileset.root;
             var content = tile.content;
             var model = content._modelInstanceCollection._model;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             expect(model.clippingPlanes).toBeUndefined();
 
@@ -308,13 +297,13 @@ describe('Core/Cartesian3', function() {
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeUndefined();
         });
@@ -324,6 +313,7 @@ describe('Core/Cartesian3', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset.root;
             var model = tile.content._modelInstanceCollection._model;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             expect(model.clippingPlanes).toBeUndefined();
 
@@ -334,7 +324,7 @@ describe('Core/Cartesian3', function() {
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
@@ -348,7 +338,7 @@ describe('Core/Cartesian3', function() {
             newClippingPlaneCollection.update(scene.frameState);
             expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
 
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
         });
     });
@@ -364,10 +354,11 @@ describe('Core/Cartesian3', function() {
                     new ClippingPlane(Cartesian3.UNIT_X, 0.0)
                 ]
             });
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
             content.clippingPlanesDirty = true;
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });
@@ -378,4 +369,3 @@ describe('Core/Cartesian3', function() {
     });
 
 }, 'WebGL');
-});

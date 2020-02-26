@@ -1,20 +1,10 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './JulianDate'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        JulianDate) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import JulianDate from './JulianDate.js';
 
     /**
      * An interval defined by a start and a stop time; optionally including those times as part of the interval.
@@ -406,6 +396,4 @@ define([
      * @param {*} rightData The second data instance.
      * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
      */
-
-    return TimeInterval;
-});
+export default TimeInterval;

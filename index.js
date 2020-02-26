@@ -1,4 +1,4 @@
-/*eslint-env node,es6*/
+/*eslint-env node*/
 'use strict';
 
 var path = require('path');
@@ -8,14 +8,4 @@ if (process.env.NODE_ENV === 'production') {
     module.exports = require(path.join(__dirname, 'Build/Cesium/Cesium'));
     return;
 }
-
-// Otherwise, use un-optimized requirejs modules for improved error checking. For example 'development' mode
-var requirejs = require('requirejs');
-requirejs.config({
-    paths: {
-        'Cesium': path.join(__dirname, 'Source')
-    },
-    nodeRequire: require
-});
-
-module.exports = requirejs('Cesium/Cesium');
+module.exports = require('esm')(module)('./Source/Cesium.js');

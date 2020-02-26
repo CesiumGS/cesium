@@ -1,28 +1,15 @@
-define([
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Scene/SingleTileImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Ellipsoid,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        SingleTileImageryProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/SingleTileImageryProvider', function() {
 
@@ -135,9 +122,10 @@ describe('Scene/SingleTileImageryProvider', function() {
     it('requests the single image immediately upon construction', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+        spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+            var url = request.url;
             expect(url).toEqual(imageUrl);
-            Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
         });
 
         var provider = new SingleTileImageryProvider({
@@ -194,10 +182,10 @@ describe('Scene/SingleTileImageryProvider', function() {
             }
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -222,5 +210,4 @@ describe('Scene/SingleTileImageryProvider', function() {
             });
         });
     });
-});
 });

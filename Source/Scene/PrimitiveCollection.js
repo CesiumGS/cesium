@@ -1,18 +1,9 @@
-define([
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError'
-    ], function(
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError) {
-    'use strict';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A collection of primitives.  This is most often used with {@link Scene#primitives},
@@ -151,7 +142,7 @@ define([
      *
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
-     * scene.primitives.remove(p);  // Returns true
+     * scene.primitives.remove(billboards);  // Returns true
      *
      * @see PrimitiveCollection#destroyPrimitives
      */
@@ -471,6 +462,4 @@ define([
         this.removeAll();
         return destroyObject(this);
     };
-
-    return PrimitiveCollection;
-});
+export default PrimitiveCollection;

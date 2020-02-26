@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents the position relative to the terrain.
@@ -31,6 +27,4 @@ define([
          */
         RELATIVE_TO_GROUND : 2
     };
-
-    return freezeObject(HeightReference);
-});
+export default freezeObject(HeightReference);

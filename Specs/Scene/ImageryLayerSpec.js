@@ -1,50 +1,26 @@
-define([
-        'Core/EllipsoidTerrainProvider',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Renderer/ComputeEngine',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
-        'Scene/ArcGisMapServerImageryProvider',
-        'Scene/BingMapsImageryProvider',
-        'Scene/createTileMapServiceImageryProvider',
-        'Scene/GlobeSurfaceTile',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerCollection',
-        'Scene/ImageryState',
-        'Scene/NeverTileDiscardPolicy',
-        'Scene/QuadtreeTile',
-        'Scene/SingleTileImageryProvider',
-        'Scene/UrlTemplateImageryProvider',
-        'Scene/WebMapServiceImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        EllipsoidTerrainProvider,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        ComputeEngine,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
-        GlobeSurfaceTile,
-        Imagery,
-        ImageryLayer,
-        ImageryLayerCollection,
-        ImageryState,
-        NeverTileDiscardPolicy,
-        QuadtreeTile,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { ComputeEngine } from '../../Source/Cesium.js';
+import { TextureMagnificationFilter } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { BingMapsImageryProvider } from '../../Source/Cesium.js';
+import { TileMapServiceImageryProvider } from '../../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { NeverTileDiscardPolicy } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/ImageryLayer', function() {
 
@@ -82,8 +58,8 @@ describe('Scene/ImageryLayer', function() {
     };
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -146,8 +122,8 @@ describe('Scene/ImageryLayer', function() {
             });
         };
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -287,8 +263,8 @@ describe('Scene/ImageryLayer', function() {
     });
 
     it('assigns texture property when reprojection is skipped because the tile is very small', function() {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red256x256.png'}), crossOrigin, deferred);
         };
 
         var provider = new UrlTemplateImageryProvider({
@@ -485,7 +461,7 @@ describe('Scene/ImageryLayer', function() {
 
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -525,7 +501,7 @@ describe('Scene/ImageryLayer', function() {
         });
 
         it('does not get confused when base layer imagery overlaps in one direction but not the other', function() {
-            // This is a pretty specific test targeted at https://github.com/AnalyticalGraphicsInc/cesium/issues/2815
+            // This is a pretty specific test targeted at https://github.com/CesiumGS/cesium/issues/2815
             // It arranges for tileImageryBoundsScratch to be a rectangle that is invalid in the WebMercator projection.
             // Then, it triggers issue #2815 where that stale data is used in a later call.  Prior to the fix this
             // triggers an exception (use of an undefined reference).
@@ -534,7 +510,7 @@ describe('Scene/ImageryLayer', function() {
                 url : 'Data/Images/Blue.png'
             });
 
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -580,7 +556,7 @@ describe('Scene/ImageryLayer', function() {
                 url : 'Data/Images/Green4x4.png'
             });
 
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -717,4 +693,3 @@ describe('Scene/ImageryLayer', function() {
         });
     });
 }, 'WebGL');
-});

@@ -1,34 +1,13 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/RuntimeError'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        defined,
-        DeveloperError,
-        FeatureDetection,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        RuntimeError) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix2 from '../Core/Matrix2.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import RuntimeError from '../Core/RuntimeError.js';
 
     /**
      * @private
@@ -422,6 +401,4 @@ define([
             this._gl.uniformMatrix4fv(this._location, false, array);
         }
     };
-
-    return createUniform;
-});
+export default createUniform;

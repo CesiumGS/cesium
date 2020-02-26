@@ -1,7 +1,6 @@
-/*global self:true*/
 // make sure self is defined so that the Dojo build can evaluate this file without crashing.
 if (typeof self === 'undefined') {
-    self = {};
+    self = {}; //eslint-disable-line no-implicit-globals, no-global-assign
 }
 
 self.onmessage = function(event) {

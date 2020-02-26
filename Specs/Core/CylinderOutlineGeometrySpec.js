@@ -1,14 +1,7 @@
-define([
-        'Core/arrayFill',
-        'Core/CylinderOutlineGeometry',
-        'Core/GeometryOffsetAttribute',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        CylinderOutlineGeometry,
-        GeometryOffsetAttribute,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { CylinderOutlineGeometry } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CylinderOutlineGeometry', function() {
 
@@ -142,5 +135,4 @@ describe('Core/CylinderOutlineGeometry', function() {
     });
     var packedInstance = [1.0, 1.0, 0.0, 3.0, 0.0, -1.0];
     createPackableSpecs(CylinderOutlineGeometry, cylinder, packedInstance);
-});
 });

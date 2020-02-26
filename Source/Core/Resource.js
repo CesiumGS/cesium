@@ -1,58 +1,29 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './appendForwardSlash',
-        './Check',
-        './clone',
-        './combine',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './getAbsoluteUri',
-        './getBaseUri',
-        './getExtensionFromUri',
-        './isBlobUri',
-        './isCrossOriginUrl',
-        './isDataUri',
-        './loadAndExecuteScript',
-        './objectToQuery',
-        './queryToObject',
-        './Request',
-        './RequestErrorEvent',
-        './RequestScheduler',
-        './RequestState',
-        './RuntimeError',
-        './TrustedServers'
-    ], function(
-        Uri,
-        when,
-        appendForwardSlash,
-        Check,
-        clone,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        getAbsoluteUri,
-        getBaseUri,
-        getExtensionFromUri,
-        isBlobUri,
-        isCrossOriginUrl,
-        isDataUri,
-        loadAndExecuteScript,
-        objectToQuery,
-        queryToObject,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        RequestState,
-        RuntimeError,
-        TrustedServers) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import appendForwardSlash from './appendForwardSlash.js';
+import Check from './Check.js';
+import clone from './clone.js';
+import combine from './combine.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import getAbsoluteUri from './getAbsoluteUri.js';
+import getBaseUri from './getBaseUri.js';
+import getExtensionFromUri from './getExtensionFromUri.js';
+import isBlobUri from './isBlobUri.js';
+import isCrossOriginUrl from './isCrossOriginUrl.js';
+import isDataUri from './isDataUri.js';
+import loadAndExecuteScript from './loadAndExecuteScript.js';
+import objectToQuery from './objectToQuery.js';
+import queryToObject from './queryToObject.js';
+import Request from './Request.js';
+import RequestErrorEvent from './RequestErrorEvent.js';
+import RequestScheduler from './RequestScheduler.js';
+import RequestState from './RequestState.js';
+import RuntimeError from './RuntimeError.js';
+import TrustedServers from './TrustedServers.js';
 
     var xhrBlobSupported = (function() {
         try {
@@ -972,7 +943,6 @@ define([
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
-            var url = resource.url;
             var crossOrigin = false;
 
             // data URIs can't have crossorigin set.
@@ -981,7 +951,7 @@ define([
             }
 
             var deferred = when.defer();
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
+            Resource._Implementations.createImage(request, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -1851,7 +1821,8 @@ define([
         image.src = url;
     }
 
-    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY, preferImageBitmap) {
+    Resource._Implementations.createImage = function(request, crossOrigin, deferred, flipY, preferImageBitmap) {
+        var url = request.url;
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
         // See:
@@ -1860,16 +1831,32 @@ define([
         Resource.supportsImageBitmapOptions()
             .then(function(supportsImageBitmap) {
                 // We can only use ImageBitmap if we can flip on decode.
-                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                // See: https://github.com/CesiumGS/cesium/pull/7579#issuecomment-466146898
                 if (!(supportsImageBitmap && preferImageBitmap)) {
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
+                var responseType = 'blob';
+                var method = 'GET';
+                var xhrDeferred = when.defer();
+                var xhr = Resource._Implementations.loadWithXhr(
+                    url,
+                    responseType,
+                    method,
+                    undefined,
+                    undefined,
+                    xhrDeferred,
+                    undefined,
+                    undefined,
+                    undefined
+                );
 
-                return Resource.fetchBlob({
-                    url: url
-                })
-                .then(function(blob) {
+                if (defined(xhr) && defined(xhr.abort)) {
+                    request.cancelFunction = function() {
+                        xhr.abort();
+                    };
+                }
+                return xhrDeferred.promise.then(function(blob) {
                     if (!defined(blob)) {
                         deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
                         return;
@@ -1912,15 +1899,10 @@ define([
     }
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
-
-        // Specifically use the Node version of require to avoid conflicts with the global
-        // require defined in the built version of Cesium.
-        var nodeRequire = global.require; // eslint-disable-line
-
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = nodeRequire('url').parse(url);
-        var http = URL.protocol === 'https:' ? nodeRequire('https') : nodeRequire('http');
-        var zlib = nodeRequire('zlib');
+        var URL = require('url').parse(url); // eslint-disable-line
+        var http = URL.protocol === 'https:' ? require('https') : require('http'); // eslint-disable-line
+        var zlib = require('zlib'); // eslint-disable-line
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,
@@ -2093,6 +2075,4 @@ define([
      * @param {Error} [error] The error that occurred during the loading of the resource.
      * @returns {Boolean|Promise<Boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
      */
-
-    return Resource;
-});
+export default Resource;

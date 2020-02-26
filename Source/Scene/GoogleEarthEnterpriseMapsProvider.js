@@ -1,38 +1,19 @@
-define([
-        '../Core/buildModuleUrl',
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './ImageryProvider'
-    ], function(
-        buildModuleUrl,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        WebMercatorTilingScheme,
-        when,
-        ImageryProvider) {
-    'use strict';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import ImageryProvider from './ImageryProvider.js';
 
     /**
      * Provides tiled imagery using the Google Earth Imagery API.
@@ -86,9 +67,9 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -623,7 +604,4 @@ define([
             }
         }
     });
-
-    return GoogleEarthEnterpriseMapsProvider;
-});
-
+export default GoogleEarthEnterpriseMapsProvider;

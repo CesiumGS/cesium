@@ -1,22 +1,11 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Fullscreen',
-        '../../ThirdParty/knockout',
-        '../createCommand',
-        '../getElement'
-    ], function(
-        defaultValue,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Fullscreen,
-        knockout,
-        createCommand,
-        getElement) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Fullscreen from '../../Core/Fullscreen.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
+import getElement from '../getElement.js';
 
     /**
      * The view model for {@link FullscreenButton}.
@@ -140,6 +129,4 @@ define([
         document.removeEventListener(Fullscreen.changeEventName, this._callback);
         destroyObject(this);
     };
-
-    return FullscreenButtonViewModel;
-});
+export default FullscreenButtonViewModel;

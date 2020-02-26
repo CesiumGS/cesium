@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A policy for discarding tile images according to some criteria.  This type describes an
@@ -34,6 +30,4 @@ define([
      * @returns {Boolean} True if the image should be discarded; otherwise, false.
      */
     TileDiscardPolicy.prototype.shouldDiscardImage = DeveloperError.throwInstantiationError;
-
-    return TileDiscardPolicy;
-});
+export default TileDiscardPolicy;

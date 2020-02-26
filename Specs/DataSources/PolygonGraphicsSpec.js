@@ -1,30 +1,15 @@
-define([
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/PolygonHierarchy',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/PolygonGraphics',
-        'Scene/ClassificationType',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        ArcType,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        PolygonHierarchy,
-        ColorMaterialProperty,
-        ConstantProperty,
-        PolygonGraphics,
-        ClassificationType,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PolygonGraphics } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
 
 describe('DataSources/PolygonGraphics', function() {
 
@@ -304,5 +289,4 @@ describe('DataSources/PolygonGraphics', function() {
         expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
         expect(hierarchy.positions).toEqual(positions);
     });
-});
 });

@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Scene/SceneMode',
-        'Scene/SkyAtmosphere',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        SceneMode,
-        SkyAtmosphere,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SkyAtmosphere } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/SkyAtmosphere', function() {
 
@@ -58,7 +49,7 @@ describe('Scene/SkyAtmosphere', function() {
 
     it('draws sky with setDynamicAtmosphereColor set to true', function() {
         var s = new SkyAtmosphere();
-        s.setDynamicAtmosphereColor(true);
+        s.setDynamicAtmosphereColor(true, false);
 
         expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
@@ -71,9 +62,24 @@ describe('Scene/SkyAtmosphere', function() {
         s.destroy();
     });
 
+    it('draws sky with setDynamicAtmosphereColor set to true using the sun direction', function() {
+        var s = new SkyAtmosphere();
+        s.setDynamicAtmosphereColor(true, true);
+
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.render();
+
+        var command = s.update(scene.frameState);
+        expect(command).toBeDefined();
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(2);
+        command.execute(scene.context); // Not reliable enough across browsers to test pixels
+
+        s.destroy();
+    });
+
     it('draws sky with setDynamicAtmosphereColor set to false', function() {
         var s = new SkyAtmosphere();
-        s.setDynamicAtmosphereColor(false);
+        s.setDynamicAtmosphereColor(false, false);
 
         expect(scene).toRender([0, 0, 0, 255]);
         scene.render();
@@ -91,7 +97,7 @@ describe('Scene/SkyAtmosphere', function() {
         var s = new SkyAtmosphere();
 
         scene.skyAtmosphere = s;
-        scene._environmentState.isReadyForAtmosphere = true;
+        scene.environmentState.isReadyForAtmosphere = true;
 
         scene.camera.setView({
             destination : Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
@@ -161,4 +167,3 @@ describe('Scene/SkyAtmosphere', function() {
         expect(s.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
-});

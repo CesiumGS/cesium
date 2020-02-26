@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/when',
-        './Cartesian2',
-        './defined',
-        './DeveloperError',
-        './sampleTerrain'
-    ], function(
-        when,
-        Cartesian2,
-        defined,
-        DeveloperError,
-        sampleTerrain) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Cartesian2 from './Cartesian2.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import sampleTerrain from './sampleTerrain.js';
 
     var scratchCartesian2 = new Cartesian2();
 
@@ -112,6 +104,4 @@ define([
                     });
             });
     }
-
-    return sampleTerrainMostDetailed;
-});
+export default sampleTerrainMostDetailed;

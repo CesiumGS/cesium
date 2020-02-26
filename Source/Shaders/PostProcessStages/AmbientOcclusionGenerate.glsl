@@ -46,11 +46,11 @@ void main(void)
         return;
     }
 
-    vec2 pixelSize = 1.0 / czm_viewport.zw;
-    float depthU = czm_readDepth(depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y));
-    float depthD = czm_readDepth(depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y));
-    float depthL = czm_readDepth(depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0));
-    float depthR = czm_readDepth(depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0));
+    vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
+    float depthU = czm_readDepth(depthTexture, v_textureCoordinates - vec2(0.0, pixelSize.y));
+    float depthD = czm_readDepth(depthTexture, v_textureCoordinates + vec2(0.0, pixelSize.y));
+    float depthL = czm_readDepth(depthTexture, v_textureCoordinates - vec2(pixelSize.x, 0.0));
+    float depthR = czm_readDepth(depthTexture, v_textureCoordinates + vec2(pixelSize.x, 0.0));
     vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
 
     float ao = 0.0;
@@ -59,9 +59,6 @@ void main(void)
 
     // RandomNoise
     float randomVal = texture2D(randomTexture, v_textureCoordinates).x;
-
-    float inverseViewportWidth = 1.0 / czm_viewport.z;
-    float inverseViewportHeight = 1.0 / czm_viewport.w;
 
     //Loop for each direction
     for (int i = 0; i < 4; i++)
@@ -78,8 +75,7 @@ void main(void)
         //Loop for each step
         for (int j = 0; j < 6; j++)
         {
-            vec2 directionWithStep = vec2(rotatedSampleDirection.x * localStepSize * inverseViewportWidth, rotatedSampleDirection.y * localStepSize * inverseViewportHeight);
-            vec2 newCoords = directionWithStep + v_textureCoordinates;
+            vec2 newCoords = v_textureCoordinates + rotatedSampleDirection * localStepSize * pixelSize;
 
             //Exception Handling
             if(newCoords.x > 1.0 || newCoords.y > 1.0 || newCoords.x < 0.0 || newCoords.y < 0.0)

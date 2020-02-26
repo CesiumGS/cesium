@@ -1,15 +1,6 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/WebGLConstants'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Matrix4,
-        WebGLConstants) {
-    'use strict';
-    /*global WebGLRenderingContext*/
+import Cartesian3 from '../Core/Cartesian3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     var viewerPositionWCScratch = new Cartesian3();
 
@@ -17,11 +8,6 @@ define([
         this._size = options.size;
         this._datatype = options.datatype;
         this.getValue = options.getValue;
-    }
-
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext === 'undefined') {
-        return {};
     }
 
     var datatypeToGlsl = {};
@@ -1146,51 +1132,47 @@ define([
         }),
 
         /**
-         * The log2 of the current frustums far plane. Used for computing the log depth.
+         * Gets the far plane's distance from the near plane, plus 1.0.
          *
-         * @alias czm_log2FarDistance
+         * @alias czm_farDepthFromNearPlusOne
          * @namespace
          * @glslUniform
-         *
-         * @private
          */
-        czm_log2FarDistance : new AutomaticUniform({
-            size : 1,
+        czm_farDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2FarDistance;
+                return uniformState.farDepthFromNearPlusOne;
             }
         }),
 
         /**
-         * An automatic GLSL uniform containing log2 of the far distance + 1.0.
-         * This is used when reversing log depth computations.
+         * Gets the log2 of {@link AutomaticUniforms#czm_farDepthFromNearPlusOne}.
          *
-         * @alias czm_log2FarPlusOne
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
          * @namespace
          * @glslUniform
          */
-        czm_log2FarPlusOne : new AutomaticUniform({
-            size : 1,
+        czm_log2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2FarPlusOne;
+                return uniformState.log2FarDepthFromNearPlusOne;
             }
         }),
 
         /**
-         * An automatic GLSL uniform containing log2 of the near distance.
-         * This is used when writing log depth in the fragment shader.
+         * Gets 1.0 divided by {@link AutomaticUniforms#czm_log2FarDepthFromNearPlusOne}.
          *
-         * @alias czm_log2NearDistance
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
          * @namespace
          * @glslUniform
          */
-        czm_log2NearDistance : new AutomaticUniform({
-            size : 1,
+        czm_oneOverLog2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2NearDistance;
+                return uniformState.oneOverLog2FarDepthFromNearPlusOne;
             }
         }),
 
@@ -1241,7 +1223,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionEC
          * @namespace
@@ -1268,7 +1249,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionWC
          * @namespace
@@ -1277,6 +1257,9 @@ define([
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunDirectionWC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_sunDirectionWC, normalWC), 0.0);
          *
          * @see UniformState#sunDirectionWC
          * @see czm_sunPositionWC
@@ -1292,7 +1275,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
-         * This is commonly used for directional lighting computations.
          *
          * @alias czm_moonDirectionEC
          * @namespace
@@ -1317,9 +1299,114 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the normalized direction to the scene's light source in eye coordinates.
+         * This is commonly used for directional lighting computations.
+         *
+         * @alias czm_lightDirectionEC
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightDirectionEC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_lightDirectionEC, normalEC), 0.0);
+         *
+         * @see UniformState#lightDirectionEC
+         * @see czm_lightDirectionWC
+         */
+        czm_lightDirectionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightDirectionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the scene's light source in world coordinates.
+         * This is commonly used for directional lighting computations.
+         *
+         * @alias czm_lightDirectionWC
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightDirectionWC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightDirectionWC
+         * @see czm_lightDirectionEC
+         */
+        czm_lightDirectionWC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightDirectionWC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that represents the color of light emitted by the scene's light source. This
+         * is equivalent to the light color multiplied by the light intensity limited to a maximum luminance of 1.0
+         * suitable for non-HDR lighting.
+         *
+         * @alias czm_lightColor
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightColor;
+         *
+         * // Example
+         * vec3 diffuseColor = czm_lightColor * max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightColor
+         * @see czm_lightColorHdr
+         */
+        czm_lightColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightColor;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that represents the high dynamic range color of light emitted by the scene's light
+         * source. This is equivalent to the light color multiplied by the light intensity suitable for HDR lighting.
+         *
+         * @alias czm_lightColorHdr
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_lightColorHdr;
+         *
+         * // Example
+         * vec3 diffuseColor = czm_lightColorHdr * max(dot(czm_lightDirectionWC, normalWC), 0.0);
+         *
+         * @see UniformState#lightColorHdr
+         * @see czm_lightColor
+         */
+        czm_lightColorHdr : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.lightColorHdr;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing the high bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCHigh
          * @namespace
@@ -1344,7 +1431,7 @@ define([
         /**
          * An automatic GLSL uniform representing the low bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@linkhttp://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCLow
          * @namespace
@@ -1666,18 +1753,18 @@ define([
         /**
          * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
          *
-         * @alias czm_resolutionScale
+         * @alias czm_pixelRatio
          * @namespace
          * @glslUniform
          *
          * @example
-         * uniform float czm_resolutionScale;
+         * uniform float czm_pixelRatio;
          */
-        czm_resolutionScale : new AutomaticUniform({
+        czm_pixelRatio : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.resolutionScale;
+                return uniformState.pixelRatio;
             }
         }),
 
@@ -1777,22 +1864,6 @@ define([
             getValue : function(uniformState) {
                 return uniformState.gamma;
             }
-        }),
-
-        /**
-         * An automatic GLSL uniform that defines the color of light emitted by the sun.
-         *
-         * @alias czm_sunColor
-         * @glslUniform
-         */
-        czm_sunColor: new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT_VEC3,
-            getValue: function(uniformState) {
-                return uniformState.sunColor;
-            }
         })
     };
-
-    return AutomaticUniforms;
-});
+export default AutomaticUniforms;

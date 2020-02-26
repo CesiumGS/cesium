@@ -1,48 +1,24 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/combine',
-        'Core/Ellipsoid',
-        'Core/FeatureDetection',
-        'Core/GeographicProjection',
-        'Core/IntersectionTests',
-        'Core/KeyboardEventModifier',
-        'Core/Math',
-        'Core/OrthographicFrustum',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/Ray',
-        'Core/Transforms',
-        'Scene/Camera',
-        'Scene/CameraEventType',
-        'Scene/MapMode2D',
-        'Scene/SceneMode',
-        'Scene/ScreenSpaceCameraController',
-        'Specs/createCamera',
-        'Specs/createCanvas',
-        'Specs/DomEventSimulator'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        combine,
-        Ellipsoid,
-        FeatureDetection,
-        GeographicProjection,
-        IntersectionTests,
-        KeyboardEventModifier,
-        CesiumMath,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        Ray,
-        Transforms,
-        Camera,
-        CameraEventType,
-        MapMode2D,
-        SceneMode,
-        ScreenSpaceCameraController,
-        createCamera,
-        createCanvas,
-        DomEventSimulator) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { IntersectionTests } from '../../Source/Cesium.js';
+import { KeyboardEventModifier } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { CameraEventType } from '../../Source/Cesium.js';
+import { MapMode2D } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { ScreenSpaceCameraController } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import createCanvas from '../createCanvas.js';
+import DomEventSimulator from '../DomEventSimulator.js';
 
 describe('Scene/ScreenSpaceCameraController', function() {
 
@@ -1048,18 +1024,18 @@ describe('Scene/ScreenSpaceCameraController', function() {
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController();
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(direction);
-        expect(camera.up).toEqual(up);
-        expect(camera.right).toEqual(right);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON7);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON7);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON7);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON7);
 
         controller.enableRotate = true;
         updateController();
 
-        expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(direction);
-        expect(camera.up).toEqual(up);
-        expect(camera.right).toEqual(right);
+        expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON7);
+        expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON7);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON7);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON7);
     });
 
     it('can set input type to undefined', function() {
@@ -1125,12 +1101,17 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.setView({
-            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 
-        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON7);
+        expect(camera.positionCartographic.height).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON5);
     });
 
     it('camera does not go below the terrain in CV', function() {
@@ -1140,8 +1121,13 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.setView({
-            destination : Cartesian3.fromDegrees(-72.0, 40.0, 1.0)
+            destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 
@@ -1159,6 +1145,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
             destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.positionCartographic.height).toBeLessThan(controller.minimumZoomDistance);
@@ -1175,6 +1166,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
             destination : Cartesian3.fromDegrees(-72.0, 40.0, -10.0)
         });
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.position.z).toBeLessThan(controller.minimumZoomDistance);
@@ -1187,6 +1183,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
         updateController();
 
         camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
+
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
 
         updateController();
 
@@ -1201,6 +1202,11 @@ describe('Scene/ScreenSpaceCameraController', function() {
 
         camera.lookAt(Cartesian3.fromDegrees(-72.0, 40.0, 1.0), new Cartesian3(1.0, 1.0, -10.0));
 
+        // Trigger terrain adjustment with a small mouse movement
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+
         updateController();
 
         expect(camera.positionWC.x).toEqualEpsilon(controller.minimumZoomDistance, CesiumMath.EPSILON8);
@@ -1211,5 +1217,4 @@ describe('Scene/ScreenSpaceCameraController', function() {
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);
     });
-});
 });

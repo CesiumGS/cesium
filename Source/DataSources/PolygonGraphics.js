@@ -1,26 +1,13 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/isArray',
-        '../Core/PolygonHierarchy',
-        './ConstantProperty',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        isArray,
-        PolygonHierarchy,
-        ConstantProperty,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import isArray from '../Core/isArray.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import ConstantProperty from './ConstantProperty.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     function createPolygonHierarchyProperty(value) {
         if (isArray(value)) {
@@ -56,13 +43,13 @@ define([
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
      * @param {Property} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
     function PolygonGraphics(options) {
         this._definitionChanged = new Event();
@@ -263,7 +250,7 @@ define([
 
         /**
          * Get or sets the enum Property specifying whether the polygon
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED
@@ -363,6 +350,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return PolygonGraphics;
-});
+export default PolygonGraphics;

@@ -1,8 +1,4 @@
-define([
-        'Renderer/ShaderSource'
-    ], function(
-        ShaderSource) {
-        'use strict';
+import { ShaderSource } from '../../Source/Cesium.js';
 
 describe('Renderer/ShaderSource', function() {
 
@@ -96,5 +92,4 @@ describe('Renderer/ShaderSource', function() {
         expect(clone.pickColorQualifier).toEqual(source.pickColorQualifier);
         expect(clone.includeBuiltIns).toEqual(source.includeBuiltIns);
     });
-});
 });

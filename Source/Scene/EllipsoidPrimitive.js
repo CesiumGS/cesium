@@ -1,52 +1,26 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/BoxGeometry',
-        '../Core/Cartesian3',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Core/VertexFormat',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/EllipsoidFS',
-        '../Shaders/EllipsoidVS',
-        './BlendingState',
-        './CullFace',
-        './Material',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian3,
-        combine,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Matrix4,
-        VertexFormat,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        EllipsoidFS,
-        EllipsoidVS,
-        BlendingState,
-        CullFace,
-        Material,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxGeometry from '../Core/BoxGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix4 from '../Core/Matrix4.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import EllipsoidFS from '../Shaders/EllipsoidFS.js';
+import EllipsoidVS from '../Shaders/EllipsoidVS.js';
+import BlendingState from './BlendingState.js';
+import CullFace from './CullFace.js';
+import Material from './Material.js';
+import SceneMode from './SceneMode.js';
 
     var attributeLocations = {
         position : 0
@@ -139,7 +113,7 @@ define([
 
         /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -155,7 +129,7 @@ define([
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -374,7 +348,7 @@ define([
                 fs.defines.push('WRITE_DEPTH');
             }
             if (this._useLogDepth) {
-                vs.defines.push('LOG_DEPTH', 'DISABLE_GL_POSITION_LOG_DEPTH');
+                vs.defines.push('LOG_DEPTH');
                 fs.defines.push('LOG_DEPTH');
                 fs.sources.push(logDepthExtension);
             }
@@ -498,6 +472,4 @@ define([
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
-
-    return EllipsoidPrimitive;
-});
+export default EllipsoidPrimitive;

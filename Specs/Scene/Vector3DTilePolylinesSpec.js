@@ -1,28 +1,14 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Rectangle',
-        'Scene/Cesium3DTileBatchTable',
-        'Scene/ColorBlendMode',
-        'Scene/Vector3DTilePolylines',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        Cesium3DTileBatchTable,
-        ColorBlendMode,
-        Vector3DTilePolylines,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Cesium3DTileBatchTable } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { Vector3DTilePolylines } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/Vector3DTilePolylines', function() {
 
@@ -242,4 +228,3 @@ describe('Scene/Vector3DTilePolylines', function() {
     });
 
 }, 'WebGL');
-});

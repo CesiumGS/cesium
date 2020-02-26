@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Object for setting and retrieving the default Bing Maps API key.
@@ -30,6 +26,4 @@ define([
 
         return BingMapsApi.defaultKey;
     };
-
-    return BingMapsApi;
-});
+export default BingMapsApi;

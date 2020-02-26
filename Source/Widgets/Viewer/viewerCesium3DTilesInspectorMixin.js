@@ -1,12 +1,6 @@
-define([
-        '../../Core/Check',
-        '../../Core/defineProperties',
-        '../Cesium3DTilesInspector/Cesium3DTilesInspector'
-    ], function(
-        Check,
-        defineProperties,
-        Cesium3DTilesInspector) {
-    'use strict';
+import Check from '../../Core/Check.js';
+import defineProperties from '../../Core/defineProperties.js';
+import Cesium3DTilesInspector from '../Cesium3DTilesInspector/Cesium3DTilesInspector.js';
 
     /**
      * A mixin which adds the {@link Cesium3DTilesInspector} widget to the {@link Viewer} widget.
@@ -38,6 +32,4 @@ define([
             }
         });
     }
-
-    return viewerCesium3DTilesInspectorMixin;
-});
+export default viewerCesium3DTilesInspectorMixin;

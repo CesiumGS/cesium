@@ -1,10 +1,5 @@
-define([
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,
@@ -127,6 +122,4 @@ define([
      *          if 'result' is undefined.
      */
     TilingScheme.prototype.positionToTileXY = DeveloperError.throwInstantiationError;
-
-    return TilingScheme;
-});
+export default TilingScheme;

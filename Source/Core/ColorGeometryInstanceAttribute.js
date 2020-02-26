@@ -1,18 +1,9 @@
-define([
-        './Color',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import Color from './Color.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Value and type information for per-instance geometry color.
@@ -182,6 +173,4 @@ define([
                 left.value[2] === right.value[2] &&
                 left.value[3] === right.value[3]);
     };
-
-    return ColorGeometryInstanceAttribute;
-});
+export default ColorGeometryInstanceAttribute;

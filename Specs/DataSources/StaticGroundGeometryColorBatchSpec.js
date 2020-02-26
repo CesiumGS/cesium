@@ -1,42 +1,21 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defaultValue',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/CallbackProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/Entity',
-        'DataSources/StaticGroundGeometryColorBatch',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian3,
-        Color,
-        defaultValue,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        CallbackProperty,
-        EllipseGeometryUpdater,
-        Entity,
-        StaticGroundGeometryColorBatch,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        GroundPrimitive,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { StaticGroundGeometryColorBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('DataSources/StaticGroundGeometryColorBatch', function() {
 
@@ -58,11 +37,8 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
-    function computeKey(color, zIndex) {
-        var ui8 = new Uint8Array(color);
-        var ui32 = new Uint32Array(ui8.buffer);
-        zIndex = defaultValue(zIndex, 0);
-        return ui32[0] + ':' + zIndex;
+    function computeKey(zIndex) {
+        return defaultValue(zIndex, 0);
     }
 
     it('updates color attribute after rebuilding primitive', function() {
@@ -96,7 +72,7 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             var red = [255, 0, 0, 255];
-            var redKey = computeKey(red);
+            var redKey = computeKey();
             expect(attributes.color).toEqual(red);
 
             // Verify we have 1 batch with the key for red
@@ -118,7 +94,7 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
                 var primitive = scene.groundPrimitives.get(0);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
                 var green = [0, 128, 0, 255];
-                var greenKey = computeKey(green);
+                var greenKey = computeKey();
                 expect(attributes.color).toEqual(green);
 
                 // Verify we have 1 batch with the key for green
@@ -355,5 +331,4 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
                 batch.removeAllPrimitives();
             });
     });
-});
 });

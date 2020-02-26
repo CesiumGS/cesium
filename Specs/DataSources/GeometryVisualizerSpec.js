@@ -1,56 +1,28 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/JulianDate',
-        'Core/ShowGeometryInstanceAttribute',
-        'DataSources/BoundingSphereState',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/EntityCollection',
-        'DataSources/GeometryVisualizer',
-        'DataSources/GridMaterialProperty',
-        'DataSources/SampledProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/ShadowMode',
-        'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        JulianDate,
-        ShowGeometryInstanceAttribute,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGraphics,
-        Entity,
-        EntityCollection,
-        GeometryVisualizer,
-        GridMaterialProperty,
-        SampledProperty,
-        ClassificationType,
-        GroundPrimitive,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ShadowMode,
-        createDynamicProperty,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { GeometryVisualizer } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('DataSources/GeometryVisualizer', function() {
 
@@ -736,57 +708,6 @@ describe('DataSources/GeometryVisualizer', function() {
         });
     });
 
-    it('batches ground entities by identical color if ground entity materials are not supported', function() {
-        spyOn(GroundPrimitive, 'supportsMaterials').and.callFake(function() {
-            return false;
-        });
-        var entities = new EntityCollection();
-        var visualizer = new GeometryVisualizer(scene, entities, scene.primitives, scene.groundPrimitives);
-
-        var blueColor = Color.BLUE.withAlpha(0.5);
-        entities.add({
-            position : new Cartesian3(1, 2, 3),
-            ellipse : {
-                semiMajorAxis : 2,
-                semiMinorAxis : 1,
-                material : blueColor
-            }
-        });
-
-        return visualizerUpdated(visualizer).then(function() {
-            expect(scene.groundPrimitives.length).toEqual(1);
-
-            entities.add({
-                position : new Cartesian3(12, 34, 45),
-                ellipse : {
-                    semiMajorAxis : 2,
-                    semiMinorAxis : 1,
-                    material : blueColor
-                }
-            });
-
-            return visualizerUpdated(visualizer);
-        }).then(function() {
-            expect(scene.groundPrimitives.length).toEqual(1);
-
-            entities.add({
-                position : new Cartesian3(123, 456, 789),
-                ellipse : {
-                    semiMajorAxis : 2,
-                    semiMinorAxis : 1,
-                    material : Color.BLUE.withAlpha(0.6)
-                }
-            });
-
-            return visualizerUpdated(visualizer);
-        }).then(function() {
-            expect(scene.groundPrimitives.length).toEqual(2);
-
-            entities.removeAll();
-            visualizer.destroy();
-        });
-    });
-
     it('batches ground entities by material if ground entity materials is supported', function() {
         if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
             return;
@@ -871,4 +792,3 @@ describe('DataSources/GeometryVisualizer', function() {
     });
 
 }, 'WebGL');
-});

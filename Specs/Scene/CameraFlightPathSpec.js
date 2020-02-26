@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Math',
-        'Core/OrthographicOffCenterFrustum',
-        'Scene/CameraFlightPath',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        CesiumMath,
-        OrthographicOffCenterFrustum,
-        CameraFlightPath,
-        SceneMode,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { CameraFlightPath } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/CameraFlightPath', function() {
 
@@ -599,4 +589,3 @@ describe('Scene/CameraFlightPath', function() {
         }
     });
 }, 'WebGL');
-});

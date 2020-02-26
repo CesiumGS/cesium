@@ -1,15 +1,12 @@
+# List of Slack usernames (not GitHub) for the Cesium Concierge Slackbot to send release reminders for.
 releaseSchedule:
-  OmarShehata: 9/2/2019
-  mramato: 10/1/2019
-  hpinkos: 11/1/2019
-  lilleyse: 12/1/2019
-  ggetz: 1/2/2020
-  likangning93: 2/3/2020
-  tfili: 3/2/2020
-
-greetings:
-  - Happy Friday everyone!
-  - Can you believe Friday is already here?
-  - I hope you all had awesome week!
-  - I skipped breakfast, so I hope Gary baked something good today...
-  - Good morning everyone!
+  mamato: 3/2/2020
+  oshehata: 4/1/2020
+  lilleyse: 5/1/2020
+  ian: 6/1/2020
+  sam.suhag: 7/1/2020
+  sam.vargas: 8/3/2020
+  kevin: 9/1/2020
+  mamato: 10/1/2020
+  oshehata: 11/2/2020
+  lilleyse: 12/1/2020

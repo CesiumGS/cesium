@@ -1,24 +1,12 @@
-define([
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/EllipseGeometry',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        Cartesian3,
-        EllipseGeometry,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        Rectangle,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipseGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/EllipseGeometry', function() {
 
@@ -422,5 +410,4 @@ describe('Core/EllipseGeometry', function() {
     var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, -1];
     createPackableSpecs(EllipseGeometry, packableInstance, packedInstance);
 
-});
 });

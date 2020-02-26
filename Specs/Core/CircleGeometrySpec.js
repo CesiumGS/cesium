@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/CircleGeometry',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        CircleGeometry,
-        Ellipsoid,
-        CesiumMath,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CircleGeometry', function() {
 
@@ -197,5 +188,4 @@ describe('Core/CircleGeometry', function() {
     });
     var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, -1];
     createPackableSpecs(CircleGeometry, packableInstance, packedInstance);
-});
 });

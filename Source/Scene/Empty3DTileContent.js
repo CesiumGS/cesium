@@ -1,14 +1,9 @@
-define([
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
 
     /**
      * Represents empty content for tiles in a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset that
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset that
      * do not have content, e.g., because they are used to optimize hierarchical culling.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
@@ -132,6 +127,4 @@ define([
     Empty3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
-
-    return Empty3DTileContent;
-});
+export default Empty3DTileContent;

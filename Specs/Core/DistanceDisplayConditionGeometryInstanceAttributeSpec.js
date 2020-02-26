@@ -1,12 +1,6 @@
-define([
-        'Core/ComponentDatatype',
-        'Core/DistanceDisplayCondition',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute'
-    ], function(
-        ComponentDatatype,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
 
 describe('Core/DistanceDisplayConditionGeometryInstanceAttribute', function() {
 
@@ -69,5 +63,4 @@ describe('Core/DistanceDisplayConditionGeometryInstanceAttribute', function() {
             DistanceDisplayConditionGeometryInstanceAttribute.toValue();
         }).toThrowDeveloperError();
     });
-});
 });
