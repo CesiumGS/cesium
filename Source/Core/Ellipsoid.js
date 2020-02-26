@@ -3,7 +3,6 @@ import Cartographic from './Cartographic.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
@@ -83,7 +82,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
         initialize(this, x, y, z);
     }
 
-    defineProperties(Ellipsoid.prototype, {
+    Object.defineProperties(Ellipsoid.prototype, {
         /**
          * Gets the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype

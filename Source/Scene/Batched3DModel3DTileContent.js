@@ -3,7 +3,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -56,7 +55,7 @@ import ModelUtility from './ModelUtility.js';
     // This can be overridden for testing purposes
     Batched3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
-    defineProperties(Batched3DModel3DTileContent.prototype, {
+    Object.defineProperties(Batched3DModel3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return this._batchTable.featuresLength;

@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -52,7 +51,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         initialize(this, arrayBuffer, byteOffset);
     }
 
-    defineProperties(Vector3DTileContent.prototype, {
+    Object.defineProperties(Vector3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.featuresLength : 0;

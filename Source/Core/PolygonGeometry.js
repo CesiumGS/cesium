@@ -9,7 +9,6 @@ import Check from './Check.js';
 import ComponentDatatype from './ComponentDatatype.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import EllipsoidGeodesic from './EllipsoidGeodesic.js';
@@ -1049,7 +1048,7 @@ import WindingOrder from './WindingOrder.js';
         return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
     }
 
-    defineProperties(PolygonGeometry.prototype, {
+    Object.defineProperties(PolygonGeometry.prototype, {
         /**
          * @private
          */

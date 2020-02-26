@@ -7,7 +7,6 @@ import { combine } from '../../Source/Cesium.js';
 import { Credit } from '../../Source/Cesium.js';
 import { defaultValue } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
-import { defineProperties } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
@@ -3283,7 +3282,7 @@ describe('Scene/Model', function() {
             };
 
             globe.terrainProviderChanged = new Event();
-            defineProperties(globe, {
+            Object.defineProperties(globe, {
                 terrainProvider : {
                     set : function(value) {
                         this.terrainProviderChanged.raiseEvent(value);

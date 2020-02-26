@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -57,7 +56,7 @@ import ImageryLayer from './ImageryLayer.js';
         this.layerShownOrHidden = new Event();
     }
 
-    defineProperties(ImageryLayerCollection.prototype, {
+    Object.defineProperties(ImageryLayerCollection.prototype, {
         /**
          * Gets the number of layers in this collection.
          * @memberof ImageryLayerCollection.prototype

@@ -1,6 +1,5 @@
 import Cartesian3 from '../../Core/Cartesian3.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Ray from '../../Core/Ray.js';
@@ -551,7 +550,7 @@ import createCommand from '../createCommand.js';
         });
     }
 
-    defineProperties(CesiumInspectorViewModel.prototype, {
+    Object.defineProperties(CesiumInspectorViewModel.prototype, {
         /**
          * Gets the scene to control.
          * @memberof CesiumInspectorViewModel.prototype

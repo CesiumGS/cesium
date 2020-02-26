@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import ContextLimits from './ContextLimits.js';
@@ -54,7 +53,7 @@ import RenderbufferFormat from './RenderbufferFormat.js';
         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
     }
 
-    defineProperties(Renderbuffer.prototype, {
+    Object.defineProperties(Renderbuffer.prototype, {
         format: {
             get : function() {
                 return this._format;

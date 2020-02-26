@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Rectangle from '../Core/Rectangle.js';
 import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
@@ -178,7 +177,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
     };
 
-    defineProperties(QuadtreeTile.prototype, {
+    Object.defineProperties(QuadtreeTile.prototype, {
         /**
          * Gets the tiling scheme used to tile the surface.
          * @memberof QuadtreeTile.prototype

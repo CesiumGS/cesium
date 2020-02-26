@@ -9,7 +9,6 @@ import CornerType from './CornerType.js';
 import CorridorGeometryLibrary from './CorridorGeometryLibrary.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import Geometry from './Geometry.js';
 import GeometryAttribute from './GeometryAttribute.js';
@@ -1066,7 +1065,7 @@ import VertexFormat from './VertexFormat.js';
         });
     };
 
-    defineProperties(CorridorGeometry.prototype, {
+    Object.defineProperties(CorridorGeometry.prototype, {
         /**
          * @private
          */

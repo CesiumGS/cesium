@@ -4,7 +4,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -119,7 +118,7 @@ import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js'
         this._batchValuesDirty = false;
     }
 
-    defineProperties(BatchTable.prototype, {
+    Object.defineProperties(BatchTable.prototype, {
         /**
          * The attribute descriptions.
          * @memberOf BatchTable.prototype

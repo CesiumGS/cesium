@@ -11,7 +11,6 @@ import createGuid from '../Core/createGuid.js';
 import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -753,7 +752,7 @@ import View from './View.js';
 
     var scratchSunColor = new Cartesian4();
 
-    defineProperties(Scene.prototype, {
+    Object.defineProperties(Scene.prototype, {
         /**
          * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype

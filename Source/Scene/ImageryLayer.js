@@ -2,7 +2,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
@@ -259,7 +258,7 @@ import TileImagery from './TileImagery.js';
         this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
-    defineProperties(ImageryLayer.prototype, {
+    Object.defineProperties(ImageryLayer.prototype, {
 
         /**
          * Gets the imagery provider for this layer.

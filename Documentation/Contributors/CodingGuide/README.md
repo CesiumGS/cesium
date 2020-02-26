@@ -678,13 +678,13 @@ function Model(options) {
 };
 ```
 
-Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
+Read-only properties can be created with a private property and a getter using `Object.defineProperties` function, e.g.,
 ```javascript
 function Cesium3DTileset(options) {
     this._url = options.url;
 };
 
-defineProperties(Cesium3DTileset.prototype, {
+Object.defineProperties(Cesium3DTileset.prototype, {
     url : {
         get : function() {
             return this._url;
@@ -696,7 +696,7 @@ Getters can perform any needed computation to return the property, but the perfo
 
 Setters can also perform computation before assigning to a private property, set a flag to delay computation, or both, for example:
 ```javascript
-defineProperties(UniformState.prototype, {
+Object.defineProperties(UniformState.prototype, {
     viewport : {
         get : function() {
             return this._viewport;
@@ -790,14 +790,12 @@ Modules (files) should only reference modules in the same level or a lower level
 ```javascript
 define([
         '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
-        defineProperties,
         Event,
         JulianDate,
         ModelAnimationLoop,

@@ -6,7 +6,6 @@ import Cartographic from '../Core/Cartographic.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -164,7 +163,7 @@ import SunLight from '../Scene/SunLight.js';
         this._minimumDisableDepthTestDistance = undefined;
     }
 
-    defineProperties(UniformState.prototype, {
+    Object.defineProperties(UniformState.prototype, {
         /**
          * @memberof UniformState.prototype
          * @type {FrameState}
