@@ -2868,9 +2868,7 @@ import SceneMode from './SceneMode.js';
     var MINIMUM_ZOOM = 100.0;
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
-        if (!defined(offset)) {
-            offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
-        }
+        offset = HeadingPitchRange.clone(defined(offset) ? offset : Camera.DEFAULT_OFFSET);
 
         var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
         var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;

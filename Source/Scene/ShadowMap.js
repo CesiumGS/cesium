@@ -131,7 +131,7 @@ import ShadowMapShader from './ShadowMapShader.js';
 
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
-        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;

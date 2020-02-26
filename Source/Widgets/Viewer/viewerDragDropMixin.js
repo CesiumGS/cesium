@@ -79,7 +79,7 @@ import getElement from '../getElement.js';
              * @type {Element}
              */
             dropTarget : {
-                //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
+                //TODO See https://github.com/CesiumGS/cesium/issues/832
                 get : function() {
                     return dropTarget;
                 },

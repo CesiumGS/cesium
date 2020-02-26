@@ -806,6 +806,30 @@ import CesiumMath from './Math.js';
     };
 
     /**
+     * Computes the linear interpolation or extrapolation at t between the provided colors.
+     *
+     * @param {Color} start The color corresponding to t at 0.0.
+     * @param {Color} end The color corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.lerp = function(start, end, t, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('start', start);
+        Check.typeOf.object('end', end);
+        Check.typeOf.number('t', t);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result.red = CesiumMath.lerp(start.red, end.red, t);
+        result.green = CesiumMath.lerp(start.green, end.green, t);
+        result.blue = CesiumMath.lerp(start.blue, end.blue, t);
+        result.alpha = CesiumMath.lerp(start.alpha, end.alpha, t);
+        return result;
+    };
+
+    /**
      * Multiplies the provided Color componentwise by the provided scalar.
      *
      * @param {Color} color The Color to be scaled.

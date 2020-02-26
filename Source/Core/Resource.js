@@ -1831,7 +1831,7 @@ import TrustedServers from './TrustedServers.js';
         Resource.supportsImageBitmapOptions()
             .then(function(supportsImageBitmap) {
                 // We can only use ImageBitmap if we can flip on decode.
-                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                // See: https://github.com/CesiumGS/cesium/pull/7579#issuecomment-466146898
                 if (!(supportsImageBitmap && preferImageBitmap)) {
                     loadImageElement(url, crossOrigin, deferred);
                     return;
@@ -1899,15 +1899,10 @@ import TrustedServers from './TrustedServers.js';
     }
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
-
-        // Specifically use the Node version of require to avoid conflicts with the global
-        // require defined in the built version of Cesium.
-        var nodeRequire = global.require; // eslint-disable-line
-
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = nodeRequire('url').parse(url);
-        var http = URL.protocol === 'https:' ? nodeRequire('https') : nodeRequire('http');
-        var zlib = nodeRequire('zlib');
+        var URL = require('url').parse(url); // eslint-disable-line
+        var http = URL.protocol === 'https:' ? require('https') : require('http'); // eslint-disable-line
+        var zlib = require('zlib'); // eslint-disable-line
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,

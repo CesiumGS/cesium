@@ -89,7 +89,7 @@ import Property from './Property.js';
                 primitive = new GroundPrimitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     classificationType : this.classificationType
                 });
                 primitives.add(primitive, this.zIndex);
