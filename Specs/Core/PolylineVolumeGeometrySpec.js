@@ -95,7 +95,7 @@ describe('Core/PolylineVolumeGeometry', function() {
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
-    //https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+    //https://github.com/CesiumGS/cesium/issues/3609
     xit('compute all vertex attributes', function() {
         var m = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
             vertexFormat : VertexFormat.ALL,

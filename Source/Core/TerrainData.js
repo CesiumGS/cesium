@@ -10,6 +10,7 @@ import DeveloperError from './DeveloperError.js';
      *
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function TerrainData() {
         DeveloperError.throwInstantiationError();

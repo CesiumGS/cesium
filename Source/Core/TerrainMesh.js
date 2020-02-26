@@ -13,6 +13,8 @@ import defaultValue from './defaultValue.js';
       *                       the Cartesian position of the vertex, H is the height above the ellipsoid, and
       *                       U and V are the texture coordinates.
       * @param {Uint8Array|Uint16Array|Uint32Array} indices The indices describing how the vertices are connected to form triangles.
+      * @param {Number} indexCountWithoutSkirts The index count of the mesh not including skirts.
+      * @param {Number} vertexCountWithoutSkirts The vertex count of the mesh not including skirts.
       * @param {Number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
       * @param {Number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
       * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
@@ -31,8 +33,8 @@ import defaultValue from './defaultValue.js';
       * @private
       */
     function TerrainMesh(
-        center, vertices, indices, minimumHeight, maximumHeight,
-        boundingSphere3D, occludeePointInScaledSpace,
+        center, vertices, indices, indexCountWithoutSkirts, vertexCountWithoutSkirts, minimumHeight,
+        maximumHeight, boundingSphere3D, occludeePointInScaledSpace,
         vertexStride, orientedBoundingBox, encoding, exaggeration,
         westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast) {
 
@@ -65,6 +67,18 @@ import defaultValue from './defaultValue.js';
          * @type {Uint8Array|Uint16Array|Uint32Array}
          */
         this.indices = indices;
+
+        /**
+         * The index count of the mesh not including skirts.
+         * @type {Number}
+         */
+        this.indexCountWithoutSkirts = indexCountWithoutSkirts;
+
+        /**
+         * The vertex count of the mesh not including skirts.
+         * @type {Number}
+         */
+        this.vertexCountWithoutSkirts = vertexCountWithoutSkirts;
 
         /**
          * The lowest height in the tile, in meters above the ellipsoid.

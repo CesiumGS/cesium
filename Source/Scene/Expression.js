@@ -16,7 +16,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
      * An expression for a style applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      * <p>
      * Implements the {@link StyleExpression} interface.
@@ -125,7 +125,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
@@ -1559,6 +1559,8 @@ import ExpressionNodeType from './ExpressionNodeType.js';
         return expressions;
     }
 
+    var nullSentinel = 'czm_infinity'; // null just needs to be some sentinel value that will cause "[expression] === null" to be false in nearly all cases. GLSL doesn't have a NaN constant so use czm_infinity.
+
     Node.prototype.getShaderExpression = function(attributePrefix, shaderState, parent) {
         var color;
         var left;
@@ -1603,7 +1605,13 @@ import ExpressionNodeType from './ExpressionNodeType.js';
                     return 'floor(' + left + ' + 0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
-                } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
+                } else if (value === 'isNaN') {
+                    // In GLSL 2.0 use isnan instead
+                    return '(' + left + ' != ' + left + ')';
+                } else if (value === 'isFinite') {
+                    // In GLSL 2.0 use isinf instead. GLSL doesn't have an infinity constant so use czm_infinity which is an arbitrarily big enough number.
+                    return '(abs(' + left + ') < czm_infinity)';
+                } else if ((value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {
                     throw new RuntimeError('Error generating style shader: "' + value + '" is not supported.');
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
@@ -1659,7 +1667,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
             case ExpressionNodeType.VARIABLE_IN_STRING:
                 throw new RuntimeError('Error generating style shader: Converting a variable to a string is not supported.');
             case ExpressionNodeType.LITERAL_NULL:
-                throw new RuntimeError('Error generating style shader: null is not supported.');
+                return nullSentinel;
             case ExpressionNodeType.LITERAL_BOOLEAN:
                 return value ? 'true' : 'false';
             case ExpressionNodeType.LITERAL_NUMBER:
@@ -1745,7 +1753,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
             case ExpressionNodeType.LITERAL_REGEX:
                 throw new RuntimeError('Error generating style shader: Regular expressions are not supported.');
             case ExpressionNodeType.LITERAL_UNDEFINED:
-                throw new RuntimeError('Error generating style shader: undefined is not supported.');
+                return nullSentinel;
             case ExpressionNodeType.BUILTIN_VARIABLE:
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_time';

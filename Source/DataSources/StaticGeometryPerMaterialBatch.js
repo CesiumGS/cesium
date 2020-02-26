@@ -127,7 +127,7 @@ import Property from './Property.js';
                 primitive = new Primitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     appearance : new this.appearanceType({
                         material : this.material,
                         translucent : this.material.isTranslucent(),

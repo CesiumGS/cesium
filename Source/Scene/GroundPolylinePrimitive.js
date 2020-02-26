@@ -349,11 +349,7 @@ import StencilOperation from './StencilOperation.js';
         // Helps with varying budget.
         var fs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeFS);
 
-        // Tesselation on these volumes tends to be low,
-        // which causes problems when interpolating log depth from vertices.
-        // So force computing and writing log depth in the fragment shader.
-        // Re-enable at far distances to avoid z-fighting.
-        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', 'GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
+        var vsDefines =  ['GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
         var colorDefine = '';
         var materialShaderSource = '';
         if (defined(appearance.material)) {

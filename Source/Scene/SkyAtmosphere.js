@@ -131,8 +131,8 @@ import SceneMode from './SceneMode.js';
     /**
      * @private
      */
-    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
-        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
+    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting, useSunDirection) {
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
     };
 
     /**

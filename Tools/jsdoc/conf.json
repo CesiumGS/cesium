@@ -14,7 +14,7 @@
         "default": {
             "outputSourceFiles": false
         },
-        "sourceUrl": "https://github.com/AnalyticalGraphicsInc/cesium/blob/{version}/Source/{filename}"
+        "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
     },
     "opts": {
         "destination": "Build/Documentation",

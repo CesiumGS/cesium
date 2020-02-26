@@ -11,6 +11,7 @@ import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
 import { HeadingPitchRange } from '../../Source/Cesium.js';
 import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { isDataUri } from '../../Source/Cesium.js';
 import { Iso8601 } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
@@ -224,6 +225,14 @@ describe('DataSources/KmlDataSource', function() {
         return dataSource.load('Data/KML/simple.kmz').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load works with a KMZ URL with Windows-style paths', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/backslash.kmz').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(isDataUri(source.entities.values[0]._billboard._image._value.url)).toBe(true);
         });
     });
 

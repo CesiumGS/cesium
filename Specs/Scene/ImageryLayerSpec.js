@@ -1,5 +1,6 @@
 import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { ComputeEngine } from '../../Source/Cesium.js';
@@ -57,8 +58,8 @@ describe('Scene/ImageryLayer', function() {
     };
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -121,8 +122,8 @@ describe('Scene/ImageryLayer', function() {
             });
         };
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -262,8 +263,8 @@ describe('Scene/ImageryLayer', function() {
     });
 
     it('assigns texture property when reprojection is skipped because the tile is very small', function() {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red256x256.png'}), crossOrigin, deferred);
         };
 
         var provider = new UrlTemplateImageryProvider({
@@ -500,7 +501,7 @@ describe('Scene/ImageryLayer', function() {
         });
 
         it('does not get confused when base layer imagery overlaps in one direction but not the other', function() {
-            // This is a pretty specific test targeted at https://github.com/AnalyticalGraphicsInc/cesium/issues/2815
+            // This is a pretty specific test targeted at https://github.com/CesiumGS/cesium/issues/2815
             // It arranges for tileImageryBoundsScratch to be a rectangle that is invalid in the WebMercator projection.
             // Then, it triggers issue #2815 where that stale data is used in a later call.  Prior to the fix this
             // triggers an exception (use of an undefined reference).

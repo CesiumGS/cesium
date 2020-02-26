@@ -50,7 +50,7 @@ import Primitive from './Primitive.js';
 import ShadowMapShader from './ShadowMapShader.js';
 
     /**
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map. Do not construct this directly.
      *
      * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
@@ -131,7 +131,7 @@ import ShadowMapShader from './ShadowMapShader.js';
 
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
-        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
@@ -1089,6 +1089,9 @@ import ShadowMapShader from './ShadowMapShader.js';
         // Start to construct the light view matrix. Set translation later once the bounding box is found.
         var lightDir = shadowMapCamera.directionWC;
         var lightUp = sceneCamera.directionWC; // Align shadows to the camera view.
+        if (Cartesian3.equalsEpsilon(lightDir, lightUp, CesiumMath.EPSILON10)) {
+            lightUp = sceneCamera.upWC;
+        }
         var lightRight = Cartesian3.cross(lightDir, lightUp, scratchRight);
         lightUp = Cartesian3.cross(lightRight, lightDir, scratchUp); // Recalculate up now that right is derived
         Cartesian3.normalize(lightUp, lightUp);
