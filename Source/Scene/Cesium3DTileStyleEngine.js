@@ -26,7 +26,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._styleDirty = true;
     };
 
-    Cesium3DTileStyleEngine.prototype.applyStyle = function(tileset, frameState) {
+    Cesium3DTileStyleEngine.prototype.applyStyle = function(tileset, passOptions) {
         if (!tileset.ready) {
             return;
         }
@@ -37,8 +37,8 @@ import defineProperties from '../Core/defineProperties.js';
 
         var styleDirty = this._styleDirty;
 
-        if (frameState.passes.render) {
-            // Don't reset until the color pass, e.g., for mouse-over picking
+        if (passOptions.isRender) {
+            // Don't reset until the render pass
             this._styleDirty = false;
         }
 

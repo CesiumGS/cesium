@@ -41,7 +41,7 @@ import CullFace from './CullFace.js';
          *
          * @type Material
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = options.material;
 

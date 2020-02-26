@@ -4,6 +4,7 @@ import BoxGeometry from '../Core/BoxGeometry.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
+import clone from '../Core/clone.js';
 import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import createGuid from '../Core/createGuid.js';
@@ -97,6 +98,7 @@ import View from './View.js';
      *     depth : true,
      *     stencil : false,
      *     antialias : true,
+     *     powerPreference: 'high-performance',
      *     premultipliedAlpha : true,
      *     preserveDrawingBuffer : false,
      *     failIfMajorPerformanceCaveat : false
@@ -156,9 +158,17 @@ import View from './View.js';
     function Scene(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var canvas = options.canvas;
-        var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
         var creditViewport = options.creditViewport;
+
+        var contextOptions = clone(options.contextOptions);
+        if (!defined(contextOptions)) {
+            contextOptions = {};
+        }
+        if (!defined(contextOptions.webgl)) {
+            contextOptions.webgl = {};
+        }
+        contextOptions.webgl.powerPreference = defaultValue(contextOptions.webgl.powerPreference, 'high-performance');
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -2865,11 +2875,19 @@ import View from './View.js';
             environmentState.sunComputeCommand = undefined;
             environmentState.moonCommand = undefined;
         } else {
-            if (defined(skyAtmosphere) && defined(globe)) {
-                skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
-                environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+            if (defined(skyAtmosphere)) {
+                if (defined(globe)) {
+                    skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
+                    environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+                }
+                environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
+                if (defined(environmentState.skyAtmosphereCommand)) {
+                    this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
+                }
+            } else {
+                environmentState.skyAtmosphereCommand = undefined;
             }
-            environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
+
             environmentState.skyBoxCommand = defined(this.skyBox) ? this.skyBox.update(frameState, this._hdr) : undefined;
             var sunCommands = defined(this.sun) ? this.sun.update(frameState, view.passState, this._hdr) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;

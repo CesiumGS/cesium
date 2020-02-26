@@ -1,4 +1,4 @@
-Copyright 2011-2019 CesiumJS Contributors
+Copyright 2011-2020 CesiumJS Contributors
 
                                  Apache License
                            Version 2.0, January 2004
@@ -188,7 +188,7 @@ Copyright 2011-2019 CesiumJS Contributors
       same "printed page" as the copyright notice for easier
       identification within third-party archives.
 
-   Copyright 2011-2018 CesiumJS Contributors
+   Copyright 2011-2020 CesiumJS Contributors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -851,7 +851,7 @@ http://dojotoolkit.org/
 
 http://codemirror.net/
 
-> Copyright (C) 2014 by Marijn Haverbeke <marijnh@gmail.com> and others
+> Copyright (C) 2017 by Marijn Haverbeke <marijnh@gmail.com> and others
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >

@@ -113,7 +113,7 @@ import SceneMode from './SceneMode.js';
 
         /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -129,7 +129,7 @@ import SceneMode from './SceneMode.js';
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -348,7 +348,7 @@ import SceneMode from './SceneMode.js';
                 fs.defines.push('WRITE_DEPTH');
             }
             if (this._useLogDepth) {
-                vs.defines.push('LOG_DEPTH', 'DISABLE_GL_POSITION_LOG_DEPTH');
+                vs.defines.push('LOG_DEPTH');
                 fs.defines.push('LOG_DEPTH');
                 fs.sources.push(logDepthExtension);
             }

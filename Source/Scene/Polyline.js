@@ -174,7 +174,7 @@ import Material from './Material.js';
 
         /**
          * Gets or sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Polyline.prototype
          * @type {Material}
          */
@@ -282,6 +282,19 @@ import Material from './Material.js';
         pickId : {
             get : function() {
                 return this._pickId;
+            }
+        },
+
+        /**
+         * Gets the destruction status of this polyline
+         * @memberof Polyline.prototype
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        isDestroyed : {
+            get : function() {
+                return !defined(this._polylineCollection);
             }
         },
 
