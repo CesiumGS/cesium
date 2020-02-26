@@ -725,7 +725,7 @@ import LinearApproximation from '../Core/LinearApproximation.js';
 
         var values = this._values;
         var otherValues = other._values;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < values.length; i++) {
             if (values[i] !== otherValues[i]) {
                 return false;
             }
