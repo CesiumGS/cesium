@@ -804,7 +804,7 @@ var tmp = {};
 
 	var workerScriptsPath;
 
-	defineProperties(obj.zip, {
+	Object.defineProperties(obj.zip, {
         'workerScriptsPath' : {
             get : function() {
                 if (typeof workerScriptsPath === 'undefined') {
