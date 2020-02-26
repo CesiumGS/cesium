@@ -3,6 +3,9 @@ Change Log
 
 ### 1.67.0 - 2020-03-02
 
+##### Breaking Changes :mega:
+* `Cesium3DTileset.skipLevelOfDetail` is now `false` by default. [#8631](https://github.com/CesiumGS/cesium/pull/8631)
+
 ##### Additions :tada:
 
 * Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
