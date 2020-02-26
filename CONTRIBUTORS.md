@@ -117,6 +117,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 * [Orbit Logic](http://www.orbitlogic.com)
    * [Roderick Green](https://github.com/roderickgreen/)
+   * [Sang Han](https://github.com/seoular/)
 * [Hexastack](https://www.hexastack.com)
   * [Mohamed Marrouchi](https://github.com/marrouchi/)
 * [PropellerAero](https://www.propelleraero.com/)
