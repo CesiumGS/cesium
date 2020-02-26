@@ -75,7 +75,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
      * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
      * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
-     * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
+     * @param {Boolean} [options.skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
      * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
@@ -575,7 +575,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {Boolean}
          * @default true
          */
-        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
+        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
         this._skipLevelOfDetail = this.skipLevelOfDetail;
         this._disableSkipLevelOfDetail = false;
 
