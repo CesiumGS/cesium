@@ -13,6 +13,7 @@ Change Log
 * Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/CesiumGS/cesium/pull/8607)
 * `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/CesiumGS/cesium/pull/8563)
 * Added basic support for `isNaN`, `isFinite`, `null`, and `undefined` in the 3D Tiles styling GLSL backend for point clouds. [#8621](https://github.com/CesiumGS/cesium/pull/8621)
+* Updated knockout from 3.5.0 to 3.5.1.
 
 ##### Fixes :wrench:
 
