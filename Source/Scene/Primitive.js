@@ -323,8 +323,6 @@ import ShadowMode from './ShadowMode.js';
         this._colorCommands = [];
         this._pickCommands = [];
 
-        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
@@ -2072,24 +2070,9 @@ import ShadowMode from './ShadowMode.js';
             if (perInstanceAttributeIndices.hasOwnProperty(name)) {
                 var attributeIndex = perInstanceAttributeIndices[name];
                 properties[name] = {
-                    get : createGetFunction(batchTable, index, attributeIndex)
+                    get : createGetFunction(batchTable, index, attributeIndex),
+                    set : createSetFunction(batchTable, index, attributeIndex, this, name)
                 };
-
-                var createSetter = true;
-                var readOnlyAttributes = this._readOnlyInstanceAttributes;
-                if (createSetter && defined(readOnlyAttributes)) {
-                    length = readOnlyAttributes.length;
-                    for (var k = 0; k < length; ++k) {
-                        if (name === readOnlyAttributes[k]) {
-                            createSetter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
-                }
             }
         }
 
