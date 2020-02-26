@@ -187,6 +187,7 @@ import StencilConstants from './StencilConstants.js';
                 if (defined(this._drawCommand)) {
                     return this._drawCommand.boundingVolume;
                 }
+                return undefined;
             },
             set : function(value) {
                 this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);

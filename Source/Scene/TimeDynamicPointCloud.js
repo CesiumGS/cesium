@@ -237,6 +237,7 @@ import ShadowMode from './ShadowMode.js';
                 if (defined(this._lastRenderedFrame)) {
                     return this._lastRenderedFrame.pointCloud.boundingSphere;
                 }
+                return undefined;
             }
         },
 

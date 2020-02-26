@@ -555,6 +555,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyToProcessPromise)) {
                     return this._contentReadyToProcessPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -574,6 +575,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+                return undefined;
             }
         },
 
