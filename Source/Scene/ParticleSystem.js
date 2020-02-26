@@ -40,6 +40,7 @@ import Particle from './Particle.js';
      * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] If set, overrides the minimumImageSize and maximumImageSize inputs that scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.minimumImageSize] Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.maximumImageSize] Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
+     * @param {Boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. <code>true</code> to size the particles in meters; otherwise, the size is in pixels.
      * @param {Number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
      * @param {Number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
      * @param {Number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
@@ -117,6 +118,8 @@ import Particle from './Particle.js';
 
         this._minimumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize)));
         this._maximumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize)));
+
+        this._sizeInMeters = defaultValue(options.sizeInMeters, false);
 
         this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
 
@@ -434,6 +437,23 @@ import Particle from './Particle.js';
             }
         },
         /**
+         * Gets or sets if the particle size is in meters or pixels. <code>true</code> to size particles in meters; otherwise, the size is in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        sizeInMeters : {
+            get : function() {
+                return this._sizeInMeters;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.bool('value', value);
+                //>>includeEnd('debug');
+                this._sizeInMeters = value;
+            }
+        },
+        /**
          * How long the particle system will emit particles, in seconds.
          * @memberof ParticleSystem.prototype
          * @type {Number}
@@ -551,6 +571,7 @@ import Particle from './Particle.js';
         billboard.width = particle.imageSize.x;
         billboard.height = particle.imageSize.y;
         billboard.position = particle.position;
+        billboard.sizeInMeters = system.sizeInMeters;
         billboard.show = true;
 
         // Update the color
