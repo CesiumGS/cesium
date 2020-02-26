@@ -9,7 +9,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -351,7 +350,7 @@ import ShadowMode from './ShadowMode.js';
         this._batchTableBoundingSphereAttributeIndices = undefined;
     }
 
-    defineProperties(Primitive.prototype, {
+    Object.defineProperties(Primitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -2095,7 +2094,7 @@ import ShadowMode from './ShadowMode.js';
 
         createBoundingSphereProperties(this, properties, index);
         createPickIdProperty(this, properties, index);
-        defineProperties(attributes, properties);
+        Object.defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;

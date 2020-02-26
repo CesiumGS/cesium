@@ -4,7 +4,6 @@ import Cartographic from '../../Core/Cartographic.js';
 import Clock from '../../Core/Clock.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Event from '../../Core/Event.js';
@@ -710,7 +709,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
-    defineProperties(Viewer.prototype, {
+    Object.defineProperties(Viewer.prototype, {
         /**
          * Gets the parent container.
          * @memberof Viewer.prototype

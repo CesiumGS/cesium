@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 
     /**
      * @private
@@ -10,7 +9,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._lastStyleTime = 0;      // The "time" when the last style was assigned
     }
 
-    defineProperties(Cesium3DTileStyleEngine.prototype, {
+    Object.defineProperties(Cesium3DTileStyleEngine.prototype, {
         style : {
             get : function() {
                 return this._style;

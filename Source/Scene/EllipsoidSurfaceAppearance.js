@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import EllipsoidSurfaceAppearanceFS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS.js';
 import EllipsoidSurfaceAppearanceVS from '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS.js';
@@ -81,7 +80,7 @@ import Material from './Material.js';
         this._aboveGround = aboveGround;
     }
 
-    defineProperties(EllipsoidSurfaceAppearance.prototype, {
+    Object.defineProperties(EllipsoidSurfaceAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

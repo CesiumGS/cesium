@@ -2,7 +2,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -201,7 +200,7 @@ import StencilOperation from './StencilOperation.js';
         };
     }
 
-    defineProperties(ClassificationPrimitive.prototype, {
+    Object.defineProperties(ClassificationPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *

@@ -5,7 +5,6 @@ import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import isArray from '../Core/isArray.js';
@@ -321,7 +320,7 @@ import when from '../ThirdParty/when.js';
         this._defaultTexture = undefined;
 
         initializeMaterial(options, this);
-        defineProperties(this, {
+        Object.defineProperties(this, {
             type : {
                 value : this.type,
                 writable : false

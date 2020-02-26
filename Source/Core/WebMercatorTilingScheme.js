@@ -1,7 +1,6 @@
 import Cartesian2 from './Cartesian2.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import Rectangle from './Rectangle.js';
 import WebMercatorProjection from './WebMercatorProjection.js';
@@ -54,7 +53,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
                                   northeast.longitude, northeast.latitude);
     }
 
-    defineProperties(WebMercatorTilingScheme.prototype, {
+    Object.defineProperties(WebMercatorTilingScheme.prototype, {
         /**
          * Gets the ellipsoid that is tiled by this tiling scheme.
          * @memberof WebMercatorTilingScheme.prototype

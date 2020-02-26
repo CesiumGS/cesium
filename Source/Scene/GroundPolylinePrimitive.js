@@ -2,7 +2,6 @@ import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -207,7 +206,7 @@ import StencilOperation from './StencilOperation.js';
         });
     }
 
-    defineProperties(GroundPolylinePrimitive.prototype, {
+    Object.defineProperties(GroundPolylinePrimitive.prototype, {
         /**
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *

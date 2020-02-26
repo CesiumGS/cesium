@@ -28,7 +28,6 @@
 **/
 
 import buildModuleUrl from '../Core/buildModuleUrl.js';
-import defineProperties from '../Core/defineProperties.js';
 
 var tmp = {};
 

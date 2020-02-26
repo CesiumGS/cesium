@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import freezeObject from '../Core/freezeObject.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import AllMaterialAppearanceFS from '../Shaders/Appearances/AllMaterialAppearanceFS.js';
@@ -89,7 +88,7 @@ import Material from './Material.js';
         this._faceForward = defaultValue(options.faceForward, !closed);
     }
 
-    defineProperties(MaterialAppearance.prototype, {
+    Object.defineProperties(MaterialAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

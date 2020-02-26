@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 
@@ -19,7 +18,7 @@ import Event from '../Core/Event.js';
         this.setCallback(callback, isConstant);
     }
 
-    defineProperties(CallbackProperty.prototype, {
+    Object.defineProperties(CallbackProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof CallbackProperty.prototype

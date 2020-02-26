@@ -2,7 +2,6 @@ import Color from './Color.js';
 import ComponentDatatype from './ComponentDatatype.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -54,7 +53,7 @@ import DeveloperError from './DeveloperError.js';
         ]);
     }
 
-    defineProperties(ColorGeometryInstanceAttribute.prototype, {
+    Object.defineProperties(ColorGeometryInstanceAttribute.prototype, {
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
          * {@link ColorGeometryInstanceAttribute#value}.

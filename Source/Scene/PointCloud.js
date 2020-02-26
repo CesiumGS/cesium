@@ -8,7 +8,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import CesiumMath from '../Core/Math.js';
@@ -149,7 +148,7 @@ import StencilConstants from './StencilConstants.js';
         initialize(this, options);
     }
 
-    defineProperties(PointCloud.prototype, {
+    Object.defineProperties(PointCloud.prototype, {
         pointsLength : {
             get : function() {
                 return this._pointsLength;

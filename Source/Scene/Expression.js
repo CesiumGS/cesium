@@ -4,7 +4,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import isArray from '../Core/isArray.js';
 import CesiumMath from '../Core/Math.js';
@@ -59,7 +58,7 @@ import ExpressionNodeType from './ExpressionNodeType.js';
         this._runtimeAst = createRuntimeAst(this, ast);
     }
 
-    defineProperties(Expression.prototype, {
+    Object.defineProperties(Expression.prototype, {
         /**
          * Gets the expression defined in the 3D Tiles Styling language.
          *

@@ -1,4 +1,3 @@
-import defineProperties from '../../Core/defineProperties.js';
 import knockout from '../../ThirdParty/knockout.js';
 import createCommand from '../createCommand.js';
 
@@ -38,7 +37,7 @@ import createCommand from '../createCommand.js';
         knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
     }
 
-    defineProperties(NavigationHelpButtonViewModel.prototype, {
+    Object.defineProperties(NavigationHelpButtonViewModel.prototype, {
         /**
          * Gets the Command that is executed when the button is clicked.
          * @memberof NavigationHelpButtonViewModel.prototype

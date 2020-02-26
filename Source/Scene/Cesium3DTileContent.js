@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -30,7 +29,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         this.featurePropertiesDirty = false;
     }
 
-    defineProperties(Cesium3DTileContent.prototype, {
+    Object.defineProperties(Cesium3DTileContent.prototype, {
         /**
          * Gets the number of features in the tile.
          *

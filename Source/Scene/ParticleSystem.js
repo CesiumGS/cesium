@@ -4,7 +4,6 @@ import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Event from '../Core/Event.js';
 import JulianDate from '../Core/JulianDate.js';
@@ -138,7 +137,7 @@ import Particle from './Particle.js';
         this._particleEstimate = 0;
     }
 
-    defineProperties(ParticleSystem.prototype, {
+    Object.defineProperties(ParticleSystem.prototype, {
         /**
          * The particle emitter for this
          * @memberof ParticleSystem.prototype

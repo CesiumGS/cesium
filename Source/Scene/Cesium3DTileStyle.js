@@ -1,7 +1,6 @@
 import clone from '../Core/clone.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Resource from '../Core/Resource.js';
 import when from '../ThirdParty/when.js';
@@ -172,7 +171,7 @@ import Expression from './Expression.js';
         return expression;
     }
 
-    defineProperties(Cesium3DTileStyle.prototype, {
+    Object.defineProperties(Cesium3DTileStyle.prototype, {
         /**
          * Gets the object defining the style using the
          * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.

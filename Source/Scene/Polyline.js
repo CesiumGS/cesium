@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -100,7 +99,7 @@ import Material from './Material.js';
         }
     }
 
-    defineProperties(Polyline.prototype, {
+    Object.defineProperties(Polyline.prototype, {
 
         /**
          * Determines if this polyline will be shown.  Use this to hide or show a polyline, instead

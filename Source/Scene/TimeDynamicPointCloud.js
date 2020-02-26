@@ -3,7 +3,6 @@ import Check from '../Core/Check.js';
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Event from '../Core/Event.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -192,7 +191,7 @@ import ShadowMode from './ShadowMode.js';
         this._runningAverage = 0.0;
     }
 
-    defineProperties(TimeDynamicPointCloud.prototype, {
+    Object.defineProperties(TimeDynamicPointCloud.prototype, {
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
          *

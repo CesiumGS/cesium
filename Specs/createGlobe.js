@@ -1,5 +1,4 @@
 import { defaultValue } from '../Source/Cesium.js';
-import { defineProperties } from '../Source/Cesium.js';
 import { Ellipsoid } from '../Source/Cesium.js';
 import { Event } from '../Source/Cesium.js';
 
@@ -33,7 +32,7 @@ import { Event } from '../Source/Cesium.js';
         };
 
         globe.terrainProviderChanged = new Event();
-        defineProperties(globe, {
+        Object.defineProperties(globe, {
             terrainProvider : {
                 get : function() {
                     return this._terrainProvider;
