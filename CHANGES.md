@@ -55,16 +55,6 @@ Change Log
 * Added a font cache to improve label performance. [#8537](https://github.com/CesiumGS/cesium/pull/8537)
 
 ##### Fixes :wrench:
-* Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
-* Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/AnalyticalGraphicsInc/cesium/pull/8504)
-* Fixed a bug where files with backslashes were not loaded in KMZ files. [#8533](https://github.com/AnalyticalGraphicsInc/cesium/pull/8533)
-* Reduced Cesium bundle size by avoiding unnecessarily importing `Cesium3DTileset` in `Picking.js` [#8532](https://github.com/AnalyticalGraphicsInc/cesium/pull/8532)
-* Fixed WebGL warning message about `EXT_float_blend` being implicitly enabled. [#8534](https://github.com/AnalyticalGraphicsInc/cesium/pull/8534)
-* Updated SampleData models to glTF 2.0. [#7802](https://github.com/AnalyticalGraphicsInc/cesium/issues/7802)
-* Fixed a bug where toggling point cloud classification visibility would result in a grey screen on Linux / Nvidia [#8538](https://github.com/AnalyticalGraphicsInc/cesium/pull/8538)
-* Fixed a bug where a point in a `PointPrimitiveCollection` is rendered in the middle of the screen instead of being clipped. [#8542](https://github.com/AnalyticalGraphicsInc/cesium/pull/8542)
-* Fixed a crash when deleting and re-creating polylines from CZML. `ReferenceProperty` now returns undefined when the target entity or property does not exist, instead of throwing. [#8544](https://github.com/AnalyticalGraphicsInc/cesium/pull/8544)
-* Fixed a bug where rapidly updating a PolylineCollection could result in an instanceIndex is out of range error [#8546](https://github.com/AnalyticalGraphicsInc/cesium/pull/8546)
 * Fixed a bug where the camera could go underground during mouse navigation. [#8504](https://github.com/CesiumGS/cesium/pull/8504)
 * Fixed a bug where rapidly updating a `PolylineCollection` could result in an `instanceIndex` is out of range error. [#8546](https://github.com/CesiumGS/cesium/pull/8546)
 * Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/CesiumGS/cesium/issues/8162)
