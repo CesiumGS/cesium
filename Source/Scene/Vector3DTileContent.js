@@ -1,4 +1,4 @@
-// import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
@@ -317,8 +317,9 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
 
         var modelMatrix = content._tile.computedTransform;
 
-        var center = featureTable.getGlobalProperty('RTC_CENTER');
+        var center = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
         if (defined(center)) {
+            center = Cartesian3.unpack(center);
             Matrix4.multiplyByPoint(modelMatrix, center, center);
         } else {
             center = Rectangle.center(rectangle);
