@@ -8,7 +8,6 @@ import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute
 import GroundPrimitive from '../Scene/GroundPrimitive.js';
 import BoundingSphereState from './BoundingSphereState.js';
 import Property from './Property.js';
-import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
