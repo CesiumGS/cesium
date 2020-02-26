@@ -244,5 +244,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tinco Andringa](https://github.com/tinco)
 * [André Borud](https://github.com/andreborud)
 * [Nathan Schulte](https://github.com/nmschulte)
+* [Ricardo Morin](https://github.com/jimmyangel)
 * [Jan Wąsak](https://github.com/jhnwsk)
 * [Julian Fell](https://github.com/jtfell)
