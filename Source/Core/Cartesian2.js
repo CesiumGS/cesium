@@ -149,7 +149,8 @@ import CesiumMath from './Math.js';
      * Flattens an array of Cartesian2s into and array of components.
      *
      * @param {Cartesian2[]} array The array of cartesians to pack.
-     * @param {Number[]} [result] The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 2 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 2) elements.
+
      * @returns {Number[]} The packed array.
      */
     Cartesian2.packArray = function(array, result) {
@@ -158,10 +159,13 @@ import CesiumMath from './Math.js';
         //>>includeEnd('debug');
 
         var length = array.length;
+        var resultLength = length * 2;
         if (!defined(result)) {
-            result = new Array(length * 2);
-        } else {
-            result.length = length * 2;
+            result = new Array(resultLength);
+        } else if (!Array.isArray(result) && result.length !== resultLength) {
+            throw new DeveloperError('If result is a typed array, it must have exactly array.length * 2 elements');
+        } else if (result.length !== resultLength) {
+            result.length = resultLength;
         }
 
         for (var i = 0; i < length; ++i) {
@@ -180,6 +184,10 @@ import CesiumMath from './Math.js';
     Cartesian2.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
+        Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 2);
+        if (array.length % 2 !== 0) {
+            throw new DeveloperError('array length must be a multiple of 2.');
+        }
         //>>includeEnd('debug');
 
         var length = array.length;
