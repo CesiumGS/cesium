@@ -13,8 +13,8 @@ import getElement from '../getElement.js';
      * @alias FullscreenButtonViewModel
      * @constructor
      *
-     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
+     * @param {Element|String} [container] The DOM element or ID that will contain the widget.
      */
     function FullscreenButtonViewModel(fullscreenElement, container) {
         if (!defined(container)) {
