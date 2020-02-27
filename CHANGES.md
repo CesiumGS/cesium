@@ -25,12 +25,12 @@ Change Log
 * Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/AnalyticalGraphicsInc/cesium/pull/8568)
 
 ##### Deprecated :hourglass_flowing_sand:
-* The `isArray` function has been deprecated and will be removed in Cesium 1.69. Use the native `Array.isArray` function instead. [#8526](https://github.com/AnalyticalGraphicsInc/cesium/pull/8526)
+* The `isArray` function has been deprecated and will be removed in Cesium 1.69. Use the native `Array.isArray` function instead. [#8526](https://github.com/CesiumGS/cesium/pull/8526)
 
 ### 1.66.0 - 2020-02-03
 
 ##### Deprecated :hourglass_flowing_sand:
-* The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#8493](https://github.com/AnalyticalGraphicsInc/cesium/pull/8493)
+* The property `Scene.sunColor` has been deprecated and will be removed in Cesium 1.69. Use `scene.light.color` and `scene.light.intensity` instead. [#8493](https://github.com/CesiumGS/cesium/pull/8493)
 
 ##### Additions :tada:
 
