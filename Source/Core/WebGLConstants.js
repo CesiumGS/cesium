@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Enum containing WebGL Constant values by name.
@@ -607,4 +606,4 @@ import freezeObject from './freezeObject.js';
         // Extensions
         MAX_TEXTURE_MAX_ANISOTROPY_EXT : 0x84FF
     };
-export default freezeObject(WebGLConstants);
+export default Object.freeze(WebGLConstants);

@@ -3,7 +3,6 @@ import Cartesian4 from './Cartesian4.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import Matrix3 from './Matrix3.js';
 import RuntimeError from './RuntimeError.js';
@@ -2387,7 +2386,7 @@ import RuntimeError from './RuntimeError.js';
      * @type {Matrix4}
      * @constant
      */
-    Matrix4.IDENTITY = freezeObject(new Matrix4(1.0, 0.0, 0.0, 0.0,
+    Matrix4.IDENTITY = Object.freeze(new Matrix4(1.0, 0.0, 0.0, 0.0,
                                                 0.0, 1.0, 0.0, 0.0,
                                                 0.0, 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 0.0, 1.0));
@@ -2398,7 +2397,7 @@ import RuntimeError from './RuntimeError.js';
      * @type {Matrix4}
      * @constant
      */
-    Matrix4.ZERO = freezeObject(new Matrix4(0.0, 0.0, 0.0, 0.0,
+    Matrix4.ZERO = Object.freeze(new Matrix4(0.0, 0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0, 0.0));

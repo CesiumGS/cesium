@@ -1,5 +1,4 @@
 import Tween from '../ThirdParty/Tween.js';
-import freezeObject from './freezeObject.js';
 
     /**
      * Easing functions for use with TweenCollection.  These function are from
@@ -254,4 +253,4 @@ import freezeObject from './freezeObject.js';
      *     return time * (2.0 - time);
      * }
      */
-export default freezeObject(EasingFunction);
+export default Object.freeze(EasingFunction);

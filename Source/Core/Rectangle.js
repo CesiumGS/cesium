@@ -3,7 +3,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import Ellipsoid from './Ellipsoid.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 
     /**
@@ -866,5 +865,5 @@ import CesiumMath from './Math.js';
      * @type {Rectangle}
      * @constant
     */
-    Rectangle.MAX_VALUE = freezeObject(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
+    Rectangle.MAX_VALUE = Object.freeze(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 export default Rectangle;

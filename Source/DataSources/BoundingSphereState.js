@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
@@ -25,4 +24,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         FAILED : 2
     };
-export default freezeObject(BoundingSphereState);
+export default Object.freeze(BoundingSphereState);
