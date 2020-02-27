@@ -5,7 +5,6 @@ import Check from './Check.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import GoogleEarthEnterpriseTileInformation from './GoogleEarthEnterpriseTileInformation.js';
 import isBitSet from './isBitSet.js';
 import loadAndExecuteScript from './loadAndExecuteScript.js';
@@ -128,7 +127,7 @@ import TaskProcessor from './TaskProcessor.js';
             });
     }
 
-    defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
         /**
          * Gets the name of the Google Earth Enterprise server.
          * @memberof GoogleEarthEnterpriseMetadata.prototype

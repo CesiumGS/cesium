@@ -11,7 +11,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -104,7 +103,7 @@ import ShadowMode from './ShadowMode.js';
         this.count = 0;
     }
 
-    defineProperties(CachedGltf.prototype, {
+    Object.defineProperties(CachedGltf.prototype, {
         gltf : {
             set : function(value) {
                 this._gltf = value;
@@ -620,7 +619,7 @@ import ShadowMode from './ShadowMode.js';
         this._shouldRegenerateShaders = false;
     }
 
-    defineProperties(Model.prototype, {
+    Object.defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
@@ -2250,7 +2249,7 @@ import ShadowMode from './ShadowMode.js';
         var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
 
         // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // https://github.com/CesiumGS/cesium/issues/6575.
         // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);

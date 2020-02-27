@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -26,7 +25,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         return tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (65 * tilingScheme.getNumberOfXTilesAtLevel(0));
     };
 
-    defineProperties(QuadtreeTileProvider.prototype, {
+    Object.defineProperties(QuadtreeTileProvider.prototype, {
         /**
          * Gets or sets the {@link QuadtreePrimitive} for which this provider is
          * providing tiles.

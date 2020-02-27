@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import CesiumMath from '../Core/Math.js';
 
     var defaultAngle = CesiumMath.toRadians(30.0);
@@ -19,7 +18,7 @@ import CesiumMath from '../Core/Math.js';
         this._angle = defaultValue(angle, defaultAngle);
     }
 
-    defineProperties(ConeEmitter.prototype, {
+    Object.defineProperties(ConeEmitter.prototype, {
         /**
          * The angle of the cone in radians.
          * @memberof CircleEmitter.prototype

@@ -3,7 +3,6 @@ import Cartesian4 from './Cartesian4.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import Matrix3 from './Matrix3.js';
@@ -2532,7 +2531,7 @@ import RuntimeError from './RuntimeError.js';
      */
     Matrix4.COLUMN3ROW3 = 15;
 
-    defineProperties(Matrix4.prototype, {
+    Object.defineProperties(Matrix4.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof Matrix4.prototype

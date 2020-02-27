@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -292,7 +291,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
-    defineProperties(Globe.prototype, {
+    Object.defineProperties(Globe.prototype, {
         /**
          * Gets an ellipsoid describing the shape of this globe.
          * @memberof Globe.prototype
@@ -451,7 +450,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         /**
          * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Globe.prototype
          * @type {Material}
          */

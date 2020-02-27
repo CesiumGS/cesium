@@ -10,7 +10,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -159,7 +158,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this._hasFillTilesThisFrame = false;
     }
 
-    defineProperties(GlobeSurfaceTileProvider.prototype, {
+    Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof GlobeSurfaceTileProvider.prototype

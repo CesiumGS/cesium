@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import ReferenceFrame from '../Core/ReferenceFrame.js';
@@ -23,7 +22,7 @@ import PositionProperty from './PositionProperty.js';
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     }
 
-    defineProperties(ConstantPositionProperty.prototype, {
+    Object.defineProperties(ConstantPositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

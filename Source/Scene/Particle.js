@@ -3,7 +3,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
 
@@ -96,7 +95,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._billboard = undefined;
     }
 
-    defineProperties(Particle.prototype, {
+    Object.defineProperties(Particle.prototype, {
         /**
          * Gets the age of the particle in seconds.
          * @memberof Particle.prototype

@@ -1,6 +1,5 @@
 import { Cartesian2 } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
-import { defineProperties } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
@@ -56,7 +55,7 @@ describe('DataSources/EntityCluster', function() {
         };
 
         scene.globe.terrainProviderChanged = new Event();
-        defineProperties(scene.globe, {
+        Object.defineProperties(scene.globe, {
             terrainProvider : {
                 set : function(value) {
                     this.terrainProviderChanged.raiseEvent(value);

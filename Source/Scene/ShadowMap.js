@@ -12,7 +12,6 @@ import combine from '../Core/combine.js';
 import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
@@ -131,7 +130,7 @@ import ShadowMapShader from './ShadowMapShader.js';
 
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
-        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
@@ -315,7 +314,7 @@ import ShadowMapShader from './ShadowMapShader.js';
         createRenderStates(this);
     };
 
-    defineProperties(ShadowMap.prototype, {
+    Object.defineProperties(ShadowMap.prototype, {
         /**
          * Determines if the shadow map will be shown.
          *

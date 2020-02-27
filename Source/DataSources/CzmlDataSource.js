@@ -11,7 +11,6 @@ import Credit from '../Core/Credit.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -1766,7 +1765,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
         this._definitionChanged = new Event();
     }
 
-    defineProperties(PolygonHierarchyProperty.prototype, {
+    Object.defineProperties(PolygonHierarchyProperty.prototype, {
         isConstant : {
             get : function() {
                 var positions = this.polygon._positions;
@@ -2190,7 +2189,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
         return new CzmlDataSource().load(czml, options);
     };
 
-    defineProperties(CzmlDataSource.prototype, {
+    Object.defineProperties(CzmlDataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
          * @memberof CzmlDataSource.prototype

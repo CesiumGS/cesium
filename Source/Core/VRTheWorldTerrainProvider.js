@@ -2,7 +2,6 @@ import when from '../ThirdParty/when.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import Event from './Event.js';
@@ -126,7 +125,7 @@ import TileProviderError from './TileProviderError.js';
         requestMetadata();
     }
 
-    defineProperties(VRTheWorldTerrainProvider.prototype, {
+    Object.defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners

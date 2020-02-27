@@ -2,7 +2,6 @@ import { BoundingSphere } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
-import { defineProperties } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
@@ -44,7 +43,7 @@ describe('DataSources/PointVisualizer', function() {
         scene.globe._surface.updateHeight = function() {
         };
 
-        defineProperties(scene.globe, {
+        Object.defineProperties(scene.globe, {
             terrainProvider : {
                 set : function(value) {
                     this.terrainProviderChanged.raiseEvent(value);

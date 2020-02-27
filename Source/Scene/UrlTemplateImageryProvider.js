@@ -5,7 +5,6 @@ import combine from '../Core/combine.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicProjection from '../Core/GeographicProjection.js';
@@ -225,7 +224,7 @@ import ImageryProvider from './ImageryProvider.js';
         this.reinitialize(options);
     }
 
-    defineProperties(UrlTemplateImageryProvider.prototype, {
+    Object.defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
          * Gets the URL template to use to request tiles.  It has the following keywords:
          * <ul>

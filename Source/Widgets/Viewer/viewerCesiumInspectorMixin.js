@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
 
@@ -31,7 +30,7 @@ import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
         viewer.container.appendChild(cesiumInspectorContainer);
         var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.scene);
 
-        defineProperties(viewer, {
+        Object.defineProperties(viewer, {
             cesiumInspector : {
                 get : function() {
                     return cesiumInspector;

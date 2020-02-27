@@ -2,7 +2,6 @@ import Cartographic from './Cartographic.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
@@ -54,7 +53,7 @@ import CesiumMath from './Math.js';
         this.north = defaultValue(north, 0.0);
     }
 
-    defineProperties(Rectangle.prototype, {
+    Object.defineProperties(Rectangle.prototype, {
         /**
          * Gets the width of the rectangle in radians.
          * @memberof Rectangle.prototype

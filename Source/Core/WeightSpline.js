@@ -1,7 +1,6 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Spline from './Spline.js';
 
@@ -60,7 +59,7 @@ import Spline from './Spline.js';
         this._lastTimeIndex = 0;
     }
 
-    defineProperties(WeightSpline.prototype, {
+    Object.defineProperties(WeightSpline.prototype, {
         /**
          * An array of times for the control weights.
          *
