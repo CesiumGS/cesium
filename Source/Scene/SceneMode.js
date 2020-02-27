@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
@@ -56,4 +55,4 @@ import freezeObject from '../Core/freezeObject.js';
         }
         return 0.0;
     };
-export default freezeObject(SceneMode);
+export default Object.freeze(SceneMode);

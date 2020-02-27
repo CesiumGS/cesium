@@ -62,7 +62,7 @@ this._canvas = canvas;
 ```
 * Constants are in uppercase with underscores, e.g.,
 ```javascript
-Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 ```
 * Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g.,
 ```javascript
@@ -284,20 +284,15 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `freezeObject` function to create enums, e.g.,
+* Use `Object.freeze` function to create enums, e.g.,
 ```javascript
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
         ANIMATING : 1
     };
 
-    return freezeObject(ModelAnimationState);
+    return Object.freeze(ModelAnimationState);
 });
 ```
 * Use descriptive comments for non-obvious code, e.g.,
@@ -629,9 +624,9 @@ The prototype versions have the benefit of being able to be used polymorphically
 
 ### Static Constants
 
-To create a static constant related to a class, use `freezeObject`:
+To create a static constant related to a class, use `Object.freeze`:
 ```javascript
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ### Private Functions

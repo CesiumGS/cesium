@@ -4,7 +4,6 @@ import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
-import freezeObject from '../Core/freezeObject.js';
 import isArray from '../Core/isArray.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
@@ -13,7 +12,7 @@ import when from '../ThirdParty/when.js';
 import ImageryProvider from './ImageryProvider.js';
 import TimeDynamicImagery from './TimeDynamicImagery.js';
 
-    var defaultParameters = freezeObject({
+    var defaultParameters = Object.freeze({
         service : 'WMTS',
         version : '1.0.0',
         request : 'GetTile'

@@ -315,7 +315,7 @@ Object.defineProperties(Entity.prototype, {
  * @type {Cartesian3}
  * @constant
  */
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ## Functions and Callbacks
