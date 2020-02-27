@@ -3,7 +3,6 @@ import Cartesian3 from '../../Core/Cartesian3.js';
 import Clock from '../../Core/Clock.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Ellipsoid from '../../Core/Ellipsoid.js';
@@ -161,7 +160,6 @@ import getElement from '../getElement.js';
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : Cesium.createWorldImagery(),
      *     terrainProvider : Cesium.createWorldTerrain(),
-     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
      *         sources : {
      *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
@@ -351,7 +349,7 @@ import getElement from '../getElement.js';
         }
     }
 
-    defineProperties(CesiumWidget.prototype, {
+    Object.defineProperties(CesiumWidget.prototype, {
         /**
          * Gets the parent container.
          * @memberof CesiumWidget.prototype

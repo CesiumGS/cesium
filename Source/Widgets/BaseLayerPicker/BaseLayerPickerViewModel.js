@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import EllipsoidTerrainProvider from '../../Core/EllipsoidTerrainProvider.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -248,7 +247,7 @@ import createCommand from '../createCommand.js';
         this.selectedTerrain = defaultValue(options.selectedTerrainProviderViewModel, terrainProviderViewModels[0]);
     }
 
-    defineProperties(BaseLayerPickerViewModel.prototype, {
+    Object.defineProperties(BaseLayerPickerViewModel.prototype, {
         /**
          * Gets the command to toggle the visibility of the drop down.
          * @memberof BaseLayerPickerViewModel.prototype

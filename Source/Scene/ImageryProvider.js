@@ -1,6 +1,5 @@
 import Check from '../Core/Check.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -103,7 +102,7 @@ import Resource from '../Core/Resource.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(ImageryProvider.prototype, {
+    Object.defineProperties(ImageryProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof ImageryProvider.prototype

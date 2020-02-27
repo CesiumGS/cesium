@@ -3,7 +3,6 @@ import Check from '../Core/Check.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import CesiumMath from '../Core/Math.js';
@@ -346,7 +345,7 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
         return texture;
     };
 
-    defineProperties(Texture.prototype, {
+    Object.defineProperties(Texture.prototype, {
         /**
          * A unique id for the texture
          * @memberof Texture.prototype

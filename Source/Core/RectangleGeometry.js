@@ -7,7 +7,6 @@ import Check from './Check.js';
 import ComponentDatatype from './ComponentDatatype.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import Geometry from './Geometry.js';
@@ -1169,7 +1168,7 @@ import VertexFormat from './VertexFormat.js';
         return result;
     }
 
-    defineProperties(RectangleGeometry.prototype, {
+    Object.defineProperties(RectangleGeometry.prototype, {
         /**
          * @private
          */

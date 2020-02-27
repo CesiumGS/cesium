@@ -5,7 +5,6 @@ import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import Iso8601 from '../Core/Iso8601.js';
@@ -117,7 +116,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
             return url;
         };
 
-        defineProperties(ExternalFileHandler.prototype, {
+        Object.defineProperties(ExternalFileHandler.prototype, {
             promise : {
                 get : function() {
                     return when.all(this._promises);

@@ -2,7 +2,6 @@ import combine from '../Core/combine.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import freezeObject from '../Core/freezeObject.js';
@@ -268,7 +267,7 @@ import TimeDynamicImagery from './TimeDynamicImagery.js';
         return ImageryProvider.loadImage(imageryProvider, resource);
     }
 
-    defineProperties(WebMapTileServiceImageryProvider.prototype, {
+    Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
         /**
          * Gets the URL of the service hosting the imagery.
          * @memberof WebMapTileServiceImageryProvider.prototype

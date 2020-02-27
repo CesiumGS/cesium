@@ -11,7 +11,6 @@ import Credit from '../Core/Credit.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -90,6 +89,7 @@ import TimeIntervalCollectionProperty from './TimeIntervalCollectionProperty.js'
 import VelocityOrientationProperty from './VelocityOrientationProperty.js';
 import VelocityVectorProperty from './VelocityVectorProperty.js';
 import WallGraphics from './WallGraphics.js';
+import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
 
     // A marker type to distinguish CZML properties where we need to end up with a unit vector.
     // The data is still loaded into Cartesian3 objects but they are normalized.
@@ -1764,7 +1764,7 @@ import WallGraphics from './WallGraphics.js';
         this._definitionChanged = new Event();
     }
 
-    defineProperties(PolygonHierarchyProperty.prototype, {
+    Object.defineProperties(PolygonHierarchyProperty.prototype, {
         isConstant : {
             get : function() {
                 var positions = this.polygon._positions;
@@ -1923,6 +1923,23 @@ import WallGraphics from './WallGraphics.js';
         processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(ClassificationType, rectangle, 'classificationType', rectangleData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'zIndex', rectangleData.zIndex, interval, sourceUri, entityCollection);
+    }
+
+    function processTileset(entity, packet, entityCollection, sourceUri) {
+        var tilesetData = packet.tileset;
+        if (!defined(tilesetData)) {
+            return;
+        }
+
+        var interval = intervalFromString(tilesetData.interval);
+        var tileset = entity.tileset;
+        if (!defined(tileset)) {
+            entity.tileset = tileset = new Cesium3DTilesetGraphics();
+        }
+
+        processPacketData(Boolean, tileset, 'show', tilesetData.show, interval, sourceUri, entityCollection);
+        processPacketData(Uri, tileset, 'uri', tilesetData.uri, interval, sourceUri, entityCollection);
+        processPacketData(Number, tileset, 'maximumScreenSpaceError', tilesetData.maximumScreenSpaceError, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {
@@ -2171,7 +2188,7 @@ import WallGraphics from './WallGraphics.js';
         return new CzmlDataSource().load(czml, options);
     };
 
-    defineProperties(CzmlDataSource.prototype, {
+    Object.defineProperties(CzmlDataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
          * @memberof CzmlDataSource.prototype
@@ -2312,6 +2329,7 @@ import WallGraphics from './WallGraphics.js';
         processProperties, //
         processRectangle, //
         processPosition, //
+        processTileset, //
         processViewFrom, //
         processWall, //
         processOrientation, //

@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import freezeObject from '../Core/freezeObject.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import AllMaterialAppearanceFS from '../Shaders/Appearances/AllMaterialAppearanceFS.js';
@@ -30,7 +29,7 @@ import Material from './Material.js';
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
@@ -63,7 +62,7 @@ import Material from './Material.js';
          *
          * @default {@link Material.ColorType}
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 
@@ -89,7 +88,7 @@ import Material from './Material.js';
         this._faceForward = defaultValue(options.faceForward, !closed);
     }
 
-    defineProperties(MaterialAppearance.prototype, {
+    Object.defineProperties(MaterialAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

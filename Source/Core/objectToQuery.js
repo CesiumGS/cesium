@@ -50,7 +50,7 @@ import DeveloperError from './DeveloperError.js';
 
         // This function used to replace %20 with + which is more compact and readable.
         // However, some servers didn't properly handle + as a space.
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/2192
+        // https://github.com/CesiumGS/cesium/issues/2192
 
         return result;
     }

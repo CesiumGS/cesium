@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.65.0",
+  "version": "1.66.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -11,7 +11,7 @@
   "contributors": [
     {
       "name": "CesiumJS community",
-      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
     }
   ],
   "keywords": [
@@ -23,10 +23,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
+    "url": "https://github.com/CesiumGS/cesium.git"
   },
   "bugs": {
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
+    "url": "https://github.com/CesiumGS/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
   "main": "index.js",
@@ -63,13 +63,13 @@
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
     "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^2.0.0",
+    "karma-jasmine": "^3.1.1",
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
     "merge-stream": "^2.0.0",
     "mime": "^2.0.3",
-    "mkdirp": "^0.5.1",
+    "mkdirp": "^1.0.0",
     "open": "^7.0.0",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",

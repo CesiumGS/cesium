@@ -7,7 +7,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -59,7 +58,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the collection casts or receives shadows from light sources.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Cartesian3} [options.lightColor] The light color when shading models. When <code>undefined</code> the scene's light color is used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -152,7 +151,7 @@ import ShadowMode from './ShadowMode.js';
         this.specularEnvironmentMaps = options.specularEnvironmentMaps;
     }
 
-    defineProperties(ModelInstanceCollection.prototype, {
+    Object.defineProperties(ModelInstanceCollection.prototype, {
         allowPicking : {
             get : function() {
                 return this._allowPicking;

@@ -4,7 +4,6 @@ import Cartesian3 from './Cartesian3.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import IndexDatatype from './IndexDatatype.js';
 import Intersections2D from './Intersections2D.js';
@@ -86,7 +85,7 @@ import TerrainMesh from './TerrainMesh.js';
         this._maximumHeight = undefined;
     }
 
-    defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
         /**
          * An array of credits for this tile
          * @memberof GoogleEarthEnterpriseTerrainData.prototype

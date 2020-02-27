@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
@@ -41,7 +40,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(PathGraphics.prototype, {
+    Object.defineProperties(PathGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PathGraphics.prototype

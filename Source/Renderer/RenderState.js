@@ -734,7 +734,7 @@ import freezeRenderState from './freezeRenderState.js';
         var scissorTest = (defined(passState.scissorTest)) ? passState.scissorTest : renderState.scissorTest;
 
         // Our scissor rectangle can get out of sync with the GL scissor rectangle on clears.
-        // Seems to be a problem only on ANGLE. See https://github.com/AnalyticalGraphicsInc/cesium/issues/2994
+        // Seems to be a problem only on ANGLE. See https://github.com/CesiumGS/cesium/issues/2994
         if ((previousScissorTest !== scissorTest) || clear) {
             applyScissorTest(gl, renderState, passState);
         }

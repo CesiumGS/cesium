@@ -1,7 +1,6 @@
 import clone from '../Core/clone.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EasingFunction from '../Core/EasingFunction.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -45,7 +44,7 @@ import TweenJS from '../ThirdParty/Tween.js';
         this.needsStart = true;
     }
 
-    defineProperties(Tween.prototype, {
+    Object.defineProperties(Tween.prototype, {
         /**
          * An object with properties for initial values of the tween.  The properties of this object are changed during the tween's animation.
          * @memberof Tween.prototype
@@ -169,7 +168,7 @@ import TweenJS from '../ThirdParty/Tween.js';
         this._tweens = [];
     }
 
-    defineProperties(TweenCollection.prototype, {
+    Object.defineProperties(TweenCollection.prototype, {
         /**
          * The number of tweens in the collection.
          * @memberof TweenCollection.prototype

@@ -1,5 +1,4 @@
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -13,7 +12,7 @@ import DeveloperError from './DeveloperError.js';
         this._hash = {};
     }
 
-    defineProperties(AssociativeArray.prototype, {
+    Object.defineProperties(AssociativeArray.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof AssociativeArray.prototype

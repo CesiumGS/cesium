@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -48,7 +47,7 @@ import getElement from '../Widgets/getElement.js';
         display.appendChild(throttledElement);
     }
 
-     defineProperties(PerformanceDisplay.prototype, {
+     Object.defineProperties(PerformanceDisplay.prototype, {
         /**
          * The display should indicate the FPS is being throttled.
          * @memberof PerformanceDisplay.prototype

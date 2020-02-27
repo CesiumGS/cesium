@@ -1,7 +1,6 @@
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
 import when from '../ThirdParty/when.js';
@@ -34,7 +33,7 @@ import when from '../ThirdParty/when.js';
         this._readyPromise = when.resolve(true);
     }
 
-    defineProperties(TileCoordinatesImageryProvider.prototype, {
+    Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
         /**
          * Gets the proxy used by this provider.
          * @memberof TileCoordinatesImageryProvider.prototype

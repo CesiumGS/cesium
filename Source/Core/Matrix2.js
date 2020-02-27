@@ -2,7 +2,6 @@ import Cartesian2 from './Cartesian2.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import freezeObject from './freezeObject.js';
 
     /**
@@ -810,7 +809,7 @@ import freezeObject from './freezeObject.js';
      */
     Matrix2.COLUMN1ROW1 = 3;
 
-    defineProperties(Matrix2.prototype, {
+    Object.defineProperties(Matrix2.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof Matrix2.prototype

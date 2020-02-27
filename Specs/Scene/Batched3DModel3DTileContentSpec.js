@@ -5,6 +5,7 @@ import { HeadingPitchRoll } from '../../Source/Cesium.js';
 import { Matrix4 } from '../../Source/Cesium.js';
 import { Transforms } from '../../Source/Cesium.js';
 import { Batched3DModel3DTileContent } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
 import { ClippingPlane } from '../../Source/Cesium.js';
 import { ClippingPlaneCollection } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
@@ -261,6 +262,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
             var tile = tileset.root;
             var content = tile.content;
             var model = content._model;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             expect(model.clippingPlanes).toBeUndefined();
 
@@ -271,13 +273,13 @@ describe('Scene/Batched3DModel3DTileContent', function() {
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
 
             tile._isClipped = false;
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeUndefined();
         });
@@ -287,6 +289,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset.root;
             var model = tile.content._model;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             expect(model.clippingPlanes).toBeUndefined();
 
@@ -297,7 +300,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(model.clippingPlanes).toBeDefined();
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
@@ -311,7 +314,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
             newClippingPlaneCollection.update(scene.frameState);
             expect(model.clippingPlanes).not.toBe(tileset.clippingPlanes);
 
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
             expect(model.clippingPlanes).toBe(tileset.clippingPlanes);
         });
     });
@@ -321,6 +324,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
 
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var tile = tileset.root;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             var clippingPlaneCollection = new ClippingPlaneCollection({
                 planes : [
@@ -329,7 +333,7 @@ describe('Scene/Batched3DModel3DTileContent', function() {
             });
             tileset.clippingPlanes = clippingPlaneCollection;
             clippingPlaneCollection.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
 
             expect(Model._getClippingFunction.calls.count()).toEqual(1);
         });

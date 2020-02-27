@@ -177,7 +177,7 @@ import CesiumMath from './Math.js';
      * Flattens an array of Cartesian3s into an array of components.
      *
      * @param {Cartesian3[]} array The array of cartesians to pack.
-     * @param {Number[]} [result] The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
      * @returns {Number[]} The packed array.
      */
     Cartesian3.packArray = function(array, result) {
@@ -186,10 +186,13 @@ import CesiumMath from './Math.js';
         //>>includeEnd('debug');
 
         var length = array.length;
+        var resultLength = length * 3;
         if (!defined(result)) {
-            result = new Array(length * 3);
-        } else {
-            result.length = length * 3;
+            result = new Array(resultLength);
+        } else if (!Array.isArray(result) && result.length !== resultLength) {
+            throw new DeveloperError('If result is a typed array, it must have exactly array.length * 3 elements');
+        } else if (result.length !== resultLength) {
+            result.length = resultLength;
         }
 
         for (var i = 0; i < length; ++i) {

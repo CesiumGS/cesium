@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import freezeObject from '../Core/freezeObject.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
@@ -191,7 +190,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         return tileProvider.pickFeatures(x, y, level, longitude, latitude);
     }
 
-    defineProperties(WebMapServiceImageryProvider.prototype, {
+    Object.defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
          * Gets the URL of the WMS server.
          * @memberof WebMapServiceImageryProvider.prototype
