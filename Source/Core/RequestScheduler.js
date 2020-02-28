@@ -46,7 +46,6 @@ import RequestState from './RequestState.js';
      *
      * @exports RequestScheduler
      *
-     * @public
      */
     function RequestScheduler() {
     }
