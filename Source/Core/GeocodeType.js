@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The type of geocoding to be performed by a {@link GeocoderService}.
@@ -23,4 +22,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         AUTOCOMPLETE: 1
     };
-export default freezeObject(GeocodeType);
+export default Object.freeze(GeocodeType);

@@ -40,7 +40,7 @@ viewer.scene.camera.setView({
 });
 
 // Load the NYC buildings tileset
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(75343) });
 viewer.scene.primitives.add(tileset);
 
 // HTML overlay for showing feature name on mouseover
@@ -99,10 +99,7 @@ if (Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
         nameOverlay.style.display = 'block';
         nameOverlay.style.bottom = viewer.canvas.clientHeight - movement.endPosition.y + 'px';
         nameOverlay.style.left = movement.endPosition.x + 'px';
-        var name = pickedFeature.getProperty('name');
-        if (!Cesium.defined(name)) {
-            name = pickedFeature.getProperty('id');
-        }
+        var name = pickedFeature.getProperty('BIN');
         nameOverlay.textContent = name;
 
         // Highlight the feature if it's not already selected.

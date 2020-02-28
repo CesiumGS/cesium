@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import Event from '../../Core/Event.js';
 import knockout from '../../ThirdParty/knockout.js';
 
@@ -82,7 +81,7 @@ import knockout from '../../ThirdParty/knockout.js';
         return (this.maxHeight - offset) + 'px';
     };
 
-    defineProperties(InfoBoxViewModel.prototype, {
+    Object.defineProperties(InfoBoxViewModel.prototype, {
         /**
          * Gets an {@link Event} that is fired when the user clicks the camera icon.
          * @memberof InfoBoxViewModel.prototype

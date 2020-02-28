@@ -20,5 +20,5 @@ void main()
     material.diffuse = color.rgb;
     material.alpha = color.a;
 
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material, czm_lightDirectionEC);
 }

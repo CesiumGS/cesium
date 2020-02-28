@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Enumerates the available input for interacting with the camera.
@@ -46,4 +45,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         PINCH : 4
     };
-export default freezeObject(CameraEventType);
+export default Object.freeze(CameraEventType);

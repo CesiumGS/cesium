@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -21,4 +20,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (renderbufferFormat === RenderbufferFormat.DEPTH_STENCIL));
         }
     };
-export default freezeObject(RenderbufferFormat);
+export default Object.freeze(RenderbufferFormat);

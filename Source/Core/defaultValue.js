@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Returns the first parameter if not undefined, otherwise the second parameter.
@@ -25,5 +24,5 @@ import freezeObject from './freezeObject.js';
      * an object literal.
      * @type {Object}
      */
-    defaultValue.EMPTY_OBJECT = freezeObject({});
+    defaultValue.EMPTY_OBJECT = Object.freeze({});
 export default defaultValue;

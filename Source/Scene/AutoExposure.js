@@ -1,7 +1,6 @@
 import Cartesian2 from '../Core/Cartesian2.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import ClearCommand from '../Renderer/ClearCommand.js';
@@ -68,7 +67,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
         this.maximumLuminance = 10.0;
     }
 
-    defineProperties(AutoExposure.prototype, {
+    Object.defineProperties(AutoExposure.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
          * and {@link AutoExposure#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures

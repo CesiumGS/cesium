@@ -1,7 +1,6 @@
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import MapboxApi from '../Core/MapboxApi.js';
 import Resource from '../Core/Resource.js';
@@ -99,7 +98,7 @@ function MapboxStyleImageryProvider(options) {
     });
 }
 
-defineProperties(MapboxStyleImageryProvider.prototype, {
+Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     /**
      * Gets the URL of the Mapbox server.
      * @memberof MapboxStyleImageryProvider.prototype

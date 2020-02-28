@@ -2,7 +2,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import HeadingPitchRange from '../Core/HeadingPitchRange.js';
 import JulianDate from '../Core/JulianDate.js';
@@ -229,7 +228,7 @@ import SceneMode from '../Scene/SceneMode.js';
     }
 
     // STATIC properties defined here, not per-instance.
-    defineProperties(EntityView, {
+    Object.defineProperties(EntityView, {
         /**
          * Gets or sets a camera offset that will be used to
          * initialize subsequent EntityViews.

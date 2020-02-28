@@ -9,7 +9,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -80,7 +79,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
+     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -281,7 +280,7 @@ import ShadowMode from './ShadowMode.js';
         //>>includeEnd('debug');
 
         /**
-         * Determines whether this primitive casts or receives shadows from each light source.
+         * Determines whether this primitive casts or receives shadows from light sources.
          *
          * @type {ShadowMode}
          *
@@ -323,8 +322,6 @@ import ShadowMode from './ShadowMode.js';
         this._colorCommands = [];
         this._pickCommands = [];
 
-        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
@@ -351,7 +348,7 @@ import ShadowMode from './ShadowMode.js';
         this._batchTableBoundingSphereAttributeIndices = undefined;
     }
 
-    defineProperties(Primitive.prototype, {
+    Object.defineProperties(Primitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -1020,8 +1017,12 @@ import ShadowMode from './ShadowMode.js';
             'varying float v_WindowZ;\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
-            '#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)\n' +
-            '    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '#if defined(GL_EXT_frag_depth)\n' +
+            '    #if defined(LOG_DEPTH)\n' +
+            '        czm_writeLogDepth();\n' +
+            '    #else\n' +
+            '        gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);\n' +
+            '    #endif\n' +
             '#endif\n' +
             '}\n';
         modifiedFS =
@@ -2068,30 +2069,15 @@ import ShadowMode from './ShadowMode.js';
             if (perInstanceAttributeIndices.hasOwnProperty(name)) {
                 var attributeIndex = perInstanceAttributeIndices[name];
                 properties[name] = {
-                    get : createGetFunction(batchTable, index, attributeIndex)
+                    get : createGetFunction(batchTable, index, attributeIndex),
+                    set : createSetFunction(batchTable, index, attributeIndex, this, name)
                 };
-
-                var createSetter = true;
-                var readOnlyAttributes = this._readOnlyInstanceAttributes;
-                if (createSetter && defined(readOnlyAttributes)) {
-                    length = readOnlyAttributes.length;
-                    for (var k = 0; k < length; ++k) {
-                        if (name === readOnlyAttributes[k]) {
-                            createSetter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
-                }
             }
         }
 
         createBoundingSphereProperties(this, properties, index);
         createPickIdProperty(this, properties, index);
-        defineProperties(attributes, properties);
+        Object.defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;

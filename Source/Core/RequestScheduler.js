@@ -3,7 +3,6 @@ import when from '../ThirdParty/when.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Event from './Event.js';
 import Heap from './Heap.js';
 import isBlobUri from './isBlobUri.js';
@@ -94,7 +93,7 @@ import RequestState from './RequestState.js';
      */
     RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
-    defineProperties(RequestScheduler, {
+    Object.defineProperties(RequestScheduler, {
         /**
          * Returns the statistics used by the request scheduler.
          *
@@ -329,7 +328,7 @@ import RequestState from './RequestState.js';
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+        if (RequestScheduler.throttleRequests && request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
             // Server is saturated. Try again later.
             return undefined;
         }

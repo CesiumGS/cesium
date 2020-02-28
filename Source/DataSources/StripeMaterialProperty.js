@@ -1,7 +1,6 @@
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import createPropertyDescriptor from './createPropertyDescriptor.js';
 import Property from './Property.js';
@@ -47,7 +46,7 @@ import StripeOrientation from './StripeOrientation.js';
         this.repeat = options.repeat;
     }
 
-    defineProperties(StripeMaterialProperty.prototype, {
+    Object.defineProperties(StripeMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

@@ -433,7 +433,7 @@ describe('requestTileGeometry', function() {
 
         var deferreds = [];
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             // Do nothing, so requests never complete
             deferreds.push(deferred);
         };

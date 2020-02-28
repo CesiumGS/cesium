@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -15,7 +14,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(DataSource.prototype, {
+    Object.defineProperties(DataSource.prototype, {
         /**
          * Gets a human-readable name for this instance.
          * @memberof DataSource.prototype

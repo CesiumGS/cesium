@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import EventHelper from '../Core/EventHelper.js';
@@ -21,7 +20,7 @@ import Property from './Property.js';
         this.setValue(value);
     }
 
-    defineProperties(PropertyArray.prototype, {
+    Object.defineProperties(PropertyArray.prototype, {
         /**
          * Gets a value indicating if this property is constant.  This property
          * is considered constant if all property items in the array are constant.

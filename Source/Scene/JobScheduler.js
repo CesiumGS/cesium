@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import getTimestamp from '../Core/getTimestamp.js';
 import JobType from './JobType.js';
@@ -33,7 +32,7 @@ import JobType from './JobType.js';
         this.starvedLastFrame = false;
     }
 
-    defineProperties(JobTypeBudget.prototype, {
+    Object.defineProperties(JobTypeBudget.prototype, {
         total : {
             get : function() {
                 return this._total;
@@ -96,7 +95,7 @@ import JobType from './JobType.js';
     // For unit testing
     JobScheduler.getTimestamp = getTimestamp;
 
-    defineProperties(JobScheduler.prototype, {
+    Object.defineProperties(JobScheduler.prototype, {
         totalBudget : {
             get : function() {
                 return this._totalBudget;

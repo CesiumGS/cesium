@@ -5,12 +5,10 @@ import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import isArray from '../Core/isArray.js';
-import CesiumMath from '../Core/Math.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
 import when from '../ThirdParty/when.js';
@@ -238,7 +236,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         };
     }
 
-    defineProperties(GroundPrimitive.prototype, {
+    Object.defineProperties(GroundPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -449,15 +447,8 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         var ellipsoid = frameState.mapProjection.ellipsoid;
         var rectangle = getRectangle(frameState, geometry);
 
-        // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
-        if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._maxHeight, groundPrimitive._minHeight, ellipsoid);
-            groundPrimitive._boundingVolumes.push(obb);
-        } else {
-            var highPositions = geometry.attributes.position3DHigh.values;
-            var lowPositions = geometry.attributes.position3DLow.values;
-            groundPrimitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
-        }
+        var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._minHeight, groundPrimitive._maxHeight, ellipsoid);
+        groundPrimitive._boundingVolumes.push(obb);
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;

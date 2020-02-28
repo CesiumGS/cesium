@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The state of a {@link QuadtreeTile} in the tile load pipeline.
@@ -38,4 +37,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         FAILED : 3
     };
-export default freezeObject(QuadtreeTileLoadState);
+export default Object.freeze(QuadtreeTileLoadState);

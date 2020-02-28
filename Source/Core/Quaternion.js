@@ -3,7 +3,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import FeatureDetection from './FeatureDetection.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import Matrix3 from './Matrix3.js';
 
@@ -967,7 +966,7 @@ import Matrix3 from './Matrix3.js';
      * @type {Quaternion}
      * @constant
      */
-    Quaternion.ZERO = freezeObject(new Quaternion(0.0, 0.0, 0.0, 0.0));
+    Quaternion.ZERO = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
@@ -975,7 +974,7 @@ import Matrix3 from './Matrix3.js';
      * @type {Quaternion}
      * @constant
      */
-    Quaternion.IDENTITY = freezeObject(new Quaternion(0.0, 0.0, 0.0, 1.0));
+    Quaternion.IDENTITY = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Quaternion instance.

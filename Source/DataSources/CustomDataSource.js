@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import DataSource from './DataSource.js';
@@ -37,7 +36,7 @@ import EntityCollection from './EntityCollection.js';
         this._entityCluster = new EntityCluster();
     }
 
-    defineProperties(CustomDataSource.prototype, {
+    Object.defineProperties(CustomDataSource.prototype, {
         /**
          * Gets or sets a human-readable name for this instance.
          * @memberof CustomDataSource.prototype

@@ -1,5 +1,4 @@
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     var _supportsFullscreen;
     var _names = {
@@ -21,7 +20,7 @@ import defineProperties from './defineProperties.js';
      */
     var Fullscreen = {};
 
-    defineProperties(Fullscreen, {
+    Object.defineProperties(Fullscreen, {
         /**
          * The element that is currently fullscreen, if any.  To simply check if the
          * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.

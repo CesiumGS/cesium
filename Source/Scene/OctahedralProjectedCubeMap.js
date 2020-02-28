@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -46,7 +45,7 @@ import when from '../ThirdParty/when.js';
         this._readyPromise = when.defer();
     }
 
-    defineProperties(OctahedralProjectedCubeMap.prototype, {
+    Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
         /**
          * The url to the KTX file containing the specular environment map and convoluted mipmaps.
          * @memberof OctahedralProjectedCubeMap.prototype
@@ -233,6 +232,7 @@ import when from '../ThirdParty/when.js';
      */
     OctahedralProjectedCubeMap.prototype.update = function(frameState) {
         var context = frameState.context;
+
         if (!OctahedralProjectedCubeMap.isSupported(context)) {
             return;
         }
@@ -262,7 +262,7 @@ import when from '../ThirdParty/when.js';
             loadKTX(this._url).then(function(buffers) {
                 that._cubeMapBuffers = buffers;
                 that._loading = false;
-            });
+            }).otherwise(this._readyPromise.reject);
             this._loading = true;
         }
         if (!defined(this._cubeMapBuffers)) {

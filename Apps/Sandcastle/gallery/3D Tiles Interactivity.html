@@ -72,11 +72,11 @@ scene.camera.setView({
 });
 
 // Load the NYC buildings tileset.
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5741) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(75343) });
 scene.primitives.add(tileset);
 tileset.style = new Cesium.Cesium3DTileStyle({
     meta: {
-        description: "'Building id ${id} has height ${height}.'"
+        description: "'Building ${BIN} has height ${Height}.'"
     }
 });
 
@@ -144,9 +144,9 @@ function printProperties(movement, feature) {
 }
 
 function zoom(movement, feature) {
-    var longitude = Cesium.Math.toRadians(feature.getProperty('longitude'));
-    var latitude = Cesium.Math.toRadians(feature.getProperty('latitude'));
-    var height = feature.getProperty('height');
+    var longitude = Cesium.Math.toRadians(feature.getProperty('Longitude'));
+    var latitude = Cesium.Math.toRadians(feature.getProperty('Latitude'));
+    var height = feature.getProperty('Height');
 
     var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
     var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
