@@ -83,8 +83,9 @@ import Check from './Check.js';
             var tileRequest = tileRequests[i];
             var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
             var tilePromise = requestPromise
-                .then(createInterpolateFunction(tileRequest))
-                .otherwise(createMarkFailedFunction(tileRequest));
+                .then(createInterpolateFunction(tileRequest));
+                // PROPELLER HACK: Fail if requestTileGeometry fails
+                //.otherwise(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 
