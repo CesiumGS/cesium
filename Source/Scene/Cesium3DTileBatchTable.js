@@ -8,7 +8,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -101,7 +100,7 @@ import StencilOperation from './StencilOperation.js';
     // This can be overridden for testing purposes
     Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
-    defineProperties(Cesium3DTileBatchTable.prototype, {
+    Object.defineProperties(Cesium3DTileBatchTable.prototype, {
         memorySizeInBytes : {
             get : function() {
                 var memory = 0;

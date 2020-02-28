@@ -5,7 +5,6 @@ import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -237,7 +236,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         };
     }
 
-    defineProperties(GroundPrimitive.prototype, {
+    Object.defineProperties(GroundPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *

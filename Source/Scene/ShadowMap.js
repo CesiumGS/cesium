@@ -12,7 +12,6 @@ import combine from '../Core/combine.js';
 import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
@@ -315,7 +314,7 @@ import ShadowMapShader from './ShadowMapShader.js';
         createRenderStates(this);
     };
 
-    defineProperties(ShadowMap.prototype, {
+    Object.defineProperties(ShadowMap.prototype, {
         /**
          * Determines if the shadow map will be shown.
          *

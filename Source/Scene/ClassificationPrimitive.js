@@ -2,7 +2,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -25,8 +24,6 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
 import StencilConstants from './StencilConstants.js';
 import StencilFunction from './StencilFunction.js';
 import StencilOperation from './StencilOperation.js';
-
-    var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
 
     /**
      * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
@@ -172,11 +169,6 @@ import StencilOperation from './StencilOperation.js';
 
         this.appearance = options.appearance;
 
-        var readOnlyAttributes;
-        if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
-            readOnlyAttributes = ClassificationPrimitiveReadOnlyInstanceAttributes;
-        }
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
@@ -191,7 +183,6 @@ import StencilOperation from './StencilOperation.js';
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
-            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createBoundingVolumeFunction : undefined,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
@@ -201,7 +192,7 @@ import StencilOperation from './StencilOperation.js';
         };
     }
 
-    defineProperties(ClassificationPrimitive.prototype, {
+    Object.defineProperties(ClassificationPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *

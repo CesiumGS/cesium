@@ -1,6 +1,5 @@
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents a command to the renderer for clearing a framebuffer.
@@ -88,7 +87,7 @@ import freezeObject from '../Core/freezeObject.js';
      *
      * @constant
      */
-    ClearCommand.ALL = freezeObject(new ClearCommand({
+    ClearCommand.ALL = Object.freeze(new ClearCommand({
         color : new Color(0.0, 0.0, 0.0, 0.0),
         depth : 1.0,
         stencil : 0.0

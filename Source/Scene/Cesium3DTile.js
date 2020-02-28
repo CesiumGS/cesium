@@ -5,7 +5,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -336,7 +335,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     // This can be overridden for testing purposes
     Cesium3DTile._deprecationWarning = deprecationWarning;
 
-    defineProperties(Cesium3DTile.prototype, {
+    Object.defineProperties(Cesium3DTile.prototype, {
         /**
          * The tileset containing this tile.
          *
@@ -556,6 +555,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyToProcessPromise)) {
                     return this._contentReadyToProcessPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -575,6 +575,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+                return undefined;
             }
         },
 

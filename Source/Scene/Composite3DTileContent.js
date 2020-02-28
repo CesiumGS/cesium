@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getMagic from '../Core/getMagic.js';
 import RuntimeError from '../Core/RuntimeError.js';
@@ -29,7 +28,7 @@ import when from '../ThirdParty/when.js';
         initialize(this, arrayBuffer, byteOffset, factory);
     }
 
-    defineProperties(Composite3DTileContent.prototype, {
+    Object.defineProperties(Composite3DTileContent.prototype, {
         featurePropertiesDirty : {
             get : function() {
                 var contents = this._contents;

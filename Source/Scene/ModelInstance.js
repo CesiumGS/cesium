@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import Matrix4 from '../Core/Matrix4.js';
 
     /**
@@ -10,7 +9,7 @@ import Matrix4 from '../Core/Matrix4.js';
         this._instanceId = instanceId;
     }
 
-    defineProperties(ModelInstance.prototype, {
+    Object.defineProperties(ModelInstance.prototype, {
         instanceId : {
             get : function() {
                 return this._instanceId;

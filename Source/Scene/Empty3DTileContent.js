@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 
     /**
@@ -21,7 +20,7 @@ import destroyObject from '../Core/destroyObject.js';
         this.featurePropertiesDirty = false;
     }
 
-    defineProperties(Empty3DTileContent.prototype, {
+    Object.defineProperties(Empty3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return 0;

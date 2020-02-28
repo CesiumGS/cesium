@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is for representing keyboard modifiers. These are keys
@@ -31,4 +30,4 @@ import freezeObject from './freezeObject.js';
          */
         ALT : 2
     };
-export default freezeObject(KeyboardEventModifier);
+export default Object.freeze(KeyboardEventModifier);

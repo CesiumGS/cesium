@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 
     /**
@@ -11,7 +10,7 @@ import destroyObject from '../Core/destroyObject.js';
         this._texturesToRelease = {};
     }
 
-    defineProperties(TextureCache.prototype, {
+    Object.defineProperties(TextureCache.prototype, {
         numberOfTextures : {
             get : function() {
                 return this._numberOfTextures;

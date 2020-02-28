@@ -4,7 +4,6 @@ import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
 import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
@@ -77,7 +76,7 @@ import Property from './Property.js';
         EllipsoidGeometryUpdater.prototype.constructor = EllipsoidGeometryUpdater;
     }
 
-    defineProperties(EllipsoidGeometryUpdater.prototype, {
+    Object.defineProperties(EllipsoidGeometryUpdater.prototype, {
         /**
          * Gets the terrain offset property
          * @type {TerrainOffsetProperty}

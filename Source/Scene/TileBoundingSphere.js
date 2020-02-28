@@ -2,7 +2,6 @@ import BoundingSphere from '../Core/BoundingSphere.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
-import defineProperties from '../Core/defineProperties.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -27,7 +26,7 @@ import Primitive from './Primitive.js';
         this._boundingSphere = new BoundingSphere(center, radius);
     }
 
-    defineProperties(TileBoundingSphere.prototype, {
+    Object.defineProperties(TileBoundingSphere.prototype, {
         /**
          * The center of the bounding sphere
          *

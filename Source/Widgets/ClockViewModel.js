@@ -1,6 +1,5 @@
 import Clock from '../Core/Clock.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import EventHelper from '../Core/EventHelper.js';
 import JulianDate from '../Core/JulianDate.js';
@@ -134,7 +133,7 @@ import knockout from '../ThirdParty/knockout.js';
         knockout.track(this, ['systemTime', 'startTime', 'stopTime', 'currentTime', 'multiplier', 'clockStep', 'clockRange', 'canAnimate', 'shouldAnimate']);
     }
 
-    defineProperties(ClockViewModel.prototype, {
+    Object.defineProperties(ClockViewModel.prototype, {
         /**
          * Gets the underlying Clock.
          * @memberof ClockViewModel.prototype

@@ -2,7 +2,6 @@ import Check from '../Core/Check.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 
     /**
@@ -108,7 +107,7 @@ import destroyObject from '../Core/destroyObject.js';
         this._selectedDirty = true;
     }
 
-    defineProperties(PostProcessStageComposite.prototype, {
+    Object.defineProperties(PostProcessStageComposite.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed.
          *

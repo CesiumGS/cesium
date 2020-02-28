@@ -1,5 +1,4 @@
 import Check from '../../Core/Check.js';
-import defineProperties from '../../Core/defineProperties.js';
 import Cesium3DTilesInspector from '../Cesium3DTilesInspector/Cesium3DTilesInspector.js';
 
     /**
@@ -24,7 +23,7 @@ import Cesium3DTilesInspector from '../Cesium3DTilesInspector/Cesium3DTilesInspe
         viewer.container.appendChild(container);
         var cesium3DTilesInspector = new Cesium3DTilesInspector(container, viewer.scene);
 
-        defineProperties(viewer, {
+        Object.defineProperties(viewer, {
             cesium3DTilesInspector : {
                 get : function() {
                     return cesium3DTilesInspector;

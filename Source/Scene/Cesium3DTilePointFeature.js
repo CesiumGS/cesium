@@ -2,7 +2,6 @@ import Cartographic from '../Core/Cartographic.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import createBillboardPointCallback from './createBillboardPointCallback.js';
 
     /**
@@ -67,7 +66,7 @@ import createBillboardPointCallback from './createBillboardPointCallback.js';
 
     var scratchCartographic = new Cartographic();
 
-    defineProperties(Cesium3DTilePointFeature.prototype, {
+    Object.defineProperties(Cesium3DTilePointFeature.prototype, {
         /**
          * Gets or sets if the feature will be shown. This is set for all features
          * when a style's show is evaluated.

@@ -1,6 +1,5 @@
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 
     /**
      * A feature of a {@link Cesium3DTileset}.
@@ -43,7 +42,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._color = undefined;  // for calling getColor
     }
 
-    defineProperties(Cesium3DTileFeature.prototype, {
+    Object.defineProperties(Cesium3DTileFeature.prototype, {
         /**
          * Gets or sets if the feature will be shown. This is set for all features
          * when a style's show is evaluated.

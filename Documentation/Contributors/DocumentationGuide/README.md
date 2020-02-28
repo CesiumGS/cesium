@@ -270,7 +270,7 @@ function Cartesian3(x, y) {
 ```
 * Use `@memberOf` when documenting property getter/setters, e.g.,
 ```javascript
-defineProperties(Entity.prototype, {
+Object.defineProperties(Entity.prototype, {
     /**
      * Gets or sets whether this entity should be displayed. When set to true,
      * the entity is only displayed if the parent entity's show property is also true.
@@ -290,7 +290,7 @@ defineProperties(Entity.prototype, {
 ```
 * Use `@readonly` to indicate read-only properties, e.g.,
 ```javascript
-defineProperties(Entity.prototype, {
+Object.defineProperties(Entity.prototype, {
     /**
      * Gets the unique ID associated with this object.
      *
@@ -315,7 +315,7 @@ defineProperties(Entity.prototype, {
  * @type {Cartesian3}
  * @constant
  */
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ## Functions and Callbacks

@@ -62,7 +62,7 @@ this._canvas = canvas;
 ```
 * Constants are in uppercase with underscores, e.g.,
 ```javascript
-Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 ```
 * Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g.,
 ```javascript
@@ -284,20 +284,15 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `freezeObject` function to create enums, e.g.,
+* Use `Object.freeze` function to create enums, e.g.,
 ```javascript
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
         ANIMATING : 1
     };
 
-    return freezeObject(ModelAnimationState);
+    return Object.freeze(ModelAnimationState);
 });
 ```
 * Use descriptive comments for non-obvious code, e.g.,
@@ -629,9 +624,9 @@ The prototype versions have the benefit of being able to be used polymorphically
 
 ### Static Constants
 
-To create a static constant related to a class, use `freezeObject`:
+To create a static constant related to a class, use `Object.freeze`:
 ```javascript
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ### Private Functions
@@ -678,13 +673,13 @@ function Model(options) {
 };
 ```
 
-Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
+Read-only properties can be created with a private property and a getter using `Object.defineProperties` function, e.g.,
 ```javascript
 function Cesium3DTileset(options) {
     this._url = options.url;
 };
 
-defineProperties(Cesium3DTileset.prototype, {
+Object.defineProperties(Cesium3DTileset.prototype, {
     url : {
         get : function() {
             return this._url;
@@ -696,7 +691,7 @@ Getters can perform any needed computation to return the property, but the perfo
 
 Setters can also perform computation before assigning to a private property, set a flag to delay computation, or both, for example:
 ```javascript
-defineProperties(UniformState.prototype, {
+Object.defineProperties(UniformState.prototype, {
     viewport : {
         get : function() {
             return this._viewport;
@@ -790,14 +785,12 @@ Modules (files) should only reference modules in the same level or a lower level
 ```javascript
 define([
         '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
-        defineProperties,
         Event,
         JulianDate,
         ModelAnimationLoop,

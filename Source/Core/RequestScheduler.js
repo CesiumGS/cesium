@@ -3,7 +3,6 @@ import when from '../ThirdParty/when.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Event from './Event.js';
 import Heap from './Heap.js';
 import isBlobUri from './isBlobUri.js';
@@ -104,7 +103,7 @@ import RequestState from './RequestState.js';
      */
     RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
-    defineProperties(RequestScheduler, {
+    Object.defineProperties(RequestScheduler, {
         /**
          * Returns the statistics used by the request scheduler.
          *

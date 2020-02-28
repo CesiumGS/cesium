@@ -6,9 +6,7 @@ import clone from './clone.js';
 import combine from './combine.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import getAbsoluteUri from './getAbsoluteUri.js';
 import getBaseUri from './getBaseUri.js';
 import getExtensionFromUri from './getExtensionFromUri.js';
@@ -385,7 +383,7 @@ import TrustedServers from './TrustedServers.js';
         return supportsImageBitmapOptionsPromise;
     };
 
-    defineProperties(Resource, {
+    Object.defineProperties(Resource, {
         /**
          * Returns true if blobs are supported.
          *
@@ -401,7 +399,7 @@ import TrustedServers from './TrustedServers.js';
         }
     });
 
-    defineProperties(Resource.prototype, {
+    Object.defineProperties(Resource.prototype, {
         /**
          * Query parameters appended to the url.
          *
@@ -2063,7 +2061,7 @@ import TrustedServers from './TrustedServers.js';
      * @type {Resource}
      * @constant
      */
-    Resource.DEFAULT = freezeObject(new Resource({
+    Resource.DEFAULT = Object.freeze(new Resource({
         url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
 

@@ -4,7 +4,6 @@ import Check from '../Core/Check.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import CesiumMath from '../Core/Math.js';
@@ -183,7 +182,7 @@ import WallGraphics from './WallGraphics.js';
         entity._definitionChanged.raiseEvent(entity, 'isShowing', isShowing, !isShowing);
     }
 
-    defineProperties(Entity.prototype, {
+    Object.defineProperties(Entity.prototype, {
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's

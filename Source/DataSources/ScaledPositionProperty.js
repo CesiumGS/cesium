@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
@@ -18,7 +17,7 @@ import Property from './Property.js';
         this.setValue(value);
     }
 
-    defineProperties(ScaledPositionProperty.prototype, {
+    Object.defineProperties(ScaledPositionProperty.prototype, {
         isConstant : {
             get : function() {
                 return Property.isConstant(this._value);
