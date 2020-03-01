@@ -4609,7 +4609,7 @@ declare namespace Cesium {
         type Callback = (timestamp: number) => void;
     }
 
-    function sampleTerrain(terrainProvider: TerrainProvider, level: number, positions: Cartographic[]): Promise<Cartographic[]>;
+    function sampleTerrain(terrainProvider: TerrainProvider, level: number, positions: Cartographic[], failResultOnTileFail?: boolean): Promise<Cartographic[]>;
 
     function sampleTerrainMostDetailed(terrainProvider: TerrainProvider, positions: Cartographic[]): Promise<Cartographic[]>;
 
