@@ -37,17 +37,17 @@ import Check from './Check.js';
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    function sampleTerrain(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions, failResultOnTileFail) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('terrainProvider', terrainProvider);
         Check.typeOf.number('level', level);
         Check.defined('positions', positions);
         //>>includeEnd('debug');
 
-        return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
+        return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions, failResultOnTileFail); });
     }
 
-    function doSampling(terrainProvider, level, positions) {
+    function doSampling(terrainProvider, level, positions, failResultOnTileFail = false) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var i;
@@ -82,10 +82,18 @@ import Check from './Check.js';
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
             var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
-            var tilePromise = requestPromise
-                .then(createInterpolateFunction(tileRequest));
-                // PROPELLER HACK: Fail if requestTileGeometry fails
-                //.otherwise(createMarkFailedFunction(tileRequest));
+            var tilePromise;
+
+            // PROPELLER HACK: Allow fail on requestTileGeometry fail
+
+            if(failResultOnTileFail) {
+                tilePromise = requestPromise
+                    .then(createInterpolateFunction(tileRequest));
+            } else {
+                tilePromise = requestPromise
+                    .then(createInterpolateFunction(tileRequest))
+                    .otherwise(createMarkFailedFunction(tileRequest));
+            }
             tilePromises.push(tilePromise);
         }
 
