@@ -1,5 +1,6 @@
 import when from '../ThirdParty/when.js';
 import Check from './Check.js';
+import defaultValue from './defaultValue';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -47,7 +48,7 @@ import Check from './Check.js';
         return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions, failResultOnTileFail); });
     }
 
-    function doSampling(terrainProvider, level, positions, failResultOnTileFail = false) {
+    function doSampling(terrainProvider, level, positions, failResultOnTileFail) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var i;
