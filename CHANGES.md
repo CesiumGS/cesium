@@ -5,6 +5,7 @@ Change Log
 
 ##### Breaking Changes :mega:
 * `Cesium3DTileset.skipLevelOfDetail` is now `false` by default. [#8631](https://github.com/CesiumGS/cesium/pull/8631)
+* glTF models are now rendered using the `LEQUALS` depth test function insead of `LESS`. This means that when geometry overlaps, the _later_ geometry will be visible above the earlier, where previously the opposite was true. We believe this is a more sensible default, and makes it easier to render e.g. outlined buildings with glTF.
 
 ##### Additions :tada:
 

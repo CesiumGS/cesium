@@ -32,6 +32,7 @@ import { DracoLoader } from '../../Source/Cesium.js';
 import { HeightReference } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { ModelAnimationLoop } from '../../Source/Cesium.js';
+import { DepthFunction } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
@@ -522,7 +523,8 @@ describe('Scene/Model', function() {
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.LESS_OR_EQUAL
                 },
                 depthMask : true,
                 blending : {

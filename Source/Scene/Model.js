@@ -57,6 +57,7 @@ import Axis from './Axis.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import ColorBlendMode from './ColorBlendMode.js';
+import DepthFunction from './DepthFunction.js';
 import DracoLoader from './DracoLoader.js';
 import getClipAndStyleCode from './getClipAndStyleCode.js';
 import getClippingFunction from './getClippingFunction.js';
@@ -3010,7 +3011,8 @@ import ShadowMode from './ShadowMode.js';
                 enabled : enableCulling
             },
             depthTest : {
-                enabled : true
+                enabled : true,
+                func: DepthFunction.LESS_OR_EQUAL
             },
             depthMask : !blendingEnabled,
             blending : {
