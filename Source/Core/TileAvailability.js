@@ -1,7 +1,6 @@
 import binarySearch from './binarySearch.js';
 import Cartographic from './Cartographic.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Rectangle from './Rectangle.js';
 
     /**
@@ -215,7 +214,7 @@ import Rectangle from './Rectangle.js';
         this._ne = undefined;
     }
 
-    defineProperties(QuadtreeNode.prototype, {
+    Object.defineProperties(QuadtreeNode.prototype, {
         nw: {
             get: function() {
                 if (!this._nw) {

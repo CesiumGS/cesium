@@ -2,6 +2,7 @@
 /Build
 /Cesium-*.zip
 /cesium-*.tgz
+.directory
 .DS_Store
 Thumbs.db
 .eslintcache

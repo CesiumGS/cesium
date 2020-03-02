@@ -843,5 +843,5 @@ describe('Core/Cartesian2', function() {
     });
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
-    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
+    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4], 2);
 });

@@ -1,7 +1,6 @@
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
@@ -104,7 +103,7 @@ import ImageryProvider from './ImageryProvider.js';
         doRequest();
     }
 
-    defineProperties(SingleTileImageryProvider.prototype, {
+    Object.defineProperties(SingleTileImageryProvider.prototype, {
         /**
          * Gets the URL of the single, top-level imagery tile.
          * @memberof SingleTileImageryProvider.prototype

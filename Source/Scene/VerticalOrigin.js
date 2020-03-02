@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The vertical location of an origin relative to an object, e.g., a {@link Billboard}
@@ -48,4 +47,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         TOP : -1
     };
-export default freezeObject(VerticalOrigin);
+export default Object.freeze(VerticalOrigin);

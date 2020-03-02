@@ -3,7 +3,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -58,7 +57,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         this._resolvedPromise = false;
     }
 
-    defineProperties(Vector3DTilePoints.prototype, {
+    Object.defineProperties(Vector3DTilePoints.prototype, {
         /**
          * Gets the number of points.
          *

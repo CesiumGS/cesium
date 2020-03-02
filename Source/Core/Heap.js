@@ -1,7 +1,6 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * Array implementation of a heap.
@@ -25,7 +24,7 @@ import defineProperties from './defineProperties.js';
         this._maximumLength = undefined;
     }
 
-    defineProperties(Heap.prototype, {
+    Object.defineProperties(Heap.prototype, {
         /**
          * Gets the length of the heap.
          *

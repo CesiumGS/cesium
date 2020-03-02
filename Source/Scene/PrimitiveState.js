@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -12,4 +11,4 @@ import freezeObject from '../Core/freezeObject.js';
         COMPLETE : 5,
         FAILED : 6
     };
-export default freezeObject(PrimitiveState);
+export default Object.freeze(PrimitiveState);

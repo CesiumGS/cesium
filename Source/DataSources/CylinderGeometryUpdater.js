@@ -5,7 +5,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import CylinderGeometry from '../Core/CylinderGeometry.js';
 import CylinderOutlineGeometry from '../Core/CylinderOutlineGeometry.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -65,7 +64,7 @@ import Property from './Property.js';
         CylinderGeometryUpdater.prototype.constructor = CylinderGeometryUpdater;
     }
 
-    defineProperties(CylinderGeometryUpdater.prototype, {
+    Object.defineProperties(CylinderGeometryUpdater.prototype, {
         /**
          * Gets the terrain offset property
          * @type {TerrainOffsetProperty}

@@ -5,10 +5,8 @@ import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadKTX from '../Core/loadKTX.js';
 import Matrix2 from '../Core/Matrix2.js';
@@ -43,7 +41,7 @@ import when from '../ThirdParty/when.js';
      * A Material defines surface appearance through a combination of diffuse, specular,
      * normal, emission, and alpha components. These values are specified using a
      * JSON schema called Fabric which gets parsed and assembled into glsl shader code
-     * behind-the-scenes. Check out the {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|wiki page}
+     * behind-the-scenes. Check out the {@link https://github.com/CesiumGS/cesium/wiki/Fabric|wiki page}
      * for more details on Fabric.
      * <br /><br />
      * <style type="text/css">
@@ -243,7 +241,7 @@ import when from '../ThirdParty/when.js';
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
@@ -321,7 +319,7 @@ import when from '../ThirdParty/when.js';
         this._defaultTexture = undefined;
 
         initializeMaterial(options, this);
-        defineProperties(this, {
+        Object.defineProperties(this, {
             type : {
                 value : this.type,
                 writable : false
@@ -993,7 +991,7 @@ import when from '../ThirdParty/when.js';
                     uniformType = 'sampler2D';
                 }
             } else if (type === 'object') {
-                if (isArray(uniformValue)) {
+                if (Array.isArray(uniformValue)) {
                     if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
                         uniformType = 'mat' + Math.sqrt(uniformValue.length);
                     }

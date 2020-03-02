@@ -1,9 +1,8 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Enum containing WebGL Constant values by name.
      * for use without an active WebGL context, or in cases where certain constants are unavailable using the WebGL context
-     * (For example, in [Safari 9]{@link https://github.com/AnalyticalGraphicsInc/cesium/issues/2989}).
+     * (For example, in [Safari 9]{@link https://github.com/CesiumGS/cesium/issues/2989}).
      *
      * These match the constants from the [WebGL 1.0]{@link https://www.khronos.org/registry/webgl/specs/latest/1.0/}
      * and [WebGL 2.0]{@link https://www.khronos.org/registry/webgl/specs/latest/2.0/}
@@ -607,4 +606,4 @@ import freezeObject from './freezeObject.js';
         // Extensions
         MAX_TEXTURE_MAX_ANISOTROPY_EXT : 0x84FF
     };
-export default freezeObject(WebGLConstants);
+export default Object.freeze(WebGLConstants);

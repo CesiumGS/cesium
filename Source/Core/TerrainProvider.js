@@ -1,5 +1,4 @@
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import IndexDatatype from './IndexDatatype.js';
 import CesiumMath from './Math.js';
@@ -21,7 +20,7 @@ import CesiumMath from './Math.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(TerrainProvider.prototype, {
+    Object.defineProperties(TerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error..  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners

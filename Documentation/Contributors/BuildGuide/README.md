@@ -14,14 +14,14 @@
    * Recommended Git settings:
       * `git config --global pull.rebase preserve` - when pulling remote changes, rebase your local changes on top of the remote changes, to avoid unnecessary merge commits.
       * `git config --global fetch.prune true` - when fetching remote changes, remove any remote branches that no longer exist on the remote.
-* Have [commit access](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
+* Have [commit access](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CommittersGuide/README.md) to CesiumJS?
    * No
-      * Fork [cesium](https://github.com/AnalyticalGraphicsInc/cesium).
-      * Use the [GitHub website](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) to delete all branches in your fork except `master`.
+      * Fork [cesium](https://github.com/CesiumGS/cesium).
+      * Use the [GitHub website](https://github.com/CesiumGS/cesium/branches/all) to delete all branches in your fork except `master`.
       * Clone your fork, e.g., `git clone git@github.com:yourusername/cesium.git`.
       * Make changes in a branch, e.g., `git checkout -b my-feature`.
    * Yes
-      * Clone the cesium repo, e.g., `git clone git@github.com:AnalyticalGraphicsInc/cesium.git`
+      * Clone the cesium repo, e.g., `git clone git@github.com:CesiumGS/cesium.git`
       * Make changes in a branch, e.g., `git checkout -b my-feature`.
 
 ## Build the Code
@@ -51,8 +51,8 @@ Then browse to [http://localhost:8080/](http://localhost:8080/). The landing pag
 
 * **Hello World** : an example using the combined and minified Cesium library to create a 3D globe. [Tutorial here](http://cesiumjs.org/tutorials/cesium-up-and-running/)
 * **Sandcastle** : an app for viewing and creating [code examples](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Hello%20World.html&label=Showcases), complete with a live preview
-* **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
-* **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
+* **Test Suites** : tests using [Jasmine](https://jasmine.github.io/). [Testing guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/TestingGuide/README.md#testing-guide)
+* **Documentation** : reference documentation built from source. [Documentation guide here.](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/DocumentationGuide/README.md#documentation-guide)
 
 Cesium can be used in two different ways. Cesium can be either a set of modules using [Asynchronous Module Definition (AMD)](https://github.com/amdjs/amdjs-api/wiki/AMD), or it can be built as one combined file containing all modules. The basics:
 
@@ -130,7 +130,7 @@ Travis triggers a build whenever someone opens a pull request or pushes code to 
 
 ![Checks](checks_failed.jpg)
 
-You can also access the build of any branch of CesiumJS by going to the [Cesium Branches](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) page, and clicking the icon next to the branch name.
+You can also access the build of any branch of CesiumJS by going to the [Cesium Branches](https://github.com/CesiumGS/cesium/branches/all) page, and clicking the icon next to the branch name.
 
 ![Branches](branches.png)
 

@@ -3,7 +3,6 @@ import TerrainTileProcessor from '../TerrainTileProcessor.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Cartographic } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
-import { defineProperties } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { EventHelper } from '../../Source/Cesium.js';
 import { GeographicProjection } from '../../Source/Cesium.js';
@@ -506,7 +505,7 @@ describe('Scene/QuadtreePrimitive', function() {
                 'initialize', 'updateImagery', 'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
                 'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'canRefine', 'isDestroyed', 'destroy']);
 
-            defineProperties(result, {
+            Object.defineProperties(result, {
                 quadtree : {
                     get : result.getQuadtree,
                     set : result.setQuadtree

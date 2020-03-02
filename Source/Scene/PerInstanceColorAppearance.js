@@ -1,5 +1,4 @@
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import PerInstanceColorAppearanceFS from '../Shaders/Appearances/PerInstanceColorAppearanceFS.js';
 import PerInstanceColorAppearanceVS from '../Shaders/Appearances/PerInstanceColorAppearanceVS.js';
@@ -110,7 +109,7 @@ import Appearance from './Appearance.js';
         this._faceForward = defaultValue(options.faceForward, !closed);
     }
 
-    defineProperties(PerInstanceColorAppearance.prototype, {
+    Object.defineProperties(PerInstanceColorAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

@@ -1,6 +1,5 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import Framebuffer from '../Renderer/Framebuffer.js';
@@ -22,7 +21,7 @@ import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
         this._drawCommand = undefined;
     }
 
-    defineProperties(BrdfLutGenerator.prototype, {
+    Object.defineProperties(BrdfLutGenerator.prototype, {
         colorTexture : {
             get : function() {
                 return this._colorTexture;

@@ -3,7 +3,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -73,7 +72,7 @@ import when from '../ThirdParty/when.js';
         this._root = undefined;
     }
 
-    defineProperties(TextureAtlas.prototype, {
+    Object.defineProperties(TextureAtlas.prototype, {
         /**
          * The amount of spacing between adjacent images in pixels.
          * @memberof TextureAtlas.prototype

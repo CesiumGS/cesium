@@ -1,9 +1,7 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import JulianDate from './JulianDate.js';
 
     /**
@@ -94,7 +92,7 @@ import JulianDate from './JulianDate.js';
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
     }
 
-    defineProperties(TimeInterval.prototype, {
+    Object.defineProperties(TimeInterval.prototype, {
         /**
          * Gets whether or not this interval is empty.
          * @memberof TimeInterval.prototype
@@ -373,7 +371,7 @@ import JulianDate from './JulianDate.js';
      * @type {TimeInterval}
      * @constant
      */
-    TimeInterval.EMPTY = freezeObject(new TimeInterval({
+    TimeInterval.EMPTY = Object.freeze(new TimeInterval({
         start : new JulianDate(),
         stop : new JulianDate(),
         isStartIncluded : false,
