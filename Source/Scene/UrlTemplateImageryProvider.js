@@ -8,7 +8,6 @@ import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicProjection from '../Core/GeographicProjection.js';
-import isArray from '../Core/isArray.js';
 import CesiumMath from '../Core/Math.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
@@ -565,7 +564,7 @@ import ImageryProvider from './ImageryProvider.js';
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
             that._subdomains = properties.subdomains;
-            if (isArray(that._subdomains)) {
+            if (Array.isArray(that._subdomains)) {
                 that._subdomains = that._subdomains.slice();
             } else if (defined(that._subdomains) && that._subdomains.length > 0) {
                 that._subdomains = that._subdomains.split('');

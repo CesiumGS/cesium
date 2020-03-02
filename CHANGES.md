@@ -25,6 +25,9 @@ Change Log
 * Fixed a bug where applying a new 3D Tiles style during a flight would not update all existing tiles. [#8622](https://github.com/CesiumGS/cesium/pull/8622)
 * Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/AnalyticalGraphicsInc/cesium/pull/8568)
 
+##### Deprecated :hourglass_flowing_sand:
+* The `isArray` function has been deprecated and will be removed in Cesium 1.69. Use the native `Array.isArray` function instead. [#8526](https://github.com/CesiumGS/cesium/pull/8526)
+
 ### 1.66.0 - 2020-02-03
 
 ##### Deprecated :hourglass_flowing_sand:

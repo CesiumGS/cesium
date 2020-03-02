@@ -1,6 +1,5 @@
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import isArray from './isArray.js';
 
     /**
      * Parses a query string into an object, where the keys and values of the object are the
@@ -50,7 +49,7 @@ import isArray from './isArray.js';
             if (typeof resultValue === 'string') {
                 // expand the single value to an array
                 result[name] = [resultValue, value];
-            } else if (isArray(resultValue)) {
+            } else if (Array.isArray(resultValue)) {
                 resultValue.push(value);
             } else {
                 result[name] = value;

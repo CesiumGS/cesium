@@ -18,7 +18,6 @@ import Event from '../Core/Event.js';
 import ExtrapolationType from '../Core/ExtrapolationType.js';
 import getFilenameFromUri from '../Core/getFilenameFromUri.js';
 import HermitePolynomialApproximation from '../Core/HermitePolynomialApproximation.js';
-import isArray from '../Core/isArray.js';
 import Iso8601 from '../Core/Iso8601.js';
 import JulianDate from '../Core/JulianDate.js';
 import LagrangePolynomialApproximation from '../Core/LagrangePolynomialApproximation.js';
@@ -776,7 +775,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; ++i) {
                 processProperty(type, object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -950,7 +949,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; ++i) {
                 processPositionProperty(object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -1086,7 +1085,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; ++i) {
                 processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri, entityCollection);
             }
@@ -1148,7 +1147,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
                     }
 
                     var propertyData = propertiesData[key];
-                    if (isArray(propertyData)) {
+                    if (Array.isArray(propertyData)) {
                         for (var i = 0, len = propertyData.length; i < len; ++i) {
                             processProperty(getPropertyType(propertyData[i]), entity.properties, key, propertyData[i], undefined, sourceUri, entityCollection);
                         }
@@ -1200,7 +1199,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, length = packetData.length; i < length; ++i) {
                 processArrayPacketData(object, propertyName, packetData[i], entityCollection);
             }
@@ -1233,7 +1232,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, length = packetData.length; i < length; ++i) {
                 processPositionArrayPacketData(object, propertyName, packetData[i], entityCollection);
             }
@@ -1283,7 +1282,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
             return;
         }
 
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, length = packetData.length; i < length; ++i) {
                 processPositionArrayOfArraysPacketData(object, propertyName, packetData[i], entityCollection);
             }
@@ -1299,7 +1298,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
         }
 
         var intervals;
-        if (isArray(packetData)) {
+        if (Array.isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; ++i) {
                 if (!defined(intervals)) {
                     intervals = new TimeIntervalCollection();
@@ -1617,7 +1616,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
         var i, len;
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
-            if (isArray(nodeTransformationsData)) {
+            if (Array.isArray(nodeTransformationsData)) {
                 for (i = 0, len = nodeTransformationsData.length; i < len; ++i) {
                     processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
                 }
@@ -1628,7 +1627,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
 
         var articulationsData = modelData.articulations;
         if (defined(articulationsData)) {
-            if (isArray(articulationsData)) {
+            if (Array.isArray(articulationsData)) {
                 for (i = 0, len = articulationsData.length; i < len; ++i) {
                     processArticulations(model, articulationsData[i], interval, sourceUri, entityCollection);
                 }
@@ -2407,7 +2406,7 @@ import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
     CzmlDataSource._processCzml = function(czml, entityCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defaultValue(updaterFunctions, CzmlDataSource.updaters);
 
-        if (isArray(czml)) {
+        if (Array.isArray(czml)) {
             for (var i = 0, len = czml.length; i < len; ++i) {
                 processCzmlPacket(czml[i], entityCollection, updaterFunctions, sourceUri, dataSource);
             }

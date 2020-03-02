@@ -14,7 +14,6 @@ import clone from '../../Core/clone.js'
 import ComponentDatatype from '../../Core/ComponentDatatype.js'
 import defaultValue from '../../Core/defaultValue.js'
 import defined from '../../Core/defined.js'
-import isArray from '../../Core/isArray.js'
 import Matrix4 from '../../Core/Matrix4.js'
 import Quaternion from '../../Core/Quaternion.js'
 import WebGLConstants from '../../Core/WebGLConstants.js'
@@ -567,7 +566,7 @@ import WebGLConstants from '../../Core/WebGLConstants.js'
         for (var topLevelId in gltf) {
             if (Object.prototype.hasOwnProperty.call(gltf, topLevelId)) {
                 var array = gltf[topLevelId];
-                if (isArray(array) && array.length === 0) {
+                if (Array.isArray(array) && array.length === 0) {
                     delete gltf[topLevelId];
                 }
             }
