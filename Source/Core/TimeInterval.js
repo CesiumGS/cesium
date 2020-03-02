@@ -2,7 +2,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import JulianDate from './JulianDate.js';
 
     /**
@@ -372,7 +371,7 @@ import JulianDate from './JulianDate.js';
      * @type {TimeInterval}
      * @constant
      */
-    TimeInterval.EMPTY = freezeObject(new TimeInterval({
+    TimeInterval.EMPTY = Object.freeze(new TimeInterval({
         start : new JulianDate(),
         stop : new JulianDate(),
         isStartIncluded : false,

@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -71,4 +70,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
          */
         ALWAYS : WebGLConstants.ALWAYS
     };
-export default freezeObject(StencilFunction);
+export default Object.freeze(StencilFunction);

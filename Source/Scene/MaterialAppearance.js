@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import freezeObject from '../Core/freezeObject.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import AllMaterialAppearanceFS from '../Shaders/Appearances/AllMaterialAppearanceFS.js';
 import AllMaterialAppearanceVS from '../Shaders/Appearances/AllMaterialAppearanceVS.js';
@@ -274,7 +273,7 @@ import Material from './Material.js';
          *
          * @constant
          */
-        BASIC : freezeObject({
+        BASIC : Object.freeze({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             vertexShaderSource : BasicMaterialAppearanceVS,
             fragmentShaderSource : BasicMaterialAppearanceFS
@@ -286,7 +285,7 @@ import Material from './Material.js';
          *
          * @constant
          */
-        TEXTURED : freezeObject({
+        TEXTURED : Object.freeze({
             vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
             vertexShaderSource : TexturedMaterialAppearanceVS,
             fragmentShaderSource : TexturedMaterialAppearanceFS
@@ -298,7 +297,7 @@ import Material from './Material.js';
          *
          * @constant
          */
-        ALL : freezeObject({
+        ALL : Object.freeze({
             vertexFormat : VertexFormat.ALL,
             vertexShaderSource : AllMaterialAppearanceVS,
             fragmentShaderSource : AllMaterialAppearanceFS

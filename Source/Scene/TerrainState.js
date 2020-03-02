@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -12,4 +11,4 @@ import freezeObject from '../Core/freezeObject.js';
         TRANSFORMED : 5,
         READY : 6
     };
-export default freezeObject(TerrainState);
+export default Object.freeze(TerrainState);

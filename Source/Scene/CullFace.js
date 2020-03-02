@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -31,4 +30,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
          */
         FRONT_AND_BACK : WebGLConstants.FRONT_AND_BACK
     };
-export default freezeObject(CullFace);
+export default Object.freeze(CullFace);

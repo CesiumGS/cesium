@@ -3,7 +3,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 
     /**
@@ -1341,7 +1340,7 @@ import CesiumMath from './Math.js';
      * @type {Matrix3}
      * @constant
      */
-    Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
+    Matrix3.IDENTITY = Object.freeze(new Matrix3(1.0, 0.0, 0.0,
                                                 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 1.0));
 
@@ -1351,7 +1350,7 @@ import CesiumMath from './Math.js';
      * @type {Matrix3}
      * @constant
      */
-    Matrix3.ZERO = freezeObject(new Matrix3(0.0, 0.0, 0.0,
+    Matrix3.ZERO = Object.freeze(new Matrix3(0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0));
 
