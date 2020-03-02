@@ -3010,7 +3010,8 @@ import ShadowMode from './ShadowMode.js';
                 enabled : enableCulling
             },
             depthTest : {
-                enabled : true
+                enabled : true,
+                func: WebGLConstants.LEQUAL
             },
             depthMask : !blendingEnabled,
             blending : {
