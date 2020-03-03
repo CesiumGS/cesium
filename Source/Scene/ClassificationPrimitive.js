@@ -5,7 +5,6 @@ import defined from '../Core/defined.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
-import isArray from '../Core/isArray.js';
 import DrawCommand from '../Renderer/DrawCommand.js';
 import Pass from '../Renderer/Pass.js';
 import RenderState from '../Renderer/RenderState.js';
@@ -988,7 +987,7 @@ import StencilOperation from './StencilOperation.js';
         var primitiveOptions = this._primitiveOptions;
 
         if (!defined(this._primitive)) {
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
 
             var i;

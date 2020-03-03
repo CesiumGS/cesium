@@ -170,7 +170,7 @@
     server.on('error', function (e) {
         if (e.code === 'EADDRINUSE') {
             console.log('Error: Port %d is already in use, select a different port.', argv.port);
-            console.log('Example: node server.js --port %d', argv.port + 1);
+            console.log('Example: node server.cjs --port %d', argv.port + 1);
         } else if (e.code === 'EACCES') {
             console.log('Error: This process does not have permission to listen on port %d.', argv.port);
             if (argv.port < 1024) {

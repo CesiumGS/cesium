@@ -1,6 +1,5 @@
 import hasExtension from './hasExtension.js'
 import defined from '../../Core/defined.js'
-import isArray from '../../Core/isArray.js'
 
     /**
      * Contains traversal functions for processing elements of the glTF hierarchy.
@@ -53,7 +52,7 @@ import isArray from '../../Core/isArray.js'
      */
     ForEach.topLevel = function(gltf, name, handler) {
         var gltfProperty = gltf[name];
-        if (defined(gltfProperty) && !isArray(gltfProperty)) {
+        if (defined(gltfProperty) && !Array.isArray(gltfProperty)) {
             return ForEach.objectLegacy(gltfProperty, handler);
         }
 
