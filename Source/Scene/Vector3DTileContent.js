@@ -372,9 +372,15 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         }
 
         if (numberOfPolylines > 0) {
-            var polylineCounts = featureTable.getPropertyArray('POLYLINE_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolylines);
+            featureTable.featuresLength = numberOfPolylines;
+
+            var polylineCounts = defaultValue(
+                featureTable.getPropertyArray('POLYLINE_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolylines),
+                featureTable.getPropertyArray('POLYLINE_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolylines) // Workaround for old vector tilesets using the non-plural name
+            );
+
             if (!defined(polylineCounts)) {
-              throw new RuntimeError('Feature table property: POLYLINE_COUNTS must be defined when POLYLINES_LENGTH is greater than 0');
+                throw new RuntimeError('Feature table property: POLYLINE_COUNTS must be defined when POLYLINES_LENGTH is greater than 0');
             }
 
             var widths = featureTable.getPropertyArray('POLYLINE_WIDTHS', ComponentDatatype.UNSIGNED_SHORT, numberOfPolylines);
@@ -388,7 +394,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             // Use the counts array to determine how many position values we want. If we used the byte length then
             // zero padding values would be included and cause the delta zig-zag decoding to fail
             var numPolylinePositions = polylineCounts.reduce(function(total, count) {
-              return total + count * 3;
+                return total + count * 3;
             }, 0);
             var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, numPolylinePositions);
             byteOffset += polylinePositionByteLength;
