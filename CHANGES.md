@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.68.0 - 2020-04-01
+
+##### Additions :tada:
+
+* Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
+
 ### 1.67.0 - 2020-03-02
 
 ##### Breaking Changes :mega:
@@ -15,7 +21,6 @@ Change Log
 * `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/CesiumGS/cesium/pull/8563)
 * Added basic support for `isNaN`, `isFinite`, `null`, and `undefined` in the 3D Tiles styling GLSL backend for point clouds. [#8621](https://github.com/CesiumGS/cesium/pull/8621)
 * Updated knockout from 3.5.0 to 3.5.1.
-* Added `RequestScheduler` to public API; this allows users to have more control over the requests made by Cesium. [#8384](https://github.com/AnalyticalGraphicsInc/cesium/issues/8384)
 * Added `sizeInMeters` to `ParticleSystem`. [#7746](https://github.com/CesiumGS/cesium/pull/7746)
 
 ##### Fixes :wrench:
@@ -23,7 +28,7 @@ Change Log
 * Fixed a bug that caused large, nearby geometry to be clipped when using a logarithmic depth buffer, which is the default on most systems. [#8600](https://github.com/CesiumGS/cesium/pull/8600)
 * Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/CesiumGS/cesium/pull/8598)
 * Fixed a bug where applying a new 3D Tiles style during a flight would not update all existing tiles. [#8622](https://github.com/CesiumGS/cesium/pull/8622)
-* Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/AnalyticalGraphicsInc/cesium/pull/8568)
+* Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/CesiumGS/cesium/pull/8568)
 
 ### 1.66.0 - 2020-02-03
 
