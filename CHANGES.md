@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.68 - 2020-04-01
+
+##### Fixes :wrench:
+
+* Fixed image splitting in VR mode. [#8138](https://github.com/CesiumGS/cesium/pull/8138)
+
 ### 1.67.0 - 2020-03-02
 
 ##### Breaking Changes :mega:

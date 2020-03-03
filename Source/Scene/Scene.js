@@ -2648,6 +2648,8 @@ import View from './View.js';
         }
     };
 
+    var scratchVRFrustum = new PerspectiveOffCenterFrustum();
+
     function executeWebVRCommands(scene, passState, backgroundColor) {
         var view = scene._view;
         var camera = view.camera;
@@ -2684,24 +2686,24 @@ import View from './View.js';
         var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
         var aspectRatio = camera.frustum.aspectRatio = viewport.width / viewport.height;
-        var widthdiv2 = near * Math.tan(camera.frustum.fov / 2);
-
+        var widthOverTwo = near * Math.tan(camera.frustum.fov / 2.0);
         var offset = 0.5 * eyeSeparation * near / fo;
 
         Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
 
-        var left = - aspectRatio * widthdiv2 - offset;
-        var right = aspectRatio * widthdiv2 - offset;
-        var top = widthdiv2;
-        var bottom = - widthdiv2;
-        camera.frustum = new PerspectiveOffCenterFrustum({
-            left: left,
-            right: right,
-            top: top,
-            bottom: bottom,
-            near: near,
-            far: far
-        });
+        var left = -aspectRatio * widthOverTwo - offset;
+        var right = aspectRatio * widthOverTwo - offset;
+        var top = widthOverTwo;
+        var bottom = -widthOverTwo;
+
+        var vrFrustum = camera.frustum = scratchVRFrustum;
+
+        vrFrustum.left = left;
+        vrFrustum.right = right;
+        vrFrustum.top = top;
+        vrFrustum.bottom = bottom;
+        vrFrustum.near = near;
+        vrFrustum.far = far;
 
         executeCommands(scene, passState);
 
@@ -2709,18 +2711,17 @@ import View from './View.js';
 
         Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
 
-        left = - aspectRatio * widthdiv2 + offset;
-        right = aspectRatio * widthdiv2 + offset;
-        top = widthdiv2;
-        bottom = - widthdiv2;
-        camera.frustum = new PerspectiveOffCenterFrustum({
-            left: left,
-            right: right,
-            top: top,
-            bottom: bottom,
-            near: near,
-            far: far
-        });
+        left = -aspectRatio * widthOverTwo + offset;
+        right = aspectRatio * widthOverTwo + offset;
+        top = widthOverTwo;
+        bottom = -widthOverTwo;
+
+        vrFrustum.left = left;
+        vrFrustum.right = right;
+        vrFrustum.top = top;
+        vrFrustum.bottom = bottom;
+        vrFrustum.near = near;
+        vrFrustum.far = far;
 
         executeCommands(scene, passState);
 
