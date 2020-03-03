@@ -409,6 +409,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
 
         if (numberOfPoints > 0) {
             var pointPositions = new Uint16Array(arrayBuffer, byteOffset, numberOfPoints * 3);
+            byteOffset += pointsPositionByteLength;
             content._points = new Vector3DTilePoints({
                 positions : pointPositions,
                 batchIds : batchIds.points,
