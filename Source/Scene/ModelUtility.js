@@ -68,14 +68,14 @@ import Axis from './Axis.js';
                 var material = materials[materialIndex];
 
                 var primitiveInfo = getPrimitiveInfo(gltf.accessors, primitive);
-                if(!defined(primitiveInfoByMaterial[materialIndex])) {
+                if (!defined(primitiveInfoByMaterial[materialIndex])) {
                     primitiveInfoByMaterial[materialIndex] = primitiveInfo;
-                } else if(!equalsPrimitiveInfo(primitiveInfo, primitiveInfoByMaterial[materialIndex])){
+                } else if (!equalsPrimitiveInfo(primitiveInfo, primitiveInfoByMaterial[materialIndex])){
                     // This primitive uses the same material as another one that either:
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
                     // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
-                    if(!primitiveInfoCache[materialIndex]) {
+                    if (!defined(primitiveInfoCache[materialIndex])) {
                         primitiveInfoCache[materialIndex] = {
                             primitiveInfos: [],
                             primitives: [],
