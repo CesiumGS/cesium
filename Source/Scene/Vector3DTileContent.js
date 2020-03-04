@@ -220,7 +220,6 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         };
     }
 
-    var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     function initialize(content, arrayBuffer, byteOffset) {
