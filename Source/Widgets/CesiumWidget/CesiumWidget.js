@@ -209,12 +209,13 @@ import getElement from '../getElement.js';
         // This leads to unexpected interaction if the last element was an input field.
         // For example, clicking the mouse wheel could lead to the value in  the field changing
         // unexpectedly. The solution is to blur whatever has focus as soon as canvas interaction begins.
-        canvas.addEventListener('mousedown', function() {
-            canvas.ownerDocument.activeElement.blur();
-        });
-        canvas.addEventListener('pointerdown', function() {
-            canvas.ownerDocument.activeElement.blur();
-        });
+        function blurActiveElement() {
+            if (canvas !== canvas.ownerDocument.activeElement) {
+                canvas.ownerDocument.activeElement.blur();
+            }
+        }
+        canvas.addEventListener('mousedown', blurActiveElement);
+        canvas.addEventListener('pointerdown', blurActiveElement);
 
         element.appendChild(canvas);
 
