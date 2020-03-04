@@ -323,7 +323,7 @@ gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocume
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
 
     var builtSrc = gulp.src([
@@ -342,7 +342,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         'ThirdParty/**',
         'favicon.ico',
         'gulpfile.js',
-        'server.js',
+        'server.cjs',
         'package.json',
         'LICENSE.md',
         'CHANGES.md',
@@ -460,7 +460,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 'gulpfile.js',
                 'index.html',
                 'package.json',
-                'server.js',
+                'server.cjs',
                 'web.config',
                 '*.zip',
                 '*.tgz'
@@ -1317,6 +1317,7 @@ function createJsHintOptions() {
     primary.jasmine = false;
     primary.predef = gallery.predef;
     primary.unused = gallery.unused;
+    primary.esversion = gallery.esversion;
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\

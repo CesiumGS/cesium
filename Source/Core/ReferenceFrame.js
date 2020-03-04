@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Constants for identifying well-known reference frames.
@@ -22,4 +21,4 @@ import freezeObject from './freezeObject.js';
          */
         INERTIAL : 1
     };
-export default freezeObject(ReferenceFrame);
+export default Object.freeze(ReferenceFrame);

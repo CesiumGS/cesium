@@ -3,7 +3,6 @@ import Cartesian4 from './Cartesian4.js';
 import CullingVolume from './CullingVolume.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
@@ -130,7 +129,7 @@ import Matrix4 from './Matrix4.js';
         }
     }
 
-    defineProperties(PerspectiveOffCenterFrustum.prototype, {
+    Object.defineProperties(PerspectiveOffCenterFrustum.prototype, {
         /**
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveOffCenterFrustum.prototype

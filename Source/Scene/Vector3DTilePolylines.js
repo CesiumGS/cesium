@@ -4,7 +4,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
@@ -90,7 +89,7 @@ import Cesium3DTileFeature from './Cesium3DTileFeature.js';
         this._verticesPromise = undefined;
     }
 
-    defineProperties(Vector3DTilePolylines.prototype, {
+    Object.defineProperties(Vector3DTilePolylines.prototype, {
         /**
          * Gets the number of triangles.
          *

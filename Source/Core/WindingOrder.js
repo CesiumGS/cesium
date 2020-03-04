@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 import WebGLConstants from './WebGLConstants.js';
 
     /**
@@ -31,4 +30,4 @@ import WebGLConstants from './WebGLConstants.js';
                    windingOrder === WindingOrder.COUNTER_CLOCKWISE;
         }
     };
-export default freezeObject(WindingOrder);
+export default Object.freeze(WindingOrder);

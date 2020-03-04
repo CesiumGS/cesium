@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The direction to display an ImageryLayer relative to the {@link Scene#imagerySplitPosition}.
@@ -32,4 +31,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         RIGHT : 1.0
     };
-export default freezeObject(ImagerySplitDirection);
+export default Object.freeze(ImagerySplitDirection);

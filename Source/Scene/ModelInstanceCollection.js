@@ -7,7 +7,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -152,7 +151,7 @@ import ShadowMode from './ShadowMode.js';
         this.specularEnvironmentMaps = options.specularEnvironmentMaps;
     }
 
-    defineProperties(ModelInstanceCollection.prototype, {
+    Object.defineProperties(ModelInstanceCollection.prototype, {
         allowPicking : {
             get : function() {
                 return this._allowPicking;

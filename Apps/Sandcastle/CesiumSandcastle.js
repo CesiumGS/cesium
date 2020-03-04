@@ -15,7 +15,7 @@ require({
         location: '../Apps/Sandcastle'
     }, {
         name: 'CodeMirror',
-        location: '../ThirdParty/codemirror-4.6'
+        location: '../ThirdParty/codemirror-5.52.0'
     }, {
         name: 'ThirdParty',
         location: '../Apps/Sandcastle/ThirdParty'
@@ -1057,7 +1057,7 @@ require({
         });
     }
 
-    // Work around Chrome 79 bug: https://github.com/AnalyticalGraphicsInc/cesium/issues/8460
+    // Work around Chrome 79 bug: https://github.com/CesiumGS/cesium/issues/8460
     function waitForDoc(doc, test) {
         var deferred = new Deferred();
         if (test()) {

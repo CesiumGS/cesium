@@ -9,7 +9,6 @@ import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
-import isArray from '../Core/isArray.js';
 import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -370,7 +369,7 @@ import TweenCollection from './TweenCollection.js';
 
         var aggregator = controller._aggregator;
 
-        if (!isArray(eventTypes)) {
+        if (!Array.isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }

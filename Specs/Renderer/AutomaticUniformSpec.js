@@ -1294,39 +1294,6 @@ describe('Renderer/AutomaticUniforms', function() {
         }).contextToRender();
     });
 
-    it('has czm_log2FarDistance', function() {
-        var fs =
-            'void main() {' +
-            '  gl_FragColor = vec4(czm_log2FarDistance == (2.0 / log2(czm_currentFrustum.y + 1.0)));' +
-            '}';
-        expect({
-            context : context,
-            fragmentShader : fs
-        }).contextToRender();
-    });
-
-    it('has czm_log2FarPlusOne', function() {
-        var fs =
-            'void main() {' +
-            '  gl_FragColor = vec4(czm_log2FarPlusOne == log2(czm_currentFrustum.y + 1.0));' +
-            '}';
-        expect({
-            context : context,
-            fragmentShader : fs
-        }).contextToRender();
-    });
-
-    it('has czm_log2NearDistance', function() {
-        var fs =
-            'void main() {' +
-            '  gl_FragColor = vec4(czm_log2NearDistance == log2(czm_currentFrustum.x));' +
-            '}';
-        expect({
-            context : context,
-            fragmentShader : fs
-        }).contextToRender();
-    });
-
     it('has czm_gamma', function() {
         context.uniformState.gamma = 1.0;
         var fs =

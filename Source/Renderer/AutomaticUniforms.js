@@ -1132,51 +1132,47 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         }),
 
         /**
-         * The log2 of the current frustums far plane. Used for computing the log depth.
+         * Gets the far plane's distance from the near plane, plus 1.0.
          *
-         * @alias czm_log2FarDistance
+         * @alias czm_farDepthFromNearPlusOne
          * @namespace
          * @glslUniform
-         *
-         * @private
          */
-        czm_log2FarDistance : new AutomaticUniform({
-            size : 1,
+        czm_farDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2FarDistance;
+                return uniformState.farDepthFromNearPlusOne;
             }
         }),
 
         /**
-         * An automatic GLSL uniform containing log2 of the far distance + 1.0.
-         * This is used when reversing log depth computations.
+         * Gets the log2 of {@link AutomaticUniforms#czm_farDepthFromNearPlusOne}.
          *
-         * @alias czm_log2FarPlusOne
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
          * @namespace
          * @glslUniform
          */
-        czm_log2FarPlusOne : new AutomaticUniform({
-            size : 1,
+        czm_log2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2FarPlusOne;
+                return uniformState.log2FarDepthFromNearPlusOne;
             }
         }),
 
         /**
-         * An automatic GLSL uniform containing log2 of the near distance.
-         * This is used when writing log depth in the fragment shader.
+         * Gets 1.0 divided by {@link AutomaticUniforms#czm_log2FarDepthFromNearPlusOne}.
          *
-         * @alias czm_log2NearDistance
+         * @alias czm_oneOverLog2FarDepthFromNearPlusOne
          * @namespace
          * @glslUniform
          */
-        czm_log2NearDistance : new AutomaticUniform({
-            size : 1,
+        czm_oneOverLog2FarDepthFromNearPlusOne : new AutomaticUniform({
+            size: 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.log2NearDistance;
+                return uniformState.oneOverLog2FarDepthFromNearPlusOne;
             }
         }),
 

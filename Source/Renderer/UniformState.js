@@ -6,7 +6,6 @@ import Cartographic from '../Core/Cartographic.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -44,9 +43,9 @@ import SunLight from '../Scene/SunLight.js';
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
-        this._log2FarDistance = undefined;
-        this._log2FarPlusOne = undefined;
-        this._log2NearDistance = undefined;
+        this._farDepthFromNearPlusOne = undefined;
+        this._log2FarDepthFromNearPlusOne = undefined;
+        this._oneOverLog2FarDepthFromNearPlusOne = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -164,7 +163,7 @@ import SunLight from '../Scene/SunLight.js';
         this._minimumDisableDepthTestDistance = undefined;
     }
 
-    defineProperties(UniformState.prototype, {
+    Object.defineProperties(UniformState.prototype, {
         /**
          * @memberof UniformState.prototype
          * @type {FrameState}
@@ -638,35 +637,38 @@ import SunLight from '../Scene/SunLight.js';
         },
 
         /**
-         * The log2 of the current frustum's far distance. Used to compute the log depth.
+         * The far plane's distance from the near plane, plus 1.0.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2FarDistance : {
+        farDepthFromNearPlusOne : {
             get : function() {
-                return this._log2FarDistance;
+                return this._farDepthFromNearPlusOne;
             }
         },
 
         /**
-         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
+         * The log2 of {@link UniformState#farDepthFromNearPlusOne}.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2FarPlusOne : {
+        log2FarDepthFromNearPlusOne : {
             get : function() {
-                return this._log2FarPlusOne;
+                return this._log2FarDepthFromNearPlusOne;
             }
         },
 
         /**
-         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
+         * 1.0 divided by {@link UniformState#log2FarDepthFromNearPlusOne}.
+         *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        log2NearDistance : {
+        oneOverLog2FarDepthFromNearPlusOne : {
             get : function() {
-                return this._log2NearDistance;
+                return this._oneOverLog2FarDepthFromNearPlusOne;
             }
         },
 
@@ -1110,9 +1112,9 @@ import SunLight from '../Scene/SunLight.js';
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
-        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
-        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
-        this._log2NearDistance = CesiumMath.log2(frustum.near);
+        this._farDepthFromNearPlusOne = (frustum.far - frustum.near) + 1.0;
+        this._log2FarDepthFromNearPlusOne = CesiumMath.log2(this._farDepthFromNearPlusOne);
+        this._oneOverLog2FarDepthFromNearPlusOne = 1.0 / this._log2FarDepthFromNearPlusOne;
 
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
