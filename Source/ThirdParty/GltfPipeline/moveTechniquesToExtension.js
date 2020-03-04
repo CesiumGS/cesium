@@ -1,16 +1,8 @@
-define([
-        './addExtensionsUsed',
-        './addExtensionsRequired',
-        './addToArray',
-        './ForEach',
-        '../../Core/defined'
-    ], function(
-        addExtensionsUsed,
-        addExtensionsRequired,
-        addToArray,
-        ForEach,
-        defined) {
-    'use strict';
+import addExtensionsUsed from './addExtensionsUsed.js'
+import addExtensionsRequired from './addExtensionsRequired.js'
+import addToArray from './addToArray.js'
+import ForEach from './ForEach.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Move glTF 1.0 material techniques to glTF 2.0 KHR_techniques_webgl extension.
@@ -129,5 +121,4 @@ define([
         return gltf;
     }
 
-    return moveTechniquesToExtension;
-});
+    export default moveTechniquesToExtension;

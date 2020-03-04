@@ -1,44 +1,24 @@
-defineSuite([
-        'DataSources/LabelVisualizer',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/NearFarScalar',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCluster',
-        'DataSources/EntityCollection',
-        'DataSources/LabelGraphics',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/VerticalOrigin',
-        'Specs/createGlobe',
-        'Specs/createScene'
-    ], function(
-        LabelVisualizer,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        JulianDate,
-        NearFarScalar,
-        BoundingSphereState,
-        ConstantProperty,
-        EntityCluster,
-        EntityCollection,
-        LabelGraphics,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin,
-        createGlobe,
-        createScene) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCluster } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { LabelGraphics } from '../../Source/Cesium.js';
+import { LabelVisualizer } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/LabelVisualizer', function() {
 
     var scene;
     var entityCluster;

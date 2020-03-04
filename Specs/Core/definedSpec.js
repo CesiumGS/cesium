@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import { defined } from '../../Source/Cesium.js';
+
+describe('Core/defined', function() {
 
     it('works for defined value', function() {
         expect(defined(0)).toEqual(true);

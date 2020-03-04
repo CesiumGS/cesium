@@ -1,8 +1,6 @@
-defineSuite([
-        'Scene/StyleExpression'
-    ], function(
-        StyleExpression) {
-    'use strict';
+import { StyleExpression } from '../../Source/Cesium.js';
+
+describe('Scene/StyleExpression', function() {
 
     function MockFeature() {
     }

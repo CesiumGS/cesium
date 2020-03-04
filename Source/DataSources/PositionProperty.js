@@ -1,20 +1,9 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Matrix3',
-        '../Core/ReferenceFrame',
-        '../Core/Transforms'
-    ], function(
-        Cartesian3,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Matrix3,
-        ReferenceFrame,
-        Transforms) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix3 from '../Core/Matrix3.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import Transforms from '../Core/Transforms.js';
 
     /**
      * The interface for all {@link Property} objects that define a world
@@ -23,6 +12,7 @@ define([
      *
      * @alias PositionProperty
      * @constructor
+     * @abstract
      *
      * @see CompositePositionProperty
      * @see ConstantPositionProperty
@@ -33,7 +23,7 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(PositionProperty.prototype, {
+    Object.defineProperties(PositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -126,6 +116,4 @@ define([
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
     };
-
-    return PositionProperty;
-});
+export default PositionProperty;

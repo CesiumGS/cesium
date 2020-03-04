@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/ShaderSource'
-    ], function(
-        ShaderSource) {
-    'use strict';
+import { ShaderSource } from '../../Source/Cesium.js';
+
+describe('Renderer/ShaderSource', function() {
 
     var mockContext = {
         webgl2 : false

@@ -1,42 +1,19 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/combine',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicProjection',
-        '../Core/isArray',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './ImageryProvider'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        combine,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicProjection,
-        isArray,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        WebMercatorTilingScheme,
-        when,
-        ImageryProvider) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import combine from '../Core/combine.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeographicProjection from '../Core/GeographicProjection.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import ImageryProvider from './ImageryProvider.js';
 
     var templateRegex = /{[^}]+}/g;
 
@@ -165,7 +142,7 @@ define([
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
      * var tms = new Cesium.UrlTemplateImageryProvider({
-     *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+     *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
      *     credit : '© Analytical Graphics, Inc.',
      *     tilingScheme : new Cesium.GeographicTilingScheme(),
      *     maximumLevel : 5
@@ -198,9 +175,9 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      */
@@ -246,7 +223,7 @@ define([
         this.reinitialize(options);
     }
 
-    defineProperties(UrlTemplateImageryProvider.prototype, {
+    Object.defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
          * Gets the URL template to use to request tiles.  It has the following keywords:
          * <ul>
@@ -587,7 +564,7 @@ define([
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
             that._subdomains = properties.subdomains;
-            if (isArray(that._subdomains)) {
+            if (Array.isArray(that._subdomains)) {
                 that._subdomains = that._subdomains.slice();
             } else if (defined(that._subdomains) && that._subdomains.length > 0) {
                 that._subdomains = that._subdomains.split('');
@@ -977,6 +954,4 @@ define([
     function formatTag(imageryProvider, x, y, level, longitude, latitude, format) {
         return format;
     }
-
-    return UrlTemplateImageryProvider;
-});
+export default UrlTemplateImageryProvider;

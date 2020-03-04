@@ -1,22 +1,10 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property',
-        './StripeOrientation'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property,
-        StripeOrientation) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
+import StripeOrientation from './StripeOrientation.js';
 
     var defaultOrientation = StripeOrientation.HORIZONTAL;
     var defaultEvenColor = Color.WHITE;
@@ -58,7 +46,7 @@ define([
         this.repeat = options.repeat;
     }
 
-    defineProperties(StripeMaterialProperty.prototype, {
+    Object.defineProperties(StripeMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -180,6 +168,4 @@ define([
                        Property.equals(this._offset, other._offset) && //
                        Property.equals(this._repeat, other._repeat));
     };
-
-    return StripeMaterialProperty;
-});
+export default StripeMaterialProperty;

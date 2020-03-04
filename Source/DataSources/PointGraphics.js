@@ -1,18 +1,8 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a graphical point located at the position of the containing {@link Entity}.
@@ -58,7 +48,7 @@ define([
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(PointGraphics.prototype, {
+    Object.defineProperties(PointGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PointGraphics.prototype
@@ -202,6 +192,4 @@ define([
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
-
-    return PointGraphics;
-});
+export default PointGraphics;

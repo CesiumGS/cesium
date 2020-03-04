@@ -1,14 +1,6 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Determines visibility based on the distance to the camera.
@@ -31,7 +23,7 @@ define([
         this._far = far;
     }
 
-    defineProperties(DistanceDisplayCondition.prototype, {
+    Object.defineProperties(DistanceDisplayCondition.prototype, {
         /**
          * The smallest distance in the interval where the object is visible.
          * @memberof DistanceDisplayCondition.prototype
@@ -175,6 +167,4 @@ define([
     DistanceDisplayCondition.prototype.equals = function(other) {
         return DistanceDisplayCondition.equals(this, other);
     };
-
-    return DistanceDisplayCondition;
-});
+export default DistanceDisplayCondition;

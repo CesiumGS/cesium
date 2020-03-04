@@ -1,22 +1,10 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './PositionProperty'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        PositionProperty) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import PositionProperty from './PositionProperty.js';
 
     /**
      * A {@link PositionProperty} whose value does not change in respect to the
@@ -34,7 +22,7 @@ define([
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     }
 
-    defineProperties(ConstantPositionProperty.prototype, {
+    Object.defineProperties(ConstantPositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -141,6 +129,4 @@ define([
                 Cartesian3.equals(this._value, other._value) &&
                 this._referenceFrame === other._referenceFrame);
     };
-
-    return ConstantPositionProperty;
-});
+export default ConstantPositionProperty;

@@ -1,12 +1,6 @@
-define([
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/Math'
-    ], function(
-        defaultValue,
-        defined,
-        CesiumMath) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { Math as CesiumMath } from '../Source/Cesium.js';
 
     function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         namePrefix = defaultValue(namePrefix, '');
@@ -92,6 +86,4 @@ define([
             });
         }
     }
-
-    return createPackableSpecs;
-});
+export default createPackableSpecs;

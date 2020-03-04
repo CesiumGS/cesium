@@ -1,18 +1,7 @@
-define([
-        './Cartesian2',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './freezeObject'
-    ], function(
-        Cartesian2,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        freezeObject) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
@@ -759,7 +748,7 @@ define([
      * @type {Matrix2}
      * @constant
      */
-    Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
+    Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0,
                                                 0.0, 1.0));
 
     /**
@@ -768,7 +757,7 @@ define([
      * @type {Matrix2}
      * @constant
      */
-    Matrix2.ZERO = freezeObject(new Matrix2(0.0, 0.0,
+    Matrix2.ZERO = Object.freeze(new Matrix2(0.0, 0.0,
                                             0.0, 0.0));
 
     /**
@@ -819,7 +808,7 @@ define([
      */
     Matrix2.COLUMN1ROW1 = 3;
 
-    defineProperties(Matrix2.prototype, {
+    Object.defineProperties(Matrix2.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof Matrix2.prototype
@@ -877,6 +866,4 @@ define([
         return '(' + this[0] + ', ' + this[2] + ')\n' +
                '(' + this[1] + ', ' + this[3] + ')';
     };
-
-    return Matrix2;
-});
+export default Matrix2;

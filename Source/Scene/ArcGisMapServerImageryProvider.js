@@ -1,50 +1,24 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicProjection',
-        '../Core/GeographicTilingScheme',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorProjection',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './DiscardMissingTileImagePolicy',
-        './ImageryLayerFeatureInfo',
-        './ImageryProvider'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicProjection,
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        when,
-        DiscardMissingTileImagePolicy,
-        ImageryLayerFeatureInfo,
-        ImageryProvider) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeographicProjection from '../Core/GeographicProjection.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import DiscardMissingTileImagePolicy from './DiscardMissingTileImagePolicy.js';
+import ImageryLayerFeatureInfo from './ImageryLayerFeatureInfo.js';
+import ImageryProvider from './ImageryProvider.js';
 
     /**
      * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
@@ -91,9 +65,9 @@ define([
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -108,7 +82,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function ArcGisMapServerImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
@@ -288,7 +262,7 @@ define([
         return resource;
     }
 
-    defineProperties(ArcGisMapServerImageryProvider.prototype, {
+    Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
          * @memberof ArcGisMapServerImageryProvider.prototype
@@ -696,6 +670,4 @@ define([
             return result;
         });
     };
-
-    return ArcGisMapServerImageryProvider;
-});
+export default ArcGisMapServerImageryProvider;

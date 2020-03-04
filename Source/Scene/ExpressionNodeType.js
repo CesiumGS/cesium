@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
@@ -28,6 +23,4 @@ define([
         LITERAL_UNDEFINED : 17,
         BUILTIN_VARIABLE : 18
     };
-
-    return freezeObject(ExpressionNodeType);
-});
+export default Object.freeze(ExpressionNodeType);

@@ -1,48 +1,26 @@
-defineSuite([
-        'DataSources/PathVisualizer',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'DataSources/CompositePositionProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/PathGraphics',
-        'DataSources/PolylineGlowMaterialProperty',
-        'DataSources/PolylineOutlineMaterialProperty',
-        'DataSources/ReferenceProperty',
-        'DataSources/SampledPositionProperty',
-        'DataSources/ScaledPositionProperty',
-        'DataSources/TimeIntervalCollectionPositionProperty',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        PathVisualizer,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        Matrix4,
-        ReferenceFrame,
-        TimeInterval,
-        CompositePositionProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        PathGraphics,
-        PolylineGlowMaterialProperty,
-        PolylineOutlineMaterialProperty,
-        ReferenceProperty,
-        SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionPositionProperty,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { PathGraphics } from '../../Source/Cesium.js';
+import { PathVisualizer } from '../../Source/Cesium.js';
+import { PolylineGlowMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineOutlineMaterialProperty } from '../../Source/Cesium.js';
+import { ReferenceProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { ScaledPositionProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionPositionProperty } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/PathVisualizer', function() {
 
     var scene;
     var visualizer;
@@ -404,6 +382,40 @@ defineSuite([
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
         expect(primitive.id).toEqual(testObject);
+    });
+
+    it('Visualizer destroys primitives when all items are removed.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var updateTime = new JulianDate(0.5, 0);
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        expect(scene.primitives.length).toEqual(0);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var position = new SampledPositionProperty();
+        testObject.position = position;
+        position.addSamples(times, positions);
+
+        var path = testObject.path = new PathGraphics();
+        path.show = new ConstantProperty(true);
+        path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.width = new ConstantProperty(12.5);
+        path.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.outlineWidth = new ConstantProperty(2.5);
+        path.leadTime = new ConstantProperty(25);
+        path.trailTime = new ConstantProperty(10);
+
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        entityCollection.removeAll();
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('subSample works for constant properties', function() {

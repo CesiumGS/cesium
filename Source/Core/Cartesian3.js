@@ -1,18 +1,8 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 3D Cartesian point.
@@ -186,7 +176,7 @@ define([
      * Flattens an array of Cartesian3s into an array of components.
      *
      * @param {Cartesian3[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 3 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 3) elements.
      * @returns {Number[]} The packed array.
      */
     Cartesian3.packArray = function(array, result) {
@@ -195,10 +185,13 @@ define([
         //>>includeEnd('debug');
 
         var length = array.length;
+        var resultLength = length * 3;
         if (!defined(result)) {
-            result = new Array(length * 3);
-        } else {
-            result.length = length * 3;
+            result = new Array(resultLength);
+        } else if (!Array.isArray(result) && result.length !== resultLength) {
+            throw new DeveloperError('If result is a typed array, it must have exactly array.length * 3 elements');
+        } else if (result.length !== resultLength) {
+            result.length = resultLength;
         }
 
         for (var i = 0; i < length; ++i) {
@@ -211,7 +204,7 @@ define([
      * Unpacks an array of cartesian components into an array of Cartesian3s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian3[]} result The array onto which to store the result.
+     * @param {Cartesian3[]} [result] The array onto which to store the result.
      * @returns {Cartesian3[]} The unpacked array.
      */
     Cartesian3.unpackArray = function(array, result) {
@@ -1018,7 +1011,7 @@ define([
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+    Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
@@ -1026,7 +1019,7 @@ define([
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+    Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 1.0, 0.0).
@@ -1034,7 +1027,7 @@ define([
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_Y = freezeObject(new Cartesian3(0.0, 1.0, 0.0));
+    Cartesian3.UNIT_Y = Object.freeze(new Cartesian3(0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 1.0).
@@ -1042,7 +1035,7 @@ define([
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_Z = freezeObject(new Cartesian3(0.0, 0.0, 1.0));
+    Cartesian3.UNIT_Z = Object.freeze(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian3 instance.
@@ -1087,6 +1080,4 @@ define([
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
-
-    return Cartesian3;
-});
+export default Cartesian3;

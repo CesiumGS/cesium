@@ -1,22 +1,10 @@
-define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/MapboxApi',
-    '../Core/Resource',
-    './UrlTemplateImageryProvider'
-], function(
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    MapboxApi,
-    Resource,
-    UrlTemplateImageryProvider) {
-'use strict';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import MapboxApi from '../Core/MapboxApi.js';
+import Resource from '../Core/Resource.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
 var trailingSlashRegex = /\/$/;
 var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
@@ -62,13 +50,7 @@ function MapboxStyleImageryProvider(options) {
     }
     //>>includeEnd('debug');
 
-    var url = options.url;
-    if (!defined(url)) {
-        url = 'https://api.mapbox.com/styles/v1/';
-    }
-    this._url = url;
-
-    var resource = Resource.createIfNeeded(url);
+    var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://api.mapbox.com/styles/v1/'));
 
     var accessToken = MapboxApi.getAccessToken(options.accessToken);
     this._styleId = styleId;
@@ -116,7 +98,7 @@ function MapboxStyleImageryProvider(options) {
     });
 }
 
-defineProperties(MapboxStyleImageryProvider.prototype, {
+Object.defineProperties(MapboxStyleImageryProvider.prototype, {
     /**
      * Gets the URL of the Mapbox server.
      * @memberof MapboxStyleImageryProvider.prototype
@@ -125,7 +107,7 @@ defineProperties(MapboxStyleImageryProvider.prototype, {
      */
     url : {
         get : function() {
-            return this._url;
+            return this._imageryProvider.url;
         }
     },
 
@@ -366,6 +348,4 @@ MapboxStyleImageryProvider.prototype.pickFeatures = function(x, y, level, longit
 
 // Exposed for tests
 MapboxStyleImageryProvider._defaultCredit = defaultCredit;
-
-return MapboxStyleImageryProvider;
-});
+export default MapboxStyleImageryProvider;

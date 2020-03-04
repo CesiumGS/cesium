@@ -1,10 +1,4 @@
-define([
-        '../Core/freezeObject',
-        '../Core/Math'
-    ], function(
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import CesiumMath from '../Core/Math.js';
 
     /**
      * Defines different modes for blending between a target color and a primitive's source color.
@@ -36,6 +30,4 @@ define([
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
     };
-
-    return freezeObject(ColorBlendMode);
-});
+export default Object.freeze(ColorBlendMode);

@@ -1,20 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/getTimestamp',
-        '../Widgets/getElement'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        getTimestamp,
-        getElement) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import getElement from '../Widgets/getElement.js';
 
     /**
      * @private
@@ -58,7 +47,7 @@ define([
         display.appendChild(throttledElement);
     }
 
-     defineProperties(PerformanceDisplay.prototype, {
+     Object.defineProperties(PerformanceDisplay.prototype, {
         /**
          * The display should indicate the FPS is being throttled.
          * @memberof PerformanceDisplay.prototype
@@ -128,6 +117,4 @@ define([
     PerformanceDisplay.prototype.destroy = function() {
         return destroyObject(this);
     };
-
-    return PerformanceDisplay;
-});
+export default PerformanceDisplay;

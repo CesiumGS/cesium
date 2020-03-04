@@ -1,80 +1,42 @@
-defineSuite([
-        'Scene/Cesium3DTileset',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/defined',
-        'Core/CullingVolume',
-        'Core/getAbsoluteUri',
-        'Core/getStringFromTypedArray',
-        'Core/HeadingPitchRange',
-        'Core/Intersect',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PrimitiveType',
-        'Core/Ray',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/Transforms',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Scene/Camera',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileColorBlendMode',
-        'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTilePass',
-        'Scene/Cesium3DTilePassState',
-        'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/CullFace',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Cesium3DTileset,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        defined,
-        CullingVolume,
-        getAbsoluteUri,
-        getStringFromTypedArray,
-        HeadingPitchRange,
-        Intersect,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        PrimitiveType,
-        Ray,
-        RequestScheduler,
-        Resource,
-        Transforms,
-        ClearCommand,
-        ContextLimits,
-        Camera,
-        Cesium3DTile,
-        Cesium3DTileColorBlendMode,
-        Cesium3DTileContentState,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        Cesium3DTileRefine,
-        Cesium3DTileStyle,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        CullFace,
-        Cesium3DTilesTester,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { CullingVolume } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { getStringFromTypedArray } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTileColorBlendMode } from '../../Source/Cesium.js';
+import { Cesium3DTileContentState } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
+import { Cesium3DTilePassState } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTileset } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { CullFace } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/Cesium3DTileset', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
@@ -1925,24 +1887,32 @@ defineSuite([
     });
 
     it('renders with imageBaseLightingFactor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).notToRender(rgba);
+                expect(renderOptions).notToRender(rgba);
             });
         });
     });
 
     it('renders with lightColor', function() {
+        var renderOptions = {
+            scene : scene,
+            time : new JulianDate(2457522.154792)
+        };
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 tileset.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
+                expect(renderOptions).toRenderAndCall(function(rgba2) {
                     expect(rgba2).not.toEqual(rgba);
                     tileset.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
+                    expect(renderOptions).notToRender(rgba2);
                 });
             });
         });
@@ -2228,12 +2198,14 @@ defineSuite([
 
             // Check that the feature is red
             var sourceRed;
+            var sourceGreen;
             var renderOptions = {
                 scene : scene,
                 time : new JulianDate(2457522.154792)
             };
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 sourceRed = rgba[0];
+                sourceGreen = rgba[1];
             });
 
             expect(renderOptions).toRenderAndCall(function(rgba) {
@@ -2318,7 +2290,7 @@ defineSuite([
                 mixGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(replaceRed);
                 expect(rgba[0]).toBeLessThan(sourceRed);
-                expect(rgba[1]).toBeGreaterThan(50);
+                expect(rgba[1]).toBeGreaterThan(sourceGreen);
                 expect(rgba[1]).toBeLessThan(replaceGreen);
                 expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);
@@ -2700,9 +2672,13 @@ defineSuite([
         });
     });
 
+    var skipLevelOfDetailOptions = {
+        skipLevelOfDetail : true
+    };
+
     it('does not mark tileset as refining when tiles have selection depth 0', function() {
         viewRootOnly();
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, skipLevelOfDetailOptions).then(function(tileset) {
             viewAllTiles();
             scene.renderForSpecs();
             var statistics = tileset._statistics;
@@ -2718,7 +2694,7 @@ defineSuite([
     });
 
     it('marks tileset as mixed when tiles have nonzero selection depth', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, skipLevelOfDetailOptions).then(function(tileset) {
             var statistics = tileset._statistics;
 
             tileset.root.children[0].children[0].children[0].unloadContent();
@@ -2741,7 +2717,7 @@ defineSuite([
     });
 
     it('adds stencil clear command first when unresolved', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, skipLevelOfDetailOptions).then(function(tileset) {
             tileset.root.children[0].children[0].children[0].unloadContent();
             tileset.root.children[0].children[0].children[1].unloadContent();
             tileset.root.children[0].children[0].children[2].unloadContent();
@@ -2754,7 +2730,7 @@ defineSuite([
     });
 
     it('creates duplicate backface commands', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, skipLevelOfDetailOptions).then(function(tileset) {
             var statistics = tileset._statistics;
             var root = tileset.root;
 
@@ -2782,7 +2758,7 @@ defineSuite([
     });
 
     it('does not create duplicate backface commands if no selected descendants', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, skipLevelOfDetailOptions).then(function(tileset) {
             var statistics = tileset._statistics;
             var root = tileset.root;
 
@@ -2807,6 +2783,7 @@ defineSuite([
 
     it('does not add commands or stencil clear command with no selected tiles', function() {
         options.url = tilesetUrl;
+        options.skipLevelOfDetail = true;
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
         scene.renderForSpecs();
         var statistics = tileset._statistics;
@@ -2816,7 +2793,7 @@ defineSuite([
 
     it('does not add stencil clear command or backface commands when fully resolved', function() {
         viewAllTiles();
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, skipLevelOfDetailOptions).then(function(tileset) {
             var statistics = tileset._statistics;
             expect(statistics.numberOfCommands).toEqual(tileset._selectedTiles.length);
 
@@ -2833,6 +2810,7 @@ defineSuite([
     it('loadSiblings', function() {
         viewBottomLeft();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {
+            skipLevelOfDetail : true,
             loadSiblings : false,
             foveatedTimeDelay : 0
         }).then(function(tileset) {
@@ -2849,6 +2827,7 @@ defineSuite([
     it('immediatelyLoadDesiredLevelOfDetail', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+            skipLevelOfDetail : true,
             immediatelyLoadDesiredLevelOfDetail : true
         }).then(function(tileset) {
             var root = tileset.root;
@@ -2874,7 +2853,7 @@ defineSuite([
     });
 
     it('selects children if no ancestors available', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl, skipLevelOfDetailOptions).then(function(tileset) {
             var statistics = tileset._statistics;
             var parent = tileset.root.children[0];
             var child = parent.children[3].children[0];
@@ -3678,7 +3657,7 @@ defineSuite([
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            spyOn(Camera.prototype, 'hasCurrentFlight').and.callFake(function() {
+            spyOn(Camera.prototype, 'canPreloadFlight').and.callFake(function() {
                 return true;
             });
             scene.renderForSpecs();
@@ -3693,6 +3672,17 @@ defineSuite([
             viewAllTiles();
             scene.renderForSpecs();
             expect(tileset._requestedTilesInFlight.length).toEqual(0); // Big camera delta so no fetches should occur.
+        });
+    });
+
+    it('does not apply cullRequestWhileMoving optimization if tileset is moving', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            tileset.cullRequestsWhileMoving = true;
+            tileset.modelMatrix[12] += 1.0;
+            viewAllTiles();
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toEqual(2);
         });
     });
 

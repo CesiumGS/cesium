@@ -1,14 +1,9 @@
-defineSuite([
-        'DataSources/DataSourceClock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/JulianDate'
-    ], function(
-        DataSourceClock,
-        ClockRange,
-        ClockStep,
-        JulianDate) {
-    'use strict';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { DataSourceClock } from '../../Source/Cesium.js';
+
+describe('DataSources/DataSourceClock', function() {
 
     it('merge assigns unassigned properties', function() {
         var source = new DataSourceClock();

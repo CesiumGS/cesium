@@ -1,13 +1,8 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Style options for corners.
      *
-     * @demo The {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
+     * @demo The {@link https://sandcastle.cesium.com/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
      * demonstrates the three corner types, as used by {@link CorridorGraphics}.
      *
      * @exports CornerType
@@ -40,6 +35,4 @@ define([
          */
         BEVELED : 2
     };
-
-    return freezeObject(CornerType);
-});
+export default Object.freeze(CornerType);

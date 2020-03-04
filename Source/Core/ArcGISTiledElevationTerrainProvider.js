@@ -1,51 +1,24 @@
-/*global define*/
-define([
-    '../ThirdParty/when',
-    './Cartesian2',
-    './Credit',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Ellipsoid',
-    './Event',
-    './GeographicTilingScheme',
-    './HeightmapEncoding',
-    './HeightmapTerrainData',
-    './Rectangle',
-    './Request',
-    './RequestState',
-    './RequestType',
-    './Resource',
-    './RuntimeError',
-    './TerrainProvider',
-    './TileAvailability',
-    './TileProviderError',
-    './WebMercatorTilingScheme'
-], function(
-    when,
-    Cartesian2,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Ellipsoid,
-    Event,
-    GeographicTilingScheme,
-    HeightmapEncoding,
-    HeightmapTerrainData,
-    Rectangle,
-    Request,
-    RequestState,
-    RequestType,
-    Resource,
-    RuntimeError,
-    TerrainProvider,
-    TileAvailability,
-    TileProviderError,
-    WebMercatorTilingScheme) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Cartesian2 from './Cartesian2.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Event from './Event.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import HeightmapEncoding from './HeightmapEncoding.js';
+import HeightmapTerrainData from './HeightmapTerrainData.js';
+import Rectangle from './Rectangle.js';
+import Request from './Request.js';
+import RequestState from './RequestState.js';
+import RequestType from './RequestType.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TerrainProvider from './TerrainProvider.js';
+import TileAvailability from './TileAvailability.js';
+import TileProviderError from './TileProviderError.js';
+import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
 
     var ALL_CHILDREN = 15;
 
@@ -186,7 +159,7 @@ define([
         this._errorEvent = new Event();
     }
 
-    defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
+    Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
@@ -620,6 +593,4 @@ define([
             request: request
         };
     }
-
-    return ArcGISTiledElevationTerrainProvider;
-});
+export default ArcGISTiledElevationTerrainProvider;

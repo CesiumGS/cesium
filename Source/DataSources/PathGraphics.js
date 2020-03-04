@@ -1,20 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a polyline defined as the path made by an {@link Entity} as it moves over time.
@@ -24,8 +13,8 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
-     * @param {Property} [options.leadTime] A Property specifying the number of seconds behind the object to show.
-     * @param {Property} [options.trailTime] A Property specifying the number of seconds in front of the object to show.
+     * @param {Property} [options.leadTime] A Property specifying the number of seconds in front the object to show.
+     * @param {Property} [options.trailTime] A Property specifying the number of seconds behind of the object to show.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
@@ -51,7 +40,7 @@ define([
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(PathGraphics.prototype, {
+    Object.defineProperties(PathGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PathGraphics.prototype
@@ -159,6 +148,4 @@ define([
         this.material = defaultValue(this.material, source.material);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return PathGraphics;
-});
+export default PathGraphics;

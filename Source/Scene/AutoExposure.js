@@ -1,36 +1,16 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
-    ], function(
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
 
     /**
      * A post process stage that will get the luminance value at each pixel and
@@ -87,7 +67,7 @@ define([
         this.maximumLuminance = 10.0;
     }
 
-    defineProperties(AutoExposure.prototype, {
+    Object.defineProperties(AutoExposure.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
          * and {@link AutoExposure#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
@@ -427,6 +407,4 @@ define([
         destroyCommands(this);
         return destroyObject(this);
     };
-
-    return AutoExposure;
-});
+export default AutoExposure;

@@ -1,40 +1,19 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Check',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/WebGLConstants',
-        './ContextLimits',
-        './MipmapHint',
-        './PixelDatatype',
-        './Sampler',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter'
-    ], function(
-        Cartesian2,
-        Check,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        WebGLConstants,
-        ContextLimits,
-        MipmapHint,
-        PixelDatatype,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Check from '../Core/Check.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ContextLimits from './ContextLimits.js';
+import MipmapHint from './MipmapHint.js';
+import PixelDatatype from './PixelDatatype.js';
+import Sampler from './Sampler.js';
+import TextureMagnificationFilter from './TextureMagnificationFilter.js';
+import TextureMinificationFilter from './TextureMinificationFilter.js';
 
     /**
      * @private
@@ -366,7 +345,7 @@ define([
         return texture;
     };
 
-    defineProperties(Texture.prototype, {
+    Object.defineProperties(Texture.prototype, {
         /**
          * A unique id for the texture
          * @memberof Texture.prototype
@@ -708,6 +687,4 @@ define([
         this._context._gl.deleteTexture(this._texture);
         return destroyObject(this);
     };
-
-    return Texture;
-});
+export default Texture;

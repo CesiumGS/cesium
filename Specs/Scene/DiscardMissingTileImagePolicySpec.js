@@ -1,16 +1,10 @@
-defineSuite([
-        'Scene/DiscardMissingTileImagePolicy',
-        'Core/Cartesian2',
-        'Core/Resource',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        DiscardMissingTileImagePolicy,
-        Cartesian2,
-        Resource,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/DiscardMissingTileImagePolicy', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -50,12 +44,13 @@ defineSuite([
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             spyOn(Resource, 'createImageBitmapFromBlob').and.callThrough();
-            spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+                var url = request.url;
                 if (/^blob:/.test(url)) {
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
                 }
             });
 

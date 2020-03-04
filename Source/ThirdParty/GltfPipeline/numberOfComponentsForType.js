@@ -1,5 +1,4 @@
-define([], function() {
-    'use strict';
+
 
     /**
      * Utility function for retrieving the number of components in a given type.
@@ -27,5 +26,4 @@ define([], function() {
         }
     }
 
-    return numberOfComponentsForType;
-});
+    export default numberOfComponentsForType;

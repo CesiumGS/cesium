@@ -1,18 +1,8 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 4D Cartesian point.
@@ -186,7 +176,8 @@ define([
      * Flattens an array of Cartesian4s into and array of components.
      *
      * @param {Cartesian4[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+
      * @returns {Number[]} The packed array.
      */
     Cartesian4.packArray = function(array, result) {
@@ -195,10 +186,13 @@ define([
         //>>includeEnd('debug');
 
         var length = array.length;
+        var resultLength = length * 4;
         if (!defined(result)) {
-            result = new Array(length * 4);
-        } else {
-            result.length = length * 4;
+            result = new Array(resultLength);
+        } else if (!Array.isArray(result) && result.length !== resultLength) {
+            throw new DeveloperError('If result is a typed array, it must have exactly array.length * 4 elements');
+        } else if (result.length !== resultLength) {
+            result.length = resultLength;
         }
 
         for (var i = 0; i < length; ++i) {
@@ -211,12 +205,16 @@ define([
      * Unpacks an array of cartesian components into and array of Cartesian4s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian4[]} result The array onto which to store the result.
+     * @param {Cartesian4[]} [result] The array onto which to store the result.
      * @returns {Cartesian4[]} The unpacked array.
      */
     Cartesian4.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
+        Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 4);
+        if (array.length % 4 !== 0) {
+            throw new DeveloperError('array length must be a multiple of 4.');
+        }
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -739,7 +737,7 @@ define([
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.ZERO = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+    Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
@@ -747,7 +745,7 @@ define([
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_X = freezeObject(new Cartesian4(1.0, 0.0, 0.0, 0.0));
+    Cartesian4.UNIT_X = Object.freeze(new Cartesian4(1.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 1.0, 0.0, 0.0).
@@ -755,7 +753,7 @@ define([
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_Y = freezeObject(new Cartesian4(0.0, 1.0, 0.0, 0.0));
+    Cartesian4.UNIT_Y = Object.freeze(new Cartesian4(0.0, 1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 1.0, 0.0).
@@ -763,7 +761,7 @@ define([
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_Z = freezeObject(new Cartesian4(0.0, 0.0, 1.0, 0.0));
+    Cartesian4.UNIT_Z = Object.freeze(new Cartesian4(0.0, 0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 1.0).
@@ -771,7 +769,7 @@ define([
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
+    Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian4 instance.
@@ -809,9 +807,9 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z, w)'.
      *
-     * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
      */
     Cartesian4.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
@@ -905,6 +903,4 @@ define([
 
         return unpacked * Math.pow(10.0, exponent);
     };
-
-    return Cartesian4;
-});
+export default Cartesian4;

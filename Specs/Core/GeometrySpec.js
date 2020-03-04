@@ -1,26 +1,15 @@
-defineSuite([
-        'Core/Geometry',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/ComponentDatatype',
-        'Core/Ellipsoid',
-        'Core/GeometryAttribute',
-        'Core/GeometryType',
-        'Core/PrimitiveType',
-        'Core/Rectangle'
-    ], function(
-        Geometry,
-        BoundingSphere,
-        Cartesian3,
-        CesiumMath,
-        ComponentDatatype,
-        Ellipsoid,
-        GeometryAttribute,
-        GeometryType,
-        PrimitiveType,
-        Rectangle) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryType } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+
+describe('Core/Geometry', function() {
 
     it('constructor', function() {
         var attributes = {

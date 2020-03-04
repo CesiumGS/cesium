@@ -1,40 +1,15 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Iso8601',
-        '../Core/oneTimeWarning',
-        '../Scene/GroundPrimitive',
-        '../Scene/HeightReference',
-        './CallbackProperty',
-        './ConstantProperty',
-        './GeometryUpdater',
-        './Property',
-        './TerrainOffsetProperty'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        GeometryOffsetAttribute,
-        Iso8601,
-        oneTimeWarning,
-        GroundPrimitive,
-        HeightReference,
-        CallbackProperty,
-        ConstantProperty,
-        GeometryUpdater,
-        Property,
-        TerrainOffsetProperty) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import HeightReference from '../Scene/HeightReference.js';
+import CallbackProperty from './CallbackProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import TerrainOffsetProperty from './TerrainOffsetProperty.js';
 
     var defaultZIndex = new ConstantProperty(0);
 
@@ -61,7 +36,7 @@ define([
         GroundGeometryUpdater.prototype.constructor = GroundGeometryUpdater;
     }
 
-    defineProperties(GroundGeometryUpdater.prototype, {
+    Object.defineProperties(GroundGeometryUpdater.prototype, {
         /**
          * Gets the zindex
          * @type {Number}
@@ -214,6 +189,4 @@ define([
 
         return undefined;
     };
-
-    return GroundGeometryUpdater;
-});
+export default GroundGeometryUpdater;

@@ -1,44 +1,24 @@
-defineSuite([
-        'Scene/LabelCollection',
-        'Core/BoundingRectangle',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/Rectangle',
-        'Scene/BlendOption',
-        'Scene/Globe',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/Label',
-        'Scene/LabelStyle',
-        'Scene/VerticalOrigin',
-        'Specs/createGlobe',
-        'Specs/createScene'
-    ], function(
-        LabelCollection,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        CesiumMath,
-        NearFarScalar,
-        Rectangle,
-        BlendOption,
-        Globe,
-        HeightReference,
-        HorizontalOrigin,
-        Label,
-        LabelStyle,
-        VerticalOrigin,
-        createGlobe,
-        createScene) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { BlendOption } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { Label } from '../../Source/Cesium.js';
+import { LabelCollection } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
+
+describe('Scene/LabelCollection', function() {
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 

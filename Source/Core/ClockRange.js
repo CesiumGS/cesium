@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Constants used by {@link Clock#tick} to determine behavior
@@ -42,6 +37,4 @@ define([
          */
         LOOP_STOP : 2
     };
-
-    return freezeObject(ClockRange);
-});
+export default Object.freeze(ClockRange);

@@ -1,44 +1,24 @@
-defineSuite([
-        'DataSources/CylinderGeometryUpdater',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/CylinderGraphics',
-        'DataSources/Entity',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        CylinderGeometryUpdater,
-        Cartesian3,
-        Color,
-        GeometryOffsetAttribute,
-        JulianDate,
-        Quaternion,
-        TimeIntervalCollection,
-        ConstantPositionProperty,
-        ConstantProperty,
-        CylinderGraphics,
-        Entity,
-        SampledPositionProperty,
-        SampledProperty,
-        HeightReference,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CylinderGeometryUpdater } from '../../Source/Cesium.js';
+import { CylinderGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/CylinderGeometryUpdater', function() {
 
     var scene;
     var time;

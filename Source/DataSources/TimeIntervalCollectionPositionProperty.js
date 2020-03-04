@@ -1,24 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        '../Core/TimeIntervalCollection',
-        './PositionProperty',
-        './Property'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        TimeIntervalCollection,
-        PositionProperty,
-        Property) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import PositionProperty from './PositionProperty.js';
+import Property from './Property.js';
 
     /**
      * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
@@ -35,7 +22,7 @@ define([
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     }
 
-    defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
+    Object.defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -142,6 +129,4 @@ define([
     TimeIntervalCollectionPositionProperty.prototype._intervalsChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return TimeIntervalCollectionPositionProperty;
-});
+export default TimeIntervalCollectionPositionProperty;

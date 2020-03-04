@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/IonResource',
-        'Core/Ion',
-        'Core/RequestErrorEvent',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'ThirdParty/when'
-    ], function(
-        IonResource,
-        Ion,
-        RequestErrorEvent,
-        Resource,
-        RuntimeError,
-        when) {
-'use strict';
+import { Ion } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
@@ -155,11 +148,11 @@ defineSuite([
         Ion.defaultAccessToken = defaultAccessToken;
     });
 
-    it('Calls base _makeRequest with expected options when resource no Accept header is already defined', function() {
+    it('Calls base _makeRequest with expected options when resource no Authorization header is defined', function() {
         var originalOptions = {};
         var expectedOptions = {
             headers: {
-                Accept: '*/*;access_token=' + endpoint.accessToken
+                Authorization: 'Bearer ' + endpoint.accessToken
             }
         };
 
@@ -170,37 +163,18 @@ defineSuite([
         expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
     });
 
-    it('Calls base _makeRequest with expected options when resource Accept header is already defined', function() {
+    it('Calls base _makeRequest with expected options when resource Authorization header is already defined', function() {
         var originalOptions = {};
         var expectedOptions = {
             headers: {
-                Accept: 'application/json,*/*;access_token=' + endpoint.accessToken
+                Authorization: 'Bearer ' + endpoint.accessToken
             }
         };
 
         var _makeRequest = spyOn(Resource.prototype, '_makeRequest');
         var endpointResource = IonResource._createEndpointResource(assetId);
         var resource = new IonResource(endpoint, endpointResource);
-        resource.headers.Accept = 'application/json';
-        resource._makeRequest(originalOptions);
-        expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
-    });
-
-    it('Calls base _makeRequest with expected options when options header.Accept is already defined', function() {
-        var originalOptions = {
-            headers: {
-                Accept: 'application/json'
-            }
-        };
-        var expectedOptions = {
-            headers: {
-                Accept: 'application/json,*/*;access_token=' + endpoint.accessToken
-            }
-        };
-
-        var _makeRequest = spyOn(Resource.prototype, '_makeRequest');
-        var endpointResource = IonResource._createEndpointResource(assetId);
-        var resource = new IonResource(endpoint, endpointResource);
+        resource.headers.Authorization = 'Not valid';
         resource._makeRequest(originalOptions);
         expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
     });

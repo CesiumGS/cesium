@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/getBaseUri'
-    ], function(
-        getBaseUri) {
-    'use strict';
+import { getBaseUri } from '../../Source/Cesium.js';
+
+describe('Core/getBaseUri', function() {
 
     it('works as expected', function() {
         var result = getBaseUri('http://www.mysite.com/awesome?makeitawesome=true');

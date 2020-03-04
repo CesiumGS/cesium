@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/QuaternionSpline',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Quaternion'
-    ], function(
-        QuaternionSpline,
-        Cartesian3,
-        CesiumMath,
-        Quaternion) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { QuaternionSpline } from '../../Source/Cesium.js';
+
+describe('Core/QuaternionSpline', function() {
 
     var points;
     var times;

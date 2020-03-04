@@ -1,24 +1,11 @@
-define([
-        '../../Core/Check',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        '../InspectorShared',
-        './Cesium3DTilesInspectorViewModel'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        knockout,
-        getElement,
-        InspectorShared,
-        Cesium3DTilesInspectorViewModel) {
-    'use strict';
+import Check from '../../Core/Check.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import InspectorShared from '../InspectorShared.js';
+import Cesium3DTilesInspectorViewModel from './Cesium3DTilesInspectorViewModel.js';
 
     /**
      * Inspector widget to aid in debugging 3D Tiles
@@ -171,7 +158,7 @@ define([
         knockout.applyBindings(viewModel, element);
     }
 
-    defineProperties(Cesium3DTilesInspector.prototype, {
+    Object.defineProperties(Cesium3DTilesInspector.prototype, {
         /**
          * Gets the parent container.
          * @memberof Cesium3DTilesInspector.prototype
@@ -254,6 +241,4 @@ define([
 
         return button;
     }
-
-    return Cesium3DTilesInspector;
-});
+export default Cesium3DTilesInspector;

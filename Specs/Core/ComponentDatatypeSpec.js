@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/ComponentDatatype'
-    ], function(
-        ComponentDatatype) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+
+describe('Core/ComponentDatatype', function() {
 
     it('fromTypedArray works', function() {
         expect(ComponentDatatype.fromTypedArray(new Int8Array())).toBe(ComponentDatatype.BYTE);

@@ -1,14 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
 
     /**
      * A {@link Property} whose value is lazily evaluated by a callback function.
@@ -26,7 +18,7 @@ define([
         this.setCallback(callback, isConstant);
     }
 
-    defineProperties(CallbackProperty.prototype, {
+    Object.defineProperties(CallbackProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof CallbackProperty.prototype
@@ -110,6 +102,4 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied or is unsupported.
      */
-
-    return CallbackProperty;
-});
+export default CallbackProperty;

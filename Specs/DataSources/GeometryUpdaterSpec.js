@@ -1,14 +1,9 @@
-defineSuite([
-        'DataSources/GeometryUpdater',
-        'DataSources/Entity',
-        'Scene/PrimitiveCollection',
-        'Specs/createScene'
-    ], function(
-        GeometryUpdater,
-        Entity,
-        PrimitiveCollection,
-        createScene) {
-    'use strict';
+import { Entity } from '../../Source/Cesium.js';
+import { GeometryUpdater } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/GeometryUpdater', function() {
 
     var scene;
 

@@ -1,16 +1,7 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        knockout,
-        createCommand) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link HomeButton}.
@@ -45,7 +36,7 @@ define([
         knockout.track(this, ['tooltip']);
     }
 
-    defineProperties(HomeButtonViewModel.prototype, {
+    Object.defineProperties(HomeButtonViewModel.prototype, {
         /**
          * Gets the scene to control.
          * @memberof HomeButtonViewModel.prototype
@@ -93,6 +84,4 @@ define([
             }
         }
     });
-
-    return HomeButtonViewModel;
-});
+export default HomeButtonViewModel;

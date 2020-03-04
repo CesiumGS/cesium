@@ -1,22 +1,10 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './Math'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import CesiumMath from './Math.js';
 
     function setConstants(ellipsoidGeodesic) {
         var uSquared = ellipsoidGeodesic._uSquared;
@@ -219,7 +207,7 @@ define([
         }
     }
 
-    defineProperties(EllipsoidGeodesic.prototype, {
+    Object.defineProperties(EllipsoidGeodesic.prototype, {
         /**
          * Gets the ellipsoid.
          * @memberof EllipsoidGeodesic.prototype
@@ -403,6 +391,4 @@ define([
 
         return new Cartographic(this._start.longitude + l, latitude, 0.0);
     };
-
-    return EllipsoidGeodesic;
-});
+export default EllipsoidGeodesic;

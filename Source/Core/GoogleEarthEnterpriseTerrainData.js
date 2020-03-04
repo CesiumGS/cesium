@@ -1,40 +1,19 @@
-define([
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './QuantizedMeshTerrainData',
-        './Rectangle',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        QuantizedMeshTerrainData,
-        Rectangle,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import QuantizedMeshTerrainData from './QuantizedMeshTerrainData.js';
+import Rectangle from './Rectangle.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile from a Google Earth Enterprise server.
@@ -71,7 +50,7 @@ define([
      * });
      *
      * @see TerrainData
-     * @see HeightTerrainData
+     * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
     function GoogleEarthEnterpriseTerrainData(options) {
@@ -104,11 +83,9 @@ define([
         this._mesh = undefined;
         this._minimumHeight = undefined;
         this._maximumHeight = undefined;
-        this._vertexCountWithoutSkirts = undefined;
-        this._skirtIndex = undefined;
     }
 
-    defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
         /**
          * An array of credits for this tile
          * @memberof GoogleEarthEnterpriseTerrainData.prototype
@@ -199,6 +176,8 @@ define([
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
+                    result.indexCountWithoutSkirts,
+                    result.vertexCountWithoutSkirts,
                     result.minimumHeight,
                     result.maximumHeight,
                     BoundingSphere.clone(result.boundingSphere3D),
@@ -212,8 +191,6 @@ define([
                     result.eastIndicesNorthToSouth,
                     result.northIndicesWestToEast);
 
-                that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
-                that._skirtIndex = result.skirtIndex;
                 that._minimumHeight = result.minimumHeight;
                 that._maximumHeight = result.maximumHeight;
 
@@ -289,9 +266,9 @@ define([
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : mesh.vertices,
-            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
             indices : mesh.indices,
-            skirtIndex : this._skirtIndex,
+            indexCountWithoutSkirts : mesh.indexCountWithoutSkirts,
+            vertexCountWithoutSkirts : mesh.vertexCountWithoutSkirts,
             encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
@@ -511,6 +488,4 @@ define([
         // Position does not lie in any triangle in this mesh.
         return undefined;
     }
-
-    return GoogleEarthEnterpriseTerrainData;
-});
+export default GoogleEarthEnterpriseTerrainData;

@@ -1,20 +1,9 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
 
     /**
      * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
@@ -35,7 +24,7 @@ define([
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
     }
 
-    defineProperties(GeographicProjection.prototype, {
+    Object.defineProperties(GeographicProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *
@@ -113,6 +102,4 @@ define([
         result.height = height;
         return result;
     };
-
-    return GeographicProjection;
-});
+export default GeographicProjection;

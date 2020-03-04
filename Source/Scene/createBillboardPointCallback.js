@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * Creates a {@link createBillboardPointCallback~CanvasFunction} that will create a canvas with a point.
@@ -57,6 +55,4 @@ define(function() {
      * @callback createBillboardPointCallback~CanvasFunction
      * @returns {HTMLCanvasElement} The result of the calculation.
      */
-
-    return createBillboardPointCallback;
-});
+export default createBillboardPointCallback;

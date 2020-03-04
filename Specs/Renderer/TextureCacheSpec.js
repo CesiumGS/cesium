@@ -1,12 +1,8 @@
-defineSuite([
-        'Renderer/TextureCache',
-        'Renderer/Texture',
-        'Specs/createContext'
-    ], function(
-        TextureCache,
-        Texture,
-        createContext) {
-        'use strict';
+import { Texture } from '../../Source/Cesium.js';
+import { TextureCache } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/TextureCache', function() {
 
     var context;
 

@@ -1,42 +1,18 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Renderer/ContextLimits',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        combine,
-        ComponentDatatype,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        CesiumMath,
-        PixelFormat,
-        ContextLimits,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 
     /**
      * Creates a texture to look up per instance attributes for batched primitives. For example, store each primitive's pick color in the texture.
@@ -142,7 +118,7 @@ define([
         this._batchValuesDirty = false;
     }
 
-    defineProperties(BatchTable.prototype, {
+    Object.defineProperties(BatchTable.prototype, {
         /**
          * The attribute descriptions.
          * @memberOf BatchTable.prototype
@@ -240,10 +216,6 @@ define([
         var w = Cartesian4.unpackFloat(packed);
 
         return Cartesian4.fromElements(x, y, z, w, result);
-    }
-
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return;
     }
 
     function setPackedAttribute(value, array, index) {
@@ -595,6 +567,4 @@ define([
      * @param {String} vertexShaderSource The vertex shader source.
      * @returns {String} The new vertex shader source with the functions for retrieving batch table values injected.
      */
-
-    return BatchTable;
-});
+export default BatchTable;

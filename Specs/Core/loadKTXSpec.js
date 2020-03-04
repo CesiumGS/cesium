@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/loadKTX',
-        'Core/PixelFormat',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/RuntimeError'
-    ], function(
-        loadKTX,
-        PixelFormat,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        Resource,
-        RuntimeError) {
-    'use strict';
+import { loadKTX } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+
+describe('Core/loadKTX', function() {
 
     var validCompressed = new Uint8Array([171, 75, 84, 88, 32, 49, 49, 187, 13, 10, 26, 10, 1, 2, 3, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 241, 131, 0, 0, 8, 25, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 224, 7, 224, 7, 0, 0, 0, 0]);
     var validCompressedMipmap = new Uint8Array([171, 75, 84, 88, 32, 49, 49, 187, 13, 10, 26, 10, 1, 2, 3, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 100, 141, 0, 0, 7, 25, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 52, 0, 0, 0, 19, 0, 0, 0, 67, 82, 78, 76, 73, 66, 95, 70, 79, 85, 82, 67, 67, 0, 69, 84, 67, 49, 0, 0, 23, 0, 0, 0, 75, 84, 88, 111, 114, 105, 101, 110, 116, 97, 116, 105, 111, 110, 0, 83, 61, 114, 44, 84, 61, 100, 0, 0, 8, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 8, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 8, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0]);

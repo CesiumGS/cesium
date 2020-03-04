@@ -1,18 +1,8 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     /**
      * A {@link MaterialProperty} that maps to PolylineArrow {@link Material} uniforms.
@@ -30,7 +20,7 @@ define([
         this.color = color;
     }
 
-    defineProperties(PolylineArrowMaterialProperty.prototype, {
+    Object.defineProperties(PolylineArrowMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -104,6 +94,4 @@ define([
                (other instanceof PolylineArrowMaterialProperty && //
                 Property.equals(this._color, other._color));
     };
-
-    return PolylineArrowMaterialProperty;
-});
+export default PolylineArrowMaterialProperty;

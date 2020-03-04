@@ -1,73 +1,35 @@
-define([
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/WebGLConstants',
-        '../Shaders/ViewportQuadVS',
-        './BufferUsage',
-        './ClearCommand',
-        './ContextLimits',
-        './CubeMap',
-        './DrawCommand',
-        './PassState',
-        './PixelDatatype',
-        './RenderState',
-        './ShaderCache',
-        './ShaderProgram',
-        './Texture',
-        './TextureCache',
-        './UniformState',
-        './VertexArray'
-    ], function(
-        Check,
-        clone,
-        Color,
-        ComponentDatatype,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        RuntimeError,
-        WebGLConstants,
-        ViewportQuadVS,
-        BufferUsage,
-        ClearCommand,
-        ContextLimits,
-        CubeMap,
-        DrawCommand,
-        PassState,
-        PixelDatatype,
-        RenderState,
-        ShaderCache,
-        ShaderProgram,
-        Texture,
-        TextureCache,
-        UniformState,
-        VertexArray) {
-    'use strict';
-    /*global WebGLRenderingContext*/
-
-    /*global WebGL2RenderingContext*/
+import Check from '../Core/Check.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Geometry from '../Core/Geometry.js';
+import GeometryAttribute from '../Core/GeometryAttribute.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ViewportQuadVS from '../Shaders/ViewportQuadVS.js';
+import BufferUsage from './BufferUsage.js';
+import checkFloatTexturePrecision from './checkFloatTexturePrecision.js';
+import ClearCommand from './ClearCommand.js';
+import ContextLimits from './ContextLimits.js';
+import CubeMap from './CubeMap.js';
+import DrawCommand from './DrawCommand.js';
+import PassState from './PassState.js';
+import PixelDatatype from './PixelDatatype.js';
+import RenderState from './RenderState.js';
+import ShaderCache from './ShaderCache.js';
+import ShaderProgram from './ShaderProgram.js';
+import Texture from './Texture.js';
+import TextureCache from './TextureCache.js';
+import UniformState from './UniformState.js';
+import VertexArray from './VertexArray.js';
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
@@ -191,6 +153,7 @@ define([
         this._canvas = canvas;
 
         options = clone(options, true);
+        // Don't use defaultValue.EMPTY_OBJECT here because the options object gets modified in the next line.
         options = defaultValue(options, {});
         options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
         var webglOptions = defaultValue(options.webgl, {});
@@ -287,6 +250,7 @@ define([
         this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
 
         this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
+        this._floatBlend = !!getExtension(gl, ['EXT_float_blend']);
         this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
@@ -447,11 +411,13 @@ define([
         this.cache = {};
 
         RenderState.apply(gl, rs, ps);
+
+        this._floatTexSixPlaces = checkFloatTexturePrecision(this);
     }
 
     var defaultFramebufferMarker = {};
 
-    defineProperties(Context.prototype, {
+    Object.defineProperties(Context.prototype, {
         id : {
             get : function() {
                 return this._id;
@@ -535,6 +501,19 @@ define([
         },
 
         /**
+         * <code>true</code> if the EXT_float_blend extension is supported. This
+         * extension enables blending with 32-bit float values.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/}
+         */
+        floatBlend : {
+            get : function() {
+                return this._floatBlend;
+            }
+        },
+
+        /**
          * <code>true</code> if the EXT_blend_minmax extension is supported.  This
          * extension extends blending capabilities by adding two new blend equations:
          * the minimum or maximum color components of the source and destination colors.
@@ -585,6 +564,18 @@ define([
         floatingPointTexture : {
             get : function() {
                 return this._webgl2 || this._textureFloat;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if the context's floating point textures support 6 decimal places of precision.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+         */
+        floatTextureSixPlaces : {
+            get : function() {
+                return this._floatTexSixPlaces;
             }
         },
 
@@ -1226,7 +1217,7 @@ define([
         this.color = color;
     }
 
-    defineProperties(PickId.prototype, {
+    Object.defineProperties(PickId.prototype, {
         object : {
             get : function() {
                 return this._pickObjects[this.key];
@@ -1302,6 +1293,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Context;
-});
+export default Context;

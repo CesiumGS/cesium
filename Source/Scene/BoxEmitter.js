@@ -1,16 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defineProperties,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import CesiumMath from '../Core/Math.js';
 
     var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -36,7 +27,7 @@ define([
         this._dimensions = Cartesian3.clone(dimensions);
     }
 
-    defineProperties(BoxEmitter.prototype, {
+    Object.defineProperties(BoxEmitter.prototype, {
         /**
          * The width, height and depth dimensions of the box in meters.
          * @memberof BoxEmitter.prototype
@@ -79,6 +70,4 @@ define([
         particle.position = Cartesian3.fromElements(x, y, z, particle.position);
         particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
     };
-
-    return BoxEmitter;
-});
+export default BoxEmitter;

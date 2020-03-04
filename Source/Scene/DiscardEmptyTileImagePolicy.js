@@ -1,10 +1,4 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from '../Core/defined.js';
 
     /**
      * A policy for discarding tile images that contain no data (and so aren't actually images).
@@ -39,7 +33,7 @@ define([
 
     var emptyImage;
 
-    defineProperties(DiscardEmptyTileImagePolicy, {
+    Object.defineProperties(DiscardEmptyTileImagePolicy, {
         /**
          * Default value for representing an empty image.
          * @type {Image}
@@ -57,6 +51,4 @@ define([
             }
         }
     });
-
-    return DiscardEmptyTileImagePolicy;
-});
+export default DiscardEmptyTileImagePolicy;

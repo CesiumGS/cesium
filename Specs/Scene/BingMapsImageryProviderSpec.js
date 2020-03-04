@@ -1,38 +1,21 @@
-defineSuite([
-        'Scene/BingMapsImageryProvider',
-        'Core/appendForwardSlash',
-        'Core/defined',
-        'Core/queryToObject',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorTilingScheme',
-        'Scene/BingMapsStyle',
-        'Scene/DiscardEmptyTileImagePolicy',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri',
-        'ThirdParty/when'
-    ], function(
-        BingMapsImageryProvider,
-        appendForwardSlash,
-        defined,
-        queryToObject,
-        RequestScheduler,
-        Resource,
-        WebMercatorTilingScheme,
-        BingMapsStyle,
-        DiscardEmptyTileImagePolicy,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri,
-        when) {
-    'use strict';
+import { appendForwardSlash } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { BingMapsImageryProvider } from '../../Source/Cesium.js';
+import { BingMapsStyle } from '../../Source/Cesium.js';
+import { DiscardEmptyTileImagePolicy } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { Uri } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/BingMapsImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -53,6 +36,7 @@ defineSuite([
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -183,10 +167,11 @@ defineSuite([
     }
 
     function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else {
                 if (defined(expectedUrl)) {
                     var uri = new Uri(url);
@@ -204,7 +189,7 @@ defineSuite([
                     }
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 
@@ -505,13 +490,14 @@ defineSuite([
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

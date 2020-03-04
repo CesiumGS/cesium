@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * The state of a {@link QuadtreeTile} in the tile load pipeline.
@@ -42,6 +37,4 @@ define([
          */
         FAILED : 3
     };
-
-    return freezeObject(QuadtreeTileLoadState);
-});
+export default Object.freeze(QuadtreeTileLoadState);

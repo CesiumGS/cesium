@@ -1,30 +1,14 @@
-define([
-        '../Core/arrayRemoveDuplicates',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Matrix4',
-        '../Core/PolylinePipeline',
-        './Material'
-    ], function(
-        arrayRemoveDuplicates,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Matrix4,
-        PolylinePipeline,
-        Material) {
-    'use strict';
+import arrayRemoveDuplicates from '../Core/arrayRemoveDuplicates.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PolylinePipeline from '../Core/PolylinePipeline.js';
+import Material from './Material.js';
 
     /**
      * A renderable polyline. Create this by calling {@link PolylineCollection#add}
@@ -115,7 +99,7 @@ define([
         }
     }
 
-    defineProperties(Polyline.prototype, {
+    Object.defineProperties(Polyline.prototype, {
 
         /**
          * Determines if this polyline will be shown.  Use this to hide or show a polyline, instead
@@ -189,7 +173,7 @@ define([
 
         /**
          * Gets or sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Polyline.prototype
          * @type {Material}
          */
@@ -301,6 +285,19 @@ define([
         },
 
         /**
+         * Gets the destruction status of this polyline
+         * @memberof Polyline.prototype
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        isDestroyed : {
+            get : function() {
+                return !defined(this._polylineCollection);
+            }
+        },
+
+        /**
          * Gets or sets the condition specifying at what distance from the camera that this polyline will be displayed.
          * @memberof Polyline.prototype
          * @type {DistanceDisplayCondition}
@@ -386,6 +383,4 @@ define([
         this._material = this._material && this._material.destroy();
         this._polylineCollection = undefined;
     };
-
-    return Polyline;
-});
+export default Polyline;

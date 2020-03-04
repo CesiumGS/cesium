@@ -1,22 +1,9 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 3x3 matrix, indexable as a column-major order array.
@@ -1023,6 +1010,27 @@ define([
         return result;
     };
 
+    var UNIT = new Cartesian3(1, 1, 1);
+
+    /**
+     * Extracts the rotation assuming the matrix is an affine transformation.
+     *
+     * @param {Matrix3} matrix The matrix.
+     * @param {Matrix3} result The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter
+     */
+    Matrix3.getRotation = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        var inverseScale = Cartesian3.divideComponents(UNIT, Matrix3.getScale(matrix, scratchScale), scratchScale);
+        result = Matrix3.multiplyByScale(matrix, inverseScale, result);
+
+        return result;
+    };
+
     function computeFrobeniusNorm(matrix) {
         var norm = 0.0;
         for (var i = 0; i < 9; ++i) {
@@ -1332,7 +1340,7 @@ define([
      * @type {Matrix3}
      * @constant
      */
-    Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
+    Matrix3.IDENTITY = Object.freeze(new Matrix3(1.0, 0.0, 0.0,
                                                 0.0, 1.0, 0.0,
                                                 0.0, 0.0, 1.0));
 
@@ -1342,7 +1350,7 @@ define([
      * @type {Matrix3}
      * @constant
      */
-    Matrix3.ZERO = freezeObject(new Matrix3(0.0, 0.0, 0.0,
+    Matrix3.ZERO = Object.freeze(new Matrix3(0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0,
                                             0.0, 0.0, 0.0));
 
@@ -1418,7 +1426,7 @@ define([
      */
     Matrix3.COLUMN2ROW2 = 8;
 
-    defineProperties(Matrix3.prototype, {
+    Object.defineProperties(Matrix3.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof Matrix3.prototype
@@ -1492,6 +1500,4 @@ define([
                '(' + this[1] + ', ' + this[4] + ', ' + this[7] + ')\n' +
                '(' + this[2] + ', ' + this[5] + ', ' + this[8] + ')';
     };
-
-    return Matrix3;
-});
+export default Matrix3;

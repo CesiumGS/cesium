@@ -1,20 +1,13 @@
-defineSuite([
-        'Core/PolylineVolumeGeometry',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/Ellipsoid',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        PolylineVolumeGeometry,
-        Cartesian2,
-        Cartesian3,
-        CornerType,
-        Ellipsoid,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { PolylineVolumeGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/PolylineVolumeGeometry', function() {
+
     var shape;
 
     beforeAll(function() {
@@ -102,7 +95,7 @@ defineSuite([
         expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
-    //https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+    //https://github.com/CesiumGS/cesium/issues/3609
     xit('compute all vertex attributes', function() {
         var m = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
             vertexFormat : VertexFormat.ALL,

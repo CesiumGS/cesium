@@ -1,10 +1,7 @@
-defineSuite([
-        'Renderer/ShaderCache',
-        'Specs/createContext'
-    ], function(
-        ShaderCache,
-        createContext) {
-    'use strict';
+import { ShaderCache } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/ShaderCache', function() {
 
     var context;
 

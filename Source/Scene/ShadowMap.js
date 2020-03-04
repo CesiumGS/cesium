@@ -1,109 +1,55 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/combine',
-        '../Core/CullingVolume',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/GeometryInstance',
-        '../Core/Intersect',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/PixelFormat',
-        '../Core/Quaternion',
-        '../Core/SphereOutlineGeometry',
-        '../Core/WebGLConstants',
-        '../Renderer/ClearCommand',
-        '../Renderer/ContextLimits',
-        '../Renderer/CubeMap',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/Pass',
-        '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        './Camera',
-        './CullFace',
-        './DebugCameraPrimitive',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './ShadowMapShader'
-    ], function(
-        BoundingRectangle,
-        BoundingSphere,
-        BoxOutlineGeometry,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        clone,
-        Color,
-        ColorGeometryInstanceAttribute,
-        combine,
-        CullingVolume,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        GeometryInstance,
-        Intersect,
-        CesiumMath,
-        Matrix4,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        PixelFormat,
-        Quaternion,
-        SphereOutlineGeometry,
-        WebGLConstants,
-        ClearCommand,
-        ContextLimits,
-        CubeMap,
-        DrawCommand,
-        Framebuffer,
-        Pass,
-        PassState,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        Camera,
-        CullFace,
-        DebugCameraPrimitive,
-        PerInstanceColorAppearance,
-        Primitive,
-        ShadowMapShader) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import combine from '../Core/combine.js';
+import CullingVolume from '../Core/CullingVolume.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Intersect from '../Core/Intersect.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Quaternion from '../Core/Quaternion.js';
+import SphereOutlineGeometry from '../Core/SphereOutlineGeometry.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import CubeMap from '../Renderer/CubeMap.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Pass from '../Renderer/Pass.js';
+import PassState from '../Renderer/PassState.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Renderbuffer from '../Renderer/Renderbuffer.js';
+import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import Camera from './Camera.js';
+import CullFace from './CullFace.js';
+import DebugCameraPrimitive from './DebugCameraPrimitive.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import ShadowMapShader from './ShadowMapShader.js';
 
     /**
-     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map. Do not construct this directly.
      *
      * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
@@ -129,7 +75,7 @@ define([
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -184,7 +130,7 @@ define([
 
         // In IE11 and Edge polygon offset is not functional.
         // TODO : Also disabled for instances of Firefox and Chrome running ANGLE that do not support depth textures.
-        // Re-enable once https://github.com/AnalyticalGraphicsInc/cesium/issues/4560 is resolved.
+        // Re-enable once https://github.com/CesiumGS/cesium/issues/4560 is resolved.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer() || FeatureDetection.isEdge() || ((FeatureDetection.isChrome() || FeatureDetection.isFirefox()) && FeatureDetection.isWindows() && !context.depthTexture)) {
             polygonOffsetSupported = false;
@@ -368,7 +314,7 @@ define([
         createRenderStates(this);
     };
 
-    defineProperties(ShadowMap.prototype, {
+    Object.defineProperties(ShadowMap.prototype, {
         /**
          * Determines if the shadow map will be shown.
          *
@@ -1142,6 +1088,9 @@ define([
         // Start to construct the light view matrix. Set translation later once the bounding box is found.
         var lightDir = shadowMapCamera.directionWC;
         var lightUp = sceneCamera.directionWC; // Align shadows to the camera view.
+        if (Cartesian3.equalsEpsilon(lightDir, lightUp, CesiumMath.EPSILON10)) {
+            lightUp = sceneCamera.upWC;
+        }
         var lightRight = Cartesian3.cross(lightDir, lightUp, scratchRight);
         lightUp = Cartesian3.cross(lightRight, lightDir, scratchUp); // Recalculate up now that right is derived
         Cartesian3.normalize(lightUp, lightUp);
@@ -1637,6 +1586,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return ShadowMap;
-});
+export default ShadowMap;

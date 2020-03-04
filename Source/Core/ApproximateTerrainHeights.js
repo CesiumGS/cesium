@@ -1,34 +1,16 @@
-define([
-        './buildModuleUrl',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './DeveloperError',
-        './Ellipsoid',
-        './GeographicTilingScheme',
-        './Rectangle',
-        './Resource'
-    ], function(
-        buildModuleUrl,
-        defaultValue,
-        defined,
-        defineProperties,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        DeveloperError,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import buildModuleUrl from './buildModuleUrl.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import Rectangle from './Rectangle.js';
+import Resource from './Resource.js';
 
     var scratchDiagonalCartesianNE = new Cartesian3();
     var scratchDiagonalCartesianSW = new Cartesian3();
@@ -201,7 +183,7 @@ define([
     ApproximateTerrainHeights._terrainHeights = undefined;
     ApproximateTerrainHeights._initPromise = undefined;
 
-    defineProperties(ApproximateTerrainHeights, {
+    Object.defineProperties(ApproximateTerrainHeights, {
         /**
          * Determines if the terrain heights are initialized and ready to use. To initialize the terrain heights,
          * call {@link ApproximateTerrainHeights#initialize} and wait for the returned promise to resolve.
@@ -215,6 +197,4 @@ define([
             }
         }
     });
-
-    return ApproximateTerrainHeights;
-});
+export default ApproximateTerrainHeights;

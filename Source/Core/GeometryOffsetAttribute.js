@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Represents which vertices should have a value of `true` for the `applyOffset` attribute
@@ -13,6 +8,4 @@ define([
         TOP : 1,
         ALL : 2
     };
-
-    return freezeObject(GeometryOffsetAttribute);
-});
+export default Object.freeze(GeometryOffsetAttribute);

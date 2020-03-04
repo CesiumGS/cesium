@@ -1,12 +1,6 @@
-define([
-        './defined',
-        './DeveloperError',
-        './oneTimeWarning'
-    ], function(
-        defined,
-        DeveloperError,
-        oneTimeWarning) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import oneTimeWarning from './oneTimeWarning.js';
 
     /**
      * Logs a deprecation message to the console.  Use this function instead of
@@ -32,7 +26,7 @@ define([
      * };
      *
      * // Deprecated property
-     * defineProperties(Bar.prototype, {
+     * Object.defineProperties(Bar.prototype, {
      *     prop : {
      *         get : function() {
      *             deprecationWarning('Bar.prop', 'Bar.prop was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use Bar.newProp instead.');
@@ -56,6 +50,4 @@ define([
 
         oneTimeWarning(identifier, message);
     }
-
-    return deprecationWarning;
-});
+export default deprecationWarning;

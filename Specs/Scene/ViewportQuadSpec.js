@@ -1,22 +1,13 @@
-defineSuite([
-        'Scene/ViewportQuad',
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Core/Resource',
-        'Renderer/Texture',
-        'Scene/Material',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ViewportQuad,
-        BoundingRectangle,
-        Color,
-        Resource,
-        Texture,
-        Material,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { ViewportQuad } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/ViewportQuad', function() {
 
     var scene;
     var viewportQuad;

@@ -1,8 +1,6 @@
-defineSuite([
-        'ThirdParty/when'
-    ], function(
-        when) {
-    'use strict';
+import { when } from '../../Source/Cesium.js';
+
+describe('ThirdParty/when', function() {
 
     // These tests are from my original attempt to write my own promise implementation.
     // When I switched to cujojs/when, I figured I may as well leave these here since

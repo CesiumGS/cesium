@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/AttributeCompression',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/defined',
-        'Core/Math'
-    ], function(
-        AttributeCompression,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        defined,
-        CesiumMath) {
-    'use strict';
+import { AttributeCompression } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/AttributeCompression', function() {
 
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     it('oct decode(0, 0)', function() {

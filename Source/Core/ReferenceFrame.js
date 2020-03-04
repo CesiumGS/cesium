@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * Constants for identifying well-known reference frames.
@@ -26,6 +21,4 @@ define([
          */
         INERTIAL : 1
     };
-
-    return freezeObject(ReferenceFrame);
-});
+export default Object.freeze(ReferenceFrame);

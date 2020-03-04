@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Intersections2D'
-    ], function(
-        Intersections2D) {
-    'use strict';
+import { Intersections2D } from '../../Source/Cesium.js';
+
+describe('Core/Intersections2D', function() {
 
     describe('clipTriangleAtAxisAlignedThreshold', function() {
         it('eliminates a triangle that is entirely on the wrong side of the threshold', function() {

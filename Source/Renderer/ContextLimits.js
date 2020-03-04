@@ -1,8 +1,3 @@
-define([
-        '../Core/defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
 
     /**
      * @private
@@ -31,7 +26,7 @@ define([
         _highpIntSupported: false
     };
 
-    defineProperties(ContextLimits, {
+    Object.defineProperties(ContextLimits, {
 
         /**
          * The maximum number of texture units that can be used from the vertex and fragment
@@ -290,6 +285,4 @@ define([
         }
 
     });
-
-    return ContextLimits;
-});
+export default ContextLimits;

@@ -237,6 +237,15 @@
           15638,24381,37983
         ]
       },
+      "innerRadii":{
+        "cartesian":[
+          21988,44373,36013
+        ]
+      },
+      "minimumClock":57589,
+      "maximumClock":24940,
+      "minimumCone":54533,
+      "maximumCone":64532,
       "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
@@ -570,6 +579,11 @@
       "classificationType":"TERRAIN",
       "zIndex":445
     },
+    "tileset":{
+      "show":true,
+      "uri":"http://example.com/6864",
+      "maximumScreenSpaceError":51767
+    },
     "wall":{
       "show":true,
       "positions":{
@@ -687,7 +701,8 @@
           83,22,249,147
         ]
       },
-      "environmentIntersectionWidth":13317
+      "environmentIntersectionWidth":13317,
+      "showThroughEllipsoid":true
     },
     "agi_customPatternSensor":{
       "show":true,
@@ -763,7 +778,8 @@
           134,29,12,55
         ]
       },
-      "environmentIntersectionWidth":53576
+      "environmentIntersectionWidth":53576,
+      "showThroughEllipsoid":true
     },
     "agi_rectangularSensor":{
       "show":true,
@@ -835,7 +851,8 @@
           84,60,81,144
         ]
       },
-      "environmentIntersectionWidth":64839
+      "environmentIntersectionWidth":64839,
+      "showThroughEllipsoid":true
     },
     "agi_fan":{
       "show":true,
@@ -7567,6 +7584,21 @@
       "radii":{
         "reference":"Constant#ellipsoid.radii"
       },
+      "innerRadii":{
+        "reference":"Constant#ellipsoid.innerRadii"
+      },
+      "minimumClock":{
+        "reference":"Constant#ellipsoid.minimumClock"
+      },
+      "maximumClock":{
+        "reference":"Constant#ellipsoid.maximumClock"
+      },
+      "minimumCone":{
+        "reference":"Constant#ellipsoid.minimumCone"
+      },
+      "maximumCone":{
+        "reference":"Constant#ellipsoid.maximumCone"
+      },
       "heightReference":{
         "reference":"Constant#ellipsoid.heightReference"
       },
@@ -7984,6 +8016,17 @@
         "reference":"Constant#rectangle.zIndex"
       }
     },
+    "tileset":{
+      "show":{
+        "reference":"Constant#tileset.show"
+      },
+      "uri":{
+        "reference":"Constant#tileset.uri"
+      },
+      "maximumScreenSpaceError":{
+        "reference":"Constant#tileset.maximumScreenSpaceError"
+      }
+    },
     "wall":{
       "show":{
         "reference":"Constant#wall.show"
@@ -8127,6 +8170,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#conicSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#conicSensor.showThroughEllipsoid"
       }
     },
     "agi_customPatternSensor":{
@@ -8209,6 +8255,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#customPatternSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#customPatternSensor.showThroughEllipsoid"
       }
     },
     "agi_rectangularSensor":{
@@ -8297,6 +8346,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#rectangularSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#rectangularSensor.showThroughEllipsoid"
       }
     },
     "agi_fan":{
@@ -11331,6 +11383,41 @@
           3600,39497,12186,45103
         ]
       },
+      "innerRadii":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartesian":[
+          0,40318,27037,59497,
+          3600,57650,53729,12241
+        ]
+      },
+      "minimumClock":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,13484,
+          3600,2170
+        ]
+      },
+      "maximumClock":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,10874,
+          3600,2968
+        ]
+      },
+      "minimumCone":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,54230,
+          3600,59454
+        ]
+      },
+      "maximumCone":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,49077,
+          3600,26303
+        ]
+      },
       "material":{
         "solidColor":{
           "color":{
@@ -11843,6 +11930,15 @@
         "number":[
           0,27256,
           3600,53581
+        ]
+      }
+    },
+    "tileset":{
+      "maximumScreenSpaceError":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,17401,
+          3600,7930
         ]
       }
     },

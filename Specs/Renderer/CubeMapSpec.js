@@ -1,38 +1,21 @@
-defineSuite([
-        'Renderer/CubeMap',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/PixelFormat',
-        'Core/Resource',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Renderer/PixelDatatype',
-        'Renderer/Sampler',
-        'Renderer/Texture',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap',
-        'Specs/createContext',
-        'ThirdParty/when'
-    ], function(
-        CubeMap,
-        Cartesian3,
-        Color,
-        defined,
-        PixelFormat,
-        Resource,
-        ClearCommand,
-        ContextLimits,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        createContext,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { CubeMap } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Sampler } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { TextureMagnificationFilter } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { TextureWrap } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Renderer/CubeMap', function() {
 
     var context;
     var cubeMap;

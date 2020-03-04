@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * The direction to display an ImageryLayer relative to the {@link Scene#imagerySplitPosition}.
@@ -36,6 +31,4 @@ define([
          */
         RIGHT : 1.0
     };
-
-    return freezeObject(ImagerySplitDirection);
-});
+export default Object.freeze(ImagerySplitDirection);

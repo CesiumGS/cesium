@@ -1,20 +1,9 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        './PixelDatatype'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        PixelFormat,
-        PixelDatatype) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PixelDatatype from './PixelDatatype.js';
 
     /**
      * @private
@@ -32,7 +21,7 @@ define([
         this._initialized = initialized;
     }
 
-    defineProperties(CubeMapFace.prototype, {
+    Object.defineProperties(CubeMapFace.prototype, {
         pixelFormat : {
             get : function() {
                 return this._pixelFormat;
@@ -231,6 +220,4 @@ define([
         gl.bindTexture(target, null);
         this._initialized = true;
     };
-
-    return CubeMapFace;
-});
+export default CubeMapFace;

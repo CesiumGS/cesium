@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/TerrainQuantization',
-        '../Renderer/ShaderProgram',
-        './getClippingFunction',
-        './SceneMode'
-    ], function(
-        defined,
-        destroyObject,
-        TerrainQuantization,
-        ShaderProgram,
-        getClippingFunction,
-        SceneMode) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import TerrainQuantization from '../Core/TerrainQuantization.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import getClippingFunction from './getClippingFunction.js';
+import SceneMode from './SceneMode.js';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
         this.numberOfDayTextures = numberOfDayTextures;
@@ -80,6 +71,8 @@ define([
         var showReflectiveOcean = options.showReflectiveOcean;
         var showOceanWaves = options.showOceanWaves;
         var enableLighting = options.enableLighting;
+        var dynamicAtmosphereLighting = options.dynamicAtmosphereLighting;
+        var dynamicAtmosphereLightingFromSun = options.dynamicAtmosphereLightingFromSun;
         var showGroundAtmosphere = options.showGroundAtmosphere;
         var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
         var hasVertexNormals = options.hasVertexNormals;
@@ -102,13 +95,6 @@ define([
         if (quantizationMode === TerrainQuantization.BITS12) {
             quantization = 1;
             quantizationDefine = 'QUANTIZATION_BITS12';
-        }
-
-        var vertexLogDepth = 0;
-        var vertexLogDepthDefine = '';
-        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
-            vertexLogDepth = 1;
-            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
 
         var cartographicLimitRectangleFlag = 0;
@@ -136,20 +122,21 @@ define([
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (showGroundAtmosphere << 11) |
-                    (perFragmentGroundAtmosphere << 12) |
-                    (hasVertexNormals << 13) |
-                    (useWebMercatorProjection << 14) |
-                    (enableFog << 15) |
-                    (quantization << 16) |
-                    (applySplit << 17) |
-                    (enableClippingPlanes << 18) |
-                    (vertexLogDepth << 19) |
-                    (cartographicLimitRectangleFlag << 20) |
-                    (imageryCutoutFlag << 21) |
-                    (colorCorrect << 22) |
-                    (highlightFillTile << 23) |
-                    (colorToAlpha << 24);
+                    (dynamicAtmosphereLighting << 11) |
+                    (dynamicAtmosphereLightingFromSun << 12) |
+                    (showGroundAtmosphere << 13) |
+                    (perFragmentGroundAtmosphere << 14) |
+                    (hasVertexNormals << 15) |
+                    (useWebMercatorProjection << 16) |
+                    (enableFog << 17) |
+                    (quantization << 18) |
+                    (applySplit << 19) |
+                    (enableClippingPlanes << 20) |
+                    (cartographicLimitRectangleFlag << 21) |
+                    (imageryCutoutFlag << 22) |
+                    (colorCorrect << 23) |
+                    (highlightFillTile << 24) |
+                    (colorToAlpha << 25);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -181,7 +168,7 @@ define([
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {
@@ -220,6 +207,13 @@ define([
                 } else {
                     vs.defines.push('ENABLE_DAYNIGHT_SHADING');
                     fs.defines.push('ENABLE_DAYNIGHT_SHADING');
+                }
+            }
+
+            if (dynamicAtmosphereLighting) {
+                fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING');
+                if (dynamicAtmosphereLightingFromSun) {
+                    fs.defines.push('DYNAMIC_ATMOSPHERE_LIGHTING_FROM_SUN');
                 }
             }
 
@@ -345,6 +339,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GlobeSurfaceShaderSet;
-});
+export default GlobeSurfaceShaderSet;

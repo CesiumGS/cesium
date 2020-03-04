@@ -1,22 +1,10 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Scene/FrameRateMonitor',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FrameRateMonitor,
-        knockout,
-        createCommand) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import FrameRateMonitor from '../../Scene/FrameRateMonitor.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link PerformanceWatchdog}.
@@ -79,7 +67,7 @@ define([
         });
     }
 
-    defineProperties(PerformanceWatchdogViewModel.prototype, {
+    Object.defineProperties(PerformanceWatchdogViewModel.prototype, {
         /**
          * Gets the {@link Scene} instance for which to monitor performance.
          * @memberof PerformanceWatchdogViewModel.prototype
@@ -110,6 +98,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return PerformanceWatchdogViewModel;
-});
+export default PerformanceWatchdogViewModel;

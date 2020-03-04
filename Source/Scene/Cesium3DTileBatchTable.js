@@ -1,76 +1,37 @@
-define([
-        '../Core/arrayFill',
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/RuntimeError',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        './AttributeType',
-        './BlendingState',
-        './Cesium3DTileColorBlendMode',
-        './CullFace',
-        './getBinaryAccessor',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        arrayFill,
-        Cartesian2,
-        Cartesian4,
-        Check,
-        clone,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        RuntimeError,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        AttributeType,
-        BlendingState,
-        Cesium3DTileColorBlendMode,
-        CullFace,
-        getBinaryAccessor,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import arrayFill from '../Core/arrayFill.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import AttributeType from './AttributeType.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileColorBlendMode from './Cesium3DTileColorBlendMode.js';
+import CullFace from './CullFace.js';
+import getBinaryAccessor from './getBinaryAccessor.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     var DEFAULT_COLOR_VALUE = Color.WHITE;
     var DEFAULT_SHOW_VALUE = true;
@@ -139,7 +100,7 @@ define([
     // This can be overridden for testing purposes
     Cesium3DTileBatchTable._deprecationWarning = deprecationWarning;
 
-    defineProperties(Cesium3DTileBatchTable.prototype, {
+    Object.defineProperties(Cesium3DTileBatchTable.prototype, {
         memorySizeInBytes : {
             get : function() {
                 var memory = 0;
@@ -1368,13 +1329,14 @@ define([
         return derivedCommand;
     }
 
-    function getDisableLogDepthFragmentShaderProgram(context, shaderProgram) {
+    function getLogDepthPolygonOffsetFragmentShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth');
         if (!defined(shader)) {
             var fs = shaderProgram.fragmentShaderSource.clone();
             fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
-            fs.defines.push('DISABLE_LOG_DEPTH_FRAGMENT_WRITE');
+            fs.defines.push('POLYGON_OFFSET');
 
+            fs.sources.unshift('#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n');
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'zBackfaceLogDepth', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
@@ -1412,9 +1374,17 @@ define([
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
-        // Disable the depth writes in the fragment shader. The back face commands were causing the higher resolution
+        derivedCommand.uniformMap = clone(command.uniformMap);
+
+        var polygonOffset = new Cartesian2(5.0, 5.0);
+        derivedCommand.uniformMap.u_polygonOffset = function() {
+            return polygonOffset;
+        };
+
+        // Make the log depth depth fragment write account for the polygon offset, too.
+        // Otherwise, the back face commands will cause the higher resolution
         // tiles to disappear.
-        derivedCommand.shaderProgram = getDisableLogDepthFragmentShaderProgram(context, command.shaderProgram);
+        derivedCommand.shaderProgram = getLogDepthPolygonOffsetFragmentShaderProgram(context, command.shaderProgram);
         return derivedCommand;
     }
 
@@ -1560,6 +1530,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Cesium3DTileBatchTable;
-});
+export default Cesium3DTileBatchTable;

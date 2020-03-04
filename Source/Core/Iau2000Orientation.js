@@ -1,16 +1,8 @@
-define([
-        './defined',
-        './IauOrientationParameters',
-        './JulianDate',
-        './Math',
-        './TimeConstants'
-    ], function(
-        defined,
-        IauOrientationParameters,
-        JulianDate,
-        CesiumMath,
-        TimeConstants) {
-    'use strict';
+import defined from './defined.js';
+import IauOrientationParameters from './IauOrientationParameters.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import TimeConstants from './TimeConstants.js';
 
     /**
      * This is a collection of the orientation information available for central bodies.
@@ -133,6 +125,4 @@ define([
 
         return result;
     };
-
-    return Iau2000Orientation;
-});
+export default Iau2000Orientation;

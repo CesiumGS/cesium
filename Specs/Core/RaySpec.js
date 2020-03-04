@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/Ray',
-        'Core/Cartesian3'
-    ], function(
-        Ray,
-        Cartesian3) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+
+describe('Core/Ray', function() {
 
     it('default constructor create zero valued Ray', function() {
         var ray = new Ray();

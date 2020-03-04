@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/GeometryAttribute',
-        'Core/ComponentDatatype'
-    ], function(
-        GeometryAttribute,
-        ComponentDatatype) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+
+describe('Core/GeometryAttribute', function() {
 
     it('constructor', function() {
         var color = new GeometryAttribute({

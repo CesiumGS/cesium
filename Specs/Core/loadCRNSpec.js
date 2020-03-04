@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/loadCRN',
-        'Core/PixelFormat',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/Resource'
-    ], function(
-        loadCRN,
-        PixelFormat,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        Resource) {
-    'use strict';
+import { loadCRN } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+
+describe('Core/loadCRN', function() {
 
     var validCompressed = new Uint8Array([72, 120, 0, 74, 227, 123, 0, 0, 0, 138, 92, 167, 0, 4, 0, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 22, 0, 1, 0, 0, 96, 0, 0, 12, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 108, 0, 0, 0, 137, 0, 10, 96, 0, 0, 0, 0, 0, 0, 16, 4, 9, 130, 0, 0, 0, 0, 0, 0, 109, 4, 0, 0, 198, 96, 128, 0, 0, 0, 0, 0, 26, 80, 0, 0, 6, 96, 0, 0, 0, 0, 0, 0, 16, 0, 51, 0, 0, 0, 0, 0, 0, 0, 128, 1, 152, 0, 0, 0, 0, 0, 0, 4, 0]);
     var validCompressedMipmap = new Uint8Array([72, 120, 0, 82, 183, 141, 0, 0, 0, 148, 151, 24, 0, 4, 0, 4, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 0, 22, 0, 1, 0, 0, 104, 0, 0, 12, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 116, 0, 0, 0, 145, 0, 0, 0, 146, 0, 0, 0, 147, 0, 130, 97, 0, 0, 0, 0, 0, 4, 35, 37, 0, 3, 48, 0, 0, 0, 0, 0, 0, 8, 200, 0, 198, 96, 128, 0, 0, 0, 0, 0, 26, 80, 0, 0, 6, 96, 0, 0, 0, 0, 0, 0, 16, 0, 51, 0, 0, 0, 0, 0, 0, 0, 128, 1, 152, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0]);

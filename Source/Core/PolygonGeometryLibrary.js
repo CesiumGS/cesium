@@ -1,52 +1,25 @@
-define([
-        './ArcType',
-        './arrayRemoveDuplicates',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidRhumbLine',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix3',
-        './PolygonPipeline',
-        './PrimitiveType',
-        './Quaternion',
-        './Queue',
-        './WindingOrder'
-    ], function(
-        ArcType,
-        arrayRemoveDuplicates,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidRhumbLine,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix3,
-        PolygonPipeline,
-        PrimitiveType,
-        Quaternion,
-        Queue,
-        WindingOrder) {
-    'use strict';
+import ArcType from './ArcType.js';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Queue from './Queue.js';
+import WindingOrder from './WindingOrder.js';
 
     /**
      * @private
@@ -591,7 +564,8 @@ define([
 
             p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
             p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14, CesiumMath.EPSILON6)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10, CesiumMath.EPSILON10)) {
+                //skip corner
                 continue;
             }
 
@@ -615,6 +589,4 @@ define([
             primitiveType : PrimitiveType.TRIANGLES
         });
     };
-
-    return PolygonGeometryLibrary;
-});
+export default PolygonGeometryLibrary;

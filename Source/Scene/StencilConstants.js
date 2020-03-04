@@ -1,12 +1,5 @@
-define([
-        '../Core/freezeObject',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        freezeObject,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
      * The most significant bit is used to identify whether the pixel is 3D Tiles.
@@ -41,6 +34,4 @@ define([
             mask : StencilConstants.CESIUM_3D_TILE_MASK
         };
     };
-
-    return freezeObject(StencilConstants);
-});
+export default Object.freeze(StencilConstants);

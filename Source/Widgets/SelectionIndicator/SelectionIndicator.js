@@ -1,20 +1,9 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './SelectionIndicatorViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        knockout,
-        getElement,
-        SelectionIndicatorViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import SelectionIndicatorViewModel from './SelectionIndicatorViewModel.js';
 
     /**
      * A widget for displaying an indicator on a selected object.
@@ -71,7 +60,7 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
         knockout.applyBindings(this._viewModel, this._element);
     }
 
-    defineProperties(SelectionIndicator.prototype, {
+    Object.defineProperties(SelectionIndicator.prototype, {
         /**
          * Gets the parent container.
          * @memberof SelectionIndicator.prototype
@@ -114,6 +103,4 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
         container.removeChild(this._element);
         return destroyObject(this);
     };
-
-    return SelectionIndicator;
-});
+export default SelectionIndicator;

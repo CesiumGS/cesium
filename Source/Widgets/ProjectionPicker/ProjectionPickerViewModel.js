@@ -1,24 +1,11 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/EventHelper',
-        '../../Core/OrthographicFrustum',
-        '../../Scene/SceneMode',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EventHelper,
-        OrthographicFrustum,
-        SceneMode,
-        knockout,
-        createCommand) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import EventHelper from '../../Core/EventHelper.js';
+import OrthographicFrustum from '../../Core/OrthographicFrustum.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link ProjectionPicker}.
@@ -122,7 +109,7 @@ define([
         this._sceneMode = SceneMode;
     }
 
-    defineProperties(ProjectionPickerViewModel.prototype, {
+    Object.defineProperties(ProjectionPickerViewModel.prototype, {
         /**
          * Gets the scene
          * @memberof ProjectionPickerViewModel.prototype
@@ -197,6 +184,4 @@ define([
         this._eventHelper.removeAll();
         destroyObject(this);
     };
-
-    return ProjectionPickerViewModel;
-});
+export default ProjectionPickerViewModel;

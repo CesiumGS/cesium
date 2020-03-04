@@ -1,34 +1,16 @@
-define([
-        '../Core/Check',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Geometry',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/RuntimeError',
-        './Buffer',
-        './BufferUsage',
-        './ContextLimits'
-    ], function(
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Geometry,
-        IndexDatatype,
-        CesiumMath,
-        RuntimeError,
-        Buffer,
-        BufferUsage,
-        ContextLimits) {
-    'use strict';
+import Check from '../Core/Check.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Geometry from '../Core/Geometry.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Buffer from './Buffer.js';
+import BufferUsage from './BufferUsage.js';
+import ContextLimits from './ContextLimits.js';
 
     function addAttribute(attributes, attribute, index, context) {
         var hasVertexBuffer = defined(attribute.vertexBuffer);
@@ -641,7 +623,7 @@ define([
         });
     };
 
-    defineProperties(VertexArray.prototype, {
+    Object.defineProperties(VertexArray.prototype, {
         numberOfAttributes : {
             get : function() {
                 return this._attributes.length;
@@ -780,6 +762,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return VertexArray;
-});
+export default VertexArray;

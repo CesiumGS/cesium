@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/TimeInterval',
-        'Core/JulianDate'
-    ], function(
-        TimeInterval,
-        JulianDate) {
-    'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+
+describe('Core/TimeInterval', function() {
 
     function returnTrue() {
         return true;

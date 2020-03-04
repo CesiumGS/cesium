@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/CorridorOutlineGeometry',
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Specs/createPackableSpecs'
-    ], function(
-        CorridorOutlineGeometry,
-        arrayFill,
-        Cartesian3,
-        CornerType,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        createPackableSpecs) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { CorridorOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CorridorOutlineGeometry', function() {
 
     it('throws without positions', function() {
         expect(function() {

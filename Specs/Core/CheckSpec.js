@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Check'
-    ], function(
-        Check) {
-    'use strict';
+import { Check } from '../../Source/Cesium.js';
+
+describe('Core/Check', function() {
 
     describe('type checks', function () {
         it('Check.typeOf.bool does not throw when passed a boolean', function () {

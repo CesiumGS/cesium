@@ -1,20 +1,9 @@
-define([
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Resource'
-    ], function(
-        Check,
-        defined,
-        defineProperties,
-        DeveloperError,
-        loadCRN,
-        loadKTX,
-        Resource) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Resource from '../Core/Resource.js';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
@@ -25,8 +14,8 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
@@ -38,8 +27,8 @@ define([
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -113,7 +102,7 @@ define([
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(ImageryProvider.prototype, {
+    Object.defineProperties(ImageryProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof ImageryProvider.prototype
@@ -340,11 +329,11 @@ define([
 
         var resource = Resource.createIfNeeded(url);
 
-        if (ktxRegex.test(resource)) {
+        if (ktxRegex.test(resource.url)) {
             return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
+        } else if (crnRegex.test(resource.url)) {
             return loadCRN(resource);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+        } else if (defined(imageryProvider) && defined(imageryProvider.tileDiscardPolicy)) {
             return resource.fetchImage({
                 preferBlob : true,
                 preferImageBitmap : true,
@@ -357,6 +346,4 @@ define([
             flipY : true
         });
     };
-
-    return ImageryProvider;
-});
+export default ImageryProvider;

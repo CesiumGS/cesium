@@ -1,20 +1,10 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/Math',
-        '../Core/destroyObject',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/Texture'
-    ], function(
-        Color,
-        defined,
-        CesiumMath,
-        destroyObject,
-        ClearCommand,
-        Framebuffer,
-        Texture) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import CesiumMath from '../Core/Math.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Texture from '../Renderer/Texture.js';
 
     /**
      * Creates a minimal amount of textures and framebuffers.
@@ -381,6 +371,4 @@ define([
         releaseResources(this);
         return destroyObject(this);
     };
-
-    return PostProcessStageTextureCache;
-});
+export default PostProcessStageTextureCache;

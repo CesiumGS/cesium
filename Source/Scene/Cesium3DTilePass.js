@@ -1,14 +1,5 @@
-define([
-        '../Core/Check',
-        '../Core/freezeObject',
-        './Cesium3DTilesetMostDetailedTraversal',
-        './Cesium3DTilesetTraversal'
-    ], function(
-        Check,
-        freezeObject,
-        Cesium3DTilesetMostDetailedTraversal,
-        Cesium3DTilesetTraversal) {
-    'use strict';
+import Cesium3DTilesetMostDetailedTraversal from './Cesium3DTilesetMostDetailedTraversal.js';
+import Cesium3DTilesetTraversal from './Cesium3DTilesetTraversal.js';
 
     /**
      * The pass in which a 3D Tileset is updated.
@@ -29,56 +20,56 @@ define([
 
     var passOptions = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
-    passOptions[Cesium3DTilePass.RENDER] = freezeObject({
+    passOptions[Cesium3DTilePass.RENDER] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : true,
         requestTiles : true,
         ignoreCommands : false
     });
 
-    passOptions[Cesium3DTilePass.PICK] = freezeObject({
+    passOptions[Cesium3DTilePass.PICK] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : false,
         ignoreCommands : false
     });
 
-    passOptions[Cesium3DTilePass.SHADOW] = freezeObject({
+    passOptions[Cesium3DTilePass.SHADOW] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : false
     });
 
-    passOptions[Cesium3DTilePass.PRELOAD] = freezeObject({
+    passOptions[Cesium3DTilePass.PRELOAD] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
-    passOptions[Cesium3DTilePass.PRELOAD_FLIGHT] = freezeObject({
+    passOptions[Cesium3DTilePass.PRELOAD_FLIGHT] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
-    passOptions[Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK] = freezeObject({
+    passOptions[Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK] = Object.freeze({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
-    passOptions[Cesium3DTilePass.MOST_DETAILED_PRELOAD] = freezeObject({
+    passOptions[Cesium3DTilePass.MOST_DETAILED_PRELOAD] = Object.freeze({
         traversal : Cesium3DTilesetMostDetailedTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
-    passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = freezeObject({
+    passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = Object.freeze({
         traversal : Cesium3DTilesetMostDetailedTraversal,
         isRender : false,
         requestTiles : false,
@@ -88,6 +79,4 @@ define([
     Cesium3DTilePass.getPassOptions = function(pass) {
         return passOptions[pass];
     };
-
-    return freezeObject(Cesium3DTilePass);
-});
+export default Object.freeze(Cesium3DTilePass);

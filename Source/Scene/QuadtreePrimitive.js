@@ -1,48 +1,23 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Visibility',
-        './QuadtreeOccluders',
-        './QuadtreeTile',
-        './QuadtreeTileLoadState',
-        './SceneMode',
-        './TileReplacementQueue',
-        './TileSelectionResult'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        getTimestamp,
-        CesiumMath,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        Ray,
-        Rectangle,
-        Visibility,
-        QuadtreeOccluders,
-        QuadtreeTile,
-        QuadtreeTileLoadState,
-        SceneMode,
-        TileReplacementQueue,
-        TileSelectionResult) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Visibility from '../Core/Visibility.js';
+import QuadtreeOccluders from './QuadtreeOccluders.js';
+import QuadtreeTile from './QuadtreeTile.js';
+import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
+import SceneMode from './SceneMode.js';
+import TileReplacementQueue from './TileReplacementQueue.js';
+import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
@@ -185,7 +160,7 @@ define([
         this._lastSelectionFrameNumber = undefined;
     }
 
-    defineProperties(QuadtreePrimitive.prototype, {
+    Object.defineProperties(QuadtreePrimitive.prototype, {
         /**
          * Gets the provider of {@link QuadtreeTile} instances for this quadtree.
          * @type {QuadtreeTile}
@@ -655,7 +630,7 @@ define([
         result.notYetRenderableCount = southwest.notYetRenderableCount + southeast.notYetRenderableCount + northwest.notYetRenderableCount + northeast.notYetRenderableCount;
     };
 
-    var traversalQuadsByLevel = new Array(30); // level 30 tiles are ~2cm wide at the equator, should be good enough.
+    var traversalQuadsByLevel = new Array(31); // level 30 tiles are ~2cm wide at the equator, should be good enough.
     for (var i = 0; i < traversalQuadsByLevel.length; ++i) {
         traversalQuadsByLevel[i] = new TraversalQuadDetails();
     }
@@ -994,8 +969,10 @@ define([
         var error = (maxGeometricError * height) / (distance * sseDenominator);
 
         if (frameState.fog.enabled) {
-            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }
@@ -1016,8 +993,10 @@ define([
         var error = maxGeometricError / pixelSize;
 
         if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }
@@ -1206,6 +1185,4 @@ define([
             tileProvider.showTileThisFrame(tile, frameState);
         }
     }
-
-    return QuadtreePrimitive;
-});
+export default QuadtreePrimitive;

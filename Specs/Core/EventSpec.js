@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Event'
-    ], function(
-        Event) {
-    'use strict';
+import { Event } from '../../Source/Cesium.js';
+
+describe('Core/Event', function() {
 
     var event;
     var spyListener;

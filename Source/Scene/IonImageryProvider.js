@@ -1,44 +1,20 @@
-define([
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/IonResource',
-        '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './ArcGisMapServerImageryProvider',
-        './BingMapsImageryProvider',
-        './createTileMapServiceImageryProvider',
-        './GoogleEarthEnterpriseMapsProvider',
-        './MapboxImageryProvider',
-        './SingleTileImageryProvider',
-        './UrlTemplateImageryProvider',
-        './WebMapServiceImageryProvider',
-        './WebMapTileServiceImageryProvider'
-    ], function(
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        IonResource,
-        RuntimeError,
-        when,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import IonResource from '../Core/IonResource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import ArcGisMapServerImageryProvider from './ArcGisMapServerImageryProvider.js';
+import BingMapsImageryProvider from './BingMapsImageryProvider.js';
+import TileMapServiceImageryProvider from './TileMapServiceImageryProvider.js';
+import GoogleEarthEnterpriseMapsProvider from './GoogleEarthEnterpriseMapsProvider.js';
+import MapboxImageryProvider from './MapboxImageryProvider.js';
+import SingleTileImageryProvider from './SingleTileImageryProvider.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
+import WebMapServiceImageryProvider from './WebMapServiceImageryProvider.js';
+import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider.js';
 
     function createFactory(Type) {
         return function(options) {
@@ -54,7 +30,7 @@ define([
         GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
         MAPBOX: createFactory(MapboxImageryProvider),
         SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createTileMapServiceImageryProvider,
+        TMS: createFactory(TileMapServiceImageryProvider),
         URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
         WMS: createFactory(WebMapServiceImageryProvider),
         WMTS: createFactory(WebMapTileServiceImageryProvider)
@@ -177,7 +153,7 @@ define([
                 var imageryProvider;
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
-                    imageryProvider = createTileMapServiceImageryProvider({
+                    imageryProvider = new TileMapServiceImageryProvider({
                         url: new IonResource(endpoint, endpointResource)
                     });
                 } else {
@@ -206,7 +182,7 @@ define([
             });
     }
 
-    defineProperties(IonImageryProvider.prototype, {
+    Object.defineProperties(IonImageryProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof IonImageryProvider.prototype
@@ -499,6 +475,4 @@ define([
 
     //exposed for testing
     IonImageryProvider._endpointCache = {};
-
-    return IonImageryProvider;
-});
+export default IonImageryProvider;

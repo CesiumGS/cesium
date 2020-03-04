@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/DoublyLinkedList'
-    ], function(
-        DoublyLinkedList) {
-    'use strict';
+import { DoublyLinkedList } from '../../Source/Cesium.js';
+
+describe('Core/DoublyLinkedList', function() {
 
     it('constructs', function() {
         var list = new DoublyLinkedList();

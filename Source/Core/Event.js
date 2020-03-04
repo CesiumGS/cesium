@@ -1,12 +1,5 @@
-define([
-        './Check',
-        './defined',
-        './defineProperties'
-    ], function(
-        Check,
-        defined,
-        defineProperties) {
-    'use strict';
+import Check from './Check.js';
+import defined from './defined.js';
 
     /**
      * A generic utility class for managing subscribers for a particular event.
@@ -34,7 +27,7 @@ define([
         this._insideRaiseEvent = false;
     }
 
-    defineProperties(Event.prototype, {
+    Object.defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
          * @memberof Event.prototype
@@ -166,6 +159,4 @@ define([
      * A function that removes a listener.
      * @callback Event~RemoveCallback
      */
-
-    return Event;
-});
+export default Event;

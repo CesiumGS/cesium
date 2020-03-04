@@ -1,24 +1,11 @@
-define([
-        './Cartesian2',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './GeographicProjection',
-        './Math',
-        './Rectangle'
-    ], function(
-        Cartesian2,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        GeographicProjection,
-        CesiumMath,
-        Rectangle) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import GeographicProjection from './GeographicProjection.js';
+import CesiumMath from './Math.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * A tiling scheme for geometry referenced to a simple {@link GeographicProjection} where
@@ -38,7 +25,7 @@ define([
      * the tile tree.
      */
     function GeographicTilingScheme(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
@@ -47,7 +34,7 @@ define([
         this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
     }
 
-    defineProperties(GeographicTilingScheme.prototype, {
+    Object.defineProperties(GeographicTilingScheme.prototype, {
         /**
          * Gets the ellipsoid that is tiled by this tiling scheme.
          * @memberof GeographicTilingScheme.prototype
@@ -237,6 +224,4 @@ define([
         result.y = yTileCoordinate;
         return result;
     };
-
-    return GeographicTilingScheme;
-});
+export default GeographicTilingScheme;

@@ -1,26 +1,12 @@
-define([
-        '../Core/binarySearch',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ExtrapolationType',
-        '../Core/JulianDate',
-        '../Core/LinearApproximation'
-    ], function(
-        binarySearch,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ExtrapolationType,
-        JulianDate,
-        LinearApproximation) {
-    'use strict';
+import binarySearch from '../Core/binarySearch.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ExtrapolationType from '../Core/ExtrapolationType.js';
+import JulianDate from '../Core/JulianDate.js';
+import LinearApproximation from '../Core/LinearApproximation.js';
 
     var PackableNumber = {
         packedLength : 1,
@@ -219,7 +205,7 @@ define([
         this._backwardExtrapolationDuration = 0;
     }
 
-    defineProperties(SampledProperty.prototype, {
+    Object.defineProperties(SampledProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
@@ -750,6 +736,4 @@ define([
 
     //Exposed for testing.
     SampledProperty._mergeNewSamples = mergeNewSamples;
-
-    return SampledProperty;
-});
+export default SampledProperty;

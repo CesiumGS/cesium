@@ -1,9 +1,3 @@
-/*global define*/
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-        'use strict';
 
         /**
          * Returns frozen renderState as well as all of the object literal properties. This function is deep object freeze
@@ -29,7 +23,6 @@ define([
                     renderState[propName] = freezeRenderState(renderState[propName]);
                 }
             }
-            return freezeObject(renderState);
+            return Object.freeze(renderState);
         }
-        return freezeRenderState;
-});
+export default freezeRenderState;

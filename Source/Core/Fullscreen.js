@@ -1,10 +1,4 @@
-define([
-        './defined',
-        './defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from './defined.js';
 
     var _supportsFullscreen;
     var _names = {
@@ -26,7 +20,7 @@ define([
      */
     var Fullscreen = {};
 
-    defineProperties(Fullscreen, {
+    Object.defineProperties(Fullscreen, {
         /**
          * The element that is currently fullscreen, if any.  To simply check if the
          * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.
@@ -251,5 +245,6 @@ define([
         document[_names.exitFullscreen]();
     };
 
-    return Fullscreen;
-});
+    //For unit tests
+    Fullscreen._names = _names;
+export default Fullscreen;

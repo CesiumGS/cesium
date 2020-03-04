@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     // Note, these values map directly to ion asset ids.
 
@@ -36,6 +31,4 @@ define([
          */
         ROAD : 4
     };
-
-    return freezeObject(IonWorldImageryStyle);
-});
+export default Object.freeze(IonWorldImageryStyle);

@@ -1,18 +1,8 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Fullscreen',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Fullscreen,
-        when) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Fullscreen from './Fullscreen.js';
     /*global CanvasPixelArray*/
 
     var theNavigator;
@@ -177,7 +167,7 @@ define([
             //that rely on it, such as the Windows WebBrowser control which defines
             //PointerEvent but sets navigator.pointerEnabled to false.
 
-            //Firefox disabled because of https://github.com/AnalyticalGraphicsInc/cesium/issues/6372
+            //Firefox disabled because of https://github.com/CesiumGS/cesium/issues/6372
             hasPointerEvents = !isFirefox() && typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;
@@ -246,7 +236,7 @@ define([
 
         return supportsWebPDeferred.promise;
     };
-    defineProperties(supportsWebP, {
+    Object.defineProperties(supportsWebP, {
         initialized: {
             get: function() {
                 return defined(supportsWebP._result);
@@ -339,6 +329,4 @@ define([
     FeatureDetection.supportsWebAssembly = function() {
         return typeof WebAssembly !== 'undefined' && !FeatureDetection.isEdge();
     };
-
-    return FeatureDetection;
-});
+export default FeatureDetection;

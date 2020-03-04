@@ -1,16 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defineProperties,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import CesiumMath from '../Core/Math.js';
 
     /**
      * A ParticleEmitter that emits particles within a sphere.
@@ -31,7 +22,7 @@ define([
         this._radius = defaultValue(radius, 1.0);
     }
 
-    defineProperties(SphereEmitter.prototype, {
+    Object.defineProperties(SphereEmitter.prototype, {
         /**
          * The radius of the sphere in meters.
          * @memberof SphereEmitter.prototype
@@ -69,6 +60,4 @@ define([
         particle.position = Cartesian3.fromElements(x, y, z, particle.position);
         particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
     };
-
-    return SphereEmitter;
-});
+export default SphereEmitter;

@@ -1,8 +1,3 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * This enumerated type is for representing keyboard modifiers. These are keys
@@ -35,6 +30,4 @@ define([
          */
         ALT : 2
     };
-
-    return freezeObject(KeyboardEventModifier);
-});
+export default Object.freeze(KeyboardEventModifier);

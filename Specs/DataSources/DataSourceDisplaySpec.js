@@ -1,32 +1,18 @@
-defineSuite([
-        'DataSources/DataSourceDisplay',
-        'Core/ApproximateTerrainHeights',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Iso8601',
-        'DataSources/BoundingSphereState',
-        'DataSources/DataSourceCollection',
-        'DataSources/Entity',
-        'Scene/GroundPolylinePrimitive',
-        'Scene/GroundPrimitive',
-        'ThirdParty/when',
-        'Specs/createScene',
-        'Specs/MockDataSource'
-    ], function(
-        DataSourceDisplay,
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        Cartesian3,
-        Iso8601,
-        BoundingSphereState,
-        DataSourceCollection,
-        Entity,
-        GroundPolylinePrimitive,
-        GroundPrimitive,
-        when,
-        createScene,
-        MockDataSource) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { DataSourceCollection } from '../../Source/Cesium.js';
+import { DataSourceDisplay } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import MockDataSource from '../MockDataSource.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/DataSourceDisplay', function() {
 
     var dataSourceCollection;
     var scene;

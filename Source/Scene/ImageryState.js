@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
@@ -17,6 +12,4 @@ define([
         INVALID : 6,
         PLACEHOLDER : 7
     };
-
-    return freezeObject(ImageryState);
-});
+export default Object.freeze(ImageryState);

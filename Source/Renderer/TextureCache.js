@@ -1,12 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
 
     /**
      * @private
@@ -17,7 +10,7 @@ define([
         this._texturesToRelease = {};
     }
 
-    defineProperties(TextureCache.prototype, {
+    Object.defineProperties(TextureCache.prototype, {
         numberOfTextures : {
             get : function() {
                 return this._numberOfTextures;
@@ -85,6 +78,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return TextureCache;
-});
+export default TextureCache;

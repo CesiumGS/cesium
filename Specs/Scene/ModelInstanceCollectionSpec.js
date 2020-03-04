@@ -1,38 +1,21 @@
-defineSuite([
-        'Scene/ModelInstanceCollection',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/defaultValue',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/PrimitiveType',
-        'Core/Resource',
-        'Core/Transforms',
-        'Scene/Model',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        ModelInstanceCollection,
-        BoundingSphere,
-        Cartesian3,
-        defaultValue,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        JulianDate,
-        Matrix4,
-        PrimitiveType,
-        Resource,
-        Transforms,
-        Model,
-        ShadowMode,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { ModelInstanceCollection } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/ModelInstanceCollection', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';

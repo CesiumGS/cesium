@@ -1,10 +1,4 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * Determines the function used to compare stencil values for the stencil test.
@@ -76,6 +70,4 @@ define([
          */
         ALWAYS : WebGLConstants.ALWAYS
     };
-
-    return freezeObject(StencilFunction);
-});
+export default Object.freeze(StencilFunction);

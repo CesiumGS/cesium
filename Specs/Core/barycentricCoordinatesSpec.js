@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/barycentricCoordinates',
-        'Core/Cartesian3',
-        'Core/Math'
-    ], function(
-        barycentricCoordinates,
-        Cartesian3,
-        CesiumMath) {
-    'use strict';
+import { barycentricCoordinates } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/barycentricCoordinates', function() {
 
     var p0 = new Cartesian3(-1.0, 0.0, 0.0);
     var p1 = new Cartesian3( 1.0, 0.0, 0.0);
@@ -46,6 +42,12 @@ defineSuite([
         var scalar = 1.0 / 3.0;
         var point = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.add(p0, p1, new Cartesian3()), p2, new Cartesian3()), scalar, new Cartesian3());
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqualEpsilon(new Cartesian3(scalar, scalar, scalar), CesiumMath.EPSILON14);
+    });
+
+    it('evaluates without throwing a NaN', function() {
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p1, p1, p1), 0.5, new Cartesian3());
+        var coord = barycentricCoordinates(point, p0, p1, p2);
+        expect(coord.z).not.toBeNaN();
     });
 
     it('evaluates with equal length sides', function() {

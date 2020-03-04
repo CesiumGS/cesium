@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/CubicRealPolynomial',
-        'Core/Math'
-    ], function(
-        CubicRealPolynomial,
-        CesiumMath) {
-    'use strict';
+import { CubicRealPolynomial } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/CubicRealPolynomial', function() {
 
     it('discriminant throws without a', function() {
         expect(function() {

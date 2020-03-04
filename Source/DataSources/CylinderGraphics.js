@@ -1,20 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
@@ -28,7 +17,7 @@ define([
      * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
      * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
      * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
@@ -36,7 +25,7 @@ define([
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
@@ -73,7 +62,7 @@ define([
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(CylinderGraphics.prototype, {
+    Object.defineProperties(CylinderGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof CylinderGraphics.prototype
@@ -182,7 +171,7 @@ define([
 
         /**
          * Get or sets the enum Property specifying whether the cylinder
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED
@@ -252,6 +241,4 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
-
-    return CylinderGraphics;
-});
+export default CylinderGraphics;

@@ -1,8 +1,3 @@
-define([
-        './defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
 
     /**
      * A queue that can enqueue items at the end, and dequeue items from the front.
@@ -16,7 +11,7 @@ define([
         this._length = 0;
     }
 
-    defineProperties(Queue.prototype, {
+    Object.defineProperties(Queue.prototype, {
         /**
          * The length of the queue.
          *
@@ -129,6 +124,4 @@ define([
      *     return a - b;
      * }
      */
-
-    return Queue;
-});
+export default Queue;

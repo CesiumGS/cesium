@@ -1,16 +1,7 @@
-define([
-        '../Core/Check',
-        '../Core/freezeObject',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4'
-    ], function(
-        Check,
-        freezeObject,
-        CesiumMath,
-        Matrix3,
-        Matrix4) {
-    'use strict';
+import Check from '../Core/Check.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
 
     /**
      * An enum describing the x, y, and z axes and helper conversion functions.
@@ -105,6 +96,4 @@ define([
             return Axis[name];
         }
     };
-
-    return freezeObject(Axis);
-});
+export default Object.freeze(Axis);

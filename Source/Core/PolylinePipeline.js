@@ -1,32 +1,15 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidGeodesic',
-        './EllipsoidRhumbLine',
-        './IntersectionTests',
-        './isArray',
-        './Math',
-        './Matrix4',
-        './Plane'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        EllipsoidRhumbLine,
-        IntersectionTests,
-        isArray,
-        CesiumMath,
-        Matrix4,
-        Plane) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidGeodesic from './EllipsoidGeodesic.js';
+import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
+import IntersectionTests from './IntersectionTests.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
+import Plane from './Plane.js';
 
     /**
      * @private
@@ -276,7 +259,7 @@ define([
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var hasHeightArray = isArray(height);
+        var hasHeightArray = Array.isArray(height);
 
         if (length < 1) {
             return [];
@@ -367,7 +350,7 @@ define([
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var hasHeightArray = isArray(height);
+        var hasHeightArray = Array.isArray(height);
 
         if (length < 1) {
             return [];
@@ -480,6 +463,4 @@ define([
         }
         return newPositions;
     };
-
-    return PolylinePipeline;
-});
+export default PolylinePipeline;

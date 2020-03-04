@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/HeightmapTerrainData',
-        'Core/GeographicTilingScheme',
-        'Core/HeightmapEncoding',
-        'Core/TerrainData'
-    ], function(
-        HeightmapTerrainData,
-        GeographicTilingScheme,
-        HeightmapEncoding,
-        TerrainData) {
-     'use strict';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { HeightmapEncoding } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { TerrainData } from '../../Source/Cesium.js';
+
+describe('Core/HeightmapTerrainData', function() {
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);

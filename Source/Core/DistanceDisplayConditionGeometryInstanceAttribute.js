@@ -1,16 +1,7 @@
-define([
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Value and type information for per-instance geometry attribute that determines if the geometry instance has a distance display condition.
@@ -61,7 +52,7 @@ define([
         this.value = new Float32Array([near, far]);
     }
 
-    defineProperties(DistanceDisplayConditionGeometryInstanceAttribute.prototype, {
+    Object.defineProperties(DistanceDisplayConditionGeometryInstanceAttribute.prototype, {
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
          * {@link DistanceDisplayConditionGeometryInstanceAttribute#value}.
@@ -169,6 +160,4 @@ define([
         result[1] = distanceDisplayCondition.far;
         return result;
     };
-
-    return DistanceDisplayConditionGeometryInstanceAttribute;
-});
+export default DistanceDisplayConditionGeometryInstanceAttribute;

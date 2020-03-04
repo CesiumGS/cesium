@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Static interface for types which can store their values as packed
@@ -41,6 +37,4 @@ define([
          */
         unpack : DeveloperError.throwInstantiationError
     };
-
-    return Packable;
-});
+export default Packable;

@@ -1,22 +1,8 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/defined',
-        '../Core/deprecationWarning',
-        '../Core/Event',
-        '../Core/JulianDate',
-        './ModelAnimationLoop',
-        './ModelAnimationState'
-    ], function(
-        defaultValue,
-        defineProperties,
-        defined,
-        deprecationWarning,
-        Event,
-        JulianDate,
-        ModelAnimationLoop,
-        ModelAnimationState) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import ModelAnimationLoop from './ModelAnimationLoop.js';
+import ModelAnimationState from './ModelAnimationState.js';
 
     /**
      * An active glTF animation.  A glTF asset can contain animations.  An active animation
@@ -127,7 +113,7 @@ define([
         };
     }
 
-    defineProperties(ModelAnimation.prototype, {
+    Object.defineProperties(ModelAnimation.prototype, {
         /**
          * The glTF animation name that identifies this animation.
          *
@@ -244,6 +230,4 @@ define([
             }
         }
     });
-
-    return ModelAnimation;
-});
+export default ModelAnimation;

@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -184,8 +179,8 @@ function highlightTrees() {
 }
 
 function invertClassification(checked) {
-    if (!scene.invertClassificationSupported) {
-        console.log('This browser does not support invert classification');
+    if (checked && !scene.invertClassificationSupported) {
+        window.alert('This browser does not support invert classification');
     }
 
     scene.invertClassification = checked;
@@ -202,7 +197,7 @@ function updateAlpha(value) {
     scene.invertClassificationColor.alpha = parseFloat(value);
 }
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(6074) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(40866) });
 scene.primitives.add(tileset);
 
 var viewModel = {
@@ -267,9 +262,8 @@ handler.setInputAction(function(movement) {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

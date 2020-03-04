@@ -1,22 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/TimeConstants'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        getTimestamp,
-        TimeConstants) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import TimeConstants from '../Core/TimeConstants.js';
 
     /**
      * Monitors the frame rate (frames per second) in a {@link Scene} and raises an event if the frame rate is
@@ -165,7 +153,7 @@ define([
         return scene._frameRateMonitor;
     };
 
-    defineProperties(FrameRateMonitor.prototype, {
+    Object.defineProperties(FrameRateMonitor.prototype, {
         /**
          * Gets the {@link Scene} instance for which to monitor performance.
          * @memberof FrameRateMonitor.prototype
@@ -330,6 +318,4 @@ define([
             monitor.unpause();
         }
     }
-
-    return FrameRateMonitor;
-});
+export default FrameRateMonitor;

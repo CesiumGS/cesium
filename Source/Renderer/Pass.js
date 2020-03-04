@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * The render pass for a command.
@@ -29,6 +24,4 @@ define([
         OVERLAY : 9,
         NUMBER_OF_PASSES : 10
     };
-
-    return freezeObject(Pass);
-});
+export default Object.freeze(Pass);

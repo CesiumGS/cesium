@@ -1,52 +1,26 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/GeometryInstance',
-        '../Core/Iso8601',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/PlaneGeometry',
-        '../Core/PlaneOutlineGeometry',
-        '../Core/Quaternion',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './Property'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        GeometryInstance,
-        Iso8601,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        PlaneGeometry,
-        PlaneOutlineGeometry,
-        Quaternion,
-        ShowGeometryInstanceAttribute,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        Property) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Iso8601 from '../Core/Iso8601.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PlaneGeometry from '../Core/PlaneGeometry.js';
+import PlaneOutlineGeometry from '../Core/PlaneOutlineGeometry.js';
+import Quaternion from '../Core/Quaternion.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import Property from './Property.js';
 
     var positionScratch = new Cartesian3();
     var scratchColor = new Color();
@@ -266,6 +240,9 @@ define([
         var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
         if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
             up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
+            if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
+                up = Cartesian3.clone(Cartesian3.UNIT_X, up);
+            }
         }
 
         var left = Cartesian3.cross(up, transformedNormal, scratchAxis);
@@ -289,6 +266,4 @@ define([
      * @private
      */
     PlaneGeometryUpdater.createPrimitiveMatrix = createPrimitiveMatrix;
-
-    return PlaneGeometryUpdater;
-});
+export default PlaneGeometryUpdater;

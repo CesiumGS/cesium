@@ -1,60 +1,32 @@
-defineSuite([
-        'Scene/GroundPrimitive',
-        'Core/ApproximateTerrainHeights',
-        'Core/arraySlice',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/destroyObject',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/PolygonGeometry',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/ShowGeometryInstanceAttribute',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/ClassificationType',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/InvertClassification',
-        'Scene/Material',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/StencilConstants',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        GroundPrimitive,
-        ApproximateTerrainHeights,
-        arraySlice,
-        Color,
-        ColorGeometryInstanceAttribute,
-        destroyObject,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
-        GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        PolygonGeometry,
-        Rectangle,
-        RectangleGeometry,
-        ShowGeometryInstanceAttribute,
-        Pass,
-        RenderState,
-        ClassificationType,
-        EllipsoidSurfaceAppearance,
-        InvertClassification,
-        Material,
-        PerInstanceColorAppearance,
-        Primitive,
-        StencilConstants,
-        createCanvas,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { arraySlice } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { InvertClassification } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GroundPrimitive', function() {
 
     var scene;
     var context;
@@ -162,7 +134,6 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
-        scene.render(); // clear any afterRender commands
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 
@@ -298,11 +269,9 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
-        frameState.commandList.length = 0;
-
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.groundPrimitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('does not render when show is false', function() {
@@ -315,21 +284,13 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toBeGreaterThan(0);
 
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.afterRender.length).toEqual(1);
-
-        frameState.afterRender[0]();
-        frameState.commandList.length = 0;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toBeGreaterThan(0);
-
-        frameState.commandList.length = 0;
         primitive.show = false;
-        primitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('becomes ready when show is false', function() {
@@ -349,7 +310,7 @@ defineSuite([
         });
 
         return pollToPromise(function() {
-            scene.render();
+            scene.renderForSpecs();
             return ready;
         }).then(function() {
             expect(ready).toEqual(true);
@@ -561,7 +522,7 @@ defineSuite([
         });
 
         function verifyLargerScene(groundPrimitive, expectedColor, destination) {
-            largeScene.render();
+            largeScene.renderForSpecs();
 
             largeScene.postProcessStages.fxaa.enabled = false;
             largeScene.camera.setView({destination : destination});
@@ -1109,13 +1070,10 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
+        scene.groundPrimitives.add(primitive);
+
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
-            primitive.update(frameState);
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -1143,13 +1101,10 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = scene.frameState;
-        frameState.afterRender.length = 0;
+        scene.groundPrimitives.add(primitive);
+
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
-            primitive.update(frameState);
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -1264,13 +1219,10 @@ defineSuite([
             allowPicking : false
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
             var attributes = primitive.getGeometryInstanceAttributes('rectangle');
@@ -1339,29 +1291,40 @@ defineSuite([
             geometryInstances : rectangleInstance
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return primitive.ready;
         }).then(function() {
+            // verifyGroundPrimitiveRender adds the primitive, so remove it to avoid being added twice.
+            scene.groundPrimitives.destroyPrimitives = false;
+            scene.groundPrimitives.removeAll();
+            scene.groundPrimitives.destroyPrimitives = true;
+
             verifyGroundPrimitiveRender(primitive, rectColor);
         });
     });
 
-    it('destroy before asynchonous pipeline is complete', function() {
+    it('destroy before asynchronous pipeline is complete', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         primitive = new GroundPrimitive({
             geometryInstances : rectangleInstance
         });
 
-        var frameState = scene.frameState;
-        primitive.update(frameState);
+        scene.groundPrimitives.add(primitive);
 
+        scene.renderForSpecs();
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
+
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
+        scene.groundPrimitives.destroyPrimitives = false;
+        scene.groundPrimitives.removeAll();
+        scene.groundPrimitives.destroyPrimitives = true;
     });
 
     it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
@@ -1376,9 +1339,11 @@ defineSuite([
             asynchronous : false
         });
 
+        scene.groundPrimitives.add(primitive);
+
         if (GroundPrimitive.isSupported(scene)) {
             expect(function() {
-                primitive.update(scene.frameState);
+                scene.renderForSpecs();
             }).toThrowDeveloperError();
         }
 

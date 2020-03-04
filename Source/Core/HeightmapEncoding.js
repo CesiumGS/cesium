@@ -1,8 +1,3 @@
-define([
-    './freezeObject'
-], function(
-    freezeObject) {
-    'use strict';
 
     /**
      * The encoding that is used for a heightmap
@@ -28,6 +23,4 @@ define([
          */
         LERC: 1
     };
-
-    return freezeObject(HeightmapEncoding);
-});
+export default Object.freeze(HeightmapEncoding);

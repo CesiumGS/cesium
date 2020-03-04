@@ -1,16 +1,9 @@
-define([
-        './freezeObject',
-        './JulianDate',
-        './TimeInterval'
-    ], function(
-        freezeObject,
-        JulianDate,
-        TimeInterval) {
-    'use strict';
+import JulianDate from './JulianDate.js';
+import TimeInterval from './TimeInterval.js';
 
-    var MINIMUM_VALUE = freezeObject(JulianDate.fromIso8601('0000-01-01T00:00:00Z'));
-    var MAXIMUM_VALUE = freezeObject(JulianDate.fromIso8601('9999-12-31T24:00:00Z'));
-    var MAXIMUM_INTERVAL = freezeObject(new TimeInterval({
+    var MINIMUM_VALUE = Object.freeze(JulianDate.fromIso8601('0000-01-01T00:00:00Z'));
+    var MAXIMUM_VALUE = Object.freeze(JulianDate.fromIso8601('9999-12-31T24:00:00Z'));
+    var MAXIMUM_INTERVAL = Object.freeze(new TimeInterval({
         start : MINIMUM_VALUE,
         stop : MAXIMUM_VALUE
     }));
@@ -52,6 +45,4 @@ define([
          */
         MAXIMUM_INTERVAL : MAXIMUM_INTERVAL
     };
-
-    return Iso8601;
-});
+export default Iso8601;

@@ -1,22 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        when) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * A collection of {@link DataSource} instances.
@@ -30,7 +18,7 @@ define([
         this._dataSourceMoved = new Event();
     }
 
-    defineProperties(DataSourceCollection.prototype, {
+    Object.defineProperties(DataSourceCollection.prototype, {
         /**
          * Gets the number of data sources in this collection.
          * @memberof DataSourceCollection.prototype
@@ -193,6 +181,24 @@ define([
         return this._dataSources[index];
     };
 
+    /**
+     * Gets a data source by name from the collection.
+     *
+     * @param {String} name The name to retrieve.
+     * @returns {DataSource[]} A list of all data sources matching the provided name.
+     */
+    DataSourceCollection.prototype.getByName = function(name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        return this._dataSources.filter(function(dataSource) {
+            return dataSource.name === name;
+        });
+    };
+
     function getIndex(dataSources, dataSource) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(dataSource)) {
@@ -324,6 +330,4 @@ define([
         this.removeAll(true);
         return destroyObject(this);
     };
-
-    return DataSourceCollection;
-});
+export default DataSourceCollection;

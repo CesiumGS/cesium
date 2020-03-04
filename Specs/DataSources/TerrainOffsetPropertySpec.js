@@ -1,26 +1,12 @@
-defineSuite([
-    'DataSources/TerrainOffsetProperty',
-    'Core/Cartesian3',
-    'Core/Event',
-    'Core/JulianDate',
-    'Core/Rectangle',
-    'Scene/HeightReference',
-    'DataSources/CallbackProperty',
-    'DataSources/ConstantProperty',
-    'Specs/createGlobe',
-    'Specs/createScene'
-], function(
-    TerrainOffsetProperty,
-    Cartesian3,
-    Event,
-    JulianDate,
-    Rectangle,
-    HeightReference,
-    CallbackProperty,
-    ConstantProperty,
-    createGlobe,
-    createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { TerrainOffsetProperty } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/TerrainOffsetProperty', function() {
 
     var scene;
     var time = JulianDate.now();

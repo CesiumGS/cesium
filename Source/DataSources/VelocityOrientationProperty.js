@@ -1,28 +1,13 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/Matrix3',
-        '../Core/Quaternion',
-        '../Core/Transforms',
-        './Property',
-        './VelocityVectorProperty'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        Event,
-        Matrix3,
-        Quaternion,
-        Transforms,
-        Property,
-        VelocityVectorProperty) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Event from '../Core/Event.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Quaternion from '../Core/Quaternion.js';
+import Transforms from '../Core/Transforms.js';
+import Property from './Property.js';
+import VelocityVectorProperty from './VelocityVectorProperty.js';
 
     /**
      * A {@link Property} which evaluates to a {@link Quaternion} rotation
@@ -57,7 +42,7 @@ define([
         });
     }
 
-    defineProperties(VelocityOrientationProperty.prototype, {
+    Object.defineProperties(VelocityOrientationProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof VelocityOrientationProperty.prototype
@@ -152,6 +137,4 @@ define([
                 (this._ellipsoid === other._ellipsoid ||
                  this._ellipsoid.equals(other._ellipsoid)));
     };
-
-    return VelocityOrientationProperty;
-});
+export default VelocityOrientationProperty;

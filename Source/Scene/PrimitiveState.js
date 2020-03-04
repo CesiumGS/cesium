@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * @private
@@ -16,6 +11,4 @@ define([
         COMPLETE : 5,
         FAILED : 6
     };
-
-    return freezeObject(PrimitiveState);
-});
+export default Object.freeze(PrimitiveState);

@@ -1,36 +1,17 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        './ContextLimits',
-        './CubeMapFace',
-        './MipmapHint',
-        './PixelDatatype',
-        './Sampler',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        ContextLimits,
-        CubeMapFace,
-        MipmapHint,
-        PixelDatatype,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ContextLimits from './ContextLimits.js';
+import CubeMapFace from './CubeMapFace.js';
+import MipmapHint from './MipmapHint.js';
+import PixelDatatype from './PixelDatatype.js';
+import Sampler from './Sampler.js';
+import TextureMagnificationFilter from './TextureMagnificationFilter.js';
+import TextureMinificationFilter from './TextureMinificationFilter.js';
 
     /**
      * @private
@@ -199,7 +180,7 @@ define([
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
 
-    defineProperties(CubeMap.prototype, {
+    Object.defineProperties(CubeMap.prototype, {
         positiveX : {
             get : function() {
                 return this._positiveX;
@@ -371,6 +352,4 @@ define([
         this._negativeZ = destroyObject(this._negativeZ);
         return destroyObject(this);
     };
-
-    return CubeMap;
-});
+export default CubeMap;

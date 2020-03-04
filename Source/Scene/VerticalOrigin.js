@@ -1,8 +1,3 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     /**
      * The vertical location of an origin relative to an object, e.g., a {@link Billboard}
@@ -52,6 +47,4 @@ define([
          */
         TOP : -1
     };
-
-    return freezeObject(VerticalOrigin);
-});
+export default Object.freeze(VerticalOrigin);

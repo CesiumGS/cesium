@@ -1,20 +1,12 @@
-defineSuite([
-        'DataSources/CompositeMaterialProperty',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/GridMaterialProperty'
-    ], function(
-        CompositeMaterialProperty,
-        Color,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        GridMaterialProperty) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { CompositeMaterialProperty } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/CompositeMaterialProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();

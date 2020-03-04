@@ -1,20 +1,12 @@
-defineSuite([
-        'Renderer/Context',
-        'Core/Color',
-        'Core/IndexDatatype',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ContextLimits',
-        'Specs/createContext'
-    ], function(
-        Context,
-        Color,
-        IndexDatatype,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        createContext) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { Context } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Context', function() {
 
     var context;
 
@@ -169,6 +161,10 @@ defineSuite([
 
     it('gets the texture float extension', function() {
         expect(context.floatingPointTexture).toBeDefined();
+    });
+
+    it('gets whether the texture float has 6 places of precision', function() {
+        expect(context.floatTextureSixPlaces).toBeDefined();
     });
 
     it('gets texture filter anisotropic extension', function() {

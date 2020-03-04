@@ -1,20 +1,8 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './JulianDate'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        JulianDate) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import JulianDate from './JulianDate.js';
 
     /**
      * An interval defined by a start and a stop time; optionally including those times as part of the interval.
@@ -104,7 +92,7 @@ define([
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
     }
 
-    defineProperties(TimeInterval.prototype, {
+    Object.defineProperties(TimeInterval.prototype, {
         /**
          * Gets whether or not this interval is empty.
          * @memberof TimeInterval.prototype
@@ -383,7 +371,7 @@ define([
      * @type {TimeInterval}
      * @constant
      */
-    TimeInterval.EMPTY = freezeObject(new TimeInterval({
+    TimeInterval.EMPTY = Object.freeze(new TimeInterval({
         start : new JulianDate(),
         stop : new JulianDate(),
         isStartIncluded : false,
@@ -406,6 +394,4 @@ define([
      * @param {*} rightData The second data instance.
      * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
      */
-
-    return TimeInterval;
-});
+export default TimeInterval;
