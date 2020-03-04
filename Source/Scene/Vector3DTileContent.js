@@ -331,32 +331,53 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         byteOffset += byteOffset % 4;
 
         if (numberOfPolygons > 0) {
-            var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
+            featureTable.featuresLength = numberOfPolygons;
+
+            var polygonCounts = defaultValue(
+                featureTable.getPropertyArray('POLYGON_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolygons),
+                featureTable.getPropertyArray('POLYGON_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolygons) // Workaround for old vector tilesets using the non-plural name
+            );
+
+            if (!defined(polygonCounts)) {
+                throw new RuntimeError('Feature table property: POLYGON_COUNTS must be defined when POLYGONS_LENGTH is greater than 0');
+            }
+
+            var polygonIndexCounts = defaultValue(
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolygons),
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolygons) // Workaround for old vector tilesets using the non-plural name
+            );
+
+            if (!defined(polygonIndexCounts)) {
+                throw new RuntimeError('Feature table property: POLYGON_INDEX_COUNTS must be defined when POLYGONS_LENGTH is greater than 0');
+            }
+
+            // Use the counts array to determine how many position values we want. If we used the byte length then
+            // zero padding values would be included and cause the delta zig-zag decoding to fail
+            var numPolygonPositions = polygonCounts.reduce(function(total, count) {
+                return total + count * 2;
+            }, 0);
+
+            var numPolygonIndices = polygonIndexCounts.reduce(function(total, count) {
+                return total + count;
+            }, 0);
+
+            var indices = new Uint32Array(arrayBuffer, byteOffset, numPolygonIndices);
             byteOffset += indicesByteLength;
 
-            var polygonPositions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+            var polygonPositions = new Uint16Array(arrayBuffer, byteOffset, numPolygonPositions);
             byteOffset += positionByteLength;
-
-            var polygonCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
-            var counts = new Uint32Array(featureTableBinary.buffer, polygonCountByteOffset, numberOfPolygons);
-
-            var polygonIndexCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
-            var indexCounts = new Uint32Array(featureTableBinary.buffer, polygonIndexCountByteOffset, numberOfPolygons);
 
             var polygonMinimumHeights;
             var polygonMaximumHeights;
             if (defined(featureTableJson.POLYGON_MINIMUM_HEIGHTS) && defined(featureTableJson.POLYGON_MAXIMUM_HEIGHTS)) {
-                var polygonMinimumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MINIMUM_HEIGHTS.byteOffset;
-                polygonMinimumHeights = new Float32Array(featureTableBinary.buffer, polygonMinimumHeightsByteOffset, numberOfPolygons);
-
-                var polygonMaximumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MAXIMUM_HEIGHTS.byteOffset;
-                polygonMaximumHeights = new Float32Array(featureTableBinary.buffer, polygonMaximumHeightsByteOffset, numberOfPolygons);
+                polygonMinimumHeights = featureTable.getPropertyArray('POLYGON_MINIMUM_HEIGHTS', ComponentDatatype.FLOAT, numberOfPolygons);
+                polygonMaximumHeights = featureTable.getPropertyArray('POLYGON_MAXIMUM_HEIGHTS', ComponentDatatype.FLOAT, numberOfPolygons);
             }
 
             content._polygons = new Vector3DTilePolygons({
                 positions : polygonPositions,
-                counts : counts,
-                indexCounts : indexCounts,
+                counts : polygonCounts,
+                indexCounts : polygonIndexCounts,
                 indices : indices,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
