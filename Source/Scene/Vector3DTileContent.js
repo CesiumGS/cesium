@@ -334,8 +334,8 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             featureTable.featuresLength = numberOfPolygons;
 
             var polygonCounts = defaultValue(
-                featureTable.getPropertyArray('POLYGON_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolygons),
-                featureTable.getPropertyArray('POLYGON_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolygons) // Workaround for old vector tilesets using the non-plural name
+                featureTable.getPropertyArray('POLYGON_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYGON_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
             );
 
             if (!defined(polygonCounts)) {
@@ -343,8 +343,8 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             }
 
             var polygonIndexCounts = defaultValue(
-                featureTable.getPropertyArray('POLYGON_INDEX_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolygons),
-                featureTable.getPropertyArray('POLYGON_INDEX_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolygons) // Workaround for old vector tilesets using the non-plural name
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
             );
 
             if (!defined(polygonIndexCounts)) {
@@ -370,8 +370,8 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             var polygonMinimumHeights;
             var polygonMaximumHeights;
             if (defined(featureTableJson.POLYGON_MINIMUM_HEIGHTS) && defined(featureTableJson.POLYGON_MAXIMUM_HEIGHTS)) {
-                polygonMinimumHeights = featureTable.getPropertyArray('POLYGON_MINIMUM_HEIGHTS', ComponentDatatype.FLOAT, numberOfPolygons);
-                polygonMaximumHeights = featureTable.getPropertyArray('POLYGON_MAXIMUM_HEIGHTS', ComponentDatatype.FLOAT, numberOfPolygons);
+                polygonMinimumHeights = featureTable.getPropertyArray('POLYGON_MINIMUM_HEIGHTS', ComponentDatatype.FLOAT, 1);
+                polygonMaximumHeights = featureTable.getPropertyArray('POLYGON_MAXIMUM_HEIGHTS', ComponentDatatype.FLOAT, 1);
             }
 
             content._polygons = new Vector3DTilePolygons({
@@ -396,15 +396,15 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             featureTable.featuresLength = numberOfPolylines;
 
             var polylineCounts = defaultValue(
-                featureTable.getPropertyArray('POLYLINE_COUNTS', ComponentDatatype.UNSIGNED_INT, numberOfPolylines),
-                featureTable.getPropertyArray('POLYLINE_COUNT', ComponentDatatype.UNSIGNED_INT, numberOfPolylines) // Workaround for old vector tilesets using the non-plural name
+                featureTable.getPropertyArray('POLYLINE_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYLINE_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
             );
 
             if (!defined(polylineCounts)) {
                 throw new RuntimeError('Feature table property: POLYLINE_COUNTS must be defined when POLYLINES_LENGTH is greater than 0');
             }
 
-            var widths = featureTable.getPropertyArray('POLYLINE_WIDTHS', ComponentDatatype.UNSIGNED_SHORT, numberOfPolylines);
+            var widths = featureTable.getPropertyArray('POLYLINE_WIDTHS', ComponentDatatype.UNSIGNED_SHORT, 1);
             if (!defined(widths)) {
                 widths = new Uint16Array(numberOfPolylines);
                 for (var i = 0; i < numberOfPolylines; ++i) {
