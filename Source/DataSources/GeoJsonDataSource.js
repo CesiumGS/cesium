@@ -5,7 +5,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import getFilenameFromUri from '../Core/getFilenameFromUri.js';
@@ -506,7 +505,7 @@ import PolylineGraphics from './PolylineGraphics.js';
         return new GeoJsonDataSource().load(data, options);
     };
 
-    defineProperties(GeoJsonDataSource, {
+    Object.defineProperties(GeoJsonDataSource, {
         /**
          * Gets or sets the default size of the map pin created for each point, in pixels.
          * @memberof GeoJsonDataSource
@@ -651,7 +650,7 @@ import PolylineGraphics from './PolylineGraphics.js';
         }
     });
 
-    defineProperties(GeoJsonDataSource.prototype, {
+    Object.defineProperties(GeoJsonDataSource.prototype, {
         /**
          * Gets or sets a human-readable name for this instance.
          * @memberof GeoJsonDataSource.prototype

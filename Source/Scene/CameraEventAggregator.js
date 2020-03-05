@@ -1,6 +1,5 @@
 import Cartesian2 from '../Core/Cartesian2.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
@@ -285,7 +284,7 @@ import CameraEventType from './CameraEventType.js';
         }
     }
 
-    defineProperties(CameraEventAggregator.prototype, {
+    Object.defineProperties(CameraEventAggregator.prototype, {
         /**
          * Gets the current mouse position.
          * @memberof CameraEventAggregator.prototype

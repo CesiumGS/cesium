@@ -1,4 +1,3 @@
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -15,7 +14,7 @@ import DeveloperError from './DeveloperError.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(MapProjection.prototype, {
+    Object.defineProperties(MapProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

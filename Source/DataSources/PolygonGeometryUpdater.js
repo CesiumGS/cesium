@@ -240,7 +240,7 @@ import Property from './Property.js';
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
                !Property.isConstant(polygon.arcType) || //
-               (this._onTerrain && !Property.isConstant(this._materialProperty));
+               (this._onTerrain && !Property.isConstant(this._materialProperty) && !(this._materialProperty instanceof ColorMaterialProperty));
     };
 
     PolygonGeometryUpdater.prototype._setStaticOptions = function(entity, polygon) {

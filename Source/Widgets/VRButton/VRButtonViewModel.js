@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import EventHelper from '../../Core/EventHelper.js';
@@ -168,7 +167,7 @@ import getElement from '../getElement.js';
         document.addEventListener(Fullscreen.changeEventName, this._callback);
     }
 
-    defineProperties(VRButtonViewModel.prototype, {
+    Object.defineProperties(VRButtonViewModel.prototype, {
         /**
          * Gets or sets the HTML element to place into VR mode when the
          * corresponding button is pressed.

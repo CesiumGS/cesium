@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -37,4 +36,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (textureMagnificationFilter === TextureMagnificationFilter.LINEAR));
         }
     };
-export default freezeObject(TextureMagnificationFilter);
+export default Object.freeze(TextureMagnificationFilter);

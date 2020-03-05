@@ -3,7 +3,6 @@ import Check from '../Core/Check.js';
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Event from '../Core/Event.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -38,7 +37,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the point cloud casts or receives shadows from light sources.
      * @param {Number} [options.maximumMemoryUsage=256] The maximum amount of memory in MB that can be used by the point cloud.
      * @param {Object} [options.shading] Options for constructing a {@link PointCloudShading} object to control point attenuation and eye dome lighting.
-     * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
+     * @param {Cesium3DTileStyle} [options.style] The style, defined using the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}, applied to each point in the point cloud.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
      */
     function TimeDynamicPointCloud(options) {
@@ -103,7 +102,7 @@ import ShadowMode from './ShadowMode.js';
 
         /**
          * The style, defined using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+         * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
          * applied to each point in the point cloud.
          * <p>
          * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -124,7 +123,7 @@ import ShadowMode from './ShadowMode.js';
          *    show : '${Classification} !== 2'
          * });
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
          */
         this.style = options.style;
 
@@ -192,7 +191,7 @@ import ShadowMode from './ShadowMode.js';
         this._runningAverage = 0.0;
     }
 
-    defineProperties(TimeDynamicPointCloud.prototype, {
+    Object.defineProperties(TimeDynamicPointCloud.prototype, {
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
          *
@@ -238,6 +237,7 @@ import ShadowMode from './ShadowMode.js';
                 if (defined(this._lastRenderedFrame)) {
                     return this._lastRenderedFrame.pointCloud.boundingSphere;
                 }
+                return undefined;
             }
         },
 

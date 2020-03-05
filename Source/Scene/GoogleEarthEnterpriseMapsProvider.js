@@ -3,7 +3,6 @@ import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
@@ -221,7 +220,7 @@ import ImageryProvider from './ImageryProvider.js';
         requestMetadata();
     }
 
-    defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
         /**
          * Gets the URL of the Google Earth MapServer.
          * @memberof GoogleEarthEnterpriseMapsProvider.prototype
@@ -582,7 +581,7 @@ import ImageryProvider from './ImageryProvider.js';
 
     GoogleEarthEnterpriseMapsProvider._logoUrl = undefined;
 
-    defineProperties(GoogleEarthEnterpriseMapsProvider, {
+    Object.defineProperties(GoogleEarthEnterpriseMapsProvider, {
         /**
          * Gets or sets the URL to the Google Earth logo for display in the credit.
          * @memberof GoogleEarthEnterpriseMapsProvider

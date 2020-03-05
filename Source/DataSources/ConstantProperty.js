@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 
     /**
@@ -20,7 +19,7 @@ import Event from '../Core/Event.js';
         this.setValue(value);
     }
 
-    defineProperties(ConstantProperty.prototype, {
+    Object.defineProperties(ConstantProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.

@@ -1,7 +1,6 @@
 import binarySearch from './binarySearch.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Event from './Event.js';
 import GregorianDate from './GregorianDate.js';
@@ -33,7 +32,7 @@ import TimeInterval from './TimeInterval.js';
         }
     }
 
-    defineProperties(TimeIntervalCollection.prototype, {
+    Object.defineProperties(TimeIntervalCollection.prototype, {
         /**
          * Gets an event that is raised whenever the collection of intervals change.
          * @memberof TimeIntervalCollection.prototype

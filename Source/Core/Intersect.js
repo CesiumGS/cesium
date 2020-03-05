@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used in determining where, relative to the frustum, an
@@ -33,4 +32,4 @@ import freezeObject from './freezeObject.js';
          */
         INSIDE : 1
     };
-export default freezeObject(Intersect);
+export default Object.freeze(Intersect);

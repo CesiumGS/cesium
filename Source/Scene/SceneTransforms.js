@@ -295,8 +295,9 @@ import SceneMode from './SceneMode.js';
             // log2(z + 1) / log2( far + 1);
             // to perspective form
             // (far - far * near / z) / (far - near)
-            depth = Math.pow(2.0, depth * CesiumMath.log2(far + 1.0)) - 1.0;
-            depth = far * (1.0 - near / depth) / (far - near);
+            var log2Depth = depth * uniformState.log2FarDepthFromNearPlusOne;
+            var depthFromNear = Math.pow(2.0, log2Depth) - 1.0;
+            depth = far * (1.0 - near / (depthFromNear + near)) / (far - near);
         }
 
         var viewport = scene.view.passState.viewport;

@@ -1,5 +1,6 @@
 import AssociativeArray from '../Core/AssociativeArray.js';
 import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import defined from '../Core/defined.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
@@ -64,8 +65,6 @@ import Property from './Property.js';
         }
         return false;
     };
-
-    var scratchArray = new Array(4);
 
     Batch.prototype.update = function(time) {
         var isUpdated = true;
@@ -135,12 +134,7 @@ import Property from './Property.js';
 
                     if (!Color.equals(attributes._lastColor, fillColor)) {
                         attributes._lastColor = Color.clone(fillColor, attributes._lastColor);
-                        var color = this.color;
-                        var newColor = fillColor.toBytes(scratchArray);
-                        if (color[0] !== newColor[0] || color[1] !== newColor[1] ||
-                            color[2] !== newColor[2] || color[3] !== newColor[3]) {
-                           this.itemsToRemove[removedCount++] = updater;
-                        }
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(fillColor, attributes.color);
                     }
                 }
 
@@ -241,9 +235,9 @@ import Property from './Property.js';
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
-        // color and zIndex are batch breakers, so we'll use that for the key
+        // zIndex is a batch breaker, so we'll use that for the key
         var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
-        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0] + ':' + zIndex;
+        var batchKey = zIndex;
         var batch;
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);

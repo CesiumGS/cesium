@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -13,7 +12,7 @@ import DeveloperError from '../Core/DeveloperError.js';
     function Light() {
     }
 
-    defineProperties(Light.prototype, {
+    Object.defineProperties(Light.prototype, {
         /**
          * The color of the light.
          * @memberof Light.prototype

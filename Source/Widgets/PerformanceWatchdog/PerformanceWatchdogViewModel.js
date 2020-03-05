@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import FrameRateMonitor from '../../Scene/FrameRateMonitor.js';
@@ -68,7 +67,7 @@ import createCommand from '../createCommand.js';
         });
     }
 
-    defineProperties(PerformanceWatchdogViewModel.prototype, {
+    Object.defineProperties(PerformanceWatchdogViewModel.prototype, {
         /**
          * Gets the {@link Scene} instance for which to monitor performance.
          * @memberof PerformanceWatchdogViewModel.prototype

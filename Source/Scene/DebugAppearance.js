@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Appearance from './Appearance.js';
 
@@ -133,7 +132,7 @@ import Appearance from './Appearance.js';
         this._glslDatatype = glslDatatype;
     }
 
-    defineProperties(DebugAppearance.prototype, {
+    Object.defineProperties(DebugAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

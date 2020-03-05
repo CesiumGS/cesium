@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -13,4 +12,4 @@ import freezeObject from '../Core/freezeObject.js';
         INVALID : 6,
         PLACEHOLDER : 7
     };
-export default freezeObject(ImageryState);
+export default Object.freeze(ImageryState);

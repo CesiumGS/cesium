@@ -1,7 +1,6 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import ClearCommand from '../Renderer/ClearCommand.js';
@@ -61,7 +60,7 @@ import StencilOperation from './StencilOperation.js';
         this._debugGlobeDepthViewportCommand = undefined;
     }
 
-    defineProperties(GlobeDepth.prototype, {
+    Object.defineProperties(GlobeDepth.prototype, {
         framebuffer : {
             get : function() {
                 return this._globeColorFramebuffer;

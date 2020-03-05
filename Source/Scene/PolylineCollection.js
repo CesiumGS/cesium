@@ -8,7 +8,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -178,7 +177,7 @@ import SceneMode from './SceneMode.js';
         };
     }
 
-    defineProperties(PolylineCollection.prototype, {
+    Object.defineProperties(PolylineCollection.prototype, {
         /**
          * Returns the number of polylines in this collection.  This is commonly used with
          * {@link PolylineCollection#get} to iterate over all the polylines

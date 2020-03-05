@@ -386,7 +386,7 @@ describe('Scene/ClassificationPrimitive', function() {
     });
 
     // Rendering in 2D/CV is broken:
-    // https://github.com/AnalyticalGraphicsInc/cesium/issues/6308
+    // https://github.com/CesiumGS/cesium/issues/6308
     xit('renders in Columbus view when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;

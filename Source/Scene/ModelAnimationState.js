@@ -1,9 +1,8 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
      */
-export default freezeObject({
+export default Object.freeze({
         STOPPED : 0,
         ANIMATING : 1
     });

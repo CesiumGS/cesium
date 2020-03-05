@@ -6,7 +6,6 @@ import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -153,7 +152,7 @@ import ClippingPlane from './ClippingPlane.js';
         return (value === Intersect.INSIDE);
     }
 
-    defineProperties(ClippingPlaneCollection.prototype, {
+    Object.defineProperties(ClippingPlaneCollection.prototype, {
         /**
          * Returns the number of planes in this collection.  This is commonly used with
          * {@link ClippingPlaneCollection#get} to iterate over all the planes
