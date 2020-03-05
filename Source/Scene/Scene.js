@@ -2903,6 +2903,7 @@ import View from './View.js';
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
         var globeTranslucent = frameState.globeTranslucent;
+        var globeSeeThrough = globeTranslucent && globe.translucencyMode === GlobeTranslucencyMode.ENABLED;
 
         if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (this._cameraUnderground && !globeTranslucent)) {
             environmentState.skyAtmosphereCommand = undefined;
@@ -2955,8 +2956,8 @@ import View from './View.js';
 
         // Determine visibility of celestial and terrestrial environment effects.
         environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
+        environmentState.isSunVisible = globeSeeThrough || this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = globeSeeThrough || this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
         var envMaps = this.specularEnvironmentMaps;
         var envMapAtlas = this._specularEnvironmentMapAtlas;
