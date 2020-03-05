@@ -3,6 +3,10 @@ Change Log
 
 ### 1.68.0 - 2020-04-01
 
+##### Additions :tada:
+
+* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
+
 ##### Fixes :wrench:
 
 * Interacting with the Cesium canvas will now blur the previously focused element. This prevents unintended modification of input elements when interacting with the globe.
