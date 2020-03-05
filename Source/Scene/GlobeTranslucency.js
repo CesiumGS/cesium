@@ -260,6 +260,7 @@ import CullFace from './CullFace.js';
             var rs = RenderState.getState(renderState);
             rs.cull.face = CullFace.FRONT;
             rs.cull.enabled = true; // TODO: why not just disable cull in Globe?
+            rs.blending = BlendingState.ALPHA_BLEND;
 
             backFaceState = RenderState.fromCache(rs);
             cache[renderState.id] = backFaceState;
@@ -275,6 +276,7 @@ import CullFace from './CullFace.js';
             var rs = RenderState.getState(renderState);
             rs.cull.face = CullFace.BACK;
             rs.cull.enabled = true;
+            rs.blending = BlendingState.ALPHA_BLEND;
 
             frontFaceState = RenderState.fromCache(rs);
             cache[renderState.id] = frontFaceState;
@@ -283,7 +285,7 @@ import CullFace from './CullFace.js';
         return frontFaceState;
     }
 
-    GlobeTranslucency.updateDerivedCommand = function(command, context) {
+    GlobeTranslucency.updateDerivedCommand = function(command, pass, context) {
         var derivedCommands = command.derivedCommands.globeTranslucency;
 
         if (!defined(derivedCommands) || command.dirty) {
@@ -307,6 +309,10 @@ import CullFace from './CullFace.js';
 
             backFaceCommand = DrawCommand.shallowClone(command, backFaceCommand);
             frontFaceCommand = DrawCommand.shallowClone(command, frontFaceCommand);
+
+            // TODO
+            backFaceCommand.pass = pass;
+            frontFaceCommand.pass = pass;
 
             derivedCommands.backFaceCommand = backFaceCommand;
             derivedCommands.frontFaceCommand = frontFaceCommand;

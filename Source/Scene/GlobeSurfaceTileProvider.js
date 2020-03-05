@@ -39,6 +39,7 @@ import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
 import GlobeTranslucency from './GlobeTranslucency.js';
+import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
@@ -106,6 +107,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.showSkirts = true;
         this.backFaceCulling = true;
         this.translucencyByDistance = undefined;
+        this.translucencyMode = undefined;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -1560,6 +1562,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         var cameraUnderground = frameState.cameraUnderground;
         var translucent = frameState.globeTranslucent;
+        var pass = translucent && tileProvider.translucencyMode === GlobeTranslucencyMode.ENABLED ? Pass.TRANSLUCENT : Pass.GLOBE;
 
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
@@ -1988,7 +1991,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, context);
+                GlobeTranslucency.updateDerivedCommand(command, pass, context);
             }
 
             pushCommand(command, frameState);

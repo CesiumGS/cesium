@@ -921,6 +921,7 @@ import ShadowMode from './ShadowMode.js';
             tileProvider.showSkirts = this.showSkirts;
             tileProvider.backFaceCulling = this.backFaceCulling;
             tileProvider.translucencyByDistance = this._translucencyByDistanceFinal;
+            tileProvider.translucencyMode = this._translucencyMode;
             surface.beginFrame(frameState);
         }
     };

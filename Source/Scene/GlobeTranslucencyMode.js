@@ -26,6 +26,6 @@ var GlobeTranslucencyMode = {
      * @type {Number}
      * @constant
      */
-    FRONT_FACES_ONLY : 1
+    FRONT_FACES_ONLY : 2
 };
 export default Object.freeze(GlobeTranslucencyMode);

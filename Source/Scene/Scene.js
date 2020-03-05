@@ -2302,7 +2302,7 @@ import View from './View.js';
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
 
-            if (globeTranslucent) {
+            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
                 globeTranslucency.executeGlobeCommands(commands, length, clearGlobeDepth, scene._cameraUnderground, scene._hdr, executeCommand, view.viewport, scene, context, passState);
             } else {
                 for (j = 0; j < length; ++j) {
@@ -2323,7 +2323,7 @@ import View from './View.js';
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
-            if (globeTranslucent) {
+            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
                 globeTranslucency.executeClassificationCommands(commands, length, executeCommand, scene, context, passState);
             }
             else
@@ -2462,7 +2462,7 @@ import View from './View.js';
             }
 
             var globeTranslucencyCommand;
-            if (globeTranslucent) {
+            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
                 globeTranslucencyCommand = globeTranslucency.updateCommand(context, passState);
             }
 
@@ -3154,7 +3154,7 @@ import View from './View.js';
             }
         }
 
-        if (frameState.globeTranslucent) {
+        if (frameState.globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
             view.globeTranslucency.updateAndClear(scene._hdr, oit, useOIT, view.viewport, context, passState);
         }
     }
