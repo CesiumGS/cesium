@@ -31,6 +31,7 @@ import CullFace from './CullFace.js';
 
         this._manualDepthTestRenderState = undefined;
         this._blendRenderState = undefined;
+        this._blendRenderStateOIT = undefined;
 
         this._manualDepthTestCommand = undefined;
         this._blendCommand = undefined;
@@ -41,14 +42,6 @@ import CullFace from './CullFace.js';
         this._scissorRectangle = undefined;
         this._useHdr = undefined;
     }
-
-    Object.defineProperties(GlobeTranslucency.prototype, {
-        blendCommand : {
-            get : function() {
-                return this._blendCommand;
-            }
-        }
-    });
 
     GlobeTranslucency.isSupported = function(context) {
         return context.depthTexture;
@@ -108,7 +101,7 @@ import CullFace from './CullFace.js';
         }
     }
 
-    function updateCommands(globeTranslucency, context, width, height, passState) {
+    function updateCommands(globeTranslucency, context, width, height, oit, useOIT, passState) {
         globeTranslucency._viewport.width = width;
         globeTranslucency._viewport.height = height;
 
@@ -137,6 +130,7 @@ import CullFace from './CullFace.js';
                 },
                 blending: BlendingState.ALPHA_BLEND
             });
+            globeTranslucency._blendRenderStateOIT = RenderState.fromCache({});
         }
 
         if (!defined(globeTranslucency._manualDepthTestCommand)) {
@@ -192,6 +186,13 @@ import CullFace from './CullFace.js';
         globeTranslucency._manualDepthTestCommand.renderState = globeTranslucency._manualDepthTestRenderState;
         globeTranslucency._blendCommand.renderState = globeTranslucency._blendRenderState;
         globeTranslucency._clearCommand.framebuffer = globeTranslucency._framebuffer;
+
+        if (useOIT) {
+            var command = globeTranslucency._blendCommand;
+            command.renderState = globeTranslucency._blendRenderStateOIT;
+            var derivedCommands = command.derivedCommands;
+            derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+        }
     }
 
     function removeDefine(defines, defineToRemove) {
@@ -347,12 +348,12 @@ import CullFace from './CullFace.js';
         }
     }
 
-    GlobeTranslucency.prototype.updateAndClear = function(hdr, viewport, context, passState) {
+    GlobeTranslucency.prototype.updateAndClear = function(hdr, oit, useOIT, viewport, context, passState) {
         var width = viewport.width;
         var height = viewport.height;
 
         updateResources(this, context, width, height, hdr);
-        updateCommands(this, context, width, height, passState);
+        updateCommands(this, context, width, height, oit, useOIT, passState);
 
         this._clearCommand.execute(context, passState);
 
