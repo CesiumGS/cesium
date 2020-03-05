@@ -54,6 +54,7 @@ import Fog from './Fog.js';
 import FrameState from './FrameState.js';
 import GlobeDepth from './GlobeDepth.js';
 import GlobeTranslucency from './GlobeTranslucency.js';
+import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import InvertClassification from './InvertClassification.js';
 import JobScheduler from './JobScheduler.js';
 import MapMode2D from './MapMode2D.js';
@@ -1792,7 +1793,7 @@ import View from './View.js';
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
         frameState.cameraUnderground = this._cameraUnderground;
-        frameState.globeTranslucent = defined(globe) && (globe.alpha < 1.0) && GlobeTranslucency.isSupported(frameState.context);
+        frameState.globeTranslucent = defined(globe) && (globe.translucencyMode !== GlobeTranslucencyMode.DISABLED) && GlobeTranslucency.isSupported(frameState.context);
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
             frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;

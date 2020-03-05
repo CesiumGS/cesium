@@ -84,8 +84,8 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
-#ifdef GLOBE_TRANSLUCENT
-uniform float u_alpha;
+#ifdef TRANSCLUCENT
+uniform vec4 u_translucencyByDistance;
 #endif
 
 varying vec3 v_positionMC;
@@ -100,7 +100,7 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(GLOBE_TRANSLUCENT)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSCLUCENT)
 varying float v_distance;
 #endif
 
@@ -327,13 +327,13 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#ifdef GLOBE_TRANSLUCENT
-    vec3 radii = czm_ellipsoidRadii;
-    float maxRadii = max(radii.x, max(radii.y, radii.z));
-    float startDistance = maxRadii * 0.025;
-    float endDistance = maxRadii * 0.05;
-    float alphaStrength = clamp((endDistance - v_distance) / (endDistance - startDistance), 0.0, 1.0);
-    float alphaMutiplier = mix(1.0, u_alpha, alphaStrength);
+#ifdef TRANSCLUCENT
+    float startDistance = u_translucencyByDistance.x;
+    float startAlpha = u_translucencyByDistance.y;
+    float endDistance = u_translucencyByDistance.z;
+    float endAlpha = u_translucencyByDistance.w;
+    float alphaLerp = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    float alphaMutiplier = mix(startAlpha, endAlpha, alphaLerp);
     color.a *= alphaMutiplier;
 #endif
 

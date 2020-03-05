@@ -37,8 +37,8 @@ import VertexArray from '../Renderer/VertexArray.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
-import GlobeTranslucency from './GlobeTranslucency.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
@@ -105,7 +105,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this.showSkirts = true;
         this.backFaceCulling = true;
-        this.alpha = 1.0;
+        this.translucencyByDistance = undefined;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -1306,8 +1306,8 @@ import TileSelectionResult from './TileSelectionResult.js';
             u_colorsToAlpha : function() {
                 return this.properties.colorsToAlpha;
             },
-            u_alpha : function() {
-                return this.properties.alpha;
+            u_translucencyByDistance : function() {
+                return this.properties.translucencyByDistance;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -1354,7 +1354,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
                 localizedCartographicLimitRectangle : new Cartesian4(),
 
-                alpha: 1.0
+                translucencyByDistance : new Cartesian4()
             }
         };
 
@@ -1559,13 +1559,13 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var cameraUnderground = frameState.cameraUnderground;
-        var globeTranslucent = frameState.globeTranslucent;
+        var translucent = frameState.globeTranslucent;
 
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
-        var enableFog = frameState.fog.enabled && !cameraUnderground && !globeTranslucent;
+        var enableFog = frameState.fog.enabled && !cameraUnderground && !translucent;
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
@@ -1690,8 +1690,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var showSkirts = tileProvider.showSkirts && !cameraUnderground && !globeTranslucent;
-        var backFaceCulling = tileProvider.backFaceCulling && !cameraUnderground && !globeTranslucent;
+        var showSkirts = tileProvider.showSkirts && !cameraUnderground && !translucent;
+        var backFaceCulling = tileProvider.backFaceCulling && !cameraUnderground && !translucent;
         var firstPassRenderState = backFaceCulling ? tileProvider._renderState : tileProvider._disableCullingRenderState;
         var otherPassesRenderState = backFaceCulling ? tileProvider._blendRenderState : tileProvider._disableCullingBlendRenderState;
         var renderState = firstPassRenderState;
@@ -1750,7 +1750,11 @@ import TileSelectionResult from './TileSelectionResult.js';
             uniformMapProperties.nightFadeDistance.x = tileProvider.nightFadeOutDistance;
             uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
-            uniformMapProperties.alpha = tileProvider.alpha;
+
+            var translucencyByDistance = tileProvider.translucencyByDistance;
+            if (defined(translucencyByDistance)) {
+                Cartesian4.fromElements(translucencyByDistance.near, translucencyByDistance.nearValue, translucencyByDistance.far, translucencyByDistance.farValue, uniformMapProperties.translucencyByDistance);
+            }
 
             var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;
             if (highlightFillTile) {
@@ -1939,7 +1943,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
-            surfaceShaderSetOptions.globeTranslucent = globeTranslucent;
+            surfaceShaderSetOptions.translucent = translucent;
 
             var count = surfaceTile.renderedMesh.indices.length;
             if (!showSkirts) {
@@ -1983,7 +1987,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
             command.dirty = true;
 
-            if (globeTranslucent) {
+            if (translucent) {
                 GlobeTranslucency.updateDerivedCommand(command, context);
             }
 
