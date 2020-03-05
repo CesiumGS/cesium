@@ -607,8 +607,6 @@ import BlendFunction from './BlendFunction.js';
 
         if (defined(globeTranslucencyCommand)) {
             command = globeTranslucencyCommand;
-            var derivedCommands = command.derivedCommands;
-            derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
             derivedCommand = command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }

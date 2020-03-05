@@ -42,6 +42,14 @@ import CullFace from './CullFace.js';
         this._useHdr = undefined;
     }
 
+    Object.defineProperties(GlobeTranslucency.prototype, {
+        blendCommand : {
+            get : function() {
+                return this._blendCommand;
+            }
+        }
+    });
+
     GlobeTranslucency.isSupported = function(context) {
         return context.depthTexture;
     };
@@ -339,6 +347,18 @@ import CullFace from './CullFace.js';
         }
     }
 
+    GlobeTranslucency.prototype.updateAndClear = function(hdr, viewport, context, passState) {
+        var width = viewport.width;
+        var height = viewport.height;
+
+        updateResources(this, context, width, height, hdr);
+        updateCommands(this, context, width, height, passState);
+
+        this._clearCommand.execute(context, passState);
+
+        this._useHdr = hdr;
+    }
+
     GlobeTranslucency.prototype.executeGlobeCommands = function(commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
         if (length === 0) {
             return;
@@ -349,18 +369,8 @@ import CullFace from './CullFace.js';
 
         executeFirstPass(commands, length, executeCommandFunction, scene, context, passState);
 
-        var width = viewport.width;
-        var height = viewport.height;
-
-        updateResources(this, context, width, height, hdr);
-        updateCommands(this, context, width, height, passState);
-
-        this._useHdr = hdr;
-
         var originalFramebuffer = passState.framebuffer;
         passState.framebuffer = this._framebuffer;
-
-        this._clearCommand.execute(context, passState);
 
         executeSecondPass(commands, length, executeCommandFunction, scene, context, passState);
 

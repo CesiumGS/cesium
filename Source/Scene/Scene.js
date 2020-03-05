@@ -3153,6 +3153,16 @@ import View from './View.js';
                 environmentState.useInvertClassification = false;
             }
         }
+
+        if (frameState.globeTranslucent) {
+            var globeTranslucency = view.globeTranslucency;
+            globeTranslucency.updateAndClear(scene._hdr, view.viewport, context, passState);
+            if (useOIT) {
+                var command = globeTranslucency.blendCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+            }
+        }
     }
 
     /**
