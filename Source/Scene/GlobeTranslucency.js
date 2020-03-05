@@ -364,7 +364,7 @@ import CullFace from './CullFace.js';
         this._clearCommand.execute(context, passState);
 
         this._useHdr = hdr;
-    }
+    };
 
     GlobeTranslucency.prototype.executeGlobeCommands = function(commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
         if (length === 0) {
