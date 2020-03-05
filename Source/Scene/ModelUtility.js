@@ -75,7 +75,7 @@ import Axis from './Axis.js';
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
                     // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
-                    if(!primitiveInfoCache[materialIndex]) {
+                    if(!defined(primitiveInfoCache[materialIndex])) {
                         primitiveInfoCache[materialIndex] = {
                             primitiveInfos: [],
                             primitives: [],
