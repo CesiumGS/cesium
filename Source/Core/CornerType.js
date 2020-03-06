@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Style options for corners.
@@ -36,4 +35,4 @@ import freezeObject from './freezeObject.js';
          */
         BEVELED : 2
     };
-export default freezeObject(CornerType);
+export default Object.freeze(CornerType);

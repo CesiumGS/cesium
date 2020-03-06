@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
@@ -51,4 +50,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         MIX : 2
     };
-export default freezeObject(Cesium3DTileColorBlendMode);
+export default Object.freeze(Cesium3DTileColorBlendMode);

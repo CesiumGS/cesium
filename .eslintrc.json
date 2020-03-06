@@ -10,7 +10,7 @@
         {
             "files": [
                 "index.js",
-                "server.js",
+                "server.cjs",
                 "gulpfile.js",
                 "Source/Workers/transferTypedArrayTest.js"
             ],

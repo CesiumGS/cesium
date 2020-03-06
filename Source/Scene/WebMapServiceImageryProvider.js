@@ -1,7 +1,6 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
-import freezeObject from '../Core/freezeObject.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
 import Resource from '../Core/Resource.js';
 import WebMercatorProjection from '../Core/WebMercatorProjection.js';
@@ -523,7 +522,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
      * @constant
      * @type {Object}
      */
-    WebMapServiceImageryProvider.DefaultParameters = freezeObject({
+    WebMapServiceImageryProvider.DefaultParameters = Object.freeze({
         service : 'WMS',
         version : '1.1.1',
         request : 'GetMap',
@@ -540,16 +539,16 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
      * @constant
      * @type {Object}
      */
-    WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
+    WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = Object.freeze({
         service : 'WMS',
         version : '1.1.1',
         request : 'GetFeatureInfo'
     });
 
-    WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = freezeObject([
-        freezeObject(new GetFeatureInfoFormat('json', 'application/json')),
-        freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
-        freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
+    WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
+        Object.freeze(new GetFeatureInfoFormat('json', 'application/json')),
+        Object.freeze(new GetFeatureInfoFormat('xml', 'text/xml')),
+        Object.freeze(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
 
     function objectToLowercase(obj) {

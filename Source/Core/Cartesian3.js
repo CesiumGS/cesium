@@ -2,7 +2,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 
     /**
@@ -1012,7 +1011,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+    Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
@@ -1020,7 +1019,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+    Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 1.0, 0.0).
@@ -1028,7 +1027,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_Y = freezeObject(new Cartesian3(0.0, 1.0, 0.0));
+    Cartesian3.UNIT_Y = Object.freeze(new Cartesian3(0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 1.0).
@@ -1036,7 +1035,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian3}
      * @constant
      */
-    Cartesian3.UNIT_Z = freezeObject(new Cartesian3(0.0, 0.0, 1.0));
+    Cartesian3.UNIT_Z = Object.freeze(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian3 instance.

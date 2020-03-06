@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * An enum describing the attribute type for glTF and 3D Tiles.
@@ -64,4 +63,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         MAT4 : 'MAT4'
     };
-export default freezeObject(AttributeType);
+export default Object.freeze(AttributeType);

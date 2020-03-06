@@ -2,14 +2,13 @@ import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
-import isArray from '../Core/isArray.js';
 import PolygonHierarchy from '../Core/PolygonHierarchy.js';
 import ConstantProperty from './ConstantProperty.js';
 import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
 import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     function createPolygonHierarchyProperty(value) {
-        if (isArray(value)) {
+        if (Array.isArray(value)) {
             // convert array of positions to PolygonHierarchy object
             value = new PolygonHierarchy(value);
         }

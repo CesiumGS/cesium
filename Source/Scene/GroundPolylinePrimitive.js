@@ -7,7 +7,6 @@ import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
 import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
-import isArray from '../Core/isArray.js';
 import DrawCommand from '../Renderer/DrawCommand.js';
 import Pass from '../Renderer/Pass.js';
 import RenderState from '../Renderer/RenderState.js';
@@ -591,7 +590,7 @@ import StencilOperation from './StencilOperation.js';
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
-            var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var geometryInstances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
             var groundInstances = new Array(geometryInstancesLength);
 

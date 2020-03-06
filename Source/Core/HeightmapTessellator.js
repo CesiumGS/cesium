@@ -7,7 +7,6 @@ import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import EllipsoidalOccluder from './EllipsoidalOccluder.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
 import OrientedBoundingBox from './OrientedBoundingBox.js';
@@ -30,7 +29,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
      *
      * @constant
      */
-    HeightmapTessellator.DEFAULT_STRUCTURE = freezeObject({
+    HeightmapTessellator.DEFAULT_STRUCTURE = Object.freeze({
         heightScale : 1.0,
         heightOffset : 0.0,
         elementsPerHeight : 1,

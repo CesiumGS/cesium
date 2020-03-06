@@ -7,7 +7,6 @@ import combine from './combine.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import getAbsoluteUri from './getAbsoluteUri.js';
 import getBaseUri from './getBaseUri.js';
 import getExtensionFromUri from './getExtensionFromUri.js';
@@ -2062,7 +2061,7 @@ import TrustedServers from './TrustedServers.js';
      * @type {Resource}
      * @constant
      */
-    Resource.DEFAULT = freezeObject(new Resource({
+    Resource.DEFAULT = Object.freeze(new Resource({
         url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
 

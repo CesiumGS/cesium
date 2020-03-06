@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The types of imagery provided by Bing Maps.
@@ -92,4 +91,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         COLLINS_BART : 'CollinsBart'
     };
-export default freezeObject(BingMapsStyle);
+export default Object.freeze(BingMapsStyle);

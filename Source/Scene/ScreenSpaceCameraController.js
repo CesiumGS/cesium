@@ -9,7 +9,6 @@ import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
-import isArray from '../Core/isArray.js';
 import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -370,7 +369,7 @@ import TweenCollection from './TweenCollection.js';
 
         var aggregator = controller._aggregator;
 
-        if (!isArray(eventTypes)) {
+        if (!Array.isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }
@@ -937,10 +936,8 @@ import TweenCollection from './TweenCollection.js';
 
         var scene = controller._scene;
         var camera = scene.camera;
-        var maxCoord = controller._maxCoord;
-        var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
 
-        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller._minimumPickingTerrainHeight) {
+        if (controller._tiltCVOffMap || !controller.onMap() || camera.position.z > controller._minimumPickingTerrainHeight) {
             controller._tiltCVOffMap = true;
             rotateCVOnPlane(controller, startPosition, movement);
         } else {
@@ -1988,6 +1985,21 @@ import TweenCollection from './TweenCollection.js';
         }
     }
 
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.onMap = function() {
+        var scene = this._scene;
+        var mode = scene.mode;
+        var camera = scene.camera;
+
+        if (mode === SceneMode.COLUMBUS_VIEW) {
+            return Math.abs(camera.position.x) - this._maxCoord.x < 0 && Math.abs(camera.position.y) - this._maxCoord.y < 0;
+        }
+
+        return true;
+    };
+
     var scratchPreviousPosition = new Cartesian3();
     var scratchPreviousDirection = new Cartesian3();
 
@@ -2037,6 +2049,13 @@ import TweenCollection from './TweenCollection.js';
         }
 
         this._aggregator.reset();
+    };
+
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.adjustedHeightForTerrain = function() {
+        return this._adjustedHeightForTerrain;
     };
 
     /**

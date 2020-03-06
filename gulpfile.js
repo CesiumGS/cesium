@@ -342,7 +342,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         'ThirdParty/**',
         'favicon.ico',
         'gulpfile.js',
-        'server.js',
+        'server.cjs',
         'package.json',
         'LICENSE.md',
         'CHANGES.md',
@@ -460,7 +460,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 'gulpfile.js',
                 'index.html',
                 'package.json',
-                'server.js',
+                'server.cjs',
                 'web.config',
                 '*.zip',
                 '*.tgz'

@@ -1,6 +1,5 @@
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import isArray from './isArray.js';
 
     /**
      * Converts an object representing a set of name/value pairs into a query string,
@@ -36,7 +35,7 @@ import isArray from './isArray.js';
                 var value = obj[propName];
 
                 var part = encodeURIComponent(propName) + '=';
-                if (isArray(value)) {
+                if (Array.isArray(value)) {
                     for (var i = 0, len = value.length; i < len; ++i) {
                         result += part + encodeURIComponent(value[i]) + '&';
                     }
