@@ -262,6 +262,11 @@
 			result += this.scheme + ':';
 		if (this.authority)
 			result += '//' + this.authority;
+		else
+			// this else branch was added in cesium repository to fix URI handling in Android WebView context
+			// see: https://github.com/CesiumGS/cesium/pull/8669
+			if (this.scheme == "file")
+				result += '//';
 		result += this.path;
 		if (this.query)
 			result += '?' + this.query;
