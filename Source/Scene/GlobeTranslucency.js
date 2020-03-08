@@ -14,6 +14,7 @@ import Framebuffer from '../Renderer/Framebuffer.js';
 import RenderState from '../Renderer/RenderState.js';
 import BlendingState from './BlendingState.js';
 import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
+import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
 import ClearCommand from '../Renderer/ClearCommand.js';
 import Color from '../Core/Color.js';
 import CullFace from './CullFace.js';
@@ -29,11 +30,15 @@ import CullFace from './CullFace.js';
         this._manualDepthTestTexture = undefined;
         this._manualDepthTestFramebuffer = undefined;
 
-        this._manualDepthTestRenderState = undefined;
+        this._packedDepthTexture = undefined;
+        this._packedDepthFramebuffer = undefined;
+
+        this._renderState = undefined;
         this._blendRenderState = undefined;
         this._blendRenderStateOIT = undefined;
 
         this._manualDepthTestCommand = undefined;
+        this._packedDepthCommand = undefined;
         this._blendCommand = undefined;
         this._clearCommand = undefined;
 
@@ -50,8 +55,10 @@ import CullFace from './CullFace.js';
     function destroyResources(globeTranslucency) {
         globeTranslucency._colorTexture = globeTranslucency._colorTexture && !globeTranslucency._colorTexture.isDestroyed() && globeTranslucency._colorTexture.destroy();
         globeTranslucency._depthStencilTexture = globeTranslucency._depthStencilTexture && !globeTranslucency._depthStencilTexture.isDestroyed() && globeTranslucency._depthStencilTexture.destroy();
+        globeTranslucency._packedDepthTexture = globeTranslucency._packedDepthTexture && !globeTranslucency._packedDepthTexture.isDestroyed() && globeTranslucency._packedDepthTexture.destroy();
         globeTranslucency._framebuffer = globeTranslucency._framebuffer && !globeTranslucency._framebuffer.isDestroyed() && globeTranslucency._framebuffer.destroy();
         globeTranslucency._manualDepthTestFramebuffer = globeTranslucency._manualDepthTestFramebuffer && !globeTranslucency._manualDepthTestFramebuffer.isDestroyed() && globeTranslucency._manualDepthTestFramebuffer.destroy();
+        globeTranslucency._packedDepthFramebuffer = globeTranslucency._packedDepthFramebuffer && !globeTranslucency._packedDepthFramebuffer.isDestroyed() && globeTranslucency._packedDepthFramebuffer.destroy();
     }
 
     function createResources(globeTranslucency, context, width, height, hdr) {
@@ -78,6 +85,20 @@ import CullFace from './CullFace.js';
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
         });
 
+        globeTranslucency._packedDepthTexture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
+
         globeTranslucency._framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeTranslucency._colorTexture],
@@ -88,6 +109,12 @@ import CullFace from './CullFace.js';
         globeTranslucency._manualDepthTestFramebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeTranslucency._colorTexture],
+            destroyAttachments : false
+        });
+
+        globeTranslucency._packedDepthFramebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [globeTranslucency._packedDepthTexture],
             destroyAttachments : false
         });
     }
@@ -114,8 +141,8 @@ import CullFace from './CullFace.js';
             updateScissor = true;
         }
 
-        if (!defined(globeTranslucency._blendRenderState) || !BoundingRectangle.equals(globeTranslucency._viewport, globeTranslucency._blendRenderState.viewport) || updateScissor) {
-            globeTranslucency._manualDepthTestRenderState = RenderState.fromCache({
+        if (!defined(globeTranslucency._renderState) || !BoundingRectangle.equals(globeTranslucency._viewport, globeTranslucency._renderState.viewport) || updateScissor) {
+            globeTranslucency._renderState = RenderState.fromCache({
                 viewport : globeTranslucency._viewport,
                 scissorTest : {
                     enabled : globeTranslucency._useScissorTest,
@@ -162,6 +189,17 @@ import CullFace from './CullFace.js';
             });
         }
 
+        if (!defined(globeTranslucency._packedDepthCommand)) {
+            globeTranslucency._packedDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
+                uniformMap : {
+                    u_depthTexture : function() {
+                        return globeTranslucency._depthStencilTexture;
+                    }
+                },
+                owner : globeTranslucency
+            });
+        }
+
         if (!defined(globeTranslucency._blendCommand)) {
             globeTranslucency._blendCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
@@ -183,7 +221,9 @@ import CullFace from './CullFace.js';
         }
 
         globeTranslucency._manualDepthTestCommand.framebuffer = globeTranslucency._manualDepthTestFramebuffer;
-        globeTranslucency._manualDepthTestCommand.renderState = globeTranslucency._manualDepthTestRenderState;
+        globeTranslucency._manualDepthTestCommand.renderState = globeTranslucency._renderState;
+        globeTranslucency._packedDepthCommand.framebuffer = globeTranslucency._packedDepthFramebuffer;
+        globeTranslucency._packedDepthCommand.renderState = globeTranslucency._renderState;
         globeTranslucency._blendCommand.renderState = globeTranslucency._blendRenderState;
         globeTranslucency._clearCommand.framebuffer = globeTranslucency._framebuffer;
 
@@ -381,11 +421,11 @@ import CullFace from './CullFace.js';
 
         executeSecondPass(commands, length, executeCommandFunction, scene, context, passState);
 
-        passState.framebuffer = originalFramebuffer;
-
         if (clearGlobeDepth) {
             executeManualDepthTest(this, context, passState);
         }
+
+        passState.framebuffer = originalFramebuffer;
     };
 
     GlobeTranslucency.prototype.executeClassificationCommands = function(commands, length, executeCommandFunction, scene, context, passState) {
@@ -400,6 +440,11 @@ import CullFace from './CullFace.js';
             executeCommandFunction(commands[i], scene, context, passState);
         }
 
+        // Pack depth into separate texture for ground polylines and textured ground primitives
+        var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
+        this._packedDepthCommand.execute(context, passState);
+        context.uniformState.globeDepthTexture = this._packedDepthTexture;
+
         var originalFramebuffer = passState.framebuffer;
         passState.framebuffer = this._framebuffer;
 
@@ -408,6 +453,7 @@ import CullFace from './CullFace.js';
             executeCommandFunction(commands[i], scene, context, passState);
         }
 
+        context.uniformState.globeDepthTexture = originalGlobeDepthTexture;
         passState.framebuffer = originalFramebuffer;
     };
 
