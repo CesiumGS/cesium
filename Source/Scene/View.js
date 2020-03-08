@@ -349,6 +349,7 @@ import ShadowMap from './ShadowMap.js';
         this.sceneFramebuffer = this.sceneFramebuffer && this.sceneFramebuffer.destroy();
         this.globeDepth = this.globeDepth && this.globeDepth.destroy();
         this.oit = this.oit && this.oit.destroy();
+        this.globeTranslucency = this.globeTranslucency && this.globeTranslucency.destroy();
 
         var i;
         var length;
