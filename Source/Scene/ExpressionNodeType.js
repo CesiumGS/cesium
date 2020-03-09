@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -24,4 +23,4 @@ import freezeObject from '../Core/freezeObject.js';
         LITERAL_UNDEFINED : 17,
         BUILTIN_VARIABLE : 18
     };
-export default freezeObject(ExpressionNodeType);
+export default Object.freeze(ExpressionNodeType);

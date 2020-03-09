@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The types of imagery provided by Bing Maps.
@@ -21,7 +20,7 @@ import freezeObject from '../Core/freezeObject.js';
          *
          * @type {String}
          * @constant
-         * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/7128.
+         * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
          * Use `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` instead
          */
         AERIAL_WITH_LABELS : 'AerialWithLabels',
@@ -39,7 +38,7 @@ import freezeObject from '../Core/freezeObject.js';
          *
          * @type {String}
          * @constant
-         * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/7128.
+         * @deprecated See https://github.com/CesiumGS/cesium/issues/7128.
          * Use `BingMapsStyle.ROAD_ON_DEMAND` instead
          */
         ROAD : 'Road',
@@ -92,4 +91,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         COLLINS_BART : 'CollinsBart'
     };
-export default freezeObject(BingMapsStyle);
+export default Object.freeze(BingMapsStyle);

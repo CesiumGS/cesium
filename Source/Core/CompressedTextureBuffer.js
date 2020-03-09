@@ -1,5 +1,4 @@
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * Describes a compressed texture and contains a compressed texture buffer.
@@ -18,7 +17,7 @@ import defineProperties from './defineProperties.js';
         this._buffer =  buffer;
     }
 
-    defineProperties(CompressedTextureBuffer.prototype, {
+    Object.defineProperties(CompressedTextureBuffer.prototype, {
         /**
          * The format of the compressed texture.
          * @type PixelFormat

@@ -1,6 +1,5 @@
 import Check from './Check.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * A generic utility class for managing subscribers for a particular event.
@@ -28,7 +27,7 @@ import defineProperties from './defineProperties.js';
         this._insideRaiseEvent = false;
     }
 
-    defineProperties(Event.prototype, {
+    Object.defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
          * @memberof Event.prototype

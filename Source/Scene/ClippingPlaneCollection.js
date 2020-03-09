@@ -6,7 +6,6 @@ import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -45,8 +44,8 @@ import ClippingPlane from './ClippingPlane.js';
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+     * @demo {@link https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
+     * @demo {@link https://sandcastle.cesium.com/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
      *
      * @example
      * // This clipping plane's distance is positive, which means its normal
@@ -153,7 +152,7 @@ import ClippingPlane from './ClippingPlane.js';
         return (value === Intersect.INSIDE);
     }
 
-    defineProperties(ClippingPlaneCollection.prototype, {
+    Object.defineProperties(ClippingPlaneCollection.prototype, {
         /**
          * Returns the number of planes in this collection.  This is commonly used with
          * {@link ClippingPlaneCollection#get} to iterate over all the planes

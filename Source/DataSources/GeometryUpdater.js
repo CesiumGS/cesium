@@ -2,7 +2,6 @@ import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -72,7 +71,7 @@ import Property from './Property.js';
         this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
     }
 
-    defineProperties(GeometryUpdater.prototype, {
+    Object.defineProperties(GeometryUpdater.prototype, {
         /**
          * Gets the unique ID associated with this updater
          * @memberof GeometryUpdater.prototype
@@ -189,7 +188,7 @@ import Property from './Property.js';
         },
         /**
          * Gets the property specifying whether the geometry
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof GeometryUpdater.prototype
          *
          * @type {Property}
@@ -226,7 +225,7 @@ import Property from './Property.js';
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * If true, all visualization is delegated to a DynamicGeometryUpdater
          * returned by GeometryUpdater#createDynamicUpdater.
          * @memberof GeometryUpdater.prototype
          *

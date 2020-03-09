@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     // Note, these values map directly to ion asset ids.
 
@@ -32,4 +31,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         ROAD : 4
     };
-export default freezeObject(IonWorldImageryStyle);
+export default Object.freeze(IonWorldImageryStyle);

@@ -240,6 +240,9 @@ import Property from './Property.js';
         var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
         if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
             up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
+            if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
+                up = Cartesian3.clone(Cartesian3.UNIT_X, up);
+            }
         }
 
         var left = Cartesian3.cross(up, transformedNormal, scratchAxis);

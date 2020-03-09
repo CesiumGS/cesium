@@ -15,7 +15,7 @@ require({
         location: '../Apps/Sandcastle'
     }, {
         name: 'CodeMirror',
-        location: '../ThirdParty/codemirror-4.6'
+        location: '../ThirdParty/codemirror-5.52.0'
     }, {
         name: 'ThirdParty',
         location: '../Apps/Sandcastle/ThirdParty'
@@ -42,6 +42,7 @@ require({
         'dojo/promise/all',
         'dojo/query',
         'dojo/when',
+        'dojo/Deferred',
         'dojo/request/script',
         'Sandcastle/LinkButton',
         'ThirdParty/clipboard.min',
@@ -87,6 +88,7 @@ require({
         all,
         query,
         when,
+        Deferred,
         dojoscript,
         LinkButton,
         ClipboardJS,
@@ -709,7 +711,7 @@ require({
 
             var json, code, html;
             if (defined(queryObject.gist)) {
-                dojoscript.get('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60', {
+                dojoscript.get('https://api.github.com/gists/' + queryObject.gist, {
                     jsonp: 'callback'
                 }).then(function(data) {
                     var files = data.data.files;
@@ -718,7 +720,7 @@ require({
                     var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                     applyLoadedDemo(code, html);
                 }).otherwise(function(error) {
-                    appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                    appendConsole('consoleError', 'Unable to GET gist from GitHub API. This could be due to too many requests from your IP. Try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
                     console.log(error);
                 });
             } else if (defined(queryObject.code)) {
@@ -738,6 +740,10 @@ require({
             } else {
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(demo.code, 'text/html');
+
+                return waitForDoc(doc, function(){
+                    return doc.querySelector('script[id="cesium_sandcastle_script"]');
+                }).then(function(){
 
                 var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
                 if (!script) {
@@ -763,6 +769,7 @@ require({
                 htmlText = htmlText.replace(/^\s+/, '');
 
                 applyLoadedDemo(scriptCode, htmlText);
+                });
             }
         });
     }
@@ -1050,6 +1057,22 @@ require({
         });
     }
 
+    // Work around Chrome 79 bug: https://github.com/CesiumGS/cesium/issues/8460
+    function waitForDoc(doc, test) {
+        var deferred = new Deferred();
+        if (test()) {
+            deferred.resolve(doc);
+        } else {
+            var counter = 1;
+            setTimeout(function() {
+                if (test() || counter++ > 10) {
+                    deferred.resolve(doc);
+                }
+            }, 100 * counter);
+        }
+        return deferred.promise;
+    }
+
     var newInLabel = 'New in ' + VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
@@ -1058,6 +1081,10 @@ require({
 
             var parser = new DOMParser();
             var doc = parser.parseFromString(value, 'text/html');
+            return waitForDoc(doc, function(){
+                return doc.body.getAttribute('data-sandcastle-bucket');
+            });
+        }).then(function(doc) {
 
             var bucket = doc.body.getAttribute('data-sandcastle-bucket');
             demo.bucket = bucket ? bucket : 'bucket-requirejs.html';

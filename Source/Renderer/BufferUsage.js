@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -15,4 +14,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (bufferUsage === BufferUsage.DYNAMIC_DRAW));
         }
     };
-export default freezeObject(BufferUsage);
+export default Object.freeze(BufferUsage);

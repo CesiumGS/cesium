@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used to determine how the vertices of the terrain mesh are compressed.
@@ -24,4 +23,4 @@ import freezeObject from './freezeObject.js';
          */
         BITS12 : 1
     };
-export default freezeObject(TerrainQuantization);
+export default Object.freeze(TerrainQuantization);

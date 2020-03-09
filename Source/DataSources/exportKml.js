@@ -5,10 +5,8 @@ import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
-import isArray from '../Core/isArray.js';
 import Iso8601 from '../Core/Iso8601.js';
 import JulianDate from '../Core/JulianDate.js';
 import CesiumMath from '../Core/Math.js';
@@ -118,7 +116,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
             return url;
         };
 
-        defineProperties(ExternalFileHandler.prototype, {
+        Object.defineProperties(ExternalFileHandler.prototype, {
             promise : {
                 get : function() {
                     return when.all(this._promises);
@@ -243,7 +241,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
          * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
          *
          * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
          * @example
          * Cesium.exportKml({
          *      entities: entityCollection
@@ -949,7 +947,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
             var hierarchy = valueGetter.get(hierarchyProperty);
 
             // Polygon hierarchy can sometimes just be an array of positions
-            var positions = isArray(hierarchy) ? hierarchy : hierarchy.positions;
+            var positions = Array.isArray(hierarchy) ? hierarchy : hierarchy.positions;
 
             // Polygon boundaries
             var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
@@ -1206,7 +1204,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
         }
 
         function getCoordinates(coordinates, ellipsoid) {
-            if (!isArray(coordinates)) {
+            if (!Array.isArray(coordinates)) {
                 coordinates = [coordinates];
             }
 

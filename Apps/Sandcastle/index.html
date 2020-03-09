@@ -5,16 +5,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Sandcastle</title>
-    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/lib/codemirror.css">
+    <link rel="stylesheet" href="../../ThirdParty/codemirror-5.52.0/lib/codemirror.css">
     <link rel="stylesheet" href="CesiumSandcastle.css">
     <script>
     if (window.location.protocol === 'file:') {
         if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+            window.location = 'https://github.com/CesiumGS/cesium/wiki/Contributor%27s-Guide';
         }
     }
     </script>
-    <script src="../../ThirdParty/jshint-2.1.10/jshint.js"></script>
+    <script src="../../ThirdParty/jshint-2.11.0/jshint.js"></script>
 
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.10.4/dojo/dojo.js"></script>
 
@@ -23,13 +23,13 @@
     <script type="text/javascript" src="Sandcastle-helpers.js"></script>
     <script src="CesiumSandcastle.js"></script>
     <!-- Needed for autocomplete -->
-    <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="../../ThirdParty/codemirror-5.52.0/addon/hint/show-hint.css">
     <!-- End of autocomplete -->
     <meta property="og:title" content="Cesium Sandcastle" />
     <meta property="og:description" content="The Cesium Sandcastle provides an interactive environment for testing Cesium code." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/index.html" />
-    <meta property="og:image" content="https://cesiumjs.org/images/Sandcastle.png" />
+    <meta property="og:url" content="https://sandcastle.cesium.com/index.html" />
+    <meta property="og:image" content="https://cesium.com/images/social-card.jpg" />
     <meta property="og:site_name" content="Cesium" />
     <meta property="fb:admins" content="1222088662,1322006496" />
 </head>
@@ -37,7 +37,7 @@
     <div id="loading"><span>Loading...</span></div>
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle"><a href="http://cesiumjs.org/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
+            <div class="cesiumTitle"><a href="http://cesium.com/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
             <div id="buttonNew" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFile', showLabel: true">
                 New
             </div>

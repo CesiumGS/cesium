@@ -142,7 +142,7 @@ import WindingOrder from './WindingOrder.js';
                 geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
             } catch (e) {
                 oneTimeWarning('polyline-volume-tangent-bitangent', 'Unable to compute tangents and bitangents for polyline volume geometry');
-                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+                //TODO https://github.com/CesiumGS/cesium/issues/3609
             }
 
             if (!vertexFormat.tangent) {
@@ -175,7 +175,7 @@ import WindingOrder from './WindingOrder.js';
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      *
      * @example
      * function computeCircle(radius) {

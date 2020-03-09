@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -15,8 +14,8 @@ import ImageryLayer from './ImageryLayer.js';
      * @alias ImageryLayerCollection
      * @constructor
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryLayerCollection() {
         this._layers = [];
@@ -57,7 +56,7 @@ import ImageryLayer from './ImageryLayer.js';
         this.layerShownOrHidden = new Event();
     }
 
-    defineProperties(ImageryLayerCollection.prototype, {
+    Object.defineProperties(ImageryLayerCollection.prototype, {
         /**
          * Gets the number of layers in this collection.
          * @memberof ImageryLayerCollection.prototype

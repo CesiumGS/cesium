@@ -24,7 +24,6 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var Karma = require('karma');
 var yargs = require('yargs');
@@ -227,27 +226,6 @@ gulp.task('clean', function(done) {
     done();
 });
 
-// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
-// file from an overly precise terrain heights file to reduce bandwidth
-// the approximate terrain heights are only used when the terrain provider does not have this
-// information and not a high level of precision is required
-gulp.task('optimizeApproximateTerrainHeights', function() {
-    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
-    var precision = typeof argv.p !== undefined ? argv.p : 1;
-    precision = Math.pow(10, precision);
-    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
-        .pipe(gulpJsonTransform(function(data, file) {
-            Object.entries(data).forEach(function(entry) {
-                var values = entry[1];
-                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
-                                  Math.ceil(values[1] * precision) / precision ];
-            });
-            return data;
-        }))
-        .pipe(gulpRename('approximateTerrainHeights.json'))
-        .pipe(gulp.dest('Source/Assets/'));
-});
-
 function cloc() {
     var cmdLine;
     var clocPath = path.join('node_modules', 'cloc', 'lib', 'cloc');
@@ -345,7 +323,7 @@ gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocume
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
 
     var builtSrc = gulp.src([
@@ -364,7 +342,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         'ThirdParty/**',
         'favicon.ico',
         'gulpfile.js',
-        'server.js',
+        'server.cjs',
         'package.json',
         'LICENSE.md',
         'CHANGES.md',
@@ -482,7 +460,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 'gulpfile.js',
                 'index.html',
                 'package.json',
-                'server.js',
+                'server.cjs',
                 'web.config',
                 '*.zip',
                 '*.tgz'
@@ -1339,6 +1317,7 @@ function createJsHintOptions() {
     primary.jasmine = false;
     primary.predef = gallery.predef;
     primary.unused = gallery.unused;
+    primary.esversion = gallery.esversion;
 
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
@@ -1416,6 +1395,7 @@ function buildCesiumViewer() {
         var stream = mergeStream(
             gulp.src('Build/Apps/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
+                .pipe(gulpReplace('../../Source', '.'))
                 .pipe(gulp.dest(cesiumViewerOutputDirectory)),
 
             gulp.src('Apps/CesiumViewer/CesiumViewer.css')

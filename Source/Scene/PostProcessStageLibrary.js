@@ -2,7 +2,6 @@ import buildModuleUrl from '../Core/buildModuleUrl.js';
 import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import AcesTonemapping from '../Shaders/PostProcessStages/AcesTonemappingStage.js';
 import AmbientOcclusionGenerate from '../Shaders/PostProcessStages/AmbientOcclusionGenerate.js';
@@ -65,7 +64,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         });
 
         var uniforms = {};
-        defineProperties(uniforms, {
+        Object.defineProperties(uniforms, {
             delta : {
                 get : function() {
                     return blurX.uniforms.delta;
@@ -150,7 +149,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         });
 
         var uniforms = {};
-        defineProperties(uniforms, {
+        Object.defineProperties(uniforms, {
             focalDistance : {
                 get : function() {
                     return dof.uniforms.focalDistance;
@@ -412,7 +411,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         });
 
         var uniforms = {};
-        defineProperties(uniforms, {
+        Object.defineProperties(uniforms, {
             glowOnly : {
                 get : function() {
                     return bloomComposite.uniforms.glowOnly;
@@ -533,7 +532,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         });
 
         var uniforms = {};
-        defineProperties(uniforms, {
+        Object.defineProperties(uniforms, {
             intensity : {
                 get : function() {
                     return generate.uniforms.intensity;
@@ -803,7 +802,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
      * Creates a post-process stage that applies an effect simulating light flaring a camera lens.
      * <p>
      * This stage has the following uniforms: <code>dirtTexture</code>, <code>starTexture</code>, <code>intensity</code>, <code>distortion</code>, <code>ghostDispersal</code>,
-     * <code>haloWidth</code>, and <code>earthRadius</code>.
+     * <code>haloWidth</code>, <code>dirtAmount</code>, and <code>earthRadius</code>.
      * <ul>
      * <li><code>dirtTexture</code> is a texture sampled to simulate dirt on the lens.</li>
      * <li><code>starTexture</code> is the texture sampled for the star pattern of the flare.</li>
@@ -811,6 +810,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
      * <li><code>distortion</code> is a scalar value that affects the chromatic effect distortion. The default value is <code>10.0</code>.</li>
      * <li><code>ghostDispersal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
      * <li><code>haloWidth</code> is a scalar representing the width of the halo  from the ghost dispersal. The default value is <code>0.4</code>.</li>
+     * <li><code>dirtAmount</code> is a scalar representing the amount of dirt on the lens. The default value is <code>0.4</code>.</li>
      * <li><code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.</li>
      * </ul>
      * </p>
@@ -827,6 +827,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
                 distortion : 10.0,
                 ghostDispersal : 0.4,
                 haloWidth : 0.4,
+                dirtAmount : 0.4,
                 earthRadius : Ellipsoid.WGS84.maximumRadius
             }
         });

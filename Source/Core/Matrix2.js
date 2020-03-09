@@ -2,8 +2,6 @@ import Cartesian2 from './Cartesian2.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
-import freezeObject from './freezeObject.js';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
@@ -750,7 +748,7 @@ import freezeObject from './freezeObject.js';
      * @type {Matrix2}
      * @constant
      */
-    Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
+    Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0,
                                                 0.0, 1.0));
 
     /**
@@ -759,7 +757,7 @@ import freezeObject from './freezeObject.js';
      * @type {Matrix2}
      * @constant
      */
-    Matrix2.ZERO = freezeObject(new Matrix2(0.0, 0.0,
+    Matrix2.ZERO = Object.freeze(new Matrix2(0.0, 0.0,
                                             0.0, 0.0));
 
     /**
@@ -810,7 +808,7 @@ import freezeObject from './freezeObject.js';
      */
     Matrix2.COLUMN1ROW1 = 3;
 
-    defineProperties(Matrix2.prototype, {
+    Object.defineProperties(Matrix2.prototype, {
         /**
          * Gets the number of items in the collection.
          * @memberof Matrix2.prototype

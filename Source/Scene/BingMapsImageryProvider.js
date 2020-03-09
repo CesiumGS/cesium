@@ -4,7 +4,6 @@ import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import CesiumMath from '../Core/Math.js';
@@ -205,7 +204,7 @@ import ImageryProvider from './ImageryProvider.js';
         }
     }
 
-    defineProperties(BingMapsImageryProvider.prototype, {
+    Object.defineProperties(BingMapsImageryProvider.prototype, {
         /**
          * Gets the name of the BingMaps server url hosting the imagery.
          * @memberof BingMapsImageryProvider.prototype
@@ -617,7 +616,7 @@ import ImageryProvider from './ImageryProvider.js';
 
     BingMapsImageryProvider._logoUrl = undefined;
 
-    defineProperties(BingMapsImageryProvider, {
+    Object.defineProperties(BingMapsImageryProvider, {
         /**
          * Gets or sets the URL to the Bing logo for display in the credit.
          * @memberof BingMapsImageryProvider

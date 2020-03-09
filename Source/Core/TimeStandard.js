@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Provides the type of time standards which JulianDate can take as input.
@@ -29,4 +28,4 @@ import freezeObject from './freezeObject.js';
          */
         TAI : 1
     };
-export default freezeObject(TimeStandard);
+export default Object.freeze(TimeStandard);

@@ -1,7 +1,6 @@
 import when from '../ThirdParty/when.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import Event from './Event.js';
 import GeographicTilingScheme from './GeographicTilingScheme.js';
@@ -43,7 +42,7 @@ import TerrainProvider from './TerrainProvider.js';
         this._readyPromise = when.resolve(true);
     }
 
-    defineProperties(EllipsoidTerrainProvider.prototype, {
+    Object.defineProperties(EllipsoidTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners

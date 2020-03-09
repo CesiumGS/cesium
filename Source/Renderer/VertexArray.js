@@ -2,7 +2,6 @@ import Check from '../Core/Check.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Geometry from '../Core/Geometry.js';
@@ -624,7 +623,7 @@ import ContextLimits from './ContextLimits.js';
         });
     };
 
-    defineProperties(VertexArray.prototype, {
+    Object.defineProperties(VertexArray.prototype, {
         numberOfAttributes : {
             get : function() {
                 return this._attributes.length;

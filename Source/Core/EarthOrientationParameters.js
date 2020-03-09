@@ -3,7 +3,6 @@ import binarySearch from './binarySearch.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import EarthOrientationParametersSample from './EarthOrientationParametersSample.js';
-import freezeObject from './freezeObject.js';
 import JulianDate from './JulianDate.js';
 import LeapSecond from './LeapSecond.js';
 import Resource from './Resource.js';
@@ -99,7 +98,7 @@ import TimeStandard from './TimeStandard.js';
     /**
      * A default {@link EarthOrientationParameters} instance that returns zero for all EOP values.
      */
-    EarthOrientationParameters.NONE = freezeObject({
+    EarthOrientationParameters.NONE = Object.freeze({
             getPromiseToLoad : function() {
                 return when();
             },

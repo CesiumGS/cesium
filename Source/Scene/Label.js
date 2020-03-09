@@ -4,10 +4,8 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
-import freezeObject from '../Core/freezeObject.js';
 import NearFarScalar from '../Core/NearFarScalar.js';
 import Billboard from './Billboard.js';
 import HeightReference from './HeightReference.js';
@@ -16,7 +14,11 @@ import LabelStyle from './LabelStyle.js';
 import SDFSettings from './SDFSettings.js';
 import VerticalOrigin from './VerticalOrigin.js';
 
-    var textTypes = freezeObject({
+    var fontInfoCache = {};
+    var fontInfoCacheLength = 0;
+    var fontInfoCacheMaxSize = 256;
+
+    var textTypes = Object.freeze({
         LTR : 0,
         RTL : 1,
         WEAK : 2,
@@ -44,18 +46,31 @@ import VerticalOrigin from './VerticalOrigin.js';
     }
 
     function parseFont(label) {
-        var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.opacity = 0;
-        div.style.font = label._font;
-        document.body.appendChild(div);
+        var fontInfo = fontInfoCache[label._font];
+        if (!defined(fontInfo)) {
+            var div = document.createElement('div');
+            div.style.position = 'absolute';
+            div.style.opacity = 0;
+            div.style.font = label._font;
+            document.body.appendChild(div);
 
-        label._fontFamily = getCSSValue(div,'font-family');
-        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
-        label._fontStyle = getCSSValue(div,'font-style');
-        label._fontWeight = getCSSValue(div,'font-weight');
+            fontInfo = {
+                family : getCSSValue(div, 'font-family'),
+                size : getCSSValue(div, 'font-size').replace('px', ''),
+                style : getCSSValue(div, 'font-style'),
+                weight : getCSSValue(div, 'font-weight')
+            };
 
-        document.body.removeChild(div);
+            document.body.removeChild(div);
+            if (fontInfoCacheLength < fontInfoCacheMaxSize) {
+                fontInfoCache[label._font] = fontInfo;
+                fontInfoCacheLength++;
+            }
+        }
+        label._fontFamily = fontInfo.family;
+        label._fontSize = fontInfo.size;
+        label._fontStyle = fontInfo.style;
+        label._fontWeight = fontInfo.weight;
     }
 
     /**
@@ -73,7 +88,7 @@ import VerticalOrigin from './VerticalOrigin.js';
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -169,7 +184,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         this._updateClamping();
     }
 
-    defineProperties(Label.prototype, {
+    Object.defineProperties(Label.prototype, {
         /**
          * Determines if this label will be shown.  Use this to hide or show a label, instead
          * of removing it and re-adding it to the collection.
@@ -1133,12 +1148,11 @@ import VerticalOrigin from './VerticalOrigin.js';
         var width = 0;
         var height = 0;
         var scale = label.totalScale;
-        var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -1161,8 +1175,8 @@ import VerticalOrigin from './VerticalOrigin.js';
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
+                var glyphX = screenSpacePosition.x + (billboard._translate.x);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y);
                 var glyphWidth = glyph.dimensions.width * scale;
                 var glyphHeight = glyph.dimensions.height * scale;
 

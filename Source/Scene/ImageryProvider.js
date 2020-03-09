@@ -1,6 +1,5 @@
 import Check from '../Core/Check.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -28,8 +27,8 @@ import Resource from '../Core/Resource.js';
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -103,7 +102,7 @@ import Resource from '../Core/Resource.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(ImageryProvider.prototype, {
+    Object.defineProperties(ImageryProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof ImageryProvider.prototype

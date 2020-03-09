@@ -2,7 +2,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -161,7 +160,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this._lastSelectionFrameNumber = undefined;
     }
 
-    defineProperties(QuadtreePrimitive.prototype, {
+    Object.defineProperties(QuadtreePrimitive.prototype, {
         /**
          * Gets the provider of {@link QuadtreeTile} instances for this quadtree.
          * @type {QuadtreeTile}

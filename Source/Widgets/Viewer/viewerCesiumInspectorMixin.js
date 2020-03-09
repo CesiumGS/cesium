@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
 
@@ -13,7 +12,7 @@ import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
      *
      * @exception {DeveloperError} viewer is required.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
@@ -31,7 +30,7 @@ import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
         viewer.container.appendChild(cesiumInspectorContainer);
         var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.scene);
 
-        defineProperties(viewer, {
+        Object.defineProperties(viewer, {
             cesiumInspector : {
                 get : function() {
                     return cesiumInspector;

@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
@@ -190,7 +189,7 @@ import BufferUsage from './BufferUsage.js';
 
         var numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
 
-        defineProperties(buffer, {
+        Object.defineProperties(buffer, {
             indexDatatype: {
                 get : function() {
                     return indexDatatype;
@@ -211,7 +210,7 @@ import BufferUsage from './BufferUsage.js';
         return buffer;
     };
 
-    defineProperties(Buffer.prototype, {
+    Object.defineProperties(Buffer.prototype, {
         sizeInBytes : {
             get : function() {
                 return this._sizeInBytes;

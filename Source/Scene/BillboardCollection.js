@@ -6,7 +6,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -123,7 +122,7 @@ import VerticalOrigin from './VerticalOrigin.js';
      * @see Billboard
      * @see LabelCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      *
      * @example
      * // Create a billboard collection with two billboards
@@ -316,7 +315,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         }
     }
 
-    defineProperties(BillboardCollection.prototype, {
+    Object.defineProperties(BillboardCollection.prototype, {
         /**
          * Returns the number of billboards in this collection.  This is commonly used with
          * {@link BillboardCollection#get} to iterate over all the billboards

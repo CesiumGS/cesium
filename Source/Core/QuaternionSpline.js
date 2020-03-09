@@ -1,6 +1,5 @@
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Quaternion from './Quaternion.js';
 import Spline from './Spline.js';
@@ -69,7 +68,7 @@ import Spline from './Spline.js';
         this._lastTimeIndex = 0;
     }
 
-    defineProperties(QuaternionSpline.prototype, {
+    Object.defineProperties(QuaternionSpline.prototype, {
         /**
          * An array of times for the control points.
          *

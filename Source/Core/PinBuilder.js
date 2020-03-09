@@ -16,7 +16,7 @@ import writeTextToCanvas from './writeTextToCanvas.js';
      * @alias PinBuilder
      * @constructor
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
     function PinBuilder() {
         this._cache = {};

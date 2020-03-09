@@ -20,7 +20,6 @@ import  Camera from './Camera.js';
 import  Cesium3DTileFeature from './Cesium3DTileFeature.js';
 import  Cesium3DTilePass from './Cesium3DTilePass.js';
 import  Cesium3DTilePassState from './Cesium3DTilePassState.js';
-import  Cesium3DTileset from './Cesium3DTileset.js';
 import  PickDepth from './PickDepth.js';
 import  PrimitiveCollection from './PrimitiveCollection.js';
 import  SceneMode from './SceneMode.js';
@@ -108,7 +107,7 @@ import  View from './View.js';
             Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
         }
 
-        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchOrthoPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, 1.0, scratchOrthoPixelSize);
 
         var ortho = scratchOrthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -138,7 +137,7 @@ import  View from './View.js';
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchPerspPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, 1.0, scratchPerspPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
@@ -546,7 +545,7 @@ import  View from './View.js';
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if (primitive.show) {
-                if ((primitive instanceof Cesium3DTileset)) {
+                if (defined(primitive.isCesium3DTileset)) {
                     if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
                         tilesets.push(primitive);
                     }
@@ -671,6 +670,7 @@ import  View from './View.js';
                 deferred.resolve(result);
                 removeCallback();
             });
+            scene.requestRender();
         }).otherwise(function(error) {
             deferred.reject(error);
         });

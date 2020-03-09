@@ -2,7 +2,6 @@ import ClockRange from './ClockRange.js';
 import ClockStep from './ClockStep.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Event from './Event.js';
 import getTimestamp from './getTimestamp.js';
@@ -141,7 +140,7 @@ import JulianDate from './JulianDate.js';
         this.clockStep = defaultValue(options.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
     }
 
-    defineProperties(Clock.prototype, {
+    Object.defineProperties(Clock.prototype, {
         /**
          * The current time.
          * Changing this property will change

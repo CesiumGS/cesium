@@ -9,7 +9,6 @@ import CornerType from './CornerType.js';
 import CorridorGeometryLibrary from './CorridorGeometryLibrary.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import Geometry from './Geometry.js';
 import GeometryAttribute from './GeometryAttribute.js';
@@ -783,7 +782,7 @@ import VertexFormat from './VertexFormat.js';
      * @see CorridorGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({
@@ -1066,7 +1065,7 @@ import VertexFormat from './VertexFormat.js';
         });
     };
 
-    defineProperties(CorridorGeometry.prototype, {
+    Object.defineProperties(CorridorGeometry.prototype, {
         /**
          * @private
          */

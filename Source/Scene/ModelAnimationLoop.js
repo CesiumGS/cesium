@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Determines if and how a glTF animation is looped.
@@ -32,4 +31,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         MIRRORED_REPEAT : 2
     };
-export default freezeObject(ModelAnimationLoop);
+export default Object.freeze(ModelAnimationLoop);

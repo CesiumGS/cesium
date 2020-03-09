@@ -1,7 +1,6 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
-     * Specifies whether the object casts or receives shadows from each light source when
+     * Specifies whether the object casts or receives shadows from light sources when
      * shadows are enabled.
      *
      * @exports ShadowMode
@@ -72,4 +71,4 @@ import freezeObject from '../Core/freezeObject.js';
         }
         return ShadowMode.DISABLED;
     };
-export default freezeObject(ShadowMode);
+export default Object.freeze(ShadowMode);

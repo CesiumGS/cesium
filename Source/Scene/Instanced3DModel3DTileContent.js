@@ -4,7 +4,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -26,8 +25,8 @@ import ModelInstanceCollection from './ModelInstanceCollection.js';
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Instanced3DModel|Instanced 3D Model}
+     * tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -53,7 +52,7 @@ import ModelInstanceCollection from './ModelInstanceCollection.js';
     // This can be overridden for testing purposes
     Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
-    defineProperties(Instanced3DModel3DTileContent.prototype, {
+    Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return this._batchTable.featuresLength;

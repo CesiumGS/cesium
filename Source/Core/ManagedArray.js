@@ -1,6 +1,5 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * A wrapper around arrays so that the internal length of the array can be manually managed.
@@ -17,7 +16,7 @@ import defineProperties from './defineProperties.js';
         this._length = length;
     }
 
-    defineProperties(ManagedArray.prototype, {
+    Object.defineProperties(ManagedArray.prototype, {
         /**
          * Gets or sets the length of the array.
          * If the set length is greater than the length of the internal array, the internal array is resized.

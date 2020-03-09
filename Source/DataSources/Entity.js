@@ -4,7 +4,6 @@ import Check from '../Core/Check.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import CesiumMath from '../Core/Math.js';
@@ -26,6 +25,7 @@ import EllipseGraphics from './EllipseGraphics.js';
 import EllipsoidGraphics from './EllipsoidGraphics.js';
 import LabelGraphics from './LabelGraphics.js';
 import ModelGraphics from './ModelGraphics.js';
+import Cesium3DTilesetGraphics from './Cesium3DTilesetGraphics.js';
 import PathGraphics from './PathGraphics.js';
 import PlaneGraphics from './PlaneGraphics.js';
 import PointGraphics from './PointGraphics.js';
@@ -81,6 +81,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
+     * @param {Cesium3DTilesetGraphics} [options.tileset] A 3D Tiles tileset to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
      * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
@@ -91,7 +92,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -108,7 +109,7 @@ import WallGraphics from './WallGraphics.js';
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
+                               'ellipsoid', 'label', 'model', 'tileset', 'orientation', 'path', 'plane', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
@@ -129,6 +130,8 @@ import WallGraphics from './WallGraphics.js';
         this._labelSubscription = undefined;
         this._model = undefined;
         this._modelSubscription = undefined;
+        this._tileset = undefined;
+        this._tilesetSubscription = undefined;
         this._orientation = undefined;
         this._orientationSubscription = undefined;
         this._path = undefined;
@@ -179,7 +182,7 @@ import WallGraphics from './WallGraphics.js';
         entity._definitionChanged.raiseEvent(entity, 'isShowing', isShowing, !isShowing);
     }
 
-    defineProperties(Entity.prototype, {
+    Object.defineProperties(Entity.prototype, {
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
@@ -362,6 +365,12 @@ import WallGraphics from './WallGraphics.js';
          * @type {ModelGraphics}
          */
         model : createPropertyTypeDescriptor('model', ModelGraphics),
+        /**
+         * Gets or sets the tileset.
+         * @memberof Entity.prototype
+         * @type {Cesium3DTilesetGraphics}
+         */
+        tileset : createPropertyTypeDescriptor('tileset', Cesium3DTilesetGraphics),
         /**
          * Gets or sets the orientation.
          * @memberof Entity.prototype

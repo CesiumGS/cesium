@@ -2,6 +2,7 @@
 /Build
 /Cesium-*.zip
 /cesium-*.tgz
+.directory
 .DS_Store
 Thumbs.db
 .eslintcache
@@ -25,6 +26,7 @@ Thumbs.db
 npm-debug.log
 npm-debug.log.*
 package-lock.json
+yarn.lock
 
 # WebStorm user-specific
 .idea/workspace.xml

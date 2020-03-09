@@ -1,4 +1,3 @@
-import defineProperties from './defineProperties.js';
 
     /**
      * A queue that can enqueue items at the end, and dequeue items from the front.
@@ -12,7 +11,7 @@ import defineProperties from './defineProperties.js';
         this._length = 0;
     }
 
-    defineProperties(Queue.prototype, {
+    Object.defineProperties(Queue.prototype, {
         /**
          * The length of the queue.
          *

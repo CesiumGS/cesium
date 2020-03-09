@@ -2,7 +2,6 @@ import DOMPurify from '../ThirdParty/purify.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     var nextCreditId = 0;
     var creditToId = {};
@@ -19,7 +18,7 @@ import defineProperties from './defineProperties.js';
      *
      * @example
      * //Create a credit with a tooltip, image and link
-     * var credit = new Cesium.Credit('<a href="https://cesiumjs.org/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+     * var credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
      */
     function Credit(html, showOnScreen) {
         //>>includeStart('debug', pragmas.debug);
@@ -44,7 +43,7 @@ import defineProperties from './defineProperties.js';
         this._element = undefined;
     }
 
-    defineProperties(Credit.prototype, {
+    Object.defineProperties(Credit.prototype, {
         /**
          * The credit content
          * @memberof Credit.prototype

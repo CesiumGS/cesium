@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import StencilFunction from './StencilFunction.js';
 import StencilOperation from './StencilOperation.js';
 
@@ -35,4 +34,4 @@ import StencilOperation from './StencilOperation.js';
             mask : StencilConstants.CESIUM_3D_TILE_MASK
         };
     };
-export default freezeObject(StencilConstants);
+export default Object.freeze(StencilConstants);

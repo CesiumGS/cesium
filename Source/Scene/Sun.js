@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import CesiumMath from '../Core/Math.js';
@@ -83,7 +82,7 @@ import SceneTransforms from './SceneTransforms.js';
         };
     }
 
-    defineProperties(Sun.prototype, {
+    Object.defineProperties(Sun.prototype, {
         /**
          * Gets or sets a number that controls how "bright" the Sun's lens flare appears
          * to be.  Zero shows just the Sun's disc without any flare.
@@ -275,8 +274,9 @@ import SceneTransforms from './SceneTransforms.js';
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
         var limbWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, limbCC, scratchLimbWC);
 
-        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
+        this._size = Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
+        this._size = Math.ceil(this._size);
 
         return this._commands;
     };

@@ -5,7 +5,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -37,7 +36,7 @@ import SceneTransforms from './SceneTransforms.js';
      * @internalConstructor
      * @class
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
     function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -118,7 +117,7 @@ import SceneTransforms from './SceneTransforms.js';
         }
     }
 
-    defineProperties(PointPrimitive.prototype, {
+    Object.defineProperties(PointPrimitive.prototype, {
         /**
          * Determines if this point will be shown.  Use this to hide or show a point, instead
          * of removing it and re-adding it to the collection.

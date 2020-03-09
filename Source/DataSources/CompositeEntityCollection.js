@@ -1,6 +1,5 @@
 import createGuid from '../Core/createGuid.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import CesiumMath from '../Core/Math.js';
 import Entity from './Entity.js';
@@ -130,7 +129,7 @@ import EntityCollection from './EntityCollection.js';
         this._shouldRecomposite = false;
     }
 
-    defineProperties(CompositeEntityCollection.prototype, {
+    Object.defineProperties(CompositeEntityCollection.prototype, {
         /**
          * Gets the event that is fired when entities are added or removed from the collection.
          * The generated event is a {@link EntityCollection.collectionChangedEventCallback}.
