@@ -1562,7 +1562,6 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         var cameraUnderground = frameState.cameraUnderground;
         var translucent = frameState.globeTranslucent;
-        var pass = translucent && tileProvider.translucencyMode === GlobeTranslucencyMode.ENABLED ? Pass.TRANSLUCENT : Pass.GLOBE;
 
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
@@ -1991,7 +1990,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, pass, context);
+                GlobeTranslucency.updateDerivedCommand(command, (renderState === firstPassRenderState), tileProvider.translucencyMode, context);
             }
 
             pushCommand(command, frameState);

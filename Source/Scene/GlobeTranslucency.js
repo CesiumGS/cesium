@@ -1,23 +1,25 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
-import PixelDatatype from '../Renderer/PixelDatatype.js';
-import Texture from '../Renderer/Texture.js';
-import PixelFormat from '../Core/PixelFormat.js';
-import Sampler from '../Renderer/Sampler.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import destroyObject from '../Core/destroyObject.js';
 import defined from '../Core/defined.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
 import DrawCommand from '../Renderer/DrawCommand.js';
 import Framebuffer from '../Renderer/Framebuffer.js';
+import Pass from '../Renderer/Pass.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
 import RenderState from '../Renderer/RenderState.js';
-import BlendingState from './BlendingState.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
 import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
 import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
-import ClearCommand from '../Renderer/ClearCommand.js';
-import Color from '../Core/Color.js';
+import BlendingState from './BlendingState.js';
 import CullFace from './CullFace.js';
+import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 
     /**
      * @private
@@ -40,12 +42,17 @@ import CullFace from './CullFace.js';
         this._manualDepthTestCommand = undefined;
         this._packedDepthCommand = undefined;
         this._blendCommand = undefined;
+        this._blendCommandOIT = undefined;
         this._clearCommand = undefined;
 
         this._viewport = new BoundingRectangle();
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
         this._useHdr = undefined;
+
+        this._executor = undefined;
+        this._frontAndBackExecutor = new FrontAndBackExecutor();
+        this._frontOnlyExecutor = new FrontOnlyExecutor();
     }
 
     GlobeTranslucency.isSupported = function(context) {
@@ -211,6 +218,17 @@ import CullFace from './CullFace.js';
             });
         }
 
+        if (!defined(globeTranslucency._blendCommandOIT)) {
+            globeTranslucency._blendCommandOIT = context.createViewportQuadCommand(PassThrough, {
+                uniformMap : {
+                    colorTexture : function() {
+                        return globeTranslucency._colorTexture;
+                    }
+                },
+                owner : globeTranslucency
+            });
+        }
+
         if (!defined(globeTranslucency._clearCommand)) {
             globeTranslucency._clearCommand = new ClearCommand({
                 color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -225,11 +243,11 @@ import CullFace from './CullFace.js';
         globeTranslucency._packedDepthCommand.framebuffer = globeTranslucency._packedDepthFramebuffer;
         globeTranslucency._packedDepthCommand.renderState = globeTranslucency._renderState;
         globeTranslucency._blendCommand.renderState = globeTranslucency._blendRenderState;
+        globeTranslucency._blendCommandOIT.renderState = globeTranslucency._blendRenderStateOIT;
         globeTranslucency._clearCommand.framebuffer = globeTranslucency._framebuffer;
 
         if (useOIT) {
-            var command = globeTranslucency._blendCommand;
-            command.renderState = globeTranslucency._blendRenderStateOIT;
+            var command = globeTranslucency._blendCommandOIT;
             var derivedCommands = command.derivedCommands;
             derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
         }
@@ -255,6 +273,8 @@ import CullFace from './CullFace.js';
 
             removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
             removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
+            // removeDefine(vs.defines, 'TRANSCLUCENT');
+            // removeDefine(fs.defines, 'TRANSCLUCENT');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'backFace', {
                 vertexShaderSource : vs,
@@ -267,25 +287,6 @@ import CullFace from './CullFace.js';
     }
 
     function getFrontFaceShaderProgram(context, shaderProgram) {
-        // TODO : not needed for ALPHA?
-        // TODO : Needs to use regular fog
-        // var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'frontFace');
-        // if (!defined(shader)) {
-        //     var attributeLocations = shaderProgram._attributeLocations;
-        //     var fs = shaderProgram.fragmentShaderSource.clone();
-
-        //     fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
-        //     fs.defines.push('ALPHA');
-
-        //     shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'frontFace', {
-        //         vertexShaderSource : shaderProgram.vertexShaderSource,
-        //         fragmentShaderSource : fs,
-        //         attributeLocations : attributeLocations
-        //     });
-        // }
-
-        // return shader;
-
         return shaderProgram;
     }
 
@@ -300,7 +301,7 @@ import CullFace from './CullFace.js';
             var rs = RenderState.getState(renderState);
             rs.cull.face = CullFace.FRONT;
             rs.cull.enabled = true; // TODO: why not just disable cull in Globe?
-            rs.blending = BlendingState.ALPHA_BLEND;
+            rs.blending = BlendingState.ALPHA_BLEND; // TODO Need to set this for non OIT mode and ENABLED
 
             backFaceState = RenderState.fromCache(rs);
             cache[renderState.id] = backFaceState;
@@ -316,7 +317,7 @@ import CullFace from './CullFace.js';
             var rs = RenderState.getState(renderState);
             rs.cull.face = CullFace.BACK;
             rs.cull.enabled = true;
-            rs.blending = BlendingState.ALPHA_BLEND;
+            rs.blending = BlendingState.ALPHA_BLEND; // TODO Need to set this for non OIT mode and ENABLED
 
             frontFaceState = RenderState.fromCache(rs);
             cache[renderState.id] = frontFaceState;
@@ -325,7 +326,7 @@ import CullFace from './CullFace.js';
         return frontFaceState;
     }
 
-    GlobeTranslucency.updateDerivedCommand = function(command, pass, context) {
+    GlobeTranslucency.updateDerivedCommand = function(command, firstPass, globeTranslucencyMode, context) {
         var derivedCommands = command.derivedCommands.globeTranslucency;
 
         if (!defined(derivedCommands) || command.dirty) {
@@ -350,12 +351,18 @@ import CullFace from './CullFace.js';
             backFaceCommand = DrawCommand.shallowClone(command, backFaceCommand);
             frontFaceCommand = DrawCommand.shallowClone(command, frontFaceCommand);
 
-            // TODO
+            // Add some extra metadata to the derivedCommands object instead of adding a new property to DrawCommand
+            backFaceCommand.derivedCommands.writeDepthForClassification = firstPass;
+            frontFaceCommand.derivedCommands.writeDepthForClassification = firstPass;
+
+            var pass = (globeTranslucencyMode === GlobeTranslucencyMode.ENABLED) ? Pass.TRANSLUCENT : Pass.GLOBE;
             backFaceCommand.pass = pass;
             frontFaceCommand.pass = pass;
 
             derivedCommands.backFaceCommand = backFaceCommand;
             derivedCommands.frontFaceCommand = frontFaceCommand;
+            derivedCommands.writeDepthForClassification = firstPass;
+
             command.derivedCommands.globeTranslucency = derivedCommands;
 
             if (!defined(backFaceShader) || (derivedCommands.shaderProgramId !== command.shaderProgram.id)) {
@@ -373,28 +380,7 @@ import CullFace from './CullFace.js';
         }
     };
 
-    function executeManualDepthTest(globeTranslucency, context, passState) {
-        globeTranslucency._manualDepthTestTexture = defaultValue(passState.framebuffer.depthStencilTexture, passState.framebuffer.depthTexture);
-        globeTranslucency._manualDepthTestCommand.execute(context, passState);
-    }
-
-    function executeBackFaceCommands(commands, length, executeCommandFunction, scene, context, passState) {
-        // TODO : safer approach than inteleaving?
-        for (var i = 0; i < length; i += 2)
-        {
-            executeCommandFunction(commands[i], scene, context, passState);
-        }
-    }
-
-    function executeFrontFaceCommands(commands, length, executeCommandFunction, scene, context, passState) {
-        // TODO : safer approach than inteleaving?
-        for (var i = 1; i < length; i += 2)
-        {
-            executeCommandFunction(commands[i], scene, context, passState);
-        }
-    }
-
-    GlobeTranslucency.prototype.updateAndClear = function(hdr, oit, useOIT, viewport, context, passState) {
+    GlobeTranslucency.prototype.updateAndClear = function(hdr, oit, useOIT, globeTranslucencyMode, viewport, context, passState) {
         var width = viewport.width;
         var height = viewport.height;
 
@@ -403,36 +389,101 @@ import CullFace from './CullFace.js';
 
         this._clearCommand.execute(context, passState);
 
+        if (globeTranslucencyMode === GlobeTranslucencyMode.ENABLED) {
+            this._executor = this._frontAndBackExecutor;
+        } else if (globeTranslucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY) {
+            this._executor = this._frontOnlyExecutor;
+        }
+
         this._useHdr = hdr;
     };
 
     GlobeTranslucency.prototype.executeGlobeCommands = function(commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
-        if (length === 0) {
+        if (length === 0 || !defined(this._executor)) {
             return;
         }
 
-        var executeFirstPass = cameraUnderground ? executeFrontFaceCommands : executeBackFaceCommands;
-        var executeSecondPass = cameraUnderground ? executeBackFaceCommands : executeFrontFaceCommands;
+        this._executor.executeGlobeCommands(this, commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState);
+    };
 
-        executeFirstPass(commands, length, executeCommandFunction, scene, context, passState);
+    GlobeTranslucency.prototype.executeGlobeClassificationCommands = function(commands, length, executeCommandFunction, scene, context, passState) {
+        if (length === 0 || !defined(this._executor)) {
+            return;
+        }
+
+        this._executor.executeGlobeClassificationCommands(this, commands, length, executeCommandFunction, scene, context, passState);
+    };
+
+    GlobeTranslucency.prototype.executeTranslucentCommands = function(translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        if (length === 0 || !defined(this._executor)) {
+            return;
+        }
+
+        this._executor.executeTranslucentCommands(this, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState);
+    };
+
+    GlobeTranslucency.prototype.execute = function(context, passState) {
+        if (length === 0 || !defined(this._executor)) {
+            return;
+        }
+
+        this._executor.execute(this, context, passState);
+    };
+
+
+    GlobeTranslucency.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    GlobeTranslucency.prototype.destroy = function() {
+        destroyResources();
+        return destroyObject(this);
+    };
+
+    // ----------------------------------------
+    // GlobeTranslucencyMode.FRONT_FACES_ONLY
+    // ----------------------------------------
+
+    function executeManualDepthTest(globeTranslucency, context, passState) {
+        globeTranslucency._manualDepthTestTexture = defaultValue(passState.framebuffer.depthStencilTexture, passState.framebuffer.depthTexture);
+        globeTranslucency._manualDepthTestCommand.execute(context, passState);
+    }
+
+    function executePerFaceCommands(commands, length, cullFace, executeCommandFunction, scene, context, passState) {
+        for (var i = 0; i < length; ++i) {
+            var command = commands[i];
+            if (command.renderState.cull.face === cullFace) {
+                executeCommandFunction(command, scene, context, passState);
+            }
+        }
+    }
+
+    function FrontOnlyExecutor() {
+    }
+
+    FrontOnlyExecutor.prototype.executeGlobeCommands = function(globeTranslucency, commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
+        var firstPassFace = cameraUnderground ? CullFace.BACK : CullFace.FRONT;
+        var secondPassFace = cameraUnderground ? CullFace.FRONT : CullFace.BACK;
+
+        var originalBlendingEnabled = passState.blendingEnabled;
+        passState.blendingEnabled = false;
+
+        executePerFaceCommands(commands, length, firstPassFace, executeCommandFunction, scene, context, passState);
 
         var originalFramebuffer = passState.framebuffer;
-        passState.framebuffer = this._framebuffer;
+        passState.framebuffer = globeTranslucency._framebuffer;
 
-        executeSecondPass(commands, length, executeCommandFunction, scene, context, passState);
+        executePerFaceCommands(commands, length, secondPassFace, executeCommandFunction, scene, context, passState);
 
         if (clearGlobeDepth) {
-            executeManualDepthTest(this, context, passState);
+            executeManualDepthTest(globeTranslucency, context, passState);
         }
 
         passState.framebuffer = originalFramebuffer;
+        passState.blendingEnabled = originalBlendingEnabled;
     };
 
-    GlobeTranslucency.prototype.executeClassificationCommands = function(commands, length, executeCommandFunction, scene, context, passState) {
-        if (length === 0) {
-            return;
-        }
-
+    FrontOnlyExecutor.prototype.executeGlobeClassificationCommands = function(globeTranslucency, commands, length, executeCommandFunction, scene, context, passState) {
         var i;
 
         // Execute classification on back faces
@@ -442,11 +493,11 @@ import CullFace from './CullFace.js';
 
         // Pack depth into separate texture for ground polylines and textured ground primitives
         var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
-        this._packedDepthCommand.execute(context, passState);
-        context.uniformState.globeDepthTexture = this._packedDepthTexture;
+        globeTranslucency._packedDepthCommand.execute(context, passState);
+        context.uniformState.globeDepthTexture = globeTranslucency._packedDepthTexture;
 
         var originalFramebuffer = passState.framebuffer;
-        passState.framebuffer = this._framebuffer;
+        passState.framebuffer = globeTranslucency._framebuffer;
 
         // Execute classification on front faces
         for (i = 0; i < length; ++i) {
@@ -457,18 +508,72 @@ import CullFace from './CullFace.js';
         passState.framebuffer = originalFramebuffer;
     };
 
-    GlobeTranslucency.prototype.updateCommand = function(context, passState) {
-        executeManualDepthTest(this, context, passState);
-        return this._blendCommand;
+    FrontOnlyExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        executeManualDepthTest(globeTranslucency, context, passState);
+        var blendCommand = useOIT ? globeTranslucency._blendCommandOIT : globeTranslucency._blendCommand;
+        executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, blendCommand);
     };
 
-    GlobeTranslucency.prototype.isDestroyed = function() {
-        return false;
+    FrontOnlyExecutor.prototype.execute = function(globeTranslucency, context, passState) {
     };
 
-    GlobeTranslucency.prototype.destroy = function() {
-        destroyResources();
-        return destroyObject(this);
+    // ----------------------------------
+    // GlobeTranslucencyMode.ENABLED
+    // ----------------------------------
+
+    function executeDepthOnlyCommands(commands, length, executeCommandFunction, scene, context, passState) {
+        var originalPassesDepth = scene.frameState.passes.depth;
+        scene.frameState.passes.depth = true; // Renders depth-only commands in executeCommand
+
+        for (var i = 0; i < length; ++i)
+        {
+            var command = commands[i];
+            if (command.derivedCommands.writeDepthForClassification) {
+                executeCommandFunction(command, scene, context, passState);
+            }
+        }
+
+        scene.frameState.passes.depth = originalPassesDepth;
+    }
+
+    function FrontAndBackExecutor() {
+    }
+
+    FrontAndBackExecutor.prototype.executeGlobeCommands = function(globeTranslucency, commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
     };
+
+    FrontAndBackExecutor.prototype.executeGlobeClassificationCommands = function(globeTranslucency, commands, length, executeCommandFunction, scene, context, passState) {
+    };
+
+    FrontAndBackExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, undefined);
+
+        var originalFramebuffer = passState.framebuffer;
+        passState.framebuffer = globeTranslucency._framebuffer;
+
+        // TODO : classification on back faces won't be visible but this is a more general problem
+        // TODO : why not pack in this pass? Don't need to write color... or is it not possible?
+        executeDepthOnlyCommands(translucentCommands, translucentCommands.length, executeCommandFunction, scene, context, passState);
+
+        // Pack depth into separate texture for ground polylines and textured ground primitives
+        var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
+        globeTranslucency._packedDepthCommand.execute(context, passState);
+        context.uniformState.globeDepthTexture = globeTranslucency._packedDepthTexture;
+
+        // TODO : need to set pass?
+        for (var i = 0; i < classificationCommandsLength; ++i) {
+            executeCommandFunction(classificationCommands[i], scene, context, passState);
+        }
+
+        passState.framebuffer = originalFramebuffer;
+        executeManualDepthTest(globeTranslucency, context, passState);
+
+        context.uniformState.globeDepthTexture = originalGlobeDepthTexture;
+    };
+
+    FrontAndBackExecutor.prototype.execute = function(globeTranslucency, context, passState) {
+        globeTranslucency._blendCommand.execute(context, passState)
+    };
+
 
 export default GlobeTranslucency;

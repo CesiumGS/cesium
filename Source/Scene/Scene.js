@@ -2302,7 +2302,7 @@ import View from './View.js';
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
 
-            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
+            if (globeTranslucent) {
                 globeTranslucency.executeGlobeCommands(commands, length, clearGlobeDepth, scene._cameraUnderground, scene._hdr, executeCommand, view.viewport, scene, context, passState);
             } else {
                 for (j = 0; j < length; ++j) {
@@ -2323,11 +2323,9 @@ import View from './View.js';
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
-            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
-                globeTranslucency.executeClassificationCommands(commands, length, executeCommand, scene, context, passState);
-            }
-            else
-            {
+            if (globeTranslucent) {
+                globeTranslucency.executeGlobeClassificationCommands(commands, length, executeCommand, scene, context, passState);
+            } else {
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2461,11 +2459,6 @@ import View from './View.js';
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            var globeTranslucencyCommand;
-            if (globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
-                globeTranslucencyCommand = globeTranslucency.updateCommand(context, passState);
-            }
-
             if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
@@ -2482,7 +2475,13 @@ import View from './View.js';
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
-            executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification, globeTranslucencyCommand);
+            if (globeTranslucent) {
+                var classificationCommands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+                var classificationCommandsLength = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
+                globeTranslucency.executeTranslucentCommands(commands, classificationCommands, classificationCommandsLength, executeTranslucentCommands, executeCommand, environmentState.useOIT, scene, context, invertClassification, passState);
+            } else {
+                executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification, undefined);
+            }
 
             if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
@@ -2903,7 +2902,7 @@ import View from './View.js';
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
         var globeTranslucent = frameState.globeTranslucent;
-        var globeSeeThrough = globeTranslucent && globe.translucencyMode === GlobeTranslucencyMode.ENABLED;
+        var sunVisibleThroughGlobe = globeTranslucent && (globe.translucencyMode === GlobeTranslucencyMode.ENABLED);
 
         if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (this._cameraUnderground && !globeTranslucent)) {
             environmentState.skyAtmosphereCommand = undefined;
@@ -2956,8 +2955,8 @@ import View from './View.js';
 
         // Determine visibility of celestial and terrestrial environment effects.
         environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = globeSeeThrough || this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = globeSeeThrough || this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
+        environmentState.isSunVisible = sunVisibleThroughGlobe || this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = sunVisibleThroughGlobe || this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
         var envMaps = this.specularEnvironmentMaps;
         var envMapAtlas = this._specularEnvironmentMapAtlas;
@@ -3155,8 +3154,8 @@ import View from './View.js';
             }
         }
 
-        if (frameState.globeTranslucent && defined(scene._globe) && (scene._globe.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY)) {
-            view.globeTranslucency.updateAndClear(scene._hdr, oit, useOIT, view.viewport, context, passState);
+        if (frameState.globeTranslucent) {
+            view.globeTranslucency.updateAndClear(scene._hdr, oit, useOIT, scene.globe.translucencyMode, view.viewport, context, passState);
         }
     }
 
@@ -3187,6 +3186,10 @@ import View from './View.js';
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
             view.oit.execute(context, passState);
+        }
+
+        if (frameState.globeTranslucent) {
+            view.globeTranslucency.execute(context, passState);
         }
 
         if (usePostProcess) {
