@@ -1991,7 +1991,8 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, pass, context);
+                var firstPass = renderState === firstPassRenderState;
+                GlobeTranslucency.updateDerivedCommand(command, firstPass, pass, context);
             }
 
             pushCommand(command, frameState);
