@@ -10,6 +10,7 @@ Change Log
 ##### Fixes :wrench:
 
 * Interacting with the Cesium canvas will now blur the previously focused element. This prevents unintended modification of input elements when interacting with the globe.
+* `TileMapServiceImageryProvider` will now force `minimumLevel` to 0 if the `tilemapresource.xml` metadata request fails and the `rectangle` is too large for the given detail level [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448)
 
 ### 1.67.0 - 2020-03-02
 
