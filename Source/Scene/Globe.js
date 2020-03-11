@@ -329,11 +329,22 @@ define([
                 this._surface.tileProvider.clippingPlanes = value;
             }
         },
+        /**
+         * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
+         * Defaults to the maximum extent of cartographic coordinates.
+         *
+         * @member Globe.prototype
+         * @type {Rectangle}
+         * @default Rectangle.MAX_VALUE
+         */
         cartographicLimitRectangle : {
             get : function() {
                 return this._surface.tileProvider.cartographicLimitRectangle;
             },
             set : function(value) {
+                if (!defined(value)) {
+                    value = Rectangle.clone(Rectangle.MAX_VALUE);
+                }
                 this._surface.tileProvider.cartographicLimitRectangle = value;
             }
         },

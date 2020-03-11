@@ -38,7 +38,8 @@ define([
         './getClipAndStyleCode',
         './getClippingFunction',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './StencilConstants'
     ], function(
         arraySlice,
         BoundingSphere,
@@ -79,7 +80,8 @@ define([
         getClipAndStyleCode,
         getClippingFunction,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        StencilConstants) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -737,11 +739,18 @@ define([
             attributes : attributes
         });
 
-        pointCloud._opaqueRenderState = RenderState.fromCache({
+        var opaqueRenderState = {
             depthTest : {
                 enabled : true
             }
-        });
+        };
+
+        if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+            opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+            opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+        }
+
+        pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
 
         pointCloud._translucentRenderState = RenderState.fromCache({
             depthTest : {

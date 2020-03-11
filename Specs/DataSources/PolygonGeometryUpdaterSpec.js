@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
@@ -30,6 +31,7 @@ defineSuite([
     ], function(
         PolygonGeometryUpdater,
         ApproximateTerrainHeights,
+        ArcType,
         Cartesian3,
         Color,
         Ellipsoid,
@@ -227,6 +229,16 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.arcType = new SampledProperty(Number);
+        entity.polygon.arcType.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
     it('Creates geometry with expected properties', function() {
         var options = {
             height : 431,
@@ -234,8 +246,9 @@ defineSuite([
             granularity : 0.97,
             stRotation : 12,
             perPositionHeight : false,
-            closeTop: true,
-            closeBottom: false
+            closeTop : true,
+            closeBottom : false,
+            arcType : ArcType.GEODESIC
         };
 
         var entity = createBasicPolygon();
@@ -249,6 +262,7 @@ defineSuite([
         polygon.height = new ConstantProperty(options.height);
         polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         polygon.granularity = new ConstantProperty(options.granularity);
+        polygon.arcType = new ConstantProperty(options.arcType);
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -263,6 +277,7 @@ defineSuite([
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._closeTop).toEqual(options.closeTop);
         expect(geometry._closeBottom).toEqual(options.closeBottom);
+        expect(geometry._arcType).toEqual(options.arcType);
         expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
@@ -358,6 +373,7 @@ defineSuite([
         polygon.stRotation = createDynamicProperty(1);
         polygon.closeTop = createDynamicProperty(false);
         polygon.closeBottom = createDynamicProperty(false);
+        polygon.arcType = createDynamicProperty(ArcType.RHUMB);
 
         var entity = new Entity();
         entity.polygon = polygon;
@@ -376,6 +392,7 @@ defineSuite([
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
         expect(options.closeTop).toEqual(polygon.closeTop.getValue());
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
+        expect(options.arcType).toEqual(polygon.arcType.getValue());
         expect(options.offsetAttribute).toBeUndefined();
     });
 

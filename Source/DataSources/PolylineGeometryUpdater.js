@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/BoundingSphere',
         '../Core/Check',
         '../Core/Color',
@@ -14,10 +15,12 @@ define([
         '../Core/GeometryInstance',
         '../Core/GroundPolylineGeometry',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/PolylineGeometry',
         '../Core/PolylinePipeline',
         '../Core/ShowGeometryInstanceAttribute',
         '../DataSources/Entity',
+        '../Scene/ClassificationType',
         '../Scene/GroundPolylinePrimitive',
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
@@ -29,6 +32,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        ArcType,
         BoundingSphere,
         Check,
         Color,
@@ -44,10 +48,12 @@ define([
         GeometryInstance,
         GroundPolylineGeometry,
         Iso8601,
+        oneTimeWarning,
         PolylineGeometry,
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
         Entity,
+        ClassificationType,
         GroundPolylinePrimitive,
         PolylineCollection,
         PolylineColorAppearance,
@@ -70,18 +76,22 @@ define([
     var defaultShow = new ConstantProperty(true);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     function GeometryOptions() {
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
         this.followSurface = undefined;
+        this.arcType = undefined;
         this.granularity = undefined;
     }
 
     function GroundGeometryOptions() {
         this.positions = undefined;
         this.width = undefined;
+        this.arcType = undefined;
+        this.granularity = undefined;
     }
 
     /**
@@ -113,6 +123,7 @@ define([
         this._materialProperty = undefined;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
+        this._classificationTypeProperty = undefined;
         this._depthFailMaterialProperty = undefined;
         this._geometryOptions = new GeometryOptions();
         this._groundGeometryOptions = new GroundGeometryOptions();
@@ -253,6 +264,18 @@ define([
             }
         },
         /**
+         * Gets or sets the {@link ClassificationType} Property specifying if this geometry will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        classificationTypeProperty : {
+            get : function() {
+                return this._classificationTypeProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -288,6 +311,19 @@ define([
         geometryChanged : {
             get : function() {
                 return this._geometryChanged;
+            }
+        },
+
+        /**
+         * Gets a value indicating if the path of the line.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {ArcType}
+         * @readonly
+         */
+        arcType : {
+            get : function() {
+                return this._arcType;
             }
         },
 
@@ -336,7 +372,8 @@ define([
      */
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time);
+        var visible = this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
@@ -473,16 +510,18 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(polyline.distanceDisplayCondition, defaultDistanceDisplayCondition);
+        this._classificationTypeProperty = defaultValue(polyline.classificationType, defaultClassificationType);
         this._fillEnabled = true;
         this._zIndex = defaultValue(zIndex, defaultZIndex);
 
         var width = polyline.width;
         var followSurface = polyline.followSurface;
+        var arcType = polyline.arcType;
         var clampToGround = polyline.clampToGround;
         var granularity = polyline.granularity;
 
         if (!positionsProperty.isConstant || !Property.isConstant(width) ||
-            !Property.isConstant(followSurface) || !Property.isConstant(granularity) ||
+            !Property.isConstant(followSurface) || !Property.isConstant(arcType) || !Property.isConstant(granularity) ||
             !Property.isConstant(clampToGround) || !Property.isConstant(zIndex)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -493,7 +532,7 @@ define([
             var positions = positionsProperty.getValue(Iso8601.MINIMUM_VALUE, geometryOptions.positions);
 
             //Because of the way we currently handle reference properties,
-            //we can't automatically assume the positions are  always valid.
+            //we can't automatically assume the positions are always valid.
             if (!defined(positions) || positions.length < 2) {
                 if (this._fillEnabled) {
                     this._fillEnabled = false;
@@ -513,13 +552,20 @@ define([
             geometryOptions.positions = positions;
             geometryOptions.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            geometryOptions.arcType = defined(arcType) ? arcType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             var groundGeometryOptions = this._groundGeometryOptions;
             groundGeometryOptions.positions = positions;
             groundGeometryOptions.width = geometryOptions.width;
+            groundGeometryOptions.arcType = geometryOptions.arcType;
+            groundGeometryOptions.granularity = geometryOptions.granularity;
 
             this._clampToGround = defined(clampToGround) ? clampToGround.getValue(Iso8601.MINIMUM_VALUE) : false;
+
+            if (!this._clampToGround && defined(zIndex)) {
+                oneTimeWarning('Entity polylines must have clampToGround: true when using zIndex.  zIndex will be ignored.');
+            }
 
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
@@ -602,6 +648,8 @@ define([
         geometryUpdater._clampToGround = Property.getValueOrDefault(polyline._clampToGround, time, false);
         geometryUpdater._groundGeometryOptions.positions = positions;
         geometryUpdater._groundGeometryOptions.width = Property.getValueOrDefault(polyline._width, time, 1);
+        geometryUpdater._groundGeometryOptions.arcType = Property.getValueOrDefault(polyline._arcType, time, ArcType.GEODESIC);
+        geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(polyline._granularity, time, 9999);
 
         var groundPrimitives = this._groundPrimitives;
 
@@ -635,6 +683,7 @@ define([
             this._groundPolylinePrimitive = groundPrimitives.add(new GroundPolylinePrimitive({
                 geometryInstances : geometryUpdater.createFillGeometryInstance(time),
                 appearance : appearance,
+                classificationType : geometryUpdater.classificationTypeProperty.getValue(time),
                 asynchronous : false
             }), Property.getValueOrUndefined(geometryUpdater.zIndex, time));
 
@@ -657,9 +706,15 @@ define([
             return;
         }
 
-        var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
+        var followSurface = Property.getValueOrUndefined(polyline._followSurface, time);
+        var arcType = ArcType.GEODESIC;
+        if (defined(followSurface)) {
+            arcType = followSurface ? ArcType.GEODESIC : ArcType.NONE;
+        }
+        arcType = Property.getValueOrDefault(polyline._arcType, time, arcType);
+
         var globe = geometryUpdater._scene.globe;
-        if (followSurface && defined(globe)) {
+        if (arcType !== ArcType.NONE && defined(globe)) {
             generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);

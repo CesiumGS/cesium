@@ -1,18 +1,22 @@
 defineSuite([
         'DataSources/PolylineGraphics',
+        'Core/ArcType',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
         PolylineGraphics,
+        ArcType,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
     testMaterialDefinitionChanged) {
@@ -30,6 +34,8 @@ defineSuite([
             granularity : 2,
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN,
+            arcType: ArcType.GEODESIC,
             zIndex : 0
         };
 
@@ -44,6 +50,8 @@ defineSuite([
         expect(polyline.granularity).toBeInstanceOf(ConstantProperty);
         expect(polyline.shadows).toBeInstanceOf(ConstantProperty);
         expect(polyline.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(polyline.classificationType).toBeInstanceOf(ConstantProperty);
+        expect(polyline.arcType).toBeInstanceOf(ConstantProperty);
         expect(polyline.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(polyline.material.color.getValue()).toEqual(options.material);
@@ -56,6 +64,8 @@ defineSuite([
         expect(polyline.granularity.getValue()).toEqual(options.granularity);
         expect(polyline.shadows.getValue()).toEqual(options.shadows);
         expect(polyline.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(polyline.classificationType.getValue()).toEqual(options.classificationType);
+        expect(polyline.arcType.getValue()).toEqual(options.arcType);
         expect(polyline.zIndex.getValue()).toEqual(options.zIndex);
     });
 
@@ -71,6 +81,8 @@ defineSuite([
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
+        source.arcType = new ConstantProperty(ArcType.GEODESIC);
         source.zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -85,6 +97,8 @@ defineSuite([
         expect(target.granularity).toBe(source.granularity);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
+        expect(target.arcType).toBe(source.arcType);
         expect(target.zIndex).toBe(source.zIndex);
     });
 
@@ -100,6 +114,8 @@ defineSuite([
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
+        source.arcType = new ConstantProperty();
         source.zIndex = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
@@ -112,6 +128,8 @@ defineSuite([
         var granularity = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
+        var arcType = new ConstantProperty();
         var zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -125,6 +143,8 @@ defineSuite([
         target.granularity = granularity;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
+        target.arcType = arcType;
         target.zIndex = zIndex;
 
         target.merge(source);
@@ -138,6 +158,8 @@ defineSuite([
         expect(target.granularity).toBe(granularity);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
+        expect(target.arcType).toBe(arcType);
         expect(target.zIndex).toBe(zIndex);
     });
 
@@ -153,6 +175,8 @@ defineSuite([
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
+        source.arcType = new ConstantProperty();
         source.zIndex = new ConstantProperty();
 
         var result = source.clone();
@@ -166,6 +190,8 @@ defineSuite([
         expect(result.granularity).toBe(source.granularity);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
+        expect(result.arcType).toBe(source.arcType);
         expect(result.zIndex).toBe(source.zIndex);
     });
 
@@ -188,6 +214,8 @@ defineSuite([
         testDefinitionChanged(property, 'granularity', 2, 1);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 20.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN);
+        testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 20, 5);
     });
 });

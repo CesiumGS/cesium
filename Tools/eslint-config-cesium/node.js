@@ -3,7 +3,8 @@
 module.exports = {
     extends: './index.js',
     env: {
-        node: true
+        node: true,
+        es6: true
     },
     parserOptions: {
         ecmaVersion: 2017

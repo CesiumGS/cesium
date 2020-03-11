@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 6.0.1 - 2019-01-23
+* Allow ES6 global variables in Node.js code.
+
 ### 6.0.0 - 2018-05-01
 * Upgrade to eslint 5.x and it's new default rules.
 * Set ecmaVersion to 2017 for Node.js code.

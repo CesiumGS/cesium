@@ -227,7 +227,7 @@ define([
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(CorridorGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(CorridorGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
@@ -271,7 +271,7 @@ define([
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(CorridorGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(CorridorGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;

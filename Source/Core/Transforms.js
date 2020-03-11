@@ -48,6 +48,7 @@ define([
      * Contains functions for transforming positions to various reference frames.
      *
      * @exports Transforms
+     * @namespace
      */
     var Transforms = {};
 
@@ -536,7 +537,7 @@ define([
      * indicates that the preload has completed.
      *
      * @param {TimeInterval} timeInterval The interval to preload.
-     * @returns {Promise.<undefined>} A promise that, when resolved, indicates that the preload has completed
+     * @returns {Promise} A promise that, when resolved, indicates that the preload has completed
      *          and evaluation of the transformation between the fixed and ICRF axes will
      *          no longer return undefined for a time inside the interval.
      *

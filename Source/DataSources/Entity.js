@@ -664,7 +664,7 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports materials besides Color on Entities draped on terrain.
+     * Checks if the given Scene supports materials besides Color on Entities draped on terrain or 3D Tiles.
      * If this feature is not supported, Entities with non-color materials but no `height` will
      * instead be rendered as if height is 0.
      *
@@ -676,12 +676,12 @@ define([
     };
 
     /**
-     * Checks if the given Scene supports polylines clamped to the ground..
+     * Checks if the given Scene supports polylines clamped to terrain or 3D Tiles.
      * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
-     * the provided heights and using the `followSurface` parameter instead of clamped to the ground.
+     * the provided heights and using the `arcType` parameter instead of clamped to the ground.
      *
      * @param {Scene} scene The current scene.
-     * @returns {Boolean} Whether or not the current scene supports Polylines on Terrain.
+     * @returns {Boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
      */
     Entity.supportsPolylinesOnTerrain = function(scene) {
         return GroundPolylinePrimitive.isSupported(scene);

@@ -8,7 +8,6 @@ define([
      * Finds an item in a sorted array.
      *
      * @exports binarySearch
-     *
      * @param {Array} array The sorted array to search.
      * @param {*} itemToFind The item to find in the array.
      * @param {binarySearch~Comparator} comparator The function to use to compare the item to

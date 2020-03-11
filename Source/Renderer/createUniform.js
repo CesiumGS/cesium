@@ -69,8 +69,12 @@ define([
         }
     }
 
+    /**
+     * @private
+     */
     function UniformFloat(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -91,8 +95,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -114,8 +122,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -149,8 +161,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformFloatVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -184,8 +200,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformSampler(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -214,8 +234,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformInt(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -235,9 +259,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -258,9 +285,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec3(gl, activeUniform, uniformName, location) {
-        /**
+       /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -281,9 +311,12 @@ define([
     };
 
     ///////////////////////////////////////////////////////////////////////////
-
+    /**
+     * @private
+     */
     function UniformIntVec4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -306,9 +339,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchUniformArray = new Float32Array(4);
-
+    /**
+     * @private
+     */
     function UniformMat2(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -332,9 +368,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchMat3Array = new Float32Array(9);
-
+    /**
+     * @private
+     */
     function UniformMat3(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -358,9 +397,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     var scratchMat4Array = new Float32Array(16);
-
+    /**
+     * @private
+     */
     function UniformMat4(gl, activeUniform, uniformName, location) {
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;

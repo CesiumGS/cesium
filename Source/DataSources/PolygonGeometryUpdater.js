@@ -1,5 +1,6 @@
 define([
         '../Core/ApproximateTerrainHeights',
+        '../Core/ArcType',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Check',
@@ -33,6 +34,7 @@ define([
         './Property'
     ], function(
         ApproximateTerrainHeights,
+        ArcType,
         Cartesian2,
         Cartesian3,
         Check,
@@ -88,6 +90,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
+        this.arcType = undefined;
     }
 
     /**
@@ -275,6 +278,7 @@ define([
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
+               !Property.isConstant(polygon.arcType) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -322,10 +326,11 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, Iso8601.MINIMUM_VALUE, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
@@ -399,10 +404,11 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, time, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;

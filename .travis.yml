@@ -28,6 +28,8 @@ script:
 
   - npm --silent run test -- --browsers FirefoxHeadless --failTaskOnError --webgl-stub --release --suppressPassed
 
-  - node index.js
+  - NODE_ENV=development node index.js
+
+  - NODE_ENV=production node index.js
 
   - npm --silent run cloc

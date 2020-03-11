@@ -181,10 +181,11 @@ define([
      * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.removeAll = function() {
-        if (this.destroyPrimitives) {
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
+        var primitives = this._primitives;
+        var length = primitives.length;
+        for ( var i = 0; i < length; ++i) {
+            delete primitives[i]._external._composites[this._guid];
+            if (this.destroyPrimitives) {
                 primitives[i].destroy();
             }
         }

@@ -1099,9 +1099,12 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveEnd.addEventListener(spyListener);
 
-        s.cameraEventWaitTime = 0.0;
+        // We use negative time here to ensure the event runs on the next frame.
+        s.cameraEventWaitTime = -1.0;
         s.camera.moveLeft();
+        // The first render will trigger the moveStart event.
         s.render();
+        // The second will trigger the moveEnd.
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);
@@ -1720,6 +1723,27 @@ defineSuite([
 
         // Still on opposite side of globe but now show is false, the command should not be occluded anymore
         scene.globe.show = false;
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
+    it('does not occlude if DrawCommand.occlude is false', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+        rectanglePrimitive._colorCommands[0].occlude = false;
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
         scene.renderForSpecs();
         expect(getFrustumCommandsLength(scene)).toBe(1);
 

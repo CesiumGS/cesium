@@ -1,39 +1,39 @@
 define([
-    '../Core/ApproximateTerrainHeights',
-    '../Core/Cartesian3',
-    '../Core/Check',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/GeometryOffsetAttribute',
-    '../Core/Iso8601',
-    '../Core/oneTimeWarning',
-    '../Scene/GroundPrimitive',
-    '../Scene/HeightReference',
-    './CallbackProperty',
-    './ConstantProperty',
-    './GeometryUpdater',
-    './Property',
-    './TerrainOffsetProperty'
-], function(
-    ApproximateTerrainHeights,
-    Cartesian3,
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    GeometryOffsetAttribute,
-    Iso8601,
-    oneTimeWarning,
-    GroundPrimitive,
-    HeightReference,
-    CallbackProperty,
-    ConstantProperty,
-    GeometryUpdater,
-    Property,
-    TerrainOffsetProperty) {
+        '../Core/ApproximateTerrainHeights',
+        '../Core/Cartesian3',
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/GeometryOffsetAttribute',
+        '../Core/Iso8601',
+        '../Core/oneTimeWarning',
+        '../Scene/GroundPrimitive',
+        '../Scene/HeightReference',
+        './CallbackProperty',
+        './ConstantProperty',
+        './GeometryUpdater',
+        './Property',
+        './TerrainOffsetProperty'
+    ], function(
+        ApproximateTerrainHeights,
+        Cartesian3,
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        GeometryOffsetAttribute,
+        Iso8601,
+        oneTimeWarning,
+        GroundPrimitive,
+        HeightReference,
+        CallbackProperty,
+        ConstantProperty,
+        GeometryUpdater,
+        Property,
+        TerrainOffsetProperty) {
     'use strict';
 
     var defaultZIndex = new ConstantProperty(0);
@@ -41,7 +41,7 @@ define([
     /**
      * An abstract class for updating ground geometry entities.
      * @constructor
-     *
+     * @alias GroundGeometryUpdater
      * @param {Object} options An object with the following properties:
      * @param {Entity} options.entity The entity containing the geometry to be visualized.
      * @param {Scene} options.scene The scene where visualization is taking place.
