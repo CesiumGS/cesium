@@ -52,7 +52,7 @@ function meridian(longitude, color) {
             positions: Cesium.Cartesian3.fromDegreesArray([
                 longitude, 90,
                 longitude, 0,
-                longitude, -90,
+                longitude, -90
             ]),
             width: 2,
             arcType: Cesium.ArcType.RHUMB,
@@ -68,7 +68,7 @@ function labelCoordinates(cartographic) {
     var label = 'lat: ' + latitude + '°\nlon: ' + longitude + '°';
 
     return viewer.entities.add({
-        position,
+        position: position,
         label: {
             text: label
         }
