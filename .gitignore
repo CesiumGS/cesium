@@ -29,3 +29,7 @@ package-lock.json
 # WebStorm user-specific
 .idea/workspace.xml
 .idea/tasks.xml
+
+# Codeship
+deployment/secrets
+deployment/*.aes

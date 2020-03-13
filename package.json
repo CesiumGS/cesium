@@ -111,6 +111,9 @@
     "sortRequires": "gulp sortRequires",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
-    "deploy-set-version": "gulp deploy-set-version"
+    "deploy-set-version": "gulp deploy-set-version",
+    "codeship:decrypt": "./deployment/crypto.sh decrypt ./deployment/encrypted ./deployment/secrets",
+    "codeship:encrypt": "./deployment/crypto.sh encrypt ./deployment/secrets ./deployment/encrypted",
+    "codeship:local": "jet steps --key-path deployment/codeship.aes"
   }
 }
