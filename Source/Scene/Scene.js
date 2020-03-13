@@ -2478,7 +2478,8 @@ import View from './View.js';
             if (globeTranslucent) {
                 var classificationCommands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
                 var classificationCommandsLength = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
-                globeTranslucency.executeTranslucentCommands(commands, classificationCommands, classificationCommandsLength, executeTranslucentCommands, executeCommand, environmentState.useOIT, scene, context, invertClassification, passState);
+                var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
+                globeTranslucency.executeTranslucentCommands(commands, commands.length, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommands, executeCommand, environmentState.useOIT, scene, context, invertClassification, passState);
             } else {
                 executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification, undefined);
             }

@@ -399,34 +399,18 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     };
 
     GlobeTranslucency.prototype.executeGlobeCommands = function(commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
-        if (length === 0 || !defined(this._executor)) {
-            return;
-        }
-
         this._executor.executeGlobeCommands(this, commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState);
     };
 
     GlobeTranslucency.prototype.executeGlobeClassificationCommands = function(commands, length, executeCommandFunction, scene, context, passState) {
-        if (length === 0 || !defined(this._executor)) {
-            return;
-        }
-
         this._executor.executeGlobeClassificationCommands(this, commands, length, executeCommandFunction, scene, context, passState);
     };
 
-    GlobeTranslucency.prototype.executeTranslucentCommands = function(translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
-        if (length === 0 || !defined(this._executor)) {
-            return;
-        }
-
-        this._executor.executeTranslucentCommands(this, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState);
+    GlobeTranslucency.prototype.executeTranslucentCommands = function(translucentCommands, translucentCommandsLength, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        this._executor.executeTranslucentCommands(this, translucentCommands, translucentCommandsLength, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState);
     };
 
     GlobeTranslucency.prototype.execute = function(context, passState) {
-        if (length === 0 || !defined(this._executor)) {
-            return;
-        }
-
         this._executor.execute(this, context, passState);
     };
 
@@ -462,6 +446,10 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     }
 
     FrontOnlyExecutor.prototype.executeGlobeCommands = function(globeTranslucency, commands, length, clearGlobeDepth, cameraUnderground, hdr, executeCommandFunction, viewport, scene, context, passState) {
+        if (length === 0) {
+            return;
+        }
+
         var firstPassFace = cameraUnderground ? CullFace.BACK : CullFace.FRONT;
         var secondPassFace = cameraUnderground ? CullFace.FRONT : CullFace.BACK;
 
@@ -484,6 +472,10 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     };
 
     FrontOnlyExecutor.prototype.executeGlobeClassificationCommands = function(globeTranslucency, commands, length, executeCommandFunction, scene, context, passState) {
+        if (length === 0) {
+            return;
+        }
+
         var i;
 
         // Execute classification on back faces
@@ -508,7 +500,11 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         passState.framebuffer = originalFramebuffer;
     };
 
-    FrontOnlyExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+    FrontOnlyExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, translucentCommandsLength, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        if (globeCommandsLength === 0) {
+            return;
+        }
+
         executeManualDepthTest(globeTranslucency, context, passState);
         var blendCommand = useOIT ? globeTranslucency._blendCommandOIT : globeTranslucency._blendCommand;
         executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, blendCommand);
@@ -545,7 +541,11 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     FrontAndBackExecutor.prototype.executeGlobeClassificationCommands = function(globeTranslucency, commands, length, executeCommandFunction, scene, context, passState) {
     };
 
-    FrontAndBackExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, classificationCommands, classificationCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+    FrontAndBackExecutor.prototype.executeTranslucentCommands = function(globeTranslucency, translucentCommands, translucentCommandsLength, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, passState) {
+        if (translucentCommandsLength === 0) {
+            return;
+        }
+
         executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, undefined);
 
         var originalFramebuffer = passState.framebuffer;
@@ -572,6 +572,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     };
 
     FrontAndBackExecutor.prototype.execute = function(globeTranslucency, context, passState) {
+        // TODO don't execute if no translucent commands were rendered
         globeTranslucency._blendCommand.execute(context, passState)
     };
 
