@@ -39,7 +39,6 @@ import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
 import GlobeTranslucency from './GlobeTranslucency.js';
-import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';

@@ -414,7 +414,6 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         this._executor.execute(this, context, passState);
     };
 
-
     GlobeTranslucency.prototype.isDestroyed = function() {
         return false;
     };
@@ -573,8 +572,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 
     FrontAndBackExecutor.prototype.execute = function(globeTranslucency, context, passState) {
         // TODO don't execute if no translucent commands were rendered
-        globeTranslucency._blendCommand.execute(context, passState)
+        globeTranslucency._blendCommand.execute(context, passState);
     };
-
 
 export default GlobeTranslucency;
