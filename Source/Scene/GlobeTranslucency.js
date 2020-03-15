@@ -387,8 +387,6 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         updateResources(this, context, width, height, hdr);
         updateCommands(this, context, width, height, oit, useOIT, passState);
 
-        this._clearCommand.execute(context, passState);
-
         if (globeTranslucencyMode === GlobeTranslucencyMode.ENABLED) {
             this._executor = this._frontAndBackExecutor;
         } else if (globeTranslucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY) {
@@ -448,6 +446,9 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         if (length === 0) {
             return;
         }
+
+        // Clear for each frustum
+        globeTranslucency._clearCommand.execute(context, passState);
 
         var firstPassFace = cameraUnderground ? CullFace.BACK : CullFace.FRONT;
         var secondPassFace = cameraUnderground ? CullFace.FRONT : CullFace.BACK;
@@ -544,6 +545,9 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         if (translucentCommandsLength === 0) {
             return;
         }
+
+        // Clear for each frustum
+        globeTranslucency._clearCommand.execute(context, passState);
 
         executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, undefined);
 
