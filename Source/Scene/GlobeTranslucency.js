@@ -245,6 +245,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         globeTranslucency._blendCommand.renderState = globeTranslucency._blendRenderState;
         globeTranslucency._blendCommandOIT.renderState = globeTranslucency._blendRenderStateOIT;
         globeTranslucency._clearCommand.framebuffer = globeTranslucency._framebuffer;
+        globeTranslucency._clearCommand.renderState = globeTranslucency._renderState;
 
         if (useOIT) {
             var command = globeTranslucency._blendCommandOIT;
@@ -546,13 +547,17 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             return;
         }
 
-        // Clear for each frustum
-        globeTranslucency._clearCommand.execute(context, passState);
-
         executeTranslucentCommandsFunction(scene, executeCommandFunction, passState, translucentCommands, invertClassification, undefined);
+
+        if (classificationCommandsLength === 0) {
+            return;
+        }
 
         var originalFramebuffer = passState.framebuffer;
         passState.framebuffer = globeTranslucency._framebuffer;
+
+        // Clear for each frustum
+        globeTranslucency._clearCommand.execute(context, passState);
 
         // TODO : classification on back faces won't be visible but this is a more general problem
         // TODO : why not pack in this pass? Don't need to write color... or is it not possible?
