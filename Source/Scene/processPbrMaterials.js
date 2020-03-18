@@ -868,6 +868,16 @@ import ModelUtility from './ModelUtility.js';
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
 
+        fragmentShader += '    czm_writeLogDepth();\n';
+
+        if (defined(material.extensions) && defined(material.extensions.CESIUM_materials_solid_outline)) {
+            if (hasNormals) {
+                fragmentShader += '    czm_adjustSolidOutlineDepth(v_positionEC, ng);\n';
+            } else {
+                fragmentShader += '    czm_adjustSolidOutlineDepth();\n';
+            }
+        }
+
         fragmentShader += '}\n';
 
         // Add shaders

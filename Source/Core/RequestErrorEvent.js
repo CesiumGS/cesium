@@ -42,6 +42,11 @@ import parseResponseHeaders from './parseResponseHeaders.js';
         }
     }
 
+    if (defined(Object.create)) {
+        RequestErrorEvent.prototype = Object.create(Error.prototype);
+        RequestErrorEvent.prototype.constructor = RequestErrorEvent;
+    }
+
     /**
      * Creates a string representing this RequestErrorEvent.
      * @memberof RequestErrorEvent

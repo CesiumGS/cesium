@@ -206,13 +206,17 @@ import RuntimeError from './RuntimeError.js';
         return server.getDerivedResource(resourceOptions);
     };
 
+    function targetIsImage(target) {
+        return typeof Image !== 'undefined' && target instanceof Image;
+    }
+
     function retryCallback(that, error) {
         var ionRoot = defaultValue(that._ionRoot, that);
         var endpointResource = ionRoot._ionEndpointResource;
 
         // We only want to retry in the case of invalid credentials (401) or image
         // requests(since Image failures can not provide a status code)
-        if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
+        if (!defined(error) || (error.statusCode !== 401 && !targetIsImage(error.target))) {
             return when.resolve(false);
         }
 

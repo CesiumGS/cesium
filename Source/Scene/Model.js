@@ -2253,7 +2253,7 @@ import ShadowMode from './ShadowMode.js';
         // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+            // drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
         }
 
         if (!defined(model._uniformMapLoaded)) {
@@ -2340,7 +2340,7 @@ import ShadowMode from './ShadowMode.js';
 
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
-            drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+            // drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
         }
 
         if (!defined(model._uniformMapLoaded)) {
