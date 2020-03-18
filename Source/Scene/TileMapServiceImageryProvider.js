@@ -113,6 +113,38 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         this._xmlResource.fetchXML().then(this._metadataSuccess).otherwise(this._metadataFailure);
     };
 
+    /**
+     * Mutates the properties of a given rectangle so it does not extend outside of the given tiling scheme's rectangle
+     */
+    function confineRectangleToTilingScheme(rectangle, tilingScheme) {
+        if (rectangle.west < tilingScheme.rectangle.west) {
+            rectangle.west = tilingScheme.rectangle.west;
+        }
+        if (rectangle.east > tilingScheme.rectangle.east) {
+            rectangle.east = tilingScheme.rectangle.east;
+        }
+        if (rectangle.south < tilingScheme.rectangle.south) {
+            rectangle.south = tilingScheme.rectangle.south;
+        }
+        if (rectangle.north > tilingScheme.rectangle.north) {
+            rectangle.north = tilingScheme.rectangle.north;
+        }
+        return rectangle;
+    }
+
+    function calculateSafeMinimumDetailLevel(tilingScheme, rectangle, minimumLevel) {
+        // Check the number of tiles at the minimum level.  If it's more than four,
+        // try requesting the lower levels anyway, because starting at the higher minimum
+        // level will cause too many tiles to be downloaded and rendered.
+        var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
+        var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
+        var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+        if (tileCount > 4) {
+            return 0;
+        }
+        return minimumLevel;
+    }
+
     TileMapServiceImageryProvider.prototype._metadataSuccess = function(xml) {
         var tileFormatRegex = /tileformat/i;
         var tileSetRegex = /tileset/i;
@@ -221,28 +253,9 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         }
 
         // The rectangle must not be outside the bounds allowed by the tiling scheme.
-        if (rectangle.west < tilingScheme.rectangle.west) {
-            rectangle.west = tilingScheme.rectangle.west;
-        }
-        if (rectangle.east > tilingScheme.rectangle.east) {
-            rectangle.east = tilingScheme.rectangle.east;
-        }
-        if (rectangle.south < tilingScheme.rectangle.south) {
-            rectangle.south = tilingScheme.rectangle.south;
-        }
-        if (rectangle.north > tilingScheme.rectangle.north) {
-            rectangle.north = tilingScheme.rectangle.north;
-        }
-
-        // Check the number of tiles at the minimum level.  If it's more than four,
-        // try requesting the lower levels anyway, because starting at the higher minimum
-        // level will cause too many tiles to be downloaded and rendered.
-        var swTile = tilingScheme.positionToTileXY(Rectangle.southwest(rectangle), minimumLevel);
-        var neTile = tilingScheme.positionToTileXY(Rectangle.northeast(rectangle), minimumLevel);
-        var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
-        if (tileCount > 4) {
-            minimumLevel = 0;
-        }
+        rectangle = confineRectangleToTilingScheme(rectangle, tilingScheme);
+        // clamp our minimum detail level to something that isn't going to request a ridiculous number of tiles
+        minimumLevel = calculateSafeMinimumDetailLevel(tilingScheme, rectangle, minimumLevel);
 
         var templateResource = this._tmsResource.getDerivedResource({
             url : '{z}/{x}/{reverseY}.' + fileExtension
@@ -267,10 +280,15 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
         var fileExtension = defaultValue(options.fileExtension, 'png');
         var tileWidth = defaultValue(options.tileWidth, 256);
         var tileHeight = defaultValue(options.tileHeight, 256);
-        var minimumLevel = defaultValue(options.minimumLevel, 0);
         var maximumLevel = options.maximumLevel;
         var tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ellipsoid : options.ellipsoid});
+
         var rectangle = defaultValue(options.rectangle, tilingScheme.rectangle);
+        // The rectangle must not be outside the bounds allowed by the tiling scheme.
+        rectangle = confineRectangleToTilingScheme(rectangle, tilingScheme);
+
+        // make sure we use a safe minimum detail level, so we don't request a ridiculous number of tiles
+        var minimumLevel = calculateSafeMinimumDetailLevel(tilingScheme, rectangle, options.maximumLevel);
 
         var templateResource = this._tmsResource.getDerivedResource({
             url : '{z}/{x}/{reverseY}.' + fileExtension

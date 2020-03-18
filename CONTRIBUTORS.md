@@ -248,3 +248,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Jan Wąsak](https://github.com/jhnwsk)
 * [Julian Fell](https://github.com/jtfell)
 * [Richard Becker](https://github.com/richard3d)
+* [Daniel Leone](https://github.com/danielleone)
