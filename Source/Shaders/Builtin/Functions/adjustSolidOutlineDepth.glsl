@@ -29,7 +29,7 @@ vec3 intersectRayPlane(czm_ray ray, vec3 pointInPlane, vec3 planeNormal) {
     float denominator = dot(planeNormal, direction);
     float planeDistance = -dot(planeNormal, pointInPlane);
 
-    if (abs(denominator) < czm_epsilon6) {
+    if (abs(denominator) < 0.1) {
         // Ray is parallel to plane.  The ray may be in the polygon's plane.
         discard;
     }
