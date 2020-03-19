@@ -1055,7 +1055,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
                     format: 'amd',
-                    sourcemap: true,
+                    sourcemap: debug,
                     banner: copyrightHeader
                 });
             });
