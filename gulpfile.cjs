@@ -115,6 +115,8 @@ function rollupWarning(message) {
     console.log(message);
 }
 
+var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'), "utf8");
+
 function createWorkers() {
     rimraf.sync('Build/createWorkers');
 
@@ -997,7 +999,9 @@ function combineCesium(debug, optimizer, combineOutput) {
         return bundle.write({
             format: 'umd',
             name: 'Cesium',
-            file: path.join(combineOutput, 'Cesium.js')
+            file: path.join(combineOutput, 'Cesium.js'),
+            sourcemap: debug,
+            banner: copyrightHeader
         });
     });
 }
@@ -1047,7 +1051,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
-                    format: 'amd'
+                    format: 'amd',
+                    sourcemap: true,
+                    banner: copyrightHeader
                 });
             });
         });
@@ -1073,7 +1079,6 @@ function combineJavaScript(options) {
     var removePragmas = options.removePragmas;
 
     var combineOutput = path.join('Build', 'combineOutput', optimizer);
-    var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
     var promise = Promise.join(
         combineCesium(!removePragmas, optimizer, combineOutput),
@@ -1086,7 +1091,6 @@ function combineJavaScript(options) {
 
         //copy to build folder with copyright header added at the top
         var stream = gulp.src([combineOutput + '/**'])
-            .pipe(gulpInsert.prepend(copyrightHeader))
             .pipe(gulp.dest(outputDirectory));
 
         promises.push(streamToPromise(stream));
@@ -1391,7 +1395,6 @@ function buildCesiumViewer() {
     );
 
     promise = promise.then(function() {
-        var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
         var stream = mergeStream(
             gulp.src('Build/Apps/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
