@@ -8,7 +8,7 @@
 
 - name: Build
   service: builder
-  command: yarn release && ls -l
+  command: ./deployment/build.sh
 
 - name: Deploy
   tag: master
