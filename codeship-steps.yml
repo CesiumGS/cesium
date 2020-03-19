@@ -1,14 +1,6 @@
-- name: Clean
-  service: builder
-  command: yarn clean
-
 - name: Test
   service: builder
   command: yarn test
-
-# - name: Build
-#   service: builder
-#   command: ./deployment/build.sh
 
 - name: Build and Deploy
   tag: master
