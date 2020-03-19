@@ -36,9 +36,6 @@
     "import": "./Source/Cesium.js"
   },
   "type": "module",
-  "dependencies": {
-    "esm": "^3.2.25"
-  },
   "devDependencies": {
     "aws-sdk": "^2.531.0",
     "bluebird": "^3.4.6",
