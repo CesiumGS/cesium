@@ -152,6 +152,9 @@ function createWorkers() {
 
 gulp.task('build', function() {
     mkdirp.sync('Build');
+    fs.writeFileSync('Build/package.json', JSON.stringify({
+        type: 'commonjs'
+    }), "utf8");
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
