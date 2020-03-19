@@ -15,6 +15,7 @@ Change Log
 * `TileMapServiceImageryProvider` will now force `minimumLevel` to 0 if the `tilemapresource.xml` metadata request fails and the `rectangle` is too large for the given detail level [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448)
 * Fixed ground atmosphere rendering when using a samller ellipsoid. [#8683](https://github.com/CesiumGS/cesium/issues/8683)
 * Fixed globe incorrectly occluding objects when using a smaller ellipsoid. [#7124](https://github.com/CesiumGS/cesium/issues/7124)
+* Fixed a regression introduced in 1.67 which caused overlapping colored ground geometry to have visual artifacts. [#8694](https://github.com/CesiumGS/cesium/pull/8694)
 
 ### 1.67.0 - 2020-03-02
 
