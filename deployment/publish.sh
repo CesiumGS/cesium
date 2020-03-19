@@ -15,6 +15,8 @@ then
   exit 0
 fi
 
+yarn release
+
 ls -l
 
 npm publish

@@ -6,11 +6,11 @@
   service: builder
   command: yarn test
 
-- name: Build
-  service: builder
-  command: ./deployment/build.sh
+# - name: Build
+#   service: builder
+#   command: ./deployment/build.sh
 
-- name: Deploy
+- name: Build and Deploy
   tag: master
   service: builder
   command: ./deployment/publish.sh
