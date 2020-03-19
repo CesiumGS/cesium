@@ -606,6 +606,7 @@ import View from './View.js';
         this._debugVolume = undefined;
 
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+        this._cameraUnderground = false;
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
         // Keeps track of the state of a frame. FrameState is the state across
@@ -1737,7 +1738,7 @@ import View from './View.js';
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show && !scene._cameraUnderground) {
             var ellipsoid = globe.ellipsoid;
             var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
@@ -1788,6 +1789,7 @@ import View from './View.js';
         frameState.invertClassification = this.invertClassification;
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
+        frameState.cameraUnderground = this._cameraUnderground;
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
             frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;
@@ -2867,7 +2869,7 @@ import View from './View.js';
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
 
-        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum)) {
+        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || this._cameraUnderground) {
             environmentState.skyAtmosphereCommand = undefined;
             environmentState.skyBoxCommand = undefined;
             environmentState.sunDrawCommand = undefined;
@@ -2895,7 +2897,7 @@ import View from './View.js';
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D);
-        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D;
+        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D && !this._cameraUnderground;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
@@ -3191,6 +3193,36 @@ import View from './View.js';
         functions.length = 0;
     }
 
+    function isCameraUnderground(scene) {
+        var camera = scene.camera;
+        var mode = scene._mode;
+        var globe = scene.globe;
+        var cameraController = scene._screenSpaceCameraController;
+        var cartographic = camera.positionCartographic;
+
+        if (!cameraController.onMap() && (cartographic.height < 0.0)) {
+            // The camera can go off the map while in Columbus View.
+            // Make a best guess as to whether it's underground by checking if its height is less than zero.
+            return true;
+        }
+
+        if (!defined(globe) || !globe.show || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return false;
+        }
+
+        if (cameraController.adjustedHeightForTerrain()) {
+            // The camera controller already adjusted the camera, no need to call globe.getHeight again
+            return false;
+        }
+
+        var globeHeight = globe.getHeight(cartographic);
+        if (defined(globeHeight) && (cartographic.height < globeHeight)) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * @private
      */
@@ -3211,6 +3243,8 @@ import View from './View.js';
 
         this.camera.update(this._mode);
         this.camera._updateCameraChanged();
+
+        this._cameraUnderground = isCameraUnderground(this);
     };
 
     function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {

@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### 1.68.0 - 2020-04-01
+
+##### Additions :tada:
+
+* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
+
+##### Fixes :wrench:
+
+* Interacting with the Cesium canvas will now blur the previously focused element. This prevents unintended modification of input elements when interacting with the globe.
+* `TileMapServiceImageryProvider` will now force `minimumLevel` to 0 if the `tilemapresource.xml` metadata request fails and the `rectangle` is too large for the given detail level [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448)
+* Fixed ground atmosphere rendering when using a samller ellipsoid. [#8683](https://github.com/CesiumGS/cesium/issues/8683)
+* Fixed globe incorrectly occluding objects when using a smaller ellipsoid. [#7124](https://github.com/CesiumGS/cesium/issues/7124)
+
 ### 1.67.0 - 2020-03-02
 
 ##### Breaking Changes :mega:

@@ -25,7 +25,6 @@ import ImageryLayerCollection from './ImageryLayerCollection.js';
 import QuadtreePrimitive from './QuadtreePrimitive.js';
 import SceneMode from './SceneMode.js';
 import ShadowMode from './ShadowMode.js';
-import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -611,7 +610,7 @@ import TileSelectionResult from './TileSelectionResult.js';
     var scratchGetHeightRay = new Ray();
 
     function tileIfContainsCartographic(tile, cartographic) {
-        return Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
+        return defined(tile) && Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
     }
 
     /**
@@ -649,12 +648,13 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         var tileWithMesh = tile;
 
-        while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
-            tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
-                   tileIfContainsCartographic(tile.southeastChild, cartographic) ||
-                   tileIfContainsCartographic(tile.northwestChild, cartographic) ||
-                   tile.northeastChild;
-            if (defined(tile.data) && defined(tile.data.renderedMesh)) {
+        while (defined(tile)) {
+            tile = tileIfContainsCartographic(tile._southwestChild, cartographic) ||
+                   tileIfContainsCartographic(tile._southeastChild, cartographic) ||
+                   tileIfContainsCartographic(tile._northwestChild, cartographic) ||
+                   tile._northeastChild;
+
+            if (defined(tile) && defined(tile.data) && defined(tile.data.renderedMesh)) {
                 tileWithMesh = tile;
             }
         }
