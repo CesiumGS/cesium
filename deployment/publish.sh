@@ -15,6 +15,8 @@ then
   exit 0
 fi
 
+ls -l
+
 npm publish
 
 # git tag $PACKAGE_VERSION && git push origin $PACKAGE_VERSION
