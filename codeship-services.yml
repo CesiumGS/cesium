@@ -1,0 +1,6 @@
+builder:
+  build:
+    dockerfile: deployment/Dockerfile
+    encrypted_args_file: deployment/encrypted/build_args.sec
+  cached: true
+  encrypted_env_file: deployment/encrypted/build_args.sec

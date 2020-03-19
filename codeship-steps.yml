@@ -1,0 +1,16 @@
+- name: Clean
+  service: builder
+  command: yarn clean
+
+- name: Test
+  service: builder
+  command: yarn test
+
+- name: Build
+  service: builder
+  command: yarn release
+
+- name: Deploy
+  tag: master
+  service: builder
+  command: ./deployment/publish.sh
