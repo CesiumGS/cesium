@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Constants to determine how much time advances with each call
@@ -37,4 +36,4 @@ import freezeObject from './freezeObject.js';
          */
         SYSTEM_CLOCK : 2
     };
-export default freezeObject(ClockStep);
+export default Object.freeze(ClockStep);

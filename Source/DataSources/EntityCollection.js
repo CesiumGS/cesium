@@ -1,7 +1,6 @@
 import AssociativeArray from '../Core/AssociativeArray.js';
 import createGuid from '../Core/createGuid.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import Iso8601 from '../Core/Iso8601.js';
@@ -106,7 +105,7 @@ import Entity from './Entity.js';
      */
     EntityCollection.collectionChangedEventCallback = undefined;
 
-    defineProperties(EntityCollection.prototype, {
+    Object.defineProperties(EntityCollection.prototype, {
         /**
          * Gets the event that is fired when entities are added or removed from the collection.
          * The generated event is a {@link EntityCollection.collectionChangedEventCallback}.

@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Constants to determine how an interpolated value is extrapolated
@@ -33,4 +32,4 @@ import freezeObject from './freezeObject.js';
          */
         EXTRAPOLATE : 2
     };
-export default freezeObject(ExtrapolationType);
+export default Object.freeze(ExtrapolationType);

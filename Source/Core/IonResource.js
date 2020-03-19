@@ -4,7 +4,6 @@ import Check from './Check.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ion from './Ion.js';
 import Resource from './Resource.js';
 import RuntimeError from './RuntimeError.js';
@@ -101,7 +100,7 @@ import RuntimeError from './RuntimeError.js';
             });
     };
 
-    defineProperties(IonResource.prototype, {
+    Object.defineProperties(IonResource.prototype, {
         /**
          * Gets the credits required for attribution of the asset.
          *

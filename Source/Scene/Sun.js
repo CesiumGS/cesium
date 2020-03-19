@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import CesiumMath from '../Core/Math.js';
@@ -83,7 +82,7 @@ import SceneTransforms from './SceneTransforms.js';
         };
     }
 
-    defineProperties(Sun.prototype, {
+    Object.defineProperties(Sun.prototype, {
         /**
          * Gets or sets a number that controls how "bright" the Sun's lens flare appears
          * to be.  Zero shows just the Sun's disc without any flare.

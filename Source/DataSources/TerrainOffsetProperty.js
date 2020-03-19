@@ -2,7 +2,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Event from '../Core/Event.js';
 import Iso8601 from '../Core/Iso8601.js';
@@ -61,7 +60,7 @@ import Property from './Property.js';
         }
     }
 
-    defineProperties(TerrainOffsetProperty.prototype, {
+    Object.defineProperties(TerrainOffsetProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof TerrainOffsetProperty.prototype

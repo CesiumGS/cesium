@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -19,7 +18,7 @@ import when from '../ThirdParty/when.js';
         this._dataSourceMoved = new Event();
     }
 
-    defineProperties(DataSourceCollection.prototype, {
+    Object.defineProperties(DataSourceCollection.prototype, {
         /**
          * Gets the number of data sources in this collection.
          * @memberof DataSourceCollection.prototype

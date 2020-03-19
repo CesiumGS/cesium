@@ -8,7 +8,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import CesiumMath from '../Core/Math.js';
@@ -45,7 +44,7 @@ import StencilConstants from './StencilConstants.js';
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
      * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
      *
      * @alias PointCloud
@@ -149,7 +148,7 @@ import StencilConstants from './StencilConstants.js';
         initialize(this, options);
     }
 
-    defineProperties(PointCloud.prototype, {
+    Object.defineProperties(PointCloud.prototype, {
         pointsLength : {
             get : function() {
                 return this._pointsLength;
@@ -188,6 +187,7 @@ import StencilConstants from './StencilConstants.js';
                 if (defined(this._drawCommand)) {
                     return this._drawCommand.boundingVolume;
                 }
+                return undefined;
             },
             set : function(value) {
                 this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);

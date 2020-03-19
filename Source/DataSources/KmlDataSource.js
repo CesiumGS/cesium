@@ -12,7 +12,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
@@ -191,7 +190,7 @@ import WallGraphics from './WallGraphics.js';
         this._timeThreshold = 1000; // Initial load is 1 second
     }
 
-    defineProperties(DeferredLoading.prototype, {
+    Object.defineProperties(DeferredLoading.prototype, {
         dataSource : {
             get : function() {
                 return this._dataSource;
@@ -2536,7 +2535,7 @@ import WallGraphics from './WallGraphics.js';
      * <p>
      * KML support in Cesium is incomplete, but a large amount of the standard,
      * as well as Google's <code>gx</code> extension namespace, is supported. See Github issue
-     * {@link https://github.com/AnalyticalGraphicsInc/cesium/issues/873|#873} for a
+     * {@link https://github.com/CesiumGS/cesium/issues/873|#873} for a
      * detailed list of what is and isn't support. Cesium will also write information to the
      * console when it encounters most unsupported features.
      * </p>
@@ -2639,7 +2638,7 @@ import WallGraphics from './WallGraphics.js';
         return dataSource.load(data, options);
     };
 
-    defineProperties(KmlDataSource.prototype, {
+    Object.defineProperties(KmlDataSource.prototype, {
         /**
          * Gets or sets a human-readable name for this instance.
          * This will be automatically be set to the KML document name on load.

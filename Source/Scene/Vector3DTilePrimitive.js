@@ -3,7 +3,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -147,7 +146,7 @@ import Vector3DTileBatch from './Vector3DTileBatch.js';
         }
     }
 
-    defineProperties(Vector3DTilePrimitive.prototype, {
+    Object.defineProperties(Vector3DTilePrimitive.prototype, {
         /**
          * Gets the number of triangles.
          *

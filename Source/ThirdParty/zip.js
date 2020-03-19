@@ -28,7 +28,6 @@
 **/
 
 import buildModuleUrl from '../Core/buildModuleUrl.js';
-import defineProperties from '../Core/defineProperties.js';
 
 var tmp = {};
 
@@ -805,7 +804,7 @@ var tmp = {};
 
 	var workerScriptsPath;
 
-	defineProperties(obj.zip, {
+	Object.defineProperties(obj.zip, {
         'workerScriptsPath' : {
             get : function() {
                 if (typeof workerScriptsPath === 'undefined') {

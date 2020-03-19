@@ -1,7 +1,6 @@
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
@@ -71,7 +70,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
     }
 
-    defineProperties(PrimitiveCollection.prototype, {
+    Object.defineProperties(PrimitiveCollection.prototype, {
         /**
          * Gets the number of primitives in the collection.
          *

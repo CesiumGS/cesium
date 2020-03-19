@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
@@ -18,4 +17,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         VERTICAL : 1
     };
-export default freezeObject(StripeOrientation);
+export default Object.freeze(StripeOrientation);

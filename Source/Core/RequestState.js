@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * State of the request.
@@ -54,4 +53,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         FAILED : 5
     };
-export default freezeObject(RequestState);
+export default Object.freeze(RequestState);

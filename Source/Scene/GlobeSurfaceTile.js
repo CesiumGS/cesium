@@ -2,7 +2,6 @@ import BoundingSphere from '../Core/BoundingSphere.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
@@ -73,7 +72,7 @@ import TerrainState from './TerrainState.js';
         this.clippedByBoundaries = false;
     }
 
-    defineProperties(GlobeSurfaceTile.prototype, {
+    Object.defineProperties(GlobeSurfaceTile.prototype, {
         /**
          * Gets a value indicating whether or not this tile is eligible to be unloaded.
          * Typically, a tile is ineligible to be unloaded while an asynchronous operation,

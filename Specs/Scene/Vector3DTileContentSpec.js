@@ -17,7 +17,7 @@ import { StencilConstants } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createScene from '../createScene.js';
 
-// See https://github.com/AnalyticalGraphicsInc/cesium/issues/7249#issuecomment-546347729
+// See https://github.com/CesiumGS/cesium/issues/7249#issuecomment-546347729
 xdescribe('Scene/Vector3DTileContent', function() {
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);

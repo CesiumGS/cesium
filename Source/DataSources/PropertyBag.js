@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import ConstantProperty from './ConstantProperty.js';
@@ -25,7 +24,7 @@ import Property from './Property.js';
         }
     };
 
-    defineProperties(PropertyBag.prototype, {
+    Object.defineProperties(PropertyBag.prototype, {
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof PropertyBag.prototype

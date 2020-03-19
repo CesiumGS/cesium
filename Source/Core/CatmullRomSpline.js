@@ -3,7 +3,6 @@ import Cartesian4 from './Cartesian4.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import HermiteSpline from './HermiteSpline.js';
 import Matrix4 from './Matrix4.js';
 import Spline from './Spline.js';
@@ -174,7 +173,7 @@ import Spline from './Spline.js';
         this._lastTimeIndex = 0;
     }
 
-    defineProperties(CatmullRomSpline.prototype, {
+    Object.defineProperties(CatmullRomSpline.prototype, {
         /**
          * An array of times for the control points.
          *
