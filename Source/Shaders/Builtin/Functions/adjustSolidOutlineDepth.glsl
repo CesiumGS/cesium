@@ -1,11 +1,11 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
+// #ifdef GL_EXT_frag_depth
+// #extension GL_EXT_frag_depth : enable
+// #endif
 
 void czm_adjustSolidOutlineDepth() {
-#ifdef GL_EXT_frag_depth
-    // gl_FragDepthEXT -= 5e-5;
-#endif
+// #ifdef GL_EXT_frag_depth
+//     // gl_FragDepthEXT -= 5e-5;
+// #endif
 }
 
 czm_ray getPickRay(vec2 screenPosition) {
@@ -23,6 +23,8 @@ czm_ray getPickRay(vec2 screenPosition) {
     return czm_ray(vec3(0.0), direction);
 }
 
+vec3 noIntersection = vec3(czm_infinity, czm_infinity, czm_infinity);
+
 vec3 intersectRayPlane(czm_ray ray, vec3 pointInPlane, vec3 planeNormal) {
     vec3 origin = ray.origin;
     vec3 direction = ray.direction;
@@ -31,44 +33,39 @@ vec3 intersectRayPlane(czm_ray ray, vec3 pointInPlane, vec3 planeNormal) {
 
     if (abs(denominator) < 0.1) {
         // Ray is parallel to plane.  The ray may be in the polygon's plane.
-        discard;
+        return noIntersection;
     }
 
     float t = (-planeDistance - dot(planeNormal, origin)) / denominator;
 
     if (t < 0.0) {
-        discard;
+        return noIntersection;
     }
 
     vec3 result = direction * t;
     return origin + result;
 }
 
-void czm_adjustSolidOutlineDepth(vec3 positionEye, vec3 normalEye) {
-#if defined(LOG_DEPTH) && defined(GL_EXT_frag_depth)
+vec3 czm_adjustSolidOutlineDepth(vec3 positionEye, vec3 normalEye) {
+// #if defined(LOG_DEPTH) && defined(GL_EXT_frag_depth)
     // Find ray to diagonally-adjacent pixel (i.e. +1 in both X and Y directions)
-    vec2 currentPixel = gl_FragCoord.xy;
+    vec2 currentPixel = czm_eyeToWindowCoordinates(vec4(positionEye, 1.0)).xy;
     czm_ray currentRay = getPickRay(currentPixel);
-    vec2 nextPixel = gl_FragCoord.xy + vec2(1.0, 1.0);
+    vec2 nextPixel = currentPixel + vec2(1.0, 1.0);
     czm_ray nextRay = getPickRay(nextPixel);
 
     // Find intersection of ray with plane created by fragment position and normal.
     vec3 currentIntersection = intersectRayPlane(currentRay, positionEye, normalEye);
     vec3 nextIntersection = intersectRayPlane(nextRay, positionEye, normalEye);
 
+    if (currentIntersection == noIntersection || nextIntersection == noIntersection) {
+        return positionEye;
+    }
+
     // Compute the amount depth changes when we move by one pixel. Expresed in eye coordinates.
     float deltaDepth = abs(currentIntersection.z - nextIntersection.z);
 
-    czm_writeLogDepth(v_depthFromNearPlusOne - deltaDepth);
-    // gl_FragDepthEXT -= 5e-5;
-
-    // Adjust depth to be closer to the camera by this one-pixel depth value. Need to do this prior
-    // to log depth computation.
-    // vec3 planeX = vec3(-normalEye.y, normalEye.x, normalEye.z);
-    // vec3 planeY = vec3(-normalEye.z, normalEye.y, normalEye.x);
-
-    // vec3 cameraDirection = vec3(0.0, 0.0, -1.0);
-    // float faceTilt = 1.0 - abs(dot(normalEye, cameraDirection));
-    // gl_FragDepthEXT -= 5e-5 / faceTilt; //5e-5;
-#endif
+    positionEye.z += deltaDepth;
+    return positionEye;
+// #endif
 }

@@ -461,6 +461,15 @@ import ModelUtility from './ModelUtility.js';
             vertexShader += 'attribute float a_batchId;\n';
         }
 
+        if (defined(material.extensions) && defined(material.extensions.CESIUM_materials_solid_outline)) {
+            if (hasNormals) {
+                vertexShaderMain += '    v_positionEC = czm_adjustSolidOutlineDepth(v_positionEC, v_normal);\n';
+                vertexShaderMain += '    czm_vertexLogDepth(u_projectionMatrix * vec4(v_positionEC, 1.0));\n';
+            } /*else {
+                vertexShaderMain += '    czm_adjustSolidOutlineDepth();\n';
+            }*/
+        }
+
         vertexShader += 'void main(void) \n{\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
@@ -870,13 +879,13 @@ import ModelUtility from './ModelUtility.js';
 
         fragmentShader += '    czm_writeLogDepth();\n';
 
-        if (defined(material.extensions) && defined(material.extensions.CESIUM_materials_solid_outline)) {
-            if (hasNormals) {
-                fragmentShader += '    czm_adjustSolidOutlineDepth(v_positionEC, ng);\n';
-            } else {
-                fragmentShader += '    czm_adjustSolidOutlineDepth();\n';
-            }
-        }
+        // if (defined(material.extensions) && defined(material.extensions.CESIUM_materials_solid_outline)) {
+        //     if (hasNormals) {
+        //         fragmentShader += '    czm_adjustSolidOutlineDepth(v_positionEC, ng);\n';
+        //     } else {
+        //         fragmentShader += '    czm_adjustSolidOutlineDepth();\n';
+        //     }
+        // }
 
         fragmentShader += '}\n';
 
