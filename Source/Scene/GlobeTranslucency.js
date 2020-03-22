@@ -274,6 +274,8 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 
             removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
             removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
+            removeDefine(fs.defines, 'FOG');
+            removeDefine(vs.defines, 'FOG');
             // removeDefine(vs.defines, 'TRANSCLUCENT');
             // removeDefine(fs.defines, 'TRANSCLUCENT');
 

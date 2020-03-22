@@ -1566,7 +1566,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
-        var enableFog = frameState.fog.enabled && !cameraUnderground && !translucent;
+        var enableFog = frameState.fog.enabled && !cameraUnderground;
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
