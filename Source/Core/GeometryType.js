@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * @private
@@ -9,4 +8,4 @@ import freezeObject from './freezeObject.js';
         LINES : 2,
         POLYLINES : 3
     };
-export default freezeObject(GeometryType);
+export default Object.freeze(GeometryType);

@@ -3,7 +3,6 @@ import BoundingSphere from '../Core/BoundingSphere.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import EventHelper from '../Core/EventHelper.js';
 import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
@@ -117,7 +116,7 @@ import PolylineVisualizer from './PolylineVisualizer.js';
                 new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     };
 
-    defineProperties(DataSourceDisplay.prototype, {
+    Object.defineProperties(DataSourceDisplay.prototype, {
         /**
          * Gets the scene associated with this display.
          * @memberof DataSourceDisplay.prototype

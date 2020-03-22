@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
         /**
          * Returns frozen renderState as well as all of the object literal properties. This function is deep object freeze
@@ -24,6 +23,6 @@ import freezeObject from '../Core/freezeObject.js';
                     renderState[propName] = freezeRenderState(renderState[propName]);
                 }
             }
-            return freezeObject(renderState);
+            return Object.freeze(renderState);
         }
 export default freezeRenderState;

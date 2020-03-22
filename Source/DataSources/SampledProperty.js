@@ -2,7 +2,6 @@ import binarySearch from '../Core/binarySearch.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import ExtrapolationType from '../Core/ExtrapolationType.js';
@@ -206,7 +205,7 @@ import LinearApproximation from '../Core/LinearApproximation.js';
         this._backwardExtrapolationDuration = 0;
     }
 
-    defineProperties(SampledProperty.prototype, {
+    Object.defineProperties(SampledProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

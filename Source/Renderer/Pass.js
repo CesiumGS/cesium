@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The render pass for a command.
@@ -25,4 +24,4 @@ import freezeObject from '../Core/freezeObject.js';
         OVERLAY : 9,
         NUMBER_OF_PASSES : 10
     };
-export default freezeObject(Pass);
+export default Object.freeze(Pass);

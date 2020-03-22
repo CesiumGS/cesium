@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import FeatureDetection from '../../Core/FeatureDetection.js';
@@ -140,7 +139,7 @@ css: { active: $data === $parent._selectedSuggestion }');
 
     }
 
-    defineProperties(Geocoder.prototype, {
+    Object.defineProperties(Geocoder.prototype, {
         /**
          * Gets the parent container.
          * @memberof Geocoder.prototype

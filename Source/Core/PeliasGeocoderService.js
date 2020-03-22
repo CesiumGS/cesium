@@ -1,7 +1,6 @@
 import Cartesian3 from './Cartesian3.js';
 import Check from './Check.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import GeocodeType from './GeocodeType.js';
 import Rectangle from './Rectangle.js';
 import Resource from './Resource.js';
@@ -33,7 +32,7 @@ import Resource from './Resource.js';
         this._url.appendForwardSlash();
     }
 
-    defineProperties(PeliasGeocoderService.prototype, {
+    Object.defineProperties(PeliasGeocoderService.prototype, {
         /**
          * The Resource used to access the Pelias endpoint.
          * @type {Resource}

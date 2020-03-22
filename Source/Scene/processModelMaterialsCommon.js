@@ -553,7 +553,7 @@ import ModelUtility from './ModelUtility.js';
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
             if (khrMaterialsCommon.doubleSided) {
-                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/AnalyticalGraphicsInc/cesium/pull/8494.
+                // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
                 fragmentShader += '  if (gl_FrontFacing == false)\n';
                 fragmentShader += '  {\n';
                 fragmentShader += '    normal = -normal;\n';

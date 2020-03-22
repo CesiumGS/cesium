@@ -3,7 +3,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 import Event from '../Core/Event.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -400,7 +399,7 @@ import kdbush from '../ThirdParty/kdbush.js';
         this._removeEventListener = scene.camera.changed.addEventListener(cluster);
     };
 
-    defineProperties(EntityCluster.prototype, {
+    Object.defineProperties(EntityCluster.prototype, {
         /**
          * Gets or sets whether clustering is enabled.
          * @memberof EntityCluster.prototype

@@ -8,7 +8,6 @@ import Check from './Check.js';
 import ComponentDatatype from './ComponentDatatype.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import EllipsoidGeodesic from './EllipsoidGeodesic.js';
@@ -126,7 +125,7 @@ import WebMercatorProjection from './WebMercatorProjection.js';
         this._scene3DOnly = false;
     }
 
-    defineProperties(GroundPolylineGeometry.prototype, {
+    Object.defineProperties(GroundPolylineGeometry.prototype, {
         /**
          * The number of elements used to pack the object into an array.
          * @memberof GroundPolylineGeometry.prototype

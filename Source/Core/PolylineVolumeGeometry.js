@@ -142,7 +142,7 @@ import WindingOrder from './WindingOrder.js';
                 geometry = GeometryPipeline.computeTangentAndBitangent(geometry);
             } catch (e) {
                 oneTimeWarning('polyline-volume-tangent-bitangent', 'Unable to compute tangents and bitangents for polyline volume geometry');
-                //TODO https://github.com/AnalyticalGraphicsInc/cesium/issues/3609
+                //TODO https://github.com/CesiumGS/cesium/issues/3609
             }
 
             if (!vertexFormat.tangent) {

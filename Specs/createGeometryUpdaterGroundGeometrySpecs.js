@@ -27,14 +27,14 @@ import { PrimitiveCollection } from '../Source/Cesium.js';
             expect(updater.zIndex.getValue()).toBe(22);
         });
 
-        it('A time-varying color causes ground geometry to be dynamic', function() {
+        it('A time-varying color does not cause ground geometry to be dynamic', function() {
             var entity = createEntity();
             var color = new SampledProperty(Color);
             color.addSample(time, Color.WHITE);
             entity[geometryPropertyName].material = new ColorMaterialProperty(color);
             var updater = new Updater(entity, getScene());
 
-            expect(updater.isDynamic).toBe(true);
+            expect(updater.isDynamic).toBe(false);
         });
 
         it('Checks that an entity without height and extrudedHeight is on terrain', function() {

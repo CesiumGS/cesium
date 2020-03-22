@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 import WebGLConstants from './WebGLConstants.js';
 
     /**
@@ -80,4 +79,4 @@ import WebGLConstants from './WebGLConstants.js';
                    primitiveType === PrimitiveType.TRIANGLE_FAN;
         }
     };
-export default freezeObject(PrimitiveType);
+export default Object.freeze(PrimitiveType);

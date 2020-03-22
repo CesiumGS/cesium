@@ -1,7 +1,6 @@
 import arraySlice from '../Core/arraySlice.js';
 import Check from '../Core/Check.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -102,7 +101,7 @@ import Tonemapper from './Tonemapper.js';
         this._textureCache = textureCache;
     }
 
-    defineProperties(PostProcessStageCollection.prototype, {
+    Object.defineProperties(PostProcessStageCollection.prototype, {
         /**
          * Determines if all of the post-process stages in the collection are ready to be executed.
          *

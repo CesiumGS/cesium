@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -154,7 +153,7 @@ import TimeConstants from '../Core/TimeConstants.js';
         return scene._frameRateMonitor;
     };
 
-    defineProperties(FrameRateMonitor.prototype, {
+    Object.defineProperties(FrameRateMonitor.prototype, {
         /**
          * Gets the {@link Scene} instance for which to monitor performance.
          * @memberof FrameRateMonitor.prototype

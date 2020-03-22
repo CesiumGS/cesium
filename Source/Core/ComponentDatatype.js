@@ -1,7 +1,6 @@
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import WebGLConstants from './WebGLConstants.js';
 
     /**
@@ -318,4 +317,4 @@ import WebGLConstants from './WebGLConstants.js';
             //>>includeEnd('debug');
         }
     };
-export default freezeObject(ComponentDatatype);
+export default Object.freeze(ComponentDatatype);

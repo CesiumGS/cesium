@@ -5,7 +5,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EasingFunction from '../Core/EasingFunction.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -606,7 +605,7 @@ import SceneMode from './SceneMode.js';
     var scratchHPRMatrix1 = new Matrix4();
     var scratchHPRMatrix2 = new Matrix4();
 
-    defineProperties(Camera.prototype, {
+    Object.defineProperties(Camera.prototype, {
         /**
          * Gets the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          * @memberof Camera.prototype

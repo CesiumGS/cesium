@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * An enum identifying the type of request. Used for finer grained logging and priority sorting.
@@ -38,4 +37,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         OTHER : 3
     };
-export default freezeObject(RequestType);
+export default Object.freeze(RequestType);

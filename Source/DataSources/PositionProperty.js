@@ -1,6 +1,5 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Matrix3 from '../Core/Matrix3.js';
 import ReferenceFrame from '../Core/ReferenceFrame.js';
@@ -24,7 +23,7 @@ import Transforms from '../Core/Transforms.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(PositionProperty.prototype, {
+    Object.defineProperties(PositionProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

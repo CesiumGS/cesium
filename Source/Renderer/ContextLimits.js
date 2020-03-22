@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 
     /**
      * @private
@@ -27,7 +26,7 @@ import defineProperties from '../Core/defineProperties.js';
         _highpIntSupported: false
     };
 
-    defineProperties(ContextLimits, {
+    Object.defineProperties(ContextLimits, {
 
         /**
          * The maximum number of texture units that can be used from the vertex and fragment

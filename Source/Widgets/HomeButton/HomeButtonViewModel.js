@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
 import createCommand from '../createCommand.js';
@@ -37,7 +36,7 @@ import createCommand from '../createCommand.js';
         knockout.track(this, ['tooltip']);
     }
 
-    defineProperties(HomeButtonViewModel.prototype, {
+    Object.defineProperties(HomeButtonViewModel.prototype, {
         /**
          * Gets the scene to control.
          * @memberof HomeButtonViewModel.prototype
