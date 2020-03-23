@@ -4,6 +4,7 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
+import clone from '../Core/clone.js';
 import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import combine from '../Core/combine.js';
@@ -100,6 +101,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.saturationShift = 0.0;
         this.brightnessShift = 0.0;
 
+        this.backFaceCulling = true;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -107,6 +110,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this._renderState = undefined;
         this._blendRenderState = undefined;
+        this._disableCullingRenderState = undefined;
+        this._disableCullingBlendRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -405,6 +410,16 @@ import TileSelectionResult from './TileSelectionResult.js';
             });
         }
 
+        if (!this.backFaceCulling && !defined(this._disableCullingRenderState)) {
+            var rs = clone(this._renderState, true);
+            rs.cull.enabled = false;
+            this._disableCullingRenderState = RenderState.fromCache(rs);
+
+            rs = clone(this._blendRenderState, true);
+            rs.cull.enabled = false;
+            this._disableCullingBlendRenderState = RenderState.fromCache(rs);
+        }
+
         // If this frame has a mix of loaded and fill tiles, we need to propagate
         // loaded heights to the fill tiles.
         if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
@@ -420,7 +435,10 @@ import TileSelectionResult from './TileSelectionResult.js';
             }
 
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
-                addDrawCommandsForTile(this, tilesToRender[tileIndex], frameState);
+                var tile = tilesToRender[tileIndex];
+                var tileBoundingRegion = tile.data.tileBoundingRegion;
+                addDrawCommandsForTile(this, tile, frameState);
+                frameState.minimumTerrainHeight = Math.min(frameState.minimumTerrainHeight, tileBoundingRegion.minimumHeight);
             }
         }
     };
@@ -599,7 +617,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 return intersection;
             }
 
-            if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+            if (occluders.ellipsoid.isScaledSpacePointVisiblePossiblyUnderEllipsoid(occludeePointInScaledSpace, tileBoundingRegion.minimumHeight)) {
                 return intersection;
             }
 
@@ -802,17 +820,17 @@ import TileSelectionResult from './TileSelectionResult.js';
 
     var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
-    function computeOccludeePoint(tileProvider, center, rectangle, height, result) {
+    function computeOccludeePoint(tileProvider, center, rectangle, minimumHeight, maximumHeight, result) {
         var ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
         var ellipsoid = ellipsoidalOccluder.ellipsoid;
 
         var cornerPositions = cornerPositionsScratch;
-        Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
-        Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.south, maximumHeight, ellipsoid, cornerPositions[0]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.south, maximumHeight, ellipsoid, cornerPositions[1]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.north, maximumHeight, ellipsoid, cornerPositions[2]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.north, maximumHeight, ellipsoid, cornerPositions[3]);
 
-        return ellipsoidalOccluder.computeHorizonCullingPoint(center, cornerPositions, result);
+        return ellipsoidalOccluder.computeHorizonCullingPointPossiblyUnderEllipsoid(center, cornerPositions, minimumHeight, result);
     }
 
     /**
@@ -852,7 +870,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceTile.boundingVolumeSourceTile = heightSource;
 
             var rectangle = tile.rectangle;
-            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            if (defined(rectangle)) {
                 surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
                     tile.rectangle,
                     tileBoundingRegion.minimumHeight,
@@ -860,7 +878,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                     tile.tilingScheme.ellipsoid,
                     surfaceTile.orientedBoundingBox);
 
-                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
             }
         }
 
@@ -1649,8 +1667,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var firstPassRenderState = tileProvider._renderState;
-        var otherPassesRenderState = tileProvider._blendRenderState;
+        var firstPassRenderState = tileProvider.backFaceCulling ? tileProvider._renderState : tileProvider._disableCullingRenderState;
+        var otherPassesRenderState = tileProvider.backFaceCulling ? tileProvider._blendRenderState : tileProvider._disableCullingBlendRenderState;
         var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
