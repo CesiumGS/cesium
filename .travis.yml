@@ -1,14 +1,9 @@
 language: node_js
 node_js:
-  - "8"
-sudo: false
+  - "10"
 addons:
   chrome: stable
   firefox: latest
-services:
-  - xvfb
-before_script:
-  - export DISPLAY=:99.0
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -31,7 +26,7 @@ script:
 
 # Various Node.js smoke-screen tests
   - node -e "const Cesium = require('./');"
-  - NODE_ENV=development node index.js
-  - NODE_ENV=production node index.js
+  - NODE_ENV=development node index.cjs
+  - NODE_ENV=production node index.cjs
 
   - npm --silent run cloc

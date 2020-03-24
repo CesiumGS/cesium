@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * ArcType defines the path that should be taken connecting vertices.
@@ -30,4 +29,4 @@ import freezeObject from './freezeObject.js';
          */
         RHUMB : 2
     };
-export default freezeObject(ArcType);
+export default Object.freeze(ArcType);

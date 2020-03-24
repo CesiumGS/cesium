@@ -131,7 +131,7 @@ import Property from './Property.js';
                 primitive = new Primitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     appearance : new this.appearanceType({
                         translucent : this.translucent,
                         closed : this.closed

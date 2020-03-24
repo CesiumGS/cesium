@@ -2,7 +2,6 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 
     /**
@@ -177,7 +176,8 @@ import CesiumMath from './Math.js';
      * Flattens an array of Cartesian4s into and array of components.
      *
      * @param {Cartesian4[]} array The array of cartesians to pack.
-     * @param {Number[]} [result] The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result. If this is a typed array, it must have array.length * 4 components, else a {@link DeveloperError} will be thrown. If it is a regular array, it will be resized to have (array.length * 4) elements.
+
      * @returns {Number[]} The packed array.
      */
     Cartesian4.packArray = function(array, result) {
@@ -186,10 +186,13 @@ import CesiumMath from './Math.js';
         //>>includeEnd('debug');
 
         var length = array.length;
+        var resultLength = length * 4;
         if (!defined(result)) {
-            result = new Array(length * 4);
-        } else {
-            result.length = length * 4;
+            result = new Array(resultLength);
+        } else if (!Array.isArray(result) && result.length !== resultLength) {
+            throw new DeveloperError('If result is a typed array, it must have exactly array.length * 4 elements');
+        } else if (result.length !== resultLength) {
+            result.length = resultLength;
         }
 
         for (var i = 0; i < length; ++i) {
@@ -208,6 +211,10 @@ import CesiumMath from './Math.js';
     Cartesian4.unpackArray = function(array, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
+        Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 4);
+        if (array.length % 4 !== 0) {
+            throw new DeveloperError('array length must be a multiple of 4.');
+        }
         //>>includeEnd('debug');
 
         var length = array.length;
@@ -730,7 +737,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.ZERO = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+    Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
@@ -738,7 +745,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_X = freezeObject(new Cartesian4(1.0, 0.0, 0.0, 0.0));
+    Cartesian4.UNIT_X = Object.freeze(new Cartesian4(1.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 1.0, 0.0, 0.0).
@@ -746,7 +753,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_Y = freezeObject(new Cartesian4(0.0, 1.0, 0.0, 0.0));
+    Cartesian4.UNIT_Y = Object.freeze(new Cartesian4(0.0, 1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 1.0, 0.0).
@@ -754,7 +761,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_Z = freezeObject(new Cartesian4(0.0, 0.0, 1.0, 0.0));
+    Cartesian4.UNIT_Z = Object.freeze(new Cartesian4(0.0, 0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 1.0).
@@ -762,7 +769,7 @@ import CesiumMath from './Math.js';
      * @type {Cartesian4}
      * @constant
      */
-    Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
+    Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian4 instance.

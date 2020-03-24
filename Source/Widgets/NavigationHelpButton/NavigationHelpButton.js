@@ -1,7 +1,6 @@
 import buildModuleUrl from '../../Core/buildModuleUrl.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import FeatureDetection from '../../Core/FeatureDetection.js';
@@ -180,7 +179,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         }
     }
 
-    defineProperties(NavigationHelpButton.prototype, {
+    Object.defineProperties(NavigationHelpButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof NavigationHelpButton.prototype

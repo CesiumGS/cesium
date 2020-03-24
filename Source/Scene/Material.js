@@ -5,10 +5,8 @@ import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadKTX from '../Core/loadKTX.js';
 import Matrix2 from '../Core/Matrix2.js';
@@ -31,8 +29,11 @@ import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
 import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
 import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
 import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
+import Sampler from '../Renderer/Sampler.js';
 import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
 import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import WaterMaterial from '../Shaders/Materials/Water.js';
 import when from '../ThirdParty/when.js';
 
@@ -40,7 +41,7 @@ import when from '../ThirdParty/when.js';
      * A Material defines surface appearance through a combination of diffuse, specular,
      * normal, emission, and alpha components. These values are specified using a
      * JSON schema called Fabric which gets parsed and assembled into glsl shader code
-     * behind-the-scenes. Check out the {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|wiki page}
+     * behind-the-scenes. Check out the {@link https://github.com/CesiumGS/cesium/wiki/Fabric|wiki page}
      * for more details on Fabric.
      * <br /><br />
      * <style type="text/css">
@@ -225,6 +226,8 @@ import when from '../ThirdParty/when.js';
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The {@link TextureMinificationFilter} to apply to this material's textures.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The {@link TextureMagnificationFilter} to apply to this material's textures.
      * @param {Object} options.fabric The fabric JSON used to generate the material.
      *
      * @constructor
@@ -238,7 +241,7 @@ import when from '../ThirdParty/when.js';
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
@@ -298,6 +301,9 @@ import when from '../ThirdParty/when.js';
          */
         this.translucent = undefined;
 
+        this._minificationFilter = defaultValue(options.minificationFilter, TextureMinificationFilter.LINEAR);
+        this._magnificationFilter = defaultValue(options.magnificationFilter, TextureMagnificationFilter.LINEAR);
+
         this._strict = undefined;
         this._template = undefined;
         this._count = undefined;
@@ -313,7 +319,7 @@ import when from '../ThirdParty/when.js';
         this._defaultTexture = undefined;
 
         initializeMaterial(options, this);
-        defineProperties(this, {
+        Object.defineProperties(this, {
             type : {
                 value : this.type,
                 writable : false
@@ -415,6 +421,11 @@ import when from '../ThirdParty/when.js';
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
+            var sampler = new Sampler({
+                minificationFilter : this._minificationFilter,
+                magnificationFilter : this._magnificationFilter
+            });
+
             var texture;
             if (defined(image.internalFormat)) {
                 texture = new Texture({
@@ -424,12 +435,14 @@ import when from '../ThirdParty/when.js';
                     height : image.height,
                     source : {
                         arrayBufferView : image.bufferView
-                    }
+                    },
+                    sampler : sampler
                 });
             } else {
                 texture = new Texture({
                     context : context,
-                    source : image
+                    source : image,
+                    sampler : sampler
                 });
             }
 
@@ -462,7 +475,11 @@ import when from '../ThirdParty/when.js';
                         negativeY : images[3],
                         positiveZ : images[4],
                         negativeZ : images[5]
-                    }
+                    },
+                    sampler : new Sampler({
+                        minificationFilter : this._minificationFilter,
+                        magnificationFilter : this._magnificationFilter
+                    })
                 });
 
             this._textures[uniformId] = cubeMap;
@@ -725,9 +742,14 @@ import when from '../ThirdParty/when.js';
                     }
 
                     if (!defined(texture) || texture === context.defaultTexture) {
+                        var sampler = new Sampler({
+                            minificationFilter : material._minificationFilter,
+                            magnificationFilter : material._magnificationFilter
+                        });
                         texture = new Texture({
                             context : context,
-                            source : uniformValue
+                            source : uniformValue,
+                            sampler : sampler
                         });
                         material._textures[uniformId] = texture;
                         return;
@@ -969,7 +991,7 @@ import when from '../ThirdParty/when.js';
                     uniformType = 'sampler2D';
                 }
             } else if (type === 'object') {
-                if (isArray(uniformValue)) {
+                if (Array.isArray(uniformValue)) {
                     if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
                         uniformType = 'mat' + Math.sqrt(uniformValue.length);
                     }

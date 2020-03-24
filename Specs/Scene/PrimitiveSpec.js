@@ -1282,7 +1282,7 @@ describe('Scene/Primitive', function() {
         });
     });
 
-    it('destroy before asynchonous pipeline is complete', function() {
+    it('destroy before asynchronous pipeline is complete', function() {
         primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance()

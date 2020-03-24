@@ -42,7 +42,7 @@ var circleOutlineInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [circleOutlineInstance],
+    geometryInstances : circleOutlineInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
@@ -72,7 +72,7 @@ circleOutlineInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [circleOutlineInstance],
+    geometryInstances : circleOutlineInstance,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {

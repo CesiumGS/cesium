@@ -121,7 +121,7 @@ import Property from './Property.js';
                 primitive = new GroundPolylinePrimitive({
                     show : false,
                     asynchronous : this._asynchronous,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     appearance : new this.appearanceType(),
                     classificationType : this.classificationType
                 });

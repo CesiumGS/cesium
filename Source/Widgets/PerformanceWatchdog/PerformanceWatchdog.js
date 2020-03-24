@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -58,7 +57,7 @@ import PerformanceWatchdogViewModel from './PerformanceWatchdogViewModel.js';
         this._element = element;
     }
 
-    defineProperties(PerformanceWatchdog.prototype, {
+    Object.defineProperties(PerformanceWatchdog.prototype, {
         /**
          * Gets the parent container.
          * @memberof PerformanceWatchdog.prototype

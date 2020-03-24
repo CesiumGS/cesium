@@ -1,7 +1,6 @@
 import Check from '../../Core/Check.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import knockout from '../../ThirdParty/knockout.js';
 import getElement from '../getElement.js';
@@ -159,7 +158,7 @@ import Cesium3DTilesInspectorViewModel from './Cesium3DTilesInspectorViewModel.j
         knockout.applyBindings(viewModel, element);
     }
 
-    defineProperties(Cesium3DTilesInspector.prototype, {
+    Object.defineProperties(Cesium3DTilesInspector.prototype, {
         /**
          * Gets the parent container.
          * @memberof Cesium3DTilesInspector.prototype

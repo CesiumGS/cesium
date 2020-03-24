@@ -87,7 +87,6 @@ describe('Scene/GroundPolylinePrimitive', function() {
 
     beforeEach(function() {
         scene.morphTo3D(0);
-        scene.render(); // clear any afterRender commands
 
         var depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
         depthColor = depthpolylineColorAttribute.value;
@@ -235,11 +234,9 @@ describe('Scene/GroundPolylinePrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
-        frameState.commandList.length = 0;
-
-        groundPolylinePrimitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.groundPrimitives.add(groundPolylinePrimitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('does not render when show is false', function() {
@@ -252,21 +249,13 @@ describe('Scene/GroundPolylinePrimitive', function() {
             asynchronous : false
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(groundPolylinePrimitive);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toBeGreaterThan(0);
 
-        frameState.commandList.length = 0;
-        groundPolylinePrimitive.update(frameState);
-        expect(frameState.afterRender.length).toEqual(1);
-
-        frameState.afterRender[0]();
-        frameState.commandList.length = 0;
-        groundPolylinePrimitive.update(frameState);
-        expect(frameState.commandList.length).toBeGreaterThan(0);
-
-        frameState.commandList.length = 0;
         groundPolylinePrimitive.show = false;
-        groundPolylinePrimitive.update(frameState);
-        expect(frameState.commandList.length).toEqual(0);
+        scene.renderForSpecs();
+        expect(scene.frameState.commandList.length).toEqual(0);
     });
 
     it('becomes ready when show is false', function() {
@@ -285,7 +274,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         return pollToPromise(function() {
-            scene.render();
+            scene.renderForSpecs();
             return ready;
         }).then(function() {
             expect(ready).toEqual(true);
@@ -394,7 +383,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
 
         // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
         scene.morphTo2D(0);
-        scene.render();
+        scene.renderForSpecs();
 
         scene.morphToColumbusView(1);
         verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
@@ -739,7 +728,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
 
         // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
         scene.morphTo2D(0);
-        scene.render();
+        scene.renderForSpecs();
 
         scene.morphToColumbusView(1);
         verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
@@ -821,13 +810,10 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(groundPolylinePrimitive);
 
         return pollToPromise(function() {
-            groundPolylinePrimitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return groundPolylinePrimitive.ready;
         }).then(function() {
             var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes('polyline on terrain');
@@ -889,31 +875,42 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        var frameState = scene.frameState;
+        scene.groundPrimitives.add(groundPolylinePrimitive);
 
         return pollToPromise(function() {
-            groundPolylinePrimitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
-            }
+            scene.renderForSpecs();
             return groundPolylinePrimitive.ready;
         }).then(function() {
+            // verifyGroundPolylinePrimitiveRender adds the primitive, so remove it to avoid being added twice.
+            scene.groundPrimitives.destroyPrimitives = false;
+            scene.groundPrimitives.removeAll();
+            scene.groundPrimitives.destroyPrimitives = true;
+
             verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
         });
     });
 
     it('destroy before asynchronous pipeline is complete', function() {
+        if (!GroundPolylinePrimitive.isSupported(scene)) {
+            return;
+        }
+
         groundPolylinePrimitive = new GroundPolylinePrimitive({
             geometryInstances : groundPolylineInstance,
             asynchronous : true,
             appearance : new PolylineColorAppearance()
         });
 
-        var frameState = scene.frameState;
-        groundPolylinePrimitive.update(frameState);
+        scene.groundPrimitives.add(groundPolylinePrimitive);
 
+        scene.renderForSpecs();
         groundPolylinePrimitive.destroy();
         expect(groundPolylinePrimitive.isDestroyed()).toEqual(true);
+
+        // The primitive has already been destroyed, so remove it from the scene so it doesn't get destroyed again.
+        scene.groundPrimitives.destroyPrimitives = false;
+        scene.groundPrimitives.removeAll();
+        scene.groundPrimitives.destroyPrimitives = true;
     });
 
     it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
@@ -928,9 +925,11 @@ describe('Scene/GroundPolylinePrimitive', function() {
             asynchronous : false
         });
 
+        scene.groundPrimitives.add(groundPolylinePrimitive);
+
         if (GroundPolylinePrimitive.isSupported(scene)) {
             expect(function() {
-                groundPolylinePrimitive.update(scene.frameState);
+                scene.renderForSpecs();
             }).toThrowDeveloperError();
         }
 

@@ -169,7 +169,7 @@ void main()
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-    AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false);
+    AtmosphereColor atmosFogColor = computeGroundAtmosphereFromSpace(position3DWC, false, vec3(0.0));
     v_fogMieColor = atmosFogColor.mie;
     v_fogRayleighColor = atmosFogColor.rayleigh;
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);

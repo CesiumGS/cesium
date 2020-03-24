@@ -45,7 +45,7 @@ var redCircleInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: [redCircleInstance],
+    geometryInstances: redCircleInstance,
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
     })
@@ -71,7 +71,7 @@ var greenCircleInstance = new Cesium.GeometryInstance({
 });
 // Add the geometry instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances: [greenCircleInstance],
+    geometryInstances: greenCircleInstance,
     appearance: new Cesium.PerInstanceColorAppearance({
         closed: true
     })

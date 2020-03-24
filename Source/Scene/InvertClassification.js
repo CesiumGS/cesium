@@ -1,6 +1,5 @@
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import ClearCommand from '../Renderer/ClearCommand.js';
@@ -63,7 +62,7 @@ import StencilOperation from './StencilOperation.js';
         };
     }
 
-    defineProperties(InvertClassification.prototype, {
+    Object.defineProperties(InvertClassification.prototype, {
         unclassifiedCommand : {
             get : function() {
                 return this._unclassifiedCommand;

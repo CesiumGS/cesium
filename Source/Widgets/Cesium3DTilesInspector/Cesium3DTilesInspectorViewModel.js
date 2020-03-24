@@ -1,7 +1,6 @@
 import Check from '../../Core/Check.js';
 import Color from '../../Core/Color.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
 import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
@@ -1017,7 +1016,7 @@ import knockout from '../../ThirdParty/knockout.js';
         }
     }
 
-    defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
+    Object.defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
         /**
          * Gets the scene
          * @memberof Cesium3DTilesInspectorViewModel.prototype

@@ -4,7 +4,6 @@ import Check from './Check.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ion from './Ion.js';
 import Resource from './Resource.js';
 import RuntimeError from './RuntimeError.js';
@@ -101,7 +100,7 @@ import RuntimeError from './RuntimeError.js';
             });
     };
 
-    defineProperties(IonResource.prototype, {
+    Object.defineProperties(IonResource.prototype, {
         /**
          * Gets the credits required for attribution of the asset.
          *
@@ -175,21 +174,10 @@ import RuntimeError from './RuntimeError.js';
             return Resource.prototype._makeRequest.call(this, options);
         }
 
-        var acceptToken = '*/*;access_token=' + this._ionEndpoint.accessToken;
-        var existingAccept = acceptToken;
-
-        var oldHeaders = this.headers;
-        if (defined(oldHeaders) && defined(oldHeaders.Accept)) {
-            existingAccept = oldHeaders.Accept + ',' + acceptToken;
-        }
-
         if (!defined(options.headers)) {
-            options.headers = { Accept: existingAccept };
-        } else if (!defined(options.headers.Accept)) {
-            options.headers.Accept = existingAccept;
-        } else {
-            options.headers.Accept = options.headers.Accept + ',' + acceptToken;
+            options.headers = {};
         }
+        options.headers.Authorization = 'Bearer ' + this._ionEndpoint.accessToken;
 
         return Resource.prototype._makeRequest.call(this, options);
     };

@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import RuntimeError from '../Core/RuntimeError.js';
@@ -69,7 +68,7 @@ import createUniformArray from './createUniformArray.js';
         return options.context.shaderCache.replaceShaderProgram(options);
     };
 
-    defineProperties(ShaderProgram.prototype, {
+    Object.defineProperties(ShaderProgram.prototype, {
         /**
          * GLSL source for the shader program's vertex shader.
          * @memberof ShaderProgram.prototype

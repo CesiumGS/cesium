@@ -55,7 +55,7 @@ var cylinderOutline = new Cesium.GeometryInstance({
 });
 // Add the instance to primitives.
 scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : [cylinderOutline],
+    geometryInstances : cylinderOutline,
     appearance : new Cesium.PerInstanceColorAppearance({
         flat : true,
         renderState : {
