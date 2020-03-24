@@ -39,6 +39,7 @@ import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
 import GlobeTranslucency from './GlobeTranslucency.js';
+import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
@@ -446,10 +447,16 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
     };
 
-    function pushCommand(command, frameState) {
+    function pushCommand(tileProvider, command, frameState) {
         if (frameState.globeTranslucent) {
-            frameState.commandList.push(command.derivedCommands.globeTranslucency.backFaceCommand);
-            frameState.commandList.push(command.derivedCommands.globeTranslucency.frontFaceCommand);
+            if (tileProvider.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY) {
+                frameState.commandList.push(command.derivedCommands.globeTranslucency.backFaceCommand);
+                frameState.commandList.push(command.derivedCommands.globeTranslucency.frontFaceCommand);
+                frameState.commandList.push(command.derivedCommands.globeTranslucency.translucentFrontFaceCommand);
+            } else {
+                frameState.commandList.push(command.derivedCommands.globeTranslucency.globeCommand);
+                frameState.commandList.push(command.derivedCommands.globeTranslucency.translucentCommand);
+            }
         } else {
             frameState.commandList.push(command);
         }
@@ -464,7 +471,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         // Add the tile pick commands from the tiles drawn last frame.
         var drawCommands = this._drawCommands;
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
-            pushCommand(drawCommands[i], frameState);
+            pushCommand(this, drawCommands[i], frameState);
         }
     };
 
@@ -1989,10 +1996,10 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, (renderState === firstPassRenderState), tileProvider.translucencyMode, context);
+                GlobeTranslucency.updateDerivedCommand(command, tileProvider.translucencyMode, context);
             }
 
-            pushCommand(command, frameState);
+            pushCommand(tileProvider, command, frameState);
 
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;

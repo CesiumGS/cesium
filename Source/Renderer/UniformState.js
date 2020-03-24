@@ -25,6 +25,12 @@ import SunLight from '../Scene/SunLight.js';
          * @type {Texture}
          */
         this.globeDepthTexture = undefined;
+
+        /**
+         * @type {Texture}
+         */
+        this.classificationTexture = undefined;
+
         /**
          * @type {Number}
          */

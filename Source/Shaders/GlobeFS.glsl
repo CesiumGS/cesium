@@ -383,6 +383,10 @@ void main()
     fogColor *= darken;
 #endif
 
+#ifdef TRANSCLUCENT
+    fogColor = gl_FrontFacing ? fogColor : finalColor.rgb; // TODO check on mac
+#endif
+
 #ifdef HDR
     const float modifier = 0.15;
     finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
@@ -439,7 +443,17 @@ void main()
     groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
+#ifdef TRANSCLUCENT
+    fade = gl_FrontFacing ? fade : 0.0; // TODO check on mac
+#endif
+
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+#endif
+
+#ifdef CLASSIFICATION
+    vec4 classificationColor = texture2D(czm_classificationTexture, gl_FragCoord.xy / czm_viewport.zw);
+    finalColor.rgb = classificationColor.rgb * classificationColor.a + finalColor.rgb * (1.0 - classificationColor.a);
+    finalColor.a = classificationColor.a + finalColor.a * (1.0 - classificationColor.a);
 #endif
 
     gl_FragColor = finalColor;
