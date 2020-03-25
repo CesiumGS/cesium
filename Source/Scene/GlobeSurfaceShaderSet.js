@@ -202,8 +202,8 @@ import SceneMode from './SceneMode.js';
                 fs.defines.push('APPLY_COLOR_TO_ALPHA');
             }
             if (translucent) {
-                vs.defines.push('TRANSCLUCENT');
-                fs.defines.push('TRANSCLUCENT');
+                vs.defines.push('TRANSLUCENT');
+                fs.defines.push('TRANSLUCENT');
             }
 
             if (enableLighting) {

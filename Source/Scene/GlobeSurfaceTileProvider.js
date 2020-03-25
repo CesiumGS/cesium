@@ -39,7 +39,6 @@ import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import DepthFunction from './DepthFunction.js';
 import GlobeSurfaceTile from './GlobeSurfaceTile.js';
 import GlobeTranslucency from './GlobeTranslucency.js';
-import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import ImageryLayer from './ImageryLayer.js';
 import ImageryState from './ImageryState.js';
 import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
@@ -448,15 +447,8 @@ import TileSelectionResult from './TileSelectionResult.js';
     };
 
     function pushCommand(tileProvider, command, frameState) {
-        if (frameState.globeTranslucent) {
-            if (tileProvider.translucencyMode === GlobeTranslucencyMode.FRONT_FACES_ONLY) {
-                frameState.commandList.push(command.derivedCommands.globeTranslucency.backFaceCommand);
-                frameState.commandList.push(command.derivedCommands.globeTranslucency.frontFaceCommand);
-                frameState.commandList.push(command.derivedCommands.globeTranslucency.translucentFrontFaceCommand);
-            } else {
-                frameState.commandList.push(command.derivedCommands.globeTranslucency.globeCommand);
-                frameState.commandList.push(command.derivedCommands.globeTranslucency.translucentCommand);
-            }
+        if (frameState.globeTranslucent && frameState.passes.render) {
+            GlobeTranslucency.pushDerivedCommands(command, tileProvider.translucencyMode, frameState);
         } else {
             frameState.commandList.push(command);
         }
@@ -1996,7 +1988,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, tileProvider.translucencyMode, context);
+                GlobeTranslucency.updateDerivedCommand(command, tileProvider.translucencyMode, frameState);
             }
 
             pushCommand(tileProvider, command, frameState);

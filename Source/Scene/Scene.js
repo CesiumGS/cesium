@@ -3139,7 +3139,7 @@ import View from './View.js';
         }
 
         if (frameState.globeTranslucent) {
-            view.globeTranslucency.updateAndClear(scene._hdr, oit, useOIT, scene.globe.translucencyMode, view.viewport, context, passState);
+            view.globeTranslucency.updateAndClear(scene._hdr, view.viewport, context, passState);
         }
     }
 

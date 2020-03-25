@@ -84,7 +84,7 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
-#ifdef TRANSCLUCENT
+#ifdef TRANSLUCENT
 uniform vec4 u_translucencyByDistance;
 #endif
 
@@ -100,7 +100,7 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSCLUCENT)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT)
 varying float v_distance;
 #endif
 
@@ -327,7 +327,7 @@ void main()
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#ifdef TRANSCLUCENT
+#ifdef TRANSLUCENT
     float startDistance = u_translucencyByDistance.x;
     float startAlpha = u_translucencyByDistance.y;
     float endDistance = u_translucencyByDistance.z;
@@ -381,10 +381,6 @@ void main()
 #if defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
     float darken = clamp(dot(normalize(czm_viewerPositionWC), atmosphereLightDirection), u_minimumBrightness, 1.0);
     fogColor *= darken;
-#endif
-
-#ifdef TRANSCLUCENT
-    fogColor = gl_FrontFacing ? fogColor : finalColor.rgb; // TODO check on mac
 #endif
 
 #ifdef HDR
@@ -443,17 +439,7 @@ void main()
     groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
-#ifdef TRANSCLUCENT
-    fade = gl_FrontFacing ? fade : 0.0; // TODO check on mac
-#endif
-
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
-#endif
-
-#ifdef CLASSIFICATION
-    vec4 classificationColor = texture2D(czm_classificationTexture, gl_FragCoord.xy / czm_viewport.zw);
-    finalColor.rgb = classificationColor.rgb * classificationColor.a + finalColor.rgb * (1.0 - classificationColor.a);
-    finalColor.a = classificationColor.a + finalColor.a * (1.0 - classificationColor.a);
 #endif
 
     gl_FragColor = finalColor;
