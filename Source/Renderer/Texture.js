@@ -248,7 +248,12 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
         this._initialized = initialized;
         this._sampler = undefined;
 
-        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            });
     }
 
     /**

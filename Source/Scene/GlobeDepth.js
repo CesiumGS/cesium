@@ -131,13 +131,7 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
         globeDepth._tempCopyDepthFramebuffer = new Framebuffer({
             context : context,
@@ -159,13 +153,7 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : pixelDatatype,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            pixelDatatype : pixelDatatype
         });
 
         globeDepth._depthStencilTexture = new Texture({
@@ -181,13 +169,7 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
     }
 
@@ -213,13 +195,7 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : pixelDatatype,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            pixelDatatype : pixelDatatype
         });
 
         globeDepth._primitiveColorFramebuffer = new Framebuffer({

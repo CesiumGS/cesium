@@ -490,13 +490,6 @@ import ClippingPlane from './ClippingPlane.js';
             // Allocate in the Y direction, since texture may be as wide as context texture support.
             requiredResolution.y *= 2;
 
-            var sampler = new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            });
-
             if (useFloatTexture) {
                 clippingPlanesTexture = new Texture({
                     context : context,
@@ -504,7 +497,6 @@ import ClippingPlane from './ClippingPlane.js';
                     height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT,
-                    sampler : sampler,
                     flipY : false
                 });
                 this._float32View = new Float32Array(requiredResolution.x * requiredResolution.y * 4);
@@ -515,7 +507,6 @@ import ClippingPlane from './ClippingPlane.js';
                     height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    sampler : sampler,
                     flipY : false
                 });
                 this._uint8View = new Uint8Array(requiredResolution.x * requiredResolution.y * 4);
