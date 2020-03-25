@@ -7,9 +7,6 @@ import PixelDatatype from '../Renderer/PixelDatatype.js';
 import RenderState from '../Renderer/RenderState.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
 
     /**
@@ -48,7 +45,8 @@ import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
             width : 256,
             height: 256,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : Sampler.NEAREST
         });
 
         generator._colorTexture = colorTexture;

@@ -131,7 +131,8 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : Sampler.NEAREST
         });
         globeDepth._tempCopyDepthFramebuffer = new Framebuffer({
             context : context,
@@ -153,7 +154,8 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : pixelDatatype
+            pixelDatatype : pixelDatatype,
+            sampler : Sampler.NEAREST
         });
 
         globeDepth._depthStencilTexture = new Texture({
@@ -169,7 +171,8 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : Sampler.NEAREST
         });
     }
 
@@ -195,7 +198,8 @@ import StencilOperation from './StencilOperation.js';
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : pixelDatatype
+            pixelDatatype : pixelDatatype,
+            sampler : Sampler.NEAREST
         });
 
         globeDepth._primitiveColorFramebuffer = new Framebuffer({

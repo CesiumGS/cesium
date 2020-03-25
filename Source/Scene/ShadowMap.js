@@ -476,15 +476,6 @@ import ShadowMapShader from './ShadowMapShader.js';
         shadowMap._colorAttachment = shadowMap._colorAttachment && shadowMap._colorAttachment.destroy();
     }
 
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
-
     function createFramebufferColor(shadowMap, context) {
         var depthRenderbuffer = new Renderbuffer({
             context : context,
@@ -499,7 +490,7 @@ import ShadowMapShader from './ShadowMapShader.js';
             height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var framebuffer = new Framebuffer({
@@ -528,7 +519,7 @@ import ShadowMapShader from './ShadowMapShader.js';
             height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var framebuffer = new Framebuffer({
@@ -562,7 +553,7 @@ import ShadowMapShader from './ShadowMapShader.js';
             height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var faces = [cubeMap.negativeX, cubeMap.negativeY, cubeMap.negativeZ, cubeMap.positiveX, cubeMap.positiveY, cubeMap.positiveZ];

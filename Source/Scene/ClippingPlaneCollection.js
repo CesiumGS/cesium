@@ -17,9 +17,6 @@ import ContextLimits from '../Renderer/ContextLimits.js';
 import PixelDatatype from '../Renderer/PixelDatatype.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import ClippingPlane from './ClippingPlane.js';
 
     /**
@@ -497,6 +494,7 @@ import ClippingPlane from './ClippingPlane.js';
                     height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT,
+                    sampler : Sampler.NEAREST,
                     flipY : false
                 });
                 this._float32View = new Float32Array(requiredResolution.x * requiredResolution.y * 4);
@@ -507,6 +505,7 @@ import ClippingPlane from './ClippingPlane.js';
                     height : requiredResolution.y,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    sampler : Sampler.NEAREST,
                     flipY : false
                 });
                 this._uint8View = new Uint8Array(requiredResolution.x * requiredResolution.y * 4);

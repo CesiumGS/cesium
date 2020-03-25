@@ -764,12 +764,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
                     width : 1,
                     height : 1
                 },
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
             return;
         }
@@ -808,7 +803,8 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
                 arrayBufferView : ids,
                 width : textureLength,
                 height : 1
-            }
+            },
+            sampler : Sampler.NEAREST
         });
     }
 
