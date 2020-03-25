@@ -2,7 +2,6 @@ import Check from './Check.js';
 import ComponentDatatype from './ComponentDatatype.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * Value and type information for per-instance geometry attribute that determines the geometry instance offset
@@ -32,7 +31,7 @@ import defineProperties from './defineProperties.js';
         this.value = new Float32Array([x, y, z]);
     }
 
-    defineProperties(OffsetGeometryInstanceAttribute.prototype, {
+    Object.defineProperties(OffsetGeometryInstanceAttribute.prototype, {
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
          * {@link OffsetGeometryInstanceAttribute#value}.

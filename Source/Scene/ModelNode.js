@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import Matrix4 from '../Core/Matrix4.js';
 
     /**
@@ -36,7 +35,7 @@ import Matrix4 from '../Core/Matrix4.js';
         this._originalMatrix = Matrix4.clone(matrix);
     }
 
-    defineProperties(ModelNode.prototype, {
+    Object.defineProperties(ModelNode.prototype, {
         /**
          * The value of the <code>name</code> property of this node.
          *

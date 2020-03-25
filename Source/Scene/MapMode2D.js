@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Describes how the map will operate in 2D.
@@ -22,4 +21,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         INFINITE_SCROLL : 1
     };
-export default freezeObject(MapMode2D);
+export default Object.freeze(MapMode2D);

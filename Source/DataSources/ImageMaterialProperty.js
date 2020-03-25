@@ -2,7 +2,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import createPropertyDescriptor from './createPropertyDescriptor.js';
 import Property from './Property.js';
@@ -41,7 +40,7 @@ import Property from './Property.js';
         this.transparent = options.transparent;
     }
 
-    defineProperties(ImageMaterialProperty.prototype, {
+    Object.defineProperties(ImageMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

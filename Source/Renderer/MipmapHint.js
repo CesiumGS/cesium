@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -15,4 +14,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (mipmapHint === MipmapHint.NICEST));
         }
     };
-export default freezeObject(MipmapHint);
+export default Object.freeze(MipmapHint);

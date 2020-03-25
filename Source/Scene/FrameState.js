@@ -128,6 +128,14 @@ import SceneMode from './SceneMode.js';
         this.camera = undefined;
 
         /**
+         * Whether the camera is underground.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.cameraUnderground = false;
+
+        /**
          * The culling volume.
          *
          * @type {CullingVolume}

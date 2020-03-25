@@ -3,7 +3,6 @@ import Cartesian3 from './Cartesian3.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import Rectangle from './Rectangle.js';
 
@@ -46,7 +45,7 @@ import Rectangle from './Rectangle.js';
         }
     }
 
-    defineProperties(EllipsoidalOccluder.prototype, {
+    Object.defineProperties(EllipsoidalOccluder.prototype, {
         /**
          * Gets the occluding ellipsoid.
          * @memberof EllipsoidalOccluder.prototype

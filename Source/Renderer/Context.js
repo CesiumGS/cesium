@@ -5,7 +5,6 @@ import ComponentDatatype from '../Core/ComponentDatatype.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Geometry from '../Core/Geometry.js';
@@ -418,7 +417,7 @@ import VertexArray from './VertexArray.js';
 
     var defaultFramebufferMarker = {};
 
-    defineProperties(Context.prototype, {
+    Object.defineProperties(Context.prototype, {
         id : {
             get : function() {
                 return this._id;
@@ -1218,7 +1217,7 @@ import VertexArray from './VertexArray.js';
         this.color = color;
     }
 
-    defineProperties(PickId.prototype, {
+    Object.defineProperties(PickId.prototype, {
         object : {
             get : function() {
                 return this._pickObjects[this.key];

@@ -1,6 +1,5 @@
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import WebGLConstants from './WebGLConstants.js';
 
@@ -158,4 +157,4 @@ import WebGLConstants from './WebGLConstants.js';
 
         return new Uint16Array(sourceArray, byteOffset, length);
     };
-export default freezeObject(IndexDatatype);
+export default Object.freeze(IndexDatatype);

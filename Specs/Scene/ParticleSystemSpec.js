@@ -52,6 +52,7 @@ describe('Scene/ParticleSystem', function() {
         expect(p.lifetime).toEqual(Number.MAX_VALUE);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(false);
     });
 
     it('constructor', function() {
@@ -77,7 +78,8 @@ describe('Scene/ParticleSystem', function() {
             image : 'url/to/image',
             minimumImageSize : new Cartesian2(28.0, 30.0),
             maximumImageSize : new Cartesian2(29.0, 31.0),
-            lifetime : 32.0
+            lifetime : 32.0,
+            sizeInMeters : true
         };
         var p = new ParticleSystem(options);
         expect(p.show).toEqual(options.show);
@@ -104,6 +106,7 @@ describe('Scene/ParticleSystem', function() {
         expect(p.lifetime).toEqual(options.lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(true);
     });
 
     it('getters/setters', function() {
@@ -129,6 +132,7 @@ describe('Scene/ParticleSystem', function() {
         var minimumImageSize = new Cartesian2(28.0, 30.0);
         var maximumImageSize = new Cartesian2(29.0, 31.0);
         var lifetime = 32.0;
+        var sizeInMeters = true;
 
         var p = new ParticleSystem();
         p.show = show;
@@ -153,6 +157,7 @@ describe('Scene/ParticleSystem', function() {
         p.minimumImageSize = Cartesian2.clone(minimumImageSize, new Cartesian2());
         p.maximumImageSize = Cartesian2.clone(maximumImageSize, new Cartesian2());
         p.lifetime = lifetime;
+        p.sizeInMeters = sizeInMeters;
 
         expect(p.show).toEqual(show);
         expect(p.forces).toEqual(forces);
@@ -178,6 +183,7 @@ describe('Scene/ParticleSystem', function() {
         expect(p.lifetime).toEqual(lifetime);
         expect(p.complete).toBeDefined();
         expect(p.isComplete).toEqual(false);
+        expect(p.sizeInMeters).toEqual(sizeInMeters);
     });
 
     it('throws with invalid emitter', function() {

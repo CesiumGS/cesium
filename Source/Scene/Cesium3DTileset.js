@@ -6,7 +6,6 @@ import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -46,7 +45,7 @@ import TileBoundingSphere from './TileBoundingSphere.js';
 import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     /**
-     * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles tileset},
+     * A {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles tileset},
      * used for streaming massive heterogeneous 3D geospatial datasets.
      *
      * @alias Cesium3DTileset
@@ -75,7 +74,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
      * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
      * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
-     * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
+     * @param {Boolean} [options.skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
      * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
@@ -132,7 +131,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      *      dynamicScreenSpaceErrorHeightFalloff : 0.25
      * }));
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles specification}
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles specification}
      */
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -575,7 +574,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {Boolean}
          * @default true
          */
-        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
+        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
         this._skipLevelOfDetail = this.skipLevelOfDetail;
         this._disableSkipLevelOfDetail = false;
 
@@ -882,7 +881,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             });
     }
 
-    defineProperties(Cesium3DTileset.prototype, {
+    Object.defineProperties(Cesium3DTileset.prototype, {
         /**
          * NOTE: This getter exists so that `Picking.js` can differentiate between
          *       PrimitiveCollection and Cesium3DTileset objects without inflating
@@ -898,7 +897,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
-         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
+         * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-asset|asset schema reference}
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
@@ -939,7 +938,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         /**
          * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
          * <p>
-         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#reference-properties|properties schema reference}
+         * See the {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-properties|properties schema reference}
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
@@ -1065,7 +1064,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
         /**
          * The style, defined using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
+         * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language},
          * applied to each feature in the tileset.
          * <p>
          * Assign <code>undefined</code> to remove the style, which will restore the visual
@@ -1099,7 +1098,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          *    }
          * });
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
          */
         style : {
             get : function() {
@@ -1439,7 +1438,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * @type {*}
          * @readonly
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
          */
         extras : {
             get : function() {
@@ -1949,9 +1948,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         tileset._tileDebugLabels.update(frameState);
     }
 
-    function updateTiles(tileset, frameState, isRender) {
-        tileset._styleEngine.applyStyle(tileset, frameState);
+    function updateTiles(tileset, frameState, passOptions) {
+        tileset._styleEngine.applyStyle(tileset, passOptions);
 
+        var isRender = passOptions.isRender;
         var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
@@ -1988,13 +1988,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             if (isRender) {
                 tileVisible.raiseEvent(tile);
             }
-            tile.update(tileset, frameState);
+            tile.update(tileset, frameState, passOptions);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
         }
         for (i = 0; i < emptyLength; ++i) {
             tile = emptyTiles[i];
-            tile.update(tileset, frameState);
+            tile.update(tileset, frameState, passOptions);
         }
 
         var addedCommandsLength = commandList.length - lengthBeforeUpdate;
@@ -2202,7 +2202,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             requestTiles(tileset);
         }
 
-        updateTiles(tileset, frameState, isRender);
+        updateTiles(tileset, frameState, passOptions);
 
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);

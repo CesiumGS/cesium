@@ -1,5 +1,4 @@
 import Cartesian3 from '../Core/Cartesian3.js';
-import defineProperties from '../Core/defineProperties.js';
 import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 
     /**
@@ -15,7 +14,7 @@ import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
         this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
     }
 
-    defineProperties(QuadtreeOccluders.prototype, {
+    Object.defineProperties(QuadtreeOccluders.prototype, {
         /**
          * Gets the {@link EllipsoidalOccluder} that can be used to determine if a point is
          * occluded by an {@link Ellipsoid}.

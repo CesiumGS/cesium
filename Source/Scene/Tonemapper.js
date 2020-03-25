@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * A tonemapping algorithm when rendering with high dynamic range.
@@ -49,4 +48,4 @@ import freezeObject from '../Core/freezeObject.js';
                    tonemapper === Tonemapper.ACES;
         }
     };
-export default freezeObject(Tonemapper);
+export default Object.freeze(Tonemapper);

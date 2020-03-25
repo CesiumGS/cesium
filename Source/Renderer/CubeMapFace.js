@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import PixelDatatype from './PixelDatatype.js';
@@ -22,7 +21,7 @@ import PixelDatatype from './PixelDatatype.js';
         this._initialized = initialized;
     }
 
-    defineProperties(CubeMapFace.prototype, {
+    Object.defineProperties(CubeMapFace.prototype, {
         pixelFormat : {
             get : function() {
                 return this._pixelFormat;

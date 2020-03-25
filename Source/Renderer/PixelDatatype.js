@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -51,4 +50,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5));
         }
     };
-export default freezeObject(PixelDatatype);
+export default Object.freeze(PixelDatatype);
