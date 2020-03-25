@@ -10,7 +10,6 @@ import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
 
-
     /**
      * @private
      */
