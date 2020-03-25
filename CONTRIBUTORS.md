@@ -249,3 +249,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Julian Fell](https://github.com/jtfell)
 * [Richard Becker](https://github.com/richard3d)
 * [Daniel Leone](https://github.com/danielleone)
+* [Zhou Jiang](https://github.com/aboutqx)
