@@ -16,8 +16,6 @@ import { Pass } from '../../Source/Cesium.js';
 import { RenderState } from '../../Source/Cesium.js';
 import { Sampler } from '../../Source/Cesium.js';
 import { ShaderProgram } from '../../Source/Cesium.js';
-import { TextureMagnificationFilter } from '../../Source/Cesium.js';
-import { TextureMinificationFilter } from '../../Source/Cesium.js';
 import { VertexArray } from '../../Source/Cesium.js';
 import { BillboardCollection } from '../../Source/Cesium.js';
 import { BlendingState } from '../../Source/Cesium.js';
@@ -91,10 +89,7 @@ describe('Scene/Multifrustum', function() {
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = new Sampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
+        atlas.texture.sampler = Sampler.NEAREST;
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;
