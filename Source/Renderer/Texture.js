@@ -12,6 +12,7 @@ import ContextLimits from './ContextLimits.js';
 import MipmapHint from './MipmapHint.js';
 import PixelDatatype from './PixelDatatype.js';
 import Sampler from './Sampler.js';
+import TextureWrap from './TextureWrap.js';
 import TextureMagnificationFilter from './TextureMagnificationFilter.js';
 import TextureMinificationFilter from './TextureMinificationFilter.js';
 
