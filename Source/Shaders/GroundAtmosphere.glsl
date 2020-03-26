@@ -44,7 +44,8 @@ const float fKmESun = Km * ESun;
 const float fKr4PI = Kr * 4.0 * czm_pi;
 const float fKm4PI = Km * 4.0 * czm_pi;
 
-const vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+// Original: vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+const vec3 v3InvWavelength = vec3(5.60204474633241, 9.473284437923038, 19.64380261047721);
 
 const float fScaleDepth = 0.25;
 
