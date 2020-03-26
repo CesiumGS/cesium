@@ -475,10 +475,6 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         passState.framebuffer = originalFramebuffer;
     };
 
-    GlobeTranslucency.prototype.executeTranslucentCommands = function(translucentCommands, translucentCommandsLength, classificationCommands, classificationCommandsLength, globeCommandsLength, executeTranslucentCommandsFunction, executeCommandFunction, useOIT, scene, context, invertClassification, scenePassState) {
-
-    };
-
     GlobeTranslucency.prototype.isDestroyed = function() {
         return false;
     };

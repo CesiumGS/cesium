@@ -53,7 +53,6 @@ import DeviceOrientationCameraController from './DeviceOrientationCameraControll
 import Fog from './Fog.js';
 import FrameState from './FrameState.js';
 import GlobeDepth from './GlobeDepth.js';
-import GlobeTranslucency from './GlobeTranslucency.js';
 import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import InvertClassification from './InvertClassification.js';
 import JobScheduler from './JobScheduler.js';
