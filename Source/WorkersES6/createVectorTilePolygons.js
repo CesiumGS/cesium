@@ -136,7 +136,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
         AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer);
 
-        var decodedPositions = new Float32Array(positionsLength * 3);
+        var decodedPositions = new Float64Array(positionsLength * 3);
         for (i = 0; i < positionsLength; ++i) {
             var u = uBuffer[i];
             var v = vBuffer[i];

@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -71,4 +70,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
          */
         DECREMENT_WRAP : WebGLConstants.DECR_WRAP
     };
-export default freezeObject(StencilOperation);
+export default Object.freeze(StencilOperation);

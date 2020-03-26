@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import PerformanceWatchdog from '../PerformanceWatchdog/PerformanceWatchdog.js';
 
@@ -39,7 +38,7 @@ import PerformanceWatchdog from '../PerformanceWatchdog/PerformanceWatchdog.js';
             lowFrameRateMessage : options.lowFrameRateMessage
         });
 
-        defineProperties(viewer, {
+        Object.defineProperties(viewer, {
             performanceWatchdog : {
                 get : function() {
                     return performanceWatchdog;

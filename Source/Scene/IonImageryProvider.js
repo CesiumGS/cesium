@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import IonResource from '../Core/IonResource.js';
@@ -183,7 +182,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
             });
     }
 
-    defineProperties(IonImageryProvider.prototype, {
+    Object.defineProperties(IonImageryProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof IonImageryProvider.prototype

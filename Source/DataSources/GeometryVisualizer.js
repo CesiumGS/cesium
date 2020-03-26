@@ -141,7 +141,7 @@ import WallGeometryUpdater from './WallGeometryUpdater.js';
         if (supportsMaterialsforEntitiesOnTerrain) {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
                 groundMaterialBatches.push(new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, MaterialAppearance));
-                groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, PerInstanceColorAppearance);
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
             }
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {

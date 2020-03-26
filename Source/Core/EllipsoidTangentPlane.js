@@ -5,7 +5,6 @@ import Cartesian4 from './Cartesian4.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import IntersectionTests from './IntersectionTests.js';
@@ -51,7 +50,7 @@ import Transforms from './Transforms.js';
         this._plane = Plane.fromPointNormal(origin, normal);
     }
 
-    defineProperties(EllipsoidTangentPlane.prototype, {
+    Object.defineProperties(EllipsoidTangentPlane.prototype, {
         /**
          * Gets the ellipsoid.
          * @memberof EllipsoidTangentPlane.prototype

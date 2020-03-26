@@ -7,7 +7,6 @@ import Ellipsoid from './Ellipsoid.js';
 import EllipsoidGeodesic from './EllipsoidGeodesic.js';
 import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
 import IntersectionTests from './IntersectionTests.js';
-import isArray from './isArray.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
 import Plane from './Plane.js';
@@ -260,7 +259,7 @@ import Plane from './Plane.js';
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var hasHeightArray = isArray(height);
+        var hasHeightArray = Array.isArray(height);
 
         if (length < 1) {
             return [];
@@ -351,7 +350,7 @@ import Plane from './Plane.js';
         var length = positions.length;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var height = defaultValue(options.height, 0);
-        var hasHeightArray = isArray(height);
+        var hasHeightArray = Array.isArray(height);
 
         if (length < 1) {
             return [];

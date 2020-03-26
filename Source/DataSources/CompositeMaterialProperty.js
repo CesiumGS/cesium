@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import CompositeProperty from './CompositeProperty.js';
@@ -17,7 +16,7 @@ import Property from './Property.js';
         this._composite.definitionChanged.addEventListener(CompositeMaterialProperty.prototype._raiseDefinitionChanged, this);
     }
 
-    defineProperties(CompositeMaterialProperty.prototype, {
+    Object.defineProperties(CompositeMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

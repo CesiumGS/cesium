@@ -10,7 +10,6 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
@@ -159,7 +158,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this._hasFillTilesThisFrame = false;
     }
 
-    defineProperties(GlobeSurfaceTileProvider.prototype, {
+    Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
          * Gets or sets the color of the globe when no imagery is available.
          * @memberof GlobeSurfaceTileProvider.prototype
@@ -411,9 +410,7 @@ import TileSelectionResult from './TileSelectionResult.js';
                 },
                 blending : BlendingState.ALPHA_BLEND
             });
-        }
 
-        if (!this.backFaceCulling && !defined(this._disableCullingRenderState)) {
             var rs = clone(this._renderState, true);
             rs.cull.enabled = false;
             this._disableCullingRenderState = RenderState.fromCache(rs);
@@ -552,7 +549,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        if (frameState.fog.enabled) {
+        if (frameState.fog.enabled && !frameState.cameraUnderground) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
@@ -614,7 +611,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders)) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders) && !frameState.cameraUnderground) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -1545,11 +1542,13 @@ import TileSelectionResult from './TileSelectionResult.js';
             waterMaskTranslationAndScale = surfaceTile.fill.waterMaskTranslationAndScale;
         }
 
+        var cameraUnderground = frameState.cameraUnderground;
+
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
-        var enableFog = frameState.fog.enabled;
+        var enableFog = frameState.fog.enabled && !cameraUnderground;
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
         var castShadows = ShadowMode.castShadows(tileProvider.shadows);
         var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
@@ -1674,8 +1673,10 @@ import TileSelectionResult from './TileSelectionResult.js';
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
-        var firstPassRenderState = tileProvider.backFaceCulling ? tileProvider._renderState : tileProvider._disableCullingRenderState;
-        var otherPassesRenderState = tileProvider.backFaceCulling ? tileProvider._blendRenderState : tileProvider._disableCullingBlendRenderState;
+        var showSkirts = tileProvider.showSkirts && !cameraUnderground;
+        var backFaceCulling = tileProvider.backFaceCulling && !cameraUnderground;
+        var firstPassRenderState = backFaceCulling ? tileProvider._renderState : tileProvider._disableCullingRenderState;
+        var otherPassesRenderState = backFaceCulling ? tileProvider._blendRenderState : tileProvider._disableCullingBlendRenderState;
         var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
@@ -1922,7 +1923,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
             var count = surfaceTile.renderedMesh.indices.length;
-            if (!tileProvider.showSkirts) {
+            if (!showSkirts) {
                 count = surfaceTile.renderedMesh.indexCountWithoutSkirts;
             }
 

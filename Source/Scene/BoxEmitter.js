@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import CesiumMath from '../Core/Math.js';
 
     var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
@@ -28,7 +27,7 @@ import CesiumMath from '../Core/Math.js';
         this._dimensions = Cartesian3.clone(dimensions);
     }
 
-    defineProperties(BoxEmitter.prototype, {
+    Object.defineProperties(BoxEmitter.prototype, {
         /**
          * The width, height and depth dimensions of the box in meters.
          * @memberof BoxEmitter.prototype

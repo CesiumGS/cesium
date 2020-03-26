@@ -1,7 +1,6 @@
 import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
-import { defaultValue } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
 import { Math as CesiumMath } from '../../Source/Cesium.js';
@@ -37,13 +36,6 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
         ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
-    function computeKey(color, zIndex) {
-        var ui8 = new Uint8Array(color);
-        var ui32 = new Uint32Array(ui8.buffer);
-        zIndex = defaultValue(zIndex, 0);
-        return ui32[0] + ':' + zIndex;
-    }
-
     it('updates color attribute after rebuilding primitive', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;
@@ -75,13 +67,10 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
             var primitive = scene.groundPrimitives.get(0);
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             var red = [255, 0, 0, 255];
-            var redKey = computeKey(red);
             expect(attributes.color).toEqual(red);
 
-            // Verify we have 1 batch with the key for red
+            // Verify we have 1 batch
             expect(batch._batches.length).toEqual(1);
-            expect(batch._batches.contains(redKey)).toBe(true);
-            expect(batch._batches.get(redKey).key).toEqual(redKey);
 
             entity.ellipse.material = Color.GREEN;
             updater._onEntityPropertyChanged(entity, 'ellipse');
@@ -97,17 +86,53 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
                 var primitive = scene.groundPrimitives.get(0);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
                 var green = [0, 128, 0, 255];
-                var greenKey = computeKey(green);
                 expect(attributes.color).toEqual(green);
 
                 // Verify we have 1 batch with the key for green
                 expect(batch._batches.length).toEqual(1);
-                expect(batch._batches.contains(greenKey)).toBe(true);
-                expect(batch._batches.get(greenKey).key).toEqual(greenKey);
 
                 batch.removeAllPrimitives();
             });
         });
+    });
+
+    it('batches overlapping geometry separately', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives, ClassificationType.BOTH);
+        var entity = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                material : Color.RED
+            }
+        });
+
+        var entity2 = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                material : Color.RED
+            }
+        });
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(time, updater);
+
+        var updater2 = new EllipseGeometryUpdater(entity2, scene);
+        batch.add(time, updater2);
+
+        expect(batch._batches.length).toEqual(2);
     });
 
     it('updates with sampled distance display condition out of range', function() {
@@ -208,18 +233,6 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
         }
 
         var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives, ClassificationType.BOTH);
-        function buildEntity() {
-            return new Entity({
-                position : new Cartesian3(1234, 5678, 9101112),
-                ellipse : {
-                    semiMajorAxis : 2,
-                    semiMinorAxis : 1,
-                    height : 0,
-                    outline : true,
-                    outlineColor : Color.RED.withAlpha(0.5)
-                }
-            });
-        }
 
         function renderScene() {
             scene.initializeFrame();
@@ -228,8 +241,25 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
             return isUpdated;
         }
 
-        var entity1 = buildEntity();
-        var entity2 = buildEntity();
+        var entity1 = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 0.2,
+                semiMinorAxis : 0.1,
+                outline : true,
+                outlineColor : Color.RED.withAlpha(0.5)
+            }
+        });
+
+        var entity2 = new Entity({
+            position : new Cartesian3(1234, 4678, 9101112),
+            ellipse : {
+                semiMajorAxis : 0.2,
+                semiMinorAxis : 0.1,
+                outline : true,
+                outlineColor : Color.RED.withAlpha(0.5)
+            }
+        });
 
         var updater1 = new EllipseGeometryUpdater(entity1, scene);
         var updater2 = new EllipseGeometryUpdater(entity2, scene);
@@ -275,18 +305,6 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
         }
 
         var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives, ClassificationType.BOTH);
-        function buildEntity() {
-            return new Entity({
-                position : new Cartesian3(1234, 5678, 9101112),
-                ellipse : {
-                    semiMajorAxis : 2,
-                    semiMinorAxis : 1,
-                    height : 0,
-                    outline : true,
-                    outlineColor : Color.RED.withAlpha(0.5)
-                }
-            });
-        }
 
         function renderScene() {
             scene.initializeFrame();
@@ -295,11 +313,27 @@ describe('DataSources/StaticGroundGeometryColorBatch', function() {
             return isUpdated;
         }
 
-        var entity1 = buildEntity();
+        var entity1 = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 0.2,
+                semiMinorAxis : 0.1,
+                outline : true,
+                outlineColor : Color.RED.withAlpha(0.5)
+            }
+        });
         var updater1 = new EllipseGeometryUpdater(entity1, scene);
         batch.add(time, updater1);
 
-        var entity2 = buildEntity();
+        var entity2 = new Entity({
+            position : new Cartesian3(1234, 4678, 9101112),
+            ellipse : {
+                semiMajorAxis : 0.2,
+                semiMinorAxis : 0.1,
+                outline : true,
+                outlineColor : Color.RED.withAlpha(0.5)
+            }
+        });
         var updater2 = new EllipseGeometryUpdater(entity2, scene);
 
         return pollToPromise(renderScene)

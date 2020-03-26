@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -77,7 +76,7 @@ import CesiumInspectorViewModel from './CesiumInspectorViewModel.js';
         shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
         generalSection.appendChild(shaderCacheDisplay);
 
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6763
+        // https://github.com/CesiumGS/cesium/issues/6763
         // var globeDepth = createCheckbox('Show globe depth', 'globeDepth');
         // generalSection.appendChild(globeDepth);
         //
@@ -223,7 +222,7 @@ import CesiumInspectorViewModel from './CesiumInspectorViewModel.js';
         knockout.applyBindings(viewModel, this._element);
     }
 
-    defineProperties(CesiumInspector.prototype, {
+    Object.defineProperties(CesiumInspector.prototype, {
         /**
          * Gets the parent container.
          * @memberof CesiumInspector.prototype

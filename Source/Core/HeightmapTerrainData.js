@@ -3,7 +3,6 @@ import BoundingSphere from './BoundingSphere.js';
 import Cartesian3 from './Cartesian3.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import GeographicProjection from './GeographicProjection.js';
 import HeightmapEncoding from './HeightmapEncoding.js';
@@ -134,7 +133,7 @@ import TerrainProvider from './TerrainProvider.js';
         this._mesh = undefined;
     }
 
-    defineProperties(HeightmapTerrainData.prototype, {
+    Object.defineProperties(HeightmapTerrainData.prototype, {
         /**
          * An array of credits for this tile.
          * @memberof HeightmapTerrainData.prototype

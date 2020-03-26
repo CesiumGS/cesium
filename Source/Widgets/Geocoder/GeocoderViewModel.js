@@ -1,7 +1,6 @@
 import CartographicGeocoderService from '../../Core/CartographicGeocoderService.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Event from '../../Core/Event.js';
 import GeocodeType from '../../Core/GeocodeType.js';
@@ -229,7 +228,7 @@ import getElement from '../getElement.js';
         });
     }
 
-    defineProperties(GeocoderViewModel.prototype, {
+    Object.defineProperties(GeocoderViewModel.prototype, {
         /**
          * Gets the event triggered on flight completion.
          * @memberof GeocoderViewModel.prototype
