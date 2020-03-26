@@ -44,8 +44,6 @@ const float fKmESun = Km * ESun;
 const float fKr4PI = Kr * 4.0 * czm_pi;
 const float fKm4PI = Km * 4.0 * czm_pi;
 
-const vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
-
 const float fScaleDepth = 0.25;
 
 struct AtmosphereColor
@@ -65,6 +63,9 @@ float scale(float fCos)
 
 AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLighting, vec3 lightDirectionWC)
 {
+    // Shader compilation fails in IE if this variable is declared outside with the other const variables
+    vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+
     float fInnerRadius = czm_ellipsoidRadii.x;
     float fOuterRadius = czm_ellipsoidRadii.x * 1.025;
     float fOuterRadius2 = fOuterRadius * fOuterRadius;
