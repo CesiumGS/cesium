@@ -62,12 +62,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : pixelDatatype,
-            sampler : new Sampler({ // TODO
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         globeTranslucency._depthStencilTexture = new Texture({
@@ -91,12 +86,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({ // TODO
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         globeTranslucency._packedDepthFramebuffer = new Framebuffer({
@@ -356,7 +346,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             command.derivedCommands.globeTranslucency = derivedCommands;
 
             if (!defined(shaders[0]) || (derivedCommands.shaderProgramId !== command.shaderProgram.id) || globeTranslucencyModeChanged) {
-                derivedCommands.shaderProgramId = command.shaderProgram.id; // TODO should this be set for real?
+                derivedCommands.shaderProgramId = command.shaderProgram.id;
                 derivedCommands.globeTranslucencyMode = globeTranslucencyMode;
                 for (i = 0; i < length; ++i) {
                     commands[i].shaderProgram = getDerivedShaderProgram(frameState.context, command.shaderProgram, getShaderProgramFunctions[i], names[i]);
