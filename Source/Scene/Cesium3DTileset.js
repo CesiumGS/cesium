@@ -2051,7 +2051,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
-            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
+            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading, tileset.boundingSphere);
         }
 
         if (isRender) {

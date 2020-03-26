@@ -8,9 +8,6 @@ import Framebuffer from '../Renderer/Framebuffer.js';
 import PixelDatatype from '../Renderer/PixelDatatype.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 
     /**
      * A post process stage that will get the luminance value at each pixel and
@@ -138,12 +135,6 @@ import TextureWrap from '../Renderer/TextureWrap.js';
 
         var pixelFormat = PixelFormat.RGBA;
         var pixelDatatype = context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT;
-        var sampler = new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
 
         var length = Math.ceil(Math.log(Math.max(width, height)) / Math.log(3.0));
         var framebuffers = new Array(length);
@@ -158,7 +149,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
                     height : height,
                     pixelFormat : pixelFormat,
                     pixelDatatype : pixelDatatype,
-                    sampler : sampler
+                    sampler : Sampler.NEAREST
                 })]
             });
         }
@@ -172,7 +163,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
                 height : lastTexture.height,
                 pixelFormat : pixelFormat,
                 pixelDatatype : pixelDatatype,
-                sampler : sampler
+                sampler : Sampler.NEAREST
             })]
         });
 
