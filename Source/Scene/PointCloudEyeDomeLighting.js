@@ -205,7 +205,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
         return shader;
     }
 
-    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
+    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading, boundingVolume) {
         if (!isSupported(frameState.context)) {
             return;
         }
@@ -242,6 +242,8 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
 
         var clearCommand = this._clearCommand;
         var blendCommand = this._drawCommand;
+
+        blendCommand.boundingVolume = boundingVolume;
 
         // Blend EDL into the main FBO
         commandList.push(blendCommand);
