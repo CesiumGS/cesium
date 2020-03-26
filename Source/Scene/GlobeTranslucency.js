@@ -8,13 +8,12 @@ import DrawCommand from '../Renderer/DrawCommand.js';
 import Framebuffer from '../Renderer/Framebuffer.js';
 import Pass from '../Renderer/Pass.js';
 import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Renderbuffer from '../Renderer/Renderbuffer.js';
+import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
 import RenderState from '../Renderer/RenderState.js';
 import Sampler from '../Renderer/Sampler.js';
 import ShaderSource from '../Renderer/ShaderSource.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
 import BlendingState from './BlendingState.js';
 import CullFace from './CullFace.js';
@@ -26,6 +25,7 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
     function GlobeTranslucency() {
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
+        this._depthStencilRenderbuffer = undefined;
         this._framebuffer = undefined;
 
         this._packedDepthTexture = undefined;
@@ -42,13 +42,10 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         this._useHdr = undefined;
     }
 
-    GlobeTranslucency.isSupported = function(context) {
-        return context.depthTexture;
-    };
-
     function destroyResources(globeTranslucency) {
         globeTranslucency._colorTexture = globeTranslucency._colorTexture && !globeTranslucency._colorTexture.isDestroyed() && globeTranslucency._colorTexture.destroy();
         globeTranslucency._depthStencilTexture = globeTranslucency._depthStencilTexture && !globeTranslucency._depthStencilTexture.isDestroyed() && globeTranslucency._depthStencilTexture.destroy();
+        globeTranslucency._depthStencilRenderbuffer = globeTranslucency._depthStencilRenderbuffer && !globeTranslucency._depthStencilRenderbuffer.isDestroyed() && globeTranslucency._depthStencilRenderbuffer.destroy();
         globeTranslucency._framebuffer = globeTranslucency._framebuffer && !globeTranslucency._framebuffer.isDestroyed() && globeTranslucency._framebuffer.destroy();
         globeTranslucency._packedDepthTexture = globeTranslucency._packedDepthTexture && !globeTranslucency._packedDepthTexture.isDestroyed() && globeTranslucency._packedDepthTexture.destroy();
         globeTranslucency._packedDepthFramebuffer = globeTranslucency._packedDepthFramebuffer && !globeTranslucency._packedDepthFramebuffer.isDestroyed() && globeTranslucency._packedDepthFramebuffer.destroy();
@@ -65,18 +62,28 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             sampler : Sampler.NEAREST
         });
 
-        globeTranslucency._depthStencilTexture = new Texture({
-            context : context,
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
-        });
+        if (context.depthTexture) {
+            globeTranslucency._depthStencilTexture = new Texture({
+                context : context,
+                width : width,
+                height : height,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+            });
+        } else {
+            globeTranslucency._depthStencilRenderbuffer = new Renderbuffer({
+                context : context,
+                width : width,
+                height : height,
+                format : RenderbufferFormat.DEPTH_STENCIL
+            });
+        }
 
         globeTranslucency._framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeTranslucency._colorTexture],
             depthStencilTexture : globeTranslucency._depthStencilTexture,
+            depthStencilRenderbuffer : globeTranslucency._depthStencilRenderbuffer,
             destroyAttachments : false
         });
 
@@ -447,24 +454,24 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
             cullFace = cameraUnderground ? CullFace.FRONT : CullFace.BACK;
         }
 
+        var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
         var originalFramebuffer = passState.framebuffer;
-        passState.framebuffer = this._framebuffer;
 
         // Render to internal framebuffer and get the first depth peel
+        passState.framebuffer = this._framebuffer;
         executeCommands(globeCommands, globeCommandsLength, cullFace, true, executeCommandFunction, scene, context, passState);
 
-        // Pack depth into separate texture for ground polylines and textured ground primitives
-        var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
-        this._packedDepthCommand.execute(context, passState);
-        context.uniformState.globeDepthTexture = this._packedDepthTexture;
+        if (context.depthTexture) {
+            // Pack depth into separate texture for ground polylines and textured ground primitives
+            this._packedDepthCommand.execute(context, passState);
+            context.uniformState.globeDepthTexture = this._packedDepthTexture;
+        }
 
-        // Render classification
+        // Render classification on translucent faces
         executeCommands(classificationCommands, classificationCommandsLength, undefined, false, executeCommandFunction, scene, context, passState);
 
-        // Unset temporary globeDepthTexture
+        // Unset temporary state
         context.uniformState.globeDepthTexture = originalGlobeDepthTexture;
-
-        // Unset temporary framebuffer
         passState.framebuffer = originalFramebuffer;
     };
 

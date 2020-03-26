@@ -1793,7 +1793,7 @@ import View from './View.js';
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
         frameState.cameraUnderground = this._cameraUnderground;
-        frameState.globeTranslucent = defined(globe) && (globe.translucencyMode !== GlobeTranslucencyMode.DISABLED) && GlobeTranslucency.isSupported(frameState.context);
+        frameState.globeTranslucent = defined(globe) && (globe.translucencyMode !== GlobeTranslucencyMode.DISABLED);
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
             frameState.specularEnvironmentMaps = this._specularEnvironmentMapAtlas.texture;

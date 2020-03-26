@@ -37,10 +37,9 @@ import ShadowMap from './ShadowMap.js';
         updateFrustums(near, far, farToNearRatio, numFrustums, scene.logarithmicDepthBuffer, frustumCommandsList, false, undefined);
 
         var globeDepth;
-        var globeTranslucency;
+        var globeTranslucency = new GlobeTranslucency();
         if (context.depthTexture) {
             globeDepth = new GlobeDepth();
-            globeTranslucency = new GlobeTranslucency();
         }
 
         var oit;
