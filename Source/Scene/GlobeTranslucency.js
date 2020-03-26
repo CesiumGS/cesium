@@ -372,8 +372,13 @@ import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
         var derivedCommands = command.derivedCommands.globeTranslucency;
         if (globeTranslucencyMode === GlobeTranslucencyMode.ENABLED) {
             frameState.commandList.push(derivedCommands.globeCommand);
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            if (frameState.cameraUnderground) {
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            } else {
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            }
         } else {
             frameState.commandList.push(derivedCommands.backFaceCommand);
             frameState.commandList.push(derivedCommands.frontFaceCommand);
