@@ -7,6 +7,7 @@ Change Log
 
 * Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
 * The `CesiumUnminified` build now includes sourcemaps.
+* Added the ability to edit CesiumJS shaders on-the-fly using the [SpectorJS](https://spector.babylonjs.com/) Shader Editor.
 
 ##### Fixes :wrench:
 
