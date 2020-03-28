@@ -179,14 +179,6 @@ import WebGLConstants from '../Core/WebGLConstants.js';
             }
         }),
 
-        czm_classificationTexture : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.SAMPLER_2D,
-            getValue : function(uniformState) {
-                return uniformState.classificationTexture;
-            }
-        }),
-
         /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
          * transforms model coordinates to world coordinates.

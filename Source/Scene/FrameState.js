@@ -144,6 +144,11 @@ import SceneMode from './SceneMode.js';
         this.globeTranslucent = false;
 
         /**
+         * The {@link GlobeTranslucency} object used by the scene.
+         */
+        this.globeTranslucency = undefined;
+
+        /**
          * The culling volume.
          *
          * @type {CullingVolume}

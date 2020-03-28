@@ -1,5 +1,6 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
 import destroyObject from '../Core/destroyObject.js';
 import defined from '../Core/defined.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -194,10 +195,11 @@ function getTranslucentShaderProgram(vs, fs) {
 
     var globeTranslucencyMain =
         '\n\n' +
+        'uniform sampler2D u_classificationTexture; \n' +
         'void main() \n' +
         '{ \n' +
         '    czm_globe_translucency_main(); \n' +
-        '    vec4 classificationColor = texture2D(czm_classificationTexture, gl_FragCoord.xy / czm_viewport.zw); \n' +
+        '    vec4 classificationColor = texture2D(u_classificationTexture, gl_FragCoord.xy / czm_viewport.zw); \n' +
         '    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n' +
         '} \n';
     sources.push(globeTranslucencyMain);
@@ -269,7 +271,46 @@ function getDerivedRenderState(renderState, getRenderStateFunction, cache) {
     return cachedRenderState;
 }
 
-function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderStateFunctions) {
+function getTranslucencyUniformMap(globeTranslucency) {
+    return {
+        u_classificationTexture : function() {
+            return globeTranslucency._colorTexture;
+        }
+    };
+}
+
+function combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction) {
+    var propertyName;
+    var uniformMapChanged = true;
+
+    if (defined(derivedUniformMap)) {
+        uniformMapChanged = false;
+        for (propertyName in uniformMap) {
+            if (uniformMap.hasOwnProperty(propertyName)) {
+                if (!defined(derivedUniformMap[propertyName])) {
+                    uniformMapChanged = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (uniformMapChanged) {
+        return combine(uniformMap, getDerivedUniformMapFunction(globeTranslucency), false);
+    }
+
+    return derivedUniformMap;
+}
+
+function getDerivedUniformMap(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction) {
+    if (!defined(getDerivedUniformMapFunction)) {
+        return uniformMap;
+    }
+
+    return combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction);
+}
+
+function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderStateFunctions, getUniformMapFunctions) {
     var length = names.length;
     var renderStateCaches = new Array(length);
     for (var i = 0; i < length; ++i) {
@@ -281,10 +322,12 @@ function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderS
     this.passes = passes;
     this.getShaderProgramFunctions = getShaderProgramFunctions;
     this.getRenderStateFunctions = getRenderStateFunctions;
+    this.getUniformMapFunctions = getUniformMapFunctions;
     this.commands = new Array(length);
     this.shaders = new Array(length);
     this.renderStates = new Array(length);
     this.renderStateCaches = renderStateCaches;
+    this.uniformMaps = new Array(length);
 }
 
 var derivedCommandPacks = {};
@@ -296,7 +339,8 @@ function getDerivedCommandPack(globeTranslucencyMode) {
                 ['backAndFrontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
                 [Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
                 [undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
-                [getGlobeRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState]
+                [getGlobeRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
+                [undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
             );
         }
         return derivedCommandPacks.enabled;
@@ -306,7 +350,8 @@ function getDerivedCommandPack(globeTranslucencyMode) {
             ['backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
             [Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
             [getBackFaceShaderProgram, undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
-            [getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState]
+            [getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
+            [undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
         );
     }
     return derivedCommandPacks.frontFacesOnly;
@@ -315,7 +360,7 @@ function getDerivedCommandPack(globeTranslucencyMode) {
 GlobeTranslucency.updateDerivedCommand = function(command, globeTranslucencyMode, frameState) {
     var derivedCommands = command.derivedCommands.globeTranslucency;
 
-    var globeTranslucencyModeChanged = defined(derivedCommands) && (derivedCommands.globeTraslucencyMode !== globeTranslucencyMode);
+    var globeTranslucencyModeChanged = defined(derivedCommands) && (derivedCommands.globeTranslucencyMode !== globeTranslucencyMode);
 
     if (!defined(derivedCommands) || command.dirty || globeTranslucencyModeChanged) {
         var derivedCommandsPack = getDerivedCommandPack(globeTranslucencyMode);
@@ -324,10 +369,12 @@ GlobeTranslucency.updateDerivedCommand = function(command, globeTranslucencyMode
         var passes = derivedCommandsPack.passes;
         var getShaderProgramFunctions = derivedCommandsPack.getShaderProgramFunctions;
         var getRenderStateFunctions = derivedCommandsPack.getRenderStateFunctions;
+        var getUniformMapFunctions = derivedCommandsPack.getUniformMapFunctions;
         var commands = derivedCommandsPack.commands;
         var shaders = derivedCommandsPack.shaders;
         var renderStates = derivedCommandsPack.renderStates;
         var renderStateCaches = derivedCommandsPack.renderStateCaches;
+        var uniformMaps = derivedCommandsPack.uniformMaps;
 
         command.dirty = false;
         derivedCommands = defined(derivedCommands) ? derivedCommands : {};
@@ -341,12 +388,20 @@ GlobeTranslucency.updateDerivedCommand = function(command, globeTranslucencyMode
             for (i = 0; i < length; ++i) {
                 shaders[i] = commands[i].shaderProgram;
                 renderStates[i] = commands[i].renderState;
+                uniformMaps[i] = commands[i].uniformMap;
+            }
+        } else {
+            for (i = 0; i < length; ++i) {
+                shaders[i] = undefined;
+                renderStates[i] = undefined;
+                uniformMaps[i] = undefined;
             }
         }
 
         for (i = 0; i < length; ++i) {
             commands[i] = DrawCommand.shallowClone(command, commands[i]);
             commands[i].pass = passes[i];
+            commands[i].uniformMap = getDerivedUniformMap(frameState.globeTranslucency, command.uniformMap, uniformMaps[i], getUniformMapFunctions[i]);
             derivedCommands[names[i]] = commands[i];
         }
 
@@ -396,9 +451,6 @@ GlobeTranslucency.prototype.updateAndClear = function(hdr, viewport, context, pa
 
     updateResources(this, context, width, height, hdr);
     updateCommands(this, context, width, height, passState);
-
-    // TODO remove
-    context.uniformState.classificationTexture = this._colorTexture;
 
     this._useHdr = hdr;
 };

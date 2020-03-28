@@ -1601,11 +1601,13 @@ import TileSelectionResult from './TileSelectionResult.js';
         if (showOceanWaves) {
             --maxTextures;
         }
-
         if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
             --maxTextures;
         }
         if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
+            --maxTextures;
+        }
+        if (frameState.globeTranslucent) {
             --maxTextures;
         }
 
