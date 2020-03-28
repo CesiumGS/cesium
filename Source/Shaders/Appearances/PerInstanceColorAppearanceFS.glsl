@@ -11,7 +11,7 @@ void main()
     normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
 #endif
 
-    vec4 color = czm_gammaCorrect(v_color);
+    vec4 color = czm_gammaCorrect(czm_readNonPerspective(v_color, gl_FragCoord.w));
 
     czm_materialInput materialInput;
     materialInput.normalEC = normalEC;
