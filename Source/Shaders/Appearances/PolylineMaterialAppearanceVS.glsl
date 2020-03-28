@@ -22,9 +22,9 @@ void main()
     vec4 prev = czm_computePrevPosition();
     vec4 next = czm_computeNextPosition();
 
-    v_width = width;
-    v_st = st;
-
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_polylineAngle);
     gl_Position = czm_viewportOrthographic * positionWC;
+
+    v_width = width * gl_Position.w;
+    v_st = st * gl_Position.w;
 }

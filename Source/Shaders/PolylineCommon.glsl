@@ -125,7 +125,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     }
 
     vec2 offset = direction * expandDirection * expandWidth * czm_pixelRatio;
-    return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
+    return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0) * (czm_projection * clippedPositionEC).w;
 }
 
 vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float expandDirection, float width, bool usePrevious, out float angle)
