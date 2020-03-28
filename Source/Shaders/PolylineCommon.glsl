@@ -3,7 +3,8 @@ void clipLineSegmentToNearPlane(
     vec3 p1,
     out vec4 positionWC,
     out bool clipped,
-    out bool culledByNearPlane)
+    out bool culledByNearPlane,
+    out vec4 clippedPositionEC)
 {
     culledByNearPlane = false;
     clipped = false;
@@ -18,7 +19,7 @@ void clipLineSegmentToNearPlane(
     {
         culledByNearPlane = true;
     }
-    else if (endPoint0Distance < 0.0 && abs(denominator) > czm_epsilon7)
+    else if (endPoint0Distance < 0.0)
     {
         // t = (-plane distance - dot(plane normal, ray origin)) / dot(plane normal, ray direction)
         float t = (czm_currentFrustum.x + p0.z) / denominator;
@@ -33,7 +34,8 @@ void clipLineSegmentToNearPlane(
         }
     }
 
-    positionWC = czm_eyeToWindowCoordinates(vec4(p0, 1.0));
+    clippedPositionEC = vec4(p0, 1.0);
+    positionWC = czm_eyeToWindowCoordinates(clippedPositionEC);
 }
 
 vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, float expandDirection, float width, bool usePrevious, out float angle)
@@ -61,9 +63,14 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     angle = floor(angle / czm_piOverFour + 0.5) * czm_piOverFour;
 #endif
 
-    clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, clipped, culledByNearPlane);
-    clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, clipped, culledByNearPlane);
-    clipLineSegmentToNearPlane(positionEC.xyz, usePrevious ? prevEC.xyz : nextEC.xyz, endPointWC, clipped, culledByNearPlane);
+    vec4 clippedPositionEC;
+    clipLineSegmentToNearPlane(prevEC.xyz, positionEC.xyz, p0, clipped, culledByNearPlane, clippedPositionEC);
+    clipLineSegmentToNearPlane(nextEC.xyz, positionEC.xyz, p1, clipped, culledByNearPlane, clippedPositionEC);
+    clipLineSegmentToNearPlane(positionEC.xyz, usePrevious ? prevEC.xyz : nextEC.xyz, endPointWC, clipped, culledByNearPlane, clippedPositionEC);
+
+#ifdef LOG_DEPTH
+    czm_vertexLogDepth(czm_projection * clippedPositionEC);
+#endif
 
     if (culledByNearPlane)
     {

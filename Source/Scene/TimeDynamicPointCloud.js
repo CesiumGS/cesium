@@ -723,7 +723,7 @@ import ShadowMode from './ShadowMode.js';
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
         if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
-            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
+            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading, this.boundingSphere);
         }
     };
 
