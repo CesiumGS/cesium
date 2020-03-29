@@ -107,6 +107,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.backFaceCulling = true;
         this.frontTranslucencyByDistance = undefined;
         this.backTranslucencyByDistance = undefined;
+        this.translucent = false;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -447,7 +448,7 @@ import TileSelectionResult from './TileSelectionResult.js';
     };
 
     function pushCommand(tileProvider, command, frameState) {
-        if (frameState.globeTranslucent) {
+        if (tileProvider.translucent) {
             GlobeTranslucency.pushDerivedCommands(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
         } else {
             frameState.commandList.push(command);
@@ -560,7 +561,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         var distance = this.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
-        if (frameState.fog.enabled && !frameState.cameraUnderground && !frameState.globeTranslucent) {
+        if (frameState.fog.enabled && !frameState.cameraUnderground && !this.translucent) {
             if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
                 // Tile is completely in fog so return that it is not visible.
                 return Visibility.NONE;
@@ -622,7 +623,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders) && !frameState.cameraUnderground && !frameState.globeTranslucent) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders) && !frameState.cameraUnderground && !this.translucent) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -1563,7 +1564,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         var cameraUnderground = frameState.cameraUnderground;
-        var translucent = frameState.globeTranslucent;
+        var translucent = tileProvider.translucent;
 
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;

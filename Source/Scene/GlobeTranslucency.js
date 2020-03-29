@@ -217,16 +217,58 @@ function getTranslucencyModeFromGlobe(globe) {
 }
 
 GlobeTranslucency.isTranslucent = function(globe) {
+    if (!defined(globe) || !globe.show) {
+        return false;
+    }
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
     return getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
 };
 
 GlobeTranslucency.isSunVisibleThroughGlobe = function(globe, cameraUnderground) {
+    if (!defined(globe) || !globe.show) {
+        return true;
+    }
+
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
     var frontOpaque = getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
     var backOpaque = getBackTranslucencyMode(translucencyMode) === TranslucencyMode.BACK_OPAQUE;
 
+    // The sun is visible through the globe if the front and back faces are translucent when above ground
+    // or if front faces are translucent when below ground
     return !frontOpaque && (cameraUnderground || !backOpaque);
+};
+
+GlobeTranslucency.isSkyAtmosphereVisible = function(globe) {
+    if (!defined(globe) || !globe.show) {
+        return false;
+    }
+
+    var translucencyMode = getTranslucencyModeFromGlobe(globe);
+    var frontInvisible = getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_INVISIBLE;
+    var backInvisible = getBackTranslucencyMode(translucencyMode) === TranslucencyMode.BACK_INVISIBLE;
+
+    // Sky atmosphere is visible if the globe is not completely invisible
+    return !frontInvisible || !backInvisible;
+};
+
+GlobeTranslucency.isEnvironmentVisible = function(globe, cameraUnderground) {
+    if (!defined(globe) || !globe.show) {
+        return true;
+    }
+
+    // The environment is visible if the camera is above ground or underground with translucency
+    var translucencyMode = getTranslucencyModeFromGlobe(globe);
+    return !cameraUnderground || getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
+};
+
+GlobeTranslucency.useDepthPlane = function(globe, cameraUnderground) {
+    if (cameraUnderground || !defined(globe) || !globe.show) {
+        return false;
+    }
+
+    // Use the depth plane when the globe is opaque
+    var translucencyMode = getTranslucencyModeFromGlobe(globe);
+    return getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
 };
 
 function removeDefine(defines, defineToRemove) {

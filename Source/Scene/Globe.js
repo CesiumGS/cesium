@@ -23,6 +23,7 @@ import GroundAtmosphere from '../Shaders/GroundAtmosphere.js';
 import when from '../ThirdParty/when.js';
 import GlobeSurfaceShaderSet from './GlobeSurfaceShaderSet.js';
 import GlobeSurfaceTileProvider from './GlobeSurfaceTileProvider.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 import ImageryLayerCollection from './ImageryLayerCollection.js';
 import QuadtreePrimitive from './QuadtreePrimitive.js';
 import SceneMode from './SceneMode.js';
@@ -1023,6 +1024,7 @@ import ShadowMode from './ShadowMode.js';
             tileProvider.backFaceCulling = this.backFaceCulling;
             tileProvider.frontTranslucencyByDistance = this.frontTranslucencyByDistanceFinal;
             tileProvider.backTranslucencyByDistance = this.backTranslucencyByDistanceFinal;
+            tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
             surface.beginFrame(frameState);
         }
     };

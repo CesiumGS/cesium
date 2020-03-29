@@ -1739,7 +1739,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show && !scene._cameraUnderground && !scene._frameState.globeTranslucent) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show && !scene._cameraUnderground && !GlobeTranslucency.isTranslucent(globe)) {
             var ellipsoid = globe.ellipsoid;
             var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + minimumTerrainHeight;
@@ -1792,7 +1792,6 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
         frameState.cameraUnderground = this._cameraUnderground;
-        frameState.globeTranslucent = defined(globe) && GlobeTranslucency.isTranslucent(globe);
         frameState.globeTranslucency = this._view.globeTranslucency;
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
@@ -2235,7 +2234,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var globeTranslucent = frameState.globeTranslucent;
+        var globeTranslucent = GlobeTranslucency.isTranslucent(scene._globe);
         var globeTranslucency = view.globeTranslucency;
         var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = false;
         var clearDepth = scene._depthClearCommand;
@@ -2885,18 +2884,17 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         var offscreenPass = frameState.passes.offscreen;
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
-        var globeTranslucent = frameState.globeTranslucent;
         var cameraUnderground = this._cameraUnderground;
-        var sunVisibleThroughGlobe = defined(globe) && GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
+        var sunVisibleThroughGlobe = GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
 
-        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (cameraUnderground && !globeTranslucent)) {
+        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || !GlobeTranslucency.isEnvironmentVisible(globe, cameraUnderground)) {
             environmentState.skyAtmosphereCommand = undefined;
             environmentState.skyBoxCommand = undefined;
             environmentState.sunDrawCommand = undefined;
             environmentState.sunComputeCommand = undefined;
             environmentState.moonCommand = undefined;
         } else {
-            if (defined(skyAtmosphere)) {
+            if (defined(skyAtmosphere) && GlobeTranslucency.isSkyAtmosphereVisible(globe)) {
                 if (defined(globe)) {
                     skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
                     environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
@@ -2917,7 +2915,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D);
-        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D && !cameraUnderground && !globeTranslucent;
+        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D && GlobeTranslucency.useDepthPlane(globe, cameraUnderground);
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface
@@ -3139,7 +3137,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
             }
         }
 
-        if (frameState.globeTranslucent) {
+        if (GlobeTranslucency.isTranslucent(scene._globe)) {
             view.globeTranslucency.updateAndClear(scene._hdr, view.viewport, context, passState);
         }
     }
