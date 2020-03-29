@@ -53,7 +53,6 @@ import DeviceOrientationCameraController from './DeviceOrientationCameraControll
 import Fog from './Fog.js';
 import FrameState from './FrameState.js';
 import GlobeDepth from './GlobeDepth.js';
-import GlobeTranslucencyMode from './GlobeTranslucencyMode.js';
 import InvertClassification from './InvertClassification.js';
 import JobScheduler from './JobScheduler.js';
 import MapMode2D from './MapMode2D.js';
@@ -74,6 +73,7 @@ import SunLight from './SunLight.js';
 import SunPostProcess from './SunPostProcess.js';
 import TweenCollection from './TweenCollection.js';
 import View from './View.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 
     var requestRenderAfterFrame = function (scene) {
         return function () {
@@ -1792,7 +1792,7 @@ import View from './View.js';
         frameState.useLogDepth = this._logDepthBuffer && !(this.camera.frustum instanceof OrthographicFrustum || this.camera.frustum instanceof OrthographicOffCenterFrustum);
         frameState.light = this.light;
         frameState.cameraUnderground = this._cameraUnderground;
-        frameState.globeTranslucent = defined(globe) && (globe.translucencyMode !== GlobeTranslucencyMode.DISABLED);
+        frameState.globeTranslucent = defined(globe) && GlobeTranslucency.isTranslucent(globe);
         frameState.globeTranslucency = this._view.globeTranslucency;
 
         if (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) {
@@ -2293,7 +2293,7 @@ import View from './View.js';
             var length = frustumCommands.indices[Pass.GLOBE];
 
             if (globeTranslucent) {
-                globeTranslucency.executeGlobeCommands(commands, length, scene._cameraUnderground, scene.globe.translucencyMode, executeCommand, scene, context, passState);
+                globeTranslucency.executeGlobeCommands(commands, length, scene._cameraUnderground, scene._globe, executeCommand, scene, context, passState);
             } else {
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
@@ -2314,7 +2314,7 @@ import View from './View.js';
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
             if (globeTranslucent) {
-                globeTranslucency.executeGlobeClassificationCommands(frustumCommands, scene._cameraUnderground, scene.globe.translucencyMode, executeCommand, scene, context, passState);
+                globeTranslucency.executeGlobeClassificationCommands(frustumCommands, scene._cameraUnderground, scene._globe, executeCommand, scene, context, passState);
             } else {
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
@@ -2886,9 +2886,10 @@ import View from './View.js';
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
         var globeTranslucent = frameState.globeTranslucent;
-        var sunVisibleThroughGlobe = globeTranslucent && (globe.translucencyMode === GlobeTranslucencyMode.ENABLED);
+        var cameraUnderground = this._cameraUnderground;
+        var sunVisibleThroughGlobe = GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
 
-        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (this._cameraUnderground && !globeTranslucent)) {
+        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (cameraUnderground && !globeTranslucent)) {
             environmentState.skyAtmosphereCommand = undefined;
             environmentState.skyBoxCommand = undefined;
             environmentState.sunDrawCommand = undefined;
@@ -2916,7 +2917,7 @@ import View from './View.js';
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D);
-        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D && !this._cameraUnderground && !globeTranslucent;
+        var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && this.mode === SceneMode.SCENE3D && !cameraUnderground && !globeTranslucent;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
             // not depth tested against terrain so primitives on the backface

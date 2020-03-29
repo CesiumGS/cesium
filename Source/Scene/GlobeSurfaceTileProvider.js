@@ -105,8 +105,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this.showSkirts = true;
         this.backFaceCulling = true;
-        this.translucencyByDistance = undefined;
-        this.translucencyMode = undefined;
+        this.frontTranslucencyByDistance = undefined;
+        this.backTranslucencyByDistance = undefined;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -448,7 +448,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
     function pushCommand(tileProvider, command, frameState) {
         if (frameState.globeTranslucent && frameState.passes.render) {
-            GlobeTranslucency.pushDerivedCommands(command, tileProvider.translucencyMode, frameState);
+            GlobeTranslucency.pushDerivedCommands(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
         } else {
             frameState.commandList.push(command);
         }
@@ -1306,8 +1306,11 @@ import TileSelectionResult from './TileSelectionResult.js';
             u_colorsToAlpha : function() {
                 return this.properties.colorsToAlpha;
             },
-            u_translucencyByDistance : function() {
-                return this.properties.translucencyByDistance;
+            u_frontTranslucencyByDistance : function() {
+                return this.properties.frontTranslucencyByDistance;
+            },
+            u_backTranslucencyByDistance : function() {
+                return this.properties.backTranslucencyByDistance;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -1354,7 +1357,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
                 localizedCartographicLimitRectangle : new Cartesian4(),
 
-                translucencyByDistance : new Cartesian4()
+                frontTranslucencyByDistance : new Cartesian4(),
+                backTranslucencyByDistance : new Cartesian4()
             }
         };
 
@@ -1607,7 +1611,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
-        if (frameState.globeTranslucent) {
+        if (translucent) {
             --maxTextures;
         }
 
@@ -1753,10 +1757,11 @@ import TileSelectionResult from './TileSelectionResult.js';
             uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            var translucencyByDistance = tileProvider.translucencyByDistance;
-            if (defined(translucencyByDistance)) {
-                Cartesian4.fromElements(translucencyByDistance.near, translucencyByDistance.nearValue, translucencyByDistance.far, translucencyByDistance.farValue, uniformMapProperties.translucencyByDistance);
-            }
+            var frontTranslucencyByDistance = cameraUnderground ? tileProvider.backTranslucencyByDistance : tileProvider.frontTranslucencyByDistance;
+            var backTranslucencyByDistance = cameraUnderground ? tileProvider.frontTranslucencyByDistance : tileProvider.backTranslucencyByDistance;
+
+            Cartesian4.fromElements(frontTranslucencyByDistance.near, frontTranslucencyByDistance.nearValue, frontTranslucencyByDistance.far, frontTranslucencyByDistance.farValue, uniformMapProperties.frontTranslucencyByDistance);
+            Cartesian4.fromElements(backTranslucencyByDistance.near, backTranslucencyByDistance.nearValue, backTranslucencyByDistance.far, backTranslucencyByDistance.farValue, uniformMapProperties.backTranslucencyByDistance);
 
             var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;
             if (highlightFillTile) {
@@ -1990,7 +1995,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, tileProvider.translucencyMode, frameState);
+                GlobeTranslucency.updateDerivedCommand(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
             }
 
             pushCommand(tileProvider, command, frameState);
