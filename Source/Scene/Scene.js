@@ -2885,16 +2885,18 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         var skyAtmosphere = this.skyAtmosphere;
         var globe = this.globe;
         var cameraUnderground = this._cameraUnderground;
-        var sunVisibleThroughGlobe = GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
+        var environmentVisible = GlobeTranslucency.isEnvironmentVisible(globe, cameraUnderground);
+        var sunVisibleThroughGlobe = environmentVisible && GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
+        var skyAtmosphereVisible = environmentVisible && GlobeTranslucency.isSkyAtmosphereVisible(globe);
 
-        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || !GlobeTranslucency.isEnvironmentVisible(globe, cameraUnderground)) {
+        if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || !environmentVisible) {
             environmentState.skyAtmosphereCommand = undefined;
             environmentState.skyBoxCommand = undefined;
             environmentState.sunDrawCommand = undefined;
             environmentState.sunComputeCommand = undefined;
             environmentState.moonCommand = undefined;
         } else {
-            if (defined(skyAtmosphere) && GlobeTranslucency.isSkyAtmosphereVisible(globe)) {
+            if (defined(skyAtmosphere) && skyAtmosphereVisible) {
                 if (defined(globe)) {
                     skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting && globe.dynamicAtmosphereLighting, globe.dynamicAtmosphereLightingFromSun);
                     environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
@@ -2926,7 +2928,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         environmentState.renderTranslucentDepthForPick = false;
         environmentState.useWebVR = this._useWebVR && this.mode !== SceneMode.SCENE2D  && !offscreenPass;
 
-        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var occluder = (frameState.mode === SceneMode.SCENE3D) && !sunVisibleThroughGlobe ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
         // get user culling volume minus the far plane.
@@ -2938,8 +2940,8 @@ import GlobeTranslucency from './GlobeTranslucency.js';
 
         // Determine visibility of celestial and terrestrial environment effects.
         environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = sunVisibleThroughGlobe || this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = sunVisibleThroughGlobe || this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
+        environmentState.isSunVisible = this.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = this.isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
         var envMaps = this.specularEnvironmentMaps;
         var envMapAtlas = this._specularEnvironmentMapAtlas;
