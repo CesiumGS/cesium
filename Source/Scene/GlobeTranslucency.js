@@ -40,6 +40,8 @@ function GlobeTranslucency() {
     this._useScissorTest = false;
     this._scissorRectangle = undefined;
     this._useHdr = undefined;
+
+    this._derivedCommandPack = undefined;
 }
 
 function destroyResources(globeTranslucency) {
@@ -395,45 +397,26 @@ function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderS
     this.uniformMaps = new Array(length);
 }
 
-var derivedCommandPacks = {};
-
-function getDerivedCommandPack(translucencyMode) {
-    if (defined(derivedCommandPacks[translucencyMode])) {
-        return derivedCommandPacks[translucencyMode];
-    }
-
-    var derivedCommandPack;
-
-    if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)) {
-        derivedCommandPack = new DerivedCommandPack(
-            ['backAndFrontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
-            [Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
-            [undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
-            [getBackAndFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
-            [undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
-        );
-    } else {
-        derivedCommandPack = new DerivedCommandPack(
-            ['backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
-            [Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
-            [getBackFaceShaderProgram, undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
-            [getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
-            [undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
+function getDerivedCommandPack(frameState) {
+    var globeTranslucency = frameState.globeTranslucency;
+    if (!defined(globeTranslucency._derivedCommandPack)) {
+        globeTranslucency._derivedCommandPack = new DerivedCommandPack(
+            ['backAndFrontFaceCommand', 'backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
+            [Pass.GLOBE, Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
+            [undefined, getBackFaceShaderProgram, undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
+            [getBackAndFrontFaceRenderState, getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
+            [undefined, undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
         );
     }
 
-    derivedCommandPacks[translucencyMode] = derivedCommandPack;
-    return derivedCommandPack;
+    return globeTranslucency._derivedCommandPack;
 }
 
-GlobeTranslucency.updateDerivedCommand = function(command, frontTranslucencyByDistance, backTranslucencyByDistance, frameState) {
+GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     var derivedCommands = command.derivedCommands.globeTranslucency;
 
-    var translucencyMode = getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance);
-    var translucencyModeChanged = defined(derivedCommands) && (derivedCommands.translucencyMode !== translucencyMode);
-
-    if (!defined(derivedCommands) || command.dirty || translucencyModeChanged) {
-        var derivedCommandsPack = getDerivedCommandPack(translucencyMode);
+    if (!defined(derivedCommands) || command.dirty) {
+        var derivedCommandsPack = getDerivedCommandPack(frameState);
         var length = derivedCommandsPack.length;
         var names = derivedCommandsPack.names;
         var passes = derivedCommandsPack.passes;
@@ -477,9 +460,8 @@ GlobeTranslucency.updateDerivedCommand = function(command, frontTranslucencyByDi
 
         command.derivedCommands.globeTranslucency = derivedCommands;
 
-        if (!defined(shaders[0]) || (derivedCommands.shaderProgramId !== command.shaderProgram.id) || translucencyModeChanged) {
+        if (!defined(shaders[0]) || (derivedCommands.shaderProgramId !== command.shaderProgram.id)) {
             derivedCommands.shaderProgramId = command.shaderProgram.id;
-            derivedCommands.translucencyMode = translucencyMode;
             for (i = 0; i < length; ++i) {
                 commands[i].shaderProgram = getDerivedShaderProgram(frameState.context, command.shaderProgram, getShaderProgramFunctions[i], names[i]);
                 commands[i].renderState = getDerivedRenderState(command.renderState, getRenderStateFunctions[i], renderStateCaches[i]);

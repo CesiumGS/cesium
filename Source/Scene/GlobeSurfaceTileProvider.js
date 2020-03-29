@@ -1995,7 +1995,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             command.dirty = true;
 
             if (translucent) {
-                GlobeTranslucency.updateDerivedCommand(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
+                GlobeTranslucency.updateDerivedCommand(command, frameState);
             }
 
             pushCommand(tileProvider, command, frameState);
