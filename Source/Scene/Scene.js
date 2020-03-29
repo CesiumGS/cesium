@@ -2887,7 +2887,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         var globe = this.globe;
         var globeTranslucent = frameState.globeTranslucent;
         var cameraUnderground = this._cameraUnderground;
-        var sunVisibleThroughGlobe = GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
+        var sunVisibleThroughGlobe = defined(globe) && GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
 
         if (!renderPass || (this._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum) || (cameraUnderground && !globeTranslucent)) {
             environmentState.skyAtmosphereCommand = undefined;

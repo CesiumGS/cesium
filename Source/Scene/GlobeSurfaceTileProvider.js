@@ -447,7 +447,7 @@ import TileSelectionResult from './TileSelectionResult.js';
     };
 
     function pushCommand(tileProvider, command, frameState) {
-        if (frameState.globeTranslucent && frameState.passes.render) {
+        if (frameState.globeTranslucent) {
             GlobeTranslucency.pushDerivedCommands(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
         } else {
             frameState.commandList.push(command);

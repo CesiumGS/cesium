@@ -479,50 +479,72 @@ GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDis
     var translucencyMode = getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance);
 
     if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_INVISIBLE)) {
+        // Don't push any commands if both front and back faces are invisible
         return;
     }
 
     if (getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE) {
+        // Render the globe normally when front face is opaque
         frameState.commandList.push(command);
         return;
     }
 
+    var pushTranslucentCommands = frameState.passes.render;
     var derivedCommands = command.derivedCommands.globeTranslucency;
 
     if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)) {
+        // Push back and front face command for classification depth
+        // Push translucent back and front face commands separately so that non-OIT blending looks better
         frameState.commandList.push(derivedCommands.backAndFrontFaceCommand);
-        if (frameState.cameraUnderground) {
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-        } else {
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+        if (pushTranslucentCommands) {
+            if (frameState.cameraUnderground) {
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            } else {
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            }
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE)) {
+        // Push back and front face commands, one for the opaque pass and the other for classification depth
+        // Push translucent command for the face that appears in front
         frameState.commandList.push(derivedCommands.backFaceCommand);
         frameState.commandList.push(derivedCommands.frontFaceCommand);
-        if (frameState.cameraUnderground) {
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-        } else {
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+        if (pushTranslucentCommands) {
+            if (frameState.cameraUnderground) {
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            } else {
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            }
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_INVISIBLE)) {
+        // Push one command for classification depth and another for translucency
         if (frameState.cameraUnderground) {
             frameState.commandList.push(derivedCommands.backFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            if (pushTranslucentCommands) {
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            }
         } else {
             frameState.commandList.push(derivedCommands.frontFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            if (pushTranslucentCommands) {
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            }
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_TRANSLUCENT)) {
+        // Push one command for classification depth and another for translucency
         if (frameState.cameraUnderground) {
             frameState.commandList.push(derivedCommands.frontFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            if (pushTranslucentCommands) {
+                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
+            }
         } else {
             frameState.commandList.push(derivedCommands.backFaceCommand);
-            frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            if (pushTranslucentCommands) {
+                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
+            }
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_OPAQUE)) {
+        // Push command for the opaque pass
         if (frameState.cameraUnderground) {
             frameState.commandList.push(derivedCommands.frontFaceCommand);
         } else {
@@ -599,7 +621,6 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function(frustu
 
     if (frontOpaque || backOpaque) {
         // Render classification on opaque faces like normal
-        // Faces gets swapped if the camera is underground
         executeCommands(classificationCommands, classificationCommandsLength, undefined, false, executeCommandFunction, scene, context, passState);
     }
 
