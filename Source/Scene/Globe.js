@@ -490,6 +490,8 @@ import ShadowMode from './ShadowMode.js';
          * and {@link Globe#baseColor}, all of which may contain translucency, and then multiplying by
          * {@link Globe#frontTranslucency} and {@link Globe#frontTranslucencyByDistance} for front faces and
          * {@link Globe#backTranslucency} and {@link Globe#backTranslucencyByDistance} for back faces.
+         * When the camera is underground back faces and front faces are swapped, i.e. back-facing geometry
+         * is considered front facing.
          * <br /><br />
          * Translucency is disabled by default.
          *
