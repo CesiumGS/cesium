@@ -1761,8 +1761,10 @@ import TileSelectionResult from './TileSelectionResult.js';
             var frontTranslucencyByDistance = cameraUnderground ? tileProvider.backTranslucencyByDistance : tileProvider.frontTranslucencyByDistance;
             var backTranslucencyByDistance = cameraUnderground ? tileProvider.frontTranslucencyByDistance : tileProvider.backTranslucencyByDistance;
 
-            Cartesian4.fromElements(frontTranslucencyByDistance.near, frontTranslucencyByDistance.nearValue, frontTranslucencyByDistance.far, frontTranslucencyByDistance.farValue, uniformMapProperties.frontTranslucencyByDistance);
-            Cartesian4.fromElements(backTranslucencyByDistance.near, backTranslucencyByDistance.nearValue, backTranslucencyByDistance.far, backTranslucencyByDistance.farValue, uniformMapProperties.backTranslucencyByDistance);
+            if (defined(frontTranslucencyByDistance)) {
+                Cartesian4.fromElements(frontTranslucencyByDistance.near, frontTranslucencyByDistance.nearValue, frontTranslucencyByDistance.far, frontTranslucencyByDistance.farValue, uniformMapProperties.frontTranslucencyByDistance);
+                Cartesian4.fromElements(backTranslucencyByDistance.near, backTranslucencyByDistance.nearValue, backTranslucencyByDistance.far, backTranslucencyByDistance.farValue, uniformMapProperties.backTranslucencyByDistance);
+            }
 
             var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;
             if (highlightFillTile) {

@@ -702,7 +702,7 @@ GlobeTranslucency.prototype.isDestroyed = function() {
 };
 
 GlobeTranslucency.prototype.destroy = function() {
-    destroyResources();
+    destroyResources(this);
     return destroyObject(this);
 };
 
