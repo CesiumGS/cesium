@@ -287,12 +287,41 @@ function getBackFaceShaderProgram(vs, fs) {
     removeDefine(fs.defines, 'TRANSLUCENT');
 }
 
+function getBackAndFrontFaceShaderProgram(vs, fs) {
+    removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
+    removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
+    removeDefine(vs.defines, 'FOG');
+    removeDefine(fs.defines, 'FOG');
+    removeDefine(vs.defines, 'TRANSLUCENT');
+    removeDefine(fs.defines, 'TRANSLUCENT');
+}
+
+function getFrontFaceShaderProgram(vs, fs) {
+    removeDefine(vs.defines, 'TRANSLUCENT');
+    removeDefine(fs.defines, 'TRANSLUCENT');
+}
+
 function getTranslucentBackFaceShaderProgram(vs, fs) {
     getTranslucentShaderProgram(vs, fs);
     removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
     removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
     removeDefine(vs.defines, 'FOG');
     removeDefine(fs.defines, 'FOG');
+}
+
+function getPickBackFaceShaderProgram(vs, fs) {
+    getPickShaderProgram(vs, fs);
+    removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
+    removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
+    removeDefine(vs.defines, 'FOG');
+    removeDefine(fs.defines, 'FOG');
+    removeDefine(vs.defines, 'TRANSLUCENT');
+    removeDefine(fs.defines, 'TRANSLUCENT');
+}
+
+function getPickShaderProgram(vs, fs) {
+    getTranslucentShaderProgram(vs, fs);
+    fs.defines.push('PICK');
 }
 
 function getTranslucentShaderProgram(vs, fs) {
@@ -309,7 +338,14 @@ function getTranslucentShaderProgram(vs, fs) {
         '{ \n' +
         '    czm_globe_translucency_main(); \n' +
         '    vec4 classificationColor = texture2D(u_classificationTexture, gl_FragCoord.xy / czm_viewport.zw); \n' +
+        '#ifdef PICK \n' +
+        '    if (classificationColor == vec4(0.0)) { \n' +
+        '        discard; \n' +
+        '    } \n' +
+        '    gl_FragColor = classificationColor; \n' +
+        '#else \n' +
         '    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n' +
+        '#endif \n' +
         '} \n';
     sources.push(globeTranslucencyMain);
 }
@@ -368,6 +404,18 @@ function getBackAndFrontFaceRenderState(renderState) {
     renderState.cull.enabled = false;
 }
 
+function getPickBackFaceRenderState(renderState) {
+    renderState.cull.face = CullFace.FRONT;
+    renderState.cull.enabled = true;
+    renderState.blending.enabled = false;
+}
+
+function getPickFrontFaceRenderState(renderState) {
+    renderState.cull.face = CullFace.BACK;
+    renderState.cull.enabled = true;
+    renderState.blending.enabled = false;
+}
+
 function getDerivedRenderState(renderState, getRenderStateFunction, cache) {
     var cachedRenderState = cache[renderState.id];
     if (!defined(cachedRenderState)) {
@@ -419,7 +467,7 @@ function getDerivedUniformMap(globeTranslucency, uniformMap, derivedUniformMap, 
     return combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction);
 }
 
-function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderStateFunctions, getUniformMapFunctions) {
+function DerivedCommandPack(names, passes, pickOnly, getShaderProgramFunctions, getRenderStateFunctions, getUniformMapFunctions) {
     var length = names.length;
     var renderStateCaches = new Array(length);
     for (var i = 0; i < length; ++i) {
@@ -429,6 +477,7 @@ function DerivedCommandPack(names, passes, getShaderProgramFunctions, getRenderS
     this.length = length;
     this.names = names;
     this.passes = passes;
+    this.pickOnly = pickOnly;
     this.getShaderProgramFunctions = getShaderProgramFunctions;
     this.getRenderStateFunctions = getRenderStateFunctions;
     this.getUniformMapFunctions = getUniformMapFunctions;
@@ -443,11 +492,12 @@ function getDerivedCommandPack(frameState) {
     var globeTranslucency = frameState.globeTranslucency;
     if (!defined(globeTranslucency._derivedCommandPack)) {
         globeTranslucency._derivedCommandPack = new DerivedCommandPack(
-            ['backAndFrontFaceCommand', 'backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand'],
-            [Pass.GLOBE, Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
-            [undefined, getBackFaceShaderProgram, undefined, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram],
-            [getBackAndFrontFaceRenderState, getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState],
-            [undefined, undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap]
+            ['backAndFrontFaceCommand', 'backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand', 'pickBackFaceCommand', 'pickFrontFaceCommand'],
+            [Pass.GLOBE, Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
+            [false, false, false, false, false, true, true],
+            [getBackAndFrontFaceShaderProgram, getBackFaceShaderProgram, getFrontFaceShaderProgram, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram, getPickBackFaceShaderProgram, getPickShaderProgram],
+            [getBackAndFrontFaceRenderState, getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState, getPickBackFaceRenderState, getPickFrontFaceRenderState],
+            [undefined, undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap]
         );
     }
 
@@ -462,6 +512,7 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
         var length = derivedCommandsPack.length;
         var names = derivedCommandsPack.names;
         var passes = derivedCommandsPack.passes;
+        var pickOnly = derivedCommandsPack.pickOnly;
         var getShaderProgramFunctions = derivedCommandsPack.getShaderProgramFunctions;
         var getRenderStateFunctions = derivedCommandsPack.getRenderStateFunctions;
         var getUniformMapFunctions = derivedCommandsPack.getUniformMapFunctions;
@@ -496,6 +547,7 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
         for (i = 0; i < length; ++i) {
             commands[i] = DrawCommand.shallowClone(command, commands[i]);
             commands[i].pass = passes[i];
+            commands[i].pickOnly = pickOnly[i];
             commands[i].uniformMap = getDerivedUniformMap(frameState.globeTranslucency, command.uniformMap, uniformMaps[i], getUniformMapFunctions[i]);
             derivedCommands[names[i]] = commands[i];
         }
@@ -531,59 +583,50 @@ GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDis
         return;
     }
 
-    var pushTranslucentCommands = frameState.passes.render;
+    var picking = frameState.passes.pick;
+
     var derivedCommands = command.derivedCommands.globeTranslucency;
+    var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : derivedCommands.translucentFrontFaceCommand;
+    var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : derivedCommands.translucentBackFaceCommand;
 
     if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)) {
         // Push back and front face command for classification depth
         // Push translucent back and front face commands separately so that non-OIT blending looks better
         frameState.commandList.push(derivedCommands.backAndFrontFaceCommand);
-        if (pushTranslucentCommands) {
-            if (frameState.cameraUnderground) {
-                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-            } else {
-                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            }
+        if (frameState.cameraUnderground) {
+            frameState.commandList.push(translucentFrontFaceCommand);
+            frameState.commandList.push(translucentBackFaceCommand);
+        } else {
+            frameState.commandList.push(translucentBackFaceCommand);
+            frameState.commandList.push(translucentFrontFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE)) {
         // Push back and front face commands, one for the opaque pass and the other for classification depth
         // Push translucent command for the face that appears in front
         frameState.commandList.push(derivedCommands.backFaceCommand);
         frameState.commandList.push(derivedCommands.frontFaceCommand);
-        if (pushTranslucentCommands) {
-            if (frameState.cameraUnderground) {
-                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-            } else {
-                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            }
+        if (frameState.cameraUnderground) {
+            frameState.commandList.push(translucentBackFaceCommand);
+        } else {
+            frameState.commandList.push(translucentFrontFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_INVISIBLE)) {
         // Push one command for classification depth and another for translucency
         if (frameState.cameraUnderground) {
             frameState.commandList.push(derivedCommands.backFaceCommand);
-            if (pushTranslucentCommands) {
-                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-            }
+            frameState.commandList.push(translucentBackFaceCommand);
         } else {
             frameState.commandList.push(derivedCommands.frontFaceCommand);
-            if (pushTranslucentCommands) {
-                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            }
+            frameState.commandList.push(translucentFrontFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_TRANSLUCENT)) {
         // Push one command for classification depth and another for translucency
         if (frameState.cameraUnderground) {
             frameState.commandList.push(derivedCommands.frontFaceCommand);
-            if (pushTranslucentCommands) {
-                frameState.commandList.push(derivedCommands.translucentFrontFaceCommand);
-            }
+            frameState.commandList.push(translucentFrontFaceCommand);
         } else {
             frameState.commandList.push(derivedCommands.backFaceCommand);
-            if (pushTranslucentCommands) {
-                frameState.commandList.push(derivedCommands.translucentBackFaceCommand);
-            }
+            frameState.commandList.push(translucentBackFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_OPAQUE)) {
         // Push command for the opaque pass
