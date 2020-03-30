@@ -108,6 +108,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.frontTranslucencyByDistance = undefined;
         this.backTranslucencyByDistance = undefined;
         this.translucent = false;
+        this.depthTestAgainstTerrain = false;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -449,7 +450,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
     function pushCommand(tileProvider, command, frameState) {
         if (tileProvider.translucent) {
-            GlobeTranslucency.pushDerivedCommands(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, frameState);
+            GlobeTranslucency.pushDerivedCommands(command, tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.depthTestAgainstTerrain, frameState);
         } else {
             frameState.commandList.push(command);
         }
@@ -1613,7 +1614,8 @@ import TileSelectionResult from './TileSelectionResult.js';
             --maxTextures;
         }
         if (translucent) {
-            --maxTextures;
+            // TODO only uses czm_globeDepthTexture in specific circumstances
+            maxTextures -= 2;
         }
 
         var mesh = surfaceTile.renderedMesh;

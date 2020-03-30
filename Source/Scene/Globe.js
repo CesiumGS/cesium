@@ -1025,6 +1025,7 @@ import ShadowMode from './ShadowMode.js';
             tileProvider.frontTranslucencyByDistance = this.frontTranslucencyByDistanceFinal;
             tileProvider.backTranslucencyByDistance = this.backTranslucencyByDistanceFinal;
             tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
+            tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
             surface.beginFrame(frameState);
         }
     };

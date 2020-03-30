@@ -302,6 +302,18 @@ function getFrontFaceShaderProgram(vs, fs) {
     removeDefine(fs.defines, 'TRANSLUCENT');
 }
 
+function getClearDepthTranslucentBackFaceShaderProgram(vs, fs) {
+    getTranslucentBackFaceShaderProgram(vs, fs);
+    vs.defines.push('GENERATE_POSITION');
+    fs.defines.push('CLEAR_GLOBE_DEPTH');
+}
+
+function getClearDepthTranslucentFrontFaceShaderProgram(vs, fs) {
+    getTranslucentShaderProgram(vs, fs);
+    vs.defines.push('GENERATE_POSITION');
+    fs.defines.push('CLEAR_GLOBE_DEPTH');
+}
+
 function getTranslucentBackFaceShaderProgram(vs, fs) {
     getTranslucentShaderProgram(vs, fs);
     removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
@@ -310,19 +322,22 @@ function getTranslucentBackFaceShaderProgram(vs, fs) {
     removeDefine(fs.defines, 'FOG');
 }
 
-function getPickBackFaceShaderProgram(vs, fs) {
-    getPickShaderProgram(vs, fs);
-    removeDefine(vs.defines, 'GROUND_ATMOSPHERE');
-    removeDefine(fs.defines, 'GROUND_ATMOSPHERE');
-    removeDefine(vs.defines, 'FOG');
-    removeDefine(fs.defines, 'FOG');
-    removeDefine(vs.defines, 'TRANSLUCENT');
-    removeDefine(fs.defines, 'TRANSLUCENT');
-}
-
 function getPickShaderProgram(vs, fs) {
-    getTranslucentShaderProgram(vs, fs);
-    fs.defines.push('PICK');
+    var pickShader =
+        '\n\n' +
+        'uniform sampler2D u_classificationTexture; \n' +
+        'void main() \n' +
+        '{ \n' +
+        '    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n' +
+        '    vec4 classificationColor = texture2D(u_classificationTexture, st); \n' +
+        '    if (classificationColor == vec4(0.0)) \n' +
+        '    { \n' +
+        '        discard; \n' +
+        '    } \n' +
+        '    gl_FragColor = classificationColor; \n' +
+        '} \n';
+
+    fs.sources = [pickShader];
 }
 
 function getTranslucentShaderProgram(vs, fs) {
@@ -337,16 +352,22 @@ function getTranslucentShaderProgram(vs, fs) {
         'uniform sampler2D u_classificationTexture; \n' +
         'void main() \n' +
         '{ \n' +
-        '    czm_globe_translucency_main(); \n' +
-        '    vec4 classificationColor = texture2D(u_classificationTexture, gl_FragCoord.xy / czm_viewport.zw); \n' +
-        '#ifdef PICK \n' +
-        '    if (classificationColor == vec4(0.0)) { \n' +
-        '        discard; \n' +
+        '    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n' +
+        '#ifdef CLEAR_GLOBE_DEPTH \n' +
+        '    float logDepthOrDepth = czm_unpackDepth(texture2D(czm_globeDepthTexture, st)); \n' +
+        '    if (logDepthOrDepth != 0.0) \n' +
+        '    { \n' +
+        '        vec4 eyeCoordinate = czm_windowToEyeCoordinates(gl_FragCoord.xy, logDepthOrDepth); \n' +
+        '        float depthEC = eyeCoordinate.z / eyeCoordinate.w; \n' +
+        '        if (v_positionEC.z < depthEC) \n' +
+        '        { \n' +
+        '            discard; \n' +
+        '        } \n' +
         '    } \n' +
-        '    gl_FragColor = classificationColor; \n' +
-        '#else \n' +
-        '    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n' +
         '#endif \n' +
+        '    czm_globe_translucency_main(); \n' +
+        '    vec4 classificationColor = texture2D(u_classificationTexture, st); \n' +
+        '    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n' +
         '} \n';
     sources.push(globeTranslucencyMain);
 }
@@ -493,12 +514,12 @@ function getDerivedCommandPack(frameState) {
     var globeTranslucency = frameState.globeTranslucency;
     if (!defined(globeTranslucency._derivedCommandPack)) {
         globeTranslucency._derivedCommandPack = new DerivedCommandPack(
-            ['backAndFrontFaceCommand', 'backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand', 'pickBackFaceCommand', 'pickFrontFaceCommand'],
-            [Pass.GLOBE, Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
-            [false, false, false, false, false, true, true],
-            [getBackAndFrontFaceShaderProgram, getBackFaceShaderProgram, getFrontFaceShaderProgram, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram, getPickBackFaceShaderProgram, getPickShaderProgram],
-            [getBackAndFrontFaceRenderState, getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState, getPickBackFaceRenderState, getPickFrontFaceRenderState],
-            [undefined, undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap]
+            ['backAndFrontFaceCommand', 'backFaceCommand', 'frontFaceCommand', 'translucentBackFaceCommand', 'translucentFrontFaceCommand', 'clearDepthTranslucentBackFaceCommand', 'clearDepthTranslucentFrontFaceCommand', 'pickBackFaceCommand', 'pickFrontFaceCommand'],
+            [Pass.GLOBE, Pass.GLOBE, Pass.GLOBE, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT, Pass.TRANSLUCENT],
+            [false, false, false, false, false, false, false, true, true],
+            [getBackAndFrontFaceShaderProgram, getBackFaceShaderProgram, getFrontFaceShaderProgram, getTranslucentBackFaceShaderProgram, getTranslucentShaderProgram, getClearDepthTranslucentBackFaceShaderProgram, getClearDepthTranslucentFrontFaceShaderProgram, getPickShaderProgram, getPickShaderProgram],
+            [getBackAndFrontFaceRenderState, getBackFaceRenderState, getFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState, getTranslucentBackFaceRenderState, getTranslucentFrontFaceRenderState, getPickBackFaceRenderState, getPickFrontFaceRenderState],
+            [undefined, undefined, undefined, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap, getTranslucencyUniformMap]
         );
     }
 
@@ -507,6 +528,8 @@ function getDerivedCommandPack(frameState) {
 
 GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     var derivedCommands = command.derivedCommands.globeTranslucency;
+
+    // TODO - only generate derived commands for those that are needed for the current state
 
     if (!defined(derivedCommands) || command.dirty) {
         var derivedCommandsPack = getDerivedCommandPack(frameState);
@@ -570,7 +593,7 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     }
 };
 
-GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDistance, backTranslucencyByDistance, frameState) {
+GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDistance, backTranslucencyByDistance, depthTestAgainstTerrain, frameState) {
     var translucencyMode = getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance);
 
     if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_INVISIBLE)) {
@@ -586,10 +609,13 @@ GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDis
 
     var derivedCommands = command.derivedCommands.globeTranslucency;
     var picking = frameState.passes.pick;
-    var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : derivedCommands.translucentFrontFaceCommand;
-    var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : derivedCommands.translucentBackFaceCommand;
+    var scene2D = frameState.mode === SceneMode.SCENE2D;
+    var clearGlobeDepth = translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE) && !depthTestAgainstTerrain && frameState.context.depthTexture && !scene2D;
 
-    if (frameState.mode === SceneMode.SCENE2D) {
+    var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentFrontFaceCommand : derivedCommands.translucentFrontFaceCommand);
+    var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentBackFaceCommand : derivedCommands.translucentBackFaceCommand);
+
+    if (scene2D) {
         frameState.commandList.push(derivedCommands.frontFaceCommand);
         frameState.commandList.push(translucentFrontFaceCommand);
         return;
