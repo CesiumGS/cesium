@@ -273,7 +273,7 @@ import ShadowMap from './ShadowMap.js';
                     // worst-case near and far planes to avoid clipping something important.
                     distances.start = camera.frustum.near;
                     distances.stop = camera.frustum.far;
-                    undefBV = !(command instanceof ClearCommand);
+                    undefBV = undefBV || !(command instanceof ClearCommand);
                 }
 
                 insertIntoBin(scene, this, command, distances);
