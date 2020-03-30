@@ -175,12 +175,14 @@ var TranslucencyMode = {
     BACK_MASK : 12 // For bitwise operations
 };
 
-function getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance) {
+function getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance, baseColor) {
+    var baseLayerTranslucent = baseColor.alpha < 1.0;
+
     var frontInvisible = frontTranslucencyByDistance.nearValue === 0.0 && frontTranslucencyByDistance.farValue === 0.0;
-    var frontOpaque = frontTranslucencyByDistance.nearValue === 1.0 && frontTranslucencyByDistance.farValue === 1.0;
+    var frontOpaque = !baseLayerTranslucent && frontTranslucencyByDistance.nearValue === 1.0 && frontTranslucencyByDistance.farValue === 1.0;
 
     var backInvisible = backTranslucencyByDistance.nearValue === 0.0 && backTranslucencyByDistance.farValue === 0.0;
-    var backOpaque = backTranslucencyByDistance.nearValue === 1.0 && backTranslucencyByDistance.farValue === 1.0;
+    var backOpaque = !baseLayerTranslucent && backTranslucencyByDistance.nearValue === 1.0 && backTranslucencyByDistance.farValue === 1.0;
 
     var translucencyMode = 0;
 
@@ -214,7 +216,7 @@ function getBackTranslucencyMode(translucencyMode) {
 function getTranslucencyModeFromGlobe(globe) {
     var frontTranslucencyByDistance = globe.frontTranslucencyByDistanceFinal;
     var backTranslucencyByDistance = globe.backTranslucencyByDistanceFinal;
-    return getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance);
+    return getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance, globe.baseColor);
 }
 
 GlobeTranslucency.isTranslucent = function(globe) {
@@ -593,8 +595,8 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     }
 };
 
-GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDistance, backTranslucencyByDistance, depthTestAgainstTerrain, frameState) {
-    var translucencyMode = getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance);
+GlobeTranslucency.pushDerivedCommands = function(command, tileProvider, frameState) {
+    var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
 
     if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_INVISIBLE)) {
         // Don't push any commands if both front and back faces are invisible
@@ -610,7 +612,7 @@ GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDis
     var derivedCommands = command.derivedCommands.globeTranslucency;
     var picking = frameState.passes.pick;
     var scene2D = frameState.mode === SceneMode.SCENE2D;
-    var clearGlobeDepth = translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE) && !depthTestAgainstTerrain && frameState.context.depthTexture && !scene2D;
+    var clearGlobeDepth = translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE) && !tileProvider.depthTestAgainstTerrain && frameState.context.depthTexture && !scene2D;
 
     var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentFrontFaceCommand : derivedCommands.translucentFrontFaceCommand);
     var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentBackFaceCommand : derivedCommands.translucentBackFaceCommand);
