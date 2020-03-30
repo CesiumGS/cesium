@@ -18,6 +18,7 @@ import Texture from '../Renderer/Texture.js';
 import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
 import BlendingState from './BlendingState.js';
 import CullFace from './CullFace.js';
+import SceneMode from './SceneMode.js';
 
 /**
  * @private
@@ -583,11 +584,16 @@ GlobeTranslucency.pushDerivedCommands = function(command, frontTranslucencyByDis
         return;
     }
 
-    var picking = frameState.passes.pick;
-
     var derivedCommands = command.derivedCommands.globeTranslucency;
+    var picking = frameState.passes.pick;
     var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : derivedCommands.translucentFrontFaceCommand;
     var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : derivedCommands.translucentBackFaceCommand;
+
+    if (frameState.mode === SceneMode.SCENE2D) {
+        frameState.commandList.push(derivedCommands.frontFaceCommand);
+        frameState.commandList.push(translucentFrontFaceCommand);
+        return;
+    }
 
     if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)) {
         // Push back and front face command for classification depth
