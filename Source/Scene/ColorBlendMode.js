@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import CesiumMath from '../Core/Math.js';
 
     /**
@@ -31,4 +30,4 @@ import CesiumMath from '../Core/Math.js';
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
     };
-export default freezeObject(ColorBlendMode);
+export default Object.freeze(ColorBlendMode);

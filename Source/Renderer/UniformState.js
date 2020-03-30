@@ -6,7 +6,7 @@ import Cartographic from '../Core/Cartographic.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -136,6 +136,7 @@ import SunLight from '../Scene/SunLight.js';
         this._pass = undefined;
         this._mode = undefined;
         this._mapProjection = undefined;
+        this._ellipsoid = undefined;
         this._cameraDirection = new Cartesian3();
         this._cameraRight = new Cartesian3();
         this._cameraUp = new Cartesian3();
@@ -164,7 +165,7 @@ import SunLight from '../Scene/SunLight.js';
         this._minimumDisableDepthTestDistance = undefined;
     }
 
-    defineProperties(UniformState.prototype, {
+    Object.defineProperties(UniformState.prototype, {
         /**
          * @memberof UniformState.prototype
          * @type {FrameState}
@@ -999,6 +1000,18 @@ import SunLight from '../Scene/SunLight.js';
             get : function() {
                 return this._orthographicIn3D;
             }
+        },
+
+        /**
+         * The current ellipsoid.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
+            }
         }
     });
 
@@ -1144,6 +1157,7 @@ import SunLight from '../Scene/SunLight.js';
     UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
+        this._ellipsoid = frameState.mapProjection.ellipsoid;
         this._pixelRatio = frameState.pixelRatio;
 
         var camera = frameState.camera;

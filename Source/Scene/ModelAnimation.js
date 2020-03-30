@@ -1,5 +1,4 @@
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import JulianDate from '../Core/JulianDate.js';
 import ModelAnimationLoop from './ModelAnimationLoop.js';
@@ -114,7 +113,7 @@ import ModelAnimationState from './ModelAnimationState.js';
         };
     }
 
-    defineProperties(ModelAnimation.prototype, {
+    Object.defineProperties(ModelAnimation.prototype, {
         /**
          * The glTF animation name that identifies this animation.
          *

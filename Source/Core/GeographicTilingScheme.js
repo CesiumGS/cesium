@@ -2,7 +2,6 @@ import Cartesian2 from './Cartesian2.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import GeographicProjection from './GeographicProjection.js';
 import CesiumMath from './Math.js';
@@ -35,7 +34,7 @@ import Rectangle from './Rectangle.js';
         this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
     }
 
-    defineProperties(GeographicTilingScheme.prototype, {
+    Object.defineProperties(GeographicTilingScheme.prototype, {
         /**
          * Gets the ellipsoid that is tiled by this tiling scheme.
          * @memberof GeographicTilingScheme.prototype

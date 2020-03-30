@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents which vertices should have a value of `true` for the `applyOffset` attribute
@@ -9,4 +8,4 @@ import freezeObject from '../Core/freezeObject.js';
         TOP : 1,
         ALL : 2
     };
-export default freezeObject(GeometryOffsetAttribute);
+export default Object.freeze(GeometryOffsetAttribute);

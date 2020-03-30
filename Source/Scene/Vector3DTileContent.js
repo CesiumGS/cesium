@@ -1,17 +1,18 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
 import Rectangle from '../Core/Rectangle.js';
 import RuntimeError from '../Core/RuntimeError.js';
 import when from '../ThirdParty/when.js';
 import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
 import Vector3DTilePoints from './Vector3DTilePoints.js';
 import Vector3DTilePolygons from './Vector3DTilePolygons.js';
 import Vector3DTilePolylines from './Vector3DTilePolylines.js';
@@ -52,7 +53,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         initialize(this, arrayBuffer, byteOffset);
     }
 
-    defineProperties(Vector3DTileContent.prototype, {
+    Object.defineProperties(Vector3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
@@ -218,7 +219,6 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         };
     }
 
-    var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     function initialize(content, arrayBuffer, byteOffset) {
@@ -304,23 +304,20 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             return;
         }
 
-        var rectangle;
-        var minHeight;
-        var maxHeight;
-        if (defined(featureTableJson.REGION)) {
-            var region = featureTableJson.REGION;
-            rectangle = Rectangle.unpack(region);
-            minHeight = region[4];
-            maxHeight = region[5];
-        } else {
-            throw new RuntimeError('REGION is required in the feature table.');
+        var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
+        var region = featureTable.getGlobalProperty('REGION');
+        if (!defined(region)) {
+            throw new RuntimeError('Feature table global property: REGION must be defined');
         }
+        var rectangle = Rectangle.unpack(region);
+        var minHeight = region[4];
+        var maxHeight = region[5];
 
         var modelMatrix = content._tile.computedTransform;
 
-        var center;
-        if (defined(featureTableJson.RTC_CENTER)) {
-            center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        var center = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
+        if (defined(center)) {
+            center = Cartesian3.unpack(center);
             Matrix4.multiplyByPoint(modelMatrix, center, center);
         } else {
             center = Rectangle.center(rectangle);
@@ -329,36 +326,56 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         }
 
         var batchIds = getBatchIds(featureTableJson, featureTableBinary);
-
         byteOffset += byteOffset % 4;
 
         if (numberOfPolygons > 0) {
-            var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
+            featureTable.featuresLength = numberOfPolygons;
+
+            var polygonCounts = defaultValue(
+                featureTable.getPropertyArray('POLYGON_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYGON_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
+            );
+
+            if (!defined(polygonCounts)) {
+                throw new RuntimeError('Feature table property: POLYGON_COUNTS must be defined when POLYGONS_LENGTH is greater than 0');
+            }
+
+            var polygonIndexCounts = defaultValue(
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYGON_INDEX_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
+            );
+
+            if (!defined(polygonIndexCounts)) {
+                throw new RuntimeError('Feature table property: POLYGON_INDEX_COUNTS must be defined when POLYGONS_LENGTH is greater than 0');
+            }
+
+            // Use the counts array to determine how many position values we want. If we used the byte length then
+            // zero padding values would be included and cause the delta zig-zag decoding to fail
+            var numPolygonPositions = polygonCounts.reduce(function(total, count) {
+                return total + count * 2;
+            }, 0);
+
+            var numPolygonIndices = polygonIndexCounts.reduce(function(total, count) {
+                return total + count;
+            }, 0);
+
+            var indices = new Uint32Array(arrayBuffer, byteOffset, numPolygonIndices);
             byteOffset += indicesByteLength;
 
-            var polygonPositions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+            var polygonPositions = new Uint16Array(arrayBuffer, byteOffset, numPolygonPositions);
             byteOffset += positionByteLength;
-
-            var polygonCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
-            var counts = new Uint32Array(featureTableBinary.buffer, polygonCountByteOffset, numberOfPolygons);
-
-            var polygonIndexCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
-            var indexCounts = new Uint32Array(featureTableBinary.buffer, polygonIndexCountByteOffset, numberOfPolygons);
 
             var polygonMinimumHeights;
             var polygonMaximumHeights;
             if (defined(featureTableJson.POLYGON_MINIMUM_HEIGHTS) && defined(featureTableJson.POLYGON_MAXIMUM_HEIGHTS)) {
-                var polygonMinimumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MINIMUM_HEIGHTS.byteOffset;
-                polygonMinimumHeights = new Float32Array(featureTableBinary.buffer, polygonMinimumHeightsByteOffset, numberOfPolygons);
-
-                var polygonMaximumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MAXIMUM_HEIGHTS.byteOffset;
-                polygonMaximumHeights = new Float32Array(featureTableBinary.buffer, polygonMaximumHeightsByteOffset, numberOfPolygons);
+                polygonMinimumHeights = featureTable.getPropertyArray('POLYGON_MINIMUM_HEIGHTS', ComponentDatatype.FLOAT, 1);
+                polygonMaximumHeights = featureTable.getPropertyArray('POLYGON_MAXIMUM_HEIGHTS', ComponentDatatype.FLOAT, 1);
             }
 
             content._polygons = new Vector3DTilePolygons({
                 positions : polygonPositions,
-                counts : counts,
-                indexCounts : indexCounts,
+                counts : polygonCounts,
+                indexCounts : polygonIndexCounts,
                 indices : indices,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
@@ -374,22 +391,32 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         }
 
         if (numberOfPolylines > 0) {
-            var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
-            byteOffset += polylinePositionByteLength;
+            featureTable.featuresLength = numberOfPolylines;
 
-            var polylineCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
-            var polylineCounts = new Uint32Array(featureTableBinary.buffer, polylineCountByteOffset, numberOfPolylines);
+            var polylineCounts = defaultValue(
+                featureTable.getPropertyArray('POLYLINE_COUNTS', ComponentDatatype.UNSIGNED_INT, 1),
+                featureTable.getPropertyArray('POLYLINE_COUNT', ComponentDatatype.UNSIGNED_INT, 1) // Workaround for old vector tilesets using the non-plural name
+            );
 
-            var widths;
-            if (!defined(featureTableJson.POLYLINE_WIDTHS)) {
+            if (!defined(polylineCounts)) {
+                throw new RuntimeError('Feature table property: POLYLINE_COUNTS must be defined when POLYLINES_LENGTH is greater than 0');
+            }
+
+            var widths = featureTable.getPropertyArray('POLYLINE_WIDTHS', ComponentDatatype.UNSIGNED_SHORT, 1);
+            if (!defined(widths)) {
                 widths = new Uint16Array(numberOfPolylines);
                 for (var i = 0; i < numberOfPolylines; ++i) {
                     widths[i] = 2.0;
                 }
-            } else {
-                var polylineWidthsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_WIDTHS.byteOffset;
-                widths = new Uint16Array(featureTableBinary.buffer, polylineWidthsByteOffset, numberOfPolylines);
             }
+
+            // Use the counts array to determine how many position values we want. If we used the byte length then
+            // zero padding values would be included and cause the delta zig-zag decoding to fail
+            var numPolylinePositions = polylineCounts.reduce(function(total, count) {
+                return total + count * 3;
+            }, 0);
+            var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, numPolylinePositions);
+            byteOffset += polylinePositionByteLength;
 
             content._polylines = new Vector3DTilePolylines({
                 positions : polylinePositions,
@@ -406,7 +433,8 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
         }
 
         if (numberOfPoints > 0) {
-            var pointPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
+            var pointPositions = new Uint16Array(arrayBuffer, byteOffset, numberOfPoints * 3);
+            byteOffset += pointsPositionByteLength;
             content._points = new Vector3DTilePoints({
                 positions : pointPositions,
                 batchIds : batchIds.points,

@@ -5,7 +5,6 @@ import Check from '../Core/Check.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
 import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
 import CesiumMath from '../Core/Math.js';
@@ -281,7 +280,7 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         this._usesSt = false;
     }
 
-    defineProperties(ShaderDependencies.prototype, {
+    Object.defineProperties(ShaderDependencies.prototype, {
         // Set when assessing final shading (flat vs. phong) and culling using computed texture coordinates
         requiresEC : {
             get : function() {

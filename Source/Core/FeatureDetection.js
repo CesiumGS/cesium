@@ -1,7 +1,6 @@
 import when from '../ThirdParty/when.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Fullscreen from './Fullscreen.js';
     /*global CanvasPixelArray*/
@@ -237,7 +236,7 @@ import Fullscreen from './Fullscreen.js';
 
         return supportsWebPDeferred.promise;
     };
-    defineProperties(supportsWebP, {
+    Object.defineProperties(supportsWebP, {
         initialized: {
             get: function() {
                 return defined(supportsWebP._result);

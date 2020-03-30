@@ -3,7 +3,6 @@ import Cartesian2 from './Cartesian2.js';
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import Event from './Event.js';
@@ -160,7 +159,7 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         this._errorEvent = new Event();
     }
 
-    defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
+    Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
         /**
          * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners

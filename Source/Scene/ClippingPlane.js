@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 
     /**
      * A Plane in Hessian Normal form to be used with {@link ClippingPlaneCollection}.
@@ -29,7 +28,7 @@ import defineProperties from '../Core/defineProperties.js';
         this.index = -1; // to be set by ClippingPlaneCollection
     }
 
-    defineProperties(ClippingPlane.prototype, {
+    Object.defineProperties(ClippingPlane.prototype, {
         /**
          * The shortest distance from the origin to the plane.  The sign of
          * <code>distance</code> determines which side of the plane the origin
@@ -126,7 +125,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._cartesian3 = Cartesian3.clone(normal);
     }
 
-    defineProperties(UpdateChangedCartesian3.prototype, {
+    Object.defineProperties(UpdateChangedCartesian3.prototype, {
         x : {
             get : function() {
                 return this._cartesian3.x;

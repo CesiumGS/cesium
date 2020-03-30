@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
 import oneTimeWarning from '../Core/oneTimeWarning.js';
@@ -37,7 +36,7 @@ import TerrainOffsetProperty from './TerrainOffsetProperty.js';
         GroundGeometryUpdater.prototype.constructor = GroundGeometryUpdater;
     }
 
-    defineProperties(GroundGeometryUpdater.prototype, {
+    Object.defineProperties(GroundGeometryUpdater.prototype, {
         /**
          * Gets the zindex
          * @type {Number}

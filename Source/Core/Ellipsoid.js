@@ -3,9 +3,7 @@ import Cartographic from './Cartographic.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
 
@@ -83,7 +81,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
         initialize(this, x, y, z);
     }
 
-    defineProperties(Ellipsoid.prototype, {
+    Object.defineProperties(Ellipsoid.prototype, {
         /**
          * Gets the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
@@ -225,7 +223,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
      * @type {Ellipsoid}
      * @constant
      */
-    Ellipsoid.WGS84 = freezeObject(new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793));
+    Ellipsoid.WGS84 = Object.freeze(new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793));
 
     /**
      * An Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
@@ -233,7 +231,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
      * @type {Ellipsoid}
      * @constant
      */
-    Ellipsoid.UNIT_SPHERE = freezeObject(new Ellipsoid(1.0, 1.0, 1.0));
+    Ellipsoid.UNIT_SPHERE = Object.freeze(new Ellipsoid(1.0, 1.0, 1.0));
 
     /**
      * An Ellipsoid instance initialized to a sphere with the lunar radius.
@@ -241,7 +239,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
      * @type {Ellipsoid}
      * @constant
      */
-    Ellipsoid.MOON = freezeObject(new Ellipsoid(CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS));
+    Ellipsoid.MOON = Object.freeze(new Ellipsoid(CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS));
 
     /**
      * Duplicates an Ellipsoid instance.

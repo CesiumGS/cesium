@@ -1,6 +1,5 @@
 import defined from '../../Core/defined.js';
 import defaultValue from '../../Core/defaultValue.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Fullscreen from '../../Core/Fullscreen.js';
@@ -86,7 +85,7 @@ import getElement from '../getElement.js';
         ownerDocument.addEventListener(Fullscreen.changeEventName, this._callback);
     }
 
-    defineProperties(FullscreenButtonViewModel.prototype, {
+    Object.defineProperties(FullscreenButtonViewModel.prototype, {
         /**
          * Gets or sets the HTML element to place into fullscreen mode when the
          * corresponding button is pressed.

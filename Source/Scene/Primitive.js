@@ -9,7 +9,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -19,7 +18,6 @@ import GeometryAttribute from '../Core/GeometryAttribute.js';
 import GeometryAttributes from '../Core/GeometryAttributes.js';
 import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
 import Intersect from '../Core/Intersect.js';
-import isArray from '../Core/isArray.js';
 import Matrix4 from '../Core/Matrix4.js';
 import Plane from '../Core/Plane.js';
 import RuntimeError from '../Core/RuntimeError.js';
@@ -275,7 +273,7 @@ import ShadowMode from './ShadowMode.js';
         this.rtcCenter = options.rtcCenter;
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances.length !== 1))) {
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (Array.isArray(this.geometryInstances) && this.geometryInstances.length !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
@@ -323,8 +321,6 @@ import ShadowMode from './ShadowMode.js';
         this._colorCommands = [];
         this._pickCommands = [];
 
-        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
@@ -351,7 +347,7 @@ import ShadowMode from './ShadowMode.js';
         this._batchTableBoundingSphereAttributeIndices = undefined;
     }
 
-    defineProperties(Primitive.prototype, {
+    Object.defineProperties(Primitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -531,7 +527,7 @@ import ShadowMode from './ShadowMode.js';
 
     function createBatchTable(primitive, context) {
         var geometryInstances = primitive.geometryInstances;
-        var instances = (isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
+        var instances = (Array.isArray(geometryInstances)) ? geometryInstances : [geometryInstances];
         var numberOfInstances = instances.length;
         if (numberOfInstances === 0) {
             return;
@@ -654,7 +650,7 @@ import ShadowMode from './ShadowMode.js';
 
     function cloneAttribute(attribute) {
         var clonedValues;
-        if (isArray(attribute.values)) {
+        if (Array.isArray(attribute.values)) {
             clonedValues = attribute.values.slice(0);
         } else {
             clonedValues = new attribute.values.constructor(attribute.values);
@@ -679,7 +675,7 @@ import ShadowMode from './ShadowMode.js';
         var indices;
         if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
-            if (isArray(sourceValues)) {
+            if (Array.isArray(sourceValues)) {
                 indices = sourceValues.slice(0);
             } else {
                 indices = new sourceValues.constructor(sourceValues);
@@ -1079,7 +1075,7 @@ import ShadowMode from './ShadowMode.js';
         var instanceIds = primitive._instanceIds;
 
         if (primitive._state === PrimitiveState.READY) {
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
             var length = primitive._numberOfInstances = instances.length;
 
             var promises = [];
@@ -1154,7 +1150,7 @@ import ShadowMode from './ShadowMode.js';
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
             var transferableObjects = [];
-            instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+            instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
 
             var scene3DOnly = frameState.scene3DOnly;
             var projection = frameState.mapProjection;
@@ -1198,7 +1194,7 @@ import ShadowMode from './ShadowMode.js';
     }
 
     function loadSynchronous(primitive, frameState) {
-        var instances = (isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
+        var instances = (Array.isArray(primitive.geometryInstances)) ? primitive.geometryInstances : [primitive.geometryInstances];
         var length = primitive._numberOfInstances = instances.length;
         var clonedInstances = new Array(length);
         var instanceIds = primitive._instanceIds;
@@ -1818,7 +1814,7 @@ import ShadowMode from './ShadowMode.js';
      */
     Primitive.prototype.update = function(frameState) {
         if (((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && frameState.scene3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {
@@ -2072,30 +2068,15 @@ import ShadowMode from './ShadowMode.js';
             if (perInstanceAttributeIndices.hasOwnProperty(name)) {
                 var attributeIndex = perInstanceAttributeIndices[name];
                 properties[name] = {
-                    get : createGetFunction(batchTable, index, attributeIndex)
+                    get : createGetFunction(batchTable, index, attributeIndex),
+                    set : createSetFunction(batchTable, index, attributeIndex, this, name)
                 };
-
-                var createSetter = true;
-                var readOnlyAttributes = this._readOnlyInstanceAttributes;
-                if (createSetter && defined(readOnlyAttributes)) {
-                    length = readOnlyAttributes.length;
-                    for (var k = 0; k < length; ++k) {
-                        if (name === readOnlyAttributes[k]) {
-                            createSetter = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (createSetter) {
-                    properties[name].set = createSetFunction(batchTable, index, attributeIndex, this, name);
-                }
             }
         }
 
         createBoundingSphereProperties(this, properties, index);
         createPickIdProperty(this, properties, index);
-        defineProperties(attributes, properties);
+        Object.defineProperties(attributes, properties);
 
         this._lastPerInstanceAttributeIndex = index;
         this._perInstanceAttributeCache[index] = attributes;

@@ -4,7 +4,6 @@ import Cartographic from '../Core/Cartographic.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicProjection from '../Core/GeographicProjection.js';
@@ -263,7 +262,7 @@ import ImageryProvider from './ImageryProvider.js';
         return resource;
     }
 
-    defineProperties(ArcGisMapServerImageryProvider.prototype, {
+    Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
          * @memberof ArcGisMapServerImageryProvider.prototype

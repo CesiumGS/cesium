@@ -11,7 +11,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -20,7 +19,6 @@ import getAbsoluteUri from '../Core/getAbsoluteUri.js';
 import getMagic from '../Core/getMagic.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -58,6 +56,7 @@ import Axis from './Axis.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import ColorBlendMode from './ColorBlendMode.js';
+import DepthFunction from './DepthFunction.js';
 import DracoLoader from './DracoLoader.js';
 import getClipAndStyleCode from './getClipAndStyleCode.js';
 import getClippingFunction from './getClippingFunction.js';
@@ -104,7 +103,7 @@ import ShadowMode from './ShadowMode.js';
         this.count = 0;
     }
 
-    defineProperties(CachedGltf.prototype, {
+    Object.defineProperties(CachedGltf.prototype, {
         gltf : {
             set : function(value) {
                 this._gltf = value;
@@ -620,7 +619,7 @@ import ShadowMode from './ShadowMode.js';
         this._shouldRegenerateShaders = false;
     }
 
-    defineProperties(Model.prototype, {
+    Object.defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
@@ -1141,7 +1140,7 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
                     throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
                 }
                 //>>includeEnd('debug');
@@ -3011,7 +3010,8 @@ import ShadowMode from './ShadowMode.js';
                 enabled : enableCulling
             },
             depthTest : {
-                enabled : true
+                enabled : true,
+                func: DepthFunction.LESS_OR_EQUAL
             },
             depthMask : !blendingEnabled,
             blending : {

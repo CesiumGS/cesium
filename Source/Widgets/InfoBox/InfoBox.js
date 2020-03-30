@@ -2,7 +2,6 @@ import buildModuleUrl from '../../Core/buildModuleUrl.js';
 import Check from '../../Core/Check.js';
 import Color from '../../Core/Color.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import knockout from '../../ThirdParty/knockout.js';
 import getElement from '../getElement.js';
@@ -126,7 +125,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         frame.setAttribute('src', 'about:blank');
     }
 
-    defineProperties(InfoBox.prototype, {
+    Object.defineProperties(InfoBox.prototype, {
         /**
          * Gets the parent container.
          * @memberof InfoBox.prototype

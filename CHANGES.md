@@ -1,24 +1,51 @@
 Change Log
 ==========
 
+### 1.68.0 - 2020-04-01
+
+##### Additions :tada:
+
+* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
+* The `CesiumUnminified` build now includes sourcemaps.
+* Added the ability to edit CesiumJS shaders on-the-fly using the [SpectorJS](https://spector.babylonjs.com/) Shader Editor.
+
+##### Fixes :wrench:
+
+* Cesium can now be used in Node.JS 12 and later, with or without `--experimental-modules`. It can still be used in earlier versions as well.
+* Interacting with the Cesium canvas will now blur the previously focused element. This prevents unintended modification of input elements when interacting with the globe.
+* `TileMapServiceImageryProvider` will now force `minimumLevel` to 0 if the `tilemapresource.xml` metadata request fails and the `rectangle` is too large for the given detail level [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448)
+* Fixed ground atmosphere rendering when using a samller ellipsoid. [#8683](https://github.com/CesiumGS/cesium/issues/8683)
+* Fixed globe incorrectly occluding objects when using a smaller ellipsoid. [#7124](https://github.com/CesiumGS/cesium/issues/7124)
+* Fixed a regression introduced in 1.67 which caused overlapping colored ground geometry to have visual artifacts. [#8694](https://github.com/CesiumGS/cesium/pull/8694)
+* Fixed a clipping problem when viewing a polyline up close with the logarithmic depth buffer enabled, which is the default on most systems. [#8703](https://github.com/CesiumGS/cesium/pull/8703)
+
 ### 1.67.0 - 2020-03-02
 
 ##### Breaking Changes :mega:
 * `Cesium3DTileset.skipLevelOfDetail` is now `false` by default. [#8631](https://github.com/CesiumGS/cesium/pull/8631)
+* glTF models are now rendered using the `LEQUALS` depth test function instead of `LESS`. This means that when geometry overlaps, the _later_ geometry will be visible above the earlier, where previously the opposite was true. We believe this is a more sensible default, and makes it easier to render e.g. outlined buildings with glTF. [#8646](https://github.com/CesiumGS/cesium/pull/8646)
 
 ##### Additions :tada:
 
-* Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class.
-* Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles.
+* Massively improved performance of clamped Entity ground geometry with dynamic colors. [#8630](https://github.com/CesiumGS/cesium/pull/8630)
+* Added `Entity.tileset` for loading a 3D Tiles tileset via the Entity API using the new `Cesium3DTilesetGraphics` class. [#8580](https://github.com/CesiumGS/cesium/pull/8580)
+* Added `tileset.uri`, `tileset.show`, and `tileset.maximumScreenSpaceError` properties to CZML processing for loading 3D Tiles. [#8580](https://github.com/CesiumGS/cesium/pull/8580)
 * Added `Color.lerp` for linearly interpolating between two RGB colors. [#8607](https://github.com/CesiumGS/cesium/pull/8607)
 * `CesiumTerrainProvider` now supports terrain tiles using a `WebMercatorTilingScheme` by specifying `"projection": "EPSG:3857"` in `layer.json`. It also now supports numbering tiles from the North instead of the South by specifying `"scheme": "slippyMap"` in `layer.json`. [#8563](https://github.com/CesiumGS/cesium/pull/8563)
 * Added basic support for `isNaN`, `isFinite`, `null`, and `undefined` in the 3D Tiles styling GLSL backend for point clouds. [#8621](https://github.com/CesiumGS/cesium/pull/8621)
+* Added `sizeInMeters` to `ParticleSystem`. [#7746](https://github.com/CesiumGS/cesium/pull/7746)
 
 ##### Fixes :wrench:
 
 * Fixed a bug that caused large, nearby geometry to be clipped when using a logarithmic depth buffer, which is the default on most systems. [#8600](https://github.com/CesiumGS/cesium/pull/8600)
 * Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/CesiumGS/cesium/pull/8598)
 * Fixed a bug where applying a new 3D Tiles style during a flight would not update all existing tiles. [#8622](https://github.com/CesiumGS/cesium/pull/8622)
+* Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/AnalyticalGraphicsInc/cesium/pull/8568)
+* Updated knockout from 3.5.0 to 3.5.1. [#8424](https://github.com/CesiumGS/cesium/pull/8424)
+* Cesium's local development server now works in Node 12 & 13 [#8648](https://github.com/CesiumGS/cesium/pull/8648)
+
+##### Deprecated :hourglass_flowing_sand:
+* The `isArray` function has been deprecated and will be removed in Cesium 1.69. Use the native `Array.isArray` function instead. [#8526](https://github.com/CesiumGS/cesium/pull/8526)
 
 ### 1.66.0 - 2020-02-03
 

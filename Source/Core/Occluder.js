@@ -2,7 +2,6 @@ import BoundingSphere from './BoundingSphere.js';
 import Cartesian3 from './Cartesian3.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import CesiumMath from './Math.js';
@@ -51,7 +50,7 @@ import Visibility from './Visibility.js';
 
     var scratchCartesian3 = new Cartesian3();
 
-    defineProperties(Occluder.prototype, {
+    Object.defineProperties(Occluder.prototype, {
         /**
          * The position of the occluder.
          * @memberof Occluder.prototype

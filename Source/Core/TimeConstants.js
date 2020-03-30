@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Constants for time conversions like those done by {@link JulianDate}.
@@ -82,4 +81,4 @@ import freezeObject from './freezeObject.js';
          */
         MODIFIED_JULIAN_DATE_DIFFERENCE : 2400000.5
     };
-export default freezeObject(TimeConstants);
+export default Object.freeze(TimeConstants);

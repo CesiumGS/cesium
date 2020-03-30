@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The refinement approach for a tile.
@@ -28,4 +27,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         REPLACE : 1
     };
-export default freezeObject(Cesium3DTileRefine);
+export default Object.freeze(Cesium3DTileRefine);

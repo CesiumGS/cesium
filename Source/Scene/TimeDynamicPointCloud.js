@@ -3,7 +3,6 @@ import Check from '../Core/Check.js';
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Event from '../Core/Event.js';
 import getTimestamp from '../Core/getTimestamp.js';
@@ -192,7 +191,7 @@ import ShadowMode from './ShadowMode.js';
         this._runningAverage = 0.0;
     }
 
-    defineProperties(TimeDynamicPointCloud.prototype, {
+    Object.defineProperties(TimeDynamicPointCloud.prototype, {
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the point cloud.
          *
@@ -238,6 +237,7 @@ import ShadowMode from './ShadowMode.js';
                 if (defined(this._lastRenderedFrame)) {
                     return this._lastRenderedFrame.pointCloud.boundingSphere;
                 }
+                return undefined;
             }
         },
 
@@ -723,7 +723,7 @@ import ShadowMode from './ShadowMode.js';
         var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
         if (defined(shading) && shading.attenuation && shading.eyeDomeLighting && (addedCommandsLength > 0)) {
-            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading);
+            eyeDomeLighting.update(frameState, lengthBeforeUpdate, shading, this.boundingSphere);
         }
     };
 

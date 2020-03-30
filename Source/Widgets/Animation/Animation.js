@@ -1,6 +1,5 @@
 import Color from '../../Core/Color.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import getElement from '../getElement.js';
@@ -562,7 +561,7 @@ import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
         this.resize();
     }
 
-    defineProperties(Animation.prototype, {
+    Object.defineProperties(Animation.prototype, {
         /**
          * Gets the parent container.
          *

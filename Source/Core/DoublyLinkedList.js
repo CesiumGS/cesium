@@ -1,5 +1,4 @@
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     /**
      * @private
@@ -10,7 +9,7 @@ import defineProperties from './defineProperties.js';
         this._length = 0;
     }
 
-    defineProperties(DoublyLinkedList.prototype, {
+    Object.defineProperties(DoublyLinkedList.prototype, {
         length : {
             get : function() {
                 return this._length;

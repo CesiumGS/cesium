@@ -1,6 +1,5 @@
 import clone from '../Core/clone.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Expression from './Expression.js';
 
     /**
@@ -37,7 +36,7 @@ import Expression from './Expression.js';
         setRuntime(this, defines);
     }
 
-    defineProperties(ConditionsExpression.prototype, {
+    Object.defineProperties(ConditionsExpression.prototype, {
         /**
          * Gets the conditions expression defined in the 3D Tiles Styling language.
          *

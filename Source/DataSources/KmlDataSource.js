@@ -12,7 +12,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
@@ -191,7 +190,7 @@ import WallGraphics from './WallGraphics.js';
         this._timeThreshold = 1000; // Initial load is 1 second
     }
 
-    defineProperties(DeferredLoading.prototype, {
+    Object.defineProperties(DeferredLoading.prototype, {
         dataSource : {
             get : function() {
                 return this._dataSource;
@@ -1352,6 +1351,9 @@ import WallGraphics from './WallGraphics.js';
         } else {
             if (defined(zIndex)) {
                 oneTimeWarning('kml-gx:drawOrder', 'KML - gx:drawOrder is not supported in LineStrings when clampToGround is false');
+            }
+            if (dataSource._clampToGround && !tessellate) {
+                oneTimeWarning('kml-line-tesselate', 'Ignoring clampToGround for KML lines without the tessellate flag.');
             }
 
             polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
@@ -2636,7 +2638,7 @@ import WallGraphics from './WallGraphics.js';
         return dataSource.load(data, options);
     };
 
-    defineProperties(KmlDataSource.prototype, {
+    Object.defineProperties(KmlDataSource.prototype, {
         /**
          * Gets or sets a human-readable name for this instance.
          * This will be automatically be set to the KML document name on load.

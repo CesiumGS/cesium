@@ -1,6 +1,5 @@
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import destroyObject from './destroyObject.js';
 import Iso8601 from './Iso8601.js';
 import JulianDate from './JulianDate.js';
@@ -54,7 +53,7 @@ import JulianDate from './JulianDate.js';
         this._firstTickAfterSeek = false;
     }
 
-    defineProperties(VideoSynchronizer.prototype, {
+    Object.defineProperties(VideoSynchronizer.prototype, {
         /**
          * Gets or sets the clock used to drive the video element.
          *

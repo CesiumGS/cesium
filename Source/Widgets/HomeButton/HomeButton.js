@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -46,7 +45,7 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
         this._element = element;
     }
 
-    defineProperties(HomeButton.prototype, {
+    Object.defineProperties(HomeButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof HomeButton.prototype

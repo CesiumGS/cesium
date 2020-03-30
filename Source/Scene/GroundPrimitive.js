@@ -5,11 +5,9 @@ import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
-import isArray from '../Core/isArray.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
 import Rectangle from '../Core/Rectangle.js';
 import when from '../ThirdParty/when.js';
@@ -119,7 +117,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         var appearance = options.appearance;
         var geometryInstances = options.geometryInstances;
         if (!defined(appearance) && defined(geometryInstances)) {
-            var geometryInstancesArray = isArray(geometryInstances) ? geometryInstances : [geometryInstances];
+            var geometryInstancesArray = Array.isArray(geometryInstances) ? geometryInstances : [geometryInstances];
             var geometryInstanceCount = geometryInstancesArray.length;
             for (var i = 0; i < geometryInstanceCount; i++) {
                 var attributes = geometryInstancesArray[i].attributes;
@@ -237,7 +235,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
         };
     }
 
-    defineProperties(GroundPrimitive.prototype, {
+    Object.defineProperties(GroundPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -619,7 +617,7 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
             var geometry;
             var instanceType;
 
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
             var groundInstances = new Array(length);
 

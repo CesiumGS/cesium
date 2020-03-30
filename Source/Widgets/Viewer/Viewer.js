@@ -4,13 +4,11 @@ import Cartographic from '../../Core/Cartographic.js';
 import Clock from '../../Core/Clock.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Event from '../../Core/Event.js';
 import EventHelper from '../../Core/EventHelper.js';
 import HeadingPitchRange from '../../Core/HeadingPitchRange.js';
-import isArray from '../../Core/isArray.js';
 import Matrix4 from '../../Core/Matrix4.js';
 import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
 import BoundingSphereState from '../../DataSources/BoundingSphereState.js';
@@ -443,7 +441,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             var geocoderService;
             if (defined(options.geocoder) && typeof options.geocoder !== 'boolean') {
-                geocoderService = isArray(options.geocoder) ? options.geocoder : [options.geocoder];
+                geocoderService = Array.isArray(options.geocoder) ? options.geocoder : [options.geocoder];
             }
             geocoder = new Geocoder({
                 container : geocoderContainer,
@@ -710,7 +708,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
-    defineProperties(Viewer.prototype, {
+    Object.defineProperties(Viewer.prototype, {
         /**
          * Gets the parent container.
          * @memberof Viewer.prototype
@@ -1819,7 +1817,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //Zoom target is already an array, just copy it and return.
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
                 return;
             }
@@ -1833,7 +1831,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //Zoom target is already an array, just copy it and return.
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
             } else {
                 //Single entity

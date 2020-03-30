@@ -3,7 +3,6 @@ import Cartesian4 from './Cartesian4.js';
 import CullingVolume from './CullingVolume.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
@@ -126,7 +125,7 @@ import Matrix4 from './Matrix4.js';
         }
     }
 
-    defineProperties(OrthographicOffCenterFrustum.prototype, {
+    Object.defineProperties(OrthographicOffCenterFrustum.prototype, {
         /**
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicOffCenterFrustum.prototype

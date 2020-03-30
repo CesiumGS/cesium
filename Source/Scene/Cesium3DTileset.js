@@ -6,7 +6,6 @@ import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
@@ -882,7 +881,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             });
     }
 
-    defineProperties(Cesium3DTileset.prototype, {
+    Object.defineProperties(Cesium3DTileset.prototype, {
         /**
          * NOTE: This getter exists so that `Picking.js` can differentiate between
          *       PrimitiveCollection and Cesium3DTileset objects without inflating
@@ -2052,7 +2051,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
             tileset.pointCloudShading.attenuation &&
             tileset.pointCloudShading.eyeDomeLighting &&
             (addedCommandsLength > 0)) {
-            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading);
+            tileset._pointCloudEyeDomeLighting.update(frameState, numberOfInitialCommands, tileset.pointCloudShading, tileset.boundingSphere);
         }
 
         if (isRender) {

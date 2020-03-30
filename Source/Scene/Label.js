@@ -4,10 +4,8 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
-import freezeObject from '../Core/freezeObject.js';
 import NearFarScalar from '../Core/NearFarScalar.js';
 import Billboard from './Billboard.js';
 import HeightReference from './HeightReference.js';
@@ -20,7 +18,7 @@ import VerticalOrigin from './VerticalOrigin.js';
     var fontInfoCacheLength = 0;
     var fontInfoCacheMaxSize = 256;
 
-    var textTypes = freezeObject({
+    var textTypes = Object.freeze({
         LTR : 0,
         RTL : 1,
         WEAK : 2,
@@ -186,7 +184,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         this._updateClamping();
     }
 
-    defineProperties(Label.prototype, {
+    Object.defineProperties(Label.prototype, {
         /**
          * Determines if this label will be shown.  Use this to hide or show a label, instead
          * of removing it and re-adding it to the collection.

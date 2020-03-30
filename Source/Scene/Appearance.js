@@ -2,7 +2,6 @@ import clone from '../Core/clone.js';
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import BlendingState from './BlendingState.js';
 import CullFace from './CullFace.js';
 
@@ -60,7 +59,7 @@ import CullFace from './CullFace.js';
         this._closed = defaultValue(options.closed, false);
     }
 
-    defineProperties(Appearance.prototype, {
+    Object.defineProperties(Appearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *
