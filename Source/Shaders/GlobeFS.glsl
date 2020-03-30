@@ -84,6 +84,11 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
+#ifdef TRANSLUCENT
+uniform vec4 u_frontTranslucencyByDistance;
+uniform vec4 u_backTranslucencyByDistance;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -96,8 +101,11 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT)
 varying float v_distance;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogRayleighColor;
 varying vec3 v_fogMieColor;
 #endif
@@ -318,6 +326,17 @@ void main()
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+#endif
+
+#ifdef TRANSLUCENT
+    vec4 translucencyByDistance = gl_FrontFacing ? u_frontTranslucencyByDistance : u_backTranslucencyByDistance;
+    float startDistance = translucencyByDistance.x;
+    float startAlpha = translucencyByDistance.y;
+    float endDistance = translucencyByDistance.z;
+    float endAlpha = translucencyByDistance.w;
+    float alphaLerp = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    float alphaMutiplier = mix(startAlpha, endAlpha, alphaLerp);
+    color.a *= alphaMutiplier;
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
