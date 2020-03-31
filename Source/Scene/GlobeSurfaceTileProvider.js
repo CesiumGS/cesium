@@ -1580,8 +1580,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled && !cameraUnderground;
         var showGroundAtmosphere = tileProvider.showGroundAtmosphere;
-        var castShadows = ShadowMode.castShadows(tileProvider.shadows);
-        var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows);
+        var castShadows = ShadowMode.castShadows(tileProvider.shadows) && !translucent;
+        var receiveShadows = ShadowMode.receiveShadows(tileProvider.shadows) && !translucent;
 
         var hueShift = tileProvider.hueShift;
         var saturationShift = tileProvider.saturationShift;
