@@ -24,5 +24,5 @@ void main()
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
 
-    v_color = czm_writeNonPerspective(color, gl_Position.w);
+    v_color = color;
 }

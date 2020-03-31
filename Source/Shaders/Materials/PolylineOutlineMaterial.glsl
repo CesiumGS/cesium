@@ -8,7 +8,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
-    float width = czm_readNonPerspective(v_width, gl_FragCoord.w);
+    float width = v_width;
     vec2 st = materialInput.st;
     float halfInteriorWidth =  0.5 * (width - outlineWidth) / width;
     float b = step(0.5 - halfInteriorWidth, st.t);

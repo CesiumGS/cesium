@@ -15,21 +15,17 @@
  * @returns {float|vec2|vec3|vec4} The usable value.
  */
 float czm_readNonPerspective(float value, float oneOverW) {
-    // return value * oneOverW;
-    return value;
+    return value * oneOverW;
 }
 
 vec2 czm_readNonPerspective(vec2 value, float oneOverW) {
-    // return value * oneOverW;
-    return value;
+    return value * oneOverW;
 }
 
 vec3 czm_readNonPerspective(vec3 value, float oneOverW) {
-    // return value * oneOverW;
-    return value;
+    return value * oneOverW;
 }
 
 vec4 czm_readNonPerspective(vec4 value, float oneOverW) {
-    // return value * oneOverW;
-    return value;
+    return value * oneOverW;
 }

@@ -19,7 +19,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
-    float polylineAngle = czm_readNonPerspective(v_polylineAngle, gl_FragCoord.w);
+    float polylineAngle = v_polylineAngle;
     vec2 pos = rotate(polylineAngle) * gl_FragCoord.xy;
 
     // Get the relative position within the dash from 0 to 1

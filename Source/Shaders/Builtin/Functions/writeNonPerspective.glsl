@@ -16,21 +16,17 @@
  *          fragment shader with {@link czm_readNonPerspective}.
  */
 float czm_writeNonPerspective(float value, float w) {
-    // return value * w;
-    return value;
+    return value * w;
 }
 
 vec2 czm_writeNonPerspective(vec2 value, float w) {
-    // return value * w;
-    return value;
+    return value * w;
 }
 
 vec3 czm_writeNonPerspective(vec3 value, float w) {
-    // return value * w;
-    return value;
+    return value * w;
 }
 
 vec4 czm_writeNonPerspective(vec4 value, float w) {
-    // return value * w;
-    return value;
+    return value * w;
 }

@@ -9,7 +9,7 @@ void main()
     czm_materialInput materialInput;
 
     vec2 st = v_st;
-    st.t *= gl_FragCoord.w;
+    st.t = czm_readNonPerspective(st.t, gl_FragCoord.w);
 
     materialInput.s = st.s;
     materialInput.st = st;

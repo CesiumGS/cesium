@@ -26,8 +26,8 @@ void main()
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
 
-    v_width = czm_writeNonPerspective(width, gl_Position.w);
+    v_width = width;
     v_st.s = st.s;
-    v_st.t = st.t * gl_Position.w;
-    v_polylineAngle = czm_writeNonPerspective(angle, gl_Position.w);
+    v_st.t = czm_writeNonPerspective(st.t, gl_Position.w);
+    v_polylineAngle = angle;
 }
