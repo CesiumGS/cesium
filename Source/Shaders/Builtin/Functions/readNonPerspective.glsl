@@ -1,6 +1,6 @@
 /**
  * Reads a value previously transformed with {@link czm_writeNonPerspective}
- * by multiplying by dividing it by `w`, the value used in the perspective divide.
+ * by dividing it by `w`, the value used in the perspective divide.
  * This function is intended to be called in a fragment shader to access a
  * `varying` that should not be subject to perspective interpolation.
  * For example, screen-space texture coordinates. The value should have been
