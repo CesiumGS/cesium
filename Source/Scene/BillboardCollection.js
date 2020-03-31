@@ -27,6 +27,7 @@ import BillboardCollectionVS from '../Shaders/BillboardCollectionVS.js';
 import Billboard from './Billboard.js';
 import BlendingState from './BlendingState.js';
 import BlendOption from './BlendOption.js';
+import GlobeTranslucency from './GlobeTranslucency.js';
 import HeightReference from './HeightReference.js';
 import HorizontalOrigin from './HorizontalOrigin.js';
 import SceneMode from './SceneMode.js';
@@ -1180,7 +1181,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         }
 
         var disableDepthTestDistance = billboard.disableDepthTestDistance;
-        var clampToGround = billboard.heightReference === HeightReference.CLAMP_TO_GROUND && billboardCollection._scene.context.depthTexture;
+        var clampToGround = billboard.heightReference === HeightReference.CLAMP_TO_GROUND && context.depthTexture;
         if (!defined(disableDepthTestDistance)) {
             disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
         }
@@ -1240,7 +1241,11 @@ import VerticalOrigin from './VerticalOrigin.js';
 
     function writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
-            billboardCollection._shaderClampToGround = billboardCollection._scene.context.depthTexture;
+            var scene = billboardCollection._scene;
+            var globeTranslucent = GlobeTranslucency.isTranslucent(scene.globe);
+            var depthTestAgainstTerrain = defined(scene.globe) && scene.globe.depthTestAgainstTerrain;
+
+            billboardCollection._shaderClampToGround = context.depthTexture && !globeTranslucent && depthTestAgainstTerrain;
         }
         var i;
         var writer = vafWriters[attributeLocations.textureCoordinateBoundsOrLabelTranslate];
