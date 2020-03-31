@@ -149,7 +149,9 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     vec2 thisSegmentLeftWC = vec2(-thisSegmentForwardWC.y, thisSegmentForwardWC.x);
     vec2 otherSegmentLeftWC = vec2(-otherSegmentForwardWC.y, otherSegmentForwardWC.x);
 
-    vec2 leftWC = normalize((thisSegmentLeftWC + otherSegmentLeftWC) * 0.5);
+    vec2 leftSumWC = thisSegmentLeftWC + otherSegmentLeftWC;
+    float leftSumLength = length(leftSumWC);
+    vec2 leftWC = leftSumLength < czm_epsilon6 ? thisSegmentForwardWC : (leftSumWC / leftSumLength);
 
     float expandWidth = width * 0.5;
 
