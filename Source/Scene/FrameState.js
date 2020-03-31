@@ -137,6 +137,9 @@ import SceneMode from './SceneMode.js';
 
         /**
          * The {@link GlobeTranslucency} object used by the scene.
+         *
+         * @type {GlobeTranslucency}
+         * @default undefined
          */
         this.globeTranslucency = undefined;
 
