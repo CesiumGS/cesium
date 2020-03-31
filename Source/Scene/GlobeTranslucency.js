@@ -582,7 +582,7 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     }
 };
 
-GlobeTranslucency.pushDerivedCommands = function(command, tileProvider, frameState) {
+GlobeTranslucency.pushDerivedCommands = function(command, firstLayer, tileProvider, frameState) {
     var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
 
     if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_INVISIBLE)) {
@@ -611,9 +611,12 @@ GlobeTranslucency.pushDerivedCommands = function(command, tileProvider, frameSta
     }
 
     if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)) {
-        // Push back and front face command for classification depth
+        // Push back and front face command for classification depth.
+        // Only push classification command if this command is in the first globe layer
         // Push translucent back and front face commands separately so that non-OIT blending looks better
-        frameState.commandList.push(derivedCommands.backAndFrontFaceCommand);
+        if (firstLayer) {
+            frameState.commandList.push(derivedCommands.backAndFrontFaceCommand);
+        }
         if (frameState.cameraUnderground) {
             frameState.commandList.push(translucentFrontFaceCommand);
             frameState.commandList.push(translucentBackFaceCommand);
@@ -623,9 +626,19 @@ GlobeTranslucency.pushDerivedCommands = function(command, tileProvider, frameSta
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE)) {
         // Push back and front face commands, one for the opaque pass and the other for classification depth
+        // Only push classification command if this command is in the first globe layer
         // Push translucent command for the face that appears in front
-        frameState.commandList.push(derivedCommands.backFaceCommand);
-        frameState.commandList.push(derivedCommands.frontFaceCommand);
+        if (firstLayer) {
+            frameState.commandList.push(derivedCommands.backFaceCommand);
+            frameState.commandList.push(derivedCommands.frontFaceCommand);
+        } else {
+            // eslint-disable-next-line no-lonely-if
+            if (frameState.cameraUnderground) {
+                frameState.commandList.push(derivedCommands.backFaceCommand);
+            } else {
+                frameState.commandList.push(derivedCommands.frontFaceCommand);
+            }
+        }
         if (frameState.cameraUnderground) {
             frameState.commandList.push(translucentBackFaceCommand);
         } else {
@@ -633,20 +646,30 @@ GlobeTranslucency.pushDerivedCommands = function(command, tileProvider, frameSta
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_INVISIBLE)) {
         // Push one command for classification depth and another for translucency
+        // Only push classification command if this command is in the first globe layer
         if (frameState.cameraUnderground) {
-            frameState.commandList.push(derivedCommands.backFaceCommand);
+            if (firstLayer) {
+                frameState.commandList.push(derivedCommands.backFaceCommand);
+            }
             frameState.commandList.push(translucentBackFaceCommand);
         } else {
-            frameState.commandList.push(derivedCommands.frontFaceCommand);
+            if (firstLayer) {
+                frameState.commandList.push(derivedCommands.frontFaceCommand);
+            }
             frameState.commandList.push(translucentFrontFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_TRANSLUCENT)) {
         // Push one command for classification depth and another for translucency
+        // Only push classification command if this command is in the first globe layer
         if (frameState.cameraUnderground) {
-            frameState.commandList.push(derivedCommands.frontFaceCommand);
+            if (firstLayer) {
+                frameState.commandList.push(derivedCommands.frontFaceCommand);
+            }
             frameState.commandList.push(translucentFrontFaceCommand);
         } else {
-            frameState.commandList.push(derivedCommands.backFaceCommand);
+            if (firstLayer) {
+                frameState.commandList.push(derivedCommands.backFaceCommand);
+            }
             frameState.commandList.push(translucentBackFaceCommand);
         }
     } else if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_OPAQUE)) {

@@ -452,7 +452,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
     function pushCommand(tileProvider, command, frameState) {
         if (tileProvider.translucent) {
-            GlobeTranslucency.pushDerivedCommands(command, tileProvider, frameState);
+            var firstLayer = !command.renderState.blending.enabled;
+            GlobeTranslucency.pushDerivedCommands(command, firstLayer, tileProvider, frameState);
         } else {
             frameState.commandList.push(command);
         }
