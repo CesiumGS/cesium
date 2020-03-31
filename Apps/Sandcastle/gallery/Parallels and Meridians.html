@@ -206,9 +206,12 @@ Sandcastle.addToggleButton('Show higher-resolution grid', false, function(checke
 Sandcastle.addToggleButton('Show antipodal point', false, function(checked) {
     showAntipodalPoint = checked;
     var antipodalPoint = primitives.antipodalPoint;
-    antipodalPoint.parallel.show = showAntipodalPoint;
-    antipodalPoint.meridian.show = showAntipodalPoint;
-    antipodalPoint.label.show = showAntipodalPoint;
+
+    if (Cesium.defined(antipodalPoint.parallel)) {
+        antipodalPoint.parallel.show = showAntipodalPoint;
+        antipodalPoint.meridian.show = showAntipodalPoint;
+        antipodalPoint.label.show = showAntipodalPoint;
+    }
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();
