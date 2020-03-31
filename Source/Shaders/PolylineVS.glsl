@@ -94,7 +94,9 @@ void main()
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, polylineAngle);
     gl_Position = czm_viewportOrthographic * positionWC * show;
 
-    v_st = czm_writeNonPerspective(vec2(texCoord, clamp(expandDir, 0.0, 1.0)), gl_Position.w);
+    v_st.s = texCoord;
+    v_st.t = clamp(expandDir, 0.0, 1.0) * gl_Position.w;
+
     v_width = czm_writeNonPerspective(width, gl_Position.w);
     v_pickColor = czm_writeNonPerspective(pickColor, gl_Position.w);
     v_polylineAngle = czm_writeNonPerspective(polylineAngle, gl_Position.w);

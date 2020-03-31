@@ -12,7 +12,6 @@ float getPointOnLine(vec2 p0, vec2 p1, float x)
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    materialInput.st.t *= gl_FragCoord.w;
     czm_material material = czm_getDefaultMaterial(materialInput);
 
     vec2 st = materialInput.st;
