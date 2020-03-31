@@ -460,20 +460,9 @@ function getTranslucencyUniformMap(globeTranslucency) {
     };
 }
 
-function combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction) {
-    var propertyName;
-    var uniformMapChanged = true;
-
-    if (defined(derivedUniformMap)) {
-        uniformMapChanged = false;
-        for (propertyName in uniformMap) {
-            if (uniformMap.hasOwnProperty(propertyName)) {
-                if (!defined(derivedUniformMap[propertyName])) {
-                    uniformMapChanged = true;
-                    break;
-                }
-            }
-        }
+function getDerivedUniformMap(globeTranslucency, uniformMap, derivedUniformMap, uniformMapChanged, getDerivedUniformMapFunction) {
+    if (!defined(getDerivedUniformMapFunction)) {
+        return uniformMap;
     }
 
     if (uniformMapChanged) {
@@ -481,14 +470,6 @@ function combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, ge
     }
 
     return derivedUniformMap;
-}
-
-function getDerivedUniformMap(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction) {
-    if (!defined(getDerivedUniformMapFunction)) {
-        return uniformMap;
-    }
-
-    return combineUniformMaps(globeTranslucency, uniformMap, derivedUniformMap, getDerivedUniformMapFunction);
 }
 
 function DerivedCommandPack(names, passes, pickOnly, getShaderProgramFunctions, getRenderStateFunctions, getUniformMapFunctions) {
@@ -570,11 +551,17 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
             }
         }
 
+        var uniformMapChanged = false;
+        if (derivedCommands.uniformMap !== command.uniformMap) {
+            derivedCommands.uniformMap = command.uniformMap;
+            uniformMapChanged = true;
+        }
+
         for (i = 0; i < length; ++i) {
             commands[i] = DrawCommand.shallowClone(command, commands[i]);
             commands[i].pass = passes[i];
             commands[i].pickOnly = pickOnly[i];
-            commands[i].uniformMap = getDerivedUniformMap(frameState.globeTranslucency, command.uniformMap, uniformMaps[i], getUniformMapFunctions[i]);
+            commands[i].uniformMap = getDerivedUniformMap(frameState.globeTranslucency, command.uniformMap, uniformMaps[i], uniformMapChanged, getUniformMapFunctions[i]);
             derivedCommands[names[i]] = commands[i];
         }
 

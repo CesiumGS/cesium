@@ -710,9 +710,9 @@ import ShadowMode from './ShadowMode.js';
         if (defined(globe._material) && (!requireNormals || globe._terrainProvider.requestVertexNormals)) {
             fragmentSources.push(globe._material.shaderSource);
             defines.push('APPLY_MATERIAL');
-            globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+            globe._surface._tileProvider.materialUniformMap = globe._material._uniforms;
         } else {
-            globe._surface._tileProvider.uniformMap = undefined;
+            globe._surface._tileProvider.materialUniformMap = undefined;
         }
         fragmentSources.push(GlobeFS);
 

@@ -109,6 +109,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         this.backTranslucencyByDistance = undefined;
         this.translucent = false;
         this.depthTestAgainstTerrain = false;
+        this.materialUniformMap = undefined;
+        this._materialUniformMap = undefined;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -1364,6 +1366,10 @@ import TileSelectionResult from './TileSelectionResult.js';
             }
         };
 
+        if (defined(globeSurfaceTileProvider.materialUniformMap)) {
+            return combine(uniformMap, globeSurfaceTileProvider.materialUniformMap);
+        }
+
         return uniformMap;
     }
 
@@ -1713,11 +1719,21 @@ import TileSelectionResult from './TileSelectionResult.js';
             debugDestroyPrimitive();
         }
 
+        var uniformMap;
+
+        var materialUniformMapChanged = tileProvider._materialUniformMap !== tileProvider.materialUniformMap;
+        if (materialUniformMapChanged) {
+            tileProvider._materialUniformMap = tileProvider.materialUniformMap;
+            var drawCommandsLength = tileProvider._drawCommands.length;
+            for (var i = 0; i < drawCommandsLength; ++i) {
+                tileProvider._uniformMaps[i] = createTileUniformMap(frameState, tileProvider);
+            }
+        }
+
         do {
             var numberOfDayTextures = 0;
 
             var command;
-            var uniformMap;
 
             if (tileProvider._drawCommands.length <= tileProvider._usedDrawCommands) {
                 command = new DrawCommand();
@@ -1934,10 +1950,6 @@ import TileSelectionResult from './TileSelectionResult.js';
             if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
-            }
-
-            if (defined(tileProvider.uniformMap)) {
-                uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
             surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
