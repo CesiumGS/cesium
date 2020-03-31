@@ -63,14 +63,16 @@ function meridian(longitude, color) {
 
 function labelCoordinates(cartographic) {
     var position = Cesium.Cartographic.toCartesian(cartographic);
-    var latitude = toDegrees(cartographic.latitude);
-    var longitude = toDegrees(cartographic.longitude);
+    var latitude = toDegrees(cartographic.latitude).toFixed(4);
+    var longitude = toDegrees(cartographic.longitude).toFixed(4);
     var label = 'lat: ' + latitude + '°\nlon: ' + longitude + '°';
 
     return viewer.entities.add({
         position: position,
         label: {
-            text: label
+            text: label,
+            showBackground: true,
+            font: '14px monospace'
         }
     });
 }
