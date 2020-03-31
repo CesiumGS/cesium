@@ -441,6 +441,10 @@ function getPickFrontFaceRenderState(renderState) {
 }
 
 function getDerivedRenderState(renderState, getRenderStateFunction, cache) {
+    if (!defined(getRenderStateFunction)) {
+        return renderState;
+    }
+
     var cachedRenderState = cache[renderState.id];
     if (!defined(cachedRenderState)) {
         var rs = RenderState.getState(renderState);
