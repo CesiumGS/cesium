@@ -174,7 +174,7 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             return this._heightScale;
         },
         set : function(value) {
-            if (value > 0) {
+            if (value <= 0) {
                 throw new Cesium.DeveloperError('value must be greater than 0');
             }
             this._heightScale = value;
