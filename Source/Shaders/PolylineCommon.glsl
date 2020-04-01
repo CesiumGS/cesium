@@ -103,10 +103,6 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     vec4 clippedPositionWC, clippedPositionEC;
     clipLineSegmentToNearPlane(positionEC.xyz, usePrevious ? prevEC.xyz : nextEC.xyz, clippedPositionWC, segmentClipped, segmentCulled, clippedPositionEC);
 
-#ifdef LOG_DEPTH
-    czm_vertexLogDepth(czm_projection * clippedPositionEC);
-#endif
-
     if (segmentCulled)
     {
         return vec4(0.0, 0.0, 0.0, 1.0);
