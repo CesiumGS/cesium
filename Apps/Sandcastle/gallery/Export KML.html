@@ -124,7 +124,8 @@ Sandcastle.addToolbarButton('Download', function() {
         })
         .then(function(result) {
             downloadBlob(filenameToSave, result.kmz);
-        });
+        })
+        .otherwise(console.error);
 });
 //Sandcastle_End
     Sandcastle.finishedLoading();
