@@ -112,13 +112,6 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
 
-    if (czm_equalsEpsilon(clippedPositionWC.xy, usePrevious ? clippedPrevWC.xy : clippedNextWC.xy, czm_epsilon1))
-    {
-        // The ends of this segment occupy the same screen space,
-        // so cull it rather than risking an unstable expansion.
-        return vec4(0.0, 0.0, 0.0, 1.0);
-    }
-
     vec2 directionToPrevWC = normalize(clippedPrevWC.xy - clippedPositionWC.xy);
     vec2 directionToNextWC = normalize(clippedNextWC.xy - clippedPositionWC.xy);
 
@@ -147,24 +140,34 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
     }
 
     vec2 thisSegmentLeftWC = vec2(-thisSegmentForwardWC.y, thisSegmentForwardWC.x);
-    vec2 otherSegmentLeftWC = vec2(-otherSegmentForwardWC.y, otherSegmentForwardWC.x);
 
-    vec2 leftSumWC = thisSegmentLeftWC + otherSegmentLeftWC;
-    float leftSumLength = length(leftSumWC);
-    vec2 leftWC = leftSumLength < czm_epsilon6 ? thisSegmentForwardWC : (leftSumWC / leftSumLength);
-
+    vec2 leftWC = thisSegmentLeftWC;
     float expandWidth = width * 0.5;
 
-    // The sine of the angle between the two vectors is given by the formula
-    //         |a x b| = |a||b|sin(theta)
-    // which is
-    //     float sinAngle = length(cross(vec3(leftWC, 0.0), vec3(-thisSegmentForwardWC, 0.0)));
-    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
-    // Therefore, the sine of the angle is just the z component of the cross product.
-    vec2 u = -thisSegmentForwardWC;
-    vec2 v = leftWC;
-    float sinAngle = abs(u.x * v.y - u.y * v.x);
-    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
+    // When lines are split at the anti-meridian, the position may be at the
+    // same location as the next or previous position, and we need to handle
+    // that to avoid producing NaNs.
+    if (!czm_equalsEpsilon(prevEC.xyz - positionEC.xyz, vec3(0.0), czm_epsilon1) && !czm_equalsEpsilon(nextEC.xyz - positionEC.xyz, vec3(0.0), czm_epsilon1))
+    {
+        vec2 otherSegmentLeftWC = vec2(-otherSegmentForwardWC.y, otherSegmentForwardWC.x);
+
+        vec2 leftSumWC = thisSegmentLeftWC + otherSegmentLeftWC;
+        float leftSumLength = length(leftSumWC);
+        vec2 leftWC = leftSumLength < czm_epsilon6 ? thisSegmentForwardWC : (leftSumWC / leftSumLength);
+
+        float expandWidth = width * 0.5;
+
+        // The sine of the angle between the two vectors is given by the formula
+        //         |a x b| = |a||b|sin(theta)
+        // which is
+        //     float sinAngle = length(cross(vec3(leftWC, 0.0), vec3(-thisSegmentForwardWC, 0.0)));
+        // Because the z components of both vectors are zero, the x and y coordinate will be zero.
+        // Therefore, the sine of the angle is just the z component of the cross product.
+        vec2 u = -thisSegmentForwardWC;
+        vec2 v = leftWC;
+        float sinAngle = abs(u.x * v.y - u.y * v.x);
+        expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
+    }
 
     vec2 offset = leftWC * expandDirection * expandWidth * czm_pixelRatio;
     return vec4(clippedPositionWC.xy + offset, -clippedPositionWC.z, 1.0) * (czm_projection * clippedPositionEC).w;
