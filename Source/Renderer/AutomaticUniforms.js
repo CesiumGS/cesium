@@ -1864,6 +1864,34 @@ import WebGLConstants from '../Core/WebGLConstants.js';
             getValue : function(uniformState) {
                 return uniformState.gamma;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform that stores the ellipsoid radii.
+         *
+         * @alias czm_ellipsoidRadii
+         * @glslUniform
+         */
+        czm_ellipsoidRadii : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.ellipsoid.radii;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that stores the ellipsoid inverse radii.
+         *
+         * @alias czm_ellipsoidRadii
+         * @glslUniform
+         */
+        czm_ellipsoidInverseRadii : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.ellipsoid.oneOverRadii;
+            }
         })
     };
 export default AutomaticUniforms;

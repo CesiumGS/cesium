@@ -115,6 +115,8 @@ function rollupWarning(message) {
     console.log(message);
 }
 
+var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'), "utf8");
+
 function createWorkers() {
     rimraf.sync('Build/createWorkers');
 
@@ -150,6 +152,9 @@ function createWorkers() {
 
 gulp.task('build', function() {
     mkdirp.sync('Build');
+    fs.writeFileSync('Build/package.json', JSON.stringify({
+        type: 'commonjs'
+    }), "utf8");
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
@@ -352,7 +357,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         'Specs/**',
         'ThirdParty/**',
         'favicon.ico',
-        'gulpfile.js',
+        'gulpfile.cjs',
         'server.cjs',
         'package.json',
         'LICENSE.md',
@@ -458,13 +463,35 @@ function deployCesium(cacheControl, done) {
     var uploaded = 0;
     var errors = [];
 
-    function uploadFiles(prefix, filePrefix, files) {
-        return Promise.map(files, function(file) {
-            var blobName = prefix + '/' + file.replace(filePrefix, '');
-            var mimeLookup = getMimeType(blobName);
-            var contentType = mimeLookup.type;
-            var compress = mimeLookup.compress;
-            var contentEncoding = compress ? 'gzip' : undefined;
+    var prefix = uploadDirectory + '/';
+    return listAll(s3, bucketName, prefix, existingBlobs)
+        .then(function() {
+            return globby([
+                'Apps/**',
+                'Build/**',
+                'Source/**',
+                'Specs/**',
+                'ThirdParty/**',
+                '*.md',
+                'favicon.ico',
+                'gulpfile.cjs',
+                'index.html',
+                'package.json',
+                'server.cjs',
+                'web.config',
+                '*.zip',
+                '*.tgz'
+            ], {
+                dot : true // include hidden files
+            });
+        }).then(function(files) {
+            return Promise.map(files, function(file) {
+                var blobName = uploadDirectory + '/' + file;
+                var mimeLookup = getMimeType(blobName);
+                var contentType = mimeLookup.type;
+                var compress = mimeLookup.compress;
+                var contentEncoding = compress ? 'gzip' : undefined;
+                var etag;
 
             return readFile(file)
                 .then(function(content) {
@@ -920,7 +947,9 @@ function combineCesium(debug, optimizer, combineOutput) {
         return bundle.write({
             format: 'umd',
             name: 'Cesium',
-            file: path.join(combineOutput, 'Cesium.js')
+            file: path.join(combineOutput, 'Cesium.js'),
+            sourcemap: debug,
+            banner: copyrightHeader
         });
     });
 }
@@ -970,7 +999,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
-                    format: 'amd'
+                    format: 'amd',
+                    sourcemap: debug,
+                    banner: copyrightHeader
                 });
             });
         });
@@ -996,7 +1027,6 @@ function combineJavaScript(options) {
     var removePragmas = options.removePragmas;
 
     var combineOutput = path.join('Build', 'combineOutput', optimizer);
-    var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
     var promise = Promise.join(
         combineCesium(!removePragmas, optimizer, combineOutput),
@@ -1009,7 +1039,6 @@ function combineJavaScript(options) {
 
         //copy to build folder with copyright header added at the top
         var stream = gulp.src([combineOutput + '/**'])
-            .pipe(gulpInsert.prepend(copyrightHeader))
             .pipe(gulp.dest(outputDirectory));
 
         promises.push(streamToPromise(stream));
@@ -1328,7 +1357,6 @@ function buildCesiumViewer() {
     );
 
     promise = promise.then(function() {
-        var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
         var stream = mergeStream(
             gulp.src('Build/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))

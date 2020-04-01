@@ -11,8 +11,6 @@ import ContextLimits from '../Renderer/ContextLimits.js';
 import PixelDatatype from '../Renderer/PixelDatatype.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 
     /**
      * Creates a texture to look up per instance attributes for batched primitives. For example, store each primitive's pick color in the texture.
@@ -340,10 +338,7 @@ import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js'
             pixelDatatype : batchTable._pixelDatatype,
             width : dimensions.x,
             height : dimensions.y,
-            sampler : new Sampler({
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            }),
+            sampler : Sampler.NEAREST,
             flipY : false
         });
     }

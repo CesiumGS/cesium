@@ -13,9 +13,6 @@ import RenderState from '../Renderer/RenderState.js';
 import Sampler from '../Renderer/Sampler.js';
 import ShaderSource from '../Renderer/ShaderSource.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import BlendingState from '../Scene/BlendingState.js';
 import StencilConstants from '../Scene/StencilConstants.js';
 import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointCloudEyeDomeLighting.js';
@@ -36,15 +33,6 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
 
         this._strength = 1.0;
         this._radius = 1.0;
-    }
-
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
     }
 
     function destroyFramebuffer(processor) {
@@ -76,7 +64,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var depthGBuffer = new Texture({
@@ -85,7 +73,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         var depthTexture = new Texture({
@@ -94,7 +82,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
             height : screenHeight,
             pixelFormat : PixelFormat.DEPTH_COMPONENT,
             pixelDatatype : PixelDatatype.UNSIGNED_INT,
-            sampler : createSampler()
+            sampler : Sampler.NEAREST
         });
 
         processor._framebuffer = new Framebuffer({
@@ -217,7 +205,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
         return shader;
     }
 
-    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading) {
+    PointCloudEyeDomeLighting.prototype.update = function(frameState, commandStart, pointCloudShading, boundingVolume) {
         if (!isSupported(frameState.context)) {
             return;
         }
@@ -254,6 +242,8 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
 
         var clearCommand = this._clearCommand;
         var blendCommand = this._drawCommand;
+
+        blendCommand.boundingVolume = boundingVolume;
 
         // Blend EDL into the main FBO
         commandList.push(blendCommand);
