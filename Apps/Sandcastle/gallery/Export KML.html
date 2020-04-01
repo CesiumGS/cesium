@@ -34,8 +34,8 @@ var modelCzml = [{
     "name" : "CZML Model",
     "version" : "1.0"
 }, {
-    "id" : "aircraft model",
-    "name" : "Cesium Air",
+    "id" : "truck model",
+    "name" : "Cesium Milk Truck",
     "position" : {
         "cartographicDegrees" : [-77, 37, 0]
     },
@@ -108,7 +108,7 @@ Sandcastle.addToolbarMenu([{
         dataSourcePromise = Cesium.CzmlDataSource.load(modelCzml);
         viewer.dataSources.add(dataSourcePromise)
             .then(function(dataSource) {
-                viewer.trackedEntity = dataSource.entities.getById('aircraft model');
+                viewer.trackedEntity = dataSource.entities.getById('truck model');
             });
     }
 }], 'propertiesMenu');
