@@ -115,6 +115,8 @@ function rollupWarning(message) {
     console.log(message);
 }
 
+var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'), "utf8");
+
 function createWorkers() {
     rimraf.sync('Build/createWorkers');
 
@@ -150,6 +152,9 @@ function createWorkers() {
 
 gulp.task('build', function() {
     mkdirp.sync('Build');
+    fs.writeFileSync('Build/package.json', JSON.stringify({
+        type: 'commonjs'
+    }), "utf8");
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
@@ -334,7 +339,7 @@ gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocume
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
 
     var builtSrc = gulp.src([
@@ -352,7 +357,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         'Specs/**',
         'ThirdParty/**',
         'favicon.ico',
-        'gulpfile.js',
+        'gulpfile.cjs',
         'server.cjs',
         'package.json',
         'LICENSE.md',
@@ -428,7 +433,7 @@ gulp.task('deploy-s3', function(done) {
     iface.question('Files from your computer will be published to the cesium.com bucket. Continue? [y/n] ', function(answer) {
         iface.close();
         if (answer === 'y') {
-            deployCesium(bucketName, uploadDirectory, cacheControl, done);
+            deployCesium(cacheControl, done);
         } else {
             console.log('Deploy aborted by user.');
             done();
@@ -920,7 +925,9 @@ function combineCesium(debug, optimizer, combineOutput) {
         return bundle.write({
             format: 'umd',
             name: 'Cesium',
-            file: path.join(combineOutput, 'Cesium.js')
+            file: path.join(combineOutput, 'Cesium.js'),
+            sourcemap: debug,
+            banner: copyrightHeader
         });
     });
 }
@@ -970,7 +977,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
-                    format: 'amd'
+                    format: 'amd',
+                    sourcemap: debug,
+                    banner: copyrightHeader
                 });
             });
         });
@@ -996,7 +1005,6 @@ function combineJavaScript(options) {
     var removePragmas = options.removePragmas;
 
     var combineOutput = path.join('Build', 'combineOutput', optimizer);
-    var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
     var promise = Promise.join(
         combineCesium(!removePragmas, optimizer, combineOutput),
@@ -1009,7 +1017,6 @@ function combineJavaScript(options) {
 
         //copy to build folder with copyright header added at the top
         var stream = gulp.src([combineOutput + '/**'])
-            .pipe(gulpInsert.prepend(copyrightHeader))
             .pipe(gulp.dest(outputDirectory));
 
         promises.push(streamToPromise(stream));
@@ -1328,7 +1335,6 @@ function buildCesiumViewer() {
     );
 
     promise = promise.then(function() {
-        var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
         var stream = mergeStream(
             gulp.src('Build/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
@@ -1358,6 +1364,7 @@ function buildCesiumViewer() {
                     base : 'Build/Sandcastle/CesiumUnminified',
                     nodir : true
                 }),
+
             gulp.src(['Build/Sandcastle/CesiumUnminified/Widgets/shared.css'], {
                 base : 'Build/Sandcastle/CesiumUnminified'
             }),

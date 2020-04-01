@@ -35,10 +35,6 @@
  //   Code:  http://sponeil.net/
  //   GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
-const float fInnerRadius = 6378137.0;
-const float fOuterRadius = 6378137.0 * 1.025;
-const float fOuterRadius2 = fOuterRadius * fOuterRadius;
-
 const float Kr = 0.0025;
 const float Km = 0.0015;
 const float ESun = 15.0;
@@ -48,9 +44,10 @@ const float fKmESun = Km * ESun;
 const float fKr4PI = Kr * 4.0 * czm_pi;
 const float fKm4PI = Km * 4.0 * czm_pi;
 
-const float fScale = 1.0 / (fOuterRadius - fInnerRadius);
+// Original: vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+const vec3 v3InvWavelength = vec3(5.60204474633241, 9.473284437923038, 19.64380261047721);
+
 const float fScaleDepth = 0.25;
-const float fScaleOverScaleDepth = fScale / fScaleDepth;
 
 struct AtmosphereColor
 {
@@ -69,7 +66,12 @@ float scale(float fCos)
 
 AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLighting, vec3 lightDirectionWC)
 {
-	vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+    float fInnerRadius = czm_ellipsoidRadii.x;
+    float fOuterRadius = czm_ellipsoidRadii.x * 1.025;
+    float fOuterRadius2 = fOuterRadius * fOuterRadius;
+
+    float fScale = 1.0 / (fOuterRadius - fInnerRadius);
+    float fScaleOverScaleDepth = fScale / fScaleDepth;
 
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 v3Ray = v3Pos - czm_viewerPositionWC;

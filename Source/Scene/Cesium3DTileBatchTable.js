@@ -22,8 +22,6 @@ import RenderState from '../Renderer/RenderState.js';
 import Sampler from '../Renderer/Sampler.js';
 import ShaderSource from '../Renderer/ShaderSource.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import AttributeType from './AttributeType.js';
 import BlendingState from './BlendingState.js';
 import Cesium3DTileColorBlendMode from './Cesium3DTileColorBlendMode.js';
@@ -1444,10 +1442,7 @@ import StencilOperation from './StencilOperation.js';
                 arrayBufferView : bytes
             },
             flipY : false,
-            sampler : new Sampler({
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
     }
 

@@ -3,6 +3,8 @@ import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { defaultValue } from '../../Source/Cesium.js';
 import { DirectionalLight } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
 import { Matrix4 } from '../../Source/Cesium.js';
 import { OrthographicFrustum } from '../../Source/Cesium.js';
 import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
@@ -1370,6 +1372,45 @@ describe('Renderer/AutomaticUniforms', function() {
             '  bool b0 = czm_lightColorHdr.x == 0.5;' +
             '  bool b1 = czm_lightColorHdr.y == 1.0;' +
             '  bool b2 = czm_lightColorHdr.z == 2.0;' +
+            '  gl_FragColor = vec4(b0 && b1 && b2);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_ellipsoidRadii', function() {
+        var us = context.uniformState;
+        var frameState = createFrameState(context, createMockCamera());
+        var ellipsoid = new Ellipsoid(1.0, 2.0, 3.0);
+        frameState.mapProjection = new GeographicProjection(ellipsoid);
+        us.update(frameState);
+        var fs =
+            'void main() {' +
+            '  bool b0 = czm_ellipsoidRadii.x == 1.0;' +
+            '  bool b1 = czm_ellipsoidRadii.y == 2.0;' +
+            '  bool b2 = czm_ellipsoidRadii.z == 3.0;' +
+            '  gl_FragColor = vec4(b0 && b1 && b2);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_ellipsoidInverseRadii', function() {
+        var us = context.uniformState;
+        var frameState = createFrameState(context, createMockCamera());
+        var ellipsoid = new Ellipsoid(1.0, 1.0 / 2.0, 1.0 / 3.0);
+        frameState.mapProjection = new GeographicProjection(ellipsoid);
+        us.update(frameState);
+        var fs =
+            'float roundNumber(float number) { return floor(number + 0.5); }' +
+            'void main() {' +
+            '  bool b0 = roundNumber(czm_ellipsoidInverseRadii.x) == 1.0;' +
+            '  bool b1 = roundNumber(czm_ellipsoidInverseRadii.y) == 2.0;' +
+            '  bool b2 = roundNumber(czm_ellipsoidInverseRadii.z) == 3.0;' +
             '  gl_FragColor = vec4(b0 && b1 && b2);' +
             '}';
         expect({

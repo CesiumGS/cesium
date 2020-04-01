@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.67.0",
+  "version": "1.68.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -29,12 +29,13 @@
     "url": "https://github.com/CesiumGS/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
-  "main": "index.js",
-  "module": "Source/Cesium.js",
-  "type": "module",
-  "dependencies": {
-    "esm": "^3.2.25"
+  "main": "index.cjs",
+  "module": "./Source/Cesium.js",
+  "exports": {
+    "require": "./index.cjs",
+    "import": "./Source/Cesium.js"
   },
+  "type": "module",
   "devDependencies": {
     "aws-sdk": "^2.531.0",
     "bluebird": "^3.4.6",

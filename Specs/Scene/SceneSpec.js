@@ -1655,14 +1655,16 @@ describe('Scene/Scene', function() {
         scene.destroyForSpecs();
     });
 
-    function getFrustumCommandsLength(scene) {
+    function getFrustumCommandsLength(scene, pass) {
         var commandsLength = 0;
         var frustumCommandsList = scene.frustumCommandsList;
         var frustumsLength = frustumCommandsList.length;
         for (var i = 0; i < frustumsLength; ++i) {
             var frustumCommands = frustumCommandsList[i];
             for (var j = 0; j < Pass.NUMBER_OF_PASSES; ++j) {
-                commandsLength += frustumCommands.indices[j];
+                if (!defined(pass) || (j === pass)) {
+                    commandsLength += frustumCommands.indices[j];
+                }
             }
         }
         return commandsLength;
@@ -1762,6 +1764,128 @@ describe('Scene/Scene', function() {
         expect(lightColorHdr).toEqual(new Cartesian3(2.0, 2.0, 2.0));
 
         scene.destroyForSpecs();
+    });
+
+    function updateGlobeUntilDone(scene) {
+        return pollToPromise(function() {
+            scene.renderForSpecs();
+            return scene.globe.tilesLoaded;
+        });
+    }
+
+    it('detects when camera is underground', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+
+        scene.camera.setView({
+            destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030)
+        });
+
+        return updateGlobeUntilDone(scene).then(function() {
+            expect(scene._cameraUnderground).toBe(false);
+
+            // Look underground
+            scene.camera.setView({
+                destination : new Cartesian3(-746658.0557573901, -5644191.0002196245, 2863585.099969967),
+                orientation : new HeadingPitchRoll(0.3019699121236403, 0.07316306869231592, 0.0007089903642230055)
+            });
+            return updateGlobeUntilDone(scene);
+        }).then(function() {
+            expect(scene._cameraUnderground).toBe(true);
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('detects that camera is above ground if screen space camera controller adjusted height for terrain', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+
+        spyOn(ScreenSpaceCameraController.prototype, 'adjustedHeightForTerrain').and.returnValue(true);
+
+        return updateGlobeUntilDone(scene).then(function() {
+            expect(scene._cameraUnderground).toBe(false);
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('detects that camera is above ground if globe is undefined', function() {
+        var scene = createScene();
+        scene.renderForSpecs();
+        expect(scene._cameraUnderground).toBe(false);
+        scene.destroyForSpecs();
+    });
+
+    it('detects that camera is above ground if scene mode is 2D', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+        scene.morphTo2D(0.0);
+        expect(scene._cameraUnderground).toBe(false);
+        scene.destroyForSpecs();
+    });
+
+    it('detects that camera is above ground if scene mode is morphing', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+        scene.morphTo2D(1.0);
+        expect(scene._cameraUnderground).toBe(false);
+        scene.destroyForSpecs();
+    });
+
+    it('detects that camera is underground in Columbus View', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+
+        // Look underground
+        scene.camera.setView({
+            destination : new Cartesian3(-4643042.379120885, 4314056.579506199, -451828.8968118975),
+            orientation : new HeadingPitchRoll(6.283185307179586, -0.7855491933100796, 6.283185307179586)
+        });
+        scene.morphToColumbusView(0.0);
+
+        return updateGlobeUntilDone(scene).then(function() {
+            expect(scene._cameraUnderground).toBe(true);
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('does not occlude primitives when camera is underground', function() {
+        var scene = createScene();
+        var globe = new Globe();
+        scene.globe = globe;
+
+        // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the camera is underground
+        var center = Cartesian3.fromRadians(2.3929070618374535, -0.07149851443375346, -25000.0, globe.ellipsoid);
+        var radius = 10.0;
+
+        var command = new DrawCommand({
+            shaderProgram : simpleShaderProgram,
+            renderState : simpleRenderState,
+            pass : Pass.OPAQUE,
+            boundingVolume : new BoundingSphere(center, radius)
+        });
+
+        scene.primitives.add(new CommandMockPrimitive(command));
+
+        spyOn(DrawCommand.prototype, 'execute'); // Don't execute any commands, just watch what gets added to the frustum commands list
+
+        return updateGlobeUntilDone(scene).then(function() {
+            expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
+
+            // Look underground at the primitive
+            scene.camera.setView({
+                destination : new Cartesian3(-4643042.379120885, 4314056.579506199, -451828.8968118975),
+                orientation : new HeadingPitchRoll(6.283185307179586, -0.7855491933100796, 6.283185307179586)
+            });
+            return updateGlobeUntilDone(scene);
+        }).then(function() {
+            expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
+            scene.destroyForSpecs();
+        });
     });
 
 }, 'WebGL');
