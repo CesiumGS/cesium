@@ -588,26 +588,6 @@ function getMimeType(filename) {
     return { type: 'application/octet-stream', compress: true };
 }
 
-// get all files currently in bucket asynchronously
-function listAll(s3, bucketName, prefix, files, marker) {
-    return s3.listObjects({
-        Bucket: bucketName,
-        MaxKeys: 1000,
-        Prefix: prefix,
-        Marker: marker
-    }).promise().then(function(data) {
-        var items = data.Contents;
-        for (var i = 0; i < items.length; i++) {
-            files.push(items[i].Key);
-        }
-
-        if (data.IsTruncated) {
-            // get next page of results
-            return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
-        }
-    });
-}
-
 gulp.task('deploy-set-version', function(done) {
     var buildVersion = yargs.argv.buildVersion;
     if (buildVersion) {
