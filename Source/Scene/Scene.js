@@ -2040,7 +2040,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         }
 
         var passes = frameState.passes;
-        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        if (!passes.pick && !passes.depth && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 
