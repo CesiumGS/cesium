@@ -433,6 +433,9 @@ import TileSelectionResult from './TileSelectionResult.js';
             TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState, this._vertexArraysToDestroy);
         }
 
+        var translucent = GlobeTranslucency.isTranslucent(this);
+        var translucentTexturesLength = GlobeTranslucency.getNumberOfTextureUniforms(this, frameState);
+
         // Add the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
@@ -444,7 +447,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 var tile = tilesToRender[tileIndex];
                 var tileBoundingRegion = tile.data.tileBoundingRegion;
-                addDrawCommandsForTile(this, tile, frameState);
+                addDrawCommandsForTile(this, tile, translucent, translucentTexturesLength, frameState);
                 frameState.minimumTerrainHeight = Math.min(frameState.minimumTerrainHeight, tileBoundingRegion.minimumHeight);
             }
         }
@@ -1538,7 +1541,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         colorToAlpha : undefined
     };
 
-    function addDrawCommandsForTile(tileProvider, tile, frameState) {
+    function addDrawCommandsForTile(tileProvider, tile, translucent, translucentTexturesLength, frameState) {
         var surfaceTile = tile.data;
 
         if (!defined(surfaceTile.vertexArray)) {
@@ -1620,10 +1623,8 @@ import TileSelectionResult from './TileSelectionResult.js';
         if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
-        if (translucent) {
-            // TODO only uses czm_globeDepthTexture in specific circumstances
-            maxTextures -= 2;
-        }
+
+        maxTextures -= translucentTexturesLength;
 
         var mesh = surfaceTile.renderedMesh;
         var rtc = mesh.center;

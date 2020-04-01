@@ -586,6 +586,28 @@ GlobeTranslucency.updateDerivedCommand = function(command, frameState) {
     }
 };
 
+function requireManualDepthTest(tileProvider, translucencyMode, frameState, scene2D) {
+    return translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE) && !tileProvider.depthTestAgainstTerrain && frameState.context.depthTexture && !scene2D;
+}
+
+GlobeTranslucency.getNumberOfTextureUniforms = function(tileProvider, frameState) {
+    var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
+    var translucent =  getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
+    var scene2D = frameState.mode === SceneMode.SCENE2D;
+
+    var numberOfTextureUniforms = 0;
+
+    if (translucent) {
+        ++numberOfTextureUniforms; // classification texture
+    }
+
+    if (requireManualDepthTest(tileProvider, translucencyMode, frameState, scene2D)) {
+        ++numberOfTextureUniforms; // czm_globeDepthTexture for manual depth testing
+    }
+
+    return numberOfTextureUniforms;
+};
+
 GlobeTranslucency.pushDerivedCommands = function(command, firstLayer, tileProvider, frameState) {
     var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
 
@@ -603,7 +625,7 @@ GlobeTranslucency.pushDerivedCommands = function(command, firstLayer, tileProvid
     var derivedCommands = command.derivedCommands.globeTranslucency;
     var picking = frameState.passes.pick;
     var scene2D = frameState.mode === SceneMode.SCENE2D;
-    var clearGlobeDepth = translucencyMode === (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE) && !tileProvider.depthTestAgainstTerrain && frameState.context.depthTexture && !scene2D;
+    var clearGlobeDepth = requireManualDepthTest(tileProvider, translucencyMode, frameState, scene2D);
 
     var translucentFrontFaceCommand = picking ? derivedCommands.pickFrontFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentFrontFaceCommand : derivedCommands.translucentFrontFaceCommand);
     var translucentBackFaceCommand = picking ? derivedCommands.pickBackFaceCommand : (clearGlobeDepth ? derivedCommands.clearDepthTranslucentBackFaceCommand : derivedCommands.translucentBackFaceCommand);
