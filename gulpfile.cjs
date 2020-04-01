@@ -339,7 +339,7 @@ gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocume
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
-    //See https://github.com/AnalyticalGraphicsInc/cesium/pull/3106#discussion_r42793558 for discussion.
+    //See https://github.com/CesiumGS/cesium/pull/3106#discussion_r42793558 for discussion.
     glslToJavaScript(false, 'Build/minifyShaders.state');
 
     var builtSrc = gulp.src([
@@ -433,7 +433,7 @@ gulp.task('deploy-s3', function(done) {
     iface.question('Files from your computer will be published to the cesium.com bucket. Continue? [y/n] ', function(answer) {
         iface.close();
         if (answer === 'y') {
-            deployCesium(bucketName, uploadDirectory, cacheControl, done);
+            deployCesium(cacheControl, done);
         } else {
             console.log('Deploy aborted by user.');
             done();
@@ -463,35 +463,13 @@ function deployCesium(cacheControl, done) {
     var uploaded = 0;
     var errors = [];
 
-    var prefix = uploadDirectory + '/';
-    return listAll(s3, bucketName, prefix, existingBlobs)
-        .then(function() {
-            return globby([
-                'Apps/**',
-                'Build/**',
-                'Source/**',
-                'Specs/**',
-                'ThirdParty/**',
-                '*.md',
-                'favicon.ico',
-                'gulpfile.cjs',
-                'index.html',
-                'package.json',
-                'server.cjs',
-                'web.config',
-                '*.zip',
-                '*.tgz'
-            ], {
-                dot : true // include hidden files
-            });
-        }).then(function(files) {
-            return Promise.map(files, function(file) {
-                var blobName = uploadDirectory + '/' + file;
-                var mimeLookup = getMimeType(blobName);
-                var contentType = mimeLookup.type;
-                var compress = mimeLookup.compress;
-                var contentEncoding = compress ? 'gzip' : undefined;
-                var etag;
+    function uploadFiles(prefix, filePrefix, files) {
+        return Promise.map(files, function(file) {
+            var blobName = prefix + '/' + file.replace(filePrefix, '');
+            var mimeLookup = getMimeType(blobName);
+            var contentType = mimeLookup.type;
+            var compress = mimeLookup.compress;
+            var contentEncoding = compress ? 'gzip' : undefined;
 
             return readFile(file)
                 .then(function(content) {
@@ -608,6 +586,26 @@ function getMimeType(filename) {
     }
 
     return { type: 'application/octet-stream', compress: true };
+}
+
+// get all files currently in bucket asynchronously
+function listAll(s3, bucketName, prefix, files, marker) {
+    return s3.listObjects({
+        Bucket: bucketName,
+        MaxKeys: 1000,
+        Prefix: prefix,
+        Marker: marker
+    }).promise().then(function(data) {
+        var items = data.Contents;
+        for (var i = 0; i < items.length; i++) {
+            files.push(items[i].Key);
+        }
+
+        if (data.IsTruncated) {
+            // get next page of results
+            return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
+        }
+    });
 }
 
 gulp.task('deploy-set-version', function(done) {
@@ -1386,6 +1384,7 @@ function buildCesiumViewer() {
                     base : 'Build/Sandcastle/CesiumUnminified',
                     nodir : true
                 }),
+
             gulp.src(['Build/Sandcastle/CesiumUnminified/Widgets/shared.css'], {
                 base : 'Build/Sandcastle/CesiumUnminified'
             }),
