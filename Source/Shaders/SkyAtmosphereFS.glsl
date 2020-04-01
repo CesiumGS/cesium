@@ -65,7 +65,7 @@ void main (void)
 
     if (rgb.b > 1000000.0)
     {
-        // Discard colors that exceed some large number value to prevent against NaN's after the exp below
+        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
         gl_FragColor = vec4(0.0);
         return;
     }

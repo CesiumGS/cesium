@@ -37,7 +37,6 @@ import ShadowMap from './ShadowMap.js';
         updateFrustums(near, far, farToNearRatio, numFrustums, scene.logarithmicDepthBuffer, frustumCommandsList, false, undefined);
 
         var globeDepth;
-        var globeTranslucency = new GlobeTranslucency();
         if (context.depthTexture) {
             globeDepth = new GlobeDepth();
         }
@@ -61,7 +60,7 @@ import ShadowMap from './ShadowMap.js';
         this.pickDepthFramebuffer = new PickDepthFramebuffer();
         this.sceneFramebuffer = new SceneFramebuffer();
         this.globeDepth = globeDepth;
-        this.globeTranslucency = globeTranslucency;
+        this.globeTranslucency = new GlobeTranslucency();;
         this.oit = oit;
         this.pickDepths = [];
         this.debugGlobeDepths = [];
