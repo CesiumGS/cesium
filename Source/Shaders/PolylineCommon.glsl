@@ -149,9 +149,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
 
         vec2 leftSumWC = thisSegmentLeftWC + otherSegmentLeftWC;
         float leftSumLength = length(leftSumWC);
-        vec2 leftWC = leftSumLength < czm_epsilon6 ? thisSegmentForwardWC : (leftSumWC / leftSumLength);
-
-        float expandWidth = width * 0.5;
+        leftWC = leftSumLength < czm_epsilon6 ? thisSegmentLeftWC : (leftSumWC / leftSumLength);
 
         // The sine of the angle between the two vectors is given by the formula
         //         |a x b| = |a||b|sin(theta)
