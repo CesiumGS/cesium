@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.69.0 - 2020-05-01
+
+##### Fixes :wrench:
+
+* Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
+
 ### 1.68.0 - 2020-04-01
 
 ##### Additions :tada:
