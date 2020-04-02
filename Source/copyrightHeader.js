@@ -1,4 +1,5 @@
 /**
+ * @license
  * Cesium - https://github.com/CesiumGS/cesium
  *
  * Copyright 2011-2020 Cesium Contributors

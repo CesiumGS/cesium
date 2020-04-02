@@ -982,6 +982,20 @@ gulp.task('convertToModules', function() {
     });
 });
 
+function createUglifyPlugin() {
+    return rollupPluginUglify.uglify({
+        output: {
+            comments: function(node, comment) {
+              if (comment.type === "comment2") {
+                // multiline comment
+                return /@preserve|@license/i.test(comment.value);
+              }
+              return false;
+            }
+          }
+    });
+}
+
 function combineCesium(debug, optimizer, combineOutput) {
     var plugins = [];
 
@@ -991,7 +1005,7 @@ function combineCesium(debug, optimizer, combineOutput) {
         }));
     }
     if (optimizer === 'uglify2') {
-        plugins.push(rollupPluginUglify.uglify());
+        plugins.push(createUglifyPlugin());
     }
 
     return rollup.rollup({
@@ -1044,7 +1058,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
                 }));
             }
             if (optimizer === 'uglify2') {
-                plugins.push(rollupPluginUglify.uglify());
+                plugins.push(createUglifyPlugin());
             }
 
             return rollup.rollup({
@@ -1386,7 +1400,7 @@ function buildCesiumViewer() {
                 rollupPluginStripPragma({
                     pragmas: ['debug']
                 }),
-                rollupPluginUglify.uglify()
+                createUglifyPlugin()
             ],
             onwarn: rollupWarning
         }).then(function(bundle) {
