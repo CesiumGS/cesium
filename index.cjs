@@ -8,4 +8,5 @@ if (process.env.NODE_ENV === 'production') {
     module.exports = require(path.join(__dirname, 'Build/Cesium/Cesium'));
     return;
 }
-module.exports = require('esm')(module)('./Source/Cesium.js');
+
+module.exports = require(path.join(__dirname, 'Build/CesiumUnminified/Cesium'));

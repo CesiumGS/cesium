@@ -83,4 +83,11 @@ import TextureWrap from './TextureWrap.js';
                 (left._magnificationFilter === right._magnificationFilter) &&
                 (left._maximumAnisotropy === right._maximumAnisotropy));
     };
+
+    Sampler.NEAREST = Object.freeze(new Sampler({
+        wrapS : TextureWrap.CLAMP_TO_EDGE,
+        wrapT : TextureWrap.CLAMP_TO_EDGE,
+        minificationFilter : TextureMinificationFilter.NEAREST,
+        magnificationFilter : TextureMagnificationFilter.NEAREST
+    }));
 export default Sampler;

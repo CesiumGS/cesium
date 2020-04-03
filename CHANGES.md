@@ -1,11 +1,33 @@
 Change Log
 ==========
 
-### 1.68.0 - 2020-04-01
+### 1.69.0 - 2020-05-01
 
 ##### Additions :tada:
 
 * Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
+
+##### Fixes :wrench:
+
+* Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
+
+### 1.68.0 - 2020-04-01
+
+##### Additions :tada:
+
+* Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
+* The `CesiumUnminified` build now includes sourcemaps. [#8572](https://github.com/CesiumGS/cesium/pull/8659)
+* Added the ability to edit CesiumJS shaders on-the-fly using the [SpectorJS](https://spector.babylonjs.com/) Shader Editor. [#8608](https://github.com/CesiumGS/cesium/pull/8608)
+
+##### Fixes :wrench:
+
+* Cesium can now be used in Node.JS 12 and later, with or without `--experimental-modules`. It can still be used in earlier versions as well. [#8572](https://github.com/CesiumGS/cesium/pull/8659)
+* Interacting with the Cesium canvas will now blur the previously focused element. This prevents unintended modification of input elements when interacting with the globe. [#8662](https://github.com/CesiumGS/cesium/pull/8662)
+* `TileMapServiceImageryProvider` will now force `minimumLevel` to 0 if the `tilemapresource.xml` metadata request fails and the `rectangle` is too large for the given detail level [#8448](https://github.com/AnalyticalGraphicsInc/cesium/pull/8448)
+* Fixed ground atmosphere rendering when using a smaller ellipsoid. [#8683](https://github.com/CesiumGS/cesium/issues/8683)
+* Fixed globe incorrectly occluding objects when using a smaller ellipsoid. [#7124](https://github.com/CesiumGS/cesium/issues/7124)
+* Fixed a regression introduced in 1.67 which caused overlapping colored ground geometry to have visual artifacts. [#8694](https://github.com/CesiumGS/cesium/pull/8694)
+* Fixed a clipping problem when viewing a polyline up close with the logarithmic depth buffer enabled, which is the default on most systems. [#8703](https://github.com/CesiumGS/cesium/pull/8703)
 
 ### 1.67.0 - 2020-03-02
 

@@ -20,6 +20,44 @@ import { when } from '../../Source/Cesium.js';
 
 describe('Scene/TileMapServiceImageryProvider', function() {
 
+    var validSampleXmlString =
+    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+    '    <Title>NE2_HR_LC_SR_W_DR_recolored.tif</Title>' +
+    '   <Abstract></Abstract>' +
+    '   <SRS>EPSG:4326</SRS>' +
+    '   <BoundingBox miny="-90.00000000000000" minx="-180.00000000000000" maxy="90.00000000000000"' +
+    '   maxx="180.00000000000000"/>' +
+    '   <Origin y="-90.00000000000000" x="-180.00000000000000"/>' +
+    '   <TileFormat width="256" height="256" mime-type="image/jpg" extension="jpg"/>' +
+    '   <TileSets profile="geodetic">' +
+    '       <TileSet href="0" units-per-pixel="0.70312500000000" order="0"/>' +
+    '       <TileSet href="1" units-per-pixel="0.35156250000000" order="1"/>' +
+    '       <TileSet href="2" units-per-pixel="0.17578125000000" order="2"/>' +
+    '   </TileSets>' +
+    '</TileMap>';
+
+    function patchRequestScheduler(xmlResponseString) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                var parser = new DOMParser();
+                var xml = parser.parseFromString(xmlResponseString, 'text/xml');
+                deferred.resolve(xml);
+            }, 1);
+        };
+    }
+
+    function patchRequestSchedulerToRejectRequest() {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                deferred.reject(new Error('whoops; rejecting xhr request'));
+            }, 1);
+        };
+    }
+
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
     });
@@ -37,6 +75,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('resolves readyPromise', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
@@ -48,6 +87,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('resolves readyPromise when promise url is used', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : when.resolve('made/up/tms/server/')
         });
@@ -59,6 +99,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('resolves readyPromise with Resource', function() {
+        patchRequestScheduler(validSampleXmlString);
         var resource = new Resource({
             url : 'made/up/tms/server/'
         });
@@ -87,29 +128,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('rejects readyPromise on error', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            // We can't resolve the promise immediately, because then the error would be raised
-            // before we could subscribe to it.  This a problem particular to tests.
-            setTimeout(function() {
-                var parser = new DOMParser();
-                var xmlString =
-                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                    '   <Title/>' +
-                    '   <Abstract/>' +
-                    '   <SRS>EPSG:4326</SRS>' +
-                    '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
-                    '   <Origin x="-90.0" y="-180.0"/>' +
-                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                    '   <TileSets profile="foobar">' +
-                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                    '   </TileSets>' +
-                    '</TileMap>';
-                var xml = parser.parseFromString(xmlString, 'text/xml');
-                deferred.resolve(xml);
-            }, 1);
-        };
-
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:4326</SRS>' +
+            '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+            '   <Origin x="-90.0" y="-180.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="foobar">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
@@ -123,28 +155,19 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('rejects readyPromise on invalid xml', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            // We can't resolve the promise immediately, because then the error would be raised
-            // before we could subscribe to it.  This a problem particular to tests.
-            setTimeout(function() {
-                var parser = new DOMParser();
-                var xmlString =
-                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                    '   <Title/>' +
-                    '   <Abstract/>' +
-                    '   <SRS>EPSG:4326</SRS>' +
-                    '   <Origin x="-90.0" y="-180.0"/>' +
-                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                    '   <TileSets profile="foobar">' +
-                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                    '   </TileSets>' +
-                    '</TileMap>';
-                var xml = parser.parseFromString(xmlString, 'text/xml');
-                deferred.resolve(xml);
-            }, 1);
-        };
-
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:4326</SRS>' +
+            '   <Origin x="-90.0" y="-180.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="foobar">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
@@ -166,6 +189,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('returns valid value for hasAlphaChannel', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
@@ -178,6 +202,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports a slash at the end of the URL', function() {
+        patchRequestScheduler(validSampleXmlString);
         var baseUrl = 'made/up/tms/server/';
         var provider = new TileMapServiceImageryProvider({
             url : baseUrl
@@ -201,6 +226,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports no slash at the endof the URL', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'http://made/up/tms/server'
         });
@@ -223,6 +249,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports a query string at the end of the URL', function() {
+        patchRequestScheduler(validSampleXmlString);
         var baseUrl = 'made/up/tms/server/';
         var provider = new TileMapServiceImageryProvider({
             url : baseUrl + '?a=some&b=query'
@@ -246,6 +273,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
@@ -253,12 +281,10 @@ describe('Scene/TileMapServiceImageryProvider', function() {
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.url).toEqual(getAbsoluteUri('made/up/tms/server/{z}/{x}/{reverseY}.png'));
+            // check some details about the tilemapresourcel.xml so we know we got parsed/configured properly
+            expect(provider.url).toEqual(getAbsoluteUri('made/up/tms/server/{z}/{x}/{reverseY}.jpg'));
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
-            expect(provider.maximumLevel).toBeUndefined();
-            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
                 // Just return any old image.
@@ -273,6 +299,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('when no credit is supplied, the provider has no logo', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
@@ -284,6 +311,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('turns the supplied credit into a logo', function() {
+        patchRequestScheduler(validSampleXmlString);
         var providerWithCredit = new TileMapServiceImageryProvider({
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
@@ -314,6 +342,8 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
+        patchRequestScheduler(validSampleXmlString);
+
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
@@ -323,10 +353,12 @@ describe('Scene/TileMapServiceImageryProvider', function() {
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
+            // check some values coming from tilemapresource.xml
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
-            expect(provider.maximumLevel).toBeUndefined();
-            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            // check our rectangle from the constructor is correctly used
             expect(provider.rectangle.west).toEqualEpsilon(rectangle.west, CesiumMath.EPSILON14);
             expect(provider.rectangle.east).toEqualEpsilon(rectangle.east, CesiumMath.EPSILON14);
             expect(provider.rectangle.north).toEqualEpsilon(rectangle.north, CesiumMath.EPSILON14);
@@ -348,6 +380,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('uses maximumLevel passed to constructor', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             maximumLevel : 5
@@ -361,6 +394,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('raises error event when image cannot be loaded', function() {
+        patchRequestScheduler(validSampleXmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
@@ -410,24 +444,19 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('keeps the rectangle within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
-                '  <Abstract/>' +
-                '  <SRS>EPSG:900913</SRS>' +
-                "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
-                "  <Origin y='-88.0' x='-180.00000000000000'/>" +
-                "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
-                "  <TileSets profile='mercator'>" +
-                "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                '  </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
-
+        var xmlString =
+            "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+            '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+            '  <Abstract/>' +
+            '  <SRS>EPSG:900913</SRS>' +
+            "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
+            "  <Origin y='-88.0' x='-180.00000000000000'/>" +
+            "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
+            "  <TileSets profile='mercator'>" +
+            "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+            '  </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
@@ -447,24 +476,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('uses a minimum level if the tilemapresource.xml specifies one and it is reasonable', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
-                '  <Abstract/>' +
-                '  <SRS>EPSG:900913</SRS>' +
-                "  <BoundingBox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
-                "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
-                "  <TileSets profile='mercator'>" +
-                "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
-                "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                '  </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+            '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+            '  <Abstract/>' +
+            '  <SRS>EPSG:900913</SRS>' +
+            "  <BoundingBox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
+            "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+            "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
+            "  <TileSets profile='mercator'>" +
+            "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
+            "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+            '  </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -479,24 +504,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('ignores the minimum level in the tilemapresource.xml if it is unreasonable', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
-                '  <Abstract/>' +
-                '  <SRS>EPSG:900913</SRS>' +
-                "  <BoundingBox minx='-170.0' miny='-85.0' maxx='170.0' maxy='85.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
-                "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
-                "  <TileSets profile='mercator'>" +
-                "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
-                "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                '  </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+            '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+            '  <Abstract/>' +
+            '  <SRS>EPSG:900913</SRS>' +
+            "  <BoundingBox minx='-170.0' miny='-85.0' maxx='170.0' maxy='85.0'/>" +
+            "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+            "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
+            "  <TileSets profile='mercator'>" +
+            "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
+            "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+            '  </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -511,24 +532,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('handles XML with casing differences', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
-                '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
-                '  <Abstract/>' +
-                '  <SRS>EPSG:900913</SRS>' +
-                "  <boundingbox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
-                "  <Tileformat width='256' height='256' mime-type='image/png' extension='png'/>" +
-                "  <TileSets profile='mercator'>" +
-                "    <tiLeset href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
-                "    <tileset href='8' units-per-pixel='611.49622617187504' order='8'/>" +
-                '  </TileSets>' +
-                '</Tilemap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+            '  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>' +
+            '  <Abstract/>' +
+            '  <SRS>EPSG:900913</SRS>' +
+            "  <boundingbox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
+            "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+            "  <Tileformat width='256' height='256' mime-type='image/png' extension='png'/>" +
+            "  <TileSets profile='mercator'>" +
+            "    <tiLeset href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
+            "    <tileset href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+            '  </TileSets>' +
+            '</Tilemap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -543,24 +560,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports the global-mercator profile with a non-flipped, mercator bounding box', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                '   <Title/>' +
-                '   <Abstract/>' +
-                '   <SRS>EPSG:900913</SRS>' +
-                '   <BoundingBox minx="-11877789.66764229300000" miny="1707163.75952051670000" maxx="-4696205.45407573510000" maxy="7952627.07365330120000"/>' +
-                '   <Origin x="-20037508.34278924400000" y="-20037508.34278924400000"/>' +
-                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                '   <TileSets profile="global-mercator">' +
-                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                '   </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:900913</SRS>' +
+            '   <BoundingBox minx="-11877789.66764229300000" miny="1707163.75952051670000" maxx="-4696205.45407573510000" maxy="7952627.07365330120000"/>' +
+            '   <Origin x="-20037508.34278924400000" y="-20037508.34278924400000"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="global-mercator">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -584,24 +597,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports the global-geodetic profile with a non-flipped, geographic bounding box', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                '   <Title/>' +
-                '   <Abstract/>' +
-                '   <SRS>EPSG:4326</SRS>' +
-                '   <BoundingBox minx="-123.0" miny="-10.0" maxx="-110.0" maxy="11.0"/>' +
-                '   <Origin x="-180.0" y="-90.0"/>' +
-                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                '   <TileSets profile="global-geodetic">' +
-                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                '   </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:4326</SRS>' +
+            '   <BoundingBox minx="-123.0" miny="-10.0" maxx="-110.0" maxy="11.0"/>' +
+            '   <Origin x="-180.0" y="-90.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="global-geodetic">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -624,24 +633,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports the old mercator profile with a flipped, geographic bounding box', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                '   <Title/>' +
-                '   <Abstract/>' +
-                '   <SRS>EPSG:900913</SRS>' +
-                '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
-                '   <Origin x="-90.0" y="-180.0"/>' +
-                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                '   <TileSets profile="mercator">' +
-                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                '   </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:900913</SRS>' +
+            '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+            '   <Origin x="-90.0" y="-180.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="mercator">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
@@ -665,24 +670,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('supports the old geodetic profile with a flipped, geographic bounding box', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            var parser = new DOMParser();
-            var xmlString =
-                '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                '   <Title/>' +
-                '   <Abstract/>' +
-                '   <SRS>EPSG:4326</SRS>' +
-                '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
-                '   <Origin x="-90.0" y="-180.0"/>' +
-                '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                '   <TileSets profile="geodetic">' +
-                '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                '   </TileSets>' +
-                '</TileMap>';
-            var xml = parser.parseFromString(xmlString, 'text/xml');
-            deferred.resolve(xml);
-        };
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:4326</SRS>' +
+            '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+            '   <Origin x="-90.0" y="-180.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="geodetic">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
@@ -706,28 +707,20 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     });
 
     it('raises an error if tilemapresource.xml specifies an unsupported profile', function() {
-        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            // We can't resolve the promise immediately, because then the error would be raised
-            // before we could subscribe to it.  This a problem particular to tests.
-            setTimeout(function() {
-                var parser = new DOMParser();
-                var xmlString =
-                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
-                    '   <Title/>' +
-                    '   <Abstract/>' +
-                    '   <SRS>EPSG:4326</SRS>' +
-                    '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
-                    '   <Origin x="-90.0" y="-180.0"/>' +
-                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
-                    '   <TileSets profile="foobar">' +
-                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
-                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
-                    '   </TileSets>' +
-                    '</TileMap>';
-                var xml = parser.parseFromString(xmlString, 'text/xml');
-                deferred.resolve(xml);
-            }, 1);
-        };
+        var xmlString =
+            '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+            '   <Title/>' +
+            '   <Abstract/>' +
+            '   <SRS>EPSG:4326</SRS>' +
+            '   <BoundingBox minx="-10.0" miny="-123.0" maxx="11.0" maxy="-110.0"/>' +
+            '   <Origin x="-90.0" y="-180.0"/>' +
+            '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+            '   <TileSets profile="foobar">' +
+            '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+            '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+            '   </TileSets>' +
+            '</TileMap>';
+        patchRequestScheduler(xmlString);
 
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
@@ -743,6 +736,47 @@ describe('Scene/TileMapServiceImageryProvider', function() {
             return errorRaised;
         }).then(function() {
             expect(errorRaised).toBe(true);
+        });
+    });
+
+    it('forces minimum detail level to zero if the tilemapresource.xml request fails and the constructor minimum level is too high', function () {
+        patchRequestSchedulerToRejectRequest();
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/',
+            maximumLevel : 10
+        });
+
+        // we expect that our minimum detail level was forced to 0, even though we requested 10.
+        //  this is because, our rectangle has been set to the entire world (the default), so a minimum
+        //  detail level of 10 would hang the browser with too many tile requests.
+        // Forcing detail level to zero to is safe.
+        return provider.readyPromise.then(function() {
+            expect(provider.minimumLevel).toBe(0);
+        });
+    });
+
+    it('allows the constructor minimum detail level if the tilemapresource.xml request fails but the constructor rectangle is small enough', function () {
+        patchRequestSchedulerToRejectRequest();
+        var provider = new TileMapServiceImageryProvider({
+            url: 'made/up/tms/server/',
+            // a high minimum detail level
+            maximumLevel: 12,
+            // and a very small rectangle
+            rectangle: new Rectangle(
+                CesiumMath.toRadians(131.020889),
+                CesiumMath.toRadians(-25.354730),
+                CesiumMath.toRadians(131.054363),
+                CesiumMath.toRadians(-25.335803)
+            )
+        });
+
+        // we expect that our minimum detail level remains at 12, which is quite high, but that's okay
+        //  because our rectangle is still small enough that it's not too many tiles.
+        return provider.readyPromise.then(function() {
+            expect(provider.minimumLevel).toBe(12);
+            // just make sure we're actually still using a small rectangle
+            expect(provider.rectangle.width).toBeLessThan(0.001);
+            expect(provider.rectangle.height).toBeLessThan(0.001);
         });
     });
 });
