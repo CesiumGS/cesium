@@ -2,8 +2,6 @@ uniform vec4 color;
 uniform float glowPower;
 uniform float taperPower;
 
-varying float v_width;
-
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);

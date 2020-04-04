@@ -901,7 +901,7 @@ import ShadowMode from './ShadowMode.js';
         // e.g. when we're getting a height in order to place a billboard
         // on terrain, and the camera is looking at that same billboard.
         // The culled tile must have a valid mesh, though.
-        if (!defined(tile)) {
+        if (!defined(tile) || !defined(tile.data) || !defined(tile.data.renderedMesh)) {
             // Tile was not rendered (culled).
             return undefined;
         }
