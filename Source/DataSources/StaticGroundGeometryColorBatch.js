@@ -8,17 +8,17 @@ import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute
 import GroundPrimitive from '../Scene/GroundPrimitive.js';
 import BoundingSphereState from './BoundingSphereState.js';
 import Property from './Property.js';
+import RectangleCollisionChecker from '../Core/RectangleCollisionChecker.js';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-    function Batch(primitives, classificationType, color, key, zIndex) {
+    function Batch(primitives, classificationType, color, zIndex) {
         this.primitives = primitives;
         this.zIndex = zIndex;
         this.classificationType = classificationType;
         this.color = color;
-        this.key = key;
         this.createPrimitive = false;
         this.waitingOnCreate = false;
         this.primitive = undefined;
@@ -31,13 +31,19 @@ import Property from './Property.js';
         this.showsUpdated = new AssociativeArray();
         this.itemsToRemove = [];
         this.isDirty = false;
+        this.rectangleCollisionCheck = new RectangleCollisionChecker();
     }
+
+    Batch.prototype.overlapping = function(rectangle) {
+        return this.rectangleCollisionCheck.collides(rectangle);
+    };
 
     Batch.prototype.add = function(updater, instance) {
         var id = updater.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
+        this.rectangleCollisionCheck.insert(id, instance.geometry.rectangle);
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
@@ -52,8 +58,10 @@ import Property from './Property.js';
 
     Batch.prototype.remove = function(updater) {
         var id = updater.id;
+        var geometryInstance = this.geometry.get(id);
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         if (this.updaters.remove(id)) {
+            this.rectangleCollisionCheck.remove(id, geometryInstance.geometry.rectangle);
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {
@@ -227,7 +235,7 @@ import Property from './Property.js';
      * @private
      */
     function StaticGroundGeometryColorBatch(primitives, classificationType) {
-        this._batches = new AssociativeArray();
+        this._batches = [];
         this._primitives = primitives;
         this._classificationType = classificationType;
     }
@@ -235,25 +243,31 @@ import Property from './Property.js';
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
-        // zIndex is a batch breaker, so we'll use that for the key
         var zIndex = Property.getValueOrDefault(updater.zIndex, 0);
-        var batchKey = zIndex;
         var batch;
-        if (batches.contains(batchKey)) {
-            batch = batches.get(batchKey);
-        } else {
-            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, batchKey, zIndex);
-            batches.set(batchKey, batch);
+        var length = batches.length;
+        for (var i = 0; i < length; ++i) {
+            var item = batches[i];
+            if (item.zIndex === zIndex &&
+                !item.overlapping(instance.geometry.rectangle)) {
+                batch = item;
+                break;
+            }
+        }
+
+        if (!defined(batch)) {
+            batch = new Batch(this._primitives, this._classificationType, instance.attributes.color.value, zIndex);
+            batches.push(batch);
         }
         batch.add(updater, instance);
         return batch;
     };
 
     StaticGroundGeometryColorBatch.prototype.remove = function(updater) {
-        var batchesArray = this._batches.values;
-        var count = batchesArray.length;
+        var batches = this._batches;
+        var count = batches.length;
         for (var i = 0; i < count; ++i) {
-            if (batchesArray[i].remove(updater)) {
+            if (batches[i].remove(updater)) {
                 return;
             }
         }
@@ -266,15 +280,14 @@ import Property from './Property.js';
         //Perform initial update
         var isUpdated = true;
         var batches = this._batches;
-        var batchesArray = batches.values;
-        var batchCount = batchesArray.length;
+        var batchCount = batches.length;
         for (i = 0; i < batchCount; ++i) {
-            isUpdated = batchesArray[i].update(time) && isUpdated;
+            isUpdated = batches[i].update(time) && isUpdated;
         }
 
         //If any items swapped between batches we need to move them
         for (i = 0; i < batchCount; ++i) {
-            var oldBatch = batchesArray[i];
+            var oldBatch = batches[i];
             var itemsToRemove = oldBatch.itemsToRemove;
             var itemsToMoveLength = itemsToRemove.length;
             for (var j = 0; j < itemsToMoveLength; j++) {
@@ -287,16 +300,14 @@ import Property from './Property.js';
         }
 
         //If we moved anything around, we need to re-build the primitive and remove empty batches
-        var batchesArrayCopy = batchesArray.slice();
-        var batchesCopyCount = batchesArrayCopy.length;
-        for (i = 0; i < batchesCopyCount; ++i) {
-            var batch = batchesArrayCopy[i];
+        for (i = batchCount - 1; i >= 0; --i) {
+            var batch = batches[i];
             if (batch.isDirty) {
-                isUpdated = batchesArrayCopy[i].update(time) && isUpdated;
+                isUpdated = batches[i].update(time) && isUpdated;
                 batch.isDirty = false;
             }
             if (batch.geometry.length === 0) {
-                batches.remove(batch.key);
+                batches.splice(i, 1);
             }
         }
 
@@ -304,10 +315,10 @@ import Property from './Property.js';
     };
 
     StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(updater, result) {
-        var batchesArray = this._batches.values;
-        var batchCount = batchesArray.length;
+        var batches = this._batches;
+        var batchCount = batches.length;
         for (var i = 0; i < batchCount; ++i) {
-            var batch = batchesArray[i];
+            var batch = batches[i];
             if (batch.contains(updater)) {
                 return batch.getBoundingSphere(updater, result);
             }
@@ -317,10 +328,10 @@ import Property from './Property.js';
     };
 
     StaticGroundGeometryColorBatch.prototype.removeAllPrimitives = function() {
-        var batchesArray = this._batches.values;
-        var batchCount = batchesArray.length;
+        var batches = this._batches;
+        var batchCount = batches.length;
         for (var i = 0; i < batchCount; ++i) {
-            batchesArray[i].removeAllPrimitives();
+            batches[i].removeAllPrimitives();
         }
     };
 export default StaticGroundGeometryColorBatch;
