@@ -175,14 +175,14 @@ var TranslucencyMode = {
     BACK_MASK : 12 // For bitwise operations
 };
 
-function getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance, baseColor) {
+function getTranslucencyMode(frontFaceAlphaByDistance, backFaceAlphaByDistance, baseColor) {
     var baseLayerTranslucent = baseColor.alpha < 1.0;
 
-    var frontInvisible = frontTranslucencyByDistance.nearValue === 0.0 && frontTranslucencyByDistance.farValue === 0.0;
-    var frontOpaque = !baseLayerTranslucent && frontTranslucencyByDistance.nearValue === 1.0 && frontTranslucencyByDistance.farValue === 1.0;
+    var frontInvisible = frontFaceAlphaByDistance.nearValue === 0.0 && frontFaceAlphaByDistance.farValue === 0.0;
+    var frontOpaque = !baseLayerTranslucent && frontFaceAlphaByDistance.nearValue === 1.0 && frontFaceAlphaByDistance.farValue === 1.0;
 
-    var backInvisible = backTranslucencyByDistance.nearValue === 0.0 && backTranslucencyByDistance.farValue === 0.0;
-    var backOpaque = !baseLayerTranslucent && backTranslucencyByDistance.nearValue === 1.0 && backTranslucencyByDistance.farValue === 1.0;
+    var backInvisible = backFaceAlphaByDistance.nearValue === 0.0 && backFaceAlphaByDistance.farValue === 0.0;
+    var backOpaque = !baseLayerTranslucent && backFaceAlphaByDistance.nearValue === 1.0 && backFaceAlphaByDistance.farValue === 1.0;
 
     var translucencyMode = 0;
 
@@ -205,18 +205,18 @@ function getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDist
     return translucencyMode;
 }
 
-function getFrontTranslucencyMode(translucencyMode) {
+function getFrontFaceAlphaMode(translucencyMode) {
     return translucencyMode & TranslucencyMode.FRONT_MASK;
 }
 
-function getBackTranslucencyMode(translucencyMode) {
+function getBackFaceAlphaMode(translucencyMode) {
     return translucencyMode & TranslucencyMode.BACK_MASK;
 }
 
 function getTranslucencyModeFromGlobe(globe) {
-    var frontTranslucencyByDistance = globe.frontTranslucencyByDistanceFinal;
-    var backTranslucencyByDistance = globe.backTranslucencyByDistanceFinal;
-    return getTranslucencyMode(frontTranslucencyByDistance, backTranslucencyByDistance, globe.baseColor);
+    var frontFaceAlphaByDistance = globe.frontFaceAlphaByDistanceFinal;
+    var backFaceAlphaByDistance = globe.backFaceAlphaByDistanceFinal;
+    return getTranslucencyMode(frontFaceAlphaByDistance, backFaceAlphaByDistance, globe.baseColor);
 }
 
 GlobeTranslucency.isTranslucent = function(globe) {
@@ -224,7 +224,7 @@ GlobeTranslucency.isTranslucent = function(globe) {
         return false;
     }
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    return getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
+    return getFrontFaceAlphaMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
 };
 
 GlobeTranslucency.isSunVisibleThroughGlobe = function(globe, cameraUnderground) {
@@ -233,8 +233,8 @@ GlobeTranslucency.isSunVisibleThroughGlobe = function(globe, cameraUnderground) 
     }
 
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    var frontOpaque = getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
-    var backOpaque = getBackTranslucencyMode(translucencyMode) === TranslucencyMode.BACK_OPAQUE;
+    var frontOpaque = getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
+    var backOpaque = getBackFaceAlphaMode(translucencyMode) === TranslucencyMode.BACK_OPAQUE;
 
     // The sun is visible through the globe if the front and back faces are translucent when above ground
     // or if front faces are translucent when below ground
@@ -247,8 +247,8 @@ GlobeTranslucency.isSkyAtmosphereVisible = function(globe) {
     }
 
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    var frontInvisible = getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_INVISIBLE;
-    var backInvisible = getBackTranslucencyMode(translucencyMode) === TranslucencyMode.BACK_INVISIBLE;
+    var frontInvisible = getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_INVISIBLE;
+    var backInvisible = getBackFaceAlphaMode(translucencyMode) === TranslucencyMode.BACK_INVISIBLE;
 
     // Sky atmosphere is visible if the globe is not completely invisible
     return !frontInvisible || !backInvisible;
@@ -261,7 +261,7 @@ GlobeTranslucency.isEnvironmentVisible = function(globe, cameraUnderground) {
 
     // The environment is visible if the camera is above ground or underground with translucency
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    return !cameraUnderground || getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
+    return !cameraUnderground || getFrontFaceAlphaMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
 };
 
 GlobeTranslucency.useDepthPlane = function(globe, cameraUnderground) {
@@ -271,7 +271,7 @@ GlobeTranslucency.useDepthPlane = function(globe, cameraUnderground) {
 
     // Use the depth plane when the globe is opaque
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    return getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
+    return getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
 };
 
 function removeDefine(defines, defineToRemove) {
@@ -591,8 +591,8 @@ function requireManualDepthTest(tileProvider, translucencyMode, frameState, scen
 }
 
 GlobeTranslucency.getNumberOfTextureUniforms = function(tileProvider, frameState) {
-    var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
-    var translucent =  getFrontTranslucencyMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
+    var translucencyMode = getTranslucencyMode(tileProvider.frontFaceAlphaByDistance, tileProvider.backFaceAlphaByDistance, tileProvider.baseColor);
+    var translucent =  getFrontFaceAlphaMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
     var scene2D = frameState.mode === SceneMode.SCENE2D;
 
     var numberOfTextureUniforms = 0;
@@ -609,14 +609,14 @@ GlobeTranslucency.getNumberOfTextureUniforms = function(tileProvider, frameState
 };
 
 GlobeTranslucency.pushDerivedCommands = function(command, firstLayer, tileProvider, frameState) {
-    var translucencyMode = getTranslucencyMode(tileProvider.frontTranslucencyByDistance, tileProvider.backTranslucencyByDistance, tileProvider.baseColor);
+    var translucencyMode = getTranslucencyMode(tileProvider.frontFaceAlphaByDistance, tileProvider.backFaceAlphaByDistance, tileProvider.baseColor);
 
     if (translucencyMode === (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_INVISIBLE)) {
         // Don't push any commands if both front and back faces are invisible
         return;
     }
 
-    if (getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE) {
+    if (getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE) {
         // Render the globe normally when front face is opaque
         frameState.commandList.push(command);
         return;
@@ -744,8 +744,8 @@ GlobeTranslucency.prototype.executeGlobeCommands = function(commands, commandsLe
     this._clearCommand.execute(context, passState);
 
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    var frontOpaque = getFrontTranslucencyMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
-    var backOpaque = getBackTranslucencyMode(translucencyMode) === TranslucencyMode.BACK_OPAQUE;
+    var frontOpaque = getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
+    var backOpaque = getBackFaceAlphaMode(translucencyMode) === TranslucencyMode.BACK_OPAQUE;
 
     if (frontOpaque || backOpaque) {
         // Render opaque commands to scene's framebuffer like normal
@@ -766,13 +766,13 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function(frustu
     }
 
     var translucencyMode = getTranslucencyModeFromGlobe(globe);
-    var frontTranslucencyMode = getFrontTranslucencyMode(translucencyMode);
-    var backTranslucencyMode = getBackTranslucencyMode(translucencyMode);
+    var frontFaceAlphaMode = getFrontFaceAlphaMode(translucencyMode);
+    var backFaceAlphaMode = getBackFaceAlphaMode(translucencyMode);
 
-    var frontOpaque = frontTranslucencyMode === TranslucencyMode.FRONT_OPAQUE;
-    var backOpaque = backTranslucencyMode === TranslucencyMode.BACK_OPAQUE;
-    var frontTranslucent = frontTranslucencyMode === TranslucencyMode.FRONT_TRANSLUCENT;
-    var backTranslucent = backTranslucencyMode === TranslucencyMode.BACK_TRANSLUCENT;
+    var frontOpaque = frontFaceAlphaMode === TranslucencyMode.FRONT_OPAQUE;
+    var backOpaque = backFaceAlphaMode === TranslucencyMode.BACK_OPAQUE;
+    var frontTranslucent = frontFaceAlphaMode === TranslucencyMode.FRONT_TRANSLUCENT;
+    var backTranslucent = backFaceAlphaMode === TranslucencyMode.BACK_TRANSLUCENT;
 
     if (frontOpaque || backOpaque) {
         // Render classification on opaque faces like normal

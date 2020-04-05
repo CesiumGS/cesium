@@ -85,8 +85,8 @@ uniform vec4 u_fillHighlightColor;
 #endif
 
 #ifdef TRANSLUCENT
-uniform vec4 u_frontTranslucencyByDistance;
-uniform vec4 u_backTranslucencyByDistance;
+uniform vec4 u_frontFaceAlphaByDistance;
+uniform vec4 u_backFaceAlphaByDistance;
 #endif
 
 varying vec3 v_positionMC;
@@ -329,7 +329,7 @@ void main()
 #endif
 
 #ifdef TRANSLUCENT
-    vec4 translucencyByDistance = gl_FrontFacing ? u_frontTranslucencyByDistance : u_backTranslucencyByDistance;
+    vec4 translucencyByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
     float startDistance = translucencyByDistance.x;
     float startAlpha = translucencyByDistance.y;
     float endDistance = translucencyByDistance.z;

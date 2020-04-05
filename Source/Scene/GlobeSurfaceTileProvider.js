@@ -105,8 +105,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this.showSkirts = true;
         this.backFaceCulling = true;
-        this.frontTranslucencyByDistance = undefined;
-        this.backTranslucencyByDistance = undefined;
+        this.frontFaceAlphaByDistance = undefined;
+        this.backFaceAlphaByDistance = undefined;
         this.translucent = false;
         this.depthTestAgainstTerrain = false;
         this.materialUniformMap = undefined;
@@ -1314,11 +1314,11 @@ import TileSelectionResult from './TileSelectionResult.js';
             u_colorsToAlpha : function() {
                 return this.properties.colorsToAlpha;
             },
-            u_frontTranslucencyByDistance : function() {
-                return this.properties.frontTranslucencyByDistance;
+            u_frontFaceAlphaByDistance : function() {
+                return this.properties.frontFaceAlphaByDistance;
             },
-            u_backTranslucencyByDistance : function() {
-                return this.properties.backTranslucencyByDistance;
+            u_backFaceAlphaByDistance : function() {
+                return this.properties.backFaceAlphaByDistance;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -1365,8 +1365,8 @@ import TileSelectionResult from './TileSelectionResult.js';
 
                 localizedCartographicLimitRectangle : new Cartesian4(),
 
-                frontTranslucencyByDistance : new Cartesian4(),
-                backTranslucencyByDistance : new Cartesian4()
+                frontFaceAlphaByDistance : new Cartesian4(),
+                backFaceAlphaByDistance : new Cartesian4()
             }
         };
 
@@ -1778,12 +1778,12 @@ import TileSelectionResult from './TileSelectionResult.js';
             uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            var frontTranslucencyByDistance = cameraUnderground ? tileProvider.backTranslucencyByDistance : tileProvider.frontTranslucencyByDistance;
-            var backTranslucencyByDistance = cameraUnderground ? tileProvider.frontTranslucencyByDistance : tileProvider.backTranslucencyByDistance;
+            var frontFaceAlphaByDistance = cameraUnderground ? tileProvider.backFaceAlphaByDistance : tileProvider.frontFaceAlphaByDistance;
+            var backFaceAlphaByDistance = cameraUnderground ? tileProvider.frontFaceAlphaByDistance : tileProvider.backFaceAlphaByDistance;
 
-            if (defined(frontTranslucencyByDistance)) {
-                Cartesian4.fromElements(frontTranslucencyByDistance.near, frontTranslucencyByDistance.nearValue, frontTranslucencyByDistance.far, frontTranslucencyByDistance.farValue, uniformMapProperties.frontTranslucencyByDistance);
-                Cartesian4.fromElements(backTranslucencyByDistance.near, backTranslucencyByDistance.nearValue, backTranslucencyByDistance.far, backTranslucencyByDistance.farValue, uniformMapProperties.backTranslucencyByDistance);
+            if (defined(frontFaceAlphaByDistance)) {
+                Cartesian4.fromElements(frontFaceAlphaByDistance.near, frontFaceAlphaByDistance.nearValue, frontFaceAlphaByDistance.far, frontFaceAlphaByDistance.farValue, uniformMapProperties.frontFaceAlphaByDistance);
+                Cartesian4.fromElements(backFaceAlphaByDistance.near, backFaceAlphaByDistance.nearValue, backFaceAlphaByDistance.far, backFaceAlphaByDistance.farValue, uniformMapProperties.backFaceAlphaByDistance);
             }
 
             var highlightFillTile = !defined(surfaceTile.vertexArray) && defined(tileProvider.fillHighlightColor) && tileProvider.fillHighlightColor.alpha > 0.0;

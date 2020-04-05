@@ -64,20 +64,20 @@ import ShadowMode from './ShadowMode.js';
         this._terrainProviderChanged = new Event();
 
         this._translucencyEnabled = false;
-        this._frontTranslucency = 1.0;
-        this._frontTranslucencyByDistance = undefined;
-        this._backTranslucency = 1.0;
-        this._backTranslucencyByDistance = undefined;
+        this._frontFaceAlpha = 1.0;
+        this._frontFaceAlphaByDistance = undefined;
+        this._backFaceAlpha = 1.0;
+        this._backFaceAlphaByDistance = undefined;
 
         /**
          * @private
          */
-        this.frontTranslucencyByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+        this.frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
         /**
          * @private
          */
-        this.backTranslucencyByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+        this.backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
         makeShadersDirty(this);
 
@@ -489,8 +489,8 @@ import ShadowMode from './ShadowMode.js';
          * <br /><br />
          * The alpha is computed by blending {@link Globe#material}, {@link Globe#imageryLayers},
          * and {@link Globe#baseColor}, all of which may contain translucency, and then multiplying by
-         * {@link Globe#frontTranslucency} and {@link Globe#frontTranslucencyByDistance} for front faces and
-         * {@link Globe#backTranslucency} and {@link Globe#backTranslucencyByDistance} for back faces.
+         * {@link Globe#frontFaceAlpha} and {@link Globe#frontFaceAlphaByDistance} for front faces and
+         * {@link Globe#backFaceAlpha} and {@link Globe#backFaceAlphaByDistance} for back faces.
          * When the camera is underground back faces and front faces are swapped, i.e. back-facing geometry
          * is considered front facing.
          * <br /><br />
@@ -501,10 +501,10 @@ import ShadowMode from './ShadowMode.js';
          * @type {Boolean}
          * @default false
          *
-         * @see Globe#frontTranslucency
-         * @see Globe#frontTranslucencyByDistance
-         * @see Globe#backTranslucency
-         * @see Globe#backTranslucencyByDistance
+         * @see Globe#frontFaceAlpha
+         * @see Globe#frontFaceAlphaByDistance
+         * @see Globe#backFaceAlpha
+         * @see Globe#backFaceAlphaByDistance
          */
         translucencyEnabled : {
             get : function() {
@@ -529,23 +529,23 @@ import ShadowMode from './ShadowMode.js';
          * @default 1.0
          *
          * @see Globe#translucencyEnabled
-         * @see Globe#frontTranslucencyByDistance
+         * @see Globe#frontFaceAlphaByDistance
          *
          * @example
          * // Set front face translucency to 0.5.
-         * globe.frontTranslucency = 0.5;
+         * globe.frontFaceAlpha = 0.5;
          * globe.translucencyEnabled = true;
          */
-        frontTranslucency : {
+        frontFaceAlpha : {
             get : function() {
-                return this._frontTranslucency;
+                return this._frontFaceAlpha;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThanOrEquals('frontTranslucency', value, 0.0);
-                Check.typeOf.number.lessThanOrEquals('frontTranslucency', value, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('frontFaceAlpha', value, 0.0);
+                Check.typeOf.number.lessThanOrEquals('frontFaceAlpha', value, 1.0);
                 //>>includeEnd('debug');
-                this._frontTranslucency = value;
+                this._frontFaceAlpha = value;
             }
         },
         /**
@@ -554,7 +554,7 @@ import ShadowMode from './ShadowMode.js';
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
          * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
-         * frontTranslucencyByDistance will be disabled.
+         * frontFaceAlphaByDistance will be disabled.
          * <br /><br />
          * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
          *
@@ -564,24 +564,24 @@ import ShadowMode from './ShadowMode.js';
          * @default undefined
          *
          * @see Globe#translucencyEnabled
-         * @see Globe#frontTranslucency
+         * @see Globe#frontFaceAlpha
          *
          * @example
          * // Example 1.
          * // Set front face translucency to 0.5 when the
          * // camera is 1500 meters from the surface and 1.0
          * // as the camera distance approaches 8.0e6 meters.
-         * globe.frontTranslucencyByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
+         * globe.frontFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
          * globe.translucencyEnabled = true;
          *
          * @example
          * // Example 2.
          * // Disable front face translucency by distance
-         * globe.frontTranslucencyByDistance = undefined;
+         * globe.frontFaceAlphaByDistance = undefined;
          */
-        frontTranslucencyByDistance : {
+        frontFaceAlphaByDistance : {
             get : function() {
-                return this._frontTranslucencyByDistance;
+                return this._frontFaceAlphaByDistance;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -589,7 +589,7 @@ import ShadowMode from './ShadowMode.js';
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
-                this._frontTranslucencyByDistance = NearFarScalar.clone(value, this._frontTranslucencyByDistance);
+                this._frontFaceAlphaByDistance = NearFarScalar.clone(value, this._frontFaceAlphaByDistance);
             }
         },
 
@@ -604,23 +604,23 @@ import ShadowMode from './ShadowMode.js';
          * @default 1.0
          *
          * @see Globe#translucencyEnabled
-         * @see Globe#backTranslucencyByDistance
+         * @see Globe#backFaceAlphaByDistance
          *
          * @example
          * // Set back face translucency to 0.5.
-         * globe.backTranslucency = 0.5;
+         * globe.backFaceAlpha = 0.5;
          * globe.translucencyEnabled = true;
          */
-        backTranslucency : {
+        backFaceAlpha : {
             get : function() {
-                return this._backTranslucency;
+                return this._backFaceAlpha;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThanOrEquals('backTranslucency', value, 0.0);
-                Check.typeOf.number.lessThanOrEquals('backTranslucency', value, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('backFaceAlpha', value, 0.0);
+                Check.typeOf.number.lessThanOrEquals('backFaceAlpha', value, 1.0);
                 //>>includeEnd('debug');
-                this._backTranslucency = value;
+                this._backFaceAlpha = value;
             }
         },
         /**
@@ -629,7 +629,7 @@ import ShadowMode from './ShadowMode.js';
          * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
          * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
          * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
-         * backTranslucencyByDistance will be disabled.
+         * backFaceAlphaByDistance will be disabled.
          * <br /><br />
          * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
          *
@@ -639,24 +639,24 @@ import ShadowMode from './ShadowMode.js';
          * @default undefined
          *
          * @see Globe#translucencyEnabled
-         * @see Globe#backTranslucency
+         * @see Globe#backFaceAlpha
          *
          * @example
          * // Example 1.
          * // Set back face translucency to 0.5 when the
          * // camera is 1500 meters from the surface and 1.0
          * // as the camera distance approaches 8.0e6 meters.
-         * globe.backTranslucencyByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
+         * globe.backFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
          * globe.translucencyEnabled = true;
          *
          * @example
          * // Example 2.
          * // Disable back face translucency by distance
-         * globe.backTranslucencyByDistance = undefined;
+         * globe.backFaceAlphaByDistance = undefined;
          */
-        backTranslucencyByDistance : {
+        backFaceAlphaByDistance : {
             get : function() {
-                return this._backTranslucencyByDistance;
+                return this._backFaceAlphaByDistance;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -664,17 +664,17 @@ import ShadowMode from './ShadowMode.js';
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
-                this._backTranslucencyByDistance = NearFarScalar.clone(value, this._backTranslucencyByDistance);
+                this._backFaceAlphaByDistance = NearFarScalar.clone(value, this._backFaceAlphaByDistance);
             }
         }
     });
 
-    function updateFrontTranslucencyByDistance(globe) {
-        updateTranslucencyByDistance(globe._translucencyEnabled, globe._frontTranslucency, globe._frontTranslucencyByDistance, globe.frontTranslucencyByDistanceFinal);
+    function updateFrontFaceAlphaByDistance(globe) {
+        updateTranslucencyByDistance(globe._translucencyEnabled, globe._frontFaceAlpha, globe._frontFaceAlphaByDistance, globe.frontFaceAlphaByDistanceFinal);
     }
 
-    function updateBackTranslucencyByDistance(globe) {
-        updateTranslucencyByDistance(globe._translucencyEnabled, globe._backTranslucency, globe._backTranslucencyByDistance, globe.backTranslucencyByDistanceFinal);
+    function updateBackFaceAlphaByDistance(globe) {
+        updateTranslucencyByDistance(globe._translucencyEnabled, globe._backFaceAlpha, globe._backFaceAlphaByDistance, globe.backFaceAlphaByDistanceFinal);
     }
 
     function updateTranslucencyByDistance(translucencyEnabled, translucency, translucencyByDistance, translucencyByDistanceFinal) {
@@ -981,8 +981,8 @@ import ShadowMode from './ShadowMode.js';
             }
         }
 
-        updateFrontTranslucencyByDistance(this);
-        updateBackTranslucencyByDistance(this);
+        updateFrontFaceAlphaByDistance(this);
+        updateBackFaceAlphaByDistance(this);
 
         var pass = frameState.passes;
         var mode = frameState.mode;
@@ -1019,8 +1019,8 @@ import ShadowMode from './ShadowMode.js';
             tileProvider.fillHighlightColor = this.fillHighlightColor;
             tileProvider.showSkirts = this.showSkirts;
             tileProvider.backFaceCulling = this.backFaceCulling;
-            tileProvider.frontTranslucencyByDistance = this.frontTranslucencyByDistanceFinal;
-            tileProvider.backTranslucencyByDistance = this.backTranslucencyByDistanceFinal;
+            tileProvider.frontFaceAlphaByDistance = this.frontFaceAlphaByDistanceFinal;
+            tileProvider.backFaceAlphaByDistance = this.backFaceAlphaByDistanceFinal;
             tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
             tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
             surface.beginFrame(frameState);

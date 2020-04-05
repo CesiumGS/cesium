@@ -49,7 +49,7 @@ var scene = viewer.scene;
 var globe = scene.globe;
 
 scene.screenSpaceCameraController.enableCollisionDetection = false;
-globe.frontTranslucencyByDistance = new Cesium.NearFarScalar(400.0, 0.0, 800.0, 1.0);
+globe.frontFaceAlphaByDistance = new Cesium.NearFarScalar(400.0, 0.0, 800.0, 1.0);
 
 var viewModel = {
     translucencyEnabled : true,
@@ -73,8 +73,8 @@ function update() {
     alpha = !isNaN(alpha) ? alpha : 1.0;
     alpha = Cesium.Math.clamp(alpha, 0.0, 1.0);
 
-    globe.frontTranslucencyByDistance.nearValue = alpha;
-    globe.frontTranslucencyByDistance.farValue = viewModel.fadeByDistance ? 1.0 : alpha;
+    globe.frontFaceAlphaByDistance.nearValue = alpha;
+    globe.frontFaceAlphaByDistance.farValue = viewModel.fadeByDistance ? 1.0 : alpha;
 }
 update();
 
