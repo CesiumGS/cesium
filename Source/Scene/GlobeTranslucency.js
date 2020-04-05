@@ -176,6 +176,10 @@ var TranslucencyMode = {
 };
 
 function getTranslucencyMode(frontFaceAlphaByDistance, backFaceAlphaByDistance, baseColor) {
+    if (!defined(frontFaceAlphaByDistance) || !defined(backFaceAlphaByDistance)) {
+        return TranslucencyMode.FRONT_OPAQUE | TranslucencyMode.BACK_OPAQUE;
+    }
+
     var baseLayerTranslucent = baseColor.alpha < 1.0;
 
     var frontInvisible = frontFaceAlphaByDistance.nearValue === 0.0 && frontFaceAlphaByDistance.farValue === 0.0;
