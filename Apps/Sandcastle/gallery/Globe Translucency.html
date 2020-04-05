@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="View datasets underneath the surface with globe translucency.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table><tbody>
+    <tr>
+        <td>Translucency enabled</td>
+        <td><input type="checkbox" data-bind="checked: translucencyEnabled"></td>
+    </tr>
+    <tr>
+        <td>Fade by distance</td>
+        <td><input type="checkbox" data-bind="checked: fadeByDistance"></td>
+    </tr>
+    <tr>
+        <td>Alpha</td>
+        <td>
+            <input type="range" min="0.0" max="1.0" step="0.1" data-bind="value: alpha, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: alpha">
+        </td>
+    </tr>
+</tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    skyAtmosphere : false,
+    terrainProvider : Cesium.createWorldTerrain()
+});
+
+var scene = viewer.scene;
+var globe = scene.globe;
+
+scene.screenSpaceCameraController.enableCollisionDetection = false;
+globe.frontTranslucencyByDistance = new Cesium.NearFarScalar(400.0, 0.0, 800.0, 1.0);
+
+var viewModel = {
+    translucencyEnabled : true,
+    fadeByDistance : true,
+    alpha : 0.5
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+for (var name in viewModel) {
+    if (viewModel.hasOwnProperty(name)) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(update);
+    }
+}
+
+function update() {
+    globe.translucencyEnabled = viewModel.translucencyEnabled;
+
+    var alpha = Number(viewModel.alpha);
+    alpha = !isNaN(alpha) ? alpha : 1.0;
+    alpha = Cesium.Math.clamp(alpha, 0.0, 1.0);
+
+    globe.frontTranslucencyByDistance.nearValue = alpha;
+    globe.frontTranslucencyByDistance.farValue = viewModel.fadeByDistance ? 1.0 : alpha;
+}
+update();
+
+var longitude = -3.82518;
+var latitude = 53.11728;
+var height = 72.8;
+var position = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+var url = '../../SampleData/models/ParcLeadMine/ParcLeadMine.glb';
+
+var entity = viewer.entities.add({
+    name : url,
+    position : position,
+    model : {
+        uri : url
+    }
+});
+
+viewer.scene.camera.setView({
+    destination : new Cesium.Cartesian3(3826465.9884728403, -254831.02751468265, 5081387.671561018),
+    orientation : new Cesium.HeadingPitchRoll(3.3889450556243754, -0.5276382514771969, 6.282272566663295),
+    endTransform : Cesium.Matrix4.IDENTITY
+});
+
+viewer.scene.camera.flyTo({
+    destination : new Cesium.Cartesian3(3827270.552916987, -255123.18143177085, 5079147.091351856),
+    orientation : new Cesium.HeadingPitchRoll(3.2624281242239963, -0.22213535190506972, 6.282786783842843),
+    duration : 5.0
+});//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
+    startup(Cesium);
+}
+</script>
+</body>
+</html>
