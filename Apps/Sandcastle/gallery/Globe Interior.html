@@ -39,20 +39,7 @@ baseLayer.colorToAlphaThreshold = 0.2;
 viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
 viewer.scene.globe.enableTranslucency = true;
 
-var weatherLayer = layers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
-    url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
-    layers : 'nexrad-n0r',
-    credit : 'Radar data courtesy Iowa Environmental Mesonet',
-    parameters : {
-        transparent : 'true',
-        format : 'image/png'
-    }
-}));
-
-layers.add(weatherLayer);
-
 var innerCoreRadius = 1207008.0;
-var outerCoreRadius = 2301362.0;
 
 var innerCore = viewer.entities.add({
     name : 'Inner Core',
