@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="View the interior of the globe by enabling translucency on imagery layers.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain(),
+    orderIndependentTranslucency : false
+});
+viewer.scene.globe.showGroundAtmosphere = false;
+viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+var layers = viewer.scene.imageryLayers;
+
+// Set oceans on Bing base layer to transparent
+var baseLayer = layers.get(0);
+baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
+baseLayer.colorToAlphaThreshold = 0.2;
+
+viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
+viewer.scene.globe.enableTranslucency = true;
+
+var weatherLayer = layers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
+    url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+    layers : 'nexrad-n0r',
+    credit : 'Radar data courtesy Iowa Environmental Mesonet',
+    parameters : {
+        transparent : 'true',
+        format : 'image/png'
+    }
+}));
+
+layers.add(weatherLayer);
+
+var innerCoreRadius = 1207008.0;
+var outerCoreRadius = 2301362.0;
+
+var innerCore = viewer.entities.add({
+    name : 'Inner Core',
+    position: Cesium.Cartesian3.ZERO,
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(innerCoreRadius, innerCoreRadius, innerCoreRadius),
+        material : Cesium.Color.YELLOW
+    }
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
+    startup(Cesium);
+}
+</script>
+</body>
+</html>
