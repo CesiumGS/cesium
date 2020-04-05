@@ -515,8 +515,6 @@ import ShadowMode from './ShadowMode.js';
                 Check.typeOf.bool('translucencyEnabled', value);
                 //>>includeEnd('debug');
                 this._translucencyEnabled = value;
-                updateFrontTranslucencyByDistance(this);
-                updateBackTranslucencyByDistance(this);
             }
         },
 
@@ -548,7 +546,6 @@ import ShadowMode from './ShadowMode.js';
                 Check.typeOf.number.lessThanOrEquals('frontTranslucency', value, 1.0);
                 //>>includeEnd('debug');
                 this._frontTranslucency = value;
-                updateFrontTranslucencyByDistance(this);
             }
         },
         /**
@@ -588,12 +585,11 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
+                if (defined(value) && value.far < value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
                 this._frontTranslucencyByDistance = NearFarScalar.clone(value, this._frontTranslucencyByDistance);
-                updateFrontTranslucencyByDistance(this);
             }
         },
 
@@ -625,7 +621,6 @@ import ShadowMode from './ShadowMode.js';
                 Check.typeOf.number.lessThanOrEquals('backTranslucency', value, 1.0);
                 //>>includeEnd('debug');
                 this._backTranslucency = value;
-                updateBackTranslucencyByDistance(this);
             }
         },
         /**
@@ -665,12 +660,11 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
+                if (defined(value) && value.far < value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
                 this._backTranslucencyByDistance = NearFarScalar.clone(value, this._backTranslucencyByDistance);
-                updateBackTranslucencyByDistance(this);
             }
         }
     });
@@ -986,6 +980,9 @@ import ShadowMode from './ShadowMode.js';
                 this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
             }
         }
+
+        updateFrontTranslucencyByDistance(this);
+        updateBackTranslucencyByDistance(this);
 
         var pass = frameState.passes;
         var mode = frameState.mode;
