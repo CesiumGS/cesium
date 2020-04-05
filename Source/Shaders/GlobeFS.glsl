@@ -325,7 +325,8 @@ void main()
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
-    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+    vec4 materialColor = vec4(material.diffuse, material.alpha);
+    color = materialColor * vec4(materialColor.aaa, 1.0) + color * (1.0 - materialColor.a);
 #endif
 
 #ifdef TRANSLUCENT
