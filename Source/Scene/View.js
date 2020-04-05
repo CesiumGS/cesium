@@ -60,7 +60,7 @@ import ShadowMap from './ShadowMap.js';
         this.pickDepthFramebuffer = new PickDepthFramebuffer();
         this.sceneFramebuffer = new SceneFramebuffer();
         this.globeDepth = globeDepth;
-        this.globeTranslucency = new GlobeTranslucency();;
+        this.globeTranslucency = new GlobeTranslucency();
         this.oit = oit;
         this.pickDepths = [];
         this.debugGlobeDepths = [];

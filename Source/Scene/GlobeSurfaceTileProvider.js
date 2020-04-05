@@ -433,7 +433,6 @@ import TileSelectionResult from './TileSelectionResult.js';
             TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState, this._vertexArraysToDestroy);
         }
 
-        var translucent = GlobeTranslucency.isTranslucent(this);
         var translucentTexturesLength = GlobeTranslucency.getNumberOfTextureUniforms(this, frameState);
 
         // Add the tile render commands to the command list, sorted by texture count.
@@ -447,7 +446,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 var tile = tilesToRender[tileIndex];
                 var tileBoundingRegion = tile.data.tileBoundingRegion;
-                addDrawCommandsForTile(this, tile, translucent, translucentTexturesLength, frameState);
+                addDrawCommandsForTile(this, tile, translucentTexturesLength, frameState);
                 frameState.minimumTerrainHeight = Math.min(frameState.minimumTerrainHeight, tileBoundingRegion.minimumHeight);
             }
         }
@@ -1541,7 +1540,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         colorToAlpha : undefined
     };
 
-    function addDrawCommandsForTile(tileProvider, tile, translucent, translucentTexturesLength, frameState) {
+    function addDrawCommandsForTile(tileProvider, tile, translucentTexturesLength, frameState) {
         var surfaceTile = tile.data;
 
         if (!defined(surfaceTile.vertexArray)) {
