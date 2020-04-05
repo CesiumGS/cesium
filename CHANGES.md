@@ -3,6 +3,13 @@ Change Log
 
 ### 1.69.0 - 2020-05-01
 
+##### Additions :tada:
+
+* Added support for rendering the globe with translucency.
+    * Added `Globe.translucencyEnabled` for enabling globe translucency.
+    * Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
+    * Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
+
 ##### Fixes :wrench:
 
 * Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
