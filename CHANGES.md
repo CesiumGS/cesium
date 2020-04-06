@@ -5,7 +5,7 @@ Change Log
 
 ##### Additions :tada:
 
-* Added support for rendering the globe with translucency.
+* Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
     * Added `Globe.translucencyEnabled` for enabling globe translucency.
     * Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
     * Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
