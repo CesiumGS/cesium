@@ -9,9 +9,6 @@ import Renderbuffer from '../Renderer/Renderbuffer.js';
 import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 
     /**
      * @private
@@ -73,12 +70,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : pixelDatatype,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         this._idTexture = new Texture({
@@ -87,12 +79,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         if (context.depthTexture) {
@@ -102,12 +89,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
             this._depthStencilIdTexture = new Texture({
                 context : context,
@@ -115,12 +97,7 @@ import TextureWrap from '../Renderer/TextureWrap.js';
                 height : height,
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
         } else {
             this._depthStencilRenderbuffer = new Renderbuffer({
