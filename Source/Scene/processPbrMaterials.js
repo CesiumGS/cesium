@@ -313,12 +313,20 @@ import ModelUtility from './ModelUtility.js';
         var techniqueAttributes = {
             a_position : {
                 semantic : 'POSITION'
+            },
+            // TODO
+            a_outlineCoordinates : {
+                semantic : '_OUTLINE_COORDINATES'
             }
         };
         vertexShader += 'attribute vec3 a_position;\n';
+        vertexShader += 'varying vec3 v_outlineCoordinates;\n';
+        vertexShader += 'attribute vec3 a_outlineCoordinates;\n';
         if (hasNormals) {
             vertexShader += 'varying vec3 v_positionEC;\n';
         }
+
+        vertexShaderMain += '    v_outlineCoordinates = a_outlineCoordinates;\n';
 
         // Morph Target Weighting
         vertexShaderMain += '    vec3 weightedPosition = a_position;\n';
@@ -377,6 +385,7 @@ import ModelUtility from './ModelUtility.js';
 
             fragmentShader += 'varying vec3 v_normal;\n';
             fragmentShader += 'varying vec3 v_positionEC;\n';
+            fragmentShader += 'varying vec3 v_outlineCoordinates;\n';
         }
 
         // Read tangents if available
@@ -852,6 +861,8 @@ import ModelUtility from './ModelUtility.js';
         }
 
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
+
+        fragmentShader += '    color = mix(color, vec3(0.0, 0.0, 0.0), max(max(v_outlineCoordinates.x, v_outlineCoordinates.y), v_outlineCoordinates.z));\n';
 
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {

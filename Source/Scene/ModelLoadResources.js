@@ -35,6 +35,9 @@ import Queue from '../Core/Queue.js';
         this.activeDecodingTasks = 0;
         this.pendingDecodingCache = false;
 
+        this.primitivesToOutline = new Queue();
+        this.activeOutlineTasks = 0;
+
         this.skinnedNodesIds = [];
     }
 
@@ -88,6 +91,10 @@ import Queue from '../Core/Queue.js';
 
     ModelLoadResources.prototype.finishedDecoding = function() {
         return this.primitivesToDecode.length === 0 && this.activeDecodingTasks === 0 && !this.pendingDecodingCache;
+    };
+
+    ModelLoadResources.prototype.finishedOutlining = function() {
+        return this.finishedDecoding() && this.primitivesToOutline.length === 0 && this.activeOutlineTasks === 0;
     };
 
     ModelLoadResources.prototype.finished = function() {

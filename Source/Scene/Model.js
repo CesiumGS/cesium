@@ -68,6 +68,7 @@ import ModelLoadResources from './ModelLoadResources.js';
 import ModelMaterial from './ModelMaterial.js';
 import ModelMesh from './ModelMesh.js';
 import ModelNode from './ModelNode.js';
+import ModelOutlineLoader from './ModelOutlineLoader.js';
 import ModelUtility from './ModelUtility.js';
 import OctahedralProjectedCubeMap from './OctahedralProjectedCubeMap.js';
 import processModelMaterialsCommon from './processModelMaterialsCommon.js';
@@ -4630,6 +4631,9 @@ import ShadowMode from './ShadowMode.js';
                     // Start draco decoding
                     DracoLoader.parse(this, context);
 
+                    // Start outline generation
+                    ModelOutlineLoader.parse(this, context);
+
                     loadResources.initialized = true;
                 }
 
@@ -4647,7 +4651,12 @@ import ShadowMode from './ShadowMode.js';
                     loadResources.resourcesParsed = true;
                 }
 
-                if (loadResources.resourcesParsed &&
+                if (loadResources.resourcesParsed && !loadResources.finishedOutlining()) {
+                    ModelOutlineLoader.outlinePrimitives(this, context);
+                }
+
+                if (//loadResources.finishedOutlining() &&
+                    loadResources.resourcesParsed &&
                     loadResources.pendingShaderLoads === 0) {
                     createResources(this, frameState);
                 }
