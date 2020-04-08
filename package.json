@@ -117,7 +117,7 @@
     "sortRequires": "gulp sortRequires",
     "prepublish": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
     "postpublish": "bash -c \"git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}\"",
-    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
+    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp -f gulpfile.cjs terria-prepare-cesium; fi\"",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
     "deploy-set-version": "gulp deploy-set-version"
