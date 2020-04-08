@@ -251,3 +251,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Richard Becker](https://github.com/richard3d)
 * [Daniel Leone](https://github.com/danielleone)
 * [Zhou Jiang](https://github.com/aboutqx)
+* [SungHo Lim](https://github.com/SambaLim)
