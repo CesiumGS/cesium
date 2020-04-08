@@ -2380,7 +2380,7 @@ Beta Releases
 
 ### b28 - 2014-05-01
 
-* Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209)):
+* Breaking changes ([why so many?](https://community.cesium.com/t/breaking-changes/1132)):
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
   * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `CesiumWidget.scene.globe` and `Viewer.scene.globe`.
   * Renamed `CentralBody` to `Globe`.
