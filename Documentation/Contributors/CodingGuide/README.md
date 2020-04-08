@@ -837,7 +837,7 @@ function Foo() {
 
 ## Third-Party Libraries
 
-:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
+:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium community forum](http://community.cesium.com/) ([example discussion](https://community.cesium.com/t/do-we-like-using-third-party-libraries/745)).  The library should
 * Have a compatible license such as MIT, BSD, or Apache 2.0.
 * Provide capabilities that Cesium truly needs and that the team doesn't have the time and/or expertise to develop.
 * Be lightweight, tested, maintained, and reasonably widely used.
