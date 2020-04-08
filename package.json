@@ -39,7 +39,7 @@
     "import": "./Source/Cesium.js"
   },
   "dependencies": {
-    "dompurify": "^2.0.7",
+    "dompurify": "^2.0.7"
   },
   "type": "module",
   "devDependencies": {
