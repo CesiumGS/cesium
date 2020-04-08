@@ -276,6 +276,8 @@ import ModelUtility from './ModelUtility.js';
             }
         }
 
+        fragmentShader += 'uniform sampler2D u_outlineTexture;\n';
+
         // Add attributes with semantics
         var vertexShaderMain = '';
         if (hasSkinning) {
@@ -862,7 +864,13 @@ import ModelUtility from './ModelUtility.js';
 
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
 
-        fragmentShader += '    color = mix(color, vec3(0.0, 0.0, 0.0), max(max(v_outlineCoordinates.x, v_outlineCoordinates.y), v_outlineCoordinates.z));\n';
+        fragmentShader += '    float outlineness = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r + texture2D(u_outlineTexture, vec2(v_outlineCoordinates.y, 0.5)).r + texture2D(u_outlineTexture, vec2(v_outlineCoordinates.z, 0.5)).r;\n';
+        //fragmentShader += '    float outlineness = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r;\n';
+        //fragmentShader += '    color = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, v_outlineCoordinates.x)).rgb;\n';
+        //fragmentShader += '    float outlineness = v_outlineCoordinates.x;\n';
+        //fragmentShader += '    if (outlineness > 0.75) { color = vec3(1.0, 0.0, 0.0); }\n';
+
+        fragmentShader += '    color = mix(color, vec3(0.0, 0.0, 0.0), outlineness);\n';
 
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {

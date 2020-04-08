@@ -195,6 +195,24 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
                         arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
                     }
                     gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, arrayBufferView);
+
+                    if (defined(source.mipLevels)) {
+                        gl.generateMipmap(textureTarget);
+
+                        var mipWidth = width;
+                        var mipHeight = height;
+                        for (var i = 0; i < source.mipLevels.length; ++i) {
+                            mipWidth = Math.floor(mipWidth / 2) | 0;
+                            if (mipWidth < 1) {
+                                mipWidth = 1;
+                            }
+                            mipHeight = Math.floor(mipHeight / 2) | 0;
+                            if (mipHeight < 1) {
+                                mipHeight = 1;
+                            }
+                            gl.texImage2D(textureTarget, i + 1, internalFormat, mipWidth, mipHeight, 0, pixelFormat, pixelDatatype, source.mipLevels[i]);
+                        }
+                    }
                 }
             } else if (defined(source.framebuffer)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);

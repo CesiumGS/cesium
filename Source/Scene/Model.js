@@ -3211,6 +3211,8 @@ import ShadowMode from './ShadowMode.js';
         var textures = model._rendererResources.textures;
         var defaultTexture = model._defaultTexture;
 
+        var outlineTexture = ModelOutlineLoader.createTexture(model, context)
+
         ForEach.material(gltf, function (material, materialId) {
             var modelMaterial = model._runtime.materialsById[materialId];
             var technique = techniques[modelMaterial._technique];
@@ -3220,6 +3222,7 @@ import ShadowMode from './ShadowMode.js';
 
             var u = uniformMaps[materialId];
             u.uniformMap = uniforms.map;                          // uniform name -> function for the renderer
+            u.uniformMap.u_outlineTexture = function() { return outlineTexture; };
             u.values = uniforms.values;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
             u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
             u.morphWeightsUniformName = uniforms.morphWeightsUniformName;

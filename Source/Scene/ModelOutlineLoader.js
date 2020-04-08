@@ -3,6 +3,12 @@ import FeatureDetection from '../Core/FeatureDetection.js';
 import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
 import readAccessorPacked from '../ThirdParty/GltfPipeline/readAccessorPacked.js';
 import binarySearch from '../Core/binarySearch.js';
+import Texture from '../Renderer/Texture.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Sampler from '../Renderer/Sampler.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
 
 /**
  * @private
@@ -173,6 +179,57 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
     // }
 
     // return when.all(outliningPromises);
+};
+
+function createTexture(size) {
+    var texture = new Uint8Array(size);
+    // texture[(size - 1) * 3] = 255;
+    // texture[(size - 1) * 3 + 1] = 0;
+    // texture[(size - 1) * 3 + 2] = 0;
+    texture[size - 1] = 255;
+    // texture[size - 2] = 127;
+    return texture;
+}
+
+ModelOutlineLoader.createTexture = function(model, context) {
+    var levelZero = createTexture(4096);
+    // levelZero[4095*3] = 0;
+    // levelZero[4095*3 + 1] = 255;
+    // levelZero[4095*3 + 0] = 0;
+
+    var mipLevels = [
+        createTexture(2048),
+        createTexture(1024),
+        createTexture(512),
+        createTexture(256),
+        createTexture(128),
+        createTexture(64),
+        createTexture(32),
+        createTexture(16),
+        createTexture(8),
+        createTexture(4),
+        createTexture(2),
+        createTexture(1),
+    ];
+
+    var texture = new Texture({
+        context : context,
+        source : {
+            arrayBufferView : levelZero,
+            mipLevels: mipLevels
+        },
+        width : 4096,
+        height : 1,
+        pixelFormat : PixelFormat.LUMINANCE,
+        sampler : new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR
+        })
+    });
+
+    return texture;
 };
 
 function addOutline(model, context, toOutline) {
