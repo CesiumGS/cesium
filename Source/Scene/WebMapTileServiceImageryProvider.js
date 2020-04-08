@@ -664,16 +664,16 @@ import Uri from '../ThirdParty/Uri.js';
      *
      * @constant
      */
-    WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
+    WebMapTileServiceImageryProvider.GetFeatureInfoDefaultParameters = Object.freeze({
         service : 'WMTS',
         version : '1.0.0',
         request : 'GetFeatureInfo'
     });
 
-    WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats = freezeObject([
-        freezeObject(new GetFeatureInfoFormat('json', 'application/json')),
-        freezeObject(new GetFeatureInfoFormat('xml', 'text/xml')),
-        freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
+    WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats = Object.freeze([
+        Object.freeze(new GetFeatureInfoFormat('json', 'application/json')),
+        Object.freeze(new GetFeatureInfoFormat('xml', 'text/xml')),
+        Object.freeze(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
 
     function buildGetFeatureInfoUrl(imageryProvider, infoFormat, col, row, level, i, j) {
