@@ -134,7 +134,6 @@ import SceneMode from './SceneMode.js';
                 fs.sources.push(extension);
                 fs.defines.push('LOG_DEPTH');
                 vs.defines.push('LOG_DEPTH');
-                vs.defines.push('DISABLE_GL_POSITION_LOG_DEPTH');
             }
 
             this._sp = ShaderProgram.replaceCache({

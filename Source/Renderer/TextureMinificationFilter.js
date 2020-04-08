@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -86,4 +85,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
                     (textureMinificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         }
     };
-export default freezeObject(TextureMinificationFilter);
+export default Object.freeze(TextureMinificationFilter);

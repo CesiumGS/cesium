@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -61,7 +60,7 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
         knockout.applyBindings(this._viewModel, this._element);
     }
 
-    defineProperties(SelectionIndicator.prototype, {
+    Object.defineProperties(SelectionIndicator.prototype, {
         /**
          * Gets the parent container.
          * @memberof SelectionIndicator.prototype

@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
@@ -127,4 +126,4 @@ import WebGLConstants from '../Core/WebGLConstants.js';
          */
         SOURCE_ALPHA_SATURATE : WebGLConstants.SRC_ALPHA_SATURATE
     };
-export default freezeObject(BlendFunction);
+export default Object.freeze(BlendFunction);

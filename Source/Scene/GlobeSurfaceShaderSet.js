@@ -98,13 +98,6 @@ import SceneMode from './SceneMode.js';
             quantizationDefine = 'QUANTIZATION_BITS12';
         }
 
-        var vertexLogDepth = 0;
-        var vertexLogDepthDefine = '';
-        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
-            vertexLogDepth = 1;
-            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
-        }
-
         var cartographicLimitRectangleFlag = 0;
         var cartographicLimitRectangleDefine = '';
         if (clippedByBoundaries) {
@@ -120,6 +113,10 @@ import SceneMode from './SceneMode.js';
         }
 
         var sceneMode = frameState.mode;
+        // It turns out this flags parameter is really just a hash of the settings you use to create the shader
+        // And it uses the hash to memoize shaders
+        // So the values of these numbers don't really matter, 
+        // as long as none of the numbers overlap/overwrite each other
         var flags = sceneMode |
                     (applyBrightness << 2) |
                     (applyContrast << 3) |
@@ -140,13 +137,12 @@ import SceneMode from './SceneMode.js';
                     (quantization << 18) |
                     (applySplit << 19) |
                     (enableClippingPlanes << 20) |
-                    (vertexLogDepth << 21) |
-                    (cartographicLimitRectangleFlag << 22) |
-                    (imageryCutoutFlag << 23) |
-                    (colorCorrect << 24) |
-                    (highlightFillTile << 25) |
-                    (colorToAlpha << 26) |
-                    (splitTerrain << 27);
+                    (cartographicLimitRectangleFlag << 21) |
+                    (imageryCutoutFlag << 22) |
+                    (colorCorrect << 23) |
+                    (highlightFillTile << 24) |
+                    (colorToAlpha << 25) |
+                    (splitTerrain << 26);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -178,7 +174,7 @@ import SceneMode from './SceneMode.js';
                 fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            vs.defines.push(quantizationDefine);
             fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {

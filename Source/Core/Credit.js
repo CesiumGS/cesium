@@ -2,7 +2,6 @@ import DOMPurify from 'dompurify/dist/purify';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 
     var nextCreditId = 0;
     var creditToId = {};
@@ -44,7 +43,7 @@ import defineProperties from './defineProperties.js';
         this._element = undefined;
     }
 
-    defineProperties(Credit.prototype, {
+    Object.defineProperties(Credit.prototype, {
         /**
          * The credit content
          * @memberof Credit.prototype

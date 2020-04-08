@@ -2,7 +2,6 @@ import binarySearch from '../../Core/binarySearch.js';
 import ClockRange from '../../Core/ClockRange.js';
 import ClockStep from '../../Core/ClockStep.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import JulianDate from '../../Core/JulianDate.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -423,7 +422,7 @@ import ToggleButtonViewModel from '../ToggleButtonViewModel.js';
         this._allShuttleRingTicks = allTicks;
     };
 
-    defineProperties(AnimationViewModel.prototype, {
+    Object.defineProperties(AnimationViewModel.prototype, {
         /**
          * Gets a command that decreases the speed of animation.
          * @memberof AnimationViewModel.prototype

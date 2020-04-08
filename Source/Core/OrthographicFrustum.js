@@ -1,7 +1,6 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
@@ -160,7 +159,7 @@ import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
         }
     }
 
-    defineProperties(OrthographicFrustum.prototype, {
+    Object.defineProperties(OrthographicFrustum.prototype, {
         /**
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicFrustum.prototype

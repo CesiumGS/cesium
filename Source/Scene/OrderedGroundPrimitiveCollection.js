@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PrimitiveCollection from './PrimitiveCollection.js';
 
@@ -18,7 +17,7 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         this.show = true;
     }
 
-    defineProperties(OrderedGroundPrimitiveCollection.prototype, {
+    Object.defineProperties(OrderedGroundPrimitiveCollection.prototype, {
         /**
          * Gets the number of primitives in the collection.
          *

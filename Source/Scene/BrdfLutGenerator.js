@@ -1,6 +1,5 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import Framebuffer from '../Renderer/Framebuffer.js';
@@ -8,9 +7,6 @@ import PixelDatatype from '../Renderer/PixelDatatype.js';
 import RenderState from '../Renderer/RenderState.js';
 import Sampler from '../Renderer/Sampler.js';
 import Texture from '../Renderer/Texture.js';
-import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
 
     /**
@@ -22,7 +18,7 @@ import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
         this._drawCommand = undefined;
     }
 
-    defineProperties(BrdfLutGenerator.prototype, {
+    Object.defineProperties(BrdfLutGenerator.prototype, {
         colorTexture : {
             get : function() {
                 return this._colorTexture;
@@ -50,12 +46,7 @@ import BrdfLutGeneratorFS from '../Shaders/BrdfLutGeneratorFS.js';
             height: 256,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
 
         generator._colorTexture = colorTexture;

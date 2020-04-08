@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import FeatureDetection from '../../Core/FeatureDetection.js';
@@ -133,7 +132,7 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
         }
     }
 
-    defineProperties(SceneModePicker.prototype, {
+    Object.defineProperties(SceneModePicker.prototype, {
         /**
          * Gets the parent container.
          * @memberof SceneModePicker.prototype

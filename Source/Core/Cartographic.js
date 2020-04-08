@@ -2,7 +2,6 @@ import Cartesian3 from './Cartesian3.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import freezeObject from './freezeObject.js';
 import CesiumMath from './Math.js';
 import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
 
@@ -219,7 +218,7 @@ import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
      * @type {Cartographic}
      * @constant
      */
-    Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
+    Cartographic.ZERO = Object.freeze(new Cartographic(0.0, 0.0, 0.0));
 
     /**
      * Duplicates this instance.

@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -9,4 +8,4 @@ import freezeObject from '../Core/freezeObject.js';
         READY : 2,
         UPSAMPLED_ONLY : 3
     };
-export default freezeObject(TileState);
+export default Object.freeze(TileState);

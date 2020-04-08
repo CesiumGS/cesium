@@ -1,4 +1,3 @@
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -20,7 +19,7 @@ import DeveloperError from './DeveloperError.js';
         //>>includeEnd('debug');
     }
 
-    defineProperties(TilingScheme.prototype, {
+    Object.defineProperties(TilingScheme.prototype, {
         /**
          * Gets the ellipsoid that is tiled by the tiling scheme.
          * @memberof TilingScheme.prototype

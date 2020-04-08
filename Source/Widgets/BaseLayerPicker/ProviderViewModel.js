@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
 import createCommand from '../createCommand.js';
@@ -69,7 +68,7 @@ import createCommand from '../createCommand.js';
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     }
 
-    defineProperties(ProviderViewModel.prototype, {
+    Object.defineProperties(ProviderViewModel.prototype, {
         /**
          * Gets the Command that creates one or more providers which will be added to
          * the globe when this item is selected.

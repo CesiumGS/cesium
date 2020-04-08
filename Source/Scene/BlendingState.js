@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 import BlendEquation from './BlendEquation.js';
 import BlendFunction from './BlendFunction.js';
 
@@ -19,7 +18,7 @@ import BlendFunction from './BlendFunction.js';
          * @type {Object}
          * @constant
          */
-        DISABLED : freezeObject({
+        DISABLED : Object.freeze({
             enabled : false
         }),
 
@@ -29,7 +28,7 @@ import BlendFunction from './BlendFunction.js';
          * @type {Object}
          * @constant
          */
-        ALPHA_BLEND : freezeObject({
+        ALPHA_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -45,7 +44,7 @@ import BlendFunction from './BlendFunction.js';
          * @type {Object}
          * @constant
          */
-        PRE_MULTIPLIED_ALPHA_BLEND : freezeObject({
+        PRE_MULTIPLIED_ALPHA_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -61,7 +60,7 @@ import BlendFunction from './BlendFunction.js';
          * @type {Object}
          * @constant
          */
-        ADDITIVE_BLEND : freezeObject({
+        ADDITIVE_BLEND : Object.freeze({
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -71,4 +70,4 @@ import BlendFunction from './BlendFunction.js';
             functionDestinationAlpha : BlendFunction.ONE
         })
     };
-export default freezeObject(BlendingState);
+export default Object.freeze(BlendingState);

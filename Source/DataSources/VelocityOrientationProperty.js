@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
 import Matrix3 from '../Core/Matrix3.js';
@@ -43,7 +42,7 @@ import VelocityVectorProperty from './VelocityVectorProperty.js';
         });
     }
 
-    defineProperties(VelocityOrientationProperty.prototype, {
+    Object.defineProperties(VelocityOrientationProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof VelocityOrientationProperty.prototype
