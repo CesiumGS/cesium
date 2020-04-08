@@ -8,7 +8,7 @@ To ensure an inclusive community, contributors and users in the Cesium community
 
 # Submitting an Issue
 
-If you have a question, do not submit an issue; instead, search the [Cesium forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev).  The forum is very active and there are years of informative archives, often with answers from the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
+If you have a question, do not submit an issue; instead, search the [Cesium community forum](https://community.cesium.com/).  The forum is very active and there are years of informative archives, often with answers from the core Cesium team.  If you do not find an answer to your question, start a new thread and you'll likely get a quick response.
 
 If you think you've found a bug in CesiumJS, first search the [issues](https://github.com/CesiumGS/cesium/issues).  If an issue already exists, please add a comment expressing your interest and any additional information.  This helps us prioritize issues.
 
@@ -26,7 +26,7 @@ Everyone is welcome to contribute to CesiumJS!
 
 In addition to contributing core CesiumJS code, we appreciate many types of contributions:
 
-* Being active on the [Cesium forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev) by answering questions and providing input on Cesium's direction.
+* Being active on the [Cesium community forum](https://community.cesium.com/) by answering questions and providing input on Cesium's direction.
 * Showcasing your Cesium apps on [Cesium blog](https://cesium.com/blog/categories/userstories/).  Contact us at hello@cesium.com.
 * Writing tutorials, creating examples, and improving the reference documentation.  See the issues labeled [doc](https://github.com/CesiumGS/cesium/labels/doc).
 * Submitting issues as [described above](#submitting-an-issue).
@@ -40,13 +40,13 @@ For ideas for CesiumJS code contributions, see:
 
 See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 
-Always feel free to introduce yourself on the [Cesium forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev) to brainstorm ideas and ask for guidance.
+Always feel free to introduce yourself on the [Cesium community forum](https://community.cesium.com/) to brainstorm ideas and ask for guidance.
 
 # Opening a Pull Request
 
 We love pull requests.  We strive to promptly review them, provide feedback, and merge.  Interest in Cesium is at an all-time high so the core team is busy.  Following the tips in this guide will help your pull request get merged quickly.
 
-> If you plan to make a major change, please start a new thread on the [Cesium forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev) first.  Pull requests for small features and bug fixes can generally just be opened without discussion on the forum.
+> If you plan to make a major change, please start a new thread on the [Cesium community forum](https://community.cesium.com/) first.  Pull requests for small features and bug fixes can generally just be opened without discussion on the forum.
 
 ## Contributor License Agreement (CLA)
 
