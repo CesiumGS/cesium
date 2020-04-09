@@ -85,8 +85,8 @@ uniform vec4 u_fillHighlightColor;
 #endif
 
 #ifdef TRANSLUCENT
-uniform vec4 u_frontTranslucencyByDistance;
-uniform vec4 u_backTranslucencyByDistance;
+uniform vec4 u_frontFaceAlphaByDistance;
+uniform vec4 u_backFaceAlphaByDistance;
 #endif
 
 varying vec3 v_positionMC;
@@ -325,11 +325,12 @@ void main()
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
-    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+    vec4 materialColor = vec4(material.diffuse, material.alpha);
+    color = materialColor * vec4(materialColor.aaa, 1.0) + color * (1.0 - materialColor.a);
 #endif
 
 #ifdef TRANSLUCENT
-    vec4 translucencyByDistance = gl_FrontFacing ? u_frontTranslucencyByDistance : u_backTranslucencyByDistance;
+    vec4 translucencyByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
     float startDistance = translucencyByDistance.x;
     float startAlpha = translucencyByDistance.y;
     float endDistance = translucencyByDistance.z;

@@ -203,7 +203,10 @@ function loadGrandCanyon(){
             new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0,  1.0, 0.0), distance),
             new Cesium.ClippingPlane(new Cesium.Cartesian3( 0.0, -1.0, 0.0), distance)
         ],
-        unionClippingRegions : true
+        unionClippingRegions : true,
+        edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+        edgeColor: Cesium.Color.WHITE,
+        enabled : clippingPlanesEnabled
     });
     globe.backFaceCulling = false;
     globe.showSkirts = false;

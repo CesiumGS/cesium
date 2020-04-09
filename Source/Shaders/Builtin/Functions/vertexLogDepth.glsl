@@ -36,7 +36,7 @@ vec4 czm_updatePositionDepth(vec4 coords) {
 void czm_vertexLogDepth()
 {
 #ifdef LOG_DEPTH
-    v_depthFromNearPlusOne = 1.0 - czm_currentFrustum.x + gl_Position.w;
+    v_depthFromNearPlusOne = (gl_Position.w - czm_currentFrustum.x) + 1.0;
     gl_Position = czm_updatePositionDepth(gl_Position);
 #endif
 }
@@ -58,7 +58,7 @@ void czm_vertexLogDepth()
 void czm_vertexLogDepth(vec4 clipCoords)
 {
 #ifdef LOG_DEPTH
-    v_depthFromNearPlusOne = 1.0 - czm_currentFrustum.x + clipCoords.w;
+    v_depthFromNearPlusOne = (clipCoords.w - czm_currentFrustum.x) + 1.0;
     czm_updatePositionDepth(clipCoords);
 #endif
 }

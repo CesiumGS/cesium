@@ -63,9 +63,18 @@ void main (void)
 
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
 
-#ifndef HDR
+    if (rgb.b > 1000000.0)
+    {
+        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
+        gl_FragColor = vec4(0.0);
+        return;
+    }
+
     const float exposure = 2.0;
-    rgb = vec3(1.0) - exp(-exposure * rgb);
+    vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
+
+#ifndef HDR
+    rgb = rgbExposure;
 #endif
 
 #ifdef COLOR_CORRECT
@@ -86,5 +95,5 @@ void main (void)
     float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), lightDirection), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
-    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
+    gl_FragColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }

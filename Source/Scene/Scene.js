@@ -1609,7 +1609,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
          */
         opaqueFrustumNearOffset : {
             get : function() {
-                return this._frameState.useLogDepth ? 0.9 : 0.9999;
+                return 0.9999;
             }
         }
     });
@@ -2040,7 +2040,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
         }
 
         var passes = frameState.passes;
-        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
+        if (!passes.pick && !passes.depth && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
             command = command.derivedCommands.hdr.command;
         }
 
@@ -2308,15 +2308,17 @@ import GlobeTranslucency from './GlobeTranslucency.js';
             }
 
             // Draw terrain classification
-            us.updatePass(Pass.TERRAIN_CLASSIFICATION);
-            commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
-            length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
+            if (!environmentState.renderTranslucentDepthForPick) {
+                us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
-            if (globeTranslucent) {
-                globeTranslucency.executeGlobeClassificationCommands(frustumCommands, scene._cameraUnderground, scene._globe, executeCommand, scene, context, passState);
-            } else {
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
+                if (globeTranslucent) {
+                    globeTranslucency.executeGlobeClassificationCommands(frustumCommands, scene._cameraUnderground, scene._globe, executeCommand, scene, context, passState);
+                } else {
+                    for (j = 0; j < length; ++j) {
+                        executeCommand(commands[j], scene, context, passState);
+                    }
                 }
             }
 
@@ -2332,7 +2334,7 @@ import GlobeTranslucency from './GlobeTranslucency.js';
                 passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
-            if (!environmentState.useInvertClassification || picking) {
+            if (!environmentState.useInvertClassification || picking || environmentState.renderTranslucentDepthForPick) {
                 // Common/fastest path. Draw 3D Tiles and classification normally.
 
                 // Draw 3D Tiles
@@ -2349,11 +2351,13 @@ import GlobeTranslucency from './GlobeTranslucency.js';
                     }
 
                     // Draw classifications. Modifies 3D Tiles color.
-                    us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                    commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                    length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                    for (j = 0; j < length; ++j) {
-                        executeCommand(commands[j], scene, context, passState);
+                    if (!environmentState.renderTranslucentDepthForPick) {
+                        us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                        commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                        length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                        for (j = 0; j < length; ++j) {
+                            executeCommand(commands[j], scene, context, passState);
+                        }
                     }
                 }
             } else {
