@@ -1,7 +1,6 @@
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 
     /**
      * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided
@@ -107,7 +106,7 @@ import freezeObject from './freezeObject.js';
      *
      * @see VertexFormat#position
      */
-    VertexFormat.POSITION_ONLY = freezeObject(new VertexFormat({
+    VertexFormat.POSITION_ONLY = Object.freeze(new VertexFormat({
         position : true
     }));
 
@@ -121,7 +120,7 @@ import freezeObject from './freezeObject.js';
      * @see VertexFormat#position
      * @see VertexFormat#normal
      */
-    VertexFormat.POSITION_AND_NORMAL = freezeObject(new VertexFormat({
+    VertexFormat.POSITION_AND_NORMAL = Object.freeze(new VertexFormat({
         position : true,
         normal : true
     }));
@@ -138,7 +137,7 @@ import freezeObject from './freezeObject.js';
      * @see VertexFormat#normal
      * @see VertexFormat#st
      */
-    VertexFormat.POSITION_NORMAL_AND_ST = freezeObject(new VertexFormat({
+    VertexFormat.POSITION_NORMAL_AND_ST = Object.freeze(new VertexFormat({
         position : true,
         normal : true,
         st : true
@@ -154,7 +153,7 @@ import freezeObject from './freezeObject.js';
      * @see VertexFormat#position
      * @see VertexFormat#st
      */
-    VertexFormat.POSITION_AND_ST = freezeObject(new VertexFormat({
+    VertexFormat.POSITION_AND_ST = Object.freeze(new VertexFormat({
         position : true,
         st : true
     }));
@@ -168,7 +167,7 @@ import freezeObject from './freezeObject.js';
      * @see VertexFormat#position
      * @see VertexFormat#color
      */
-    VertexFormat.POSITION_AND_COLOR = freezeObject(new VertexFormat({
+    VertexFormat.POSITION_AND_COLOR = Object.freeze(new VertexFormat({
         position : true,
         color : true
     }));
@@ -185,7 +184,7 @@ import freezeObject from './freezeObject.js';
      * @see VertexFormat#tangent
      * @see VertexFormat#bitangent
      */
-    VertexFormat.ALL = freezeObject(new VertexFormat({
+    VertexFormat.ALL = Object.freeze(new VertexFormat({
         position : true,
         normal : true,
         st : true,

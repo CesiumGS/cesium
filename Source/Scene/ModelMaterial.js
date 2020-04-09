@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -27,7 +26,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         this._values = undefined;
     }
 
-    defineProperties(ModelMaterial.prototype, {
+    Object.defineProperties(ModelMaterial.prototype, {
         /**
          * The value of the <code>name</code> property of this material.
          *

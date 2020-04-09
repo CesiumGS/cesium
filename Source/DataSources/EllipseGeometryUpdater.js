@@ -179,7 +179,7 @@ import Property from './Property.js';
                !Property.isConstant(ellipse.outlineWidth) || //
                !Property.isConstant(ellipse.numberOfVerticalLines) || //
                !Property.isConstant(ellipse.zIndex) || //
-               (this._onTerrain && !Property.isConstant(this._materialProperty));
+               (this._onTerrain && !Property.isConstant(this._materialProperty) && !(this._materialProperty instanceof ColorMaterialProperty));
     };
 
     EllipseGeometryUpdater.prototype._setStaticOptions = function(entity, ellipse) {

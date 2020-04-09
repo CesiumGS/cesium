@@ -1,5 +1,4 @@
 import Check from '../Core/Check.js';
-import freezeObject from '../Core/freezeObject.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix3 from '../Core/Matrix3.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -97,4 +96,4 @@ import Matrix4 from '../Core/Matrix4.js';
             return Axis[name];
         }
     };
-export default freezeObject(Axis);
+export default Object.freeze(Axis);

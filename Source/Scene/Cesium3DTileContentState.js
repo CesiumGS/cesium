@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -11,4 +10,4 @@ import freezeObject from '../Core/freezeObject.js';
         EXPIRED : 4,    // Is expired and will be unloaded once new content is loaded.
         FAILED : 5      // Request failed.
     };
-export default freezeObject(Cesium3DTileContentState);
+export default Object.freeze(Cesium3DTileContentState);

@@ -1,6 +1,5 @@
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -24,7 +23,7 @@ import DeveloperError from './DeveloperError.js';
         this._far = far;
     }
 
-    defineProperties(DistanceDisplayCondition.prototype, {
+    Object.defineProperties(DistanceDisplayCondition.prototype, {
         /**
          * The smallest distance in the interval where the object is visible.
          * @memberof DistanceDisplayCondition.prototype

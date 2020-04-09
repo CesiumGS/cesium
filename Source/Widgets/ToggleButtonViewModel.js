@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import knockout from '../ThirdParty/knockout.js';
 
@@ -42,7 +41,7 @@ import knockout from '../ThirdParty/knockout.js';
         knockout.track(this, ['toggled', 'tooltip']);
     }
 
-    defineProperties(ToggleButtonViewModel.prototype, {
+    Object.defineProperties(ToggleButtonViewModel.prototype, {
         /**
          * Gets the command which will be executed when the button is toggled.
          * @memberof ToggleButtonViewModel.prototype

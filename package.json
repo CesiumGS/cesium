@@ -1,6 +1,6 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.66.0",
+  "version": "1.68.0",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -11,7 +11,7 @@
   "contributors": [
     {
       "name": "CesiumJS community",
-      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
     }
   ],
   "keywords": [
@@ -29,16 +29,19 @@
     "lib": "Source"
   },
   "bugs": {
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
+    "url": "https://github.com/CesiumGS/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
-  "main": "index.js",
-  "module": "Source/Cesium.js",
-  "type": "module",
-  "dependencies": {
-    "dompurify": "^2.0.7",
-    "esm": "^3.2.25"
+  "main": "index.cjs",
+  "module": "./Source/Cesium.js",
+  "exports": {
+    "require": "./index.cjs",
+    "import": "./Source/Cesium.js"
   },
+  "dependencies": {
+    "dompurify": "^2.0.7"
+  },
+  "type": "module",
   "devDependencies": {
     "aws-sdk": "^2.531.0",
     "bluebird": "^3.4.6",
@@ -47,7 +50,7 @@
     "eslint": "^6.4.0",
     "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
-    "globby": "^10.0.0",
+    "globby": "^11.0.0",
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^4.0.0",
     "gulp-clean-css": "^4.2.0",
@@ -67,7 +70,7 @@
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
     "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^2.0.0",
+    "karma-jasmine": "^3.1.1",
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
@@ -86,8 +89,8 @@
   },
   "scripts": {
     "convertToModules": "gulp convertToModules",
-    "start": "node server.js",
-    "startPublic": "node server.js --public",
+    "start": "node server.cjs",
+    "startPublic": "node server.cjs --public",
     "build": "gulp build",
     "build-watch": "gulp build-watch",
     "buildApps": "gulp buildApps",
@@ -114,7 +117,7 @@
     "sortRequires": "gulp sortRequires",
     "prepublish": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
     "postpublish": "bash -c \"git tag -a terriajs-${npm_package_version} -m \"terriajs-${npm_package_version}\" && git push origin terriajs-${npm_package_version}\"",
-    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp terria-prepare-cesium; fi\"",
+    "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp -f gulpfile.cjs terria-prepare-cesium; fi\"",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
     "deploy-set-version": "gulp deploy-set-version"

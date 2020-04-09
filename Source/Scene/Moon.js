@@ -2,7 +2,6 @@ import buildModuleUrl from '../Core/buildModuleUrl.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import IauOrientationAxes from '../Core/IauOrientationAxes.js';
@@ -73,7 +72,7 @@ import Material from './Material.js';
         this._axes = new IauOrientationAxes();
     }
 
-    defineProperties(Moon.prototype, {
+    Object.defineProperties(Moon.prototype, {
         /**
          * Get the ellipsoid that defines the shape of the moon.
          *

@@ -11,7 +11,6 @@ import createGuid from '../Core/createGuid.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -20,7 +19,6 @@ import getAbsoluteUri from '../Core/getAbsoluteUri.js';
 import getMagic from '../Core/getMagic.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -58,6 +56,7 @@ import Axis from './Axis.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import ColorBlendMode from './ColorBlendMode.js';
+import DepthFunction from './DepthFunction.js';
 import DracoLoader from './DracoLoader.js';
 import getClipAndStyleCode from './getClipAndStyleCode.js';
 import getClippingFunction from './getClippingFunction.js';
@@ -104,7 +103,7 @@ import ShadowMode from './ShadowMode.js';
         this.count = 0;
     }
 
-    defineProperties(CachedGltf.prototype, {
+    Object.defineProperties(CachedGltf.prototype, {
         gltf : {
             set : function(value) {
                 this._gltf = value;
@@ -211,7 +210,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -620,7 +619,7 @@ import ShadowMode from './ShadowMode.js';
         this._shouldRegenerateShaders = false;
     }
 
-    defineProperties(Model.prototype, {
+    Object.defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
@@ -1068,7 +1067,7 @@ import ShadowMode from './ShadowMode.js';
         },
 
         /**
-         * The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+         * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
@@ -1141,7 +1140,7 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
                     throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
                 }
                 //>>includeEnd('debug');
@@ -2251,7 +2250,7 @@ import ShadowMode from './ShadowMode.js';
         var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
 
         // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // https://github.com/CesiumGS/cesium/issues/6575.
         // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
@@ -3046,7 +3045,8 @@ import ShadowMode from './ShadowMode.js';
                 enabled : enableCulling
             },
             depthTest : {
-                enabled : true
+                enabled : true,
+                func: DepthFunction.LESS_OR_EQUAL
             },
             depthMask : !blendingEnabled,
             blending : {

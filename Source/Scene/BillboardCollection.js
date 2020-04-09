@@ -6,7 +6,6 @@ import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
@@ -316,7 +315,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         }
     }
 
-    defineProperties(BillboardCollection.prototype, {
+    Object.defineProperties(BillboardCollection.prototype, {
         /**
          * Returns the number of billboards in this collection.  This is commonly used with
          * {@link BillboardCollection#get} to iterate over all the billboards

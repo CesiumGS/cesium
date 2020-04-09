@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import FeatureDetection from '../../Core/FeatureDetection.js';
@@ -233,7 +232,7 @@ click: function($data) { $parents[1].selectedTerrain = $data; }');
         }
     }
 
-    defineProperties(BaseLayerPicker.prototype, {
+    Object.defineProperties(BaseLayerPicker.prototype, {
         /**
          * Gets the parent container.
          * @memberof BaseLayerPicker.prototype

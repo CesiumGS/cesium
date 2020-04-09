@@ -1,5 +1,4 @@
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import ShaderProgram from './ShaderProgram.js';
 import ShaderSource from './ShaderSource.js';
@@ -14,7 +13,7 @@ import ShaderSource from './ShaderSource.js';
         this._shadersToRelease = {};
     }
 
-    defineProperties(ShaderCache.prototype, {
+    Object.defineProperties(ShaderCache.prototype, {
         numberOfShaders : {
             get : function() {
                 return this._numberOfShaders;

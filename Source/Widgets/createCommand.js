@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import knockout from '../ThirdParty/knockout.js';
@@ -54,7 +53,7 @@ import knockout from '../ThirdParty/knockout.js';
         command.canExecute = canExecute;
         knockout.track(command, ['canExecute']);
 
-        defineProperties(command, {
+        Object.defineProperties(command, {
             beforeExecute : {
                 value : beforeExecute
             },

@@ -1,7 +1,6 @@
 import BingMapsApi from './BingMapsApi.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
-import defineProperties from './defineProperties.js';
 import Rectangle from './Rectangle.js';
 import Resource from './Resource.js';
 
@@ -29,7 +28,7 @@ import Resource from './Resource.js';
         });
     }
 
-    defineProperties(BingMapsGeocoderService.prototype, {
+    Object.defineProperties(BingMapsGeocoderService.prototype, {
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}

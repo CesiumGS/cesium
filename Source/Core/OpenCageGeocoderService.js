@@ -3,7 +3,6 @@ import Check from './Check.js';
 import combine from './combine.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Rectangle from './Rectangle.js';
 import Resource from './Resource.js';
 
@@ -51,7 +50,7 @@ import Resource from './Resource.js';
         this._params = defaultValue(params, {});
     }
 
-    defineProperties(OpenCageGeocoderService.prototype, {
+    Object.defineProperties(OpenCageGeocoderService.prototype, {
         /**
          * The Resource used to access the OpenCage endpoint.
          * @type {Resource}

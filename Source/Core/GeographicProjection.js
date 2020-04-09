@@ -2,7 +2,6 @@ import Cartesian3 from './Cartesian3.js';
 import Cartographic from './Cartographic.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 
@@ -25,7 +24,7 @@ import Ellipsoid from './Ellipsoid.js';
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
     }
 
-    defineProperties(GeographicProjection.prototype, {
+    Object.defineProperties(GeographicProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

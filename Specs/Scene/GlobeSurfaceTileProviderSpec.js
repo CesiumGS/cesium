@@ -7,6 +7,7 @@ import { defined } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
 import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
 import { WebMercatorProjection } from '../../Source/Cesium.js';
 import { ContextLimits } from '../../Source/Cesium.js';
@@ -677,7 +678,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
             }
 
             var tileCount = 0;
-            for ( var tileID in drawCommandsPerTile) {
+            for (var tileID in drawCommandsPerTile) {
                 if (drawCommandsPerTile.hasOwnProperty(tileID)) {
                     ++tileCount;
                     expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
@@ -806,7 +807,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
             });
 
             var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -10000.0);
-            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
                 ]
@@ -837,7 +838,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
             });
 
             var clipPlane = new ClippingPlane(Cartesian3.UNIT_Z, -1000.0);
-            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
                 ],
@@ -869,12 +870,12 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new ClippingPlane(Cartesian3.UNIT_Z, -10000.0),
                     new ClippingPlane(Cartesian3.UNIT_X, -1000.0)
                 ],
-                unionClippingRegions: true
+                unionClippingRegions : true
             });
 
             expect(scene).notToRender(result);
@@ -898,7 +899,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
 
     it('Culls tiles when completely inside clipping region', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlaneCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection({
             planes : [
                 new ClippingPlane(Cartesian3.UNIT_Z, -1000000.0)
             ]
@@ -916,7 +917,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
 
     it('Doesn\'t cull, but clips tiles when intersecting clipping plane', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlaneCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection({
             planes : [
                 new ClippingPlane(Cartesian3.UNIT_Z, 0.0)
             ]
@@ -934,7 +935,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
 
     it('Doesn\'t cull or clip tiles when completely outside clipping region', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlaneCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection({
             planes : [
                 new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
@@ -951,7 +952,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
     });
 
     it('destroys attached ClippingPlaneCollections that have been detached', function() {
-        var clippingPlanes = new ClippingPlaneCollection ({
+        var clippingPlanes = new ClippingPlaneCollection({
             planes : [
                 new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
@@ -965,7 +966,7 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
     });
 
     it('throws a DeveloperError when given a ClippingPlaneCollection attached to a Model', function() {
-        var clippingPlanes = new ClippingPlaneCollection ({
+        var clippingPlanes = new ClippingPlaneCollection({
             planes : [
                 new ClippingPlane(Cartesian3.UNIT_Z, 10000000.0)
             ]
@@ -983,24 +984,23 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
 
     it('cartographicLimitRectangle selectively enables rendering globe surface', function() {
         expect(scene).toRender([0, 0, 0, 255]);
-         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
+        switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
         var result;
-         return updateUntilDone(scene.globe).then(function() {
+        return updateUntilDone(scene.globe).then(function() {
             expect(scene).notToRender([0, 0, 0, 255]);
             expect(scene).toRenderAndCall(function(rgba) {
                 result = rgba;
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
-             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
-             expect(scene).notToRender(result);
-             scene.camera.setView({
+            scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+            expect(scene).notToRender(result);
+            scene.camera.setView({
                 destination : scene.globe.cartographicLimitRectangle
             });
-             return updateUntilDone(scene.globe);
-        })
-            .then(function() {
-                expect(scene).toRender(result);
-            });
+            return updateUntilDone(scene.globe);
+        }).then(function() {
+            expect(scene).toRender(result);
+        });
     });
 
     it('cartographicLimitRectangle defaults to Rectangle.MAX_VALUE', function() {
@@ -1010,28 +1010,47 @@ describe('Scene/GlobeSurfaceTileProvider', function() {
 
     it('cartographicLimitRectangle culls tiles outside the region', function() {
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
-         var unculledCommandCount;
+        var unculledCommandCount;
         return updateUntilDone(scene.globe).then(function() {
             unculledCommandCount = scene.frameState.commandList.length;
-             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
-             return updateUntilDone(scene.globe);
-        })
-            .then(function() {
-                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
-            });
+            scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+            return updateUntilDone(scene.globe);
+        }).then(function() {
+            expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+        });
     });
 
     it('cartographicLimitRectangle may cross the antimeridian', function() {
         switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
-         var unculledCommandCount;
+        var unculledCommandCount;
         return updateUntilDone(scene.globe).then(function() {
             unculledCommandCount = scene.frameState.commandList.length;
-             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
-             return updateUntilDone(scene.globe);
-        })
-            .then(function() {
-                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
+            return updateUntilDone(scene.globe);
+        }).then(function() {
+            expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+        });
+    });
+
+    it('disables skirts and enables back face culling when camera is underground', function() {
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(scene.globe).then(function() {
+            var command = scene.frameState.commandList[0];
+            expect(command.count).toBe(command.owner.data.renderedMesh.indices.length); // Has skirts
+            expect(command.renderState.cull.enabled).toBe(true); // Has back face culling
+
+            // Look underground
+            scene.camera.setView({
+                destination : new Cartesian3(-746658.0557573901, -5644191.0002196245, 2863585.099969967),
+                orientation : new HeadingPitchRoll(0.3019699121236403, 0.07316306869231592, 0.0007089903642230055)
             });
+            return updateUntilDone(scene.globe);
+        }).then(function() {
+            var command = scene.frameState.commandList[0];
+            expect(command.count).toBe(command.owner.data.renderedMesh.indexCountWithoutSkirts); // No skirts
+            expect(command.renderState.cull.enabled).toBe(false); // No back face culling
+        });
     });
 
 }, 'WebGL');

@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -31,7 +30,7 @@ import FullscreenButtonViewModel from './FullscreenButtonViewModel.js';
 
         container = getElement(container);
 
-        var viewModel = new FullscreenButtonViewModel(fullscreenElement);
+        var viewModel = new FullscreenButtonViewModel(fullscreenElement, container);
 
         viewModel._exitFullScreenPath = exitFullScreenPath;
         viewModel._enterFullScreenPath = enterFullScreenPath;
@@ -54,7 +53,7 @@ cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath
         this._element = element;
     }
 
-    defineProperties(FullscreenButton.prototype, {
+    Object.defineProperties(FullscreenButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof FullscreenButton.prototype
