@@ -130,10 +130,46 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
 
     // TODO: support multiple primitives. Probably make the coordinates buffer mirror the position one.
 
+    var gltf = model.gltf;
+
     while (loadResources.primitivesToOutline.length > 0) {
         var toOutline = loadResources.primitivesToOutline.dequeue();
-        var outlineCoordinates = addOutline(model, context, toOutline);
+        var result = addOutline(model, context, toOutline);
+        var outlineCoordinates = result.outlineCoordinates;
+        var vertices = result.vertices;
 
+        // Update the buffer views and accessors for the copied vertices.
+        // TODO: what if this data is shared with other primitives?
+        var i;
+        for (i = 0; i <= 2; ++i) {
+            gltf.accessors[i].count = vertices.length;
+        }
+
+        var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
+        var vertexSource = new Float32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[0].byteOffset, gltf.bufferViews[0].byteLength / Float32Array.BYTES_PER_ELEMENT);
+        var sourceIndices = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, gltf.bufferViews[1].byteLength / Uint32Array.BYTES_PER_ELEMENT);
+        var destBuffer = new ArrayBuffer(vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT + gltf.bufferViews[1].byteLength);
+        var vertexDest = new Float32Array(destBuffer, 0, vertices.length * 7);
+        var destIndices = new Uint32Array(destBuffer, vertexDest.byteLength, sourceIndices.length);
+
+        for (i = 0; i < vertices.length; ++i) {
+            var sourceIndex = vertices[i] * 7;
+            var destIndex = i * 7;
+            for (var j = 0; j < 7; ++j) {
+                vertexDest[destIndex + j] = vertexSource[sourceIndex + j];
+            }
+        }
+
+        for (i = 0; i < sourceIndices.length; ++i) {
+            destIndices[i] = sourceIndices[i];
+        }
+
+        gltf.buffers[0].extras._pipeline.source = new Uint8Array(destBuffer, 0, destBuffer.byteLength);
+        gltf.bufferViews[0].byteLength = vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
+        gltf.bufferViews[1].byteOffset = vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
+        loadResources.buffers[0] = gltf.buffers[0].extras._pipeline.source;
+
+        // Create the buffers, views, and accessors for the outline texture coordinates.
         var buffer = new Float32Array(outlineCoordinates);
         var bufferIndex = model.gltf.buffers.push({
             byteLength: buffer.byteLength,
@@ -232,6 +268,72 @@ ModelOutlineLoader.createTexture = function(model, context) {
     return texture;
 };
 
+// function isCompatible(h0, h1, h2, v0, v1, v2) {
+//     return (h0 === v0 || h0 === undefined) &&
+//            (h1 === v1 || h1 === undefined) &&
+//            (h2 === v2 || h2 === undefined);
+// }
+
+// function assignCoordinatesForTriangle(highlightCoordinates, i0, i1, i2, need110, need011, need101) {
+//     var index110 = -1;
+//     var index011 = -1;
+//     var index101 = -1;
+//     var hasInvalid = false;
+
+//     for (let i = 0; i < 3; ++i) {
+//         var h0 = highlightCoordinates[i0 * 3 + i];
+//         var h1 = highlightCoordinates[i1 * 3 + i];
+//         var h2 = highlightCoordinates[i2 * 3 + i];
+
+//         if (index110 === -1 && isCompatible(h0, h1, h2, 1.0, 1.0, 0.0)) {
+//             index110 = i;
+//         } else if (index011 === -1 && isCompatible(h0, h1, h2, 0.0, 1.0, 1.0)) {
+//             index011 = i;
+//         } else if (index101 === -1 && isCompatible(h0, h1, h2, 1.0, 0.0, 1.0)) {
+//             index101 = i;
+//         }
+
+//         // We must have either 0 or 2 1.0s. Having one or three is invalid.
+//         var sum = (h0 === 1.0 ? 1 : 0) + (h1 === 1.0 ? 1 : 0) + (h2 === 1.0 ? 1 : 0);
+//         hasInvalid = sum === 1 || sum === 3;
+//     }
+
+//     //     if (h0 === undefined || h0 === 1.0)
+//     //     has110 = has110 || (h0 === 1.0 && h1 === 1.0 && h2 === 0.0);
+//     //     has011 = has011 || (h0 === 0.0 && h1 === 1.0 && h2 === 1.0);
+//     //     has101 = has101 || (h0 === 1.0 && h1 === 0.0 && h2 === 1.0);
+
+//     //     if (!canHave110 && h0 !== 0.0 && h1 !== 0.0 && h2 !== 1.0) {
+//     //         canHave110 = true;
+//     //     } else if (!canHave011 && h0 !== 1.0 && h1 !== 0.0 && h2 !== 0.0) {
+//     //         canHave011 = true;
+//     //     } else if (!canHave101 && h0 !== 0.0 && h1 !== 1.0 && h2 !== 0.0) {
+//     //         canHave101 = true;
+//     //     }
+
+//     //     // We must have either 0 or 2 1.0s. Having one or three is invalid.
+//     //     var sum = (h0 === 1.0 ? 1 : 0) + (h1 === 1.0 ? 1 : 0) + (h2 === 1.0 ? 1 : 0);
+//     //     hasInvalid = sum === 1 || sum === 3;
+//     // }
+
+//     if (hasInvalid) {
+//         return false;
+//     }
+
+//     var canHave110 = index110 >= 0;
+//     var canHave011 = index011 >= 0;
+//     var canHave101 = index101 >= 0;
+
+//     if (need110 && (has110 || canHave110)) {
+//         highlightCoordinates[i0 * 3]
+//     }
+
+//     if (!hasInvalid && has110 === need110 && has011 === need011 && has101 === need101) {
+
+//     }
+
+// }
+
 function addOutline(model, context, toOutline) {
     var meshId = toOutline.mesh;
     var primitiveId = toOutline.primitive;
@@ -248,7 +350,9 @@ function addOutline(model, context, toOutline) {
     var triangleIndexAccessor = accessors[primitive.indices];
     var edgeIndexAccessor = accessors[toOutline.edgeIndicesAccessorId];
 
-    var triangleIndexBuffer = readAccessorPacked(gltf, triangleIndexAccessor);
+    //var triangleIndexBuffer = readAccessorPacked(gltf, triangleIndexAccessor);
+    var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
+    var triangleIndexBuffer = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, gltf.bufferViews[1].byteLength / Uint32Array.BYTES_PER_ELEMENT);
     var edgeIndexBuffer = readAccessorPacked(gltf, edgeIndexAccessor);
 
     // Make an array of edges (each with two vertex indices), sorted first by the lower vertex index
@@ -263,7 +367,16 @@ function addOutline(model, context, toOutline) {
     edges.sort(compareEdge);
 
     var highlightCoordinates = [];
-    highlightCoordinates.length = numPositions * 3;
+    //highlightCoordinates.length = numPositions * 3;
+
+    // Each element in this array is:
+    // a) undefined, if the vertex at this index has no copies
+    // b) the index of the copy.
+    var vertexCopies = [];
+
+    // Extra vertices appended after the ones originally included in the model.
+    // Each element is the index of the vertex that this one is a copy of.
+    var extraVertices = [];
 
     // For each triangle, adjust vertex data so that the correct edges are outlined.
     for (let i = 0; i < triangleIndexBuffer.length; i += 3) {
@@ -271,23 +384,69 @@ function addOutline(model, context, toOutline) {
         var i1 = triangleIndexBuffer[i + 1];
         var i2 = triangleIndexBuffer[i + 2];
 
-        if (isHighlighted(edges, i0, i1)) {
-            addEdge(highlightCoordinates, i0, i1, i2);
-        } /*else {
-            removeEdge(highlightCoordinates, i0, i1, i2);
-        }*/
+        var has01 = isHighlighted(edges, i0, i1);
+        var has12 = isHighlighted(edges, i1, i2);
+        var has20 = isHighlighted(edges, i2, i0);
 
-        if (isHighlighted(edges, i1, i2)) {
-            addEdge(highlightCoordinates, i1, i2, i0);
-        } /*else {
-            removeEdge(highlightCoordinates, i1, i2, i0);
-        }*/
+        var nextIndex = extraVertices.length;
+        extraVertices.push(i0, i1, i2);
 
-        if (isHighlighted(edges, i2, i0)) {
-            addEdge(highlightCoordinates, i2, i0, i1);
-        } /*else {
-            removeEdge(highlightCoordinates, i2, i0, i1);
-        }*/
+        triangleIndexBuffer[i] = nextIndex;
+        triangleIndexBuffer[i + 1] = nextIndex + 1;
+        triangleIndexBuffer[i + 2] = nextIndex + 2;
+
+        highlightCoordinates.push(
+            has01 ? 1.0 : 0.0,
+            0.0,
+            has20 ? 1.0 : 0.0
+        );
+
+        highlightCoordinates.push(
+            has01 ? 1.0 : 0.0,
+            has12 ? 1.0 : 0.0,
+            0.0
+        );
+
+        highlightCoordinates.push(
+            0.0,
+            has12 ? 1.0 : 0.0,
+            has20 ? 1.0 : 0.0
+        );
+
+        // while (!assignCoordinatesForTriangle(highlightCoordinates, i0, i1, i2, need110, need011, need101)) {
+        //     var i0Copied = vertexCopies[i0];
+        //     if (i0Copied === undefined) {
+        //         i0Copied = vertexCopies[i0] = extraVertices.push(i0) - 1;
+        //     }
+
+        //     var i1Copied = vertexCopies[i1];
+        //     if (i1Copied === undefined) {
+        //         i1Copied = vertexCopies[i1] = extraVertices.push(i1) - 1;
+        //     }
+
+        //     var i2Copied = vertexCopies[i2];
+        //     if (i2Copied === undefined) {
+        //         i2Copied = vertexCopies[i2] = extraVertices.push(i2) - 1;
+        //     }
+        // }
+
+        // if (isHighlighted(edges, i0, i1)) {
+        //     addEdge(highlightCoordinates, i0, i1, i2);
+        // } /*else {
+        //     removeEdge(highlightCoordinates, i0, i1, i2);
+        // }*/
+
+        // if (isHighlighted(edges, i1, i2)) {
+        //     addEdge(highlightCoordinates, i1, i2, i0);
+        // } /*else {
+        //     removeEdge(highlightCoordinates, i1, i2, i0);
+        // }*/
+
+        // if (isHighlighted(edges, i2, i0)) {
+        //     addEdge(highlightCoordinates, i2, i0, i1);
+        // } /*else {
+        //     removeEdge(highlightCoordinates, i2, i0, i1);
+        // }*/
     }
 
     /*for (let i = 0; i < triangleIndexBuffer.length; i += 3) {
@@ -307,13 +466,16 @@ function addOutline(model, context, toOutline) {
     }*/
 
     // Set all coordinates that are still undefined to 0.0.
-    for (let i = 0; i < highlightCoordinates.length; ++i) {
-        if (highlightCoordinates[i] === undefined) {
-            highlightCoordinates[i] = 0.0;
-        }
-    }
+    // for (let i = 0; i < highlightCoordinates.length; ++i) {
+    //     if (highlightCoordinates[i] === undefined) {
+    //         highlightCoordinates[i] = 0.0;
+    //     }
+    // }
 
-    return highlightCoordinates;
+    return {
+        outlineCoordinates : highlightCoordinates,
+        vertices : extraVertices
+    };
 }
 
 function compareEdge(a, b) {

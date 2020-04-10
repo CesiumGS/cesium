@@ -197,8 +197,6 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
                     gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, arrayBufferView);
 
                     if (defined(source.mipLevels)) {
-                        gl.generateMipmap(textureTarget);
-
                         var mipWidth = width;
                         var mipHeight = height;
                         for (var i = 0; i < source.mipLevels.length; ++i) {
