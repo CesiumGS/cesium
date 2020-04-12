@@ -323,12 +323,11 @@ import ModelUtility from './ModelUtility.js';
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_outlineCoordinates;\n';
+        vertexShader += 'varying vec3 v_debug;\n';
         vertexShader += 'attribute vec3 a_outlineCoordinates;\n';
         if (hasNormals) {
             vertexShader += 'varying vec3 v_positionEC;\n';
         }
-
-        vertexShaderMain += '    v_outlineCoordinates = a_outlineCoordinates;\n';
 
         // Morph Target Weighting
         vertexShaderMain += '    vec3 weightedPosition = a_position;\n';
@@ -371,6 +370,14 @@ import ModelUtility from './ModelUtility.js';
             vertexShaderMain += '    v_positionEC = position.xyz;\n';
         }
         vertexShaderMain += '    gl_Position = u_projectionMatrix * position;\n';
+        vertexShaderMain += '    v_debug = vec3(0.0, 0.0, 0.0);\n';
+        vertexShaderMain += '    vec3 outlineCoordinates = a_outlineCoordinates;\n';
+        vertexShaderMain += '    if (outlineCoordinates.x > 0.25 && outlineCoordinates.x < 1.0) { v_debug.x = 1.0; outlineCoordinates.x = 1.0; }\n';
+        vertexShaderMain += '    if (outlineCoordinates.y > 0.25 && outlineCoordinates.y < 1.0) { v_debug.y = 1.0; outlineCoordinates.y = 1.0; }\n';
+        vertexShaderMain += '    if (outlineCoordinates.z > 0.25 && outlineCoordinates.z < 1.0) { v_debug.z = 1.0; outlineCoordinates.z = 1.0; }\n';
+        // vertexShaderMain += '    v_outlineCoordinates = a_outlineCoordinates * gl_Position.w;\n';
+        vertexShaderMain += '    v_outlineCoordinates = outlineCoordinates;\n';
+
 
         // Final normal computation
         if (hasNormals) {
@@ -388,6 +395,7 @@ import ModelUtility from './ModelUtility.js';
             fragmentShader += 'varying vec3 v_normal;\n';
             fragmentShader += 'varying vec3 v_positionEC;\n';
             fragmentShader += 'varying vec3 v_outlineCoordinates;\n';
+            fragmentShader += 'varying vec3 v_debug;\n';
         }
 
         // Read tangents if available
@@ -864,13 +872,41 @@ import ModelUtility from './ModelUtility.js';
 
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
 
-        fragmentShader += '    float outlineness = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r + texture2D(u_outlineTexture, vec2(v_outlineCoordinates.y, 0.5)).r + texture2D(u_outlineTexture, vec2(v_outlineCoordinates.z, 0.5)).r;\n';
+        // fragmentShader += '    vec3 outlineCoordinates = v_outlineCoordinates * gl_FragCoord.w;\n';
+        fragmentShader += '    vec3 outlineCoordinates = v_outlineCoordinates;\n';
+        // if (outlineCoordinates.x < 0.5) {
+        //     outlineCoordinates.x = 1.0;
+        // }
+        // if (outlineCoordinates.y < 0.5) {
+        //     outlineCoordinates.y = 1.0;
+        // }
+        // if (outlineCoordinates.z < 0.5) {
+        //     outlineCoordinates.z = 1.0;
+        // }
+
+        fragmentShader += '    float outlineX = texture2D(u_outlineTexture, vec2(outlineCoordinates.x, 0.5)).r;\n';
+        fragmentShader += '    float outlineY = texture2D(u_outlineTexture, vec2(outlineCoordinates.y, 0.5)).r;\n';
+        fragmentShader += '    float outlineZ = texture2D(u_outlineTexture, vec2(outlineCoordinates.z, 0.5)).r;\n';
+        // fragmentShader += '    float outlineness;\n';
+        // fragmentShader += '    if (outlineX > 0.0 && outlineY > 0.0) { outlineness = min(outlineX, outlineY); }\n';
+        // fragmentShader += '    if (outlineX > 0.0 && outlineZ > 0.0) { outlineness = min(outlineX, outlineZ); }\n';
+        // fragmentShader += '    if (outlineY > 0.0 && outlineZ > 0.0) { outlineness = min(outlineY, outlineZ); }\n';
+        // fragmentShader += '    if (outlineX == 0.0) { outlineX = 2.0; }\n';
+        // fragmentShader += '    if (outlineY == 0.0) { outlineY = 2.0; }\n';
+        // fragmentShader += '    if (outlineZ == 0.0) { outlineZ = 2.0; }\n';
+        // fragmentShader += '    float outlineness = min(outlineX, min(outlineY, outlineZ));\n';
+        fragmentShader += '    float outlineness = max(texture2D(u_outlineTexture, vec2(outlineCoordinates.x, 0.5)).r, max(texture2D(u_outlineTexture, vec2(outlineCoordinates.y, 0.5)).r, texture2D(u_outlineTexture, vec2(outlineCoordinates.z, 0.5)).r));\n';
+        fragmentShader += '    outlineness = clamp((outlineness - 0.25) * (4.0 / 3.0), 0.0, 1.0);\n';
+        // fragmentShader += '    float outlineness = outlineCoordinates.x;\n';
         //fragmentShader += '    float outlineness = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r;\n';
         //fragmentShader += '    color = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, v_outlineCoordinates.x)).rgb;\n';
         //fragmentShader += '    float outlineness = v_outlineCoordinates.x;\n';
         //fragmentShader += '    if (outlineness > 0.75) { color = vec3(1.0, 0.0, 0.0); }\n';
 
-        fragmentShader += '    color = mix(color, vec3(0.0, 0.0, 0.0), outlineness);\n';
+        fragmentShader += '    vec3 outlineColor = vec3(0.0, 0.0, 0.0);\n';
+        // fragmentShader += '    if (v_debug.x > 0.5 || v_debug.y > 0.5 || v_debug.z > 0.5) { outlineColor = vec3(1.0, 0.0, 0.0); }\n';
+        fragmentShader += '    color = mix(color, outlineColor, outlineness);\n';
+        // fragmentShader += '    color = vec3(outlineness, outlineness, outlineness);\n';
 
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {

@@ -9,6 +9,7 @@ import PixelFormat from '../Core/PixelFormat.js';
 import Sampler from '../Renderer/Sampler.js';
 import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
 import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
 
 /**
  * @private
@@ -222,8 +223,23 @@ function createTexture(size) {
     // texture[(size - 1) * 3] = 255;
     // texture[(size - 1) * 3 + 1] = 0;
     // texture[(size - 1) * 3 + 2] = 0;
-    texture[size - 1] = 255;
-    // texture[size - 2] = 127;
+    var value = 255;
+    // if (size <= 32) {
+    //     value = size * 8;
+    // }
+
+    if (size === 8) {
+        texture[size - 1] = 96;
+    } else if (size === 4) {
+        texture[size - 1] = 48;
+    } else if (size === 2) {
+        texture[size - 1] = 24;
+    } else if (size === 1) {
+        texture[size - 1] = 12;
+    }
+    texture[size - 1] = 192;
+    // texture[size - 2] = 255;
+    // texture[size - 3] = 127;
     return texture;
 }
 
@@ -261,7 +277,8 @@ ModelOutlineLoader.createTexture = function(model, context) {
             wrapS : TextureWrap.CLAMP_TO_EDGE,
             wrapT : TextureWrap.CLAMP_TO_EDGE,
             minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR
+            magnificationFilter : TextureMagnificationFilter.LINEAR,
+            // maximumAnisotropy: 4 //ContextLimits.maximumTextureFilterAnisotropy
         })
     });
 
@@ -396,22 +413,35 @@ function addOutline(model, context, toOutline) {
         triangleIndexBuffer[i + 2] = nextIndex + 2;
 
         highlightCoordinates.push(
-            has01 ? 1.0 : 0.0,
+            has01 /*|| (!has01 && !has20 && edgeAtVertex(edges, i0))*/ ? 1.0 : 0.0,
             0.0,
             has20 ? 1.0 : 0.0
         );
 
         highlightCoordinates.push(
             has01 ? 1.0 : 0.0,
-            has12 ? 1.0 : 0.0,
-            0.0
+            has12 /*|| (!has01 && !has12 && edgeAtVertex(edges, i1))*/ ? 1.0 : 0.0,
+            0.0,
         );
 
         highlightCoordinates.push(
             0.0,
             has12 ? 1.0 : 0.0,
-            has20 ? 1.0 : 0.0
+            has20 /*|| (!has12 && !has20 && edgeAtVertex(edges, i2))*/ ? 1.0 : 0.0
         );
+
+        var outlinedEdgeCount = (has01 ? 1 : 0) + (has12 ? 1 : 0) + (has20 ? 1 : 0);
+        var firstCoordOnes = highlightCoordinates[highlightCoordinates.length - 9] + highlightCoordinates[highlightCoordinates.length - 6] + highlightCoordinates[highlightCoordinates.length - 3];
+        var secondCoordOnes = highlightCoordinates[highlightCoordinates.length - 8] + highlightCoordinates[highlightCoordinates.length - 5] + highlightCoordinates[highlightCoordinates.length - 2];
+        var thirdCoordOnes = highlightCoordinates[highlightCoordinates.length - 7] + highlightCoordinates[highlightCoordinates.length - 4] + highlightCoordinates[highlightCoordinates.length - 1];
+
+        var numberWithTwo = (firstCoordOnes >= 2 ? 1 : 0) + (secondCoordOnes >= 2 ? 1: 0) + (thirdCoordOnes >= 2 ? 1 : 0);
+        var numberWithOne = (firstCoordOnes === 1 ? 1 : 0) + (secondCoordOnes === 1 ? 1: 0) + (thirdCoordOnes === 1 ? 1 : 0);
+
+        if (numberWithTwo > outlinedEdgeCount) {
+            debugger;
+            console.log('bad');
+        }
 
         // while (!assignCoordinatesForTriangle(highlightCoordinates, i0, i1, i2, need110, need011, need101)) {
         //     var i0Copied = vertexCopies[i0];
@@ -486,8 +516,16 @@ function compareEdge(a, b) {
     return first;
 }
 
+function compareFirst(a, b) {
+    return a[0] - b[0];
+}
+
 function isHighlighted(edges, i0, i1) {
     return binarySearch(edges, [Math.min(i0, i1), Math.max(i0, i1)], compareEdge) >= 0;
+}
+
+function edgeAtVertex(edges, i0) {
+    return binarySearch(edges, [i0, i0], compareFirst) >= 0;
 }
 
 function addEdge(highlightCoordinates, highlightedVertex0, highlightedVertex1, thirdVertex) {
