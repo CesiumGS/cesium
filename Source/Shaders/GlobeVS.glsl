@@ -28,7 +28,7 @@ varying float v_aspect;
 varying float v_height;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR)
 varying float v_distance;
 #endif
 
@@ -177,7 +177,7 @@ void main()
     v_fogRayleighColor = atmosFogColor.rayleigh;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR)
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
 #endif
 

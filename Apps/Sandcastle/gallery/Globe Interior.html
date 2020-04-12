@@ -29,6 +29,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 viewer.scene.globe.showGroundAtmosphere = false;
 viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
 viewer.scene.globe.enableTranslucency = true;
+viewer.scene.globe.undergroundColor = undefined;
 viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
 
 // Set oceans on Bing base layer to transparent
