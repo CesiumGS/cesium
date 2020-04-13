@@ -228,6 +228,7 @@ function createTexture(size) {
     //     value = size * 8;
     // }
 
+    texture[size - 1] = 192;
     if (size === 8) {
         texture[size - 1] = 96;
     } else if (size === 4) {
@@ -237,7 +238,6 @@ function createTexture(size) {
     } else if (size === 1) {
         texture[size - 1] = 12;
     }
-    texture[size - 1] = 192;
     // texture[size - 2] = 255;
     // texture[size - 3] = 127;
     return texture;
@@ -277,8 +277,7 @@ ModelOutlineLoader.createTexture = function(model, context) {
             wrapS : TextureWrap.CLAMP_TO_EDGE,
             wrapT : TextureWrap.CLAMP_TO_EDGE,
             minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
-            // maximumAnisotropy: 4 //ContextLimits.maximumTextureFilterAnisotropy
+            magnificationFilter : TextureMagnificationFilter.LINEAR
         })
     });
 
@@ -369,13 +368,14 @@ function addOutline(model, context, toOutline) {
 
     //var triangleIndexBuffer = readAccessorPacked(gltf, triangleIndexAccessor);
     var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
-    var triangleIndexBuffer = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, gltf.bufferViews[1].byteLength / Uint32Array.BYTES_PER_ELEMENT);
+    var triangleIndexBuffer = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, triangleIndexAccessor.count);
     var edgeIndexBuffer = readAccessorPacked(gltf, edgeIndexAccessor);
 
     // Make an array of edges (each with two vertex indices), sorted first by the lower vertex index
     // and second by the higher vertex index.
     var edges = [];
-    for (let i = 0; i < edgeIndexBuffer.length; i += 2) {
+    var i;
+    for (i = 0; i < edgeIndexBuffer.length; i += 2) {
         var a = edgeIndexBuffer[i];
         var b = edgeIndexBuffer[i + 1];
         edges.push([Math.min(a, b), Math.max(a, b)]);
@@ -396,7 +396,7 @@ function addOutline(model, context, toOutline) {
     var extraVertices = [];
 
     // For each triangle, adjust vertex data so that the correct edges are outlined.
-    for (let i = 0; i < triangleIndexBuffer.length; i += 3) {
+    for (i = 0; i < triangleIndexBuffer.length; i += 3) {
         var i0 = triangleIndexBuffer[i];
         var i1 = triangleIndexBuffer[i + 1];
         var i2 = triangleIndexBuffer[i + 2];

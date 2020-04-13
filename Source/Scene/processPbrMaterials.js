@@ -896,7 +896,7 @@ import ModelUtility from './ModelUtility.js';
         // fragmentShader += '    if (outlineZ == 0.0) { outlineZ = 2.0; }\n';
         // fragmentShader += '    float outlineness = min(outlineX, min(outlineY, outlineZ));\n';
         fragmentShader += '    float outlineness = max(texture2D(u_outlineTexture, vec2(outlineCoordinates.x, 0.5)).r, max(texture2D(u_outlineTexture, vec2(outlineCoordinates.y, 0.5)).r, texture2D(u_outlineTexture, vec2(outlineCoordinates.z, 0.5)).r));\n';
-        fragmentShader += '    outlineness = clamp((outlineness - 0.25) * (4.0 / 3.0), 0.0, 1.0);\n';
+        // fragmentShader += '    outlineness = clamp((outlineness - 0.25) * (4.0 / 3.0), 0.0, 1.0);\n';
         // fragmentShader += '    float outlineness = outlineCoordinates.x;\n';
         //fragmentShader += '    float outlineness = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r;\n';
         //fragmentShader += '    color = texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, v_outlineCoordinates.x)).rgb;\n';
