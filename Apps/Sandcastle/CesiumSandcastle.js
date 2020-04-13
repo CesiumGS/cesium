@@ -758,6 +758,7 @@ require({
                 }
 
                 var scriptCode = scriptMatch[1];
+                scriptCode = scriptCode.replace(/^ {8}/gm, ""); //Account for Prettier spacing
 
                 var htmlText = '';
                 var childIndex = 0;
