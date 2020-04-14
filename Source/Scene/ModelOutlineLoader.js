@@ -1,15 +1,16 @@
+import binarySearch from '../Core/binarySearch.js';
 import defined from '../Core/defined.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
 import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
-import readAccessorPacked from '../ThirdParty/GltfPipeline/readAccessorPacked.js';
-import binarySearch from '../Core/binarySearch.js';
-import Texture from '../Renderer/Texture.js';
-import TextureWrap from '../Renderer/TextureWrap.js';
 import PixelFormat from '../Core/PixelFormat.js';
+import readAccessorPacked from '../ThirdParty/GltfPipeline/readAccessorPacked.js';
 import Sampler from '../Renderer/Sampler.js';
-import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import Texture from '../Renderer/Texture.js';
 import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
-import ContextLimits from '../Renderer/ContextLimits.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import when from '../ThirdParty/when.js';
 
 /**
  * @private
@@ -200,7 +201,7 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
             byteOffset: 0,
             componentType: 5126,
             count: buffer.length / 3,
-            type: "VEC3",
+            type: 'VEC3',
             min: [0.0, 0.0, 0.0],
             max: [1.0, 1.0, 1.0]
         }) - 1;
@@ -226,14 +227,6 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
 
 function createTexture(size) {
     var texture = new Uint8Array(size);
-    // texture[(size - 1) * 3] = 255;
-    // texture[(size - 1) * 3 + 1] = 0;
-    // texture[(size - 1) * 3 + 2] = 0;
-    var value = 255;
-    // if (size <= 32) {
-    //     value = size * 8;
-    // }
-
     texture[size - 1] = 192;
     if (size === 8) {
         texture[size - 1] = 96;
@@ -244,8 +237,6 @@ function createTexture(size) {
     } else if (size === 1) {
         texture[size - 1] = 12;
     }
-    // texture[size - 2] = 255;
-    // texture[size - 3] = 127;
     return texture;
 }
 
@@ -267,7 +258,7 @@ ModelOutlineLoader.createTexture = function(model, context) {
         createTexture(8),
         createTexture(4),
         createTexture(2),
-        createTexture(1),
+        createTexture(1)
     ];
 
     var texture = new Texture({
@@ -360,7 +351,6 @@ function addOutline(model, context, toOutline) {
     var meshId = toOutline.mesh;
     var primitiveId = toOutline.primitive;
 
-    var loadResources = model._loadResources;
     var gltf = model.gltf;
     var mesh = gltf.meshes[meshId];
     var primitive = mesh.primitives[primitiveId];
@@ -574,9 +564,8 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
             return i0;
         } else if (i1Popcount < i2Popcount) {
             return i1;
-        } else {
-            return i2;
         }
+        return i2;
     }
 
     var i0Start = i0 * 3;
@@ -605,74 +594,8 @@ function compareEdge(a, b) {
     return first;
 }
 
-function compareFirst(a, b) {
-    return a[0] - b[0];
-}
-
 function isHighlighted(edges, i0, i1) {
     return binarySearch(edges, [Math.min(i0, i1), Math.max(i0, i1)], compareEdge) >= 0;
-}
-
-function edgeAtVertex(edges, i0) {
-    return binarySearch(edges, [i0, i0], compareFirst) >= 0;
-}
-
-function addEdge(highlightCoordinates, highlightedVertex0, highlightedVertex1, thirdVertex) {
-    for (let i = 0; i < 3; ++i) {
-        var highlightCoordinate0 = highlightCoordinates[highlightedVertex0 * 3 + i];
-        var highlightCoordinate1 = highlightCoordinates[highlightedVertex1 * 3 + i];
-        var highlightCoordinate2 = highlightCoordinates[thirdVertex * 3 + i];
-
-        if (
-            highlightCoordinate0 === undefined || highlightCoordinate0 === 1.0 &&
-            highlightCoordinate1 === undefined || highlightCoordinate1 === 1.0 &&
-            highlightCoordinate2 === undefined || highlightCoordinate2 === 0.0
-        ) {
-            highlightCoordinates[highlightedVertex0 * 3 + i] = 1.0;
-            highlightCoordinates[highlightedVertex1 * 3 + i] = 1.0;
-            highlightCoordinates[thirdVertex * 3 + i] = 0.0;
-            return;
-        }
-    }
-
-    // TODO: not enough texture coordinates available, so we need to duplicate this vertex.
-    console.log('TODO: Need to duplicate vertex');
-}
-
-function removeEdge(highlightCoordinates, notHighlightedVertex0, notHighlightedVertex1, thirdVertex) {
-    for (let i = 0; i < 3; ++i) {
-        var highlightCoordinate0 = highlightCoordinates[notHighlightedVertex0 * 3 + i];
-        var highlightCoordinate1 = highlightCoordinates[notHighlightedVertex1 * 3 + i];
-
-        if (highlightCoordinate0 === 1.0 && highlightCoordinate1 === 1.0) {
-            // If we use these two vertices, there will be an edge between them.
-            // That's no good, so we need to duplicate the vertices.
-        }
-        if (
-            highlightCoordinate0 === undefined || highlightCoordinate0 === 1.0 &&
-            highlightCoordinate1 === undefined || highlightCoordinate1 === 1.0 &&
-            highlightCoordinate2 === undefined || highlightCoordinate2 === 0.0
-        ) {
-            highlightCoordinates[notHighlightedVertex0 * 3 + i] = 1.0;
-            highlightCoordinates[notHighlightedVertex1 * 3 + i] = 1.0;
-            highlightCoordinates[thirdVertex * 3 + i] = 0.0;
-            return;
-        }
-    }
-
-    // TODO: not enough texture coordinates available, so we need to duplicate this vertex.
-    console.log('TODO: Need to duplicate vertex');
-}
-
-function makeSureIsNotEdge(highlightCoordinates, notHighlightedVertex0, notHighlightedVertex1, thirdVertex) {
-    for (let i = 0; i < 3; ++i) {
-        var highlightCoordinate0 = highlightCoordinates[notHighlightedVertex0 * 3 + i];
-        var highlightCoordinate1 = highlightCoordinates[notHighlightedVertex1 * 3 + i];
-
-        if (highlightCoordinate0 === 1.0 && highlightCoordinate1 === 1.0) {
-            console.log('bad');
-        }
-    }
 }
 
 export default ModelOutlineLoader;

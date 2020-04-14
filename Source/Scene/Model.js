@@ -3211,7 +3211,7 @@ import ShadowMode from './ShadowMode.js';
         var textures = model._rendererResources.textures;
         var defaultTexture = model._defaultTexture;
 
-        var outlineTexture = ModelOutlineLoader.createTexture(model, context)
+        var outlineTexture = ModelOutlineLoader.createTexture(model, context);
 
         ForEach.material(gltf, function (material, materialId) {
             var modelMaterial = model._runtime.materialsById[materialId];
