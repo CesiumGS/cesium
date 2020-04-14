@@ -149,13 +149,19 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
         var vertexSource = new Float32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[0].byteOffset, gltf.bufferViews[0].byteLength / Float32Array.BYTES_PER_ELEMENT);
         var sourceIndices = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, gltf.bufferViews[1].byteLength / Uint32Array.BYTES_PER_ELEMENT);
-        var destBuffer = new ArrayBuffer(vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT + gltf.bufferViews[1].byteLength);
-        var vertexDest = new Float32Array(destBuffer, 0, vertices.length * 7);
+        var destBuffer = new ArrayBuffer(vertexSource.byteLength + vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT + gltf.bufferViews[1].byteLength);
+        var vertexDest = new Float32Array(destBuffer, 0, vertexSource.length + vertices.length * 7);
         var destIndices = new Uint32Array(destBuffer, vertexDest.byteLength, sourceIndices.length);
 
+        // Copy the original vertices
+        for (i = 0; i < vertexSource.length; ++i) {
+            vertexDest[i] = vertexSource[i];
+        }
+
+        // Copy the additional vertices
         for (i = 0; i < vertices.length; ++i) {
             var sourceIndex = vertices[i] * 7;
-            var destIndex = i * 7;
+            var destIndex = vertexSource.length + i * 7;
             for (var j = 0; j < 7; ++j) {
                 vertexDest[destIndex + j] = vertexSource[sourceIndex + j];
             }
@@ -166,8 +172,8 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         }
 
         gltf.buffers[0].extras._pipeline.source = new Uint8Array(destBuffer, 0, destBuffer.byteLength);
-        gltf.bufferViews[0].byteLength = vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
-        gltf.bufferViews[1].byteOffset = vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
+        gltf.bufferViews[0].byteLength = vertexSource.byteLength + vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
+        gltf.bufferViews[1].byteOffset = gltf.bufferViews[0].byteLength;
         loadResources.buffers[0] = gltf.buffers[0].extras._pipeline.source;
 
         // Create the buffers, views, and accessors for the outline texture coordinates.
@@ -384,7 +390,7 @@ function addOutline(model, context, toOutline) {
     edges.sort(compareEdge);
 
     var highlightCoordinates = [];
-    //highlightCoordinates.length = numPositions * 3;
+    highlightCoordinates.length = numPositions * 3;
 
     // Each element in this array is:
     // a) undefined, if the vertex at this index has no copies
@@ -401,111 +407,194 @@ function addOutline(model, context, toOutline) {
         var i1 = triangleIndexBuffer[i + 1];
         var i2 = triangleIndexBuffer[i + 2];
 
-        var has01 = isHighlighted(edges, i0, i1);
-        var has12 = isHighlighted(edges, i1, i2);
-        var has20 = isHighlighted(edges, i2, i0);
+        var all = false;
+        var has01 = all || isHighlighted(edges, i0, i1);
+        var has12 = all || isHighlighted(edges, i1, i2);
+        var has20 = all || isHighlighted(edges, i2, i0);
 
-        var nextIndex = extraVertices.length;
-        extraVertices.push(i0, i1, i2);
+        var unmatchableVertexIndex = matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20);
+        while (unmatchableVertexIndex >= 0) {
+            // Copy the unmatchable index and try again.
+            var copy;
+            if (unmatchableVertexIndex === i0) {
+                copy = vertexCopies[i0];
+            } else if (unmatchableVertexIndex === i1) {
+                copy = vertexCopies[i1];
+            } else {
+                copy = vertexCopies[i2];
+            }
 
-        triangleIndexBuffer[i] = nextIndex;
-        triangleIndexBuffer[i + 1] = nextIndex + 1;
-        triangleIndexBuffer[i + 2] = nextIndex + 2;
+            if (copy === undefined) {
+                copy = numPositions + extraVertices.length;
 
-        highlightCoordinates.push(
-            has01 /*|| (!has01 && !has20 && edgeAtVertex(edges, i0))*/ ? 1.0 : 0.0,
-            0.0,
-            has20 ? 1.0 : 0.0
-        );
+                var original = unmatchableVertexIndex;
+                while (original >= numPositions) {
+                    original = extraVertices[original - numPositions];
+                }
+                extraVertices.push(original);
+                vertexCopies[unmatchableVertexIndex] = copy;
+            }
 
-        highlightCoordinates.push(
-            has01 ? 1.0 : 0.0,
-            has12 /*|| (!has01 && !has12 && edgeAtVertex(edges, i1))*/ ? 1.0 : 0.0,
-            0.0,
-        );
+            if (unmatchableVertexIndex === i0) {
+                i0 = copy;
+                triangleIndexBuffer[i] = copy;
+            } else if (unmatchableVertexIndex === i1) {
+                i1 = copy;
+                triangleIndexBuffer[i + 1] = copy;
+            } else {
+                i2 = copy;
+                triangleIndexBuffer[i + 2] = copy;
+            }
 
-        highlightCoordinates.push(
-            0.0,
-            has12 ? 1.0 : 0.0,
-            has20 /*|| (!has12 && !has20 && edgeAtVertex(edges, i2))*/ ? 1.0 : 0.0
-        );
-
-        var outlinedEdgeCount = (has01 ? 1 : 0) + (has12 ? 1 : 0) + (has20 ? 1 : 0);
-        var firstCoordOnes = highlightCoordinates[highlightCoordinates.length - 9] + highlightCoordinates[highlightCoordinates.length - 6] + highlightCoordinates[highlightCoordinates.length - 3];
-        var secondCoordOnes = highlightCoordinates[highlightCoordinates.length - 8] + highlightCoordinates[highlightCoordinates.length - 5] + highlightCoordinates[highlightCoordinates.length - 2];
-        var thirdCoordOnes = highlightCoordinates[highlightCoordinates.length - 7] + highlightCoordinates[highlightCoordinates.length - 4] + highlightCoordinates[highlightCoordinates.length - 1];
-
-        var numberWithTwo = (firstCoordOnes >= 2 ? 1 : 0) + (secondCoordOnes >= 2 ? 1: 0) + (thirdCoordOnes >= 2 ? 1 : 0);
-        var numberWithOne = (firstCoordOnes === 1 ? 1 : 0) + (secondCoordOnes === 1 ? 1: 0) + (thirdCoordOnes === 1 ? 1 : 0);
-
-        if (numberWithTwo > outlinedEdgeCount) {
-            debugger;
-            console.log('bad');
+            unmatchableVertexIndex = matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20);
         }
-
-        // while (!assignCoordinatesForTriangle(highlightCoordinates, i0, i1, i2, need110, need011, need101)) {
-        //     var i0Copied = vertexCopies[i0];
-        //     if (i0Copied === undefined) {
-        //         i0Copied = vertexCopies[i0] = extraVertices.push(i0) - 1;
-        //     }
-
-        //     var i1Copied = vertexCopies[i1];
-        //     if (i1Copied === undefined) {
-        //         i1Copied = vertexCopies[i1] = extraVertices.push(i1) - 1;
-        //     }
-
-        //     var i2Copied = vertexCopies[i2];
-        //     if (i2Copied === undefined) {
-        //         i2Copied = vertexCopies[i2] = extraVertices.push(i2) - 1;
-        //     }
-        // }
-
-        // if (isHighlighted(edges, i0, i1)) {
-        //     addEdge(highlightCoordinates, i0, i1, i2);
-        // } /*else {
-        //     removeEdge(highlightCoordinates, i0, i1, i2);
-        // }*/
-
-        // if (isHighlighted(edges, i1, i2)) {
-        //     addEdge(highlightCoordinates, i1, i2, i0);
-        // } /*else {
-        //     removeEdge(highlightCoordinates, i1, i2, i0);
-        // }*/
-
-        // if (isHighlighted(edges, i2, i0)) {
-        //     addEdge(highlightCoordinates, i2, i0, i1);
-        // } /*else {
-        //     removeEdge(highlightCoordinates, i2, i0, i1);
-        // }*/
     }
-
-    /*for (let i = 0; i < triangleIndexBuffer.length; i += 3) {
-        var i0 = triangleIndexBuffer[i];
-        var i1 = triangleIndexBuffer[i + 1];
-        var i2 = triangleIndexBuffer[i + 2];
-
-        if (!isHighlighted(edges, i0, i1)) {
-            makeSureIsNotEdge(highlightCoordinates, i0, i1, i2);
-        }
-        if (!isHighlighted(edges, i1, i2)) {
-            makeSureIsNotEdge(highlightCoordinates, i1, i2, i0);
-        }
-        if (!isHighlighted(edges, i2, i0)) {
-            makeSureIsNotEdge(highlightCoordinates, i2, i0, i1);
-        }
-    }*/
-
-    // Set all coordinates that are still undefined to 0.0.
-    // for (let i = 0; i < highlightCoordinates.length; ++i) {
-    //     if (highlightCoordinates[i] === undefined) {
-    //         highlightCoordinates[i] = 0.0;
-    //     }
-    // }
 
     return {
         outlineCoordinates : highlightCoordinates,
         vertices : extraVertices
     };
+}
+
+// Each vertex has three coordinates, a, b, and c.
+// a is the coordinate that applies to edge 2-0 for the vertex.
+// b is the coordinate that applies to edge 0-1 for the vertex.
+// c is the coordinate that applies to edge 1-2 for the vertex.
+
+// There are 6 possible orderings of coordinates a, b, and c:
+// 0 - abc
+// 1 - acb
+// 2 - bac
+// 3 - bca
+// 4 - cab
+// 5 - cba
+
+// All vertices must use the _same ordering_ for the edges to be rendered
+// correctly. So we compute a bitmask for each vertex, where the bit at
+// each position indicates whether that ordering works (i.e. doesn't
+// conflict with already-assigned coordinates) for that vertex.
+
+// Then we can find an ordering that works for all three vertices with a
+// bitwise AND.
+
+function computeOrderMask(highlightCoordinates, vertexIndex, a, b, c) {
+    var startIndex = vertexIndex * 3;
+    var first = highlightCoordinates[startIndex];
+    var second = highlightCoordinates[startIndex + 1];
+    var third = highlightCoordinates[startIndex + 2];
+
+    if (first === undefined) {
+        // If one coordinate is undefined, they all are, and all orderings are fine.
+        return 0b111111;
+    }
+
+    return ((first === a && second === b && third === c) << 0) +
+           ((first === a && second === c && third === b) << 1) +
+           ((first === b && second === a && third === c) << 2) +
+           ((first === b && second === c && third === a) << 3) +
+           ((first === c && second === a && third === b) << 4) +
+           ((first === c && second === b && third === a) << 5);
+}
+
+// popcount for integers 0-63, inclusive.
+// i.e. how many 1s are in the binary representation of the integer.
+function popcount0to63(value) {
+    return (value & 1) + (value >> 1 & 1) + (value >> 2 & 1) + (value >> 3 & 1) + (value >> 4 & 1) + (value >> 5 & 1);
+}
+
+function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20) {
+    var a0 = has20 ? 1.0 : 0.0;
+    var b0 = has01 ? 1.0 : 0.0;
+    var c0 = 0.0;
+
+    var i0Mask = computeOrderMask(highlightCoordinates, i0, a0, b0, c0);
+    if (i0Mask === 0) {
+        return i0;
+    }
+
+    var a1 = 0.0;
+    var b1 = has01 ? 1.0 : 0.0;
+    var c1 = has12 ? 1.0 : 0.0;
+
+    var i1Mask = computeOrderMask(highlightCoordinates, i1, a1, b1, c1);
+    if (i1Mask === 0) {
+        return i1;
+    }
+
+    var a2 = has20 ? 1.0 : 0.0;
+    var b2 = 0.0;
+    var c2 = has12 ? 1.0 : 0.0;
+
+    var i2Mask = computeOrderMask(highlightCoordinates, i2, a2, b2, c2);
+    if (i2Mask === 0) {
+        return i2;
+    }
+
+    var workingCombos = i0Mask & i1Mask & i2Mask;
+
+    var a, b, c;
+
+    if (workingCombos & 1 << 0) {
+        // 0 - abc
+        a = 0;
+        b = 1;
+        c = 2;
+    } else if (workingCombos & 1 << 1) {
+        // 1 - acb
+        a = 0;
+        c = 1;
+        b = 2;
+    } else if (workingCombos & 1 << 2) {
+        // 2 - bac
+        b = 0;
+        a = 1;
+        c = 2;
+    } else if (workingCombos & 1 << 3) {
+        // 3 - bca
+        b = 0;
+        c = 1;
+        a = 2;
+    } else if (workingCombos & 1 << 4) {
+        // 4 - cab
+        c = 0;
+        a = 1;
+        b = 2;
+    } else if (workingCombos & 1 << 5) {
+        // 5 - cba
+        c = 0;
+        b = 1;
+        a = 2;
+    } else {
+        // No combination works.
+        // Report the most constrained vertex as unmatched so we copy that one.
+        var i0Popcount = popcount0to63(i0Mask);
+        var i1Popcount = popcount0to63(i1Mask);
+        var i2Popcount = popcount0to63(i2Mask);
+        if (i0Popcount < i1Popcount && i0Popcount < i2Popcount) {
+            return i0;
+        } else if (i1Popcount < i2Popcount) {
+            return i1;
+        } else {
+            return i2;
+        }
+    }
+
+    var i0Start = i0 * 3;
+    highlightCoordinates[i0Start + a] = a0;
+    highlightCoordinates[i0Start + b] = b0;
+
+    var i1Start = i1 * 3;
+    highlightCoordinates[i0Start + c] = c0;
+    highlightCoordinates[i1Start + a] = a1;
+    highlightCoordinates[i1Start + b] = b1;
+    highlightCoordinates[i1Start + c] = c1;
+
+    var i2Start = i2 * 3;
+    highlightCoordinates[i2Start + a] = a2;
+    highlightCoordinates[i2Start + b] = b2;
+    highlightCoordinates[i2Start + c] = c2;
+
+    return -1;
 }
 
 function compareEdge(a, b) {
