@@ -485,7 +485,7 @@ function computeOrderMask(highlightCoordinates, vertexIndex, a, b, c) {
 
     if (first === undefined) {
         // If one coordinate is undefined, they all are, and all orderings are fine.
-        return 0b111111;
+        return 63; // 0b111111;
     }
 
     return ((first === a && second === b && third === c) << 0) +
