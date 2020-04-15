@@ -1,4 +1,5 @@
 import binarySearch from '../Core/binarySearch.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
 import defined from '../Core/defined.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
 import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
@@ -57,7 +58,7 @@ ModelOutlineLoader.parse = function(model, context) {
     var cacheKey = model.cacheKey;
     if (defined(cacheKey)) {
         if (!defined(ModelOutlineLoader._outlinedModelResourceCache)) {
-            if (!defined(context.cache.modelDecodingCache)) {
+            if (!defined(context.cache.modelOutliningCache)) {
                 context.cache.modelOutliningCache = {};
             }
 
@@ -241,25 +242,26 @@ function createTexture(size) {
 }
 
 ModelOutlineLoader.createTexture = function(model, context) {
-    var levelZero = createTexture(4096);
-    // levelZero[4095*3] = 0;
-    // levelZero[4095*3 + 1] = 255;
-    // levelZero[4095*3 + 0] = 0;
+    var cache = context.cache.modelOutliningCache;
+    if (!defined(cache)) {
+        cache = context.cache.modelOutliningCache = {};
+    }
 
-    var mipLevels = [
-        createTexture(2048),
-        createTexture(1024),
-        createTexture(512),
-        createTexture(256),
-        createTexture(128),
-        createTexture(64),
-        createTexture(32),
-        createTexture(16),
-        createTexture(8),
-        createTexture(4),
-        createTexture(2),
-        createTexture(1)
-    ];
+    if (defined(cache.outlineTexture)) {
+        return cache.outlineTexture;
+    }
+
+    var maxSize = Math.min(4096, ContextLimits.maximumTextureSize);
+
+    var size = maxSize;
+    var levelZero = createTexture(size);
+
+    var mipLevels = [];
+
+    while (size > 1) {
+        size >>= 1;
+        mipLevels.push(createTexture(size));
+    }
 
     var texture = new Texture({
         context : context,
@@ -267,7 +269,7 @@ ModelOutlineLoader.createTexture = function(model, context) {
             arrayBufferView : levelZero,
             mipLevels: mipLevels
         },
-        width : 4096,
+        width : maxSize,
         height : 1,
         pixelFormat : PixelFormat.LUMINANCE,
         sampler : new Sampler({
@@ -278,74 +280,10 @@ ModelOutlineLoader.createTexture = function(model, context) {
         })
     });
 
+    cache.outlineTexture = texture;
+
     return texture;
 };
-
-// function isCompatible(h0, h1, h2, v0, v1, v2) {
-//     return (h0 === v0 || h0 === undefined) &&
-//            (h1 === v1 || h1 === undefined) &&
-//            (h2 === v2 || h2 === undefined);
-// }
-
-// function assignCoordinatesForTriangle(highlightCoordinates, i0, i1, i2, need110, need011, need101) {
-//     var index110 = -1;
-//     var index011 = -1;
-//     var index101 = -1;
-//     var hasInvalid = false;
-
-//     for (let i = 0; i < 3; ++i) {
-//         var h0 = highlightCoordinates[i0 * 3 + i];
-//         var h1 = highlightCoordinates[i1 * 3 + i];
-//         var h2 = highlightCoordinates[i2 * 3 + i];
-
-//         if (index110 === -1 && isCompatible(h0, h1, h2, 1.0, 1.0, 0.0)) {
-//             index110 = i;
-//         } else if (index011 === -1 && isCompatible(h0, h1, h2, 0.0, 1.0, 1.0)) {
-//             index011 = i;
-//         } else if (index101 === -1 && isCompatible(h0, h1, h2, 1.0, 0.0, 1.0)) {
-//             index101 = i;
-//         }
-
-//         // We must have either 0 or 2 1.0s. Having one or three is invalid.
-//         var sum = (h0 === 1.0 ? 1 : 0) + (h1 === 1.0 ? 1 : 0) + (h2 === 1.0 ? 1 : 0);
-//         hasInvalid = sum === 1 || sum === 3;
-//     }
-
-//     //     if (h0 === undefined || h0 === 1.0)
-//     //     has110 = has110 || (h0 === 1.0 && h1 === 1.0 && h2 === 0.0);
-//     //     has011 = has011 || (h0 === 0.0 && h1 === 1.0 && h2 === 1.0);
-//     //     has101 = has101 || (h0 === 1.0 && h1 === 0.0 && h2 === 1.0);
-
-//     //     if (!canHave110 && h0 !== 0.0 && h1 !== 0.0 && h2 !== 1.0) {
-//     //         canHave110 = true;
-//     //     } else if (!canHave011 && h0 !== 1.0 && h1 !== 0.0 && h2 !== 0.0) {
-//     //         canHave011 = true;
-//     //     } else if (!canHave101 && h0 !== 0.0 && h1 !== 1.0 && h2 !== 0.0) {
-//     //         canHave101 = true;
-//     //     }
-
-//     //     // We must have either 0 or 2 1.0s. Having one or three is invalid.
-//     //     var sum = (h0 === 1.0 ? 1 : 0) + (h1 === 1.0 ? 1 : 0) + (h2 === 1.0 ? 1 : 0);
-//     //     hasInvalid = sum === 1 || sum === 3;
-//     // }
-
-//     if (hasInvalid) {
-//         return false;
-//     }
-
-//     var canHave110 = index110 >= 0;
-//     var canHave011 = index011 >= 0;
-//     var canHave101 = index101 >= 0;
-
-//     if (need110 && (has110 || canHave110)) {
-//         highlightCoordinates[i0 * 3]
-//     }
-
-//     if (!hasInvalid && has110 === need110 && has011 === need011 && has101 === need101) {
-
-//     }
-
-// }
 
 function addOutline(model, context, toOutline) {
     var meshId = toOutline.mesh;
@@ -362,7 +300,6 @@ function addOutline(model, context, toOutline) {
     var triangleIndexAccessor = accessors[primitive.indices];
     var edgeIndexAccessor = accessors[toOutline.edgeIndicesAccessorId];
 
-    //var triangleIndexBuffer = readAccessorPacked(gltf, triangleIndexAccessor);
     var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
     var triangleIndexBuffer = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, triangleIndexAccessor.count);
     var edgeIndexBuffer = readAccessorPacked(gltf, edgeIndexAccessor);
@@ -571,9 +508,9 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
     var i0Start = i0 * 3;
     highlightCoordinates[i0Start + a] = a0;
     highlightCoordinates[i0Start + b] = b0;
+    highlightCoordinates[i0Start + c] = c0;
 
     var i1Start = i1 * 3;
-    highlightCoordinates[i0Start + c] = c0;
     highlightCoordinates[i1Start + a] = a1;
     highlightCoordinates[i1Start + b] = b1;
     highlightCoordinates[i1Start + c] = c1;
