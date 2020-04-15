@@ -293,24 +293,34 @@ function addOutline(model, context, toOutline) {
     var mesh = gltf.meshes[meshId];
     var primitive = mesh.primitives[primitiveId];
     var accessors = gltf.accessors;
+    var bufferViews = gltf.bufferViews;
 
     var positionAccessor = accessors[primitive.attributes.POSITION];
     var numPositions = positionAccessor.count;
 
-    var triangleIndexAccessor = accessors[primitive.indices];
-    var edgeIndexAccessor = accessors[toOutline.edgeIndicesAccessorId];
+    var triangleIndexAccessorGltf = accessors[primitive.indices];
+    var triangleIndexBufferViewGltf = bufferViews[triangleIndexAccessorGltf.bufferView];
+    var edgeIndexAccessorGltf = accessors[toOutline.edgeIndicesAccessorId];
+    var edgeIndexBufferViewGltf = bufferViews[edgeIndexAccessorGltf.bufferView];
 
-    var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
-    var triangleIndexBuffer = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, triangleIndexAccessor.count);
-    var edgeIndexBuffer = readAccessorPacked(gltf, edgeIndexAccessor);
+    var loadResources = model._loadResources;
+    var triangleIndexBufferView = loadResources.getBuffer(triangleIndexBufferViewGltf);
+    var edgeIndexBufferView = loadResources.getBuffer(edgeIndexBufferViewGltf);
+
+    var triangleIndices = triangleIndexAccessorGltf.componentType === 5123
+        ? new Uint16Array(triangleIndexBufferView.buffer, triangleIndexBufferView.byteOffset + triangleIndexAccessorGltf.byteOffset, triangleIndexAccessorGltf.count)
+        : new Uint32Array(triangleIndexBufferView.buffer, triangleIndexBufferView.byteOffset + triangleIndexAccessorGltf.byteOffset, triangleIndexAccessorGltf.count);
+    var edgeIndices = edgeIndexAccessorGltf.componentType === 5123
+        ? new Uint16Array(edgeIndexBufferView.buffer, edgeIndexBufferView.byteOffset + edgeIndexAccessorGltf.byteOffset, edgeIndexAccessorGltf.count)
+        : new Uint32Array(edgeIndexBufferView.buffer, edgeIndexBufferView.byteOffset + edgeIndexAccessorGltf.byteOffset, edgeIndexAccessorGltf.count);
 
     // Make an array of edges (each with two vertex indices), sorted first by the lower vertex index
     // and second by the higher vertex index.
     var edges = [];
     var i;
-    for (i = 0; i < edgeIndexBuffer.length; i += 2) {
-        var a = edgeIndexBuffer[i];
-        var b = edgeIndexBuffer[i + 1];
+    for (i = 0; i < edgeIndices.length; i += 2) {
+        var a = edgeIndices[i];
+        var b = edgeIndices[i + 1];
         edges.push([Math.min(a, b), Math.max(a, b)]);
     }
 
@@ -329,10 +339,10 @@ function addOutline(model, context, toOutline) {
     var extraVertices = [];
 
     // For each triangle, adjust vertex data so that the correct edges are outlined.
-    for (i = 0; i < triangleIndexBuffer.length; i += 3) {
-        var i0 = triangleIndexBuffer[i];
-        var i1 = triangleIndexBuffer[i + 1];
-        var i2 = triangleIndexBuffer[i + 2];
+    for (i = 0; i < triangleIndices.length; i += 3) {
+        var i0 = triangleIndices[i];
+        var i1 = triangleIndices[i + 1];
+        var i2 = triangleIndices[i + 2];
 
         var all = false;
         var has01 = all || isHighlighted(edges, i0, i1);
@@ -364,13 +374,13 @@ function addOutline(model, context, toOutline) {
 
             if (unmatchableVertexIndex === i0) {
                 i0 = copy;
-                triangleIndexBuffer[i] = copy;
+                triangleIndices[i] = copy;
             } else if (unmatchableVertexIndex === i1) {
                 i1 = copy;
-                triangleIndexBuffer[i + 1] = copy;
+                triangleIndices[i + 1] = copy;
             } else {
                 i2 = copy;
-                triangleIndexBuffer[i + 2] = copy;
+                triangleIndices[i + 2] = copy;
             }
 
             unmatchableVertexIndex = matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20);
@@ -457,42 +467,42 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
         return i2;
     }
 
-    var workingCombos = i0Mask & i1Mask & i2Mask;
+    var workingOrders = i0Mask & i1Mask & i2Mask;
 
     var a, b, c;
 
-    if (workingCombos & 1 << 0) {
+    if (workingOrders & 1 << 0) {
         // 0 - abc
         a = 0;
         b = 1;
         c = 2;
-    } else if (workingCombos & 1 << 1) {
+    } else if (workingOrders & 1 << 1) {
         // 1 - acb
         a = 0;
         c = 1;
         b = 2;
-    } else if (workingCombos & 1 << 2) {
+    } else if (workingOrders & 1 << 2) {
         // 2 - bac
         b = 0;
         a = 1;
         c = 2;
-    } else if (workingCombos & 1 << 3) {
+    } else if (workingOrders & 1 << 3) {
         // 3 - bca
         b = 0;
         c = 1;
         a = 2;
-    } else if (workingCombos & 1 << 4) {
+    } else if (workingOrders & 1 << 4) {
         // 4 - cab
         c = 0;
         a = 1;
         b = 2;
-    } else if (workingCombos & 1 << 5) {
+    } else if (workingOrders & 1 << 5) {
         // 5 - cba
         c = 0;
         b = 1;
         a = 2;
     } else {
-        // No combination works.
+        // No ordering works.
         // Report the most constrained vertex as unmatched so we copy that one.
         var i0Popcount = popcount0to63(i0Mask);
         var i1Popcount = popcount0to63(i1Mask);
