@@ -37,7 +37,7 @@ import Quaternion from './Quaternion.js';
          * @default new Cartesian3(1.0, 1.0, 1.0)
          */
         this.scale = Cartesian3.clone(defaultValue(scale, defaultScale));
-    };
+    }
 
     /**
      * Compares this instance against the provided instance and returns
