@@ -3,6 +3,7 @@ import buildModuleUrl from '../Core/buildModuleUrl.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -78,6 +79,34 @@ import ShadowMode from './ShadowMode.js';
          * @private
          */
         this.backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+
+        /**
+         * The color to render the back side of the globe when the camera is underground or the globe is translucent,
+         * blended with the globe color based on the camera's distance.
+         * <br /><br />
+         * To disable underground coloring, set <code>undergroundColor</code> to <code>undefined</code>.
+         *
+         * @type {Color}
+         * @default {@link Color.BLACK}
+         *
+         * @see Globe#undergroundColorByDistance
+         */
+        this.undergroundColor = Color.clone(Color.BLACK);
+
+         /**
+         * Gets or sets the near and far distance for blending {@link Globe#undergroundColor} with the globe color.
+         * The blending amount will interpolate between the {@link NearFarScalar#nearValue} and
+         * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+         * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+         * Outside of these ranges the blending amount remains clamped to the nearest bound. If undefined,
+         * the underground color will not be blended with the globe color.
+         *
+         * @type {NearFarScalar}
+         *
+         * @see Globe#undergroundColor
+         *
+         */
+        this.undergroundColorByDistance = new NearFarScalar(ellipsoid.maximumRadius / 1000.0, 0.0, ellipsoid.maximumRadius / 10.0, 1.0);
 
         makeShadersDirty(this);
 
@@ -1026,6 +1055,8 @@ import ShadowMode from './ShadowMode.js';
             tileProvider.backFaceAlphaByDistance = this.backFaceAlphaByDistanceFinal;
             tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
             tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
+            tileProvider.undergroundColor = this.undergroundColor;
+            tileProvider.undergroundColorByDistance = this.undergroundColorByDistance;
             surface.beginFrame(frameState);
         }
     };

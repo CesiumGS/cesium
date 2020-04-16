@@ -89,6 +89,11 @@ uniform vec4 u_frontFaceAlphaByDistance;
 uniform vec4 u_backFaceAlphaByDistance;
 #endif
 
+#ifdef UNDERGROUND_COLOR
+uniform vec4 u_undergroundColor;
+uniform vec4 u_undergroundColorByDistance;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -101,7 +106,7 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR)
 varying float v_distance;
 #endif
 
@@ -113,6 +118,25 @@ varying vec3 v_fogMieColor;
 #ifdef GROUND_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
+#endif
+
+#if defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR)
+float interpolateByDistance(vec4 nearFarScalar)
+{
+    float startDistance = nearFarScalar.x;
+    float startValue = nearFarScalar.y;
+    float endDistance = nearFarScalar.z;
+    float endValue = nearFarScalar.w;
+    float t = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    return mix(startValue, endValue, t);
+}
+#endif
+
+#if defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR) || defined(APPLY_MATERIAL)
+vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
+{
+    return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
+}
 #endif
 
 vec4 sampleAndBlend(
@@ -326,18 +350,7 @@ void main()
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     vec4 materialColor = vec4(material.diffuse, material.alpha);
-    color = materialColor * vec4(materialColor.aaa, 1.0) + color * (1.0 - materialColor.a);
-#endif
-
-#ifdef TRANSLUCENT
-    vec4 translucencyByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
-    float startDistance = translucencyByDistance.x;
-    float startAlpha = translucencyByDistance.y;
-    float endDistance = translucencyByDistance.z;
-    float endAlpha = translucencyByDistance.w;
-    float alphaLerp = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
-    float alphaMutiplier = mix(startAlpha, endAlpha, alphaLerp);
-    color.a *= alphaMutiplier;
+    color = alphaBlend(materialColor, color);
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
@@ -395,12 +408,6 @@ void main()
 #endif
 
 #ifdef GROUND_ATMOSPHERE
-    if (czm_sceneMode != czm_sceneMode3D)
-    {
-        gl_FragColor = finalColor;
-        return;
-    }
-
 #if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
@@ -443,6 +450,21 @@ void main()
 #endif
 
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+#endif
+
+#ifdef UNDERGROUND_COLOR
+    // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
+    if (gl_FrontFacing == false)
+    {
+        float blendAmount = interpolateByDistance(u_undergroundColorByDistance);
+        vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
+        finalColor = alphaBlend(undergroundColor, finalColor);
+    }
+#endif
+
+#ifdef TRANSLUCENT
+    vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+    finalColor.a *= interpolateByDistance(alphaByDistance);
 #endif
 
     gl_FragColor = finalColor;

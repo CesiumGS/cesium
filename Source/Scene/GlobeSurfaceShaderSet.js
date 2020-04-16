@@ -86,6 +86,7 @@ import SceneMode from './SceneMode.js';
         var highlightFillTile = options.highlightFillTile;
         var colorToAlpha = options.colorToAlpha;
         var translucent = options.translucent;
+        var showUndergroundColor = options.showUndergroundColor;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -138,7 +139,8 @@ import SceneMode from './SceneMode.js';
                     (colorCorrect << 23) |
                     (highlightFillTile << 24) |
                     (colorToAlpha << 25) |
-                    (translucent << 26);
+                    (translucent << 26) |
+                    (showUndergroundColor << 27);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -204,6 +206,10 @@ import SceneMode from './SceneMode.js';
             if (translucent) {
                 vs.defines.push('TRANSLUCENT');
                 fs.defines.push('TRANSLUCENT');
+            }
+            if (showUndergroundColor) {
+                vs.defines.push('UNDERGROUND_COLOR');
+                fs.defines.push('UNDERGROUND_COLOR');
             }
 
             if (enableLighting) {
