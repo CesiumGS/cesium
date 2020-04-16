@@ -86,8 +86,6 @@ ModelOutlineLoader.parse = function(model, context) {
                 return;
             }
 
-            // var indicesAccessor = gltf.accessors[outlineData.indices];
-            // var indicesBufferView = loadResource.getBuffer(gltf.bufferViews[indicesAccessor.bufferView]);
             loadResources.primitivesToOutline.enqueue({
                 mesh : meshId,
                 primitive : primitiveId,
@@ -254,6 +252,7 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
             }
         }
 
+        // This bufferView is an indendent buffer now. Update the model accordingly.
         bufferView.byteOffset = 0;
         bufferView.byteLength = destData.byteLength;
 
@@ -269,6 +268,7 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         bufferView.buffer = bufferId;
         loadResources.buffers[bufferId] = destData;
 
+        // Update the accessors to reflect the added vertices.
         var accessors = vertexNumberingScope.accessors;
         for (j = 0; j < accessors.length; ++j) {
             var accessorId = accessors[j];
@@ -318,7 +318,7 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         }
     }
 
-    // Compact buffers to remove data not referenced by any bufferViews.
+    // Compact buffers to remove data not referenced by any bufferViews anymore.
     for (i = 0; i < gltf.buffers.length; ++i) {
         var buffer = gltf.buffers[i];
         var bufferViews = gltf.bufferViews.filter(function(bufferView) { return bufferView.buffer === i });
@@ -343,21 +343,6 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         buffer.byteLength = newLength;
     }
 };
-
-function createTexture(size) {
-    var texture = new Uint8Array(size);
-    texture[size - 1] = 192;
-    if (size === 8) {
-        texture[size - 1] = 96;
-    } else if (size === 4) {
-        texture[size - 1] = 48;
-    } else if (size === 2) {
-        texture[size - 1] = 24;
-    } else if (size === 1) {
-        texture[size - 1] = 12;
-    }
-    return texture;
-}
 
 ModelOutlineLoader.createTexture = function(model, context) {
     var cache = context.cache.modelOutliningCache;
@@ -418,7 +403,7 @@ function addOutline(model, context, toOutline, vertexNumberingScope) {
     var bufferViews = gltf.bufferViews;
 
     // Find the number of vertices in this primitive by looking
-    // the first attribute.
+    // the first attribute. Others are required to be the same.
     var numVertices;
     for (var semantic in primitive.attributes) {
         if (primitive.attributes.hasOwnProperty(semantic)) {
@@ -469,7 +454,7 @@ function addOutline(model, context, toOutline, vertexNumberingScope) {
         var i1 = triangleIndices[i + 1];
         var i2 = triangleIndices[i + 2];
 
-        var all = false;
+        var all = false; // set this to true to draw a full wireframe.
         var has01 = all || isHighlighted(edges, i0, i1);
         var has12 = all || isHighlighted(edges, i1, i2);
         var has20 = all || isHighlighted(edges, i2, i0);
@@ -663,6 +648,21 @@ function compareEdge(a, b) {
 
 function isHighlighted(edges, i0, i1) {
     return binarySearch(edges, [Math.min(i0, i1), Math.max(i0, i1)], compareEdge) >= 0;
+}
+
+function createTexture(size) {
+    var texture = new Uint8Array(size);
+    texture[size - 1] = 192;
+    if (size === 8) {
+        texture[size - 1] = 96;
+    } else if (size === 4) {
+        texture[size - 1] = 48;
+    } else if (size === 2) {
+        texture[size - 1] = 24;
+    } else if (size === 1) {
+        texture[size - 1] = 12;
+    }
+    return texture;
 }
 
 export default ModelOutlineLoader;
