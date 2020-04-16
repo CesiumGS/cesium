@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import knockout from '../../ThirdParty/knockout.js';
@@ -57,7 +56,7 @@ cesiumSvgPath: { path: isVRMode ? _exitVRPath : _enterVRPath, width: 32, height:
         this._element = element;
     }
 
-    defineProperties(VRButton.prototype, {
+    Object.defineProperties(VRButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof VRButton.prototype

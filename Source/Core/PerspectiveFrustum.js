@@ -1,7 +1,6 @@
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import PerspectiveOffCenterFrustum from './PerspectiveOffCenterFrustum.js';
@@ -203,7 +202,7 @@ import PerspectiveOffCenterFrustum from './PerspectiveOffCenterFrustum.js';
         }
     }
 
-    defineProperties(PerspectiveFrustum.prototype, {
+    Object.defineProperties(PerspectiveFrustum.prototype, {
         /**
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveFrustum.prototype

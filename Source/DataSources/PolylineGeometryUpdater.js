@@ -5,7 +5,6 @@ import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -100,7 +99,7 @@ import Property from './Property.js';
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
 
-    defineProperties(PolylineGeometryUpdater.prototype, {
+    Object.defineProperties(PolylineGeometryUpdater.prototype, {
         /**
          * Gets the unique ID associated with this updater
          * @memberof PolylineGeometryUpdater.prototype

@@ -6,7 +6,6 @@ import CullingVolume from '../Core/CullingVolume.js';
 import defaultValue from '../Core/defaultValue.js';
 import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import deprecationWarning from '../Core/deprecationWarning.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -336,7 +335,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
     // This can be overridden for testing purposes
     Cesium3DTile._deprecationWarning = deprecationWarning;
 
-    defineProperties(Cesium3DTile.prototype, {
+    Object.defineProperties(Cesium3DTile.prototype, {
         /**
          * The tileset containing this tile.
          *
@@ -420,7 +419,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          *
          * @type {*}
          * @readonly
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
          */
         extras : {
             get : function() {
@@ -556,6 +555,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyToProcessPromise)) {
                     return this._contentReadyToProcessPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -575,6 +575,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -776,8 +777,13 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         }
     }
 
-    function getContentFailedFunction(tile) {
+    function getContentFailedFunction(tile, tileset) {
         return function(error) {
+            if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+                --tileset.statistics.numberOfTilesProcessing;
+            } else {
+                --tileset.statistics.numberOfPendingRequests;
+            }
             tile._contentState = Cesium3DTileContentState.FAILED;
             tile._contentReadyPromise.reject(error);
             tile._contentReadyToProcessPromise.reject(error);
@@ -837,11 +843,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this._contentReadyToProcessPromise = defer();
         this._contentReadyPromise = defer();
 
-        if (expired) {
-            this.expireDate = undefined;
-        }
-
-        var contentFailedFunction = getContentFailedFunction(this);
+        var contentFailedFunction = getContentFailedFunction(this, tileset);
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
@@ -862,6 +864,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 // The content may be json instead
                 content = Cesium3DTileContentFactory.json(tileset, that, that._contentResource, arrayBuffer, 0);
                 that.hasTilesetContent = true;
+            }
+
+            if (expired) {
+                that.expireDate = undefined;
             }
 
             that._content = content;
@@ -1206,8 +1212,8 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         this.geometricError = this._geometricError * uniformScale;
     };
 
-    function applyDebugSettings(tile, tileset, frameState) {
-        if (!frameState.passes.render) {
+    function applyDebugSettings(tile, tileset, frameState, passOptions) {
+        if (!passOptions.isRender) {
             return;
         }
 
@@ -1315,10 +1321,10 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
      *
      * @private
      */
-    Cesium3DTile.prototype.update = function(tileset, frameState) {
+    Cesium3DTile.prototype.update = function(tileset, frameState, passOptions) {
         var initCommandLength = frameState.commandList.length;
         updateClippingPlanes(this, tileset);
-        applyDebugSettings(this, tileset, frameState);
+        applyDebugSettings(this, tileset, frameState, passOptions);
         updateContent(this, tileset, frameState);
         this._commandsLength = frameState.commandList.length - initCommandLength;
 

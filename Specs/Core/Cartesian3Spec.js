@@ -54,35 +54,6 @@ describe('Core/Cartesian3', function() {
         }).toThrowDeveloperError();
     });
 
-    it('unpackArray works', function() {
-        var array = Cartesian3.unpackArray([0.0, 1.0, 2.0, 3.0, 0.0, 4.0]);
-        expect(array).toEqual([new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 0.0, 4.0)]);
-    });
-
-    it('unpackArray works with a result parameter', function() {
-        var array = [];
-        var result = Cartesian3.unpackArray([1.0, 2.0, 3.0], array);
-        expect(result).toBe(array);
-        expect(result).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
-
-        array = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
-        result = Cartesian3.unpackArray([1.0, 2.0, 3.0], array);
-        expect(result).toBe(array);
-        expect(result).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
-    });
-
-    it('unpackArray throws with array less than 3 length', function() {
-        expect(function() {
-            Cartesian3.unpackArray([1.0]);
-        }).toThrowDeveloperError();
-    });
-
-    it('unpackArray throws with array not multiple of 3', function() {
-        expect(function() {
-            Cartesian3.unpackArray([1.0, 2.0, 3.0, 4.0]);
-        }).toThrowDeveloperError();
-    });
-
     it('clone with a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = new Cartesian3();
@@ -1287,5 +1258,5 @@ describe('Core/Cartesian3', function() {
     });
 
     createPackableSpecs(Cartesian3, new Cartesian3(1, 2, 3), [1, 2, 3]);
-    createPackableArraySpecs(Cartesian3, [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)], [1, 2, 3, 4, 5, 6]);
+    createPackableArraySpecs(Cartesian3, [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)], [1, 2, 3, 4, 5, 6], 3);
 });

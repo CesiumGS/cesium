@@ -1,7 +1,6 @@
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
 
@@ -54,7 +53,7 @@ import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
         this._readyPromise = Promise.resolve(true);
     }
 
-    defineProperties(GridImageryProvider.prototype, {
+    Object.defineProperties(GridImageryProvider.prototype, {
         /**
          * Gets the proxy used by this provider.
          * @memberof GridImageryProvider.prototype

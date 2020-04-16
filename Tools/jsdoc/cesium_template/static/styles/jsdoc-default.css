@@ -28,6 +28,7 @@ code {
 
 #ClassList > li {
     font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
+    word-break: break-all;
 }
 
 .description code {

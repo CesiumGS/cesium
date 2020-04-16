@@ -8,6 +8,7 @@ import { Math as CesiumMath } from '../../Source/Cesium.js';
 import { PerspectiveFrustum } from '../../Source/Cesium.js';
 import { Transforms } from '../../Source/Cesium.js';
 import { Pass } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
 import { Cesium3DTileRefine } from '../../Source/Cesium.js';
 import { Cesium3DTileStyle } from '../../Source/Cesium.js';
 import { ClippingPlane } from '../../Source/Cesium.js';
@@ -863,6 +864,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             var tile = tileset.root;
             tile._isClipped = true;
             var content = tile.content;
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
 
             var noClipFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(noClipFS.indexOf('clip') !== -1).toBe(false);
@@ -876,7 +878,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             tileset.clippingPlanes = clippingPlanes;
 
             clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
             var clipOneIntersectFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipOneIntersectFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipOneIntersectFS.indexOf('float clip') !== -1).toBe(true);
@@ -884,7 +886,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             clippingPlanes.unionClippingRegions = true;
 
             clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
             var clipOneUnionFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipOneUnionFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipOneUnionFS.indexOf('float clip') !== -1).toBe(true);
@@ -893,7 +895,7 @@ describe('Scene/PointCloud3DTileContent', function() {
             clippingPlanes.add(new ClippingPlane(Cartesian3.UNIT_Y, 1.0));
 
             clippingPlanes.update(scene.frameState);
-            tile.update(tileset, scene.frameState);
+            tile.update(tileset, scene.frameState, passOptions);
             var clipTwoUnionFS = content._pointCloud._drawCommand.shaderProgram._fragmentShaderText;
             expect(clipTwoUnionFS.indexOf('= clip(') !== -1).toBe(true);
             expect(clipTwoUnionFS.indexOf('float clip') !== -1).toBe(true);

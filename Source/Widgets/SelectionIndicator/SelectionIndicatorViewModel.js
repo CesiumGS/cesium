@@ -1,7 +1,6 @@
 import Cartesian2 from '../../Core/Cartesian2.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import EasingFunction from '../../Core/EasingFunction.js';
 import SceneTransforms from '../../Scene/SceneTransforms.js';
@@ -145,7 +144,7 @@ import knockout from '../../ThirdParty/knockout.js';
         });
     };
 
-    defineProperties(SelectionIndicatorViewModel.prototype, {
+    Object.defineProperties(SelectionIndicatorViewModel.prototype, {
         /**
          * Gets the HTML element containing the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype

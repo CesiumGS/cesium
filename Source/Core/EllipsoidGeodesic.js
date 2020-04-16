@@ -3,7 +3,6 @@ import Cartographic from './Cartographic.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import CesiumMath from './Math.js';
 
@@ -208,7 +207,7 @@ import CesiumMath from './Math.js';
         }
     }
 
-    defineProperties(EllipsoidGeodesic.prototype, {
+    Object.defineProperties(EllipsoidGeodesic.prototype, {
         /**
          * Gets the ellipsoid.
          * @memberof EllipsoidGeodesic.prototype

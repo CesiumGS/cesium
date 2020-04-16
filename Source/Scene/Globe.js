@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -25,7 +24,6 @@ import ImageryLayerCollection from './ImageryLayerCollection.js';
 import QuadtreePrimitive from './QuadtreePrimitive.js';
 import SceneMode from './SceneMode.js';
 import ShadowMode from './ShadowMode.js';
-import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -291,7 +289,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         this._zoomedOutOceanSpecularIntensity = undefined;
     }
 
-    defineProperties(Globe.prototype, {
+    Object.defineProperties(Globe.prototype, {
         /**
          * Gets an ellipsoid describing the shape of this globe.
          * @memberof Globe.prototype
@@ -450,7 +448,7 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         /**
          * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Globe.prototype
          * @type {Material}
          */
@@ -611,7 +609,7 @@ import TileSelectionResult from './TileSelectionResult.js';
     var scratchGetHeightRay = new Ray();
 
     function tileIfContainsCartographic(tile, cartographic) {
-        return Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
+        return defined(tile) && Rectangle.contains(tile.rectangle, cartographic) ? tile : undefined;
     }
 
     /**
@@ -649,12 +647,13 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         var tileWithMesh = tile;
 
-        while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
-            tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
-                   tileIfContainsCartographic(tile.southeastChild, cartographic) ||
-                   tileIfContainsCartographic(tile.northwestChild, cartographic) ||
-                   tile.northeastChild;
-            if (defined(tile.data) && defined(tile.data.renderedMesh)) {
+        while (defined(tile)) {
+            tile = tileIfContainsCartographic(tile._southwestChild, cartographic) ||
+                   tileIfContainsCartographic(tile._southeastChild, cartographic) ||
+                   tileIfContainsCartographic(tile._northwestChild, cartographic) ||
+                   tile._northeastChild;
+
+            if (defined(tile) && defined(tile.data) && defined(tile.data.renderedMesh)) {
                 tileWithMesh = tile;
             }
         }
@@ -666,7 +665,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         // e.g. when we're getting a height in order to place a billboard
         // on terrain, and the camera is looking at that same billboard.
         // The culled tile must have a valid mesh, though.
-        if (!defined(tile)) {
+        if (!defined(tile) || !defined(tile.data) || !defined(tile.data.renderedMesh)) {
             // Tile was not rendered (culled).
             return undefined;
         }

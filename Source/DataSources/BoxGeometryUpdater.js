@@ -5,7 +5,6 @@ import Check from '../Core/Check.js';
 import Color from '../Core/Color.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
@@ -61,7 +60,7 @@ import Property from './Property.js';
         BoxGeometryUpdater.prototype.constructor = BoxGeometryUpdater;
     }
 
-    defineProperties(BoxGeometryUpdater.prototype, {
+    Object.defineProperties(BoxGeometryUpdater.prototype, {
         /**
          * Gets the terrain offset property
          * @type {TerrainOffsetProperty}

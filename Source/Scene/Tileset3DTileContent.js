@@ -1,13 +1,12 @@
 import defaultValue from '../Core/defaultValue.js';
 import defer from '../Core/defer.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import RuntimeError from '../Core/RuntimeError.js';
 
     /**
      * Represents content for a tile in a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset whose
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset whose
      * content points to another 3D Tiles tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
@@ -29,7 +28,7 @@ import RuntimeError from '../Core/RuntimeError.js';
         initialize(this, arrayBuffer, byteOffset);
     }
 
-    defineProperties(Tileset3DTileContent.prototype, {
+    Object.defineProperties(Tileset3DTileContent.prototype, {
         featuresLength : {
             get : function() {
                 return 0;

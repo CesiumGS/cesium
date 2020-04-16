@@ -627,7 +627,7 @@ describe('Core/RequestScheduler', function() {
         }
     });
 
-    it('throttleRequests', function() {
+    it('does not throttle requests when throttleRequests is false', function() {
         RequestScheduler.maximumRequests = 0;
 
         function requestFunction() {
@@ -646,6 +646,34 @@ describe('Core/RequestScheduler', function() {
         RequestScheduler.throttleRequests = false;
         request = new Request({
             throttle : true,
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+        promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+
+        RequestScheduler.throttleRequests = true;
+    });
+
+    it('does not throttle requests by server when throttleRequests is false', function() {
+        RequestScheduler.maximumRequestsPerServer = 0;
+
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        RequestScheduler.throttleRequests = true;
+        var request = new Request({
+            throttleByServer : true,
+            url : 'https://test.invalid/1',
+            requestFunction : requestFunction
+        });
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.throttleRequests = false;
+        request = new Request({
+            throttleByServer : true,
             url : 'https://test.invalid/1',
             requestFunction : requestFunction
         });

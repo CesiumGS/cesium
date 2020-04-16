@@ -3,7 +3,6 @@ import Cartesian2 from '../Core/Cartesian2.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -623,7 +622,7 @@ import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
         this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
     }
 
-    defineProperties(LabelCollection.prototype, {
+    Object.defineProperties(LabelCollection.prototype, {
         /**
          * Returns the number of labels in this collection.  This is commonly used with
          * {@link LabelCollection#get} to iterate over all the labels

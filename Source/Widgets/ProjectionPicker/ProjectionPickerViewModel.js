@@ -1,5 +1,4 @@
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import EventHelper from '../../Core/EventHelper.js';
@@ -110,7 +109,7 @@ import createCommand from '../createCommand.js';
         this._sceneMode = SceneMode;
     }
 
-    defineProperties(ProjectionPickerViewModel.prototype, {
+    Object.defineProperties(ProjectionPickerViewModel.prototype, {
         /**
          * Gets the scene
          * @memberof ProjectionPickerViewModel.prototype

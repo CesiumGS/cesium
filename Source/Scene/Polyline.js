@@ -4,7 +4,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -100,7 +99,7 @@ import Material from './Material.js';
         }
     }
 
-    defineProperties(Polyline.prototype, {
+    Object.defineProperties(Polyline.prototype, {
 
         /**
          * Determines if this polyline will be shown.  Use this to hide or show a polyline, instead
@@ -174,7 +173,7 @@ import Material from './Material.js';
 
         /**
          * Gets or sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}.
          * @memberof Polyline.prototype
          * @type {Material}
          */
@@ -282,6 +281,19 @@ import Material from './Material.js';
         pickId : {
             get : function() {
                 return this._pickId;
+            }
+        },
+
+        /**
+         * Gets the destruction status of this polyline
+         * @memberof Polyline.prototype
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        isDestroyed : {
+            get : function() {
+                return !defined(this._polylineCollection);
             }
         },
 

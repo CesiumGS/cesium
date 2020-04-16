@@ -179,7 +179,7 @@ import Property from './Property.js';
                !Property.isConstant(rectangle.rotation) || //
                !Property.isConstant(rectangle.outlineWidth) || //
                !Property.isConstant(rectangle.zIndex) || //
-               (this._onTerrain && !Property.isConstant(this._materialProperty));
+               (this._onTerrain && !Property.isConstant(this._materialProperty) && !(this._materialProperty instanceof ColorMaterialProperty));
     };
 
     RectangleGeometryUpdater.prototype._setStaticOptions = function(entity, rectangle) {

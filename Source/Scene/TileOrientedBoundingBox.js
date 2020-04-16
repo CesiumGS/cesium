@@ -3,7 +3,6 @@ import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
-import defineProperties from '../Core/defineProperties.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import Matrix3 from '../Core/Matrix3.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -89,7 +88,7 @@ import Primitive from './Primitive.js';
         this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
     }
 
-    defineProperties(TileOrientedBoundingBox.prototype, {
+    Object.defineProperties(TileOrientedBoundingBox.prototype, {
         /**
          * The underlying bounding volume.
          *

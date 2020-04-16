@@ -3,7 +3,6 @@ import BoundingSphere from '../Core/BoundingSphere.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import EventHelper from '../Core/EventHelper.js';
 import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
@@ -16,6 +15,7 @@ import CustomDataSource from './CustomDataSource.js';
 import GeometryVisualizer from './GeometryVisualizer.js';
 import LabelVisualizer from './LabelVisualizer.js';
 import ModelVisualizer from './ModelVisualizer.js';
+import Cesium3DTilesetVisualizer from './Cesium3DTilesetVisualizer.js';
 import PathVisualizer from './PathVisualizer.js';
 import PointVisualizer from './PointVisualizer.js';
 import PolylineVisualizer from './PolylineVisualizer.js';
@@ -110,12 +110,13 @@ import PolylineVisualizer from './PolylineVisualizer.js';
                 new GeometryVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives),
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
+                new Cesium3DTilesetVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
                 new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     };
 
-    defineProperties(DataSourceDisplay.prototype, {
+    Object.defineProperties(DataSourceDisplay.prototype, {
         /**
          * Gets the scene associated with this display.
          * @memberof DataSourceDisplay.prototype

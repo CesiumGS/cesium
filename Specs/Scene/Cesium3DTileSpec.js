@@ -7,6 +7,7 @@ import { Matrix4 } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
 import { Transforms } from '../../Source/Cesium.js';
 import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
 import { Cesium3DTileRefine } from '../../Source/Cesium.js';
 import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
 import { TileBoundingRegion } from '../../Source/Cesium.js';
@@ -347,25 +348,29 @@ describe('Scene/Cesium3DTile', function() {
 
         it('can be a bounding region', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be an oriented bounding box', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('can be a bounding sphere', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
 
         it('creates debug bounding volume for viewer request volume', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithViewerRequestVolume, undefined);
-            tile.update(mockTileset, scene.frameState);
+            var passOptions = Cesium3DTilePass.getPassOptions(Cesium3DTilePass.RENDER);
+            tile.update(mockTileset, scene.frameState, passOptions);
             expect(tile._debugViewerRequestVolume).toBeDefined();
         });
     });

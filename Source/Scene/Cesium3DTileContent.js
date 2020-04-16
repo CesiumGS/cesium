@@ -1,4 +1,3 @@
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 
     /**
@@ -30,7 +29,7 @@ import DeveloperError from '../Core/DeveloperError.js';
         this.featurePropertiesDirty = false;
     }
 
-    defineProperties(Cesium3DTileContent.prototype, {
+    Object.defineProperties(Cesium3DTileContent.prototype, {
         /**
          * Gets the number of features in the tile.
          *
@@ -40,7 +39,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         featuresLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -52,7 +51,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
          * </p>
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -60,7 +59,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         pointsLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -74,7 +73,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         trianglesLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -88,7 +87,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         geometryByteLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -102,7 +101,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         texturesByteLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -116,7 +115,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         batchTableByteLength : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -125,7 +124,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite}
+         * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -133,7 +132,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         innerContents : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -147,7 +146,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         readyPromise : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -161,7 +160,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         tileset : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -175,7 +174,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         tile : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -188,7 +187,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         url : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -206,7 +205,7 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @private
          */
         batchTable : {
-            get : function() {
+            get : function() {  // eslint-disable-line getter-return
                 DeveloperError.throwInstantiationError();
             }
         }
@@ -232,7 +231,7 @@ import DeveloperError from '../Core/DeveloperError.js';
      * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
      * </p>
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
      *
      * @param {Number} batchId The batchId for the feature.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.

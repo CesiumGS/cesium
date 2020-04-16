@@ -4,7 +4,6 @@ import Color from '../Core/Color.js';
 import defaultValue from '../Core/defaultValue.js';
 import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
@@ -106,7 +105,7 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         this.classificationType = ClassificationType.BOTH;
     }
 
-    defineProperties(Vector3DTilePolygons.prototype, {
+    Object.defineProperties(Vector3DTilePolygons.prototype, {
         /**
          * Gets the number of triangles.
          *

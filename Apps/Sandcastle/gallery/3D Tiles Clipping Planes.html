@@ -130,7 +130,9 @@ function loadTileset(url) {
             // The clipping plane is initially positioned at the tileset's root transform.
             // Apply an additional matrix to center the clipping plane on the bounding sphere center.
             var transformCenter = Cesium.Matrix4.getTranslation(tileset.root.transform, new Cesium.Cartesian3());
-            var height = Cesium.Cartesian3.distance(transformCenter, tileset.boundingSphere.center);
+            var transformCartographic = Cesium.Cartographic.fromCartesian(transformCenter);
+            var boundingSphereCartographic = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);
+            var height = boundingSphereCartographic.height - transformCartographic.height;
             clippingPlanes.modelMatrix = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.0, 0.0, height));
         }
 

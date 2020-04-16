@@ -5,7 +5,6 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import Cartographic from '../Core/Cartographic.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import EasingFunction from '../Core/EasingFunction.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
@@ -606,7 +605,7 @@ import SceneMode from './SceneMode.js';
     var scratchHPRMatrix1 = new Matrix4();
     var scratchHPRMatrix2 = new Matrix4();
 
-    defineProperties(Camera.prototype, {
+    Object.defineProperties(Camera.prototype, {
         /**
          * Gets the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          * @memberof Camera.prototype
@@ -2401,6 +2400,12 @@ import SceneMode from './SceneMode.js';
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     *
+     * @example
+     * var canvas = viewer.scene.canvas;
+     * var center = new Cesium.Cartesian2(canvas.clientWidth / 2.0, canvas.clientHeight / 2.0);
+     * var ellipsoid = viewer.scene.globe.ellipsoid;
+     * var result = viewer.camera.pickEllipsoid(center, ellipsoid);
      */
     Camera.prototype.pickEllipsoid = function(windowPosition, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -2862,9 +2867,7 @@ import SceneMode from './SceneMode.js';
     var MINIMUM_ZOOM = 100.0;
 
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
-        if (!defined(offset)) {
-            offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
-        }
+        offset = HeadingPitchRange.clone(defined(offset) ? offset : Camera.DEFAULT_OFFSET);
 
         var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
         var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;

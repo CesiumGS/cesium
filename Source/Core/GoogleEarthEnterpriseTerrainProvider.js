@@ -1,7 +1,6 @@
 import Credit from './Credit.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Event from './Event.js';
 import GeographicTilingScheme from './GeographicTilingScheme.js';
@@ -151,7 +150,7 @@ import TileProviderError from './TileProviderError.js';
             });
     }
 
-    defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
         /**
          * Gets the name of the Google Earth Enterprise server url hosting the imagery.
          * @memberof GoogleEarthEnterpriseTerrainProvider.prototype

@@ -1,7 +1,6 @@
 import Clock from '../Core/Clock.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import JulianDate from '../Core/JulianDate.js';
@@ -24,7 +23,7 @@ import createRawPropertyDescriptor from './createRawPropertyDescriptor.js';
         this._multiplier = undefined;
     }
 
-    defineProperties(DataSourceClock.prototype, {
+    Object.defineProperties(DataSourceClock.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DataSourceClock.prototype

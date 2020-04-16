@@ -12,7 +12,6 @@ import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
@@ -21,7 +20,6 @@ import getAbsoluteUri from '../Core/getAbsoluteUri.js';
 import getMagic from '../Core/getMagic.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
-import isArray from '../Core/isArray.js';
 import loadCRN from '../Core/loadCRN.js';
 import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -58,6 +56,7 @@ import Axis from './Axis.js';
 import BlendingState from './BlendingState.js';
 import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 import ColorBlendMode from './ColorBlendMode.js';
+import DepthFunction from './DepthFunction.js';
 import DracoLoader from './DracoLoader.js';
 import getClipAndStyleCode from './getClipAndStyleCode.js';
 import getClippingFunction from './getClippingFunction.js';
@@ -104,7 +103,7 @@ import ShadowMode from './ShadowMode.js';
         this.count = 0;
     }
 
-    defineProperties(CachedGltf.prototype, {
+    Object.defineProperties(CachedGltf.prototype, {
         gltf : {
             set : function(value) {
                 this._gltf = value;
@@ -211,7 +210,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
-     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+     * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
      * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
@@ -620,7 +619,7 @@ import ShadowMode from './ShadowMode.js';
         this._shouldRegenerateShaders = false;
     }
 
-    defineProperties(Model.prototype, {
+    Object.defineProperties(Model.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
@@ -1068,7 +1067,7 @@ import ShadowMode from './ShadowMode.js';
         },
 
         /**
-         * The light color when shading the model. When <code>undefined</code> the scene's light color are used instead.
+         * The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
          * <p>
          * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
          * model much darker. Here, increasing the intensity of the light source will make the model brighter.
@@ -1141,7 +1140,7 @@ import ShadowMode from './ShadowMode.js';
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                if (defined(value) && (!Array.isArray(value) || value.length !== 9)) {
                     throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
                 }
                 //>>includeEnd('debug');
@@ -2250,7 +2249,7 @@ import ShadowMode from './ShadowMode.js';
         var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
 
         // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
-        // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
+        // https://github.com/CesiumGS/cesium/issues/6575.
         // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
@@ -2714,32 +2713,6 @@ import ShadowMode from './ShadowMode.js';
         return attributeLocations;
     }
 
-    function mapJointNames(forest, nodes) {
-        var length = forest.length;
-        var jointNodes = {};
-        for (var i = 0; i < length; ++i) {
-            var stack = [forest[i]]; // Push root node of tree
-
-            while (stack.length > 0) {
-                var id = stack.pop();
-                var n = nodes[id];
-
-                if (defined(n)) {
-                    jointNodes[id] = id;
-                }
-
-                var children = n.children;
-                if (defined(children)) {
-                    var childrenLength = children.length;
-                    for (var k = 0; k < childrenLength; ++k) {
-                        stack.push(children[k]);
-                    }
-                }
-            }
-        }
-        return jointNodes;
-    }
-
     function createJoints(model, runtimeSkins) {
         var gltf = model.gltf;
         var skins = gltf.skins;
@@ -2757,21 +2730,10 @@ import ShadowMode from './ShadowMode.js';
             skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
             skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
 
-            // 1. Find nodes with the names in node.skeletons (the node's skeletons)
-            // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
-            // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
-            var forest = [];
-            var skin = skins[node.skin];
-            if (defined(skin.skeleton)) {
-                forest.push(skin.skeleton);
-            }
-
-            var mappedJointNames = mapJointNames(forest, nodes);
-            var gltfJointNames = skins[node.skin].joints;
-            var jointNamesLength = gltfJointNames.length;
-            for (var i = 0; i < jointNamesLength; ++i) {
-                var jointName = gltfJointNames[i];
-                var nodeId = mappedJointNames[jointName];
+            var gltfJoints = skins[node.skin].joints;
+            var jointsLength = gltfJoints.length;
+            for (var i = 0; i < jointsLength; ++i) {
+                var nodeId = gltfJoints[i];
                 var jointNode = runtimeNodes[nodeId];
                 skinnedNode.joints.push(jointNode);
             }
@@ -2813,11 +2775,6 @@ import ShadowMode from './ShadowMode.js';
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
-            //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
-
-            //if (targetPath === 'translation') {
-            //    return;
-            //}
             if (defined(spline)) {
                 localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
                 runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
@@ -2867,7 +2824,6 @@ import ShadowMode from './ShadowMode.js';
 
                 var spline = ModelAnimationCache.getAnimationSpline(model, i, animation, channel.sampler, sampler, input, path, output);
 
-                // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                 channelEvaluators[j] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
             }
 
@@ -3011,7 +2967,8 @@ import ShadowMode from './ShadowMode.js';
                 enabled : enableCulling
             },
             depthTest : {
-                enabled : true
+                enabled : true,
+                func: DepthFunction.LESS_OR_EQUAL
             },
             depthMask : !blendingEnabled,
             blending : {
@@ -3564,7 +3521,6 @@ import ShadowMode from './ShadowMode.js';
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        var skins = gltf.skins;
 
         var scene = gltf.scenes[gltf.scene];
         var sceneNodes = scene.nodes;
@@ -3580,7 +3536,6 @@ import ShadowMode from './ShadowMode.js';
                 id : sceneNodes[i]
             });
 
-            var skeletonIds = [];
             while (stack.length > 0) {
                 var n = stack.pop();
                 seen[n.id] = true;
@@ -3622,24 +3577,6 @@ import ShadowMode from './ShadowMode.js';
                                 parentRuntimeNode : runtimeNode,
                                 gltfNode : nodes[childId],
                                 id : children[j]
-                            });
-                        }
-                    }
-                }
-
-                var skin = gltfNode.skin;
-                if (defined(skin)) {
-                    skeletonIds.push(skins[skin].skeleton);
-                }
-
-                if (stack.length === 0) {
-                    for (var k = 0; k < skeletonIds.length; k++) {
-                        var skeleton = skeletonIds[k];
-                        if (!seen[skeleton]) {
-                            stack.push({
-                                parentRuntimeNode : undefined,
-                                gltfNode : nodes[skeleton],
-                                id : skeleton
                             });
                         }
                     }

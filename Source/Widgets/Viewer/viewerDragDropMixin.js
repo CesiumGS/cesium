@@ -1,6 +1,5 @@
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Event from '../../Core/Event.js';
 import wrapFunction from '../../Core/wrapFunction.js';
@@ -72,14 +71,14 @@ import getElement from '../getElement.js';
 
         dropTarget = getElement(dropTarget);
 
-        defineProperties(viewer, {
+        Object.defineProperties(viewer, {
             /**
              * Gets or sets the element to serve as the drop target.
              * @memberof viewerDragDropMixin.prototype
              * @type {Element}
              */
             dropTarget : {
-                //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
+                //TODO See https://github.com/CesiumGS/cesium/issues/832
                 get : function() {
                     return dropTarget;
                 },

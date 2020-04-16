@@ -3,13 +3,11 @@ import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
 import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
-import isArray from '../Core/isArray.js';
 import DrawCommand from '../Renderer/DrawCommand.js';
 import Pass from '../Renderer/Pass.js';
 import RenderState from '../Renderer/RenderState.js';
@@ -207,7 +205,7 @@ import StencilOperation from './StencilOperation.js';
         });
     }
 
-    defineProperties(GroundPolylinePrimitive.prototype, {
+    Object.defineProperties(GroundPolylinePrimitive.prototype, {
         /**
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
@@ -349,11 +347,7 @@ import StencilOperation from './StencilOperation.js';
         // Helps with varying budget.
         var fs = primitive._batchTable.getVertexShaderCallback()(PolylineShadowVolumeFS);
 
-        // Tesselation on these volumes tends to be low,
-        // which causes problems when interpolating log depth from vertices.
-        // So force computing and writing log depth in the fragment shader.
-        // Re-enable at far distances to avoid z-fighting.
-        var vsDefines =  ['ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT', 'GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
+        var vsDefines =  ['GLOBE_MINIMUM_ALTITUDE ' + frameState.mapProjection.ellipsoid.minimumRadius.toFixed(1)];
         var colorDefine = '';
         var materialShaderSource = '';
         if (defined(appearance.material)) {
@@ -596,7 +590,7 @@ import StencilOperation from './StencilOperation.js';
         var that = this;
         var primitiveOptions = this._primitiveOptions;
         if (!defined(this._primitive)) {
-            var geometryInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var geometryInstances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var geometryInstancesLength = geometryInstances.length;
             var groundInstances = new Array(geometryInstancesLength);
 

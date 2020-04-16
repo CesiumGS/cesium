@@ -3,7 +3,6 @@ import Uri from '../ThirdParty/Uri.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Event from './Event.js';
 import Heap from './Heap.js';
 import isBlobUri from './isBlobUri.js';
@@ -39,11 +38,13 @@ import RequestState from './RequestState.js';
     var requestCompletedEvent = new Event();
 
     /**
-     * Tracks the number of active requests and prioritizes incoming requests.
+     * The request scheduler is used to track and constrain the number of active requests in order to prioritize incoming requests. The ability
+     * to retain control over the number of requests in CesiumJS is important because due to events such as changes in the camera position,
+     * a lot of new requests may be generated and a lot of in-flight requests may become redundant. The request scheduler manually constrains the
+     * number of requests so that newer requests wait in a shorter queue and don't have to compete for bandwidth with requests that have expired.
      *
      * @exports RequestScheduler
      *
-     * @private
      */
     function RequestScheduler() {
     }
@@ -57,14 +58,20 @@ import RequestState from './RequestState.js';
 
     /**
      * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
-     * listed in requestsByServer do not observe this limit.
+     * listed in {@link requestsByServer} do not observe this limit.
      * @type {Number}
      * @default 6
      */
     RequestScheduler.maximumRequestsPerServer = 6;
 
     /**
-     * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
+     * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
+     *
+     * @example
+     * RequestScheduler.requestsByServer = {
+     *   'api.cesium.com:443': 18,
+     *   'assets.cesium.com:443': 18
+     * };
      */
     RequestScheduler.requestsByServer = {
         'api.cesium.com:443': 18,
@@ -82,6 +89,7 @@ import RequestState from './RequestState.js';
      * When true, log statistics to the console every frame
      * @type {Boolean}
      * @default false
+     * @private
      */
     RequestScheduler.debugShowStatistics = false;
 
@@ -91,10 +99,11 @@ import RequestState from './RequestState.js';
      *
      * @type {Event}
      * @default Event()
+     * @private
      */
     RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
-    defineProperties(RequestScheduler, {
+    Object.defineProperties(RequestScheduler, {
         /**
          * Returns the statistics used by the request scheduler.
          *
@@ -102,6 +111,7 @@ import RequestState from './RequestState.js';
          *
          * @type Object
          * @readonly
+         * @private
          */
         statistics : {
             get : function() {
@@ -116,6 +126,7 @@ import RequestState from './RequestState.js';
          *
          * @type {Number}
          * @default 20
+         * @private
          */
         priorityHeapLength : {
             get : function() {
@@ -215,6 +226,7 @@ import RequestState from './RequestState.js';
 
     /**
      * Sort requests by priority and start requests.
+     * @private
      */
     RequestScheduler.update = function() {
         var i;
@@ -280,6 +292,7 @@ import RequestState from './RequestState.js';
      *
      * @param {String} url The url.
      * @returns {String} The server key.
+     * @private
      */
     RequestScheduler.getServerKey = function(url) {
         //>>includeStart('debug', pragmas.debug);
@@ -309,6 +322,8 @@ import RequestState from './RequestState.js';
      * @param {Request} request The request object.
      *
      * @returns {Promise|undefined} A Promise for the requested data, or undefined if this request does not have high enough priority to be issued.
+     *
+     * @private
      */
     RequestScheduler.request = function(request) {
         //>>includeStart('debug', pragmas.debug);
@@ -329,7 +344,7 @@ import RequestState from './RequestState.js';
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+        if (RequestScheduler.throttleRequests && request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
             // Server is saturated. Try again later.
             return undefined;
         }

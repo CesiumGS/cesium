@@ -1,7 +1,6 @@
 import clone from '../Core/clone.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Resource from '../Core/Resource.js';
 import ConditionsExpression from './ConditionsExpression.js';
@@ -11,7 +10,7 @@ import Expression from './Expression.js';
      * A style that is applied to a {@link Cesium3DTileset}.
      * <p>
      * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      *
      * @alias Cesium3DTileStyle
@@ -40,7 +39,7 @@ import Expression from './Expression.js';
      *     pointSize : '${Temperature} * 2.0'
      * });
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
+     * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(style) {
         this._style = {};
@@ -171,10 +170,10 @@ import Expression from './Expression.js';
         return expression;
     }
 
-    defineProperties(Cesium3DTileStyle.prototype, {
+    Object.defineProperties(Cesium3DTileStyle.prototype, {
         /**
          * Gets the object defining the style using the
-         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
+         * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
          *
          * @memberof Cesium3DTileStyle.prototype
          *

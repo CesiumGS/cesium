@@ -7,7 +7,6 @@ import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -206,7 +205,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         }
     }
 
-    defineProperties(Billboard.prototype, {
+    Object.defineProperties(Billboard.prototype, {
         /**
          * Determines if this billboard will be shown.  Use this to hide or show a billboard, instead
          * of removing it and re-adding it to the collection.

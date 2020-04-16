@@ -2,7 +2,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defer from '../Core/defer.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import loadKTX from '../Core/loadKTX.js';
@@ -46,7 +45,7 @@ import OctahedralProjectionVS from '../Shaders/OctahedralProjectionVS.js';
         this._readyPromise = defer();
     }
 
-    defineProperties(OctahedralProjectedCubeMap.prototype, {
+    Object.defineProperties(OctahedralProjectedCubeMap.prototype, {
         /**
          * The url to the KTX file containing the specular environment map and convoluted mipmaps.
          * @memberof OctahedralProjectedCubeMap.prototype

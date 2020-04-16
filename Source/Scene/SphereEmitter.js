@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import CesiumMath from '../Core/Math.js';
 
     /**
@@ -23,7 +22,7 @@ import CesiumMath from '../Core/Math.js';
         this._radius = defaultValue(radius, 1.0);
     }
 
-    defineProperties(SphereEmitter.prototype, {
+    Object.defineProperties(SphereEmitter.prototype, {
         /**
          * The radius of the sphere in meters.
          * @memberof SphereEmitter.prototype

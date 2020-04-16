@@ -1,6 +1,5 @@
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import createPropertyDescriptor from './createPropertyDescriptor.js';
 import Property from './Property.js';
@@ -21,7 +20,7 @@ import Property from './Property.js';
         this.color = color;
     }
 
-    defineProperties(ColorMaterialProperty.prototype, {
+    Object.defineProperties(ColorMaterialProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

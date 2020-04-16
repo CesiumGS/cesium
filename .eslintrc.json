@@ -12,8 +12,8 @@
     "overrides": [
         {
             "files": [
-                "index.js",
-                "server.js",
+                "index.cjs",
+                "server.cjs",
                 "gulpfile.js",
                 "Source/Workers/transferTypedArrayTest.js"
             ],
