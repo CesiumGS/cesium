@@ -121,10 +121,11 @@ For syntax and style guidelines, we use the ESLint recommended settings (the lis
 - [no-new-require](http://eslint.org/docs/rules/no-new-require)
 
 **[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
- * When disabling linting for one line, use `//eslint-disable-line`:
+ * When disabling linting for one line, use `//eslint-disable-next-line`:
 ```js
 function exit(warningMessage) {
-    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+    //eslint-disable-next-line no-alert
+    window.alert('Cannot exit: ' + warningMessage);
 }
 ```
 
