@@ -131,99 +131,217 @@ ModelOutlineLoader.outlinePrimitives = function(model, context) {
         return when.resolve();
     }
 
-    // TODO: support multiple primitives. Probably make the coordinates buffer mirror the position one.
-
     var gltf = model.gltf;
+
+    // Assumption: A single bufferView contains a single zero-indexed range of vertices.
+    // No trickery with using accessor byteOffsets to store multiple zero-based ranges of
+    // vertices in a single bufferView. Use separate bufferViews for that, you monster.
+
+    var bufferViews = [];
 
     while (loadResources.primitivesToOutline.length > 0) {
         var toOutline = loadResources.primitivesToOutline.dequeue();
-        var result = addOutline(model, context, toOutline);
-        var outlineCoordinates = result.outlineCoordinates;
-        var vertices = result.vertices;
 
-        // Update the buffer views and accessors for the copied vertices.
-        // TODO: what if this data is shared with other primitives?
-        var i;
-        for (i = 0; i <= 2; ++i) {
-            gltf.accessors[i].count = vertices.length;
+        var mesh = gltf.meshes[toOutline.mesh];
+        if (mesh === undefined) {
+            continue;
         }
 
-        var sourceBuffer = gltf.buffers[0].extras._pipeline.source;
-        var vertexSource = new Float32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[0].byteOffset, gltf.bufferViews[0].byteLength / Float32Array.BYTES_PER_ELEMENT);
-        var sourceIndices = new Uint32Array(sourceBuffer.buffer, sourceBuffer.byteOffset + gltf.bufferViews[1].byteOffset, gltf.bufferViews[1].byteLength / Uint32Array.BYTES_PER_ELEMENT);
-        var destBuffer = new ArrayBuffer(vertexSource.byteLength + vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT + gltf.bufferViews[1].byteLength);
-        var vertexDest = new Float32Array(destBuffer, 0, vertexSource.length + vertices.length * 7);
-        var destIndices = new Uint32Array(destBuffer, vertexDest.byteLength, sourceIndices.length);
-
-        // Copy the original vertices
-        for (i = 0; i < vertexSource.length; ++i) {
-            vertexDest[i] = vertexSource[i];
+        var primitive = mesh.primitives[toOutline.primitive];
+        if (primitive === undefined) {
+            continue;
         }
 
-        // Copy the additional vertices
-        for (i = 0; i < vertices.length; ++i) {
-            var sourceIndex = vertices[i] * 7;
-            var destIndex = vertexSource.length + i * 7;
-            for (var j = 0; j < 7; ++j) {
-                vertexDest[destIndex + j] = vertexSource[sourceIndex + j];
+        var attributes = primitive.attributes;
+        if (attributes === undefined) {
+            continue;
+        }
+
+        var vertexNumberingScope = undefined;
+
+        // Initialize common details for all bufferViews used by this primitive's vertices.
+        // All bufferViews must use a common vertex numbering scheme.
+        var giveUp = false;
+        for (var semantic in attributes) {
+            if (attributes.hasOwnProperty(semantic)) {
+                var accessorId = attributes[semantic];
+                var accessor = gltf.accessors[accessorId];
+                var bufferViewId = accessor.bufferView;
+                var bufferView = gltf.bufferViews[bufferViewId];
+
+                if (bufferViews.indexOf(bufferView) < 0) {
+                    bufferViews.push(bufferView);
+                }
+
+                if (!defined(bufferView.extras)) {
+                    bufferView.extras = {};
+                }
+                if (!defined(bufferView.extras._pipeline)) {
+                    bufferView.extras._pipeline = {};
+                }
+
+                if (!defined(bufferView.extras._pipeline.vertexNumberingScope)) {
+                    bufferView.extras._pipeline.vertexNumberingScope = vertexNumberingScope || {
+                        // Each element in this array is:
+                        // a) undefined, if the vertex at this index has no copies
+                        // b) the index of the copy.
+                        vertexCopies : [],
+
+                        // Extra vertices appended after the ones originally included in the model.
+                        // Each element is the index of the vertex that this one is a copy of.
+                        extraVertices : [],
+
+                        // The texture coordinates used for outlining, three floats per vertex.
+                        outlineCoordinates : [],
+
+                        // The IDs of accessors that user this vertex numbering.
+                        accessors : [],
+
+                        // The primitives that use this vertex numbering.
+                        primitives : [],
+
+                        // True if the buffer for the outlines has already been created.
+                        createdOutlines : false
+                    };
+                } else if (bufferView.extras._pipeline.vertexNumberingScope !== vertexNumberingScope) {
+                    // Conflicting vertex numbering, let's give up.
+                    giveUp = true;
+                    break;
+                }
+
+                vertexNumberingScope = bufferView.extras._pipeline.vertexNumberingScope;
+
+                if (vertexNumberingScope.accessors.indexOf(accessorId) < 0) {
+                    vertexNumberingScope.accessors.push(accessorId);
+                }
             }
         }
 
-        for (i = 0; i < sourceIndices.length; ++i) {
-            destIndices[i] = sourceIndices[i];
+        if (giveUp) {
+            continue;
         }
 
-        gltf.buffers[0].extras._pipeline.source = new Uint8Array(destBuffer, 0, destBuffer.byteLength);
-        gltf.bufferViews[0].byteLength = vertexSource.byteLength + vertices.length * 7 * Float32Array.BYTES_PER_ELEMENT;
-        gltf.bufferViews[1].byteOffset = gltf.bufferViews[0].byteLength;
-        loadResources.buffers[0] = gltf.buffers[0].extras._pipeline.source;
+        vertexNumberingScope.primitives.push(primitive);
 
-        // Create the buffers, views, and accessors for the outline texture coordinates.
-        var buffer = new Float32Array(outlineCoordinates);
-        var bufferIndex = model.gltf.buffers.push({
-            byteLength: buffer.byteLength,
+        addOutline(model, context, toOutline, vertexNumberingScope);
+    }
+
+    // Update all relevant bufferViews to includes the duplicate vertices that are
+    // needed for outlining.
+    var i, j;
+    for (i = 0; i < bufferViews.length; ++i) {
+        var bufferView = bufferViews[i];
+        var vertexNumberingScope = bufferView.extras._pipeline.vertexNumberingScope;
+
+        // Let the temporary data be garbage collected.
+        bufferView.extras._pipeline.vertexNumberingScope = undefined;
+
+        var newVertices = vertexNumberingScope.extraVertices;
+
+        var sourceData = loadResources.getBuffer(bufferView);
+        var byteStride = bufferView.byteStride || 4;
+        var destData = new Uint8Array(sourceData.byteLength + newVertices.length * byteStride);
+
+        // Copy the original vertices
+        destData.set(sourceData);
+
+        // Copy the vertices added for outlining
+        for (j = 0; j < newVertices.length; ++j) {
+            var sourceIndex = newVertices[j] * byteStride;
+            var destIndex = sourceData.length + j * byteStride;
+            for (var k = 0; k < byteStride; ++k) {
+                destData[destIndex + k] = destData[sourceIndex + k];
+            }
+        }
+
+        bufferView.byteOffset = 0;
+        bufferView.byteLength = destData.byteLength;
+
+        var bufferId = gltf.buffers.push({
+            byteLength: destData.byteLength,
             extras: {
                 _pipeline: {
-                    source: buffer.buffer
+                    source: destData.buffer
                 }
             }
         }) - 1;
-        loadResources.buffers[bufferIndex] = new Uint8Array(buffer.buffer, 0, buffer.byteLength);
 
-        var bufferViewIndex = model.gltf.bufferViews.push({
-            buffer: bufferIndex,
-            byteLength: buffer.byteLength,
-            byteOffset: 0,
-            byteStride: 3 * Float32Array.BYTES_PER_ELEMENT,
-            target: 34962
-        }) - 1;
-        var accessorIndex = model.gltf.accessors.push({
-            bufferView: bufferViewIndex,
-            byteOffset: 0,
-            componentType: 5126,
-            count: buffer.length / 3,
-            type: 'VEC3',
-            min: [0.0, 0.0, 0.0],
-            max: [1.0, 1.0, 1.0]
-        }) - 1;
+        bufferView.buffer = bufferId;
+        loadResources.buffers[bufferId] = destData;
 
-        var mesh = model.gltf.meshes[toOutline.mesh];
-        var primitive = mesh.primitives[toOutline.primitive];
-        primitive.attributes._OUTLINE_COORDINATES = accessorIndex;
+        var accessors = vertexNumberingScope.accessors;
+        for (j = 0; j < accessors.length; ++j) {
+            var accessorId = accessors[j];
+            gltf.accessors[accessorId].count += newVertices.length;
+        }
 
-        loadResources.vertexBuffersToCreate.enqueue(bufferViewIndex);
+        if (!vertexNumberingScope.createdOutlines) {
+            // Create the buffers, views, and accessors for the outline texture coordinates.
+            var outlineCoordinates = vertexNumberingScope.outlineCoordinates;
+            var outlineCoordinateBuffer = new Float32Array(outlineCoordinates);
+            var bufferIndex = model.gltf.buffers.push({
+                byteLength: outlineCoordinateBuffer.byteLength,
+                extras: {
+                    _pipeline: {
+                        source: outlineCoordinateBuffer.buffer
+                    }
+                }
+            }) - 1;
+            loadResources.buffers[bufferIndex] = new Uint8Array(outlineCoordinateBuffer.buffer, 0, outlineCoordinateBuffer.byteLength);
+
+            var bufferViewIndex = model.gltf.bufferViews.push({
+                buffer: bufferIndex,
+                byteLength: outlineCoordinateBuffer.byteLength,
+                byteOffset: 0,
+                byteStride: 3 * Float32Array.BYTES_PER_ELEMENT,
+                target: 34962
+            }) - 1;
+
+            var accessorIndex = model.gltf.accessors.push({
+                bufferView: bufferViewIndex,
+                byteOffset: 0,
+                componentType: 5126,
+                count: outlineCoordinateBuffer.length / 3,
+                type: 'VEC3',
+                min: [0.0, 0.0, 0.0],
+                max: [1.0, 1.0, 1.0]
+            }) - 1;
+
+            var primitives = vertexNumberingScope.primitives;
+            for (j = 0; j < primitives.length; ++j) {
+                primitives[j].attributes._OUTLINE_COORDINATES = accessorIndex;
+            }
+
+            loadResources.vertexBuffersToCreate.enqueue(bufferViewIndex);
+
+            vertexNumberingScope.createdOutlines = true;
+        }
     }
 
-    // var outlinerTaskProcessor = ModelOutlineLoader._getOutlinerTaskProcessor();
-    // var outliningPromises = [];
+    // Compact buffers to remove data not referenced by any bufferViews.
+    for (i = 0; i < gltf.buffers.length; ++i) {
+        var buffer = gltf.buffers[i];
+        var bufferViews = gltf.bufferViews.filter(function(bufferView) { return bufferView.buffer === i });
+        var newLength = bufferViews.reduce(function(previous, current) { return previous + current.byteLength; }, 0);
+        if (newLength === buffer.byteLength) {
+            continue;
+        }
 
-    // var promise = scheduleOutliningTask(outlinerTaskProcessor, model, loadResources, context);
-    // while (defined(promise)) {
-    //     outliningPromises.push(promise);
-    //     promise = scheduleOutliningTask(outlinerTaskProcessor, model, loadResources, context);
-    // }
+        var newBuffer = new Uint8Array(newLength);
+        var offset = 0;
+        for (j = 0; j < bufferViews.length; ++j) {
+            var bufferView = bufferViews[j];
+            var sourceData = loadResources.getBuffer(bufferView);
+            newBuffer.set(sourceData, offset);
 
-    // return when.all(outliningPromises);
+            bufferView.byteOffset = offset;
+            offset += sourceData.byteLength;
+        }
+
+        loadResources.buffers[i] = newBuffer;
+        buffer.extras._pipeline.source = newBuffer.buffer;
+        buffer.byteLength = newLength;
+    }
 };
 
 function createTexture(size) {
@@ -285,7 +403,11 @@ ModelOutlineLoader.createTexture = function(model, context) {
     return texture;
 };
 
-function addOutline(model, context, toOutline) {
+function addOutline(model, context, toOutline, vertexNumberingScope) {
+    var vertexCopies = vertexNumberingScope.vertexCopies;
+    var extraVertices = vertexNumberingScope.extraVertices;
+    var outlineCoordinates = vertexNumberingScope.outlineCoordinates;
+
     var meshId = toOutline.mesh;
     var primitiveId = toOutline.primitive;
 
@@ -295,8 +417,23 @@ function addOutline(model, context, toOutline) {
     var accessors = gltf.accessors;
     var bufferViews = gltf.bufferViews;
 
-    var positionAccessor = accessors[primitive.attributes.POSITION];
-    var numPositions = positionAccessor.count;
+    // Find the number of vertices in this primitive by looking
+    // the first attribute.
+    var numVertices;
+    for (var semantic in primitive.attributes) {
+        if (primitive.attributes.hasOwnProperty(semantic)) {
+            var attributeId = primitive.attributes[semantic];
+            var accessor = accessors[attributeId];
+            if (defined(accessor)) {
+                numVertices = accessor.count;
+                break;
+            }
+        }
+    }
+
+    if (!defined(numVertices)) {
+        return undefined;
+    }
 
     var triangleIndexAccessorGltf = accessors[primitive.indices];
     var triangleIndexBufferViewGltf = bufferViews[triangleIndexAccessorGltf.bufferView];
@@ -326,18 +463,6 @@ function addOutline(model, context, toOutline) {
 
     edges.sort(compareEdge);
 
-    var highlightCoordinates = [];
-    highlightCoordinates.length = numPositions * 3;
-
-    // Each element in this array is:
-    // a) undefined, if the vertex at this index has no copies
-    // b) the index of the copy.
-    var vertexCopies = [];
-
-    // Extra vertices appended after the ones originally included in the model.
-    // Each element is the index of the vertex that this one is a copy of.
-    var extraVertices = [];
-
     // For each triangle, adjust vertex data so that the correct edges are outlined.
     for (i = 0; i < triangleIndices.length; i += 3) {
         var i0 = triangleIndices[i];
@@ -349,7 +474,7 @@ function addOutline(model, context, toOutline) {
         var has12 = all || isHighlighted(edges, i1, i2);
         var has20 = all || isHighlighted(edges, i2, i0);
 
-        var unmatchableVertexIndex = matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20);
+        var unmatchableVertexIndex = matchAndStoreCoordinates(outlineCoordinates, i0, i1, i2, has01, has12, has20);
         while (unmatchableVertexIndex >= 0) {
             // Copy the unmatchable index and try again.
             var copy;
@@ -362,11 +487,11 @@ function addOutline(model, context, toOutline) {
             }
 
             if (copy === undefined) {
-                copy = numPositions + extraVertices.length;
+                copy = numVertices + extraVertices.length;
 
                 var original = unmatchableVertexIndex;
-                while (original >= numPositions) {
-                    original = extraVertices[original - numPositions];
+                while (original >= numVertices) {
+                    original = extraVertices[original - numVertices];
                 }
                 extraVertices.push(original);
                 vertexCopies[unmatchableVertexIndex] = copy;
@@ -383,14 +508,9 @@ function addOutline(model, context, toOutline) {
                 triangleIndices[i + 2] = copy;
             }
 
-            unmatchableVertexIndex = matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20);
+            unmatchableVertexIndex = matchAndStoreCoordinates(outlineCoordinates, i0, i1, i2, has01, has12, has20);
         }
     }
-
-    return {
-        outlineCoordinates : highlightCoordinates,
-        vertices : extraVertices
-    };
 }
 
 // Each vertex has three coordinates, a, b, and c.
@@ -414,11 +534,11 @@ function addOutline(model, context, toOutline) {
 // Then we can find an ordering that works for all three vertices with a
 // bitwise AND.
 
-function computeOrderMask(highlightCoordinates, vertexIndex, a, b, c) {
+function computeOrderMask(outlineCoordinates, vertexIndex, a, b, c) {
     var startIndex = vertexIndex * 3;
-    var first = highlightCoordinates[startIndex];
-    var second = highlightCoordinates[startIndex + 1];
-    var third = highlightCoordinates[startIndex + 2];
+    var first = outlineCoordinates[startIndex];
+    var second = outlineCoordinates[startIndex + 1];
+    var third = outlineCoordinates[startIndex + 2];
 
     if (first === undefined) {
         // If one coordinate is undefined, they all are, and all orderings are fine.
@@ -439,12 +559,12 @@ function popcount0to63(value) {
     return (value & 1) + (value >> 1 & 1) + (value >> 2 & 1) + (value >> 3 & 1) + (value >> 4 & 1) + (value >> 5 & 1);
 }
 
-function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12, has20) {
+function matchAndStoreCoordinates(outlineCoordinates, i0, i1, i2, has01, has12, has20) {
     var a0 = has20 ? 1.0 : 0.0;
     var b0 = has01 ? 1.0 : 0.0;
     var c0 = 0.0;
 
-    var i0Mask = computeOrderMask(highlightCoordinates, i0, a0, b0, c0);
+    var i0Mask = computeOrderMask(outlineCoordinates, i0, a0, b0, c0);
     if (i0Mask === 0) {
         return i0;
     }
@@ -453,7 +573,7 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
     var b1 = has01 ? 1.0 : 0.0;
     var c1 = has12 ? 1.0 : 0.0;
 
-    var i1Mask = computeOrderMask(highlightCoordinates, i1, a1, b1, c1);
+    var i1Mask = computeOrderMask(outlineCoordinates, i1, a1, b1, c1);
     if (i1Mask === 0) {
         return i1;
     }
@@ -462,7 +582,7 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
     var b2 = 0.0;
     var c2 = has12 ? 1.0 : 0.0;
 
-    var i2Mask = computeOrderMask(highlightCoordinates, i2, a2, b2, c2);
+    var i2Mask = computeOrderMask(outlineCoordinates, i2, a2, b2, c2);
     if (i2Mask === 0) {
         return i2;
     }
@@ -516,19 +636,19 @@ function matchAndStoreCoordinates(highlightCoordinates, i0, i1, i2, has01, has12
     }
 
     var i0Start = i0 * 3;
-    highlightCoordinates[i0Start + a] = a0;
-    highlightCoordinates[i0Start + b] = b0;
-    highlightCoordinates[i0Start + c] = c0;
+    outlineCoordinates[i0Start + a] = a0;
+    outlineCoordinates[i0Start + b] = b0;
+    outlineCoordinates[i0Start + c] = c0;
 
     var i1Start = i1 * 3;
-    highlightCoordinates[i1Start + a] = a1;
-    highlightCoordinates[i1Start + b] = b1;
-    highlightCoordinates[i1Start + c] = c1;
+    outlineCoordinates[i1Start + a] = a1;
+    outlineCoordinates[i1Start + b] = b1;
+    outlineCoordinates[i1Start + c] = c1;
 
     var i2Start = i2 * 3;
-    highlightCoordinates[i2Start + a] = a2;
-    highlightCoordinates[i2Start + b] = b2;
-    highlightCoordinates[i2Start + c] = c2;
+    outlineCoordinates[i2Start + a] = a2;
+    outlineCoordinates[i2Start + b] = b2;
+    outlineCoordinates[i2Start + c] = c2;
 
     return -1;
 }
