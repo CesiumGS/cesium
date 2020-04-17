@@ -322,7 +322,9 @@ function BillboardCollection(options) {
         var billboards = this._billboards;
         var length = billboards.length;
         for (var i = 0; i < length; ++i) {
-          billboards[i]._updateClamping();
+          if (billboards[i]) {
+            billboards[i]._updateClamping();
+          }
         }
       },
       this
