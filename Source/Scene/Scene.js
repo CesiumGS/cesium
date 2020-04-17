@@ -1613,7 +1613,7 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Whether or not the camera is underground the globe.
+   * Whether or not the camera is underneath the globe.
    * @memberof Scene.prototype
    * @type {Boolean}
    * @readonly

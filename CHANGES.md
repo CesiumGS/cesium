@@ -4,6 +4,7 @@
 
 ##### Additions :tada:
 
+- Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
 
 ##### Fixes :wrench:
