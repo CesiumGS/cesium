@@ -1435,6 +1435,7 @@ Object.defineProperties(Scene.prototype, {
    * Gets the scalar used to exaggerate the terrain.
    * @memberof Scene.prototype
    * @type {Number}
+   * @readonly
    */
   terrainExaggeration: {
     get: function () {
@@ -1490,6 +1491,7 @@ Object.defineProperties(Scene.prototype, {
    * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
    * @memberof Scene.prototype
    * @type {MapMode2D}
+   * @readonly
    */
   mapMode2D: {
     get: function () {
@@ -1597,6 +1599,7 @@ Object.defineProperties(Scene.prototype, {
    * Whether or not high dynamic range rendering is supported.
    * @memberof Scene.prototype
    * @type {Boolean}
+   * @readonly
    * @default true
    */
   highDynamicRangeSupported: {
@@ -1606,6 +1609,19 @@ Object.defineProperties(Scene.prototype, {
         context.depthTexture &&
         (context.colorBufferFloat || context.colorBufferHalfFloat)
       );
+    },
+  },
+
+  /**
+   * Whether or not the camera is underneath the globe.
+   * @memberof Scene.prototype
+   * @type {Boolean}
+   * @readonly
+   * @default false
+   */
+  cameraUnderground: {
+    get: function () {
+      return this._cameraUnderground;
     },
   },
 
