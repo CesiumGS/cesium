@@ -18,7 +18,7 @@ Visit the [Downloads page](https://cesium.com/downloads/) or use the npm module:
 npm install cesium
 ```
 
-Have questions?  Ask them on the [forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev).
+Have questions?  Ask them on the [community forum](https://community.cesium.com/).
 
 Interested in contributing?  See [CONTRIBUTING.md](CONTRIBUTING.md). :heart:
 

@@ -34,7 +34,8 @@ import knockout from '../../ThirdParty/knockout.js';
             viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
 
             // Restore hover-over selection to its current value
-            viewModel.picking = viewModel.picking; // eslint-disable-line no-self-assign
+            // eslint-disable-next-line no-self-assign
+            viewModel.picking = viewModel.picking;
         }
     }
 
@@ -321,6 +322,7 @@ import knockout from '../../ThirdParty/knockout.js';
          */
         this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
+        var showOnlyPickedTileDebugLabel = knockout.observable();
         var picking = knockout.observable();
         knockout.defineProperty(this, 'picking', {
             get : function() {
@@ -347,7 +349,7 @@ import knockout from '../../ThirdParty/knockout.js';
                         if (!defined(that._tileset)) {
                             return;
                         }
-                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) { //eslint-disable-line no-use-before-define
+                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
                             var position;
                             if (scene.pickPositionSupported) {
                                 position = scene.pickPosition(e.endPosition);
@@ -503,7 +505,6 @@ import knockout from '../../ThirdParty/knockout.js';
          */
         this.freezeFrame = false;
 
-        var showOnlyPickedTileDebugLabel = knockout.observable();
         knockout.defineProperty(this, 'showOnlyPickedTileDebugLabel', {
             get : function() {
                 return showOnlyPickedTileDebugLabel();
@@ -1126,7 +1127,8 @@ import knockout from '../../ThirdParty/knockout.js';
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
-                        this[setting] = this[setting]; // eslint-disable-line no-self-assign
+                        //eslint-disable-next-line no-self-assign
+                        this[setting] = this[setting];
                     }
 
                     // update view model with existing tileset settings

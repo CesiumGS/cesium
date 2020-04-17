@@ -204,7 +204,7 @@ Copyright 2011-2020 CesiumJS Contributors
 
 Patents US9153063B2 US9865085B1 US10592242
 
-Patents pending US15/829,786 US62/837,358 US62/837,381
+Patents pending US15/829,786 US16/850,266 US62/837,358
 
 Third-Party Code
 ================
