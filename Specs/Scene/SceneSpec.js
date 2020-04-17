@@ -2035,7 +2035,7 @@ describe(
 
       return updateGlobeUntilDone(scene)
         .then(function () {
-          expect(scene._cameraUnderground).toBe(false);
+          expect(scene.cameraUnderground).toBe(false);
 
           // Look underground
           scene.camera.setView({
@@ -2053,7 +2053,7 @@ describe(
           return updateGlobeUntilDone(scene);
         })
         .then(function () {
-          expect(scene._cameraUnderground).toBe(true);
+          expect(scene.cameraUnderground).toBe(true);
           scene.destroyForSpecs();
         });
     });
@@ -2069,7 +2069,7 @@ describe(
       ).and.returnValue(true);
 
       return updateGlobeUntilDone(scene).then(function () {
-        expect(scene._cameraUnderground).toBe(false);
+        expect(scene.cameraUnderground).toBe(false);
         scene.destroyForSpecs();
       });
     });
@@ -2077,7 +2077,7 @@ describe(
     it("detects that camera is above ground if globe is undefined", function () {
       var scene = createScene();
       scene.renderForSpecs();
-      expect(scene._cameraUnderground).toBe(false);
+      expect(scene.cameraUnderground).toBe(false);
       scene.destroyForSpecs();
     });
 
@@ -2086,7 +2086,7 @@ describe(
       var globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(0.0);
-      expect(scene._cameraUnderground).toBe(false);
+      expect(scene.cameraUnderground).toBe(false);
       scene.destroyForSpecs();
     });
 
@@ -2095,7 +2095,7 @@ describe(
       var globe = new Globe();
       scene.globe = globe;
       scene.morphTo2D(1.0);
-      expect(scene._cameraUnderground).toBe(false);
+      expect(scene.cameraUnderground).toBe(false);
       scene.destroyForSpecs();
     });
 
@@ -2120,7 +2120,7 @@ describe(
       scene.morphToColumbusView(0.0);
 
       return updateGlobeUntilDone(scene).then(function () {
-        expect(scene._cameraUnderground).toBe(true);
+        expect(scene.cameraUnderground).toBe(true);
         scene.destroyForSpecs();
       });
     });

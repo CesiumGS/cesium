@@ -1610,6 +1610,18 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
+   * Whether or not the camera is underground the globe.
+   * @memberof Scene.prototype
+   * @type {Boolean}
+   * @default false
+   */
+  cameraUnderground: {
+    get: function () {
+      return this._cameraUnderground;
+    },
+  },
+
+  /**
    * Gets or sets the color of the light emitted by the sun.
    *
    * @memberof Scene.prototype
