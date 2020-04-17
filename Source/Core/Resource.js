@@ -1898,9 +1898,12 @@ import TrustedServers from './TrustedServers.js';
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = require('url').parse(url); // eslint-disable-line
-        var http = URL.protocol === 'https:' ? require('https') : require('http'); // eslint-disable-line
-        var zlib = require('zlib'); // eslint-disable-line
+        /* eslint-disable no-undef */
+        var URL = require('url').parse(url);
+        var http = URL.protocol === 'https:' ? require('https') : require('http');
+        var zlib = require('zlib');
+        /* eslint-enable no-undef */
+
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,
@@ -1924,7 +1927,8 @@ import TrustedServers from './TrustedServers.js';
                 });
 
                 res.on('end', function() {
-                    var result = Buffer.concat(chunkArray); // eslint-disable-line
+                    // eslint-disable-next-line no-undef
+                    var result = Buffer.concat(chunkArray);
                     if (res.headers['content-encoding'] === 'gzip') {
                         zlib.gunzip(result, function(error, resultUnzipped) {
                             if (error) {
