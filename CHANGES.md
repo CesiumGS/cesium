@@ -9,6 +9,7 @@
   - Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
   - Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
 - Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent.
+- Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
 
 ##### Fixes :wrench:
