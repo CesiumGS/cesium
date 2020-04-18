@@ -45,13 +45,13 @@ const float g2 = g * g;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
-varying vec3 v_positionEC;
+varying vec3 v_positionWC;
 
 void main (void)
 {
     float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
     vec3 lightDirection =
-        czm_viewerPositionWC * float(lightEnum == 0.0) +
+        v_positionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
         czm_sunDirectionWC * float(lightEnum == 2.0);
     lightDirection = normalize(lightDirection);
@@ -89,7 +89,7 @@ void main (void)
 #endif
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
+    float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - length(v_positionWC)) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
 
     // Alter alpha based on time of day (0.0 = night , 1.0 = day)
     float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), lightDirection), 0.0, 1.0) : 1.0;

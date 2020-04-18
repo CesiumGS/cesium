@@ -56,6 +56,7 @@ const float fSamples = 2.0;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
+varying vec3 v_positionWC;
 
 float scale(float cosAngle)
 {
@@ -75,7 +76,7 @@ void main(void)
     vec3 positionWC = underEllipsoid ? czm_viewerPositionWC + t * directionWC : czm_viewerPositionWC;
 
     // Unpack attributes
-    float cameraHeight = u_cameraAndRadiiAndDynamicAtmosphereColor.x;
+    float cameraHeight = length(positionWC);
     float outerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.y;
     float innerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.z;
 
@@ -154,5 +155,6 @@ void main(void)
     v_mieColor = frontColor * KmESun;
     v_rayleighColor = frontColor * (InvWavelength * KrESun);
     v_toCamera = positionWC - positionV3;
+    v_positionWC = positionWC;
     gl_Position = czm_modelViewProjection * position;
 }
