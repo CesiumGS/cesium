@@ -65,6 +65,15 @@ float scale(float cosAngle)
 
 void main(void)
 {
+    vec3 directionWC = normalize(position.xyz - czm_viewerPositionWC);
+    vec3 directionEC = (czm_view * vec4(directionWC, 0.0)).xyz;
+    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
+    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, czm_view[3].xyz, czm_ellipsoidInverseRadii);
+    bool underEllipsoid = raySegment.start >= 0.0;
+
+    float t = raySegment.stop;
+    vec3 positionWC = underEllipsoid ? czm_viewerPositionWC + t * directionWC : czm_viewerPositionWC;
+
     // Unpack attributes
     float cameraHeight = u_cameraAndRadiiAndDynamicAtmosphereColor.x;
     float outerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.y;
@@ -72,27 +81,41 @@ void main(void)
 
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 positionV3 = position.xyz;
-    vec3 ray = positionV3 - czm_viewerPositionWC;
+    vec3 ray = positionV3 - positionWC;
     float far = length(ray);
     ray /= far;
     float atmosphereScale = 1.0 / (outerRadius - innerRadius);
 
 #ifdef SKY_FROM_SPACE
-    // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
-    float B = 2.0 * dot(czm_viewerPositionWC, ray);
-    float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
-    float det = max(0.0, B*B - 4.0 * C);
-    float near = 0.5 * (-B - sqrt(det));
+    vec3 start;
+    float startAngle;
+    float startOffset;
 
-    // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 start = czm_viewerPositionWC + ray * near;
-    far -= near;
-    float startAngle = dot(ray, start) / outerRadius;
-    float startDepth = exp(-1.0 / rayleighScaleDepth );
-    float startOffset = startDepth*scale(startAngle);
+    if (underEllipsoid) {
+        // Calculate the ray's starting position, then calculate its scattering offset
+        start = positionWC;
+        float height = length(start);
+        float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
+        startAngle = dot(ray, start) / height;
+        startOffset = depth*scale(startAngle);
+    } else {
+        // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
+        float B = 2.0 * dot(positionWC, ray);
+        float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
+        float det = max(0.0, B*B - 4.0 * C);
+        float near = 0.5 * (-B - sqrt(det));
+
+        // Calculate the ray's starting position, then calculate its scattering offset
+        start = positionWC + ray * near;
+        far -= near;
+        startAngle = dot(ray, start) / outerRadius;
+        float startDepth = exp(-1.0 / rayleighScaleDepth );
+        startOffset = startDepth*scale(startAngle);
+    }
+
 #else // SKY_FROM_ATMOSPHERE
     // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 start = czm_viewerPositionWC;
+    vec3 start = positionWC;
     float height = length(start);
     float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
     float startAngle = dot(ray, start) / height;
@@ -101,7 +124,7 @@ void main(void)
 
     float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
     vec3 lightDirection =
-        czm_viewerPositionWC * float(lightEnum == 0.0) +
+        positionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
         czm_sunDirectionWC * float(lightEnum == 2.0);
     lightDirection = normalize(lightDirection);
@@ -130,6 +153,6 @@ void main(void)
     // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
     v_mieColor = frontColor * KmESun;
     v_rayleighColor = frontColor * (InvWavelength * KrESun);
-    v_toCamera = czm_viewerPositionWC - positionV3;
+    v_toCamera = positionWC - positionV3;
     gl_Position = czm_modelViewProjection * position;
 }
