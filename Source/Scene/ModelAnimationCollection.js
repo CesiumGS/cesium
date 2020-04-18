@@ -462,6 +462,16 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       pastStartTime &&
       scheduledAnimation._state === ModelAnimationState.ANIMATING
     ) {
+      // After the stop time with `play === false`
+      var animationStopTime = runtimeAnimation.stopTime;
+      animateChannels(runtimeAnimation, animationStopTime);
+
+      if (scheduledAnimation.update.numberOfListeners > 0) {
+        scheduledAnimation._updateEventTime = animationStopTime;
+        frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
+      }
+      animationOccured = true;
+
       // ANIMATING -> STOPPED state transition?
       scheduledAnimation._state = ModelAnimationState.STOPPED;
       if (scheduledAnimation.stop.numberOfListeners > 0) {
@@ -470,6 +480,25 @@ ModelAnimationCollection.prototype.update = function (frameState) {
 
       if (scheduledAnimation.removeOnStop) {
         animationsToRemove.push(scheduledAnimation);
+      }
+    } else if (
+      !pastStartTime &&
+      scheduledAnimation._state === ModelAnimationState.ANIMATING
+    ) {
+      // Before the start time with `play === false`
+      var animationStartTime = runtimeAnimation.startTime;
+      animateChannels(runtimeAnimation, animationStartTime);
+
+      if (scheduledAnimation.update.numberOfListeners > 0) {
+        scheduledAnimation._updateEventTime = animationStartTime;
+        frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
+      }
+      animationOccured = true;
+
+      // ANIMATING -> STOPPED state transition?
+      scheduledAnimation._state = ModelAnimationState.STOPPED;
+      if (scheduledAnimation.stop.numberOfListeners > 0) {
+        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
       }
     }
   }
