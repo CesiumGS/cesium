@@ -22,7 +22,7 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "editor.insertSpaces": true,
-    "editor.tabSize": 4,
+    "editor.tabSize": 2,
     "editor.detectIndentation": false,
     "eslint.enable": true,
     "javascript.format.insertSpaceAfterCommaDelimiter": true,
