@@ -22,7 +22,8 @@ import defined from './defined.js';
 
         a.href = url;
         // IE only absolutizes href on get, not set
-        a.href = a.href; // eslint-disable-line no-self-assign
+        // eslint-disable-next-line no-self-assign
+        a.href = a.href;
 
         return protocol !== a.protocol || host !== a.host;
     }

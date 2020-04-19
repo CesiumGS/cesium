@@ -90,53 +90,9 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Formatting
 
-In general, format new code in the same way as the existing code.
-
-* Use four spaces for indentation.  Do not use tab characters.
-* Do not include trailing whitespace.
-* Put `{` on the same line as the previous statement:
-```javascript
-function defaultValue(a, b) {
-   // ...
-}
-
-if (!defined(result)) {
-   // ...
-}
-```
-* Use curly braces even for single line `if`, `for`, and `while` blocks, e.g.,
-```javascript
-if (!defined(result))
-    result = new Cartesian3();
-```
-is better written as
-```javascript
-if (!defined(result)) {
-    result = new Cartesian3();
-}
-```
-* Use parenthesis judiciously, e.g.,
-```javascript
-var foo = x > 0.0 && y !== 0.0;
-```
-is better written as
-```javascript
-var foo = (x > 0.0) && (y !== 0.0);
-```
-* Use vertical whitespace to separate functions and to group related statements within a function, e.g.,
-```javascript
-function Model(options) {
-    // ...
-    this._allowPicking = defaultValue(options.allowPicking, true);
-
-    this._ready = false;
-    this._readyPromise = when.defer();
-    // ...
-};
-```
-* In JavaScript code, use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
-
-* Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
+* We use [prettier](https://prettier.io/) to automatically re-format all JS code at commit time, so all of the work is done for you. Code is automatically reformatted when you commit.
+* For HTML code, keep the existing style. Use double quotes.
+* Text files, end with a newline to minimize the noise in diffs.
 
 ## Linting
 
@@ -165,10 +121,11 @@ For syntax and style guidelines, we use the ESLint recommended settings (the lis
 - [no-new-require](http://eslint.org/docs/rules/no-new-require)
 
 **[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
- * When disabling linting for one line, use `//eslint-disable-line`:
+ * When disabling linting for one line, use `//eslint-disable-next-line`:
 ```js
 function exit(warningMessage) {
-    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+    //eslint-disable-next-line no-alert
+    window.alert('Cannot exit: ' + warningMessage);
 }
 ```
 
