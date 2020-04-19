@@ -72,9 +72,9 @@ void calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     rgb = czm_HSBToRGB(hsb);
 #endif
 
-    float outerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.y;
-    float innerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.z;
-    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
+    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((outerRadius - length(positionWC)) / (outerRadius - innerRadius), 0.0, 1.0);
@@ -88,7 +88,7 @@ void calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
 
 void main (void)
 {
-    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirection = getLightDirection(lightEnum, v_positionWC);
     calculateFinalColor(v_positionWC, v_toCamera, lightDirection, v_rayleighColor, v_mieColor);
 }

@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -89,22 +88,22 @@ function SkyAtmosphere(ellipsoid) {
   this._hueSaturationBrightness = new Cartesian3();
 
   // camera height, outer radius, inner radius, dynamic atmosphere color flag
-  var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
+  var radiiAndDynamicAtmosphereColor = new Cartesian3();
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-  cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
-  cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(
+  radiiAndDynamicAtmosphereColor.z = 0;
+  radiiAndDynamicAtmosphereColor.x = Cartesian3.maximumComponent(
     Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3())
   );
-  cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
-  this._cameraAndRadiiAndDynamicAtmosphereColor = cameraAndRadiiAndDynamicAtmosphereColor;
+  this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
 
   var that = this;
 
   this._command.uniformMap = {
-    u_cameraAndRadiiAndDynamicAtmosphereColor: function () {
-      return that._cameraAndRadiiAndDynamicAtmosphereColor;
+    u_radiiAndDynamicAtmosphereColor: function () {
+      return that._radiiAndDynamicAtmosphereColor;
     },
     u_hsbShift: function () {
       that._hueSaturationBrightness.x = that.hueShift;
@@ -137,7 +136,7 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   enableLighting,
   useSunDirection
 ) {
-  this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting
+  this._radiiAndDynamicAtmosphereColor.z = enableLighting
     ? useSunDirection
       ? 2.0
       : 1.0
@@ -268,9 +267,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var cameraPosition = frameState.camera.positionWC;
 
   var cameraHeight = Cartesian3.magnitude(cameraPosition);
-  this._cameraAndRadiiAndDynamicAtmosphereColor.x = cameraHeight;
 
-  if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
+  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
     // Camera in space
     command.shaderProgram = useColorCorrect
       ? this._spSkyFromSpaceColorCorrect

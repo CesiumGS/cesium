@@ -56,7 +56,7 @@ const float g2 = g * g;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
-uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
+uniform vec3 u_radiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
 
 float scale(float cosAngle)
 {
@@ -106,8 +106,8 @@ void calculateMieColorAndRayleighColor(vec3 positionWC, vec3 outerPosition, vec3
     float cameraHeight = length(positionWC);
 
     // Unpack attributes
-    float outerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.y;
-    float innerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.z;
+    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
     // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
     vec3 ray = outerPosition - positionWC;

@@ -55,7 +55,7 @@ void main(void)
         positionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
     }
 
-    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirection = getLightDirection(lightEnum, positionWC);
 
     calculateMieColorAndRayleighColor(
