@@ -145,8 +145,7 @@ ModelOutlineLoader.outlinePrimitives = function (model, context) {
   // No trickery with using accessor byteOffsets to store multiple zero-based ranges of
   // vertices in a single bufferView. Use separate bufferViews for that, you monster.
 
-  var bufferViews = [];
-  var vertexNumberingScope;
+  var vertexNumberingScopes = [];
 
   while (loadResources.primitivesToOutline.length > 0) {
     var toOutline = loadResources.primitivesToOutline.dequeue();
@@ -161,81 +160,14 @@ ModelOutlineLoader.outlinePrimitives = function (model, context) {
       continue;
     }
 
-    var attributes = primitive.attributes;
-    if (attributes === undefined) {
+    var vertexNumberingScope = getVertexNumberingScope(model, primitive);
+    if (vertexNumberingScope === undefined) {
       continue;
     }
 
-    vertexNumberingScope = undefined;
-
-    // Initialize common details for all bufferViews used by this primitive's vertices.
-    // All bufferViews used by this primitive must use a common vertex numbering scheme.
-    var giveUp = false;
-    for (var semantic in attributes) {
-      if (!attributes.hasOwnProperty(semantic)) {
-        continue;
-      }
-
-      var accessorId = attributes[semantic];
-      var accessor = gltf.accessors[accessorId];
-      var bufferViewId = accessor.bufferView;
-      var bufferView = gltf.bufferViews[bufferViewId];
-
-      if (bufferViews.indexOf(bufferView) < 0) {
-        bufferViews.push(bufferView);
-      }
-
-      if (!defined(bufferView.extras)) {
-        bufferView.extras = {};
-      }
-      if (!defined(bufferView.extras._pipeline)) {
-        bufferView.extras._pipeline = {};
-      }
-
-      if (!defined(bufferView.extras._pipeline.vertexNumberingScope)) {
-        bufferView.extras._pipeline.vertexNumberingScope = vertexNumberingScope || {
-          // Each element in this array is:
-          // a) undefined, if the vertex at this index has no copies
-          // b) the index of the copy.
-          vertexCopies: [],
-
-          // Extra vertices appended after the ones originally included in the model.
-          // Each element is the index of the vertex that this one is a copy of.
-          extraVertices: [],
-
-          // The texture coordinates used for outlining, three floats per vertex.
-          outlineCoordinates: [],
-
-          // The IDs of accessors that use this vertex numbering.
-          accessors: [],
-
-          // The primitives that use this vertex numbering.
-          primitives: [],
-
-          // True if the buffer for the outlines has already been created.
-          createdOutlines: false,
-        };
-      } else if (
-        bufferView.extras._pipeline.vertexNumberingScope !==
-        vertexNumberingScope
-      ) {
-        // Conflicting vertex numbering, let's give up.
-        giveUp = true;
-        break;
-      }
-
-      vertexNumberingScope = bufferView.extras._pipeline.vertexNumberingScope;
-
-      if (vertexNumberingScope.accessors.indexOf(accessorId) < 0) {
-        vertexNumberingScope.accessors.push(accessorId);
-      }
+    if (vertexNumberingScopes.indexOf(vertexNumberingScope) < 0) {
+      vertexNumberingScopes.push(vertexNumberingScope);
     }
-
-    if (giveUp) {
-      continue;
-    }
-
-    vertexNumberingScope.primitives.push(primitive);
 
     // Add the outline to this primitive
     addOutline(model, context, toOutline, vertexNumberingScope);
@@ -243,7 +175,12 @@ ModelOutlineLoader.outlinePrimitives = function (model, context) {
 
   // Update all relevant bufferViews to include the duplicate vertices that are
   // needed for outlining.
-  updateBufferViewsWithNewVertices(model, bufferViews);
+  for (var i = 0; i < vertexNumberingScopes.length; ++i) {
+    updateBufferViewsWithNewVertices(
+      model,
+      vertexNumberingScopes[i].bufferViews
+    );
+  }
 
   // Remove data not referenced by any bufferViews anymore.
   compactBuffers(model);
@@ -775,6 +712,84 @@ function compactBuffers(model) {
 
 function usesBuffer(bufferId, bufferView) {
   return bufferView.buffer === bufferId;
+}
+
+function getVertexNumberingScope(model, primitive) {
+  var attributes = primitive.attributes;
+  if (attributes === undefined) {
+    return undefined;
+  }
+
+  var gltf = model.gltf;
+
+  var vertexNumberingScope;
+
+  // Initialize common details for all bufferViews used by this primitive's vertices.
+  // All bufferViews used by this primitive must use a common vertex numbering scheme.
+  for (var semantic in attributes) {
+    if (!attributes.hasOwnProperty(semantic)) {
+      continue;
+    }
+
+    var accessorId = attributes[semantic];
+    var accessor = gltf.accessors[accessorId];
+    var bufferViewId = accessor.bufferView;
+    var bufferView = gltf.bufferViews[bufferViewId];
+
+    if (!defined(bufferView.extras)) {
+      bufferView.extras = {};
+    }
+    if (!defined(bufferView.extras._pipeline)) {
+      bufferView.extras._pipeline = {};
+    }
+
+    if (!defined(bufferView.extras._pipeline.vertexNumberingScope)) {
+      bufferView.extras._pipeline.vertexNumberingScope = vertexNumberingScope || {
+        // Each element in this array is:
+        // a) undefined, if the vertex at this index has no copies
+        // b) the index of the copy.
+        vertexCopies: [],
+
+        // Extra vertices appended after the ones originally included in the model.
+        // Each element is the index of the vertex that this one is a copy of.
+        extraVertices: [],
+
+        // The texture coordinates used for outlining, three floats per vertex.
+        outlineCoordinates: [],
+
+        // The IDs of accessors that use this vertex numbering.
+        accessors: [],
+
+        // The IDs of bufferViews that use this vertex numbering.
+        bufferViews: [],
+
+        // The primitives that use this vertex numbering.
+        primitives: [],
+
+        // True if the buffer for the outlines has already been created.
+        createdOutlines: false,
+      };
+    } else if (
+      bufferView.extras._pipeline.vertexNumberingScope !== vertexNumberingScope
+    ) {
+      // Conflicting vertex numbering, let's give up.
+      return undefined;
+    }
+
+    vertexNumberingScope = bufferView.extras._pipeline.vertexNumberingScope;
+
+    if (vertexNumberingScope.bufferViews.indexOf(bufferView) < 0) {
+      vertexNumberingScope.bufferViews.push(bufferView);
+    }
+
+    if (vertexNumberingScope.accessors.indexOf(accessorId) < 0) {
+      vertexNumberingScope.accessors.push(accessorId);
+    }
+  }
+
+  vertexNumberingScope.primitives.push(primitive);
+
+  return vertexNumberingScope;
 }
 
 export default ModelOutlineLoader;
