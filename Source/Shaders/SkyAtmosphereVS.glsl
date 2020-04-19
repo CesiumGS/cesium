@@ -64,16 +64,48 @@ float scale(float cosAngle)
     return rayleighScaleDepth  * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
 }
 
+void calculateRayScatteringFromSpace(in vec3 positionWC, in vec3 ray, in float outerRadius, inout float far, out vec3 start, out float startOffset)
+{
+    // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
+    float cameraHeight = length(positionWC);
+    float B = 2.0 * dot(positionWC, ray);
+    float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
+    float det = max(0.0, B * B - 4.0 * C);
+    float near = 0.5 * (-B - sqrt(det));
+
+    // Calculate the ray's starting position, then calculate its scattering offset
+    start = positionWC + ray * near;
+    far -= near;
+    float startAngle = dot(ray, start) / outerRadius;
+    float startDepth = exp(-1.0 / rayleighScaleDepth);
+    startOffset = startDepth * scale(startAngle);
+}
+
+void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float atmosphereScale, in float innerRadius, out vec3 start, out float startOffset)
+{
+    // Calculate the ray's starting position, then calculate its scattering offset
+    float cameraHeight = length(positionWC);
+    start = positionWC;
+    float height = length(start);
+    float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
+    float startAngle = dot(ray, start) / height;
+    startOffset = depth*scale(startAngle);
+}
+
 void main(void)
 {
     vec3 directionWC = normalize(position.xyz - czm_viewerPositionWC);
     vec3 directionEC = (czm_view * vec4(directionWC, 0.0)).xyz;
     czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
     czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, czm_view[3].xyz, czm_ellipsoidInverseRadii);
-    bool underEllipsoid = raySegment.start >= 0.0;
+    bool intersectsEllipsoid = raySegment.start >= 0.0;
 
     float t = raySegment.stop;
-    vec3 positionWC = underEllipsoid ? czm_viewerPositionWC + t * directionWC : czm_viewerPositionWC;
+    vec3 positionWC = czm_viewerPositionWC;
+    if (intersectsEllipsoid)
+    {
+        positionWC = czm_viewerPositionWC + t * directionWC;
+    }
 
     // Unpack attributes
     float cameraHeight = length(positionWC);
@@ -87,40 +119,20 @@ void main(void)
     ray /= far;
     float atmosphereScale = 1.0 / (outerRadius - innerRadius);
 
-#ifdef SKY_FROM_SPACE
     vec3 start;
-    float startAngle;
     float startOffset;
 
-    if (underEllipsoid) {
-        // Calculate the ray's starting position, then calculate its scattering offset
-        start = positionWC;
-        float height = length(start);
-        float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
-        startAngle = dot(ray, start) / height;
-        startOffset = depth*scale(startAngle);
-    } else {
-        // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
-        float B = 2.0 * dot(positionWC, ray);
-        float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
-        float det = max(0.0, B*B - 4.0 * C);
-        float near = 0.5 * (-B - sqrt(det));
-
-        // Calculate the ray's starting position, then calculate its scattering offset
-        start = positionWC + ray * near;
-        far -= near;
-        startAngle = dot(ray, start) / outerRadius;
-        float startDepth = exp(-1.0 / rayleighScaleDepth );
-        startOffset = startDepth*scale(startAngle);
+#ifdef SKY_FROM_SPACE
+    if (intersectsEllipsoid)
+    {
+        calculateRayScatteringFromGround(positionWC, ray, atmosphereScale, innerRadius, start, startOffset);
     }
-
-#else // SKY_FROM_ATMOSPHERE
-    // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 start = positionWC;
-    float height = length(start);
-    float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
-    float startAngle = dot(ray, start) / height;
-    float startOffset = depth*scale(startAngle);
+    else
+    {
+        calculateRayScatteringFromSpace(positionWC, ray, outerRadius, far, start, startOffset);
+    }
+#else
+    calculateRayScatteringFromGround(positionWC, ray, atmosphereScale, innerRadius, start, startOffset);
 #endif
 
     float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
@@ -139,13 +151,13 @@ void main(void)
     // Now loop through the sample rays
     vec3 frontColor = vec3(0.0, 0.0, 0.0);
 
-    for(int i=0; i<nSamples; i++)
+    for(int i = 0; i < nSamples; i++)
     {
         float height = length(samplePoint);
         float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - height));
         float fLightAngle = dot(lightDirection, samplePoint) / height;
         float fCameraAngle = dot(ray, samplePoint) / height;
-        float fScatter = (startOffset + depth*(scale(fLightAngle) - scale(fCameraAngle)));
+        float fScatter = (startOffset + depth * (scale(fLightAngle) - scale(fCameraAngle)));
         vec3 attenuate = exp(-fScatter * (InvWavelength * Kr4PI + Km4PI));
         frontColor += attenuate * (depth * scaledLength);
         samplePoint += sampleRay;

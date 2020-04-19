@@ -92,7 +92,7 @@ void main (void)
     float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - length(v_positionWC)) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
 
     // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), lightDirection), 0.0, 1.0) : 1.0;
+    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(v_positionWC), lightDirection), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
     gl_FragColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
