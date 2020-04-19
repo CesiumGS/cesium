@@ -14,6 +14,7 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
 import BlendingState from "./BlendingState.js";
@@ -195,23 +196,34 @@ SkyAtmosphere.prototype.update = function (frameState) {
 
     var vs = new ShaderSource({
       defines: ["SKY_FROM_SPACE"],
-      sources: [SkyAtmosphereVS],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+    });
+
+    var fs = new ShaderSource({
+      defines: ["SKY_FROM_SPACE"],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyFromSpace = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
-      fragmentShaderSource: SkyAtmosphereFS,
+      fragmentShaderSource: fs,
     });
 
     vs = new ShaderSource({
       defines: ["SKY_FROM_ATMOSPHERE"],
-      sources: [SkyAtmosphereVS],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
     });
+
+    fs = new ShaderSource({
+      defines: ["SKY_FROM_ATMOSPHERE"],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
+    });
+
     this._spSkyFromAtmosphere = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
-      fragmentShaderSource: SkyAtmosphereFS,
+      fragmentShaderSource: fs,
     });
   }
 
@@ -226,11 +238,11 @@ SkyAtmosphere.prototype.update = function (frameState) {
 
     var vsColorCorrect = new ShaderSource({
       defines: ["SKY_FROM_SPACE"],
-      sources: [SkyAtmosphereVS],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
     });
     var fsColorCorrect = new ShaderSource({
-      defines: ["COLOR_CORRECT"],
-      sources: [SkyAtmosphereFS],
+      defines: ["SKY_FROM_SPACE", "COLOR_CORRECT"],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyFromSpaceColorCorrect = ShaderProgram.fromCache({
@@ -240,7 +252,11 @@ SkyAtmosphere.prototype.update = function (frameState) {
     });
     vsColorCorrect = new ShaderSource({
       defines: ["SKY_FROM_ATMOSPHERE"],
-      sources: [SkyAtmosphereVS],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+    });
+    fsColorCorrect = new ShaderSource({
+      defines: ["SKY_FROM_ATMOSPHERE", "COLOR_CORRECT"],
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
     });
     this._spSkyFromAtmosphereColorCorrect = ShaderProgram.fromCache({
       context: contextColorCorrect,
