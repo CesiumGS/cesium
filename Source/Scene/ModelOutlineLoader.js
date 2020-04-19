@@ -14,14 +14,13 @@ import TextureWrap from '../Renderer/TextureWrap.js';
 import when from '../ThirdParty/when.js';
 
 /**
- * @private
  * Creates face outlines for glTF primitives with the `CESIUM_primitive_outline` extension.
+ * @private
  */
 function ModelOutlineLoader() {}
 
 /**
  * Returns true if the model uses or requires CESIUM_primitive_outline.
- *
  * @private
  */
 ModelOutlineLoader.hasExtension = function(model) {
