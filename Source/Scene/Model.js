@@ -3584,8 +3584,6 @@ function createUniformMaps(model, context) {
   var textures = model._rendererResources.textures;
   var defaultTexture = model._defaultTexture;
 
-  var outlineTexture = ModelOutlineLoader.createTexture(model, context);
-
   ForEach.material(gltf, function (material, materialId) {
     var modelMaterial = model._runtime.materialsById[materialId];
     var technique = techniques[modelMaterial._technique];
@@ -3603,12 +3601,16 @@ function createUniformMaps(model, context) {
 
     var u = uniformMaps[materialId];
     u.uniformMap = uniforms.map; // uniform name -> function for the renderer
-    u.uniformMap.u_outlineTexture = function () {
-      return outlineTexture;
-    };
     u.values = uniforms.values; // material parameter name -> ModelMaterial for modifying the parameter at runtime
     u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
     u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
+
+    if (technique.attributes.a_outlineCoordinates) {
+      var outlineTexture = ModelOutlineLoader.createTexture(model, context);
+      u.uniformMap.u_outlineTexture = function () {
+        return outlineTexture;
+      };
+    }
   });
 }
 
