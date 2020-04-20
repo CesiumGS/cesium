@@ -322,22 +322,6 @@ GlobeTranslucency.isSunVisibleThroughGlobe = function (
   return !frontOpaque && (cameraUnderground || !backOpaque);
 };
 
-GlobeTranslucency.isSkyAtmosphereVisible = function (globe) {
-  if (!defined(globe) || !globe.show) {
-    return false;
-  }
-
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
-  var frontInvisible =
-    getFrontFaceAlphaMode(translucencyMode) ===
-    TranslucencyMode.FRONT_INVISIBLE;
-  var backInvisible =
-    getBackFaceAlphaMode(translucencyMode) === TranslucencyMode.BACK_INVISIBLE;
-
-  // Sky atmosphere is visible if the globe is not completely invisible
-  return !frontInvisible || !backInvisible;
-};
-
 GlobeTranslucency.isEnvironmentVisible = function (globe, cameraUnderground) {
   if (!defined(globe) || !globe.show) {
     return true;

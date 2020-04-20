@@ -3331,8 +3331,6 @@ Scene.prototype.updateEnvironment = function () {
   var sunVisibleThroughGlobe =
     environmentVisible &&
     GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
-  var skyAtmosphereVisible =
-    environmentVisible && GlobeTranslucency.isSkyAtmosphereVisible(globe);
 
   if (
     !renderPass ||
@@ -3346,7 +3344,7 @@ Scene.prototype.updateEnvironment = function () {
     environmentState.sunComputeCommand = undefined;
     environmentState.moonCommand = undefined;
   } else {
-    if (defined(skyAtmosphere) && skyAtmosphereVisible) {
+    if (defined(skyAtmosphere)) {
       if (defined(globe)) {
         skyAtmosphere.setDynamicAtmosphereColor(
           globe.enableLighting && globe.dynamicAtmosphereLighting,

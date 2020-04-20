@@ -40,6 +40,7 @@ import { SceneTransforms } from "../../Source/Cesium.js";
 import { ScreenSpaceCameraController } from "../../Source/Cesium.js";
 import { SunLight } from "../../Source/Cesium.js";
 import { TweenCollection } from "../../Source/Cesium.js";
+import { Sun } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -2208,7 +2209,42 @@ describe(
 
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
+
+      scene.destroyForSpecs();
+    });
+
+    it("does not render environment when camera is underground and translucency is disabled", function () {
+      var scene = createScene();
+      var globe = new Globe();
+      scene.globe = globe;
+      scene.sun = new Sun();
+
+      // Look underground at the sun
+      scene.camera.setView({
+        destination: new Cartesian3(
+          2838477.9315700866,
+          -4939120.816857662,
+          1978094.4576285738
+        ),
+        orientation: new HeadingPitchRoll(
+          5.955798516387474,
+          -1.0556025616093283,
+          0.39098563693868016
+        ),
+      });
+
+      return updateGlobeUntilDone(scene).then(function () {
+        globe.translucencyEnabled = true;
+        globe.frontFaceAlpha = 0.5;
+        scene.renderForSpecs();
+        expect(scene.environmentState.isSunVisible).toBe(true);
+        globe.translucencyEnabled = false;
+        scene.renderForSpecs();
+        expect(scene.environmentState.isSunVisible).toBe(false);
+        scene.destroyForSpecs();
+      });
     });
   },
+
   "WebGL"
 );
