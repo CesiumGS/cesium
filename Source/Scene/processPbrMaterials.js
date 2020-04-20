@@ -428,11 +428,11 @@ function generateTechnique(
   }
 
   vertexShader += "attribute vec3 a_position;\n";
-  vertexShader += "attribute vec3 a_outlineCoordinates;\n";
   if (hasNormals) {
     vertexShader += "varying vec3 v_positionEC;\n";
   }
   if (hasOutline) {
+    vertexShader += "attribute vec3 a_outlineCoordinates;\n";
     vertexShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
