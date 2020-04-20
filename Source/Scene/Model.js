@@ -5257,7 +5257,7 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
-        ModelOutlineLoader.outlinePrimitives(this, context);
+        ModelOutlineLoader.outlinePrimitives(this);
         createResources(this, frameState);
       }
     }

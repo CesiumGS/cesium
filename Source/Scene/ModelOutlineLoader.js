@@ -8,7 +8,6 @@ import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.j
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import when from "../ThirdParty/when.js";
 
 /**
  * Creates face outlines for glTF primitives with the `CESIUM_primitive_outline` extension.
@@ -34,7 +33,7 @@ ModelOutlineLoader.hasExtension = function (model) {
  * and index WebGL buffers are not yet created.
  * @private
  */
-ModelOutlineLoader.outlinePrimitives = function (model, context) {
+ModelOutlineLoader.outlinePrimitives = function (model) {
   if (!ModelOutlineLoader.hasExtension(model)) {
     return;
   }
@@ -70,7 +69,6 @@ ModelOutlineLoader.outlinePrimitives = function (model, context) {
       // Add the outline to this primitive
       addOutline(
         model,
-        context,
         meshId,
         primitiveId,
         outlineData.indices,
@@ -138,7 +136,6 @@ ModelOutlineLoader.createTexture = function (model, context) {
 
 function addOutline(
   model,
-  context,
   meshId,
   primitiveId,
   edgeIndicesAccessorId,
