@@ -402,6 +402,16 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       duration !== 0.0
         ? JulianDate.secondsDifference(sceneTime, startTime) / duration
         : 0.0;
+
+    // Clamp delta to stop time, if defined.
+    if (
+      duration !== 0.0 &&
+      defined(stopTime) &&
+      JulianDate.greaterThan(sceneTime, stopTime)
+    ) {
+      delta = JulianDate.secondsDifference(stopTime, startTime) / duration;
+    }
+
     var pastStartTime = delta >= 0.0;
 
     // Play animation if
@@ -418,9 +428,10 @@ ModelAnimationCollection.prototype.update = function (frameState) {
       (delta <= 1.0 || repeat) &&
       (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
 
-    if (play) {
+    // If it IS, or WAS, animating...
+    if (play || scheduledAnimation._state === ModelAnimationState.ANIMATING) {
       // STOPPED -> ANIMATING state transition?
-      if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
+      if (play && scheduledAnimation._state === ModelAnimationState.STOPPED) {
         scheduledAnimation._state = ModelAnimationState.ANIMATING;
         if (scheduledAnimation.start.numberOfListeners > 0) {
           frameState.afterRender.push(scheduledAnimation._raiseStartEvent);
@@ -458,47 +469,17 @@ ModelAnimationCollection.prototype.update = function (frameState) {
         frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
       }
       animationOccured = true;
-    } else if (
-      pastStartTime &&
-      scheduledAnimation._state === ModelAnimationState.ANIMATING
-    ) {
-      // After the stop time with `play === false`
-      var animationStopTime = runtimeAnimation.stopTime;
-      animateChannels(runtimeAnimation, animationStopTime);
 
-      if (scheduledAnimation.update.numberOfListeners > 0) {
-        scheduledAnimation._updateEventTime = animationStopTime;
-        frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
-      }
-      animationOccured = true;
+      if (!play) {
+        // ANIMATING -> STOPPED state transition?
+        scheduledAnimation._state = ModelAnimationState.STOPPED;
+        if (scheduledAnimation.stop.numberOfListeners > 0) {
+          frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
+        }
 
-      // ANIMATING -> STOPPED state transition?
-      scheduledAnimation._state = ModelAnimationState.STOPPED;
-      if (scheduledAnimation.stop.numberOfListeners > 0) {
-        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
-      }
-
-      if (scheduledAnimation.removeOnStop) {
-        animationsToRemove.push(scheduledAnimation);
-      }
-    } else if (
-      !pastStartTime &&
-      scheduledAnimation._state === ModelAnimationState.ANIMATING
-    ) {
-      // Before the start time with `play === false`
-      var animationStartTime = runtimeAnimation.startTime;
-      animateChannels(runtimeAnimation, animationStartTime);
-
-      if (scheduledAnimation.update.numberOfListeners > 0) {
-        scheduledAnimation._updateEventTime = animationStartTime;
-        frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
-      }
-      animationOccured = true;
-
-      // ANIMATING -> STOPPED state transition?
-      scheduledAnimation._state = ModelAnimationState.STOPPED;
-      if (scheduledAnimation.stop.numberOfListeners > 0) {
-        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
+        if (scheduledAnimation.removeOnStop) {
+          animationsToRemove.push(scheduledAnimation);
+        }
       }
     }
   }
