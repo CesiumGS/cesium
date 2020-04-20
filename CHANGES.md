@@ -2,6 +2,10 @@
 
 ### 1.69.0 - 2020-05-01
 
+##### Breaking Changes :mega:
+
+- The property `Scene.sunColor` has been removed. Use `scene.light.color` and `scene.light.intensity` instead. [#8774](https://github.com/CesiumGS/cesium/pull/8774)
+
 ##### Additions :tada:
 
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
