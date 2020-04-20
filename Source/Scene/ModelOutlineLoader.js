@@ -1,8 +1,6 @@
 import binarySearch from "../Core/binarySearch.js";
 import defined from "../Core/defined.js";
-import FeatureDetection from "../Core/FeatureDetection.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import TaskProcessor from "../Core/TaskProcessor.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
 import Sampler from "../Renderer/Sampler.js";
 import Texture from "../Renderer/Texture.js";
@@ -29,59 +27,26 @@ ModelOutlineLoader.hasExtension = function (model) {
   );
 };
 
-// Maximum concurrency to use when outlining
-ModelOutlineLoader._maxOutliningConcurrency = Math.max(
-  FeatureDetection.hardwareConcurrency - 1,
-  1
-);
-
-// Exposed for testing purposes
-ModelOutlineLoader._outlinerTaskProcessor = undefined;
-ModelOutlineLoader._getOutlinerTaskProcessor = function () {
-  if (!defined(ModelOutlineLoader._outlinerTaskProcessor)) {
-    var processor = new TaskProcessor(
-      "outlinePrimitive",
-      ModelOutlineLoader._maxOutliningConcurrency
-    );
-    ModelOutlineLoader._outlinerTaskProcessor = processor;
-  }
-
-  return ModelOutlineLoader._outlinerTaskProcessor;
-};
-
 /**
- * Parses the outline extension on model primitives and
- * adds the outlining data to the model's load resources.
- *
+ * Arranges to outline any primitives with the CESIUM_primitive_outline extension.
+ * It is expected that all buffer data is loaded and available in
+ * `extras._pipeline.source` before this function is called, and that vertex
+ * and index WebGL buffers are not yet created.
  * @private
  */
-ModelOutlineLoader.parse = function (model, context) {
+ModelOutlineLoader.outlinePrimitives = function (model, context) {
   if (!ModelOutlineLoader.hasExtension(model)) {
     return;
   }
 
-  var loadResources = model._loadResources;
-  var cacheKey = model.cacheKey;
-  if (defined(cacheKey)) {
-    if (!defined(ModelOutlineLoader._outlinedModelResourceCache)) {
-      if (!defined(context.cache.modelOutliningCache)) {
-        context.cache.modelOutliningCache = {};
-      }
-
-      ModelOutlineLoader._outlinedModelResourceCache =
-        context.cache.modelOutliningCache;
-    }
-
-    // Outlining data for model will be loaded from cache
-    var cachedData = ModelOutlineLoader._outlinedModelResourceCache[cacheKey];
-    if (defined(cachedData)) {
-      cachedData.count++;
-      loadResources.pendingDecodingCache = true;
-      return;
-    }
-  }
-
   var gltf = model.gltf;
+
+  // Assumption: A single bufferView contains a single zero-indexed range of vertices.
+  // No trickery with using accessor byteOffsets to store multiple zero-based ranges of
+  // vertices in a single bufferView. Use separate bufferViews for that, you monster.
+
+  var vertexNumberingScopes = [];
+
   ForEach.mesh(gltf, function (mesh, meshId) {
     ForEach.meshPrimitive(mesh, function (primitive, primitiveId) {
       if (!defined(primitive.extensions)) {
@@ -93,85 +58,26 @@ ModelOutlineLoader.parse = function (model, context) {
         return;
       }
 
-      loadResources.primitivesToOutline.enqueue({
-        mesh: meshId,
-        primitive: primitiveId,
-        edgeIndicesAccessorId: outlineData.indices,
-      });
+      var vertexNumberingScope = getVertexNumberingScope(model, primitive);
+      if (vertexNumberingScope === undefined) {
+        return;
+      }
+
+      if (vertexNumberingScopes.indexOf(vertexNumberingScope) < 0) {
+        vertexNumberingScopes.push(vertexNumberingScope);
+      }
+
+      // Add the outline to this primitive
+      addOutline(
+        model,
+        context,
+        meshId,
+        primitiveId,
+        outlineData.indices,
+        vertexNumberingScope
+      );
     });
   });
-};
-
-/**
- * Schedules outlining tasks available this frame.
- * @private
- */
-ModelOutlineLoader.outlinePrimitives = function (model, context) {
-  if (!ModelOutlineLoader.hasExtension(model)) {
-    return when.resolve();
-  }
-
-  var loadResources = model._loadResources;
-  var cacheKey = model.cacheKey;
-  if (
-    defined(cacheKey) &&
-    defined(ModelOutlineLoader._outlinedModelResourceCache)
-  ) {
-    var cachedData = ModelOutlineLoader._outlinedModelResourceCache[cacheKey];
-    // Load decoded data for model when cache is ready
-    if (defined(cachedData) && loadResources.pendingDecodingCache) {
-      return when(cachedData.ready, function () {
-        model._decodedData = cachedData.data;
-        loadResources.pendingDecodingCache = false;
-      });
-    }
-
-    // Outline data for model should be cached when ready
-    ModelOutlineLoader._outlinedModelResourceCache[cacheKey] = {
-      ready: false,
-      count: 1,
-      data: undefined,
-    };
-  }
-
-  if (loadResources.primitivesToOutline.length === 0) {
-    // No more tasks to schedule
-    return when.resolve();
-  }
-
-  var gltf = model.gltf;
-
-  // Assumption: A single bufferView contains a single zero-indexed range of vertices.
-  // No trickery with using accessor byteOffsets to store multiple zero-based ranges of
-  // vertices in a single bufferView. Use separate bufferViews for that, you monster.
-
-  var vertexNumberingScopes = [];
-
-  while (loadResources.primitivesToOutline.length > 0) {
-    var toOutline = loadResources.primitivesToOutline.dequeue();
-
-    var mesh = gltf.meshes[toOutline.mesh];
-    if (mesh === undefined) {
-      continue;
-    }
-
-    var primitive = mesh.primitives[toOutline.primitive];
-    if (primitive === undefined) {
-      continue;
-    }
-
-    var vertexNumberingScope = getVertexNumberingScope(model, primitive);
-    if (vertexNumberingScope === undefined) {
-      continue;
-    }
-
-    if (vertexNumberingScopes.indexOf(vertexNumberingScope) < 0) {
-      vertexNumberingScopes.push(vertexNumberingScope);
-    }
-
-    // Add the outline to this primitive
-    addOutline(model, context, toOutline, vertexNumberingScope);
-  }
 
   // Update all relevant bufferViews to include the duplicate vertices that are
   // needed for outlining.
@@ -230,13 +136,17 @@ ModelOutlineLoader.createTexture = function (model, context) {
   return texture;
 };
 
-function addOutline(model, context, toOutline, vertexNumberingScope) {
+function addOutline(
+  model,
+  context,
+  meshId,
+  primitiveId,
+  edgeIndicesAccessorId,
+  vertexNumberingScope
+) {
   var vertexCopies = vertexNumberingScope.vertexCopies;
   var extraVertices = vertexNumberingScope.extraVertices;
   var outlineCoordinates = vertexNumberingScope.outlineCoordinates;
-
-  var meshId = toOutline.mesh;
-  var primitiveId = toOutline.primitive;
 
   var gltf = model.gltf;
   var mesh = gltf.meshes[meshId];
@@ -265,7 +175,7 @@ function addOutline(model, context, toOutline, vertexNumberingScope) {
   var triangleIndexAccessorGltf = accessors[primitive.indices];
   var triangleIndexBufferViewGltf =
     bufferViews[triangleIndexAccessorGltf.bufferView];
-  var edgeIndexAccessorGltf = accessors[toOutline.edgeIndicesAccessorId];
+  var edgeIndexAccessorGltf = accessors[edgeIndicesAccessorId];
   var edgeIndexBufferViewGltf = bufferViews[edgeIndexAccessorGltf.bufferView];
 
   var loadResources = model._loadResources;

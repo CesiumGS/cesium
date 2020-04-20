@@ -5235,9 +5235,6 @@ Model.prototype.update = function (frameState) {
         // Start draco decoding
         DracoLoader.parse(this, context);
 
-        // Start outline generation
-        ModelOutlineLoader.parse(this, context);
-
         loadResources.initialized = true;
       }
 
@@ -5256,15 +5253,11 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed = true;
       }
 
-      if (loadResources.resourcesParsed && !loadResources.finishedOutlining()) {
-        ModelOutlineLoader.outlinePrimitives(this, context);
-      }
-
       if (
-        //loadResources.finishedOutlining() &&
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
+        ModelOutlineLoader.outlinePrimitives(this, context);
         createResources(this, frameState);
       }
     }

@@ -35,9 +35,6 @@ function ModelLoadResources() {
   this.activeDecodingTasks = 0;
   this.pendingDecodingCache = false;
 
-  this.primitivesToOutline = new Queue();
-  this.activeOutlineTasks = 0;
-
   this.skinnedNodesIds = [];
 }
 
@@ -101,14 +98,6 @@ ModelLoadResources.prototype.finishedDecoding = function () {
     this.primitivesToDecode.length === 0 &&
     this.activeDecodingTasks === 0 &&
     !this.pendingDecodingCache
-  );
-};
-
-ModelLoadResources.prototype.finishedOutlining = function () {
-  return (
-    this.finishedDecoding() &&
-    this.primitivesToOutline.length === 0 &&
-    this.activeOutlineTasks === 0
   );
 };
 
