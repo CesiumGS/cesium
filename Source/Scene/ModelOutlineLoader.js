@@ -244,7 +244,7 @@ function addOutline(model, context, toOutline, vertexNumberingScope) {
   var accessors = gltf.accessors;
   var bufferViews = gltf.bufferViews;
 
-  // Find the number of vertices in this primitive by looking
+  // Find the number of vertices in this primitive by looking at
   // the first attribute. Others are required to be the same.
   var numVertices;
   for (var semantic in primitive.attributes) {
