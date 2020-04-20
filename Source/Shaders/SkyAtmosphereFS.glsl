@@ -33,62 +33,48 @@
  // Code:  http://sponeil.net/
  // GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
+varying vec3 v_outerPositionWC;
+
+#ifndef GLOBE_TRANSLUCENT
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-varying vec3 v_toCamera;
-varying vec3 v_positionWC;
-
-void calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor)
-{
-    // Extra normalize added for Android
-    float cosAngle = dot(lightDirection, normalize(toCamera)) / length(toCamera);
-    float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
-    float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
-
-    vec3 rgb = rayleighPhase * rayleighColor + miePhase * mieColor;
-
-    if (rgb.b > 1000000.0)
-    {
-        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
-        gl_FragColor = vec4(0.0);
-        return;
-    }
-
-    const float exposure = 2.0;
-    vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
-
-#ifndef HDR
-    rgb = rgbExposure;
 #endif
-
-#ifdef COLOR_CORRECT
-    // Convert rgb color to hsb
-    vec3 hsb = czm_RGBToHSB(rgb);
-    // Perform hsb shift
-    hsb.x += u_hsbShift.x; // hue
-    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
-    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
-    // Convert shifted hsb back to rgb
-    rgb = czm_HSBToRGB(hsb);
-#endif
-
-    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-
-    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((outerRadius - length(positionWC)) / (outerRadius - innerRadius), 0.0, 1.0);
-
-    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
-    atmosphereAlpha *= pow(nightAlpha, 0.5);
-
-    gl_FragColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
-}
 
 void main (void)
 {
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-    vec3 lightDirection = getLightDirection(lightEnum, v_positionWC);
-    calculateFinalColor(v_positionWC, v_toCamera, lightDirection, v_rayleighColor, v_mieColor);
+#ifdef GLOBE_TRANSLUCENT
+    vec3 outerPositionWC = v_outerPositionWC;
+    vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
+    vec3 directionEC = czm_viewRotation * directionWC;
+    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
+    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii);
+    bool intersectsEllipsoid = raySegment.start >= 0.0;
+
+    vec3 startPositionWC = czm_viewerPositionWC;
+    if (intersectsEllipsoid)
+    {
+        startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
+    }
+
+    vec3 toCamera = startPositionWC - outerPositionWC;
+    vec3 lightDirection = getLightDirection(startPositionWC);
+
+    vec3 mieColor;
+    vec3 rayleighColor;
+
+    calculateMieColorAndRayleighColor(
+        startPositionWC,
+        outerPositionWC,
+        lightDirection,
+        intersectsEllipsoid,
+        mieColor,
+        rayleighColor
+    );
+
+    gl_FragColor = calculateFinalColor(startPositionWC, toCamera, lightDirection, rayleighColor, mieColor);
+#else
+    vec3 toCamera = czm_viewerPositionWC - v_outerPositionWC;
+    vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+    gl_FragColor = calculateFinalColor(czm_viewerPositionWC, toCamera, lightDirection, v_rayleighColor, v_mieColor);
+#endif
 }

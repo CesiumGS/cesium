@@ -24,7 +24,6 @@ import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
-import GlobeTranslucency from "./GlobeTranslucency.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
@@ -1161,7 +1160,6 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.frontFaceAlphaByDistance = this.frontFaceAlphaByDistanceFinal;
     tileProvider.backFaceAlphaByDistance = this.backFaceAlphaByDistanceFinal;
-    tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
     tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
     tileProvider.undergroundColor = this.undergroundColor;
     tileProvider.undergroundColorByDistance = this.undergroundColorByDistance;

@@ -35,39 +35,25 @@
 
 attribute vec4 position;
 
+varying vec3 v_outerPositionWC;
+
+#ifndef GLOBE_TRANSLUCENT
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-varying vec3 v_toCamera;
-varying vec3 v_positionWC;
+#endif
 
 void main(void)
 {
-    vec3 outerPosition = position.xyz;
-    vec3 directionWC = normalize(outerPosition - czm_viewerPositionWC);
-    vec3 directionEC = (czm_view * vec4(directionWC, 0.0)).xyz;
-    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, czm_view[3].xyz, czm_ellipsoidInverseRadii);
-    bool intersectsEllipsoid = raySegment.start >= 0.0;
-
-    vec3 positionWC = czm_viewerPositionWC;
-    if (intersectsEllipsoid)
-    {
-        positionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
-    }
-
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
-    vec3 lightDirection = getLightDirection(lightEnum, positionWC);
-
+#ifndef GLOBE_TRANSLUCENT
     calculateMieColorAndRayleighColor(
-        positionWC,
-        outerPosition,
-        lightDirection,
-        intersectsEllipsoid,
+        czm_viewerPositionWC,
+        position.xyz,
+        getLightDirection(czm_viewerPositionWC),
+        false,
         v_mieColor,
         v_rayleighColor
     );
-
-    v_toCamera = positionWC - outerPosition;
-    v_positionWC = positionWC;
+#endif
+    v_outerPositionWC = position.xyz;
     gl_Position = czm_modelViewProjection * position;
 }

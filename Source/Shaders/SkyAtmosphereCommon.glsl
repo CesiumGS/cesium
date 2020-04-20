@@ -64,8 +64,9 @@ float scale(float cosAngle)
     return rayleighScaleDepth  * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
 }
 
-vec3 getLightDirection(float lightEnum, vec3 positionWC)
+vec3 getLightDirection(vec3 positionWC)
 {
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirection =
         positionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
@@ -155,4 +156,51 @@ void calculateMieColorAndRayleighColor(vec3 positionWC, vec3 outerPosition, vec3
     // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
     mieColor = frontColor * KmESun;
     rayleighColor = frontColor * (InvWavelength * KrESun);
+}
+
+vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor)
+{
+    // Extra normalize added for Android
+    float cosAngle = dot(lightDirection, normalize(toCamera)) / length(toCamera);
+    float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
+    float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
+
+    vec3 rgb = rayleighPhase * rayleighColor + miePhase * mieColor;
+
+    if (rgb.b > 1000000.0)
+    {
+        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
+        return vec4(0.0);
+    }
+
+    const float exposure = 2.0;
+    vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
+
+#ifndef HDR
+    rgb = rgbExposure;
+#endif
+
+#ifdef COLOR_CORRECT
+    // Convert rgb color to hsb
+    vec3 hsb = czm_RGBToHSB(rgb);
+    // Perform hsb shift
+    hsb.x += u_hsbShift.x; // hue
+    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
+    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
+    // Convert shifted hsb back to rgb
+    rgb = czm_HSBToRGB(hsb);
+#endif
+
+    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+
+    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
+    float atmosphereAlpha = clamp((outerRadius - length(positionWC)) / (outerRadius - innerRadius), 0.0, 1.0);
+
+    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
+    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
+    atmosphereAlpha *= pow(nightAlpha, 0.5);
+
+    return vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }
