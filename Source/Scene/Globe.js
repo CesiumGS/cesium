@@ -108,7 +108,7 @@ function Globe(ellipsoid) {
   this.undergroundColorByDistance = new NearFarScalar(
     ellipsoid.maximumRadius / 1000.0,
     0.0,
-    ellipsoid.maximumRadius / 10.0,
+    ellipsoid.maximumRadius / 5.0,
     1.0
   );
 
