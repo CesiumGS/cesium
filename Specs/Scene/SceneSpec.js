@@ -2174,6 +2174,41 @@ describe(
           scene.destroyForSpecs();
         });
     });
+
+    it("does not occlude primitives when the globe is translucent", function () {
+      var scene = createScene();
+      var globe = new Globe();
+      scene.globe = globe;
+
+      // A primitive at height -25000.0 is less than the minor axis for WGS84 and will get culled unless the globe is translucent
+      var center = Cartesian3.fromRadians(
+        2.3929070618374535,
+        -0.07149851443375346,
+        -25000.0,
+        globe.ellipsoid
+      );
+      var radius = 10.0;
+
+      var command = new DrawCommand({
+        shaderProgram: simpleShaderProgram,
+        renderState: simpleRenderState,
+        pass: Pass.OPAQUE,
+        boundingVolume: new BoundingSphere(center, radius),
+      });
+
+      scene.primitives.add(new CommandMockPrimitive(command));
+
+      spyOn(DrawCommand.prototype, "execute"); // Don't execute any commands, just watch what gets added to the frustum commands list
+
+      scene.renderForSpecs();
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
+
+      scene.globe.translucencyEnabled = true;
+      scene.globe.frontFaceAlpha = 0.5;
+
+      scene.renderForSpecs();
+      expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
+    });
   },
   "WebGL"
 );

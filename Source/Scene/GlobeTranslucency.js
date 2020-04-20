@@ -280,9 +280,12 @@ function getBackFaceAlphaMode(translucencyMode) {
   return translucencyMode & TranslucencyMode.BACK_MASK;
 }
 
+var scratchArray = new Array(2);
+
 function getTranslucencyModeFromGlobe(globe) {
-  var frontFaceAlphaByDistance = globe.frontFaceAlphaByDistanceFinal;
-  var backFaceAlphaByDistance = globe.backFaceAlphaByDistanceFinal;
+  var alphaByDistanceFinal = globe.getAlphaByDistanceFinal(scratchArray);
+  var frontFaceAlphaByDistance = alphaByDistanceFinal[0];
+  var backFaceAlphaByDistance = alphaByDistanceFinal[1];
   return getTranslucencyMode(
     frontFaceAlphaByDistance,
     backFaceAlphaByDistance,

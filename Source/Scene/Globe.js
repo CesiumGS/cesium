@@ -66,18 +66,10 @@ function Globe(ellipsoid) {
   this._translucencyEnabled = false;
   this._frontFaceAlpha = 1.0;
   this._frontFaceAlphaByDistance = undefined;
+  this._frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
   this._backFaceAlpha = 1.0;
   this._backFaceAlphaByDistance = undefined;
-
-  /**
-   * @private
-   */
-  this.frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
-
-  /**
-   * @private
-   */
-  this.backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+  this._backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
   /**
    * The color to render the back side of the globe when the camera is underground or the globe is translucent,
@@ -717,12 +709,23 @@ Object.defineProperties(Globe.prototype, {
   },
 });
 
+/**
+ * @private
+ */
+Globe.prototype.getAlphaByDistanceFinal = function (results) {
+  updateFrontFaceAlphaByDistance(this);
+  updateBackFaceAlphaByDistance(this);
+  results[0] = this._frontFaceAlphaByDistanceFinal;
+  results[1] = this._backFaceAlphaByDistanceFinal;
+  return results;
+};
+
 function updateFrontFaceAlphaByDistance(globe) {
   updateTranslucencyByDistance(
     globe._translucencyEnabled,
     globe._frontFaceAlpha,
     globe._frontFaceAlphaByDistance,
-    globe.frontFaceAlphaByDistanceFinal
+    globe._frontFaceAlphaByDistanceFinal
   );
 }
 
@@ -731,7 +734,7 @@ function updateBackFaceAlphaByDistance(globe) {
     globe._translucencyEnabled,
     globe._backFaceAlpha,
     globe._backFaceAlphaByDistance,
-    globe.backFaceAlphaByDistanceFinal
+    globe._backFaceAlphaByDistanceFinal
   );
 }
 
@@ -1119,9 +1122,6 @@ Globe.prototype.beginFrame = function (frameState) {
     }
   }
 
-  updateFrontFaceAlphaByDistance(this);
-  updateBackFaceAlphaByDistance(this);
-
   var pass = frameState.passes;
   var mode = frameState.mode;
 
@@ -1158,8 +1158,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
-    tileProvider.frontFaceAlphaByDistance = this.frontFaceAlphaByDistanceFinal;
-    tileProvider.backFaceAlphaByDistance = this.backFaceAlphaByDistanceFinal;
+    tileProvider.frontFaceAlphaByDistance = this._frontFaceAlphaByDistanceFinal;
+    tileProvider.backFaceAlphaByDistance = this._backFaceAlphaByDistanceFinal;
     tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
     tileProvider.undergroundColor = this.undergroundColor;
     tileProvider.undergroundColorByDistance = this.undergroundColorByDistance;
