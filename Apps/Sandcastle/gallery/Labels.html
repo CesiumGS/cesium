@@ -165,6 +165,40 @@
           });
         }
 
+        function animateLabel() {
+          Sandcastle.declare(animateLabel);
+          var entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            label: {
+              text: "Philadelphia",
+            },
+          });
+
+          var outlineDelta = 0.1;
+          var fontDelta = -1.0;
+          var fontSize = 20.0;
+          var minFontSize = 1.0;
+          var maxFontSize = 48.0;
+
+          labelListenerCallback = viewer.scene.preUpdate.addEventListener(
+            function (scene, time) {
+              entity.label.outlineWidth += outlineDelta;
+              if (
+                entity.label.outlineWidth >= 4.0 ||
+                entity.label.outlineWidth <= 0.0
+              ) {
+                outlineDelta *= -1.0;
+              }
+
+              fontSize += fontDelta;
+              if (fontSize >= maxFontSize || fontSize <= minFontSize) {
+                fontDelta *= -1.0;
+              }
+              entity.label.font = fontSize + "px Calibri";
+            }
+          );
+        }
+
         Sandcastle.addToolbarMenu([
           {
             text: "Add label",
@@ -230,39 +264,6 @@
             labelListenerCallback();
           }
         };
-
-        function animateLabel() {
-          var entity = viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
-            label: {
-              text: "Philadelphia",
-            },
-          });
-
-          var outlineDelta = 0.1;
-          var fontDelta = -1.0;
-          var fontSize = 20.0;
-          var minFontSize = 1.0;
-          var maxFontSize = 48.0;
-
-          labelListenerCallback = viewer.scene.preUpdate.addEventListener(
-            function (scene, time) {
-              entity.label.outlineWidth += outlineDelta;
-              if (
-                entity.label.outlineWidth >= 4.0 ||
-                entity.label.outlineWidth <= 0.0
-              ) {
-                outlineDelta *= -1.0;
-              }
-
-              fontSize += fontDelta;
-              if (fontSize >= maxFontSize || fontSize <= minFontSize) {
-                fontDelta *= -1.0;
-              }
-              entity.label.font = fontSize + "px Calibri";
-            }
-          );
-        }
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
