@@ -1,6 +1,12 @@
 import { defined, RuntimeError } from "../../Source/Cesium.js";
 import findAccessorMinMax from "../../Source/ThirdParty/GltfPipeline/findAccessorMinMax.js";
 
+/**
+ * A fluent interface for programmatically building a glTF.
+ * @alias GltfBuilder
+ * @constructor
+ * @private
+ */
 function GltfBuilder() {
   this.gltf = {
     asset: {
@@ -29,6 +35,11 @@ function GltfBuilder() {
   this.bufferBuilders = [];
 }
 
+/**
+ * Creates a new buffer.
+ * @param {string} [name] The name of the buffer.
+ * @returns {GltfBufferBuilder}
+ */
 GltfBuilder.prototype.buffer = function (name) {
   var index =
     this.gltf.buffers.push({
@@ -40,6 +51,11 @@ GltfBuilder.prototype.buffer = function (name) {
   return bufferBuilder;
 };
 
+/**
+ * Creates a new mesh.
+ * @param {string} [name] The name of the mesh.
+ * @returns {GltfMeshBuilder}
+ */
 GltfBuilder.prototype.mesh = function (name) {
   var index =
     this.gltf.meshes.push({
@@ -51,6 +67,11 @@ GltfBuilder.prototype.mesh = function (name) {
   return meshBuilder;
 };
 
+/**
+ * Creates a new material.
+ * @param {string} [name] The name of the material.
+ * @returns {GltfMaterialBuilder}
+ */
 GltfBuilder.prototype.material = function (name) {
   var index =
     this.gltf.materials.push({
@@ -60,97 +81,15 @@ GltfBuilder.prototype.material = function (name) {
   return materialBuilder;
 };
 
-function GltfMaterialBuilder(gltfBuilder, materialIndex) {
-  this.gltfBuilder = gltfBuilder;
-  this.materialIndex = materialIndex;
-  this.material = this.gltfBuilder.gltf.materials[materialIndex];
-}
-
-GltfMaterialBuilder.prototype.json = function (json) {
-  for (var property in json) {
-    if (!json.hasOwnProperty(property)) {
-      continue;
-    }
-
-    this.material[property] = json[property];
-  }
-};
-
-function GltfMeshBuilder(gltfBuilder, meshIndex) {
-  this.gltfBuilder = gltfBuilder;
-  this.meshIndex = meshIndex;
-  this.mesh = gltfBuilder.gltf.meshes[this.meshIndex];
-}
-
-GltfMeshBuilder.prototype.primitive = function (name) {
-  var index =
-    this.mesh.primitives.push({
-      name: name,
-      attributes: {},
-    }) - 1;
-
-  var meshBuilder = new GltfPrimitiveBuilder(this, index);
-  return meshBuilder;
-};
-
-function GltfPrimitiveBuilder(gltfMeshBuilder, primitiveIndex) {
-  this.gltfMeshBuilder = gltfMeshBuilder;
-  this.primitiveIndex = primitiveIndex;
-  this.primitive = this.gltfMeshBuilder.mesh.primitives[this.primitiveIndex];
-}
-
-GltfPrimitiveBuilder.prototype.attribute = function (semantic, accessorName) {
-  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
-  var accessorId = findAccessorByName(gltf, accessorName);
-  if (accessorId < 0) {
-    throw new RuntimeError("Accessor named " + accessorName + " not found.");
-  }
-
-  this.primitive.attributes[semantic] = accessorId;
-  return this;
-};
-
-GltfPrimitiveBuilder.prototype.indices = function (accessorName) {
-  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
-  var accessorId = findAccessorByName(gltf, accessorName);
-  if (accessorId < 0) {
-    throw new RuntimeError("Accessor named " + accessorName + " not found.");
-  }
-
-  this.primitive.indices = accessorId;
-  return this;
-};
-
-GltfPrimitiveBuilder.prototype.triangles = function () {
-  this.primitive.mode = 4;
-  return this;
-};
-
-GltfPrimitiveBuilder.prototype.material = function (materialName) {
-  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
-
-  for (var i = 0; i < gltf.materials.length; ++i) {
-    if (gltf.materials[i].name === materialName) {
-      this.primitive.material = i;
-      return this;
-    }
-  }
-
-  throw new RuntimeError("Material named " + materialName + " not found.");
-};
-
-function findAccessorByName(gltf, accessorName) {
-  var accessors = gltf.accessors;
-
-  for (var i = 0; i < accessors.length; ++i) {
-    if (accessors[i].name === accessorName) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
+/**
+ * Gets the built glTF JSON from this builder. Calling this a second
+ * time will cause the glTF returned in the first call to be invalidated.
+ * Specifically, the `uri` properties of its buffers will no longer be
+ * resolvable.
+ *
+ * After calling this method, be sure to call {@link GltfBuilder#destroy}
+ * when done with the glTF, to a void leaking buffer memory.
+ */
 GltfBuilder.prototype.toGltf = function () {
   for (var i = 0; i < this.bufferBuilders.length; ++i) {
     var bufferBuilder = this.bufferBuilders[i];
@@ -178,6 +117,11 @@ GltfBuilder.prototype.toGltf = function () {
     }
 
     bufferBuilder.buffer.byteLength = byteLength;
+
+    if (bufferBuilder.buffer.uri) {
+      URL.revokeObjectURL(bufferBuilder.buffer.uri);
+    }
+
     bufferBuilder.buffer.uri = URL.createObjectURL(new Blob([buffer]));
 
     bufferBuilder.buffer.extras = {
@@ -201,12 +145,151 @@ GltfBuilder.prototype.toGltf = function () {
   return this.gltf;
 };
 
+/**
+ * Frees memory allocated for buffers in {@link GltfBuilder@toGltf}.
+ */
 GltfBuilder.prototype.destroy = function () {
   this.bufferBuilders.forEach(function (bufferBuilder) {
     URL.revokeObjectURL(bufferBuilder.buffer.uri);
+    bufferBuilder.buffer.uri = undefined;
   });
 };
 
+/**
+ * A fluent interface for programmatically building a glTF material.
+ * @param {GltfBuilder} gltfBuilder The glTF builder.
+ * @param {number} materialIndex The index of this material within the glTF.
+ * @private
+ */
+function GltfMaterialBuilder(gltfBuilder, materialIndex) {
+  this.gltfBuilder = gltfBuilder;
+  this.materialIndex = materialIndex;
+  this.material = this.gltfBuilder.gltf.materials[materialIndex];
+}
+
+/**
+ * Defines the material using JSON.
+ * @param {*} json The JSON definition of the material.
+ * @returns {GltfMaterialBuilder}
+ */
+GltfMaterialBuilder.prototype.json = function (json) {
+  for (var property in json) {
+    if (!json.hasOwnProperty(property)) {
+      continue;
+    }
+
+    this.material[property] = json[property];
+  }
+
+  return this;
+};
+
+/**
+ * A fluent interface for building a glTF mesh.
+ * @param {GltfBuilder} gltfBuilder The glTF builder.
+ * @param {number} meshIndex The index of this mesh within the glTF.
+ * @private
+ */
+function GltfMeshBuilder(gltfBuilder, meshIndex) {
+  this.gltfBuilder = gltfBuilder;
+  this.meshIndex = meshIndex;
+  this.mesh = gltfBuilder.gltf.meshes[this.meshIndex];
+}
+
+/**
+ * Creates a new primitive within this mesh.
+ * @param {string} [name] The name of the primitive.
+ * @returns {GltfPrimitiveBuilder}
+ */
+GltfMeshBuilder.prototype.primitive = function (name) {
+  var index =
+    this.mesh.primitives.push({
+      name: name,
+      attributes: {},
+    }) - 1;
+
+  var meshBuilder = new GltfPrimitiveBuilder(this, index);
+  return meshBuilder;
+};
+
+/**
+ * A fluent interface for building a glTF primitive.
+ * @param {GltfMeshBuilder} gltfMeshBuilder The mesh builder.
+ * @param {number} primitiveIndex The index of this primitive within the mesh.
+ * @private
+ */
+function GltfPrimitiveBuilder(gltfMeshBuilder, primitiveIndex) {
+  this.gltfMeshBuilder = gltfMeshBuilder;
+  this.primitiveIndex = primitiveIndex;
+  this.primitive = this.gltfMeshBuilder.mesh.primitives[this.primitiveIndex];
+}
+
+/**
+ * Adds a new attribute to the primitive.
+ * @param {string} semantic The semantic of the attribute.
+ * @param {string} accessorName The name of the accessor referenced by this attribute.
+ * @returns {GltfPrimitiveBuilder}
+ */
+GltfPrimitiveBuilder.prototype.attribute = function (semantic, accessorName) {
+  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
+  var accessorId = findAccessorByName(gltf, accessorName);
+  if (accessorId < 0) {
+    throw new RuntimeError("Accessor named " + accessorName + " not found.");
+  }
+
+  this.primitive.attributes[semantic] = accessorId;
+  return this;
+};
+
+/**
+ * Sets the name of the accessor providing this primitive's indices.
+ * @param {string} accessorName The name of the accessor providing the indices.
+ * @returns {GltfPrimitiveBuilder}
+ */
+GltfPrimitiveBuilder.prototype.indices = function (accessorName) {
+  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
+  var accessorId = findAccessorByName(gltf, accessorName);
+  if (accessorId < 0) {
+    throw new RuntimeError("Accessor named " + accessorName + " not found.");
+  }
+
+  this.primitive.indices = accessorId;
+  return this;
+};
+
+/**
+ * Indicates that this primitive is TRIANGLES.
+ * @returns {GltfPrimitiveBuilder}
+ */
+GltfPrimitiveBuilder.prototype.triangles = function () {
+  this.primitive.mode = 4;
+  return this;
+};
+
+/**
+ * Sets the material applied to this primitive.
+ * @param {string} materialName The name of the material.
+ * @returns {GltfPrimitiveBuilder}
+ */
+GltfPrimitiveBuilder.prototype.material = function (materialName) {
+  var gltf = this.gltfMeshBuilder.gltfBuilder.gltf;
+
+  for (var i = 0; i < gltf.materials.length; ++i) {
+    if (gltf.materials[i].name === materialName) {
+      this.primitive.material = i;
+      return this;
+    }
+  }
+
+  throw new RuntimeError("Material named " + materialName + " not found.");
+};
+
+/**
+ * A fluent interface for building a glTF buffer.
+ * @param {GltfBuilder} gltfBuilder The glTF builder.
+ * @param {number} bufferIndex The index of this buffer in the glTF.
+ * @private
+ */
 function GltfBufferBuilder(gltfBuilder, bufferIndex) {
   this.gltfBuilder = gltfBuilder;
   this.bufferIndex = bufferIndex;
@@ -214,6 +297,11 @@ function GltfBufferBuilder(gltfBuilder, bufferIndex) {
   this.viewBuilders = [];
 }
 
+/**
+ * Creates a new vertex bufferView in this buffer.
+ * @param {string} name The name of the bufferView.
+ * @returns {GltfBufferViewBuilder}
+ */
 GltfBufferBuilder.prototype.vertexBuffer = function (name) {
   var index =
     this.gltfBuilder.gltf.bufferViews.push({
@@ -227,6 +315,11 @@ GltfBufferBuilder.prototype.vertexBuffer = function (name) {
   return viewBuilder;
 };
 
+/**
+ * Creates a new index bufferView in this buffer.
+ * @param {string} name The name of the bufferView.
+ * @returns {GltfBufferViewBuilder}
+ */
 GltfBufferBuilder.prototype.indexBuffer = function (name) {
   var index =
     this.gltfBuilder.gltf.bufferViews.push({
@@ -240,6 +333,13 @@ GltfBufferBuilder.prototype.indexBuffer = function (name) {
   return viewBuilder;
 };
 
+/**
+ * A fluent interface for building a glTF bufferView.
+ * @param {GltfBufferBuilder} bufferBuilder The buffer builder.
+ * @param {GltfBufferViewBuilder} bufferViewIndex The bufferView builder.
+ * @param {number} componentType The glTF `componentType` of this bufferView.
+ * @private
+ */
 function GltfBufferViewBuilder(bufferBuilder, bufferViewIndex, componentType) {
   this.bufferBuilder = bufferBuilder;
   this.bufferViewIndex = bufferViewIndex;
@@ -253,6 +353,9 @@ function GltfBufferViewBuilder(bufferBuilder, bufferViewIndex, componentType) {
 }
 
 Object.defineProperties(GltfBufferViewBuilder.prototype, {
+  /**
+   * Gets the number of bytes in each numeric element of this bufferView.
+   */
   elementByteLength: {
     get: function () {
       return this.componentType === 5126 ? 4 : 2;
@@ -260,6 +363,11 @@ Object.defineProperties(GltfBufferViewBuilder.prototype, {
   },
 });
 
+/**
+ * Defines a `VEC3` element in this bufferView.
+ * @param {string} name The name of the accessor for this element.
+ * @returns {GltfBufferViewBuilder}
+ */
 GltfBufferViewBuilder.prototype.vec3 = function (name) {
   var gltf = this.bufferBuilder.gltfBuilder.gltf;
   gltf.accessors.push({
@@ -285,6 +393,11 @@ GltfBufferViewBuilder.prototype.vec3 = function (name) {
   return this;
 };
 
+/**
+ * Defines a `SCALAR` element in this bufferView.
+ * @param {string} name The name of the accessor for this element.
+ * @returns {GltfBufferViewBuilder}
+ */
 GltfBufferViewBuilder.prototype.scalar = function (name) {
   var gltf = this.bufferBuilder.gltfBuilder.gltf;
   gltf.accessors.push({
@@ -310,6 +423,13 @@ GltfBufferViewBuilder.prototype.scalar = function (name) {
   return this;
 };
 
+/**
+ * Provides this bufferView's data. All elements should be defined with
+ * {@link GltfBufferViewBuilder#vec3} and {@link GltfBufferViewBuilder#scalar}
+ * before calling this method.
+ * @param {Array|Float32Array|Uint16Array|Uint32Array} data The data.
+ * @returns {GltfBufferViewBuilder}
+ */
 GltfBufferViewBuilder.prototype.data = function (data) {
   this.bufferView.byteLength = data.length * this.elementByteLength;
   this._data = data;
@@ -326,6 +446,20 @@ GltfBufferViewBuilder.prototype.data = function (data) {
     .forEach(function (accessor) {
       accessor.count = count;
     });
+
+  return this;
 };
+
+function findAccessorByName(gltf, accessorName) {
+  var accessors = gltf.accessors;
+
+  for (var i = 0; i < accessors.length; ++i) {
+    if (accessors[i].name === accessorName) {
+      return i;
+    }
+  }
+
+  return -1;
+}
 
 export default GltfBuilder;
