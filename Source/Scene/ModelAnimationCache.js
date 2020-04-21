@@ -6,6 +6,7 @@ import LinearSpline from "../Core/LinearSpline.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Quaternion from "../Core/Quaternion.js";
 import QuaternionSpline from "../Core/QuaternionSpline.js";
+import Spline from "../Core/Spline.js";
 import WebGLConstants from "../Core/WebGLConstants.js";
 import WeightSpline from "../Core/WeightSpline.js";
 import getAccessorByteStride from "../ThirdParty/GltfPipeline/getAccessorByteStride.js";
@@ -107,6 +108,39 @@ ConstantSpline.prototype.clampTime = function (time) {
   return 0.0;
 };
 
+function SteppedSpline(backingSpline) {
+  this._spline = backingSpline;
+  this._lastTimeIndex = 0;
+}
+SteppedSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+SteppedSpline.prototype.evaluate = function (time, result) {
+  var i = (this._lastTimeIndex = this.findTimeInterval(
+    time,
+    this._lastTimeIndex
+  ));
+  var times = this._spline.times;
+  var steppedTime = times[i + 1] === time ? times[i + 1] : times[i];
+  return this._spline.evaluate(steppedTime, result);
+};
+Object.defineProperties(SteppedSpline.prototype, {
+  times: {
+    get: function () {
+      return this._spline.times;
+    },
+  },
+  points: {
+    get: function () {
+      return this._spline.points;
+    },
+  },
+});
+SteppedSpline.prototype.wrapTime = function (time) {
+  return this._spline.wrapTime(time);
+};
+SteppedSpline.prototype.clampTime = function (time) {
+  return this._spline.clampTime(time);
+};
+
 ModelAnimationCache.getAnimationSpline = function (
   model,
   animationName,
@@ -126,7 +160,10 @@ ModelAnimationCache.getAnimationSpline = function (
 
     if (times.length === 1 && controlPoints.length === 1) {
       spline = new ConstantSpline(controlPoints[0]);
-    } else if (sampler.interpolation === "LINEAR") {
+    } else if (
+      sampler.interpolation === "LINEAR" ||
+      sampler.interpolation === "STEP"
+    ) {
       if (path === "translation" || path === "scale") {
         spline = new LinearSpline({
           times: times,
@@ -142,6 +179,10 @@ ModelAnimationCache.getAnimationSpline = function (
           times: times,
           weights: controlPoints,
         });
+      }
+
+      if (defined(spline) && sampler.interpolation === "STEP") {
+        spline = new SteppedSpline(spline);
       }
     }
 
