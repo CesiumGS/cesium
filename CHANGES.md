@@ -6,6 +6,8 @@
 
 - The property `Scene.sunColor` has been removed. Use `scene.light.color` and `scene.light.intensity` instead. [#8774](https://github.com/CesiumGS/cesium/pull/8774)
 
+- Removed `Cesium.isArray` (from file: `isArray.js`) using native `Array.isArray` instead. [#8779](https://github.com/CesiumGS/cesium/pull/8779)
+
 ##### Additions :tada:
 
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
