@@ -11,6 +11,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private
+ * @constructor
  */
 function createUniform(gl, activeUniform, uniformName, location) {
   switch (activeUniform.type) {
@@ -56,6 +57,7 @@ function createUniform(gl, activeUniform, uniformName, location) {
 
 /**
  * @private
+ * @constructor
  */
 function UniformFloat(gl, activeUniform, uniformName, location) {
   /**
@@ -82,6 +84,7 @@ UniformFloat.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformFloatVec2(gl, activeUniform, uniformName, location) {
   /**
@@ -109,6 +112,7 @@ UniformFloatVec2.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformFloatVec3(gl, activeUniform, uniformName, location) {
   /**
@@ -150,6 +154,7 @@ UniformFloatVec3.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformFloatVec4(gl, activeUniform, uniformName, location) {
   /**
@@ -191,6 +196,7 @@ UniformFloatVec4.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformSampler(gl, activeUniform, uniformName, location) {
   /**
@@ -225,6 +231,7 @@ UniformSampler.prototype._setSampler = function (textureUnitIndex) {
 
 /**
  * @private
+ * @constructor
  */
 function UniformInt(gl, activeUniform, uniformName, location) {
   /**
@@ -250,6 +257,7 @@ UniformInt.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 /**
  * @private
+ * @constructor
  */
 function UniformIntVec2(gl, activeUniform, uniformName, location) {
   /**
@@ -276,6 +284,7 @@ UniformIntVec2.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 /**
  * @private
+ * @constructor
  */
 function UniformIntVec3(gl, activeUniform, uniformName, location) {
   /**
@@ -302,6 +311,7 @@ UniformIntVec3.prototype.set = function () {
 ///////////////////////////////////////////////////////////////////////////
 /**
  * @private
+ * @constructor
  */
 function UniformIntVec4(gl, activeUniform, uniformName, location) {
   /**
@@ -330,6 +340,7 @@ UniformIntVec4.prototype.set = function () {
 var scratchUniformArray = new Float32Array(4);
 /**
  * @private
+ * @constructor
  */
 function UniformMat2(gl, activeUniform, uniformName, location) {
   /**
@@ -359,6 +370,7 @@ UniformMat2.prototype.set = function () {
 var scratchMat3Array = new Float32Array(9);
 /**
  * @private
+ * @constructor
  */
 function UniformMat3(gl, activeUniform, uniformName, location) {
   /**
@@ -388,6 +400,7 @@ UniformMat3.prototype.set = function () {
 var scratchMat4Array = new Float32Array(16);
 /**
  * @private
+ * @constructor
  */
 function UniformMat4(gl, activeUniform, uniformName, location) {
   /**
