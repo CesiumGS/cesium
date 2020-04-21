@@ -5,6 +5,7 @@
 ##### Breaking Changes :mega:
 
 - The property `Scene.sunColor` has been removed. Use `scene.light.color` and `scene.light.intensity` instead. [#8774](https://github.com/CesiumGS/cesium/pull/8774)
+- Removed `isArray`. Use the native `Array.isArray` function instead. [#8779](https://github.com/CesiumGS/cesium/pull/8779)
 
 ##### Additions :tada:
 
