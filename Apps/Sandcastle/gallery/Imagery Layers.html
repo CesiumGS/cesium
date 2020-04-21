@@ -1,59 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create imagery layers from multiple sources.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Tutorials, Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Create imagery layers from multiple sources."
+    />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Beginner, Tutorials, Showcases"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          imageryProvider: Cesium.createWorldImagery({
+            style: Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS,
+          }),
+          baseLayerPicker: false,
+        });
+
+        var layers = viewer.scene.imageryLayers;
+        var blackMarble = layers.addImageryProvider(
+          new Cesium.IonImageryProvider({ assetId: 3812 })
+        );
+
+        blackMarble.alpha = 0.5;
+
+        blackMarble.brightness = 2.0;
+
+        layers.addImageryProvider(
+          new Cesium.SingleTileImageryProvider({
+            url: "../images/Cesium_Logo_overlay.png",
+            rectangle: Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75),
+          })
+        ); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : Cesium.createWorldImagery({
-        style : Cesium.IonWorldImageryStyle.AERIAL_WITH_LABELS
-    }),
-    baseLayerPicker : false
-});
-
-var layers = viewer.scene.imageryLayers;
-var blackMarble = layers.addImageryProvider(new Cesium.IonImageryProvider({ assetId: 3812 }));
-
-blackMarble.alpha = 0.5;
-
-blackMarble.brightness = 2.0;
-
-layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-    url : '../images/Cesium_Logo_overlay.png',
-    rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)
-}));//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

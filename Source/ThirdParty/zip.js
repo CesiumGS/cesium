@@ -27,13 +27,9 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-define([
-        '../Core/buildModuleUrl',
-        '../Core/defineProperties'
-    ], function(
-        buildModuleUrl,
-        defineProperties) {
-    var tmp = {};
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+
+var tmp = {};
 
 (function(obj) {
 
@@ -808,7 +804,7 @@ define([
 
 	var workerScriptsPath;
 
-	defineProperties(obj.zip, {
+	Object.defineProperties(obj.zip, {
         'workerScriptsPath' : {
             get : function() {
                 if (typeof workerScriptsPath === 'undefined') {
@@ -821,5 +817,4 @@ define([
 
 })(tmp);
 
-    return tmp.zip;
-});
+    export default tmp.zip;

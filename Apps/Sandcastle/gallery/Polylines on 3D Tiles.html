@@ -1,126 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Display polylines on BIM and Photogrammetry 3D Tiles">
-    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Display polylines on BIM and Photogrammetry 3D Tiles"
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Power Plant design model provided by Bentley Systems
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+
+        var powerplant = scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(8564),
+            show: false,
+          })
+        );
+        var pipes = viewer.entities.add({
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray([
+              -76.36053390920833,
+              34.949935893493596,
+              -76.36055481641581,
+              34.94993589886988,
+              -76.36055477047704,
+              34.94992280693651,
+            ]),
+            width: 6,
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: Cesium.Color.YELLOW,
+              dashLength: 20.0,
+            }),
+            show: false,
+            clampToGround: true,
+            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+          },
+        });
+
+        var building = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(40866),
+          })
+        );
+        var route = viewer.entities.add({
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray([
+              -75.59604807301078,
+              40.03948512841901,
+              -75.59644577413066,
+              40.039316280505446,
+              -75.59584544997564,
+              40.03846271524258,
+              -75.59661425371488,
+              40.03814087821916,
+              -75.59664726332451,
+              40.03818297772907,
+            ]),
+            width: 6,
+            material: new Cesium.PolylineDashMaterialProperty({
+              color: Cesium.Color.YELLOW,
+            }),
+            show: false,
+            clampToGround: true,
+            classificationType: Cesium.ClassificationType.CESIUM_3D_TILE,
+          },
+        });
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "BIM",
+            onselect: function () {
+              building.show = false;
+              route.polyline.show = false;
+              powerplant.show = true;
+              pipes.polyline.show = true;
+              scene.camera.setView({
+                destination: new Cesium.Cartesian3(
+                  1234151.4883992162,
+                  -5086036.79436967,
+                  3633328.4278331124
+                ),
+                orientation: {
+                  heading: 5.593695742186853,
+                  pitch: -1.0786797635545216,
+                  roll: 6.27892466154778,
+                },
+              });
+            },
+          },
+          {
+            text: "Photogrammetry",
+            onselect: function () {
+              building.show = true;
+              route.polyline.show = true;
+              powerplant.show = false;
+              pipes.polyline.show = false;
+              scene.camera.setView({
+                destination: new Cesium.Cartesian3(
+                  1216596.5376729995,
+                  -4736445.416889214,
+                  4081406.990364228
+                ),
+                orientation: {
+                  heading: 5.153176564030707,
+                  pitch: -0.9701972964526693,
+                  roll: 6.277883257569513,
+                },
+              });
+            },
+          },
+        ]); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// Power Plant design model provided by Bentley Systems
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-
-var powerplant = scene.primitives.add(
-    new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(8564),
-        show: false
-    })
-);
-var pipes = viewer.entities.add({
-    polyline : {
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            -76.36053390920833, 34.949935893493596,
-            -76.36055481641581, 34.94993589886988,
-            -76.36055477047704, 34.94992280693651
-        ]),
-        width : 6,
-        material : new Cesium.PolylineDashMaterialProperty({
-            color : Cesium.Color.YELLOW,
-            dashLength: 20.0
-        }),
-        show: false,
-        clampToGround : true,
-        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
-    }
-});
-
-var building = viewer.scene.primitives.add(
-    new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(6074)
-    })
-);
-var route = viewer.entities.add({
-    polyline : {
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            -75.59604807301078, 40.03948512841901,
-            -75.59644577413066, 40.039316280505446,
-            -75.59584544997564, 40.03846271524258,
-            -75.59661425371488, 40.03814087821916,
-            -75.59664726332451, 40.03818297772907
-        ]),
-        width : 6,
-        material : new Cesium.PolylineDashMaterialProperty({
-            color : Cesium.Color.YELLOW
-        }),
-        show: false,
-        clampToGround : true,
-        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
-    }
-});
-
-Sandcastle.addToolbarMenu([{
-    text : 'BIM',
-    onselect : function() {
-        building.show = false;
-        route.polyline.show = false;
-        powerplant.show = true;
-        pipes.polyline.show = true;
-        scene.camera.setView({
-            destination: new Cesium.Cartesian3(1234151.4883992162, -5086036.79436967, 3633328.4278331124),
-            orientation: {
-                heading: 5.593695742186853,
-                pitch: -1.0786797635545216,
-                roll: 6.27892466154778
-            }
-        });
-    }
-}, {
-    text : 'Photogrammetry',
-    onselect : function() {
-        building.show = true;
-        route.polyline.show = true;
-        powerplant.show = false;
-        pipes.polyline.show = false;
-        scene.camera.setView({
-            destination: new Cesium.Cartesian3(1216596.5376729995, -4736445.416889214, 4081406.990364228),
-            orientation: {
-                heading: 5.153176564030707,
-                pitch: -0.9701972964526693,
-                roll: 6.277883257569513
-            }
-        });
-    }
-}]);//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

@@ -1,14 +1,17 @@
 /**
  * Computes the size of a pixel in meters at a distance from the eye.
-
+ * <p>
+ * Use this version when passing in a custom pixel ratio. For example, passing in 1.0 will return meters per native device pixel.
+ * </p>
  * @name czm_metersPerPixel
  * @glslFunction
  *
  * @param {vec3} positionEC The position to get the meters per pixel in eye coordinates.
+ * @param {float} pixelRatio The scaling factor from pixel space to coordinate space
  *
  * @returns {float} The meters per pixel at positionEC.
  */
-float czm_metersPerPixel(vec4 positionEC)
+float czm_metersPerPixel(vec4 positionEC, float pixelRatio)
 {
     float width = czm_viewport.z;
     float height = czm_viewport.w;
@@ -37,5 +40,22 @@ float czm_metersPerPixel(vec4 positionEC)
         pixelWidth = 2.0 * distanceToPixel * tanTheta / width;
     }
 
-    return max(pixelWidth, pixelHeight);
+    return max(pixelWidth, pixelHeight) * pixelRatio;
+}
+
+/**
+ * Computes the size of a pixel in meters at a distance from the eye.
+ * <p>
+ * Use this version when scaling by pixel ratio.
+ * </p>
+ * @name czm_metersPerPixel
+ * @glslFunction
+ *
+ * @param {vec3} positionEC The position to get the meters per pixel in eye coordinates.
+ *
+ * @returns {float} The meters per pixel at positionEC.
+ */
+float czm_metersPerPixel(vec4 positionEC)
+{
+    return czm_metersPerPixel(positionEC, czm_pixelRatio);
 }

@@ -1,174 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Pick from ray">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Pick from ray" />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+        scene.globe.depthTestAgainstTerrain = true;
+
+        if (!scene.pickPositionSupported) {
+          window.alert(
+            "This browser does not support pickPosition or getting position from pickFromRay."
+          );
         }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-scene.globe.depthTestAgainstTerrain = true;
 
-if (!scene.pickPositionSupported) {
-    console.log('This browser does not support pickPosition or getting position from pickFromRay.');
-}
+        var i;
+        var drillPick = false;
 
-var i;
-var drillPick = false;
+        Sandcastle.addToggleButton("Drill pick", false, function (checked) {
+          drillPick = checked;
+        });
 
-Sandcastle.addToggleButton('Drill pick', false, function(checked) {
-    drillPick = checked;
-});
+        var tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: "../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json",
+          })
+        );
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
-}));
+        tileset.style = new Cesium.Cesium3DTileStyle({
+          defines: {
+            alpha: "${id} % 2 === 0 ? 0.5 : 1.0",
+          },
+          color: "rgba(255, 255, 255, ${alpha})",
+        });
 
-tileset.style = new Cesium.Cesium3DTileStyle({
-    defines : {
-        alpha : '${id} % 2 === 0 ? 0.5 : 1.0'
-    },
-    color : 'rgba(255, 255, 255, ${alpha})'
-});
+        viewer.zoomTo(tileset);
 
-viewer.zoomTo(tileset);
+        var blueCartographic = new Cesium.Cartographic(
+          -1.3196863177294136,
+          0.6988508714746624,
+          30.0
+        );
+        var redCartographic = new Cesium.Cartographic(
+          -1.319671841889412,
+          0.6989153500784591,
+          30.0
+        );
 
-var blueCartographic = new Cesium.Cartographic(-1.3196863177294136, 0.6988508714746624, 30.0);
-var redCartographic = new Cesium.Cartographic(-1.319671841889412, 0.6989153500784591, 30.0);
+        var blueSphere = viewer.entities.add({
+          position: Cesium.Cartographic.toCartesian(blueCartographic),
+          ellipsoid: {
+            radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+            material: Cesium.Color.BLUE,
+          },
+        });
 
-var blueSphere = viewer.entities.add({
-    position : Cesium.Cartographic.toCartesian(blueCartographic),
-    ellipsoid : {
-        radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
-        material : Cesium.Color.BLUE
-    }
-});
+        var redSphere = viewer.entities.add({
+          position: Cesium.Cartographic.toCartesian(redCartographic),
+          ellipsoid: {
+            radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+            material: Cesium.Color.RED,
+          },
+        });
 
-var redSphere = viewer.entities.add({
-    position : Cesium.Cartographic.toCartesian(redCartographic),
-    ellipsoid : {
-        radii : new Cesium.Cartesian3(10.0, 10.0, 10.0),
-        material : Cesium.Color.RED
-    }
-});
+        var arrowPositions = [
+          Cesium.Cartographic.toCartesian(blueCartographic),
+          Cesium.Cartographic.toCartesian(redCartographic),
+        ];
 
-var arrowPositions = [
-    Cesium.Cartographic.toCartesian(blueCartographic),
-    Cesium.Cartographic.toCartesian(redCartographic)
-];
+        var arrow = viewer.entities.add({
+          polyline: {
+            positions: arrowPositions,
+            width: 10,
+            arcType: Cesium.ArcType.NONE,
+            material: new Cesium.PolylineArrowMaterialProperty(
+              Cesium.Color.YELLOW
+            ),
+          },
+        });
 
-var arrow = viewer.entities.add({
-    polyline : {
-        positions : arrowPositions,
-        width : 10,
-        arcType : Cesium.ArcType.NONE,
-        material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.YELLOW)
-    }
-});
+        var intersectionMarkers = [];
+        var pickedFeatures = [];
+        var objectsToExclude = [];
 
-var intersectionMarkers = [];
-var pickedFeatures = [];
-var objectsToExclude = [];
-
-function reset() {
-    objectsToExclude = [blueSphere, redSphere, arrow];
-    for (i = 0; i < pickedFeatures.length; ++i) {
-        pickedFeatures[i].color = Cesium.Color.fromAlpha(Cesium.Color.WHITE, pickedFeatures[i].color.alpha);
-    }
-    for (i = 0; i < intersectionMarkers.length; ++i) {
-        viewer.entities.remove(intersectionMarkers[i]);
-        objectsToExclude.push(intersectionMarkers[i]);
-    }
-    pickedFeatures.length = 0;
-    intersectionMarkers.length = 0;
-}
-
-function showIntersections(results) {
-    for (i = 0; i < results.length; ++i) {
-        var object = results[i].object;
-        if (object instanceof Cesium.Cesium3DTileFeature) {
-            pickedFeatures.push(object);
-            object.color = Cesium.Color.fromAlpha(Cesium.Color.YELLOW, object.color.alpha);
+        function reset() {
+          objectsToExclude = [blueSphere, redSphere, arrow];
+          for (i = 0; i < pickedFeatures.length; ++i) {
+            pickedFeatures[i].color = Cesium.Color.fromAlpha(
+              Cesium.Color.WHITE,
+              pickedFeatures[i].color.alpha
+            );
+          }
+          for (i = 0; i < intersectionMarkers.length; ++i) {
+            viewer.entities.remove(intersectionMarkers[i]);
+            objectsToExclude.push(intersectionMarkers[i]);
+          }
+          pickedFeatures.length = 0;
+          intersectionMarkers.length = 0;
         }
-        intersectionMarkers.push(viewer.entities.add({
-            position : results[i].position,
-            ellipsoid : {
-                radii : new Cesium.Cartesian3(3.0, 3.0, 3.0),
-                material : Cesium.Color.RED
+
+        function showIntersections(results) {
+          for (i = 0; i < results.length; ++i) {
+            var object = results[i].object;
+            if (object instanceof Cesium.Cesium3DTileFeature) {
+              pickedFeatures.push(object);
+              object.color = Cesium.Color.fromAlpha(
+                Cesium.Color.YELLOW,
+                object.color.alpha
+              );
             }
-        }));
-    }
-}
-
-function pickFromRay() {
-    reset();
-    var start = Cesium.Cartographic.toCartesian(blueCartographic);
-    var end = Cesium.Cartographic.toCartesian(redCartographic);
-    var direction = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(end, start, new Cesium.Cartesian3()), new Cesium.Cartesian3());
-    var ray = new Cesium.Ray(start, direction);
-
-    var results = [];
-
-    if (drillPick) {
-        results = scene.drillPickFromRay(ray, 10, objectsToExclude);
-    } else {
-        var result = scene.pickFromRay(ray, objectsToExclude);
-        if (Cesium.defined(result)) {
-            results = [result];
+            intersectionMarkers.push(
+              viewer.entities.add({
+                position: results[i].position,
+                ellipsoid: {
+                  radii: new Cesium.Cartesian3(3.0, 3.0, 3.0),
+                  material: Cesium.Color.RED,
+                },
+              })
+            );
+          }
         }
-    }
 
-    redSphere.position = Cesium.Cartographic.toCartesian(redCartographic);
-    arrow.polyline.positions = [
-        Cesium.Cartographic.toCartesian(blueCartographic),
-        Cesium.Cartographic.toCartesian(redCartographic)
-    ];
-    showIntersections(results);
-}
+        function pickFromRay() {
+          reset();
+          var start = Cesium.Cartographic.toCartesian(blueCartographic);
+          var end = Cesium.Cartographic.toCartesian(redCartographic);
+          var direction = Cesium.Cartesian3.normalize(
+            Cesium.Cartesian3.subtract(end, start, new Cesium.Cartesian3()),
+            new Cesium.Cartesian3()
+          );
+          var ray = new Cesium.Ray(start, direction);
 
-var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
-handler.setInputAction(function(movement) {
-    var redCartesian = scene.pickPosition(movement.position);
-    redCartographic = Cesium.Cartographic.fromCartesian(redCartesian);
-    redCartographic.height = 30.0;
-    pickFromRay();
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+          var results = [];
 
-window.setTimeout(function() {
-    pickFromRay();
-}, 2000.0);
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+          if (drillPick) {
+            results = scene.drillPickFromRay(ray, 10, objectsToExclude);
+          } else {
+            var result = scene.pickFromRay(ray, objectsToExclude);
+            if (Cesium.defined(result)) {
+              results = [result];
+            }
+          }
+
+          redSphere.position = Cesium.Cartographic.toCartesian(redCartographic);
+          arrow.polyline.positions = [
+            Cesium.Cartographic.toCartesian(blueCartographic),
+            Cesium.Cartographic.toCartesian(redCartographic),
+          ];
+          showIntersections(results);
+        }
+
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+        handler.setInputAction(function (movement) {
+          var redCartesian = scene.pickPosition(movement.position);
+          redCartographic = Cesium.Cartographic.fromCartesian(redCartesian);
+          redCartographic.height = 30.0;
+          pickFromRay();
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        window.setTimeout(function () {
+          pickFromRay();
+        }, 2000.0);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

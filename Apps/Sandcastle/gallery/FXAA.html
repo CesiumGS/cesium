@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Add FXAA to the scene." />
+    <meta name="cesium-sandcastle-labels" content="Post Processing" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        viewer.scene.camera.setView({
+          destination: new Cesium.Cartesian3(
+            1331419.302230775,
+            -4656681.5022043325,
+            4136232.6465900405
+          ),
+          orientation: new Cesium.HeadingPitchRoll(
+            6.032455545102689,
+            -0.056832496140112765,
+            6.282360923090216
+          ),
+          endTransform: Cesium.Matrix4.IDENTITY,
+        });
+
+        viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(75343),
+          })
+        );
+
+        viewer.scene.postProcessStages.fxaa.enabled = true;
+
+        Sandcastle.addToggleButton("FXAA", true, function (checked) {
+          viewer.scene.postProcessStages.fxaa.enabled = checked;
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

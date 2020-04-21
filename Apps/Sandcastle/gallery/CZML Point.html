@@ -1,68 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="CZML Point">
-    <meta name="cesium-sandcastle-labels" content="CZML">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="CZML Point" />
+    <meta name="cesium-sandcastle-labels" content="CZML" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var czml = [
+          {
+            id: "document",
+            name: "CZML Point",
+            version: "1.0",
+          },
+          {
+            id: "point 1",
+            name: "point",
+            position: {
+              cartographicDegrees: [-111.0, 40.0, 0],
+            },
+            point: {
+              color: {
+                rgba: [255, 255, 255, 255],
+              },
+              outlineColor: {
+                rgba: [255, 0, 0, 255],
+              },
+              outlineWidth: 4,
+              pixelSize: 20,
+            },
+          },
+        ];
+
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+        viewer.dataSources.add(dataSourcePromise);
+        viewer.zoomTo(dataSourcePromise);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-@import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var czml = [{
-    "id" : "document",
-    "name" : "CZML Point",
-    "version" : "1.0"
-}, {
-    "id" : "point 1",
-    "name": "point",
-    "position" : {
-        "cartographicDegrees" : [-111.0, 40.0, 0]
-    },
-    "point": {
-        "color": {
-            "rgba": [255, 255, 255, 255]
-        },
-        "outlineColor": {
-            "rgba": [255, 0, 0, 255]
-        },
-        "outlineWidth" : 4,
-        "pixelSize": 20
-    }
-}];
-
-var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSourcePromise);
-viewer.zoomTo(dataSourcePromise);
-
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

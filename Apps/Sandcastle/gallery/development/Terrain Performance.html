@@ -1,189 +1,311 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Measure terrain loading and rendering performance.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Measure terrain loading and rendering performance."
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === "function") {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+        var camera = scene.camera;
+        var globe = scene.globe;
+        var statistics = Cesium.RequestScheduler.statistics;
+
+        viewer.terrainProvider = Cesium.createWorldTerrain();
+
+        var startTime;
+        var flightComplete;
+        var monitor;
+        var minFrameRate = 1000;
+        var maxFrameRate = 0;
+        var sumFrameRate = 0.0;
+        var frameRateSamples = 0;
+
+        function startTest() {
+          flightComplete = false;
+          statistics.numberOfActiveRequestsEver = 0;
+          monitor = new Cesium.FrameRateMonitor({
+            scene: scene,
+            samplingWindow: 1.0,
+            quietPeriod: 0.0,
+            warmupPeriod: 0.0,
+            minimumFrameRateDuringWarmup: 0,
+            minimumFrameRateAfterWarmup: 0,
+          });
+          scene.preUpdate.addEventListener(measureFrameRate);
+          startTime = window.performance.now();
+          window.setTimeout(function () {
+            scene.postRender.addEventListener(viewReady);
+          }, 500);
         }
+
+        function measureFrameRate() {
+          var frameRate = monitor.lastFramesPerSecond;
+          if (frameRate === undefined || frameRate !== frameRate) {
+            return;
+          }
+
+          ++frameRateSamples;
+          sumFrameRate += frameRate;
+          minFrameRate = Math.min(minFrameRate, frameRate);
+          maxFrameRate = Math.max(maxFrameRate, frameRate);
+        }
+
+        function viewReady(scene, time) {
+          var ready =
+            globe._surface.tileProvider.ready &&
+            globe._surface._tileLoadQueueHigh.length === 0 &&
+            globe._surface._tileLoadQueueMedium.length === 0 &&
+            globe._surface._tileLoadQueueLow.length === 0 &&
+            globe._surface._debug.tilesWaitingForChildren === 0;
+          if (flightComplete && ready) {
+            var endTime = window.performance.now();
+            var duration = endTime - startTime;
+            alert(
+              (duration / 1000).toFixed(2) +
+                " seconds " +
+                statistics.numberOfActiveRequestsEver +
+                " requests, min/max/avg frame FPS " +
+                minFrameRate +
+                "/" +
+                maxFrameRate +
+                "/" +
+                sumFrameRate / frameRateSamples
+            );
+            scene.postRender.removeEventListener(viewReady);
+          }
+        }
+
+        function goToEverestHorizontal() {
+          camera.position = new Cesium.Cartesian3(
+            302950.1757410969,
+            5637093.359233209,
+            2976894.491577989
+          );
+          camera.direction = new Cesium.Cartesian3(
+            -0.9648960658153797,
+            -0.24110066659365145,
+            -0.10414437451009724
+          );
+          camera.right = new Cesium.Cartesian3(
+            -0.02152846103178338,
+            0.46781654381873394,
+            -0.8835633574877908
+          );
+          camera.up = new Cesium.Cartesian3(
+            -0.26174817580950865,
+            0.8503047394302772,
+            0.456584868959543
+          );
+          flightComplete = true;
+        }
+
+        function goToEverestTopDown() {
+          camera.position = new Cesium.Cartesian3(
+            301989.1870802739,
+            5637745.915399717,
+            2977153.0443453398
+          );
+          camera.direction = new Cesium.Cartesian3(
+            0.021398841015326783,
+            -0.8909524564021135,
+            -0.45359211857597476
+          );
+          camera.right = new Cesium.Cartesian3(
+            0.21237352569072232,
+            0.4473925820246778,
+            -0.8687562161705573
+          );
+          camera.up = new Cesium.Cartesian3(
+            -0.9769542339275126,
+            0.07774058129659328,
+            -0.19878839712310903
+          );
+          flightComplete = true;
+        }
+
+        function goToEverest45Degrees() {
+          camera.position = new Cesium.Cartesian3(
+            302760.41072832496,
+            5637092.977453635,
+            2977284.6758398763
+          );
+          camera.direction = new Cesium.Cartesian3(
+            -0.7254568510163212,
+            -0.3330925403210976,
+            -0.6022970337764594
+          );
+          camera.right = new Cesium.Cartesian3(
+            0.4750641658993092,
+            0.39087207931336604,
+            -0.7883736778277414
+          );
+          camera.up = new Cesium.Cartesian3(
+            -0.49802248502640617,
+            0.8580608237157107,
+            0.12532049797395203
+          );
+          flightComplete = true;
+        }
+
+        function zoomToEverest() {
+          var position = new Cesium.Cartesian3(
+            302955.90876054496,
+            5639614.4908250235,
+            2981096.1048591887
+          );
+          camera.flyTo({
+            destination: position,
+            easingFunction: Cesium.EasingFunction.QUADRATIC_OUT,
+            complete: function () {
+              flightComplete = true;
+            },
+          });
+        }
+
+        function panAroundEverest() {
+          camera.position = new Cesium.Cartesian3(
+            302950.1757410969,
+            5637093.359233209,
+            2976894.491577989
+          );
+          camera.direction = new Cesium.Cartesian3(
+            -0.9648960658153797,
+            -0.24110066659365145,
+            -0.10414437451009724
+          );
+          camera.right = new Cesium.Cartesian3(
+            -0.02152846103178338,
+            0.46781654381873394,
+            -0.8835633574877908
+          );
+          camera.up = new Cesium.Cartesian3(
+            -0.26174817580950865,
+            0.8503047394302772,
+            0.456584868959543
+          );
+
+          var startCartographic = Cesium.Cartographic.fromCartesian(
+            camera.position
+          );
+          var longitude = startCartographic.longitude;
+          var endLongitude = longitude + 0.01;
+          var latitude = startCartographic.latitude;
+          var height = startCartographic.height;
+          var startTime = window.performance.now();
+          var removeCallback = scene.preRender.addEventListener(function (
+            scene,
+            time
+          ) {
+            var endTime = window.performance.now();
+            var delta = endTime - startTime;
+            startTime = endTime;
+            longitude += delta * 0.000001;
+            if (longitude >= endLongitude) {
+              flightComplete = true;
+              removeCallback();
+            }
+            camera.position = Cesium.Cartesian3.fromRadians(
+              longitude,
+              latitude,
+              height
+            );
+          });
+        }
+
+        Sandcastle.addToolbarButton("Timer Static Horizontal", function () {
+          startTest();
+          goToEverestHorizontal();
+        });
+
+        Sandcastle.addToolbarButton("Timer Static Top Down", function () {
+          startTest();
+          goToEverestTopDown();
+        });
+
+        Sandcastle.addToolbarButton("Timer Static 45 degrees", function () {
+          startTest();
+          goToEverest45Degrees();
+        });
+
+        Sandcastle.addToolbarButton("Timer Zoom", function () {
+          startTest();
+          zoomToEverest();
+        });
+
+        Sandcastle.addToolbarButton("Timer Pan", function () {
+          startTest();
+          panAroundEverest();
+        });
+
+        Sandcastle.addToolbarButton("Save camera", function () {
+          var cameraString =
+            "camera.position = new Cesium.Cartesian3(" +
+            camera.positionWC.x +
+            ", " +
+            camera.positionWC.y +
+            ", " +
+            camera.positionWC.z +
+            ");\n" +
+            "camera.direction = new Cesium.Cartesian3(" +
+            camera.directionWC.x +
+            ", " +
+            camera.directionWC.y +
+            ", " +
+            camera.directionWC.z +
+            ");\n" +
+            "camera.right = new Cesium.Cartesian3(" +
+            camera.rightWC.x +
+            ", " +
+            camera.rightWC.y +
+            ", " +
+            camera.rightWC.z +
+            ");\n" +
+            "camera.up = new Cesium.Cartesian3(" +
+            camera.upWC.x +
+            ", " +
+            camera.upWC.y +
+            ", " +
+            camera.upWC.z +
+            ");\n";
+          console.log(cameraString);
+        }); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var camera = scene.camera;
-var globe = scene.globe;
-var statistics = Cesium.RequestScheduler.statistics;
-
-viewer.terrainProvider = Cesium.createWorldTerrain();
-
-var startTime;
-var flightComplete;
-var monitor;
-var minFrameRate = 1000;
-var maxFrameRate = 0;
-var sumFrameRate = 0.0;
-var frameRateSamples = 0;
-
-function startTest() {
-    flightComplete = false;
-    statistics.numberOfActiveRequestsEver = 0;
-    monitor = new Cesium.FrameRateMonitor({
-        scene: scene,
-        samplingWindow: 1.0,
-        quietPeriod: 0.0,
-        warmupPeriod: 0.0,
-        minimumFrameRateDuringWarmup: 0,
-        minimumFrameRateAfterWarmup: 0
-    });
-    scene.preUpdate.addEventListener(measureFrameRate);
-    startTime = window.performance.now();
-    window.setTimeout(function() {
-        scene.postRender.addEventListener(viewReady);
-    }, 500);
-}
-
-function measureFrameRate() {
-    var frameRate = monitor.lastFramesPerSecond;
-    if (frameRate === undefined || frameRate !== frameRate) {
-        return;
-    }
-
-    ++frameRateSamples;
-    sumFrameRate += frameRate;
-    minFrameRate = Math.min(minFrameRate, frameRate);
-    maxFrameRate = Math.max(maxFrameRate, frameRate);
-}
-
-function viewReady(scene, time) {
-    var ready = globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
-    if (flightComplete && ready) {
-        var endTime = window.performance.now();
-        var duration = endTime - startTime;
-        alert((duration / 1000).toFixed(2) + ' seconds ' + statistics.numberOfActiveRequestsEver + ' requests, min/max/avg frame FPS ' + minFrameRate + '/' + maxFrameRate + '/' + (sumFrameRate / frameRateSamples));
-        scene.postRender.removeEventListener(viewReady);
-    }
-}
-
-function goToEverestHorizontal() {
-    camera.position = new Cesium.Cartesian3(302950.1757410969, 5637093.359233209, 2976894.491577989);
-    camera.direction = new Cesium.Cartesian3(-0.9648960658153797, -0.24110066659365145, -0.10414437451009724);
-    camera.right = new Cesium.Cartesian3(-0.02152846103178338, 0.46781654381873394, -0.8835633574877908);
-    camera.up = new Cesium.Cartesian3(-0.26174817580950865, 0.8503047394302772, 0.456584868959543);
-    flightComplete = true;
-}
-
-function goToEverestTopDown() {
-    camera.position = new Cesium.Cartesian3(301989.1870802739, 5637745.915399717, 2977153.0443453398);
-    camera.direction = new Cesium.Cartesian3(0.021398841015326783, -0.8909524564021135, -0.45359211857597476);
-    camera.right = new Cesium.Cartesian3(0.21237352569072232, 0.4473925820246778, -0.8687562161705573);
-    camera.up = new Cesium.Cartesian3(-0.9769542339275126, 0.07774058129659328, -0.19878839712310903);
-    flightComplete = true;
-}
-
-function goToEverest45Degrees() {
-    camera.position = new Cesium.Cartesian3(302760.41072832496, 5637092.977453635, 2977284.6758398763);
-    camera.direction = new Cesium.Cartesian3(-0.7254568510163212, -0.3330925403210976, -0.6022970337764594);
-    camera.right = new Cesium.Cartesian3(0.4750641658993092, 0.39087207931336604, -0.7883736778277414);
-    camera.up = new Cesium.Cartesian3(-0.49802248502640617, 0.8580608237157107, 0.12532049797395203);
-    flightComplete = true;
-}
-
-function zoomToEverest() {
-    var position = new Cesium.Cartesian3(302955.90876054496, 5639614.4908250235, 2981096.1048591887);
-    camera.flyTo({
-        destination : position,
-        easingFunction : Cesium.EasingFunction.QUADRATIC_OUT,
-        complete : function() {
-            flightComplete = true;
-        }
-    });
-}
-
-function panAroundEverest() {
-    camera.position = new Cesium.Cartesian3(302950.1757410969, 5637093.359233209, 2976894.491577989);
-    camera.direction = new Cesium.Cartesian3(-0.9648960658153797, -0.24110066659365145, -0.10414437451009724);
-    camera.right = new Cesium.Cartesian3(-0.02152846103178338, 0.46781654381873394, -0.8835633574877908);
-    camera.up = new Cesium.Cartesian3(-0.26174817580950865, 0.8503047394302772, 0.456584868959543);
-
-    var startCartographic = Cesium.Cartographic.fromCartesian(camera.position);
-    var longitude = startCartographic.longitude;
-    var endLongitude = longitude + 0.01;
-    var latitude = startCartographic.latitude;
-    var height = startCartographic.height;
-    var startTime = window.performance.now();
-    var removeCallback = scene.preRender.addEventListener(function(scene, time) {
-        var endTime = window.performance.now();
-        var delta = endTime - startTime;
-        startTime = endTime;
-        longitude += delta * 0.000001;
-        if (longitude >= endLongitude) {
-            flightComplete = true;
-            removeCallback();
-        }
-        camera.position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
-    });
-}
-
-Sandcastle.addToolbarButton('Timer Static Horizontal', function() {
-    startTest();
-    goToEverestHorizontal();
-});
-
-Sandcastle.addToolbarButton('Timer Static Top Down', function() {
-    startTest();
-    goToEverestTopDown();
-});
-
-Sandcastle.addToolbarButton('Timer Static 45 degrees', function() {
-    startTest();
-    goToEverest45Degrees();
-});
-
-Sandcastle.addToolbarButton('Timer Zoom', function() {
-    startTest();
-    zoomToEverest();
-});
-
-Sandcastle.addToolbarButton('Timer Pan', function() {
-    startTest();
-    panAroundEverest();
-});
-
-Sandcastle.addToolbarButton('Save camera', function() {
-    var cameraString = 'camera.position = new Cesium.Cartesian3(' + camera.positionWC.x + ', ' + camera.positionWC.y + ', ' + camera.positionWC.z + ');\n'+
-                       'camera.direction = new Cesium.Cartesian3(' + camera.directionWC.x + ', ' + camera.directionWC.y + ', ' + camera.directionWC.z + ');\n'+
-                       'camera.right = new Cesium.Cartesian3(' + camera.rightWC.x + ', ' + camera.rightWC.y + ', ' + camera.rightWC.z + ');\n'+
-                       'camera.up = new Cesium.Cartesian3(' + camera.upWC.x + ', ' + camera.upWC.y + ', ' + camera.upWC.z + ');\n';
-    console.log(cameraString);
-});//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== "undefined") {
-    startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
-}
-</script>
-</body>
+  </body>
 </html>

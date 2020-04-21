@@ -1,8 +1,4 @@
-define([
-        './addToArray'
-    ], function(
-        addToArray) {
-    'use strict';
+import addToArray from './addToArray.js'
 
     /**
      * Adds buffer to gltf.
@@ -31,5 +27,4 @@ define([
         return addToArray(gltf.bufferViews, bufferView);
     }
 
-    return addBuffer;
-});
+    export default addBuffer;

@@ -1,101 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Post processing effects.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Post processing effects." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true
-});
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
 
-var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
-var url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
-viewer.trackedEntity = viewer.entities.add({
-    name : url,
-    position : position,
-    model : {
-        uri : url
-    }
-});
+        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
+        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        viewer.trackedEntity = viewer.entities.add({
+          name: url,
+          position: position,
+          model: {
+            uri: url,
+          },
+        });
 
-if (!Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
-    console.log('This browser does not support the silhouette post process.');
-}
-
-var stages = viewer.scene.postProcessStages;
-var silhouette = stages.add(Cesium.PostProcessStageLibrary.createSilhouetteStage());
-silhouette.uniforms.color = Cesium.Color.LIME;
-var blackAndWhite = stages.add(Cesium.PostProcessStageLibrary.createBlackAndWhiteStage());
-blackAndWhite.uniforms.gradations = 5.0;
-
-var handler;
-function addMouseOver(stage) {
-    handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction(function(movement) {
-        var pickedObject = viewer.scene.pick(movement.endPosition);
-        if (Cesium.defined(pickedObject)) {
-            stage.selected = [pickedObject.primitive];
-        } else {
-            stage.selected = [];
+        if (
+          !Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)
+        ) {
+          window.alert(
+            "This browser does not support the silhouette post process."
+          );
         }
-    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-}
 
-function removeMouseOver(stage) {
-    handler = handler && handler.destroy();
-    stage.selected = [];
-}
+        var stages = viewer.scene.postProcessStages;
+        var silhouette = stages.add(
+          Cesium.PostProcessStageLibrary.createSilhouetteStage()
+        );
+        silhouette.uniforms.color = Cesium.Color.LIME;
+        var blackAndWhite = stages.add(
+          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage()
+        );
+        blackAndWhite.uniforms.gradations = 5.0;
 
-Sandcastle.addToolbarMenu([{
-    text : 'Mouse-over Black and White',
-    onselect : function() {
-        blackAndWhite.enabled = true;
-        silhouette.enabled = false;
+        var handler;
+        function addMouseOver(stage) {
+          handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+          handler.setInputAction(function (movement) {
+            var pickedObject = viewer.scene.pick(movement.endPosition);
+            if (Cesium.defined(pickedObject)) {
+              stage.selected = [pickedObject.primitive];
+            } else {
+              stage.selected = [];
+            }
+          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }
 
-        removeMouseOver(silhouette);
-        addMouseOver(blackAndWhite);
-    }
-}, {
-    text : 'Mouse-over Silhouette',
-    onselect : function() {
-        blackAndWhite.enabled = false;
-        silhouette.enabled = true;
+        function removeMouseOver(stage) {
+          handler = handler && handler.destroy();
+          stage.selected = [];
+        }
 
-        removeMouseOver(blackAndWhite);
-        addMouseOver(silhouette);
-    }
-}]);
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Mouse-over Black and White",
+            onselect: function () {
+              blackAndWhite.enabled = true;
+              silhouette.enabled = false;
+
+              removeMouseOver(silhouette);
+              addMouseOver(blackAndWhite);
+            },
+          },
+          {
+            text: "Mouse-over Silhouette",
+            onselect: function () {
+              blackAndWhite.enabled = false;
+              silhouette.enabled = true;
+
+              removeMouseOver(blackAndWhite);
+              addMouseOver(silhouette);
+            },
+          },
+        ]);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

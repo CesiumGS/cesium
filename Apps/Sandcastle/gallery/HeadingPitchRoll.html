@@ -1,239 +1,281 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use HeadingPitchRoll">
-    <meta name="cesium-sandcastle-labels" content="Tutorials">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Use HeadingPitchRoll" />
+    <meta name="cesium-sandcastle-labels" content="Tutorials" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-        @import url(../templates/bucket.css);
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
     </style>
     <div id="cesiumContainer" class="fullSize"></div>
     <div id="loadingOverlay">
-        <h1>Loading...</h1>
+      <h1>Loading...</h1>
     </div>
     <div id="toolbar">
-        <table class="infoPanel">
-            <tbody>
-                <tr>
-                    <td>Click on the 3D window then use the keyboard to change settings.</td>
-                </tr>
-                <tr>
-                    <td>Heading: <span id="heading"></span>°</td>
-                </tr>
-                <tr>
-                    <td>← to left/→ to right</td>
-                </tr>
-                <tr>
-                    <td>Pitch: <span id="pitch"></span>°</td>
-                </tr>
-                <tr>
-                    <td>↑ to up/↓ to down</td>
-                </tr>
-                <tr>
-                    <td>roll: <span id="roll"></span>°</td>
-                </tr>
-                <tr>
-                    <td>← + ⇧ left/→ + ⇧ right</td>
-                </tr>
-                <tr>
-                    <td>Speed: <span id="speed"></span>m/s</td>
-                </tr>
-                <tr>
-                    <td>↑ + ⇧ to speed up/↓ + ⇧ to speed down</td>
-                </tr>
-                <tr>
-                    <td>following aircraft
-                        <input id="fromBehind" type="checkbox">
-                    </td>
-                </tr>
-
-            </tbody>
-        </table>
+      <table class="infoPanel">
+        <tbody>
+          <tr>
+            <td>
+              Click on the 3D window then use the keyboard to change settings.
+            </td>
+          </tr>
+          <tr>
+            <td>Heading: <span id="heading"></span>°</td>
+          </tr>
+          <tr>
+            <td>← to left/→ to right</td>
+          </tr>
+          <tr>
+            <td>Pitch: <span id="pitch"></span>°</td>
+          </tr>
+          <tr>
+            <td>↑ to up/↓ to down</td>
+          </tr>
+          <tr>
+            <td>roll: <span id="roll"></span>°</td>
+          </tr>
+          <tr>
+            <td>← + ⇧ left/→ + ⇧ right</td>
+          </tr>
+          <tr>
+            <td>Speed: <span id="speed"></span>m/s</td>
+          </tr>
+          <tr>
+            <td>↑ + ⇧ to speed up/↓ + ⇧ to speed down</td>
+          </tr>
+          <tr>
+            <td>
+              following aircraft
+              <input id="fromBehind" type="checkbox" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true
-});
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
 
-var canvas = viewer.canvas;
-canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
-canvas.addEventListener('click', function() {
-    canvas.focus();
-});
-canvas.focus();
+        var canvas = viewer.canvas;
+        canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
+        canvas.addEventListener("click", function () {
+          canvas.focus();
+        });
+        canvas.focus();
 
-var scene = viewer.scene;
+        var scene = viewer.scene;
 
-var pathPosition = new Cesium.SampledPositionProperty();
-var entityPath = viewer.entities.add({
-    position : pathPosition,
-    name : 'path',
-    path : {
-        show : true,
-        leadTime : 0,
-        trailTime : 60,
-        width : 10,
-        resolution : 1,
-        material : new Cesium.PolylineGlowMaterialProperty({
-            glowPower : 0.3,
-            taperPower : 0.3,
-            color : Cesium.Color.PALEGOLDENROD
-        })
-    }
-});
+        var pathPosition = new Cesium.SampledPositionProperty();
+        var entityPath = viewer.entities.add({
+          position: pathPosition,
+          name: "path",
+          path: {
+            show: true,
+            leadTime: 0,
+            trailTime: 60,
+            width: 10,
+            resolution: 1,
+            material: new Cesium.PolylineGlowMaterialProperty({
+              glowPower: 0.3,
+              taperPower: 0.3,
+              color: Cesium.Color.PALEGOLDENROD,
+            }),
+          },
+        });
 
-var camera = viewer.camera;
-var controller = scene.screenSpaceCameraController;
-var r = 0;
-var center = new Cesium.Cartesian3();
+        var camera = viewer.camera;
+        var controller = scene.screenSpaceCameraController;
+        var r = 0;
+        var center = new Cesium.Cartesian3();
 
-var hpRoll = new Cesium.HeadingPitchRoll();
-var hpRange = new Cesium.HeadingPitchRange();
-var speed = 10;
-var deltaRadians = Cesium.Math.toRadians(3.0);
+        var hpRoll = new Cesium.HeadingPitchRoll();
+        var hpRange = new Cesium.HeadingPitchRange();
+        var speed = 10;
+        var deltaRadians = Cesium.Math.toRadians(3.0);
 
-var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 5000.0);
-var speedVector = new Cesium.Cartesian3();
-var fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator('north', 'west');
+        var position = Cesium.Cartesian3.fromDegrees(
+          -123.0744619,
+          44.0503706,
+          5000.0
+        );
+        var speedVector = new Cesium.Cartesian3();
+        var fixedFrameTransform = Cesium.Transforms.localFrameToFixedFrameGenerator(
+          "north",
+          "west"
+        );
 
-var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
-    url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-    modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, fixedFrameTransform),
-    minimumPixelSize : 128
-}));
+        var planePrimitive = scene.primitives.add(
+          Cesium.Model.fromGltf({
+            url: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            modelMatrix: Cesium.Transforms.headingPitchRollToFixedFrame(
+              position,
+              hpRoll,
+              Cesium.Ellipsoid.WGS84,
+              fixedFrameTransform
+            ),
+            minimumPixelSize: 128,
+          })
+        );
 
-planePrimitive.readyPromise.then(function(model) {
-    // Play and loop all animations at half-speed
-    model.activeAnimations.addAll({
-        multiplier : 0.5,
-        loop : Cesium.ModelAnimationLoop.REPEAT
-    });
+        planePrimitive.readyPromise.then(function (model) {
+          // Play and loop all animations at half-speed
+          model.activeAnimations.addAll({
+            multiplier: 0.5,
+            loop: Cesium.ModelAnimationLoop.REPEAT,
+          });
 
-    // Zoom to model
-    r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
-    controller.minimumZoomDistance = r * 0.5;
-    Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, center);
-    var heading = Cesium.Math.toRadians(230.0);
-    var pitch = Cesium.Math.toRadians(-20.0);
-    hpRange.heading = heading;
-    hpRange.pitch = pitch;
-    hpRange.range = r * 50.0;
-    camera.lookAt(center, hpRange);
-});
+          // Zoom to model
+          r = 2.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+          controller.minimumZoomDistance = r * 0.5;
+          Cesium.Matrix4.multiplyByPoint(
+            model.modelMatrix,
+            model.boundingSphere.center,
+            center
+          );
+          var heading = Cesium.Math.toRadians(230.0);
+          var pitch = Cesium.Math.toRadians(-20.0);
+          hpRange.heading = heading;
+          hpRange.pitch = pitch;
+          hpRange.range = r * 50.0;
+          camera.lookAt(center, hpRange);
+        });
 
-document.addEventListener('keydown', function(e) {
-    switch (e.keyCode) {
-        case 40:
-            if (e.shiftKey) {
+        document.addEventListener("keydown", function (e) {
+          switch (e.keyCode) {
+            case 40:
+              if (e.shiftKey) {
                 // speed down
                 speed = Math.max(--speed, 1);
-            } else {
+              } else {
                 // pitch down
                 hpRoll.pitch -= deltaRadians;
                 if (hpRoll.pitch < -Cesium.Math.TWO_PI) {
-                    hpRoll.pitch += Cesium.Math.TWO_PI;
+                  hpRoll.pitch += Cesium.Math.TWO_PI;
                 }
-            }
-            break;
-        case 38:
-            if (e.shiftKey) {
+              }
+              break;
+            case 38:
+              if (e.shiftKey) {
                 // speed up
                 speed = Math.min(++speed, 100);
-            } else {
+              } else {
                 // pitch up
                 hpRoll.pitch += deltaRadians;
                 if (hpRoll.pitch > Cesium.Math.TWO_PI) {
-                    hpRoll.pitch -= Cesium.Math.TWO_PI;
+                  hpRoll.pitch -= Cesium.Math.TWO_PI;
                 }
-            }
-            break;
-        case 39:
-            if (e.shiftKey) {
+              }
+              break;
+            case 39:
+              if (e.shiftKey) {
                 // roll right
                 hpRoll.roll += deltaRadians;
                 if (hpRoll.roll > Cesium.Math.TWO_PI) {
-                    hpRoll.roll -= Cesium.Math.TWO_PI;
+                  hpRoll.roll -= Cesium.Math.TWO_PI;
                 }
-            } else {
+              } else {
                 // turn right
                 hpRoll.heading += deltaRadians;
                 if (hpRoll.heading > Cesium.Math.TWO_PI) {
-                    hpRoll.heading -= Cesium.Math.TWO_PI;
+                  hpRoll.heading -= Cesium.Math.TWO_PI;
                 }
-            }
-            break;
-        case 37:
-            if (e.shiftKey) {
+              }
+              break;
+            case 37:
+              if (e.shiftKey) {
                 // roll left until
                 hpRoll.roll -= deltaRadians;
                 if (hpRoll.roll < 0.0) {
-                    hpRoll.roll += Cesium.Math.TWO_PI;
+                  hpRoll.roll += Cesium.Math.TWO_PI;
                 }
-            } else {
+              } else {
                 // turn left
                 hpRoll.heading -= deltaRadians;
                 if (hpRoll.heading < 0.0) {
-                    hpRoll.heading += Cesium.Math.TWO_PI;
+                  hpRoll.heading += Cesium.Math.TWO_PI;
                 }
-            }
-            break;
-        default:
-    }
-});
+              }
+              break;
+            default:
+          }
+        });
 
-var headingSpan = document.getElementById('heading');
-var pitchSpan = document.getElementById('pitch');
-var rollSpan = document.getElementById('roll');
-var speedSpan = document.getElementById('speed');
-var fromBehind = document.getElementById('fromBehind');
+        var headingSpan = document.getElementById("heading");
+        var pitchSpan = document.getElementById("pitch");
+        var rollSpan = document.getElementById("roll");
+        var speedSpan = document.getElementById("speed");
+        var fromBehind = document.getElementById("fromBehind");
 
-viewer.scene.preUpdate.addEventListener(function(scene, time) {
-    speedVector = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.UNIT_X, speed / 10, speedVector);
-    position = Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, speedVector, position);
-    pathPosition.addSample(Cesium.JulianDate.now(), position);
-    Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, fixedFrameTransform, planePrimitive.modelMatrix);
+        viewer.scene.preUpdate.addEventListener(function (scene, time) {
+          speedVector = Cesium.Cartesian3.multiplyByScalar(
+            Cesium.Cartesian3.UNIT_X,
+            speed / 10,
+            speedVector
+          );
+          position = Cesium.Matrix4.multiplyByPoint(
+            planePrimitive.modelMatrix,
+            speedVector,
+            position
+          );
+          pathPosition.addSample(Cesium.JulianDate.now(), position);
+          Cesium.Transforms.headingPitchRollToFixedFrame(
+            position,
+            hpRoll,
+            Cesium.Ellipsoid.WGS84,
+            fixedFrameTransform,
+            planePrimitive.modelMatrix
+          );
 
-    if (fromBehind.checked) {
-        // Zoom to model
-        Cesium.Matrix4.multiplyByPoint(planePrimitive.modelMatrix, planePrimitive.boundingSphere.center, center);
-        hpRange.heading = hpRoll.heading;
-        hpRange.pitch = hpRoll.pitch;
-        camera.lookAt(center, hpRange);
-    }
-});
+          if (fromBehind.checked) {
+            // Zoom to model
+            Cesium.Matrix4.multiplyByPoint(
+              planePrimitive.modelMatrix,
+              planePrimitive.boundingSphere.center,
+              center
+            );
+            hpRange.heading = hpRoll.heading;
+            hpRange.pitch = hpRoll.pitch;
+            camera.lookAt(center, hpRange);
+          }
+        });
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
-    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
-    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
-    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
-    speedSpan.innerHTML = speed.toFixed(1);
-});
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        viewer.scene.preRender.addEventListener(function (scene, time) {
+          headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(
+            1
+          );
+          pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
+          rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
+          speedSpan.innerHTML = speed.toFixed(1);
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

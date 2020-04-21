@@ -1,121 +1,119 @@
-defineSuite([
-        'Renderer/Renderbuffer',
-        'Renderer/ContextLimits',
-        'Renderer/RenderbufferFormat',
-        'Specs/createContext'
-    ], function(
-        Renderbuffer,
-        ContextLimits,
-        RenderbufferFormat,
-        createContext) {
-    'use strict';
+import { ContextLimits } from "../../Source/Cesium.js";
+import { Renderbuffer } from "../../Source/Cesium.js";
+import { RenderbufferFormat } from "../../Source/Cesium.js";
+import createContext from "../createContext.js";
 
+describe(
+  "Renderer/Renderbuffer",
+  function () {
     var context;
     var renderbuffer;
 
-    beforeAll(function() {
-        context = createContext();
+    beforeAll(function () {
+      context = createContext();
     });
 
-    afterAll(function() {
-        context.destroyForSpecs();
+    afterAll(function () {
+      context.destroyForSpecs();
     });
 
-    afterEach(function() {
-        renderbuffer = renderbuffer && renderbuffer.destroy();
+    afterEach(function () {
+      renderbuffer = renderbuffer && renderbuffer.destroy();
     });
 
-    it('creates', function() {
+    it("creates", function () {
+      renderbuffer = new Renderbuffer({
+        context: context,
+        format: RenderbufferFormat.DEPTH_COMPONENT16,
+        width: 64,
+        height: 32,
+      });
+
+      expect(renderbuffer.format).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
+      expect(renderbuffer.width).toEqual(64);
+      expect(renderbuffer.height).toEqual(32);
+    });
+
+    it("creates with defaults", function () {
+      renderbuffer = new Renderbuffer({
+        context: context,
+      });
+
+      expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
+      expect(renderbuffer.width).toEqual(context.canvas.clientWidth);
+      expect(renderbuffer.height).toEqual(context.canvas.clientHeight);
+    });
+
+    it("destroys", function () {
+      var r = new Renderbuffer({
+        context: context,
+      });
+      expect(r.isDestroyed()).toEqual(false);
+      r.destroy();
+      expect(r.isDestroyed()).toEqual(true);
+    });
+
+    it("throws when created with invalid format", function () {
+      expect(function () {
         renderbuffer = new Renderbuffer({
-            context : context,
-            format : RenderbufferFormat.DEPTH_COMPONENT16,
-            width : 64,
-            height : 32
+          context: context,
+          format: "invalid format",
         });
-
-        expect(renderbuffer.format).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
-        expect(renderbuffer.width).toEqual(64);
-        expect(renderbuffer.height).toEqual(32);
+      }).toThrowDeveloperError();
     });
 
-    it('creates with defaults', function() {
+    it("throws when created with small width", function () {
+      expect(function () {
         renderbuffer = new Renderbuffer({
-            context : context
+          context: context,
+          width: 0,
         });
-
-        expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
-        expect(renderbuffer.width).toEqual(context.canvas.clientWidth);
-        expect(renderbuffer.height).toEqual(context.canvas.clientHeight);
+      }).toThrowDeveloperError();
     });
 
-    it('destroys', function() {
-        var r = new Renderbuffer({
-            context : context
+    it("throws when created with large width", function () {
+      expect(function () {
+        renderbuffer = new Renderbuffer({
+          context: context,
+          width: ContextLimits.maximumRenderbufferSize + 1,
         });
-        expect(r.isDestroyed()).toEqual(false);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when created with small height", function () {
+      expect(function () {
+        renderbuffer = new Renderbuffer({
+          context: context,
+          height: 0,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when created with large height", function () {
+      expect(function () {
+        renderbuffer = new Renderbuffer({
+          context: context,
+          height: ContextLimits.maximumRenderbufferSize + 1,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when fails to destroy", function () {
+      var r = new Renderbuffer({
+        context: context,
+      });
+      r.destroy();
+
+      expect(function () {
         r.destroy();
-        expect(r.isDestroyed()).toEqual(true);
+      }).toThrowDeveloperError();
     });
 
-    it('throws when created with invalid format', function() {
-        expect(function() {
-            renderbuffer = new Renderbuffer({
-                context : context,
-                format : 'invalid format'
-            });
-        }).toThrowDeveloperError();
+    it("throws when there is no context", function () {
+      expect(function () {
+        return new Renderbuffer();
+      }).toThrowDeveloperError();
     });
-
-    it('throws when created with small width', function() {
-        expect(function() {
-            renderbuffer = new Renderbuffer({
-                context : context,
-                width : 0
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when created with large width', function() {
-        expect(function() {
-            renderbuffer = new Renderbuffer({
-                context : context,
-                width : ContextLimits.maximumRenderbufferSize + 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when created with small height', function() {
-        expect(function() {
-            renderbuffer = new Renderbuffer({
-                context : context,
-                height : 0
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when created with large height', function() {
-        expect(function() {
-            renderbuffer = new Renderbuffer({
-                context : context,
-                height : ContextLimits.maximumRenderbufferSize + 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when fails to destroy', function() {
-        var r = new Renderbuffer({
-            context : context
-        });
-        r.destroy();
-
-        expect(function() {
-            r.destroy();
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when there is no context', function() {
-        expect(function() {
-            return new Renderbuffer();
-        }).toThrowDeveloperError();
-    });
-}, 'WebGL');
+  },
+  "WebGL"
+);
