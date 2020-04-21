@@ -677,6 +677,7 @@ function getVertexNumberingScope(model, primitive) {
         createdOutlines: false,
       };
     } else if (
+      vertexNumberingScope !== undefined &&
       bufferView.extras._pipeline.vertexNumberingScope !== vertexNumberingScope
     ) {
       // Conflicting vertex numbering, let's give up.
