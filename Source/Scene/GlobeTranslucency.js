@@ -507,7 +507,6 @@ function getTranslucentFrontFaceRenderState(renderState) {
 }
 
 function getBackAndFrontFaceRenderState(renderState) {
-  renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = false;
 }
 
@@ -848,8 +847,13 @@ GlobeTranslucency.pushDerivedCommands = function (
     : derivedCommands.translucentBackFaceCommand;
 
   if (scene2D) {
-    frameState.commandList.push(derivedCommands.frontFaceCommand);
-    frameState.commandList.push(translucentFrontFaceCommand);
+    if (
+      getFrontFaceAlphaMode(translucencyMode) ===
+      TranslucencyMode.FRONT_TRANSLUCENT
+    ) {
+      frameState.commandList.push(derivedCommands.frontFaceCommand);
+      frameState.commandList.push(translucentFrontFaceCommand);
+    }
     return;
   }
 
