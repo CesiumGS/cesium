@@ -5,6 +5,7 @@ import Pass from "./Pass.js";
  * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
  *
  * @private
+ * @constructor
  */
 function ComputeCommand(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
