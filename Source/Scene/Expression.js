@@ -2071,6 +2071,9 @@ Node.prototype.getShaderExpression = function (
     case ExpressionNodeType.CONDITIONAL:
       return "(" + test + " ? " + left + " : " + right + ")";
     case ExpressionNodeType.MEMBER:
+      if (checkFeature(this._left)) {
+        return attributePrefix + right;
+      }
       // This is intended for accessing the components of vector properties. String members aren't supported.
       // Check for 0.0 rather than 0 because all numbers are previously converted to decimals.
       if (right === "r" || right === "x" || right === "0.0") {
@@ -2132,7 +2135,8 @@ Node.prototype.getShaderExpression = function (
           value === "x" ||
           value === "y" ||
           value === "z" ||
-          value === "w"
+          value === "w" ||
+          checkFeature(parent._left)
         ) {
           return value;
         }

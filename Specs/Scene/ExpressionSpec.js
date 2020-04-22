@@ -3433,6 +3433,20 @@ describe("Scene/Expression", function () {
     expect(shaderExpression).toEqual(expected);
   });
 
+  it("gets shader expression for feature variable with bracket notation", function () {
+    var expression = new Expression("${feature['property']}");
+    var shaderExpression = expression.getShaderExpression("prefix_", {});
+    var expected = "prefix_property";
+    expect(shaderExpression).toEqual(expected);
+  });
+
+  it("gets shader expression for feature variable with dot notation", function () {
+    var expression = new Expression("${feature.property}");
+    var shaderExpression = expression.getShaderExpression("prefix_", {});
+    var expected = "prefix_property";
+    expect(shaderExpression).toEqual(expected);
+  });
+
   it("gets shader expression for unary not", function () {
     var expression = new Expression("!true");
     var shaderExpression = expression.getShaderExpression("", {});
