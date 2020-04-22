@@ -119,7 +119,7 @@ SteppedSpline.prototype.evaluate = function (time, result) {
     this._lastTimeIndex
   ));
   var times = this._spline.times;
-  var steppedTime = times[i + 1] === time ? times[i + 1] : times[i];
+  var steppedTime = time >= times[i + 1] ? times[i + 1] : times[i];
   return this._spline.evaluate(steppedTime, result);
 };
 Object.defineProperties(SteppedSpline.prototype, {
