@@ -13,7 +13,7 @@ var stopSearchPath =
 
 /**
  * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
- * performed using the {@link http://msdn.microsoft.com/en-us/library/ff701715.aspx|Bing Maps Locations API}.
+ * performed using {@link https://cesium.com/cesium-ion/|Cesium ion}.
  *
  * @alias Geocoder
  * @constructor
