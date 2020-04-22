@@ -17,6 +17,19 @@
             "parserOptions": {
                 "sourceType": "script"
             }
+        },
+        {
+            "files": ["**/*.ts"],
+            "extends": ["plugin:@typescript-eslint/recommended", "./Tools/eslint-config-cesium/browser.js", "prettier"],
+            "parser": "@typescript-eslint/parser",
+            "plugins": ["@typescript-eslint"],
+            "rules": {
+                "no-use-before-define": "off",
+                "@typescript-eslint/no-use-before-define": "off",
+                "@typescript-eslint/no-explicit-any": "off",
+                "@typescript-eslint/camelcase": "off",
+                "no-var": "off"
+            }
         }
     ]
 }

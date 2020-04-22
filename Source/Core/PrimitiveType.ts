@@ -5,14 +5,14 @@ import WebGLConstants from "./WebGLConstants.js";
  *
  * @exports PrimitiveType
  */
-var PrimitiveType = {
+enum PrimitiveType {
   /**
    * Points primitive where each vertex (or index) is a separate point.
    *
    * @type {Number}
    * @constant
    */
-  POINTS: WebGLConstants.POINTS,
+  POINTS = WebGLConstants.POINTS,
 
   /**
    * Lines primitive where each two vertices (or indices) is a line segment.  Line segments are not necessarily connected.
@@ -20,7 +20,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  LINES: WebGLConstants.LINES,
+  LINES = WebGLConstants.LINES,
 
   /**
    * Line loop primitive where each vertex (or index) after the first connects a line to
@@ -29,7 +29,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  LINE_LOOP: WebGLConstants.LINE_LOOP,
+  LINE_LOOP = WebGLConstants.LINE_LOOP,
 
   /**
    * Line strip primitive where each vertex (or index) after the first connects a line to the previous vertex.
@@ -37,7 +37,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  LINE_STRIP: WebGLConstants.LINE_STRIP,
+  LINE_STRIP = WebGLConstants.LINE_STRIP,
 
   /**
    * Triangles primitive where each three vertices (or indices) is a triangle.  Triangles do not necessarily share edges.
@@ -45,7 +45,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  TRIANGLES: WebGLConstants.TRIANGLES,
+  TRIANGLES = WebGLConstants.TRIANGLES,
 
   /**
    * Triangle strip primitive where each vertex (or index) after the first two connect to
@@ -54,7 +54,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  TRIANGLE_STRIP: WebGLConstants.TRIANGLE_STRIP,
+  TRIANGLE_STRIP = WebGLConstants.TRIANGLE_STRIP,
 
   /**
    * Triangle fan primitive where each vertex (or index) after the first two connect to
@@ -64,21 +64,7 @@ var PrimitiveType = {
    * @type {Number}
    * @constant
    */
-  TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,
+  TRIANGLE_FAN = WebGLConstants.TRIANGLE_FAN,
+}
 
-  /**
-   * @private
-   */
-  validate: function (primitiveType) {
-    return (
-      primitiveType === PrimitiveType.POINTS ||
-      primitiveType === PrimitiveType.LINES ||
-      primitiveType === PrimitiveType.LINE_LOOP ||
-      primitiveType === PrimitiveType.LINE_STRIP ||
-      primitiveType === PrimitiveType.TRIANGLES ||
-      primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-      primitiveType === PrimitiveType.TRIANGLE_FAN
-    );
-  },
-};
-export default Object.freeze(PrimitiveType);
+export default PrimitiveType;

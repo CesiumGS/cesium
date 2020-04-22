@@ -6,14 +6,19 @@ import defined from "./defined.js";
  * Fill an array or a portion of an array with a given value.
  *
  * @param {Array} array The array to fill.
- * @param {*} value The value to fill the array with.
+ * @param {any} value The value to fill the array with.
  * @param {Number} [start=0] The index to start filling at.
  * @param {Number} [end=array.length] The index to end stop at.
  *
  * @returns {Array} The resulting array.
  * @private
  */
-function arrayFill(array, value, start, end) {
+function arrayFill(
+  array: any,
+  value: any,
+  start?: number,
+  end?: number
+): Array<any> {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("array", array);
   Check.defined("value", value);
@@ -50,4 +55,5 @@ function arrayFill(array, value, start, end) {
   }
   return array;
 }
+
 export default arrayFill;

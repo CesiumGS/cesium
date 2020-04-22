@@ -28,7 +28,7 @@ module.exports = function (config) {
     // list of files / patterns to load in the browser
     files: [
       { pattern: "Specs/karma-main.js", included: true, type: "module" },
-      { pattern: "Source/**", included: false, type: "module" },
+      { pattern: "Build/TypeScript/**", included: false, type: "module" },
       { pattern: "Specs/*.js", included: true, type: "module" },
       { pattern: "Specs/Core/**", included: true, type: "module" },
       { pattern: "Specs/Data/**", included: false },
@@ -43,6 +43,7 @@ module.exports = function (config) {
     proxies: {
       "/Data": "/base/Specs/Data",
       "/Specs/TestWorkers": "/base/Specs/TestWorkers",
+      "/base/Source": "/base/Build/TypeScript",
     },
 
     // list of files to exclude

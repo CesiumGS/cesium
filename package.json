@@ -37,7 +37,11 @@
   },
   "type": "module",
   "devDependencies": {
+    "@rollup/plugin-typescript": "^4.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
     "aws-sdk": "^2.531.0",
+    "better-docs": "^1.4.7",
     "bluebird": "^3.4.6",
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
@@ -83,6 +87,8 @@
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^2.2.0",
+    "tslib": "^1.11.1",
+    "typescript": "^3.8.3",
     "yargs": "^15.0.1"
   },
   "husky": {
@@ -104,7 +110,7 @@
     "coverage": "gulp coverage",
     "generateDocumentation": "gulp generateDocumentation",
     "generateDocumentation-watch": "gulp generateDocumentation-watch",
-    "eslint": "eslint \"./**/*.js\" \"./**/*.html\" --cache --quiet",
+    "eslint": "eslint \"./**/*.js\" \"./**/*.ts\" \"./**/*.html\" --cache --quiet",
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",

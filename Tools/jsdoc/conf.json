@@ -3,12 +3,15 @@
         "allowUnknownTags": false
     },
     "source": {
+        "include_ts": ["Build/TypeScript"],
+        "exclude_ts": ["Build/TypeScript/ThirdParty", "Build/TypeScript/Workers"],
+        "includePattern_ts": ".+\\.js(doc)?$",
         "include": ["Source"],
         "exclude": ["Source/ThirdParty", "Source/Workers"],
-        "includePattern": ".+\\.js(doc)?$",
+        "includePattern": ".+\\.(ts|js)(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
-    "plugins": ["./Tools/jsdoc/cesiumTags"],
+    "plugins": ["node_modules/better-docs/typescript", "./Tools/jsdoc/cesiumTags"],
     "templates": {
         "cleverLinks": true,
         "default": {

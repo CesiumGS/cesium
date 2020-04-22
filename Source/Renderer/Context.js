@@ -1131,6 +1131,18 @@ function beginDraw(
   );
 }
 
+function validatePrimitiveType(primitiveType) {
+  return (
+    primitiveType === PrimitiveType.POINTS ||
+    primitiveType === PrimitiveType.LINES ||
+    primitiveType === PrimitiveType.LINE_LOOP ||
+    primitiveType === PrimitiveType.LINE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLES ||
+    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLE_FAN
+  );
+}
+
 function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   var primitiveType = drawCommand._primitiveType;
   var va = drawCommand._vertexArray;
@@ -1139,7 +1151,7 @@ function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
   var instanceCount = drawCommand.instanceCount;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!PrimitiveType.validate(primitiveType)) {
+  if (!validatePrimitiveType(primitiveType)) {
     throw new DeveloperError(
       "drawCommand.primitiveType is required and must be valid."
     );

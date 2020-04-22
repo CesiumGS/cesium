@@ -3,14 +3,14 @@
  *
  * @exports ArcType
  */
-var ArcType = {
+enum ArcType {
   /**
    * Straight line that does not conform to the surface of the ellipsoid.
    *
    * @type {Number}
    * @constant
    */
-  NONE: 0,
+  NONE = 0,
 
   /**
    * Follow geodesic path.
@@ -18,7 +18,7 @@ var ArcType = {
    * @type {Number}
    * @constant
    */
-  GEODESIC: 1,
+  GEODESIC = 1,
 
   /**
    * Follow rhumb or loxodrome path.
@@ -26,6 +26,7 @@ var ArcType = {
    * @type {Number}
    * @constant
    */
-  RHUMB: 2,
-};
-export default Object.freeze(ArcType);
+  RHUMB = 2,
+}
+
+export default ArcType;
