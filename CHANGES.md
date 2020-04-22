@@ -18,7 +18,7 @@
 - Fixed an issue with glTF skinning support where an optional property `skeleton` was considered required by Cesium. [#8175](https://github.com/CesiumGS/cesium/issues/8175)
 - Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
 - Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
-- Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash.
+- Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
 
 ### 1.68.0 - 2020-04-01
 
