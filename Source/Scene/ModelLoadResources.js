@@ -41,6 +41,7 @@ function ModelLoadResources() {
 /**
  * This function differs from the normal subarray function
  * because it takes offset and length, rather than begin and end.
+ * @private
  */
 function getSubarray(array, offset, length) {
   return array.subarray(offset, offset + length);

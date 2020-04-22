@@ -120,6 +120,7 @@ TileMapServiceImageryProvider.prototype._requestMetadata = function () {
 
 /**
  * Mutates the properties of a given rectangle so it does not extend outside of the given tiling scheme's rectangle
+ * @private
  */
 function confineRectangleToTilingScheme(rectangle, tilingScheme) {
   if (rectangle.west < tilingScheme.rectangle.west) {

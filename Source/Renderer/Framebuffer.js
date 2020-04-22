@@ -70,6 +70,7 @@ function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
  * });
  *
  * @private
+ * @constructor
  */
 function Framebuffer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -693,6 +693,7 @@ function executeEmptyTraversal(tileset, root, frameState) {
  *
  * NOTE: 3D Tiles uses 3 bits from the stencil buffer meaning this will not work when there is a chain of
  * selected tiles that is deeper than 7. This is not very likely.
+ * @private
  */
 function traverseAndSelect(tileset, root, frameState) {
   var stack = selectionTraversal.stack;
