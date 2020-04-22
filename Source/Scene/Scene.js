@@ -680,7 +680,7 @@ function Scene(options) {
    * @see Scene#requestRenderMode
    *
    * @type {Number}
-   * @default 0.5
+   * @default 0.0
    */
   this.maximumRenderTimeChange = defaultValue(
     options.maximumRenderTimeChange,
