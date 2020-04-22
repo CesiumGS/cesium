@@ -11,6 +11,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * @private
+ * @constructor
  */
 function createUniformArray(gl, activeUniform, uniformName, locations) {
   switch (activeUniform.type) {
@@ -71,6 +72,7 @@ function createUniformArray(gl, activeUniform, uniformName, locations) {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -112,6 +114,7 @@ UniformArrayFloat.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -155,6 +158,7 @@ UniformArrayFloatVec2.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -216,6 +220,7 @@ UniformArrayFloatVec3.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -282,6 +287,7 @@ UniformArrayFloatVec4.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArraySampler(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -331,6 +337,7 @@ UniformArraySampler.prototype._setSampler = function (textureUnitIndex) {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayInt(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -372,6 +379,7 @@ UniformArrayInt.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -415,6 +423,7 @@ UniformArrayIntVec2.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -458,6 +467,7 @@ UniformArrayIntVec3.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -501,6 +511,7 @@ UniformArrayIntVec4.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -544,6 +555,7 @@ UniformArrayMat2.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
   var length = locations.length;
@@ -587,6 +599,7 @@ UniformArrayMat3.prototype.set = function () {
 
 /**
  * @private
+ * @constructor
  */
 function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
   var length = locations.length;

@@ -670,6 +670,8 @@ var pointsCartographicScratch = [
  * Flatten the ellipsoid-centered corners and edge-centers of the rectangle
  * into the plane of the local ENU system, compute bounds in 2D, and
  * project back to ellipsoid-centered.
+ *
+ * @private
  */
 function computeRectangleBounds(
   rectangle,

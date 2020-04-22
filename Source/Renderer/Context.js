@@ -145,6 +145,7 @@ function getExtension(gl, names) {
 
 /**
  * @private
+ * @constructor
  */
 function Context(canvas, options) {
   // this check must use typeof, not defined, because defined doesn't work with undeclared variables.

@@ -3,6 +3,7 @@
  * in a command being executed.
  *
  * @private
+ * @constructor
  */
 function PassState(context) {
   /**
