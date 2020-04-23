@@ -3,6 +3,8 @@
 #endif
 
 uniform vec4 color;
+uniform vec4 outlineColor;
+uniform float outlineWidth;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
@@ -24,25 +26,38 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     vec2 stPerPixel = vec2(base * guess / headLength, guess);
 #endif
 
+    // Outline width in st coordinates
+    vec2 outlineSt = outlineWidth * stPerPixel;
+
     // Find the start and end of the blur between the head and the rest.
     float baseLow = 1.0 - headLength * stPerPixel.s / stPerPixel.t;
     float baseHigh = baseLow + fuzz * stPerPixel.s;
     float headOrNot = smoothstep(baseLow, baseHigh, st.s);
+    float innerHeadOrNot = smoothstep(baseLow + outlineSt.s, baseHigh + outlineSt.s, st.s);
 
     // Find if we're on the center line.
     float distanceFromCenter = abs(st.t - 0.5);
-    float centerOrNot = smoothstep(centerAmount, centerAmount + fuzz * stPerPixel.t, distanceFromCenter);
+    float centerHigh = centerAmount + fuzz * stPerPixel.t;
+    float centerOrNot = 1.0 - smoothstep(centerAmount, centerHigh, distanceFromCenter);
+    float innerCenterOrNot = 1.0 - smoothstep(centerAmount - outlineSt.t, centerHigh - outlineSt.t, distanceFromCenter);
 
     // Find if we're inside the sloped edges of the head.
-    float slope = distanceFromCenter - 0.5 + 0.5 * (st.s - baseLow) / (1.0 - baseLow);
+    float slope =  0.5 - 0.5 * (st.s - baseLow) / (1.0 - baseLow) - distanceFromCenter;
     float slopeHalfFuzz = 0.5 * fuzz * max(stPerPixel.s, stPerPixel.t);
     float slopeOrNot = smoothstep(-slopeHalfFuzz, slopeHalfFuzz, slope);
+    float innerSlopeOffset = outlineSt.t + outlineSt.s * 0.5;
+    float innerSlopeOrNot = smoothstep(-slopeHalfFuzz + innerSlopeOffset, slopeHalfFuzz + innerSlopeOffset, slope);
 
     // Choose centerOrNot vs. slopeOrNot based on headOrNot.
-    float value = 1.0 - mix(centerOrNot, slopeOrNot, headOrNot);
+    float value = mix(centerOrNot, slopeOrNot, headOrNot);
+    float innerValue = mix(innerCenterOrNot, innerSlopeOrNot, innerHeadOrNot);
 
-    // Color the line.
-    vec4 outColor = vec4(color.rgb, color.a * value);
+    // End cap at the back
+    innerValue *= smoothstep(outlineSt.s, outlineSt.s + fuzz * stPerPixel.s, st.s);
+
+    // Color the outline, then the inner line.
+    vec4 outColor = vec4(outlineColor.rgb, outlineColor.a * value);
+    outColor = mix(outColor, color, innerValue);
 
     outColor = czm_gammaCorrect(outColor);
     material.diffuse = outColor.rgb;
