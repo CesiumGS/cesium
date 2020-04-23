@@ -112,7 +112,7 @@ describe(
       "./Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf";
     var CesiumManUrl = "./Data/Models/MaterialsCommon/Cesium_Man.gltf";
     var interpolationTestUrl =
-      "./Data/Models/Interpolationtest/InterpolationTest.glb";
+      "./Data/Models/InterpolationTest/InterpolationTest.glb";
 
     var boomBoxUrl = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
     var boomBoxPbrSpecularGlossinessUrl =
