@@ -440,6 +440,11 @@ function getTranslucentShaderProgram(vs, fs) {
     "#endif \n" +
     "    czm_globe_translucency_main(); \n" +
     "    vec4 classificationColor = texture2D(u_classificationTexture, st); \n" +
+    "    if (classificationColor.a > 0.0) \n" +
+    "    { \n" +
+    "        // Reverse premultiplication process to get the correct composited result of the classification primitives \n" +
+    "        classificationColor.rgb /= classificationColor.a; \n" +
+    "    } \n" +
     "    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n" +
     "} \n";
   sources.push(globeTranslucencyMain);
