@@ -111,6 +111,8 @@ describe(
     var riggedSimpleQuantizedUrl =
       "./Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf";
     var CesiumManUrl = "./Data/Models/MaterialsCommon/Cesium_Man.gltf";
+    var interpolationTestUrl =
+      "./Data/Models/InterpolationTest/InterpolationTest.glb";
 
     var boomBoxUrl = "./Data/Models/PBR/BoomBox/BoomBox.gltf";
     var boomBoxPbrSpecularGlossinessUrl =
@@ -2229,6 +2231,106 @@ describe(
           }
           primitives.remove(m);
         });
+      });
+    });
+
+    it("animates with STEP interpolation", function () {
+      return loadModel(interpolationTestUrl).then(function (model) {
+        var time = JulianDate.fromDate(
+          new Date("January 1, 2014 12:00:00 UTC")
+        );
+
+        model.show = true;
+        var animations = model.activeAnimations;
+        var a = animations.add({
+          name: "Step Translation",
+          startTime: time,
+        });
+
+        var animatedNode = model.getNode("Cube.006");
+
+        scene.renderForSpecs(time);
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          6.665,
+          CesiumMath.EPSILON3
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 0.5, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          10.0,
+          CesiumMath.EPSILON14
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 1.0, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          6.0,
+          CesiumMath.EPSILON14
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 2.0, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          6.0,
+          CesiumMath.EPSILON14
+        );
+
+        expect(animations.remove(a)).toEqual(true);
+        primitives.remove(model);
+      });
+    });
+
+    it("animates with LINEAR interpolation", function () {
+      return loadModel(interpolationTestUrl).then(function (model) {
+        var time = JulianDate.fromDate(
+          new Date("January 1, 2014 12:00:00 UTC")
+        );
+
+        model.show = true;
+        var animations = model.activeAnimations;
+        var a = animations.add({
+          name: "Linear Translation",
+          startTime: time,
+        });
+
+        var animatedNode = model.getNode("Cube.009");
+
+        scene.renderForSpecs(time);
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          6.621,
+          CesiumMath.EPSILON3
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 0.5, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          9.2,
+          CesiumMath.EPSILON3
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 1.0, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          7.6,
+          CesiumMath.EPSILON3
+        );
+
+        scene.renderForSpecs(
+          JulianDate.addSeconds(time, 2.0, new JulianDate())
+        );
+        expect(animatedNode.matrix[13]).toEqualEpsilon(
+          6.0,
+          CesiumMath.EPSILON14
+        );
+
+        expect(animations.remove(a)).toEqual(true);
+        primitives.remove(model);
       });
     });
 
