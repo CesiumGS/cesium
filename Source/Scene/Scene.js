@@ -2596,13 +2596,9 @@ function executeCommands(scene, passState) {
 
     if (globeTranslucent) {
       globeTranslucency.executeGlobeCommands(
-        commands,
-        length,
-        scene._cameraUnderground,
-        scene._globe,
+        frustumCommands,
         executeCommand,
         scene,
-        context,
         passState
       );
     } else {
@@ -2632,11 +2628,8 @@ function executeCommands(scene, passState) {
       if (globeTranslucent) {
         globeTranslucency.executeGlobeClassificationCommands(
           frustumCommands,
-          scene._cameraUnderground,
-          scene._globe,
           executeCommand,
           scene,
-          context,
           passState
         );
       } else {

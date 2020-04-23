@@ -1,7 +1,6 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { GlobeTranslucency } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { SkyAtmosphere } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
@@ -95,8 +94,6 @@ describe(
     });
 
     it("draws sky with color correction active", function () {
-      spyOn(GlobeTranslucency, "isSkyAtmosphereVisible").and.returnValue(true);
-
       var oldSkyAtmosphere = scene.skyAtmosphere;
       var s = new SkyAtmosphere();
 

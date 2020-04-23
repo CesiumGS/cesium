@@ -677,7 +677,6 @@ describe("Scene/GlobeTranslucency", function () {
     tileProvider.backFaceAlphaByDistance = opaqueAlphaByDistance;
 
     var command = createDrawCommand(frameState.context);
-    var commandList = frameState.commandList;
 
     var executeCommand = jasmine.createSpy("executeCommand");
     spyOn(ClearCommand.prototype, "execute");
@@ -692,15 +691,17 @@ describe("Scene/GlobeTranslucency", function () {
     var expectedCommand =
       command.derivedCommands.globeTranslucency.backFaceCommand;
 
+    var globeCommands = frameState.commandList;
+
+    var frustumCommands = new FrustumCommands();
+    frustumCommands.commands[Pass.GLOBE] = globeCommands;
+    frustumCommands.indices[Pass.GLOBE] = globeCommands.length;
+
     globeTranslucency.updateAndClear(false, viewport, context, passState);
     globeTranslucency.executeGlobeCommands(
-      commandList,
-      commandList.length,
-      false,
-      globe,
+      frustumCommands,
       executeCommand,
       scene,
-      context,
       passState
     );
     expect(executeCommand).toHaveBeenCalledWith(
@@ -714,20 +715,17 @@ describe("Scene/GlobeTranslucency", function () {
 
   it("does not execute globe commands if there are no commands", function () {
     var globeTranslucency = scene._view.globeTranslucency;
-    var globe = scene.globe;
     var frameState = scene.frameState;
     var context = frameState.context;
     var passState = new PassState(context);
 
+    var frustumCommands = new FrustumCommands();
+
     var executeCommand = jasmine.createSpy("executeCommand");
     globeTranslucency.executeGlobeCommands(
-      [],
-      0,
-      false,
-      globe,
+      frustumCommands,
       executeCommand,
       scene,
-      context,
       passState
     );
 
@@ -780,11 +778,8 @@ describe("Scene/GlobeTranslucency", function () {
     globeTranslucency.updateAndClear(false, viewport, context, passState);
     globeTranslucency.executeGlobeClassificationCommands(
       frustumCommands,
-      false,
-      globe,
       executeCommand,
       scene,
-      context,
       passState
     );
     expect(executeCommand).toHaveBeenCalledWith(

@@ -721,7 +721,7 @@ Globe.prototype.getAlphaByDistanceFinal = function (results) {
 };
 
 function updateFrontFaceAlphaByDistance(globe) {
-  updateTranslucencyByDistance(
+  updateAlphaByDistance(
     globe._translucencyEnabled,
     globe._frontFaceAlpha,
     globe._frontFaceAlphaByDistance,
@@ -730,7 +730,7 @@ function updateFrontFaceAlphaByDistance(globe) {
 }
 
 function updateBackFaceAlphaByDistance(globe) {
-  updateTranslucencyByDistance(
+  updateAlphaByDistance(
     globe._translucencyEnabled,
     globe._backFaceAlpha,
     globe._backFaceAlphaByDistance,
@@ -738,27 +738,27 @@ function updateBackFaceAlphaByDistance(globe) {
   );
 }
 
-function updateTranslucencyByDistance(
+function updateAlphaByDistance(
   translucencyEnabled,
-  translucency,
-  translucencyByDistance,
-  translucencyByDistanceFinal
+  alpha,
+  alphaByDistance,
+  alphaByDistanceFinal
 ) {
   if (!translucencyEnabled) {
-    translucencyByDistanceFinal.nearValue = 1.0;
-    translucencyByDistanceFinal.farValue = 1.0;
+    alphaByDistanceFinal.nearValue = 1.0;
+    alphaByDistanceFinal.farValue = 1.0;
     return;
   }
 
-  if (!defined(translucencyByDistance)) {
-    translucencyByDistanceFinal.nearValue = translucency;
-    translucencyByDistanceFinal.farValue = translucency;
+  if (!defined(alphaByDistance)) {
+    alphaByDistanceFinal.nearValue = alpha;
+    alphaByDistanceFinal.farValue = alpha;
     return;
   }
 
-  NearFarScalar.clone(translucencyByDistance, translucencyByDistanceFinal);
-  translucencyByDistanceFinal.nearValue *= translucency;
-  translucencyByDistanceFinal.farValue *= translucency;
+  NearFarScalar.clone(alphaByDistance, alphaByDistanceFinal);
+  alphaByDistanceFinal.nearValue *= alpha;
+  alphaByDistanceFinal.farValue *= alpha;
 }
 
 function makeShadersDirty(globe) {

@@ -991,23 +991,23 @@ function executeCommands(
 }
 
 GlobeTranslucency.prototype.executeGlobeCommands = function (
-  commands,
-  commandsLength,
-  cameraUnderground,
-  globe,
+  frustumCommands,
   executeCommandFunction,
   scene,
-  context,
   passState
 ) {
-  if (commandsLength === 0) {
+  var context = scene.context;
+  var globeCommands = frustumCommands.commands[Pass.GLOBE];
+  var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
+
+  if (globeCommandsLength === 0) {
     return;
   }
 
   // Clear for each frustum
   this._clearCommand.execute(context, passState);
 
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
+  var translucencyMode = getTranslucencyModeFromGlobe(scene.globe);
   var frontOpaque =
     getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
   var backOpaque =
@@ -1016,10 +1016,10 @@ GlobeTranslucency.prototype.executeGlobeCommands = function (
   if (frontOpaque || backOpaque) {
     // Render opaque commands to scene's framebuffer like normal
     // Faces gets swapped if the camera is underground
-    var cullFace = cameraUnderground ? CullFace.BACK : CullFace.FRONT;
+    var cullFace = scene.cameraUnderground ? CullFace.BACK : CullFace.FRONT;
     executeCommands(
-      commands,
-      commandsLength,
+      globeCommands,
+      globeCommandsLength,
       cullFace,
       false,
       executeCommandFunction,
@@ -1032,13 +1032,11 @@ GlobeTranslucency.prototype.executeGlobeCommands = function (
 
 GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
   frustumCommands,
-  cameraUnderground,
-  globe,
   executeCommandFunction,
   scene,
-  context,
   passState
 ) {
+  var context = scene.context;
   var globeCommands = frustumCommands.commands[Pass.GLOBE];
   var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
   var classificationCommands =
@@ -1050,7 +1048,7 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
     return;
   }
 
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
+  var translucencyMode = getTranslucencyModeFromGlobe(scene.globe);
   var frontFaceAlphaMode = getFrontFaceAlphaMode(translucencyMode);
   var backFaceAlphaMode = getBackFaceAlphaMode(translucencyMode);
 
@@ -1084,7 +1082,7 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
   // as a filter for rendering depth-only commands.
   var cullFace =
     frontTranslucent && backOpaque
-      ? cameraUnderground
+      ? scene.cameraUnderground
         ? CullFace.FRONT
         : CullFace.BACK
       : undefined;
