@@ -41,6 +41,9 @@ import { ScreenSpaceCameraController } from "../../Source/Cesium.js";
 import { SunLight } from "../../Source/Cesium.js";
 import { TweenCollection } from "../../Source/Cesium.js";
 import { Sun } from "../../Source/Cesium.js";
+import { GroundPrimitive } from "../../Source/Cesium.js";
+import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
+import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
 import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
@@ -65,6 +68,8 @@ describe(
         }),
       });
       simpleRenderState = new RenderState();
+
+      return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterEach(function () {
@@ -2242,6 +2247,137 @@ describe(
         scene.renderForSpecs();
         expect(scene.environmentState.isSunVisible).toBe(false);
         scene.destroyForSpecs();
+      });
+    });
+
+    it("renders globe with translucency", function () {
+      var scene = createScene();
+      var globe = new Globe();
+      scene.globe = globe;
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          2764681.3022502237,
+          -20999839.371941473,
+          14894754.464869803
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179586,
+          -1.5687983447998315,
+          0
+        ),
+      });
+
+      return updateGlobeUntilDone(scene).then(function () {
+        var opaqueColor;
+        expect(scene).toRenderAndCall(function (rgba) {
+          opaqueColor = rgba;
+        });
+
+        globe.translucencyEnabled = true;
+        globe.frontFaceAlpha = 0.5;
+
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual(opaqueColor);
+        });
+      });
+    });
+
+    it("renders ground primitive on translucent globe", function () {
+      var scene = createScene();
+      var globe = new Globe();
+      scene.globe = globe;
+      globe.baseColor = Color.BLACK;
+      globe.translucencyEnabled = true;
+      globe.frontFaceAlpha = 0.5;
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -557278.4840232887,
+          -6744284.200717078,
+          2794079.461722868
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179586,
+          -1.5687983448015541,
+          0
+        ),
+      });
+
+      var redRectangleInstance = new GeometryInstance({
+        geometry: new RectangleGeometry({
+          rectangle: Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
+          vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+        }),
+        attributes: {
+          color: ColorGeometryInstanceAttribute.fromColor(
+            new Color(1.0, 0.0, 0.0, 0.5)
+          ),
+        },
+      });
+
+      scene.primitives.add(
+        new GroundPrimitive({
+          geometryInstances: [redRectangleInstance],
+          appearance: new PerInstanceColorAppearance({
+            closed: true,
+          }),
+          asynchronous: false,
+        })
+      );
+
+      return updateGlobeUntilDone(scene).then(function () {
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+        });
+      });
+    });
+
+    it("picks ground primitive on translucent globe", function () {
+      var scene = createScene();
+      var globe = new Globe();
+      scene.globe = globe;
+      globe.baseColor = Color.BLACK;
+      globe.translucencyEnabled = true;
+      globe.frontFaceAlpha = 0.5;
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -557278.4840232887,
+          -6744284.200717078,
+          2794079.461722868
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179586,
+          -1.5687983448015541,
+          0
+        ),
+      });
+
+      var redRectangleInstance = new GeometryInstance({
+        geometry: new RectangleGeometry({
+          rectangle: Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
+          vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+        }),
+        attributes: {
+          color: ColorGeometryInstanceAttribute.fromColor(
+            new Color(1.0, 0.0, 0.0, 0.5)
+          ),
+        },
+      });
+
+      var primitive = scene.primitives.add(
+        new GroundPrimitive({
+          geometryInstances: [redRectangleInstance],
+          appearance: new PerInstanceColorAppearance({
+            closed: true,
+          }),
+          asynchronous: false,
+        })
+      );
+
+      return updateGlobeUntilDone(scene).then(function () {
+        expect(scene).toPickPrimitive(primitive);
       });
     });
   },
