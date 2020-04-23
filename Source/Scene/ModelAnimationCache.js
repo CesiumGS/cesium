@@ -128,11 +128,6 @@ Object.defineProperties(SteppedSpline.prototype, {
       return this._spline.times;
     },
   },
-  points: {
-    get: function () {
-      return this._spline.points;
-    },
-  },
 });
 SteppedSpline.prototype.wrapTime = function (time) {
   return this._spline.wrapTime(time);
