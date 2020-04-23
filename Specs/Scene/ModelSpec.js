@@ -615,7 +615,7 @@ describe(
       });
     });
 
-    it("Applies the right render state", function () {
+    it("applies the right render state", function () {
       spyOn(RenderState, "fromCache").and.callThrough();
 
       // Simulate using procedural glTF as opposed to loading it from a file
@@ -1773,7 +1773,7 @@ describe(
       ).then(function () {
         expect(spyStart).toHaveBeenCalledWith(animBoxesModel, a);
 
-        expect(spyUpdate.calls.count()).toEqual(4);
+        expect(spyUpdate.calls.count()).toEqual(5);
         expect(spyUpdate.calls.argsFor(0)[0]).toBe(animBoxesModel);
         expect(spyUpdate.calls.argsFor(0)[1]).toBe(a);
         expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
@@ -1792,6 +1792,10 @@ describe(
           3.0,
           CesiumMath.EPSILON14
         );
+        expect(spyUpdate.calls.argsFor(4)[2]).toEqualEpsilon(
+          3.708, // Expect animation to have reached its final value.
+          CesiumMath.EPSILON3
+        );
 
         expect(spyStop).toHaveBeenCalledWith(animBoxesModel, a);
         expect(animations.length).toEqual(0);
@@ -1799,7 +1803,7 @@ describe(
       });
     });
 
-    it("Animates with a delay", function () {
+    it("animates with a delay", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
 
       var animations = animBoxesModel.activeAnimations;
@@ -1822,7 +1826,7 @@ describe(
       animBoxesModel.show = false;
     });
 
-    it("Animates with an explicit stopTime", function () {
+    it("animates with an explicit stopTime", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
       var stopTime = JulianDate.fromDate(
         new Date("January 1, 2014 12:00:01 UTC")
@@ -1841,9 +1845,9 @@ describe(
       animBoxesModel.show = true;
       scene.renderForSpecs(time);
       scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
-      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate())); // Does not fire update
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
 
-      expect(spyUpdate.calls.count()).toEqual(2);
+      expect(spyUpdate.calls.count()).toEqual(3);
       expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
         0.0,
         CesiumMath.EPSILON14
@@ -1852,11 +1856,15 @@ describe(
         1.0,
         CesiumMath.EPSILON14
       );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.0,
+        CesiumMath.EPSILON14
+      );
       expect(animations.remove(a)).toEqual(true);
       animBoxesModel.show = false;
     });
 
-    it("Animates with a multiplier", function () {
+    it("animates with a multiplier", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
       var animations = animBoxesModel.activeAnimations;
       var a = animations.add({
@@ -1890,7 +1898,116 @@ describe(
       animBoxesModel.show = false;
     });
 
-    it("Animates in reverse", function () {
+    it("finishes an animation after the stop time", function () {
+      var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
+      var stopTime = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:01 UTC")
+      );
+
+      var animations = animBoxesModel.activeAnimations;
+      var a = animations.add({
+        name: "animation_1",
+        startTime: time,
+        stopTime: stopTime,
+      });
+
+      var spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      scene.renderForSpecs(time);
+      scene.renderForSpecs(JulianDate.addSeconds(time, 0.5, new JulianDate())); // Midpoint of designated interval
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate())); // Past designated stop time
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.0, // Expect clamping to designated stop time.
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("finishes an animation after it runs off the end", function () {
+      var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
+      var animations = animBoxesModel.activeAnimations;
+      var a = animations.add({
+        name: "animation_1",
+        startTime: time,
+      });
+
+      var spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      scene.renderForSpecs(time);
+      scene.renderForSpecs(JulianDate.addSeconds(time, 0.5, new JulianDate())); // Somewhere inside animation
+      scene.renderForSpecs(JulianDate.addSeconds(time, 10.0, new JulianDate())); // Way past end of animation
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        3.708, // Expect animation to have reached its final value.
+        CesiumMath.EPSILON3
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("halts an animation before the start time", function () {
+      var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
+      var stopTime = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:01 UTC")
+      );
+
+      var animations = animBoxesModel.activeAnimations;
+      var a = animations.add({
+        name: "animation_1",
+        startTime: time,
+        stopTime: stopTime,
+      });
+
+      var spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      scene.renderForSpecs(time);
+      scene.renderForSpecs(JulianDate.addSeconds(time, 0.5, new JulianDate())); // Midpoint of animation
+      scene.renderForSpecs(JulianDate.addSeconds(time, -1.0, new JulianDate())); // Before start of animation
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
+    it("animates in reverse", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
       var animations = animBoxesModel.activeAnimations;
       var a = animations.add({
@@ -1929,7 +2046,7 @@ describe(
       animBoxesModel.show = false;
     });
 
-    it("Animates with REPEAT", function () {
+    it("animates with REPEAT", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
       var animations = animBoxesModel.activeAnimations;
       var a = animations.add({
@@ -1983,7 +2100,7 @@ describe(
       animBoxesModel.show = false;
     });
 
-    it("Animates with MIRRORED_REPEAT", function () {
+    it("animates with MIRRORED_REPEAT", function () {
       var time = JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC"));
       var animations = animBoxesModel.activeAnimations;
       var a = animations.add({
@@ -2037,7 +2154,7 @@ describe(
       animBoxesModel.show = false;
     });
 
-    it("Animates and renders", function () {
+    it("animates and renders", function () {
       return loadModel(animBoxesUrl, {
         scale: 2.0,
       }).then(function (m) {
