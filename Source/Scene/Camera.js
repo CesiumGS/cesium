@@ -3182,6 +3182,19 @@ Camera.prototype.cancelFlight = function () {
 };
 
 /**
+ * Complete the current camera flight if one is in progress
+ * The camera immediately move to destination
+ */
+Camera.prototype.completeFlight = function () {
+  if(defined(this._currentFlight)) {
+    this.cancelFlight();
+
+    newOptions.duration = 0;
+    this.setView(newOptions);
+  }
+};
+
+/**
  * Flies the camera from its current position to a new position.
  *
  * @param {Object} options Object with the following properties:
