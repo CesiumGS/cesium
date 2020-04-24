@@ -20,14 +20,15 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
 #ifdef GL_OES_standard_derivatives
     vec2 stPerPixel = fwidth(st);
+
+    // Outline width in st coordinates
+    vec2 outlineSt = outlineWidth * stPerPixel;
 #else
     float base = 0.025; // 2.5% of the line's length will be the arrow head
     float guess = 0.1; // 10% of the line's width will be considered a pixel.
     vec2 stPerPixel = vec2(base * guess / headLength, guess);
+    vec2 outlineSt = vec2(0.0);
 #endif
-
-    // Outline width in st coordinates
-    vec2 outlineSt = outlineWidth * stPerPixel;
 
     // Find the start and end of the blur between the head and the rest.
     float baseLow = 1.0 - headLength * stPerPixel.s / stPerPixel.t;
