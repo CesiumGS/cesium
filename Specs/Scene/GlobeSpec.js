@@ -3,6 +3,10 @@ import { Rectangle } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { Globe } from "../../Source/Cesium.js";
 import { SingleTileImageryProvider } from "../../Source/Cesium.js";
+import { Color } from "../../Source/Cesium.js";
+import { Cartesian3 } from "../../Source/Cesium.js";
+import { HeadingPitchRoll } from "../../Source/Cesium.js";
+import { NearFarScalar } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -410,6 +414,87 @@ describe(
         expect(command.count).toBe(
           command.owner.data.renderedMesh.indexCountWithoutSkirts
         );
+      });
+    });
+
+    it("sets alpha by distance when translucency is disabled", function () {
+      var results = new Array(2);
+      globe.getAlphaByDistanceFinal(results);
+      expect(results[0].nearValue).toBe(1.0);
+      expect(results[0].farValue).toBe(1.0);
+      expect(results[1].nearValue).toBe(1.0);
+      expect(results[1].farValue).toBe(1.0);
+    });
+
+    it("sets alpha by distance when translucency is enabled", function () {
+      globe.translucencyEnabled = true;
+      globe.frontFaceAlpha = 0.5;
+      globe.backFaceAlpha = 0.25;
+      var results = new Array(2);
+      globe.getAlphaByDistanceFinal(results);
+      expect(results[0].nearValue).toBe(0.5);
+      expect(results[0].farValue).toBe(0.5);
+      expect(results[1].nearValue).toBe(0.25);
+      expect(results[1].farValue).toBe(0.25);
+
+      globe.frontFaceAlphaByDistance = new NearFarScalar(0.0, 0.5, 1.0, 0.75);
+      globe.getAlphaByDistanceFinal(results);
+      expect(results[0].nearValue).toBe(0.25);
+      expect(results[0].farValue).toBe(0.375);
+      expect(results[1].nearValue).toBe(0.25);
+      expect(results[1].farValue).toBe(0.25);
+    });
+
+    it("sets underground color", function () {
+      globe.undergroundColor = Color.RED;
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -524251.65918537375,
+          -5316355.5357514685,
+          3400179.253223899
+        ),
+        orientation: new HeadingPitchRoll(
+          0.22779127099032603,
+          -0.7030060668670961,
+          0.0024147223687949193
+        ),
+      });
+
+      return updateUntilDone(globe).then(function () {
+        expect(scene).toRender([255, 0, 0, 255]);
+      });
+    });
+
+    it("sets underground color by distance", function () {
+      globe.baseColor = Color.BLACK;
+      globe.undergroundColor = Color.RED;
+      var radius = globe.ellipsoid.maximumRadius;
+      globe.undergroundColorByDistance = new NearFarScalar(
+        radius * 0.25,
+        0.0,
+        radius * 2.0,
+        1.0
+      );
+
+      scene.camera.setView({
+        destination: new Cartesian3(
+          -524251.65918537375,
+          -5316355.5357514685,
+          3400179.253223899
+        ),
+        orientation: new HeadingPitchRoll(
+          0.24245689061958142,
+          -0.445653254172905,
+          0.0024147223687949193
+        ),
+      });
+
+      return updateUntilDone(globe).then(function () {
+        expect(scene).toRenderAndCall(function (rgba) {
+          expect(rgba[0]).toBeGreaterThan(0);
+          expect(rgba[0]).toBeLessThan(255);
+        });
       });
     });
   },

@@ -1,7 +1,6 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { GlobeTranslucency } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { SkyAtmosphere } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
@@ -58,7 +57,7 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(1);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(1);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();
@@ -73,7 +72,7 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(2);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(2);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();
@@ -88,15 +87,13 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(0);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(0);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();
     });
 
     it("draws sky with color correction active", function () {
-      spyOn(GlobeTranslucency, "isSkyAtmosphereVisible").and.returnValue(true);
-
       var oldSkyAtmosphere = scene.skyAtmosphere;
       var s = new SkyAtmosphere();
 

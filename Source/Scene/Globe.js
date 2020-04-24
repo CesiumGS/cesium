@@ -24,7 +24,6 @@ import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
-import GlobeTranslucency from "./GlobeTranslucency.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
@@ -67,18 +66,10 @@ function Globe(ellipsoid) {
   this._translucencyEnabled = false;
   this._frontFaceAlpha = 1.0;
   this._frontFaceAlphaByDistance = undefined;
+  this._frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
   this._backFaceAlpha = 1.0;
   this._backFaceAlphaByDistance = undefined;
-
-  /**
-   * @private
-   */
-  this.frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
-
-  /**
-   * @private
-   */
-  this.backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+  this._backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
   /**
    * The color to render the back side of the globe when the camera is underground or the globe is translucent,
@@ -109,7 +100,7 @@ function Globe(ellipsoid) {
   this.undergroundColorByDistance = new NearFarScalar(
     ellipsoid.maximumRadius / 1000.0,
     0.0,
-    ellipsoid.maximumRadius / 10.0,
+    ellipsoid.maximumRadius / 5.0,
     1.0
   );
 
@@ -718,45 +709,56 @@ Object.defineProperties(Globe.prototype, {
   },
 });
 
+/**
+ * @private
+ */
+Globe.prototype.getAlphaByDistanceFinal = function (results) {
+  updateFrontFaceAlphaByDistance(this);
+  updateBackFaceAlphaByDistance(this);
+  results[0] = this._frontFaceAlphaByDistanceFinal;
+  results[1] = this._backFaceAlphaByDistanceFinal;
+  return results;
+};
+
 function updateFrontFaceAlphaByDistance(globe) {
-  updateTranslucencyByDistance(
+  updateAlphaByDistance(
     globe._translucencyEnabled,
     globe._frontFaceAlpha,
     globe._frontFaceAlphaByDistance,
-    globe.frontFaceAlphaByDistanceFinal
+    globe._frontFaceAlphaByDistanceFinal
   );
 }
 
 function updateBackFaceAlphaByDistance(globe) {
-  updateTranslucencyByDistance(
+  updateAlphaByDistance(
     globe._translucencyEnabled,
     globe._backFaceAlpha,
     globe._backFaceAlphaByDistance,
-    globe.backFaceAlphaByDistanceFinal
+    globe._backFaceAlphaByDistanceFinal
   );
 }
 
-function updateTranslucencyByDistance(
+function updateAlphaByDistance(
   translucencyEnabled,
-  translucency,
-  translucencyByDistance,
-  translucencyByDistanceFinal
+  alpha,
+  alphaByDistance,
+  alphaByDistanceFinal
 ) {
   if (!translucencyEnabled) {
-    translucencyByDistanceFinal.nearValue = 1.0;
-    translucencyByDistanceFinal.farValue = 1.0;
+    alphaByDistanceFinal.nearValue = 1.0;
+    alphaByDistanceFinal.farValue = 1.0;
     return;
   }
 
-  if (!defined(translucencyByDistance)) {
-    translucencyByDistanceFinal.nearValue = translucency;
-    translucencyByDistanceFinal.farValue = translucency;
+  if (!defined(alphaByDistance)) {
+    alphaByDistanceFinal.nearValue = alpha;
+    alphaByDistanceFinal.farValue = alpha;
     return;
   }
 
-  NearFarScalar.clone(translucencyByDistance, translucencyByDistanceFinal);
-  translucencyByDistanceFinal.nearValue *= translucency;
-  translucencyByDistanceFinal.farValue *= translucency;
+  NearFarScalar.clone(alphaByDistance, alphaByDistanceFinal);
+  alphaByDistanceFinal.nearValue *= alpha;
+  alphaByDistanceFinal.farValue *= alpha;
 }
 
 function makeShadersDirty(globe) {
@@ -1128,9 +1130,6 @@ Globe.prototype.beginFrame = function (frameState) {
     }
   }
 
-  updateFrontFaceAlphaByDistance(this);
-  updateBackFaceAlphaByDistance(this);
-
   var pass = frameState.passes;
   var mode = frameState.mode;
 
@@ -1167,9 +1166,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
-    tileProvider.frontFaceAlphaByDistance = this.frontFaceAlphaByDistanceFinal;
-    tileProvider.backFaceAlphaByDistance = this.backFaceAlphaByDistanceFinal;
-    tileProvider.translucent = GlobeTranslucency.isTranslucent(this);
+    tileProvider.frontFaceAlphaByDistance = this._frontFaceAlphaByDistanceFinal;
+    tileProvider.backFaceAlphaByDistance = this._backFaceAlphaByDistanceFinal;
     tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
     tileProvider.undergroundColor = this.undergroundColor;
     tileProvider.undergroundColorByDistance = this.undergroundColorByDistance;

@@ -280,9 +280,12 @@ function getBackFaceAlphaMode(translucencyMode) {
   return translucencyMode & TranslucencyMode.BACK_MASK;
 }
 
+var scratchArray = new Array(2);
+
 function getTranslucencyModeFromGlobe(globe) {
-  var frontFaceAlphaByDistance = globe.frontFaceAlphaByDistanceFinal;
-  var backFaceAlphaByDistance = globe.backFaceAlphaByDistanceFinal;
+  var alphaByDistanceFinal = globe.getAlphaByDistanceFinal(scratchArray);
+  var frontFaceAlphaByDistance = alphaByDistanceFinal[0];
+  var backFaceAlphaByDistance = alphaByDistanceFinal[1];
   return getTranslucencyMode(
     frontFaceAlphaByDistance,
     backFaceAlphaByDistance,
@@ -317,22 +320,6 @@ GlobeTranslucency.isSunVisibleThroughGlobe = function (
   // The sun is visible through the globe if the front and back faces are translucent when above ground
   // or if front faces are translucent when below ground
   return !frontOpaque && (cameraUnderground || !backOpaque);
-};
-
-GlobeTranslucency.isSkyAtmosphereVisible = function (globe) {
-  if (!defined(globe) || !globe.show) {
-    return false;
-  }
-
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
-  var frontInvisible =
-    getFrontFaceAlphaMode(translucencyMode) ===
-    TranslucencyMode.FRONT_INVISIBLE;
-  var backInvisible =
-    getBackFaceAlphaMode(translucencyMode) === TranslucencyMode.BACK_INVISIBLE;
-
-  // Sky atmosphere is visible if the globe is not completely invisible
-  return !frontInvisible || !backInvisible;
 };
 
 GlobeTranslucency.isEnvironmentVisible = function (globe, cameraUnderground) {
@@ -417,7 +404,12 @@ function getPickShaderProgram(vs, fs) {
     "void main() \n" +
     "{ \n" +
     "    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n" +
-    "    gl_FragColor = texture2D(u_classificationTexture, st); \n" +
+    "    vec4 pickColor = texture2D(u_classificationTexture, st); \n" +
+    "    if (pickColor == vec4(0.0)) \n" +
+    "    { \n" +
+    "        discard; \n" +
+    "    } \n" +
+    "    gl_FragColor = pickColor; \n" +
     "} \n";
 
   fs.sources = [pickShader];
@@ -453,6 +445,11 @@ function getTranslucentShaderProgram(vs, fs) {
     "#endif \n" +
     "    czm_globe_translucency_main(); \n" +
     "    vec4 classificationColor = texture2D(u_classificationTexture, st); \n" +
+    "    if (classificationColor.a > 0.0) \n" +
+    "    { \n" +
+    "        // Reverse premultiplication process to get the correct composited result of the classification primitives \n" +
+    "        classificationColor.rgb /= classificationColor.a; \n" +
+    "    } \n" +
     "    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n" +
     "} \n";
   sources.push(globeTranslucencyMain);
@@ -520,7 +517,6 @@ function getTranslucentFrontFaceRenderState(renderState) {
 }
 
 function getBackAndFrontFaceRenderState(renderState) {
-  renderState.cull.face = CullFace.BACK;
   renderState.cull.enabled = false;
 }
 
@@ -678,8 +674,6 @@ function getDerivedCommandPack(frameState) {
 
 GlobeTranslucency.updateDerivedCommand = function (command, frameState) {
   var derivedCommands = command.derivedCommands.globeTranslucency;
-
-  // TODO - only generate derived commands for those that are needed for the current state
 
   if (!defined(derivedCommands) || command.dirty) {
     var derivedCommandsPack = getDerivedCommandPack(frameState);
@@ -861,8 +855,13 @@ GlobeTranslucency.pushDerivedCommands = function (
     : derivedCommands.translucentBackFaceCommand;
 
   if (scene2D) {
-    frameState.commandList.push(derivedCommands.frontFaceCommand);
-    frameState.commandList.push(translucentFrontFaceCommand);
+    if (
+      getFrontFaceAlphaMode(translucencyMode) ===
+      TranslucencyMode.FRONT_TRANSLUCENT
+    ) {
+      frameState.commandList.push(derivedCommands.frontFaceCommand);
+      frameState.commandList.push(translucentFrontFaceCommand);
+    }
     return;
   }
 
@@ -995,23 +994,23 @@ function executeCommands(
 }
 
 GlobeTranslucency.prototype.executeGlobeCommands = function (
-  commands,
-  commandsLength,
-  cameraUnderground,
-  globe,
+  frustumCommands,
   executeCommandFunction,
   scene,
-  context,
   passState
 ) {
-  if (commandsLength === 0) {
+  var context = scene.context;
+  var globeCommands = frustumCommands.commands[Pass.GLOBE];
+  var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
+
+  if (globeCommandsLength === 0) {
     return;
   }
 
   // Clear for each frustum
   this._clearCommand.execute(context, passState);
 
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
+  var translucencyMode = getTranslucencyModeFromGlobe(scene.globe);
   var frontOpaque =
     getFrontFaceAlphaMode(translucencyMode) === TranslucencyMode.FRONT_OPAQUE;
   var backOpaque =
@@ -1020,10 +1019,10 @@ GlobeTranslucency.prototype.executeGlobeCommands = function (
   if (frontOpaque || backOpaque) {
     // Render opaque commands to scene's framebuffer like normal
     // Faces gets swapped if the camera is underground
-    var cullFace = cameraUnderground ? CullFace.BACK : CullFace.FRONT;
+    var cullFace = scene.cameraUnderground ? CullFace.BACK : CullFace.FRONT;
     executeCommands(
-      commands,
-      commandsLength,
+      globeCommands,
+      globeCommandsLength,
       cullFace,
       false,
       executeCommandFunction,
@@ -1036,13 +1035,11 @@ GlobeTranslucency.prototype.executeGlobeCommands = function (
 
 GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
   frustumCommands,
-  cameraUnderground,
-  globe,
   executeCommandFunction,
   scene,
-  context,
   passState
 ) {
+  var context = scene.context;
   var globeCommands = frustumCommands.commands[Pass.GLOBE];
   var globeCommandsLength = frustumCommands.indices[Pass.GLOBE];
   var classificationCommands =
@@ -1054,7 +1051,7 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
     return;
   }
 
-  var translucencyMode = getTranslucencyModeFromGlobe(globe);
+  var translucencyMode = getTranslucencyModeFromGlobe(scene.globe);
   var frontFaceAlphaMode = getFrontFaceAlphaMode(translucencyMode);
   var backFaceAlphaMode = getBackFaceAlphaMode(translucencyMode);
 
@@ -1088,7 +1085,7 @@ GlobeTranslucency.prototype.executeGlobeClassificationCommands = function (
   // as a filter for rendering depth-only commands.
   var cullFace =
     frontTranslucent && backOpaque
-      ? cameraUnderground
+      ? scene.cameraUnderground
         ? CullFace.FRONT
         : CullFace.BACK
       : undefined;

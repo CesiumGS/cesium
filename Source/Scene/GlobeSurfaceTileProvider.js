@@ -108,7 +108,6 @@ function GlobeSurfaceTileProvider(options) {
   this.backFaceCulling = true;
   this.frontFaceAlphaByDistance = undefined;
   this.backFaceAlphaByDistance = undefined;
-  this.translucent = false;
   this.depthTestAgainstTerrain = false;
   this.undergroundColor = undefined;
   this.undergroundColorByDistance = undefined;
@@ -501,7 +500,7 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
 };
 
 function pushCommand(tileProvider, command, frameState) {
-  if (tileProvider.translucent) {
+  if (frameState.globeTranslucent) {
     var firstLayer = !command.renderState.blending.enabled;
     GlobeTranslucency.pushDerivedCommands(
       command,
@@ -651,7 +650,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   if (
     frameState.fog.enabled &&
     !frameState.cameraUnderground &&
-    !this.translucent
+    !frameState.globeTranslucent
   ) {
     if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
       // Tile is completely in fog so return that it is not visible.
@@ -748,7 +747,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     !ortho3D &&
     defined(occluders) &&
     !frameState.cameraUnderground &&
-    !this.translucent
+    !frameState.globeTranslucent
   ) {
     var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
     if (!defined(occludeePointInScaledSpace)) {
@@ -1922,7 +1921,7 @@ function addDrawCommandsForTile(
   }
 
   var cameraUnderground = frameState.cameraUnderground;
-  var translucent = tileProvider.translucent;
+  var translucent = frameState.globeTranslucent;
   var undergroundColor = defaultValue(
     tileProvider.undergroundColor,
     Color.TRANSPARENT

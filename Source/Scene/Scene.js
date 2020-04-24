@@ -1866,7 +1866,7 @@ var requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
 var scratchOccluderBoundingSphere = new BoundingSphere();
 var scratchOccluder;
 
-function getOccluder(scene) {
+function getOccluder(scene, globeTranslucent) {
   // TODO: The occluder is the top-level globe. When we add
   //       support for multiple central bodies, this should be the closest one.
   var globe = scene.globe;
@@ -1875,7 +1875,7 @@ function getOccluder(scene) {
     defined(globe) &&
     globe.show &&
     !scene._cameraUnderground &&
-    !GlobeTranslucency.isTranslucent(globe)
+    !globeTranslucent
   ) {
     var ellipsoid = globe.ellipsoid;
     var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
@@ -1915,6 +1915,8 @@ function updateFrameNumber(scene, frameNumber, time) {
 Scene.prototype.updateFrameState = function () {
   var camera = this.camera;
   var globe = this.globe;
+  var globeTranslucency = this._view.globeTranslucency;
+  var globeTranslucent = GlobeTranslucency.isTranslucent(globe);
 
   var frameState = this._frameState;
   frameState.commandList.length = 0;
@@ -1930,7 +1932,7 @@ Scene.prototype.updateFrameState = function () {
     camera.directionWC,
     camera.upWC
   );
-  frameState.occluder = getOccluder(this);
+  frameState.occluder = getOccluder(this, globeTranslucent);
   frameState.terrainExaggeration = this._terrainExaggeration;
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
@@ -1943,7 +1945,8 @@ Scene.prototype.updateFrameState = function () {
     );
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
-  frameState.globeTranslucency = this._view.globeTranslucency;
+  frameState.globeTranslucent = globeTranslucent;
+  frameState.globeTranslucency = globeTranslucency;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -2519,7 +2522,7 @@ function executeCommands(scene, passState) {
 
   var clearGlobeDepth = environmentState.clearGlobeDepth;
   var useDepthPlane = environmentState.useDepthPlane;
-  var globeTranslucent = GlobeTranslucency.isTranslucent(scene._globe);
+  var globeTranslucent = frameState.globeTranslucent;
   var globeTranslucency = view.globeTranslucency;
   var separatePrimitiveFramebuffer = (environmentState.separatePrimitiveFramebuffer = false);
   var clearDepth = scene._depthClearCommand;
@@ -2593,13 +2596,9 @@ function executeCommands(scene, passState) {
 
     if (globeTranslucent) {
       globeTranslucency.executeGlobeCommands(
-        commands,
-        length,
-        scene._cameraUnderground,
-        scene._globe,
+        frustumCommands,
         executeCommand,
         scene,
-        context,
         passState
       );
     } else {
@@ -2629,11 +2628,8 @@ function executeCommands(scene, passState) {
       if (globeTranslucent) {
         globeTranslucency.executeGlobeClassificationCommands(
           frustumCommands,
-          scene._cameraUnderground,
-          scene._globe,
           executeCommand,
           scene,
-          context,
           passState
         );
       } else {
@@ -2848,8 +2844,18 @@ function executeCommands(scene, passState) {
     us.updatePass(Pass.GLOBE);
     commands = frustumCommands.commands[Pass.GLOBE];
     length = frustumCommands.indices[Pass.GLOBE];
-    for (j = 0; j < length; ++j) {
-      executeIdCommand(commands[j], scene, context, passState);
+
+    if (globeTranslucent) {
+      globeTranslucency.executeGlobeCommands(
+        frustumCommands,
+        executeIdCommand,
+        scene,
+        passState
+      );
+    } else {
+      for (j = 0; j < length; ++j) {
+        executeIdCommand(commands[j], scene, context, passState);
+      }
     }
 
     if (clearGlobeDepth) {
@@ -3328,8 +3334,6 @@ Scene.prototype.updateEnvironment = function () {
   var sunVisibleThroughGlobe =
     environmentVisible &&
     GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
-  var skyAtmosphereVisible =
-    environmentVisible && GlobeTranslucency.isSkyAtmosphereVisible(globe);
 
   if (
     !renderPass ||
@@ -3343,7 +3347,7 @@ Scene.prototype.updateEnvironment = function () {
     environmentState.sunComputeCommand = undefined;
     environmentState.moonCommand = undefined;
   } else {
-    if (defined(skyAtmosphere) && skyAtmosphereVisible) {
+    if (defined(skyAtmosphere)) {
       if (defined(globe)) {
         skyAtmosphere.setDynamicAtmosphereColor(
           globe.enableLighting && globe.dynamicAtmosphereLighting,
@@ -3646,7 +3650,7 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     }
   }
 
-  if (GlobeTranslucency.isTranslucent(scene._globe)) {
+  if (frameState.globeTranslucent) {
     view.globeTranslucency.updateAndClear(
       scene._hdr,
       view.viewport,

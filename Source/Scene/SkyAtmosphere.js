@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -14,6 +13,7 @@ import RenderState from "../Renderer/RenderState.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import VertexArray from "../Renderer/VertexArray.js";
+import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
 import BlendingState from "./BlendingState.js";
@@ -58,8 +58,7 @@ function SkyAtmosphere(ellipsoid) {
   this._spSkyFromSpace = undefined;
   this._spSkyFromAtmosphere = undefined;
 
-  this._spSkyFromSpaceColorCorrect = undefined;
-  this._spSkyFromAtmosphereColorCorrect = undefined;
+  this._flags = undefined;
 
   /**
    * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
@@ -88,22 +87,22 @@ function SkyAtmosphere(ellipsoid) {
   this._hueSaturationBrightness = new Cartesian3();
 
   // camera height, outer radius, inner radius, dynamic atmosphere color flag
-  var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
+  var radiiAndDynamicAtmosphereColor = new Cartesian3();
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-  cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
-  cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(
+  radiiAndDynamicAtmosphereColor.z = 0;
+  radiiAndDynamicAtmosphereColor.x = Cartesian3.maximumComponent(
     Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3())
   );
-  cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
-  this._cameraAndRadiiAndDynamicAtmosphereColor = cameraAndRadiiAndDynamicAtmosphereColor;
+  this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
 
   var that = this;
 
   this._command.uniformMap = {
-    u_cameraAndRadiiAndDynamicAtmosphereColor: function () {
-      return that._cameraAndRadiiAndDynamicAtmosphereColor;
+    u_radiiAndDynamicAtmosphereColor: function () {
+      return that._radiiAndDynamicAtmosphereColor;
     },
     u_hsbShift: function () {
       that._hueSaturationBrightness.x = that.hueShift;
@@ -136,11 +135,8 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   enableLighting,
   useSunDirection
 ) {
-  this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting
-    ? useSunDirection
-      ? 2.0
-      : 1.0
-    : 0.0;
+  var lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
+  this._radiiAndDynamicAtmosphereColor.z = lightEnum;
 };
 
 /**
@@ -161,11 +157,14 @@ SkyAtmosphere.prototype.update = function (frameState) {
     return undefined;
   }
 
+  var context = frameState.context;
+
+  var colorCorrect = hasColorCorrection(this);
+  var globeTranslucent = frameState.globeTranslucent;
+
   var command = this._command;
 
   if (!defined(command.vertexArray)) {
-    var context = frameState.context;
-
     var geometry = EllipsoidGeometry.createGeometry(
       new EllipsoidGeometry({
         radii: Cartesian3.multiplyByScalar(
@@ -192,84 +191,71 @@ SkyAtmosphere.prototype.update = function (frameState) {
       blending: BlendingState.ALPHA_BLEND,
       depthMask: false,
     });
+  }
+
+  var flags = colorCorrect | (globeTranslucent << 2);
+
+  if (flags !== this._flags) {
+    this._flags = flags;
+
+    var defines = [];
+
+    if (colorCorrect) {
+      defines.push("COLOR_CORRECT");
+    }
+
+    if (globeTranslucent) {
+      defines.push("GLOBE_TRANSLUCENT");
+    }
 
     var vs = new ShaderSource({
-      defines: ["SKY_FROM_SPACE"],
-      sources: [SkyAtmosphereVS],
+      defines: defines.concat("SKY_FROM_SPACE"),
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
+    });
+
+    var fs = new ShaderSource({
+      defines: defines.concat("SKY_FROM_SPACE"),
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
     });
 
     this._spSkyFromSpace = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
-      fragmentShaderSource: SkyAtmosphereFS,
+      fragmentShaderSource: fs,
     });
 
     vs = new ShaderSource({
-      defines: ["SKY_FROM_ATMOSPHERE"],
-      sources: [SkyAtmosphereVS],
+      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
+      sources: [SkyAtmosphereCommon, SkyAtmosphereVS],
     });
+
+    fs = new ShaderSource({
+      defines: defines.concat("SKY_FROM_ATMOSPHERE"),
+      sources: [SkyAtmosphereCommon, SkyAtmosphereFS],
+    });
+
     this._spSkyFromAtmosphere = ShaderProgram.fromCache({
       context: context,
       vertexShaderSource: vs,
-      fragmentShaderSource: SkyAtmosphereFS,
-    });
-  }
-
-  // Compile the color correcting versions of the shader on demand
-  var useColorCorrect = colorCorrect(this);
-  if (
-    useColorCorrect &&
-    (!defined(this._spSkyFromSpaceColorCorrect) ||
-      !defined(this._spSkyFromAtmosphereColorCorrect))
-  ) {
-    var contextColorCorrect = frameState.context;
-
-    var vsColorCorrect = new ShaderSource({
-      defines: ["SKY_FROM_SPACE"],
-      sources: [SkyAtmosphereVS],
-    });
-    var fsColorCorrect = new ShaderSource({
-      defines: ["COLOR_CORRECT"],
-      sources: [SkyAtmosphereFS],
-    });
-
-    this._spSkyFromSpaceColorCorrect = ShaderProgram.fromCache({
-      context: contextColorCorrect,
-      vertexShaderSource: vsColorCorrect,
-      fragmentShaderSource: fsColorCorrect,
-    });
-    vsColorCorrect = new ShaderSource({
-      defines: ["SKY_FROM_ATMOSPHERE"],
-      sources: [SkyAtmosphereVS],
-    });
-    this._spSkyFromAtmosphereColorCorrect = ShaderProgram.fromCache({
-      context: contextColorCorrect,
-      vertexShaderSource: vsColorCorrect,
-      fragmentShaderSource: fsColorCorrect,
+      fragmentShaderSource: fs,
     });
   }
 
   var cameraPosition = frameState.camera.positionWC;
-
   var cameraHeight = Cartesian3.magnitude(cameraPosition);
-  this._cameraAndRadiiAndDynamicAtmosphereColor.x = cameraHeight;
 
-  if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
+  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
     // Camera in space
-    command.shaderProgram = useColorCorrect
-      ? this._spSkyFromSpaceColorCorrect
-      : this._spSkyFromSpace;
+    command.shaderProgram = this._spSkyFromSpace;
   } else {
     // Camera in atmosphere
-    command.shaderProgram = useColorCorrect
-      ? this._spSkyFromAtmosphereColorCorrect
-      : this._spSkyFromAtmosphere;
+    command.shaderProgram = this._spSkyFromAtmosphere;
   }
 
   return command;
 };
 
-function colorCorrect(skyAtmosphere) {
+function hasColorCorrection(skyAtmosphere) {
   return !(
     CesiumMath.equalsEpsilon(
       skyAtmosphere.hueShift,
@@ -325,12 +311,6 @@ SkyAtmosphere.prototype.destroy = function () {
   this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
   this._spSkyFromAtmosphere =
     this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
-  this._spSkyFromSpaceColorCorrect =
-    this._spSkyFromSpaceColorCorrect &&
-    this._spSkyFromSpaceColorCorrect.destroy();
-  this._spSkyFromAtmosphereColorCorrect =
-    this._spSkyFromAtmosphereColorCorrect &&
-    this._spSkyFromAtmosphereColorCorrect.destroy();
   return destroyObject(this);
 };
 export default SkyAtmosphere;
