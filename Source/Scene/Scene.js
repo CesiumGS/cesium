@@ -2844,8 +2844,18 @@ function executeCommands(scene, passState) {
     us.updatePass(Pass.GLOBE);
     commands = frustumCommands.commands[Pass.GLOBE];
     length = frustumCommands.indices[Pass.GLOBE];
-    for (j = 0; j < length; ++j) {
-      executeIdCommand(commands[j], scene, context, passState);
+
+    if (globeTranslucent) {
+      globeTranslucency.executeGlobeCommands(
+        frustumCommands,
+        executeIdCommand,
+        scene,
+        passState
+      );
+    } else {
+      for (j = 0; j < length; ++j) {
+        executeIdCommand(commands[j], scene, context, passState);
+      }
     }
 
     if (clearGlobeDepth) {

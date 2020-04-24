@@ -404,7 +404,12 @@ function getPickShaderProgram(vs, fs) {
     "void main() \n" +
     "{ \n" +
     "    vec2 st = gl_FragCoord.xy / czm_viewport.zw; \n" +
-    "    gl_FragColor = texture2D(u_classificationTexture, st); \n" +
+    "    vec4 pickColor = texture2D(u_classificationTexture, st); \n" +
+    "    if (pickColor == vec4(0.0)) \n" +
+    "    { \n" +
+    "        discard; \n" +
+    "    } \n" +
+    "    gl_FragColor = pickColor; \n" +
     "} \n";
 
   fs.sources = [pickShader];

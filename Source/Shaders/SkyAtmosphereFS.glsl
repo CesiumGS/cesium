@@ -40,6 +40,9 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
+// Enlarge the ellipsoid slightly to avoid atmosphere artifacts when the camera is slightly below the ellipsoid
+const float epsilon = 1.000001;
+
 void main (void)
 {
 #ifdef GLOBE_TRANSLUCENT
@@ -47,7 +50,7 @@ void main (void)
     vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
     vec3 directionEC = czm_viewRotation * directionWC;
     czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii);
+    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * epsilon);
     bool intersectsEllipsoid = raySegment.start >= 0.0;
 
     vec3 startPositionWC = czm_viewerPositionWC;
