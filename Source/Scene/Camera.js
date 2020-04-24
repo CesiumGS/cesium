@@ -3186,11 +3186,15 @@ Camera.prototype.cancelFlight = function () {
  * The camera immediately move to destination
  */
 Camera.prototype.completeFlight = function () {
-  if(defined(this._currentFlight)) {
+  if (defined(this._currentFlight)) {
     this.cancelFlight();
 
     newOptions.duration = 0;
     this.setView(newOptions);
+
+    if (defined(newOptions.complete)) {
+      newOptions.complete();
+    }
   }
 };
 
