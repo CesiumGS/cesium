@@ -131,9 +131,14 @@
               new Cesium.Cartesian3(0.0, 0.0, 0.0),
               new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
             ],
-            width: 10.0,
+            width: 18.0,
             material: Cesium.Material.fromType(
-              Cesium.Material.PolylineArrowType
+              Cesium.Material.PolylineArrowType,
+              {
+                color: Cesium.Color.GOLD,
+                outlineColor: Cesium.Color.DARKBLUE,
+                outlineWidth: 1.5,
+              }
             ),
           });
           Sandcastle.declare(localPolyline); // For highlighting on mouseover in Sandcastle.
