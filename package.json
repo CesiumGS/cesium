@@ -117,7 +117,6 @@
     "test-webgl-validation": "gulp test --webglValidation",
     "test-webgl-stub": "gulp test --webglStub",
     "test-release": "gulp test --release",
-    "sortRequires": "gulp sortRequires",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
     "deploy-set-version": "gulp deploy-set-version",
