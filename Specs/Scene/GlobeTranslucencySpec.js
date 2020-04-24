@@ -641,9 +641,13 @@ describe("Scene/GlobeTranslucency", function () {
   });
 
   it("recreates resources when HDR changes", function () {
-    var globeTranslucency = scene._view.globeTranslucency;
+    if (!scene.highDynamicRangeSupported) {
+      return;
+    }
+
     var frameState = scene.frameState;
     var context = frameState.context;
+    var globeTranslucency = scene._view.globeTranslucency;
     var viewport = new BoundingRectangle(0, 0, 100, 100);
     var passState = new PassState(context);
     globeTranslucency.updateAndClear(false, viewport, context, passState);
