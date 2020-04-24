@@ -31,7 +31,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 #endif
 
     // Find the start and end of the blur between the head and the rest.
-    float baseLow = 1.0 - headLength * stPerPixel.s / stPerPixel.t;
+    float baseLow = max(0.5, 1.0 - headLength * stPerPixel.s / stPerPixel.t);
     float baseHigh = baseLow + fuzz * stPerPixel.s;
     float headOrNot = smoothstep(baseLow, baseHigh, st.s);
     float innerHeadOrNot = smoothstep(baseLow + outlineSt.s, baseHigh + outlineSt.s, st.s);
