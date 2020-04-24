@@ -675,8 +675,6 @@ function getDerivedCommandPack(frameState) {
 GlobeTranslucency.updateDerivedCommand = function (command, frameState) {
   var derivedCommands = command.derivedCommands.globeTranslucency;
 
-  // TODO - only generate derived commands for those that are needed for the current state
-
   if (!defined(derivedCommands) || command.dirty) {
     var derivedCommandsPack = getDerivedCommandPack(frameState);
     var length = derivedCommandsPack.length;
