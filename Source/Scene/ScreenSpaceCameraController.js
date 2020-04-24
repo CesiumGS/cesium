@@ -1120,7 +1120,7 @@ var translateCVStartRay = new Ray();
 var translateCVEndRay = new Ray();
 var translateCVStartPos = new Cartesian3();
 var translateCVEndPos = new Cartesian3();
-var translatCVDifference = new Cartesian3();
+var translateCVDifference = new Cartesian3();
 var translateCVOrigin = new Cartesian3();
 var translateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 var translateCVStartMouse = new Cartesian2();
@@ -1202,7 +1202,7 @@ function translateCV(controller, startPosition, movement) {
   var diff = Cartesian3.subtract(
     startPlanePos,
     endPlanePos,
-    translatCVDifference
+    translateCVDifference
   );
   var temp = diff.x;
   diff.x = diff.y;
