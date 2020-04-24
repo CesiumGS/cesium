@@ -2239,14 +2239,18 @@ describe(
       });
 
       return updateGlobeUntilDone(scene).then(function () {
+        var time = JulianDate.fromIso8601(
+          "2020-04-25T03:07:26.04924034334544558Z"
+        );
         globe.translucencyEnabled = true;
         globe.frontFaceAlpha = 0.5;
-        scene.renderForSpecs();
+        scene.renderForSpecs(time);
+
         expect(scene.environmentState.isSunVisible).toBe(true);
         globe.translucencyEnabled = false;
-        scene.renderForSpecs();
+        scene.renderForSpecs(time);
         expect(scene.environmentState.isSunVisible).toBe(false);
-        scene.destroyForSpecs();
+        scene.destroyForSpecs(time);
       });
     });
 
