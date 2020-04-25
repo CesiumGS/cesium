@@ -249,10 +249,6 @@ function ScreenSpaceCameraController(scene) {
   this._globe = undefined;
   this._ellipsoid = undefined;
 
-  this._zoomingOnVectorUnderground = false;
-  this._originalEllipsoid = undefined;
-  this._expandedEllipsoid = undefined;
-
   this._aggregator = new CameraEventAggregator(scene.canvas);
 
   this._lastInertiaSpinMovement = undefined;
@@ -665,7 +661,6 @@ function handleZoom(
         scratchCameraPositionNormal
       );
       if (
-        object._zoomingOnVectorUnderground ||
         scene.frameState.cameraUnderground ||
         (camera.positionCartographic.height < 3000.0 &&
           Math.abs(Cartesian3.dot(camera.direction, cameraPositionNormal)) <
@@ -1979,41 +1974,6 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
   }
 }
 
-var scratchBackwardsRay = new Ray();
-
-function getBackwardsDistance(controller, ray) {
-  var globe = controller._globe;
-  if (!defined(globe)) {
-    return undefined;
-  }
-
-  if (controller._ellipsoid !== controller._originalEllipsoid) {
-    controller._originalEllipsoid = controller._ellipsoid;
-    var radii = controller._ellipsoid.radii;
-    var expansionFactor = 1.002;
-    controller._expandedEllipsoid = new Ellipsoid(
-      radii.x * expansionFactor,
-      radii.y * expansionFactor,
-      radii.z * expansionFactor
-    );
-  }
-
-  var backwardsRay = scratchBackwardsRay;
-  backwardsRay.origin = Cartesian3.clone(ray.origin, backwardsRay.origin);
-  backwardsRay.direction = Cartesian3.negate(
-    ray.direction,
-    backwardsRay.direction
-  );
-  var backwardsIntersection = IntersectionTests.rayEllipsoid(
-    backwardsRay,
-    controller._expandedEllipsoid
-  );
-  if (defined(backwardsIntersection) && backwardsIntersection.start === 0.0) {
-    return backwardsIntersection.stop;
-  }
-  return undefined;
-}
-
 var zoom3DUnitPosition = new Cartesian3();
 var zoom3DCartographic = new Cartographic();
 
@@ -2053,24 +2013,6 @@ function zoom3D(controller, startPosition, movement) {
     distance = Cartesian3.distance(ray.origin, intersection);
   } else {
     distance = height;
-  }
-
-  var zoomingBackwards = movement.endPosition.y < movement.startPosition.y;
-  var sameStartPosition = Cartesian2.equals(
-    startPosition,
-    controller._zoomMouseStart
-  );
-
-  if (!sameStartPosition) {
-    controller._zoomingOnVectorUnderground =
-      scene.frameState.cameraUnderground && defined(intersection);
-  }
-
-  if (controller._zoomingOnVectorUnderground && zoomingBackwards) {
-    var backwardsDistance = getBackwardsDistance(controller, ray);
-    if (defined(backwardsDistance)) {
-      distance = Math.min(distance, backwardsDistance);
-    }
   }
 
   var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
