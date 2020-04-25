@@ -240,14 +240,13 @@ function ScreenSpaceCameraController(scene) {
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
 
   /**
-   * The height at which the camera starts to slow down when underground.
-   * When {@link minimumZoomDistance} is zero the camera will not go below this height.
-   * For best results set the underground height to the minimum height of
-   * underground entities in the scene.
+   * The height of an invisible surface that the camera uses for underground navigation.
+   * For best results the height should be set just below the minimum height of underground entities in the scene.
+   * Note that the camera can still zoom below this height if {@link minimumZoomDistance} is greater than 0.0.
    * @type {Number}
    * @default -20000.0
    */
-  this.undergroundMinimumHeight = -20000.0;
+  this.undergroundSurfaceHeight = -20000.0;
 
   /**
    * Enables or disables camera collision detection with terrain.
@@ -1987,8 +1986,18 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
   }
 }
 
+function delerp(a, b, t) {
+  return (t - a) / (b - a);
+}
+
+function remap(a0, b0, a1, b1, t) {
+  var t1 = CesiumMath.clamp(delerp(a0, b0, t), 0.0, 1.0);
+  return CesiumMath.lerp(a1, b1, t1);
+}
+
 var zoom3DUnitPosition = new Cartesian3();
 var zoom3DCartographic = new Cartographic();
+var scratchSurfaceNormal = new Cartesian3();
 
 function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
@@ -2002,7 +2011,9 @@ function zoom3D(controller, startPosition, movement) {
 
   var windowPosition;
 
-  if (scene.frameState.cameraUnderground) {
+  var cameraUnderground = scene.frameState.cameraUnderground;
+
+  if (cameraUnderground) {
     windowPosition = startPosition;
   } else {
     windowPosition = zoomCVWindowPos;
@@ -2011,12 +2022,13 @@ function zoom3D(controller, startPosition, movement) {
   }
 
   var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
-
-  var intersection;
-  var height = ellipsoid.cartesianToCartographic(
+  var cartographicPosition = ellipsoid.cartesianToCartographic(
     camera.position,
     zoom3DCartographic
-  ).height;
+  );
+
+  var intersection;
+  var height = cartographicPosition.height;
   if (height < controller._minimumPickingTerrainHeight) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
@@ -2026,6 +2038,50 @@ function zoom3D(controller, startPosition, movement) {
     distance = Cartesian3.distance(ray.origin, intersection);
   } else {
     distance = height;
+  }
+
+  if (cameraUnderground) {
+    var distanceFromSurface = Math.abs(height); // TODO use actual surface, not ellipsoid
+    var distanceFromUndergroundSurface = Math.abs(
+      height - controller.undergroundSurfaceHeight
+    );
+
+    // Geocentric normal is accurate enough for these purposes
+    var surfaceNormal = Cartesian3.normalize(
+      camera.position,
+      scratchSurfaceNormal
+    );
+
+    // Weight zoom distance based on how strongly the pick ray is pointing inward.
+    // When the ray is aligned with the inverse surface normal (pointing inward) the distance from the underground surface is used.
+    // When the ray is aligned with the surface normal (pointing outward) the distance from the surface is used.
+    // Any angle between 60 and 300 degrees uses a linear interpolation of the two distances.
+    // Note that distanceWeightedByAngle does not take into account the direction of movement (zooming in vs. out)
+    var angleLerp = Cartesian3.dot(surfaceNormal, ray.direction);
+    angleLerp = remap(-0.5, 0.5, 0.0, 1.0, angleLerp);
+    var distanceWeightedByAngle = CesiumMath.lerp(
+      distanceFromUndergroundSurface,
+      distanceFromSurface,
+      angleLerp
+    );
+
+    // Compute the closeness to the nearest surface and use this to weight the final distance.
+    // An exponent weakens the closeness factor except when the camera is very close to a surface.
+    var closerDistance = Math.min(
+      distanceFromUndergroundSurface,
+      distanceFromSurface
+    );
+    var furtherDistance = Math.max(
+      distanceFromUndergroundSurface,
+      distanceFromSurface
+    );
+    var closenessFactor = Math.exp(-(closerDistance / furtherDistance) * 10.0);
+
+    distance = CesiumMath.lerp(
+      distanceWeightedByAngle,
+      closerDistance,
+      closenessFactor
+    );
   }
 
   var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
