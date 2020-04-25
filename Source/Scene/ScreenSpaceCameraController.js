@@ -238,6 +238,17 @@ function ScreenSpaceCameraController(scene) {
    */
   this.minimumTrackBallHeight = 7500000.0;
   this._minimumTrackBallHeight = this.minimumTrackBallHeight;
+
+  /**
+   * The height at which the camera starts to slow down when underground.
+   * When {@link minimumZoomDistance} is zero the camera will not go below this height.
+   * For best results set the underground height to the minimum height of
+   * underground entities in the scene.
+   * @type {Number}
+   * @default -20000.0
+   */
+  this.undergroundMinimumHeight = -20000.0;
+
   /**
    * Enables or disables camera collision detection with terrain.
    * @type {Boolean}
@@ -532,18 +543,20 @@ function handleZoom(
   rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
   var distance = zoomRate * rangeWindowRatio;
 
-  if (distance > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
-    return;
-  }
+  if (object.enableCollisionDetection || object.minimumZoomDistance === 0.0) {
+    if (distance > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
+      return;
+    }
 
-  if (distance < 0.0 && Math.abs(distanceMeasure - maxHeight) < 1.0) {
-    return;
-  }
+    if (distance < 0.0 && Math.abs(distanceMeasure - maxHeight) < 1.0) {
+      return;
+    }
 
-  if (distanceMeasure - distance < minHeight) {
-    distance = distanceMeasure - minHeight - 1.0;
-  } else if (distanceMeasure - distance > maxHeight) {
-    distance = distanceMeasure - maxHeight;
+    if (distanceMeasure - distance < minHeight) {
+      distance = distanceMeasure - minHeight - 1.0;
+    } else if (distanceMeasure - distance > maxHeight) {
+      distance = distanceMeasure - maxHeight;
+    }
   }
 
   var scene = object._scene;
