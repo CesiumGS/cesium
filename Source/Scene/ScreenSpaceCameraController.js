@@ -2307,18 +2307,43 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
         scratchDirection
       );
       var distance = Cartesian3.magnitude(vectorToCenter);
-      if (distance > controller._undergroundTiltDistance) {
-        var direction = Cartesian3.divideByScalar(
-          vectorToCenter,
-          distance,
-          scratchDirection
-        );
-        center = Cartesian3.add(
-          camera.position,
-          Cartesian3.multiplyByScalar(direction, 10000.0, tilt3DCenter),
-          tilt3DCenter
-        );
+      var direction = Cartesian3.divideByScalar(
+        vectorToCenter,
+        distance,
+        scratchDirection
+      );
+
+      if (!defined(ray)) {
+        ray = camera.getPickRay(startPosition, tilt3DRay);
       }
+
+      var heightDelta = controller.undergroundSurfaceHeight;
+      var radii = Cartesian3.fromElements(
+        ellipsoid.radii.x + heightDelta,
+        ellipsoid.radii.y + heightDelta,
+        ellipsoid.radii.z + heightDelta,
+        scratchRadii
+      );
+
+      var innerEllipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+      intersection = IntersectionTests.rayEllipsoid(ray, innerEllipsoid);
+      if (defined(intersection)) {
+        if (intersection.start === 0.0) {
+          // Inside ellipsoid
+          distance = Math.min(distance, intersection.stop);
+        } else {
+          // Outside ellipsoid
+          distance = Math.min(distance, intersection.start);
+        }
+      }
+
+      distance = Math.min(distance, controller._undergroundTiltDistance);
+
+      center = Cartesian3.add(
+        camera.position,
+        Cartesian3.multiplyByScalar(direction, distance, tilt3DCenter),
+        tilt3DCenter
+      );
     }
 
     Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
