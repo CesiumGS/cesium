@@ -1135,7 +1135,15 @@ function remap(a0, b0, a1, b1, t) {
 
 var scratchSurfaceNormal = new Cartesian3();
 
-function getDistanceUnderground(controller, direction, position, height) {
+function getDistanceFromClosestSurface(controller, height) {
+  var distanceFromSurface = Math.abs(height); // TODO use actual surface, not ellipsoid
+  var distanceFromUndergroundSurface = Math.abs(
+    height - controller.undergroundSurfaceHeight
+  );
+  return Math.min(distanceFromUndergroundSurface, distanceFromSurface);
+}
+
+function getZoomDistanceUnderground(controller, direction, position, height) {
   var distanceFromSurface = Math.abs(height); // TODO use actual surface, not ellipsoid
   var distanceFromUndergroundSurface = Math.abs(
     height - controller.undergroundSurfaceHeight
@@ -1167,7 +1175,7 @@ function getDistanceUnderground(controller, direction, position, height) {
     distanceFromUndergroundSurface,
     distanceFromSurface
   );
-  var closenessFactor = Math.exp(-(closerDistance / furtherDistance) * 10.0);
+  var closenessFactor = Math.exp(-(closerDistance / furtherDistance));
 
   var distance = CesiumMath.lerp(
     distanceWeightedByAngle,
@@ -1629,7 +1637,7 @@ function zoomCV(controller, startPosition, movement) {
   }
 
   if (cameraUnderground) {
-    var distanceUnderground = getDistanceUnderground(
+    var distanceUnderground = getZoomDistanceUnderground(
       controller,
       direction,
       position,
@@ -2102,7 +2110,7 @@ function zoom3D(controller, startPosition, movement) {
   }
 
   if (cameraUnderground) {
-    var distanceUnderground = getDistanceUnderground(
+    var distanceUnderground = getZoomDistanceUnderground(
       controller,
       direction,
       position,
@@ -2335,6 +2343,16 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
           // Outside ellipsoid
           distance = Math.min(distance, intersection.start);
         }
+      }
+
+      if (distance > controller._undergroundTiltDistance) {
+        // When the intersection point is further than the underground tilt distance
+        // use the distance from the closest surface
+        var distanceFromClosestSurface = getDistanceFromClosestSurface(
+          controller,
+          camera.positionCartographic.height
+        );
+        distance = Math.min(distance, distanceFromClosestSurface);
       }
 
       distance = Math.min(distance, controller._undergroundTiltDistance);
