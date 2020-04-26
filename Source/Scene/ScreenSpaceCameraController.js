@@ -2345,13 +2345,16 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
         }
       }
 
-      if (distance > controller._undergroundTiltDistance) {
-        // When the intersection point is further than the underground tilt distance
-        // use the distance from the closest surface
-        var distanceFromClosestSurface = getDistanceFromClosestSurface(
-          controller,
-          camera.positionCartographic.height
-        );
+      var distanceFromClosestSurface = getDistanceFromClosestSurface(
+        controller,
+        camera.positionCartographic.height
+      );
+
+      var maximumDistance = Math.min(
+        controller._undergroundTiltDistance,
+        distanceFromClosestSurface * 5
+      );
+      if (distance > maximumDistance) {
         distance = Math.min(distance, distanceFromClosestSurface);
       }
 
