@@ -1123,6 +1123,60 @@ function pickGlobe(controller, mousePosition, result) {
   return Cartesian3.clone(rayIntersection, result);
 }
 
+function delerp(a, b, t) {
+  return (t - a) / (b - a);
+}
+
+function remap(a0, b0, a1, b1, t) {
+  var t1 = CesiumMath.clamp(delerp(a0, b0, t), 0.0, 1.0);
+  return CesiumMath.lerp(a1, b1, t1);
+}
+
+var scratchSurfaceNormal = new Cartesian3();
+
+function getDistanceUnderground(controller, direction, position, height) {
+  var distanceFromSurface = Math.abs(height); // TODO use actual surface, not ellipsoid
+  var distanceFromUndergroundSurface = Math.abs(
+    height - controller.undergroundSurfaceHeight
+  );
+
+  // Geocentric normal is accurate enough for these purposes
+  var surfaceNormal = Cartesian3.normalize(position, scratchSurfaceNormal);
+
+  // Weight zoom distance based on how strongly the pick ray is pointing inward.
+  // When the ray is aligned with the inverse surface normal (pointing inward) the distance from the underground surface is used.
+  // When the ray is aligned with the surface normal (pointing outward) the distance from the surface is used.
+  // Any angle between 60 and 300 degrees uses a linear interpolation of the two distances.
+  // Note that distanceWeightedByAngle does not take into account the direction of movement (zooming in vs. out)
+  var angleLerp = Cartesian3.dot(surfaceNormal, direction);
+  angleLerp = remap(-0.5, 0.5, 0.0, 1.0, angleLerp);
+  var distanceWeightedByAngle = CesiumMath.lerp(
+    distanceFromUndergroundSurface,
+    distanceFromSurface,
+    angleLerp
+  );
+
+  // Compute the closeness to the nearest surface and use this to weight the final distance.
+  // An exponent weakens the closeness factor except when the camera is very close to a surface.
+  var closerDistance = Math.min(
+    distanceFromUndergroundSurface,
+    distanceFromSurface
+  );
+  var furtherDistance = Math.max(
+    distanceFromUndergroundSurface,
+    distanceFromSurface
+  );
+  var closenessFactor = Math.exp(-(closerDistance / furtherDistance) * 10.0);
+
+  var distance = CesiumMath.lerp(
+    distanceWeightedByAngle,
+    closerDistance,
+    closenessFactor
+  );
+
+  return distance;
+}
+
 var translateCVStartRay = new Ray();
 var translateCVEndRay = new Ray();
 var translateCVStartPos = new Cartesian3();
@@ -1542,25 +1596,45 @@ function zoomCV(controller, startPosition, movement) {
   var camera = scene.camera;
   var canvas = scene.canvas;
 
-  var windowPosition = zoomCVWindowPos;
-  windowPosition.x = canvas.clientWidth / 2;
-  windowPosition.y = canvas.clientHeight / 2;
+  var cameraUnderground = scene.frameState.cameraUnderground;
+
+  var windowPosition;
+
+  if (cameraUnderground) {
+    windowPosition = startPosition;
+  } else {
+    windowPosition = zoomCVWindowPos;
+    windowPosition.x = canvas.clientWidth / 2;
+    windowPosition.y = canvas.clientHeight / 2;
+  }
+
   var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
+  var position = ray.origin;
+  var direction = ray.direction;
+  var height = position.x;
 
   var intersection;
-  if (camera.position.z < controller._minimumPickingTerrainHeight) {
+  if (height < controller._minimumPickingTerrainHeight) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
 
   var distance;
   if (defined(intersection)) {
-    distance = Cartesian3.distance(ray.origin, intersection);
+    distance = Cartesian3.distance(position, intersection);
   } else {
     var normal = Cartesian3.UNIT_X;
-    var position = ray.origin;
-    var direction = ray.direction;
     distance =
       -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+  }
+
+  if (cameraUnderground) {
+    var distanceUnderground = getDistanceUnderground(
+      controller,
+      direction,
+      position,
+      height
+    );
+    distance = Math.min(distance, distanceUnderground);
   }
 
   handleZoom(
@@ -1986,32 +2060,20 @@ function pan3D(controller, startPosition, movement, ellipsoid) {
   }
 }
 
-function delerp(a, b, t) {
-  return (t - a) / (b - a);
-}
-
-function remap(a0, b0, a1, b1, t) {
-  var t1 = CesiumMath.clamp(delerp(a0, b0, t), 0.0, 1.0);
-  return CesiumMath.lerp(a1, b1, t1);
-}
-
 var zoom3DUnitPosition = new Cartesian3();
-var zoom3DCartographic = new Cartographic();
-var scratchSurfaceNormal = new Cartesian3();
 
 function zoom3D(controller, startPosition, movement) {
   if (defined(movement.distance)) {
     movement = movement.distance;
   }
 
-  var ellipsoid = controller._ellipsoid;
   var scene = controller._scene;
   var camera = scene.camera;
   var canvas = scene.canvas;
 
-  var windowPosition;
-
   var cameraUnderground = scene.frameState.cameraUnderground;
+
+  var windowPosition;
 
   if (cameraUnderground) {
     windowPosition = startPosition;
@@ -2022,66 +2084,30 @@ function zoom3D(controller, startPosition, movement) {
   }
 
   var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
-  var cartographicPosition = ellipsoid.cartesianToCartographic(
-    camera.position,
-    zoom3DCartographic
-  );
+  var position = ray.origin;
+  var direction = ray.direction;
+  var height = camera.positionCartographic.height;
 
   var intersection;
-  var height = cartographicPosition.height;
   if (height < controller._minimumPickingTerrainHeight) {
     intersection = pickGlobe(controller, windowPosition, zoomCVIntersection);
   }
 
   var distance;
   if (defined(intersection)) {
-    distance = Cartesian3.distance(ray.origin, intersection);
+    distance = Cartesian3.distance(position, intersection);
   } else {
     distance = height;
   }
 
   if (cameraUnderground) {
-    var distanceFromSurface = Math.abs(height); // TODO use actual surface, not ellipsoid
-    var distanceFromUndergroundSurface = Math.abs(
-      height - controller.undergroundSurfaceHeight
+    var distanceUnderground = getDistanceUnderground(
+      controller,
+      direction,
+      position,
+      height
     );
-
-    // Geocentric normal is accurate enough for these purposes
-    var surfaceNormal = Cartesian3.normalize(
-      camera.position,
-      scratchSurfaceNormal
-    );
-
-    // Weight zoom distance based on how strongly the pick ray is pointing inward.
-    // When the ray is aligned with the inverse surface normal (pointing inward) the distance from the underground surface is used.
-    // When the ray is aligned with the surface normal (pointing outward) the distance from the surface is used.
-    // Any angle between 60 and 300 degrees uses a linear interpolation of the two distances.
-    // Note that distanceWeightedByAngle does not take into account the direction of movement (zooming in vs. out)
-    var angleLerp = Cartesian3.dot(surfaceNormal, ray.direction);
-    angleLerp = remap(-0.5, 0.5, 0.0, 1.0, angleLerp);
-    var distanceWeightedByAngle = CesiumMath.lerp(
-      distanceFromUndergroundSurface,
-      distanceFromSurface,
-      angleLerp
-    );
-
-    // Compute the closeness to the nearest surface and use this to weight the final distance.
-    // An exponent weakens the closeness factor except when the camera is very close to a surface.
-    var closerDistance = Math.min(
-      distanceFromUndergroundSurface,
-      distanceFromSurface
-    );
-    var furtherDistance = Math.max(
-      distanceFromUndergroundSurface,
-      distanceFromSurface
-    );
-    var closenessFactor = Math.exp(-(closerDistance / furtherDistance) * 10.0);
-
-    distance = CesiumMath.lerp(
-      distanceWeightedByAngle,
-      closerDistance,
-      closenessFactor
-    );
+    distance = Math.min(distance, distanceUnderground);
   }
 
   var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
