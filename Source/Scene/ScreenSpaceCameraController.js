@@ -300,7 +300,8 @@ function ScreenSpaceCameraController(scene) {
   this._minimumRotateRate = 1.0 / 5000.0;
   this._minimumZoomRate = 20.0;
   this._maximumZoomRate = 5906376272000.0; // distance from the Sun to Pluto in meters.
-  this._undergroundTiltDistance = 10000.0;
+  this._maximumUndergroundTiltDistance = 10000.0;
+  this._minimumUndergroundTiltDistance = 2000.0;
 }
 
 function decay(time, coefficient) {
@@ -1853,7 +1854,6 @@ function spin3D(controller, startPosition, movement) {
   if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
     if (defined(mousePos)) {
       if (
-        scene.frameState.cameraUnderground ||
         Cartesian3.magnitude(camera.position) < Cartesian3.magnitude(mousePos)
       ) {
         Cartesian3.clone(mousePos, controller._strafeStartPosition);
@@ -2351,14 +2351,17 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
       );
 
       var maximumDistance = Math.min(
-        controller._undergroundTiltDistance,
-        distanceFromClosestSurface * 5
+        controller._maximumUndergroundTiltDistance,
+        Math.max(
+          distanceFromClosestSurface * 5,
+          controller._minimumUndergroundTiltDistance
+        )
       );
       if (distance > maximumDistance) {
         distance = Math.min(distance, distanceFromClosestSurface);
       }
 
-      distance = Math.min(distance, controller._undergroundTiltDistance);
+      distance = Math.min(distance, controller._maximumUndergroundTiltDistance);
 
       center = Cartesian3.add(
         camera.position,
