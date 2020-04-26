@@ -2261,6 +2261,8 @@ function tilt3DOnEllipsoid(controller, startPosition, movement) {
   controller._rotateRateRangeAdjustment = radius;
 }
 
+var scratchDirection = new Cartesian3();
+
 function tilt3DOnTerrain(controller, startPosition, movement) {
   var ellipsoid = controller._ellipsoid;
   var scene = controller._scene;
@@ -2298,19 +2300,25 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
       center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
     }
 
-    var distance = Cartesian3.distance(center, camera.position);
-    if (
-      scene.frameState.cameraUnderground &&
-      distance > controller._undergroundTiltDistance
-    ) {
-      controller._looking = true;
-      up = controller._ellipsoid.geodeticSurfaceNormal(
+    if (scene.frameState.cameraUnderground) {
+      var vectorToCenter = Cartesian3.subtract(
+        center,
         camera.position,
-        tilt3DLookUp
+        scratchDirection
       );
-      look3D(controller, startPosition, movement, up);
-      Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
-      return;
+      var distance = Cartesian3.magnitude(vectorToCenter);
+      if (distance > controller._undergroundTiltDistance) {
+        var direction = Cartesian3.divideByScalar(
+          vectorToCenter,
+          distance,
+          scratchDirection
+        );
+        center = Cartesian3.add(
+          camera.position,
+          Cartesian3.multiplyByScalar(direction, 10000.0, tilt3DCenter),
+          tilt3DCenter
+        );
+      }
     }
 
     Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
