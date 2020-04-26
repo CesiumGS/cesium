@@ -232,7 +232,7 @@ function ScreenSpaceCameraController(scene) {
   this._minimumCollisionTerrainHeight = this.minimumCollisionTerrainHeight;
   /**
    * The minimum height the camera must be before switching from rotating a track ball to
-   * free look when clicks originate on the sky on in space.
+   * free look when clicks originate on the sky or in space.
    * @type {Number}
    * @default 7500000.0
    */
@@ -300,6 +300,7 @@ function ScreenSpaceCameraController(scene) {
   this._minimumRotateRate = 1.0 / 5000.0;
   this._minimumZoomRate = 20.0;
   this._maximumZoomRate = 5906376272000.0; // distance from the Sun to Pluto in meters.
+  this._undergroundTiltDistance = 10000.0;
 }
 
 function decay(time, coefficient) {
@@ -1312,7 +1313,7 @@ function rotateCV(controller, startPosition, movement) {
   if (
     controller._tiltCVOffMap ||
     !controller.onMap() ||
-    camera.position.z > controller._minimumPickingTerrainHeight
+    Math.abs(camera.position.z) > controller._minimumPickingTerrainHeight
   ) {
     controller._tiltCVOffMap = true;
     rotateCVOnPlane(controller, startPosition, movement);
@@ -2268,6 +2269,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
   var center;
   var ray;
   var intersection;
+  var up;
 
   if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
     center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
@@ -2284,7 +2286,7 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
         );
         if (cartographic.height <= controller._minimumTrackBallHeight) {
           controller._looking = true;
-          var up = controller._ellipsoid.geodeticSurfaceNormal(
+          up = controller._ellipsoid.geodeticSurfaceNormal(
             camera.position,
             tilt3DLookUp
           );
@@ -2294,6 +2296,21 @@ function tilt3DOnTerrain(controller, startPosition, movement) {
         return;
       }
       center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
+    }
+
+    var distance = Cartesian3.distance(center, camera.position);
+    if (
+      scene.frameState.cameraUnderground &&
+      distance > controller._undergroundTiltDistance
+    ) {
+      controller._looking = true;
+      up = controller._ellipsoid.geodeticSurfaceNormal(
+        camera.position,
+        tilt3DLookUp
+      );
+      look3D(controller, startPosition, movement, up);
+      Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+      return;
     }
 
     Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
