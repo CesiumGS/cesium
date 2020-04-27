@@ -3605,7 +3605,7 @@ function createUniformMaps(model, context) {
     u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
     u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
 
-    if (technique.attributes.a_outlineCoordinates) {
+    if (defined(technique.attributes.a_outlineCoordinates)) {
       var outlineTexture = ModelOutlineLoader.createTexture(model, context);
       u.uniformMap.u_outlineTexture = function () {
         return outlineTexture;

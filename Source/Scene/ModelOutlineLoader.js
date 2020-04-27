@@ -41,8 +41,12 @@ ModelOutlineLoader.outlinePrimitives = function (model) {
   var gltf = model.gltf;
 
   // Assumption: A single bufferView contains a single zero-indexed range of vertices.
-  // No trickery with using accessor byteOffsets to store multiple zero-based ranges of
-  // vertices in a single bufferView. Use separate bufferViews for that, you monster.
+  // No trickery with using large accessor byteOffsets to store multiple zero-based
+  // ranges of vertices in a single bufferView. Use separate bufferViews for that,
+  // you monster.
+  // Note that interleaved vertex attributes (e.g. position0, normal0, uv0,
+  // position1, normal1, uv1, ...) _are_ supported and should not be confused with
+  // the above.
 
   var vertexNumberingScopes = [];
 
@@ -488,15 +492,16 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
 
     var sourceData = loadResources.getBuffer(bufferView);
     var byteStride = bufferView.byteStride || 4;
+    var newVerticesLength = newVertices.length;
     var destData = new Uint8Array(
-      sourceData.byteLength + newVertices.length * byteStride
+      sourceData.byteLength + newVerticesLength * byteStride
     );
 
     // Copy the original vertices
     destData.set(sourceData);
 
     // Copy the vertices added for outlining
-    for (j = 0; j < newVertices.length; ++j) {
+    for (j = 0; j < newVerticesLength; ++j) {
       var sourceIndex = newVertices[j] * byteStride;
       var destIndex = sourceData.length + j * byteStride;
       for (var k = 0; k < byteStride; ++k) {
@@ -525,7 +530,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
     var accessors = vertexNumberingScope.accessors;
     for (j = 0; j < accessors.length; ++j) {
       var accessorId = accessors[j];
-      gltf.accessors[accessorId].count += newVertices.length;
+      gltf.accessors[accessorId].count += newVerticesLength;
     }
 
     if (!vertexNumberingScope.createdOutlines) {
