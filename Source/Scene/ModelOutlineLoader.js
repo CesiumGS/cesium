@@ -1,4 +1,3 @@
-import binarySearch from "../Core/binarySearch.js";
 import defined from "../Core/defined.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -266,6 +265,23 @@ function addOutline(
         }
         extraVertices.push(original);
         vertexCopies[unmatchableVertexIndex] = copy;
+      }
+
+      if (copy >= 65536 && triangleIndices instanceof Uint16Array) {
+        // We outgrew a 16-bit index buffer, switch to 32-bit.
+        triangleIndices = new Uint32Array(triangleIndices);
+        triangleIndexAccessorGltf.componentType = 5125; // UNSIGNED_INT
+        triangleIndexBufferViewGltf.buffer =
+          gltf.buffers.push({
+            byteLength: triangleIndices.byteLength,
+            extras: {
+              _pipeline: {
+                source: triangleIndices.buffer,
+              },
+            },
+          }) - 1;
+        triangleIndexBufferViewGltf.byteLength = triangleIndices.byteLength;
+        triangleIndexBufferViewGltf.byteOffset = 0;
       }
 
       if (unmatchableVertexIndex === i0) {
