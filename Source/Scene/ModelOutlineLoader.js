@@ -297,6 +297,19 @@ function addOutline(
 // b is the coordinate that applies to edge 0-1 for the vertex.
 // c is the coordinate that applies to edge 1-2 for the vertex.
 
+// A single triangle with all edges highlighted:
+//
+//                 | a | b | c |
+//                 | 1 | 1 | 0 |
+//                       0
+//                      / \
+//                     /   \
+//           edge 0-1 /     \ edge 2-0
+//                   /       \
+//                  /         \
+// | a | b | c |   1-----------2   | a | b | c |
+// | 0 | 1 | 1 |     edge 1-2      | 1 | 0 | 1 |
+//
 // There are 6 possible orderings of coordinates a, b, and c:
 // 0 - abc
 // 1 - acb
