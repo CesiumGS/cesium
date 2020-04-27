@@ -214,15 +214,17 @@ function addOutline(
 
   // Make an array of edges (each with two vertex indices), sorted first by the lower vertex index
   // and second by the higher vertex index.
-  var edges = [];
+  var edgeSmallMultiplier = numVertices;
+
+  var edges = [edgeSmallMultiplier];
   var i;
   for (i = 0; i < edgeIndices.length; i += 2) {
     var a = edgeIndices[i];
     var b = edgeIndices[i + 1];
-    edges.push([Math.min(a, b), Math.max(a, b)]);
+    var small = Math.min(a, b);
+    var big = Math.max(a, b);
+    edges[small * edgeSmallMultiplier + big] = 1;
   }
-
-  edges.sort(compareEdge);
 
   // For each triangle, adjust vertex data so that the correct edges are outlined.
   for (i = 0; i < triangleIndices.length; i += 3) {
@@ -447,18 +449,18 @@ function matchAndStoreCoordinates(
   return -1;
 }
 
-function compareEdge(a, b) {
-  var first = a[0] - b[0];
-  if (first === 0) {
-    return a[1] - b[1];
-  }
-  return first;
-}
-
 function isHighlighted(edges, i0, i1) {
-  return (
-    binarySearch(edges, [Math.min(i0, i1), Math.max(i0, i1)], compareEdge) >= 0
-  );
+  var edgeSmallMultiplier = edges[0];
+  var index = Math.min(i0, i1) * edgeSmallMultiplier + Math.max(i0, i1);
+
+  // If i0 and i1 are both 0, then our index will be 0 and we'll end up
+  // accessing the edgeSmallMultiplier that we've sneakily squirreled away
+  // in index 0. But it makes no sense to have an edge between vertex 0 and
+  // itself, so for any edgeSmallMultiplier other than 1 we'll return the
+  // correct answer: false. If edgeSmallMultiplier is 1, that means there is
+  // only a single vertex, so no danger of forming a meaningful triangle
+  // with that.
+  return edges[index] === 1;
 }
 
 function createTexture(size) {
