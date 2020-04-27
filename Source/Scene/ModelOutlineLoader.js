@@ -211,8 +211,14 @@ function addOutline(
           edgeIndexAccessorGltf.count
         );
 
-  // Make an array of edges (each with two vertex indices), sorted first by the lower vertex index
-  // and second by the higher vertex index.
+  // Make a hash table for quick lookups of whether an edge exists between two
+  // vertices. The hash is a sparse array indexed by
+  //   `smallerVertexIndex * totalNumberOfVertices + biggerVertexIndex`
+  // A value of 1 indicates an edge exists between the two vertex indices; any
+  // other value indicates that it does not. We store the
+  // `edgeSmallMultipler` - that is, the number of vertices in the equation
+  // above - at index 0 for easy access to it later.
+
   var edgeSmallMultiplier = numVertices;
 
   var edges = [edgeSmallMultiplier];
