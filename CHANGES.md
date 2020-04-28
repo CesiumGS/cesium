@@ -19,6 +19,7 @@
 - Fixed an issue with clamping of non-looped glTF animations. Subscribers to animation `update` events should expect one additional event firing as an animation stops. [#7387](https://github.com/CesiumGS/cesium/issues/7387)
 - Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
 - Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
+- Fix potential memory leak when destroying `CesiumWidget` instances.
 
 ### 1.68.0 - 2020-04-01
 
