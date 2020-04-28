@@ -558,7 +558,7 @@ function updateBufferViewsWithNewVertices(model, bufferViews) {
       }
     }
 
-    // This bufferView is an indendent buffer now. Update the model accordingly.
+    // This bufferView is an independent buffer now. Update the model accordingly.
     bufferView.byteOffset = 0;
     bufferView.byteLength = destData.byteLength;
 
