@@ -236,6 +236,7 @@ function generateTechnique(
   var hasNormals = false;
   var hasTangents = false;
   var hasTexCoords = false;
+  var hasOutline = false;
   var isUnlit = false;
 
   if (defined(primitiveInfo)) {
@@ -246,6 +247,7 @@ function generateTechnique(
     hasNormals = primitiveInfo.hasNormals;
     hasTangents = primitiveInfo.hasTangents;
     hasTexCoords = primitiveInfo.hasTexCoords;
+    hasOutline = primitiveInfo.hasOutline;
   }
 
   var morphTargets;
@@ -365,6 +367,10 @@ function generateTechnique(
     }
   }
 
+  if (hasOutline) {
+    fragmentShader += "uniform sampler2D u_outlineTexture;\n";
+  }
+
   // Add attributes with semantics
   var vertexShaderMain = "";
   if (hasSkinning) {
@@ -414,9 +420,20 @@ function generateTechnique(
       semantic: "POSITION",
     },
   };
+
+  if (hasOutline) {
+    techniqueAttributes.a_outlineCoordinates = {
+      semantic: "_OUTLINE_COORDINATES",
+    };
+  }
+
   vertexShader += "attribute vec3 a_position;\n";
   if (hasNormals) {
     vertexShader += "varying vec3 v_positionEC;\n";
+  }
+  if (hasOutline) {
+    vertexShader += "attribute vec3 a_outlineCoordinates;\n";
+    vertexShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
   // Morph Target Weighting
@@ -480,6 +497,10 @@ function generateTechnique(
   }
   vertexShaderMain += "    gl_Position = u_projectionMatrix * position;\n";
 
+  if (hasOutline) {
+    vertexShaderMain += "    v_outlineCoordinates = a_outlineCoordinates;\n";
+  }
+
   // Final normal computation
   if (hasNormals) {
     techniqueAttributes.a_normal = {
@@ -510,6 +531,10 @@ function generateTechnique(
     vertexShaderMain += "    v_tangent.w = weightedTangent.w;\n";
 
     fragmentShader += "varying vec4 v_tangent;\n";
+  }
+
+  if (hasOutline) {
+    fragmentShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
   var fragmentShaderMain = "";
@@ -1101,6 +1126,19 @@ function generateTechnique(
   }
 
   fragmentShader += "    color = LINEARtoSRGB(color);\n";
+
+  if (hasOutline) {
+    fragmentShader += "    float outlineness = max(\n";
+    fragmentShader +=
+      "        texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r,\n";
+    fragmentShader += "        max(\n";
+    fragmentShader +=
+      "          texture2D(u_outlineTexture, vec2(v_outlineCoordinates.y, 0.5)).r,\n";
+    fragmentShader +=
+      "          texture2D(u_outlineTexture, vec2(v_outlineCoordinates.z, 0.5)).r));\n";
+    fragmentShader +=
+      "    color = mix(color, vec3(0.0, 0.0, 0.0), outlineness);\n";
+  }
 
   if (defined(alphaMode)) {
     if (alphaMode === "MASK") {
