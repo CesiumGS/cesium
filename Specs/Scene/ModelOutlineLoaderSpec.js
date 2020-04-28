@@ -498,6 +498,86 @@ describe(
         builder.destroy();
       });
     });
+
+    it("switches to 32-bit indices if more than 65536 vertices are required", function () {
+      var vertices = [];
+      var indices = [];
+      var edges = [];
+
+      // Tricky model is 9 vertices. Add copies of it until we're just under 65636 vertices.
+      for (var i = 0; vertices.length / 7 + 9 <= 65536; ++i) {
+        createTrickyModel(vertices, indices, edges, 2, true, true, true);
+      }
+
+      var builder = createGltfBuilder();
+
+      var bufferBuilder = builder.buffer();
+
+      bufferBuilder
+        .vertexBuffer("vertices")
+        .vec3("position")
+        .vec3("normal")
+        .scalar("batchID")
+        .data(vertices);
+
+      bufferBuilder.indexBuffer("indices").scalar("index").data(indices);
+      bufferBuilder.indexBuffer("edgeIndices").scalar("edgeIndex").data(edges);
+
+      var meshBuilder = builder.mesh();
+      var primitiveBuilder = meshBuilder.primitive();
+      primitiveBuilder
+        .triangles()
+        .material("default")
+        .attribute("POSITION", "position")
+        .attribute("NORMAL", "normal")
+        .attribute("_BATCHID", "batchID")
+        .indices("index");
+
+      var gltf = builder.toGltf();
+
+      gltf.extensionsUsed.push("CESIUM_primitive_outline");
+      gltf.meshes[0].primitives[0].extensions = {
+        CESIUM_primitive_outline: {
+          indices: gltf.accessors.length - 1,
+        },
+      };
+
+      var model = new Model({
+        gltf: gltf,
+      });
+
+      primitives.add(model);
+
+      return waitForReady(scene, model).then(function () {
+        var gltf = model.gltf;
+        var primitive = gltf.meshes[0].primitives[0];
+        var triangleIndexAccessor = gltf.accessors[primitive.indices];
+
+        // The accessor should now be 32-bit and reference higher-numbered vertices.
+        expect(triangleIndexAccessor.componentType).toBe(5125); // UNSIGNED_INT
+        expect(triangleIndexAccessor.max[0]).toBeGreaterThan(65536);
+        expect(triangleIndexAccessor.byteOffset).toBe(0);
+
+        var bufferView = gltf.bufferViews[triangleIndexAccessor.bufferView];
+        var buffer = gltf.buffers[bufferView.buffer];
+        var data = buffer.extras._pipeline.source;
+        var indexBuffer = new Uint32Array(
+          data,
+          data.byteOffset + bufferView.byteOffset,
+          triangleIndexAccessor.count
+        );
+
+        // All the original indices should be the same.
+        for (var i = 0; i < indices.length; ++i) {
+          // All indices in the original range should match the original ones
+          if (indexBuffer[i] < vertices.length / 7) {
+            expect(indexBuffer[i]).toBe(indices[i]);
+          }
+        }
+
+        builder.destroy();
+      });
+    });
   },
   "WebGL"
 );

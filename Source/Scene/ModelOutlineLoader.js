@@ -288,6 +288,13 @@ function addOutline(
           }) - 1;
         triangleIndexBufferViewGltf.byteLength = triangleIndices.byteLength;
         triangleIndexBufferViewGltf.byteOffset = 0;
+        model._loadResources.buffers[
+          triangleIndexBufferViewGltf.buffer
+        ] = new Uint8Array(
+          triangleIndices.buffer,
+          0,
+          triangleIndices.byteLength
+        );
       }
 
       if (unmatchableVertexIndex === i0) {
@@ -300,6 +307,11 @@ function addOutline(
         i2 = copy;
         triangleIndices[i + 2] = copy;
       }
+
+      triangleIndexAccessorGltf.max[0] = Math.max(
+        triangleIndexAccessorGltf.max[0],
+        copy
+      );
 
       unmatchableVertexIndex = matchAndStoreCoordinates(
         outlineCoordinates,
