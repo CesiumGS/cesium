@@ -308,10 +308,12 @@ function addOutline(
         triangleIndices[i + 2] = copy;
       }
 
-      triangleIndexAccessorGltf.max[0] = Math.max(
-        triangleIndexAccessorGltf.max[0],
-        copy
-      );
+      if (defined(triangleIndexAccessorGltf.max)) {
+        triangleIndexAccessorGltf.max[0] = Math.max(
+          triangleIndexAccessorGltf.max[0],
+          copy
+        );
+      }
 
       unmatchableVertexIndex = matchAndStoreCoordinates(
         outlineCoordinates,
