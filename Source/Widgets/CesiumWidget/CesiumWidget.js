@@ -710,10 +710,10 @@ CesiumWidget.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 CesiumWidget.prototype.destroy = function () {
-  if (this._scene) {
+  if (defined(this._scene)) {
     this._scene.renderError.removeEventListener(this._onRenderError);
+    this._scene = this._scene.destroy();
   }
-  this._scene = this._scene && this._scene.destroy();
   this._container.removeChild(this._element);
   this._creditContainer.removeChild(this._innerCreditContainer);
   destroyObject(this);
