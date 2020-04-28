@@ -579,7 +579,7 @@ BatchTable.prototype.getVertexShaderCallback = function () {
     };
   }
 
-  var batchTableShader = "uniform sampler2D batchTexture; \n";
+  var batchTableShader = "uniform highp sampler2D batchTexture; \n";
   batchTableShader += getGlslComputeSt(this) + "\n";
 
   var length = attributes.length;
