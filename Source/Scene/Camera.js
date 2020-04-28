@@ -3187,14 +3187,14 @@ Camera.prototype.cancelFlight = function () {
  */
 Camera.prototype.completeFlight = function () {
   if (defined(this._currentFlight)) {
-    this.cancelFlight();
-
-    newOptions.duration = 0;
+    this._currentFlight.cancelTween();
     this.setView(newOptions);
 
-    if (defined(newOptions.complete)) {
-      newOptions.complete();
+    if (defined(this._currentFlight.complete)) {
+      this._currentFlight.complete();
     }
+
+    this._currentFlight = undefined;
   }
 };
 
