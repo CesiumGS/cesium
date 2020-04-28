@@ -604,7 +604,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Boolean}
-   * @default false
+   * @default true
    */
   useBrowserRecommendedResolution: {
     get: function () {
