@@ -18,5 +18,8 @@
                 "sourceType": "script"
             }
         }
-    ]
+    ],
+  "globals": {
+    "Cesium": true
+  }
 }
