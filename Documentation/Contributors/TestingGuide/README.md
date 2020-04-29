@@ -236,16 +236,14 @@ Tests are written in JavaScript using Jasmine. It is important to realize that t
 Here is a stripped down version of the tests:
 
 ```javascript
-define(["Core/Cartesian3"], function (Cartesian3) {
-  "use strict";
+import { Cartesian3 } from "../../Source/Cesium.js";
 
-  describe("Cartesian3", function () {
-    it("construct with default values", function () {
-      var cartesian = new Cartesian3();
-      expect(cartesian.x).toEqual(0.0);
-      expect(cartesian.y).toEqual(0.0);
-      expect(cartesian.z).toEqual(0.0);
-    });
+describe("Cartesian3", function () {
+  it("construct with default values", function () {
+    var cartesian = new Cartesian3();
+    expect(cartesian.x).toEqual(0.0);
+    expect(cartesian.y).toEqual(0.0);
+    expect(cartesian.z).toEqual(0.0);
   });
 });
 ```
@@ -724,30 +722,26 @@ This test is more cohesive and easier to debug than if it were written using a _
 As mentioned above, some tests are in the `'WebGL'` category. To assign a category to a suite, pass the category to `describe`.
 
 ```javascript
-define(["Scene/DebugModelMatrixPrimitive", "Specs/createScene"], function (
-  DebugModelMatrixPrimitive,
-  createScene
-) {
-  "use strict";
+import { DebugModelMatrixPrimitive } from "../../Source/Cesium.js";
+import createScene from "../createScene.js";
 
-  describe(
-    "Scene/DebugModelMatrixPrimitive",
-    function () {
-      var scene;
+describe(
+  "Scene/DebugModelMatrixPrimitive",
+  function () {
+    var scene;
 
-      beforeAll(function () {
-        scene = createScene();
-      });
+    beforeAll(function () {
+      scene = createScene();
+    });
 
-      afterAll(function () {
-        scene.destroyForSpecs();
-      });
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
 
-      // ...
-    },
-    "WebGL"
-  );
-});
+    // ...
+  },
+  "WebGL"
+);
 ```
 
 CesiumJS uses a customized `describe` function that wraps Jasmine describe calls and provides the category capability.

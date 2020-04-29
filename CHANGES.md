@@ -11,14 +11,18 @@
 
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
+- Added support for high-quality edges on solid geometry in glTF models. [#8776](https://github.com/CesiumGS/cesium/pull/8776)
 
 ##### Fixes :wrench:
 
 - Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
 - Fixed an issue with glTF skinning support where an optional property `skeleton` was considered required by Cesium. [#8175](https://github.com/CesiumGS/cesium/issues/8175)
+- Fixed an issue with clamping of non-looped glTF animations. Subscribers to animation `update` events should expect one additional event firing as an animation stops. [#7387](https://github.com/CesiumGS/cesium/issues/7387)
 - Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
 - Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
 - Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
+- Fix potential memory leak when destroying `CesiumWidget` instances.
+- Geometry instance floats now work for high precision floats on newer iOS devices. [#8805](https://github.com/CesiumGS/cesium/pull/8805)
 
 ### 1.68.0 - 2020-04-01
 
@@ -26,6 +30,7 @@
 
 - Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
 - The `CesiumUnminified` build now includes sourcemaps. [#8572](https://github.com/CesiumGS/cesium/pull/8659)
+- Added glTF `STEP` animation interpolation. [#8786](https://github.com/CesiumGS/cesium/pull/8786)
 - Added the ability to edit CesiumJS shaders on-the-fly using the [SpectorJS](https://spector.babylonjs.com/) Shader Editor. [#8608](https://github.com/CesiumGS/cesium/pull/8608)
 
 ##### Fixes :wrench:
