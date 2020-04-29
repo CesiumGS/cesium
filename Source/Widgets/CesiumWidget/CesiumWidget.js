@@ -366,7 +366,7 @@ function CesiumWidget(container, options) {
     this.targetFrameRate = options.targetFrameRate;
 
     var that = this;
-    scene.renderError.addEventListener(function (scene, error) {
+    this._onRenderError = function (scene, error) {
       that._useDefaultRenderLoop = false;
       that._renderLoopRunning = false;
       if (that._showRenderLoopErrors) {
@@ -374,7 +374,8 @@ function CesiumWidget(container, options) {
           "An error occurred while rendering.  Rendering has stopped.";
         that.showErrorPanel(title, undefined, error);
       }
-    });
+    };
+    scene.renderError.addEventListener(this._onRenderError);
   } catch (error) {
     if (showRenderLoopErrors) {
       var title = "Error constructing CesiumWidget.";
@@ -709,7 +710,10 @@ CesiumWidget.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 CesiumWidget.prototype.destroy = function () {
-  this._scene = this._scene && this._scene.destroy();
+  if (defined(this._scene)) {
+    this._scene.renderError.removeEventListener(this._onRenderError);
+    this._scene = this._scene.destroy();
+  }
   this._container.removeChild(this._element);
   this._creditContainer.removeChild(this._innerCreditContainer);
   destroyObject(this);

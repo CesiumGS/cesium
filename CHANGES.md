@@ -2,6 +2,11 @@
 
 ### 1.69.0 - 2020-05-01
 
+##### Breaking Changes :mega:
+
+- The property `Scene.sunColor` has been removed. Use `scene.light.color` and `scene.light.intensity` instead. [#8774](https://github.com/CesiumGS/cesium/pull/8774)
+- Removed `isArray`. Use the native `Array.isArray` function instead. [#8779](https://github.com/CesiumGS/cesium/pull/8779)
+
 ##### Additions :tada:
 
 - Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
@@ -11,13 +16,16 @@
 - Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent.
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
+- Added support for high-quality edges on solid geometry in glTF models. [#8776](https://github.com/CesiumGS/cesium/pull/8776)
 
 ##### Fixes :wrench:
 
 - Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
 - Fixed an issue with glTF skinning support where an optional property `skeleton` was considered required by Cesium. [#8175](https://github.com/CesiumGS/cesium/issues/8175)
+- Fixed an issue with clamping of non-looped glTF animations. Subscribers to animation `update` events should expect one additional event firing as an animation stops. [#7387](https://github.com/CesiumGS/cesium/issues/7387)
 - Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
 - Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
+- Fix potential memory leak when destroying `CesiumWidget` instances.
 
 ### 1.68.0 - 2020-04-01
 
@@ -25,6 +33,7 @@
 
 - Added basic underground rendering support. When the camera is underground the globe will be rendered as a solid surface and underground entities will not be culled. [#8572](https://github.com/AnalyticalGraphicsInc/cesium/pull/8572)
 - The `CesiumUnminified` build now includes sourcemaps. [#8572](https://github.com/CesiumGS/cesium/pull/8659)
+- Added glTF `STEP` animation interpolation. [#8786](https://github.com/CesiumGS/cesium/pull/8786)
 - Added the ability to edit CesiumJS shaders on-the-fly using the [SpectorJS](https://spector.babylonjs.com/) Shader Editor. [#8608](https://github.com/CesiumGS/cesium/pull/8608)
 
 ##### Fixes :wrench:

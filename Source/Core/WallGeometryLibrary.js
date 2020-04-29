@@ -7,7 +7,7 @@ import PolylinePipeline from "./PolylinePipeline.js";
 import WindingOrder from "./WindingOrder.js";
 
 /**
- * private
+ * @private
  */
 var WallGeometryLibrary = {};
 

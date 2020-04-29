@@ -5,6 +5,7 @@ import defaultValue from "../Core/defaultValue.js";
  * Represents a command to the renderer for clearing a framebuffer.
  *
  * @private
+ * @constructor
  */
 function ClearCommand(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

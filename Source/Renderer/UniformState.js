@@ -19,6 +19,7 @@ import SunLight from "../Scene/SunLight.js";
 
 /**
  * @private
+ * @constructor
  */
 function UniformState() {
   /**
