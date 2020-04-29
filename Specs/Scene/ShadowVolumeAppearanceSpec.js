@@ -140,134 +140,134 @@ describe("Scene/ShadowVolumeAppearance", function () {
   }
 
   it("provides attributes for computing texture coordinates using planes in 3D", function () {
-      var attributes = smallRectangleAttributes;
+    var attributes = smallRectangleAttributes;
 
-      var southWest_LOW = attributes.southWest_LOW;
-      var southWest_HIGH = attributes.southWest_HIGH;
-      var eastward = attributes.eastward;
-      var northward = attributes.northward;
+    var southWest_LOW = attributes.southWest_LOW;
+    var southWest_HIGH = attributes.southWest_HIGH;
+    var eastward = attributes.eastward;
+    var northward = attributes.northward;
 
-      checkGeometryInstanceAttributeVec3(southWest_LOW);
-      checkGeometryInstanceAttributeVec3(southWest_HIGH);
-      checkGeometryInstanceAttributeVec3(eastward);
-      checkGeometryInstanceAttributeVec3(northward);
+    checkGeometryInstanceAttributeVec3(southWest_LOW);
+    checkGeometryInstanceAttributeVec3(southWest_HIGH);
+    checkGeometryInstanceAttributeVec3(eastward);
+    checkGeometryInstanceAttributeVec3(northward);
 
-      // We're using a unit sphere, so expect all HIGH values to be basically 0
-      // and LOW value to be within a small cone around UNIT_X
-      expect(southWest_HIGH.value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(southWest_HIGH.value[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(southWest_HIGH.value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    // We're using a unit sphere, so expect all HIGH values to be basically 0
+    // and LOW value to be within a small cone around UNIT_X
+    expect(southWest_HIGH.value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(southWest_HIGH.value[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(southWest_HIGH.value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
-      expect(southWest_LOW.value[0]).toBeGreaterThan(
-        Math.cos(CesiumMath.toRadians(0.2))
-      );
+    expect(southWest_LOW.value[0]).toBeGreaterThan(
+      Math.cos(CesiumMath.toRadians(0.2))
+    );
 
-      // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
-      var smallRectangleCenter = Cartographic.toCartesian(
-        Rectangle.center(smallTestRectangle),
-        unitSphereEllipsoid
-      );
-      var enuMatrix = Transforms.eastNorthUpToFixedFrame(
-        smallRectangleCenter,
-        unitSphereEllipsoid
-      );
-      var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
+    // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
+    var smallRectangleCenter = Cartographic.toCartesian(
+      Rectangle.center(smallTestRectangle),
+      unitSphereEllipsoid
+    );
+    var enuMatrix = Transforms.eastNorthUpToFixedFrame(
+      smallRectangleCenter,
+      unitSphereEllipsoid
+    );
+    var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
 
-      var eastwardENU = Matrix4.multiplyByPointAsVector(
-        inverseEnu,
-        Cartesian3.fromArray(eastward.value),
-        new Cartesian3()
-      );
-      eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
-      expect(
-        Cartesian3.equalsEpsilon(
-          eastwardENU,
-          Cartesian3.UNIT_X,
-          CesiumMath.EPSILON7
-        )
-      ).toBe(true);
+    var eastwardENU = Matrix4.multiplyByPointAsVector(
+      inverseEnu,
+      Cartesian3.fromArray(eastward.value),
+      new Cartesian3()
+    );
+    eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
+    expect(
+      Cartesian3.equalsEpsilon(
+        eastwardENU,
+        Cartesian3.UNIT_X,
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
 
-      var northwardENU = Matrix4.multiplyByPointAsVector(
-        inverseEnu,
-        Cartesian3.fromArray(northward.value),
-        new Cartesian3()
-      );
-      northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
-      expect(
-        Cartesian3.equalsEpsilon(
-          northwardENU,
-          Cartesian3.UNIT_Y,
-          CesiumMath.EPSILON7
-        )
-      ).toBe(true);
-    });
+    var northwardENU = Matrix4.multiplyByPointAsVector(
+      inverseEnu,
+      Cartesian3.fromArray(northward.value),
+      new Cartesian3()
+    );
+    northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
+    expect(
+      Cartesian3.equalsEpsilon(
+        northwardENU,
+        Cartesian3.UNIT_Y,
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
+  });
 
   it("provides attributes for computing planes in 2D and Columbus View", function () {
-      var planes2D_HIGH = largeRectangleAttributes.planes2D_HIGH;
-      var planes2D_LOW = largeRectangleAttributes.planes2D_LOW;
+    var planes2D_HIGH = largeRectangleAttributes.planes2D_HIGH;
+    var planes2D_LOW = largeRectangleAttributes.planes2D_LOW;
 
-      expect(planes2D_HIGH.componentDatatype).toEqual(ComponentDatatype.FLOAT);
-      expect(planes2D_HIGH.componentsPerAttribute).toEqual(4);
-      expect(planes2D_HIGH.normalize).toEqual(false);
+    expect(planes2D_HIGH.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+    expect(planes2D_HIGH.componentsPerAttribute).toEqual(4);
+    expect(planes2D_HIGH.normalize).toEqual(false);
 
-      // Because using a unit sphere expect all HIGH values to be basically 0
-      var highValue = planes2D_HIGH.value;
-      expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    // Because using a unit sphere expect all HIGH values to be basically 0
+    var highValue = planes2D_HIGH.value;
+    expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
-      expect(planes2D_LOW.componentDatatype).toEqual(ComponentDatatype.FLOAT);
-      expect(planes2D_LOW.componentsPerAttribute).toEqual(4);
-      expect(planes2D_LOW.normalize).toEqual(false);
+    expect(planes2D_LOW.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+    expect(planes2D_LOW.componentsPerAttribute).toEqual(4);
+    expect(planes2D_LOW.normalize).toEqual(false);
 
-      var cartographic = Cartographic.fromDegrees(-45, -45, 0.0); // southwest corner
-      var southwestCartesian = projection.project(cartographic);
-      var lowValue = planes2D_LOW.value;
-      expect(lowValue[0]).toEqualEpsilon(
-        southwestCartesian.x,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[1]).toEqualEpsilon(
-        southwestCartesian.y,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[2]).toEqualEpsilon(
-        -southwestCartesian.y,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[3]).toEqualEpsilon(
-        -southwestCartesian.x,
-        CesiumMath.EPSILON7
-      );
+    var cartographic = Cartographic.fromDegrees(-45, -45, 0.0); // southwest corner
+    var southwestCartesian = projection.project(cartographic);
+    var lowValue = planes2D_LOW.value;
+    expect(lowValue[0]).toEqualEpsilon(
+      southwestCartesian.x,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[1]).toEqualEpsilon(
+      southwestCartesian.y,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[2]).toEqualEpsilon(
+      -southwestCartesian.y,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[3]).toEqualEpsilon(
+      -southwestCartesian.x,
+      CesiumMath.EPSILON7
+    );
 
-      // Small case
-      // Because using a unit sphere expect all HIGH values to be basically 0
-      highValue = smallRectangleAttributes.planes2D_HIGH.value;
-      expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
-      expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    // Small case
+    // Because using a unit sphere expect all HIGH values to be basically 0
+    highValue = smallRectangleAttributes.planes2D_HIGH.value;
+    expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+    expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
-      cartographic = Cartographic.fromDegrees(-0.1, -0.1, 0.0); // southwest corner
-      southwestCartesian = projection.project(cartographic);
-      lowValue = smallRectangleAttributes.planes2D_LOW.value;
-      expect(lowValue[0]).toEqualEpsilon(
-        southwestCartesian.x,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[1]).toEqualEpsilon(
-        southwestCartesian.y,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[2]).toEqualEpsilon(
-        -southwestCartesian.y,
-        CesiumMath.EPSILON7
-      );
-      expect(lowValue[3]).toEqualEpsilon(
-        -southwestCartesian.x,
-        CesiumMath.EPSILON7
-      );
+    cartographic = Cartographic.fromDegrees(-0.1, -0.1, 0.0); // southwest corner
+    southwestCartesian = projection.project(cartographic);
+    lowValue = smallRectangleAttributes.planes2D_LOW.value;
+    expect(lowValue[0]).toEqualEpsilon(
+      southwestCartesian.x,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[1]).toEqualEpsilon(
+      southwestCartesian.y,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[2]).toEqualEpsilon(
+      -southwestCartesian.y,
+      CesiumMath.EPSILON7
+    );
+    expect(lowValue[3]).toEqualEpsilon(
+      -southwestCartesian.x,
+      CesiumMath.EPSILON7
+    );
   });
 
   it("provides attributes for rotating texture coordinates", function () {
