@@ -139,8 +139,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     expect(attribute.normalize).toEqual(false);
   }
 
-  describe("floating point textures reliable", function () {
-    it("provides attributes for computing texture coordinates using planes in 3D", function () {
+  it("provides attributes for computing texture coordinates using planes in 3D", function () {
       var attributes = smallRectangleAttributes;
 
       var southWest_LOW = attributes.southWest_LOW;
@@ -203,7 +202,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
       ).toBe(true);
     });
 
-    it("provides attributes for computing planes in 2D and Columbus View", function () {
+  it("provides attributes for computing planes in 2D and Columbus View", function () {
       var planes2D_HIGH = largeRectangleAttributes.planes2D_HIGH;
       var planes2D_LOW = largeRectangleAttributes.planes2D_LOW;
 
@@ -269,7 +268,6 @@ describe("Scene/ShadowVolumeAppearance", function () {
         -southwestCartesian.x,
         CesiumMath.EPSILON7
       );
-    });
   });
 
   it("provides attributes for rotating texture coordinates", function () {
