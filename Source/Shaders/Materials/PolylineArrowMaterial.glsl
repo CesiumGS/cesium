@@ -4,8 +4,6 @@
 
 uniform vec4 color;
 
-varying float v_width;
-
 float getPointOnLine(vec2 p0, vec2 p1, float x)
 {
     float slope = (p0.y - p1.y) / (p0.x - p1.x);

@@ -2713,32 +2713,6 @@ import ShadowMode from './ShadowMode.js';
         return attributeLocations;
     }
 
-    function mapJointNames(forest, nodes) {
-        var length = forest.length;
-        var jointNodes = {};
-        for (var i = 0; i < length; ++i) {
-            var stack = [forest[i]]; // Push root node of tree
-
-            while (stack.length > 0) {
-                var id = stack.pop();
-                var n = nodes[id];
-
-                if (defined(n)) {
-                    jointNodes[id] = id;
-                }
-
-                var children = n.children;
-                if (defined(children)) {
-                    var childrenLength = children.length;
-                    for (var k = 0; k < childrenLength; ++k) {
-                        stack.push(children[k]);
-                    }
-                }
-            }
-        }
-        return jointNodes;
-    }
-
     function createJoints(model, runtimeSkins) {
         var gltf = model.gltf;
         var skins = gltf.skins;
@@ -2756,21 +2730,10 @@ import ShadowMode from './ShadowMode.js';
             skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
             skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
 
-            // 1. Find nodes with the names in node.skeletons (the node's skeletons)
-            // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
-            // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
-            var forest = [];
-            var skin = skins[node.skin];
-            if (defined(skin.skeleton)) {
-                forest.push(skin.skeleton);
-            }
-
-            var mappedJointNames = mapJointNames(forest, nodes);
-            var gltfJointNames = skins[node.skin].joints;
-            var jointNamesLength = gltfJointNames.length;
-            for (var i = 0; i < jointNamesLength; ++i) {
-                var jointName = gltfJointNames[i];
-                var nodeId = mappedJointNames[jointName];
+            var gltfJoints = skins[node.skin].joints;
+            var jointsLength = gltfJoints.length;
+            for (var i = 0; i < jointsLength; ++i) {
+                var nodeId = gltfJoints[i];
                 var jointNode = runtimeNodes[nodeId];
                 skinnedNode.joints.push(jointNode);
             }
@@ -2812,11 +2775,6 @@ import ShadowMode from './ShadowMode.js';
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
-            //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
-
-            //if (targetPath === 'translation') {
-            //    return;
-            //}
             if (defined(spline)) {
                 localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
                 runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
@@ -2866,7 +2824,6 @@ import ShadowMode from './ShadowMode.js';
 
                 var spline = ModelAnimationCache.getAnimationSpline(model, i, animation, channel.sampler, sampler, input, path, output);
 
-                // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                 channelEvaluators[j] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
             }
 
@@ -3564,7 +3521,6 @@ import ShadowMode from './ShadowMode.js';
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        var skins = gltf.skins;
 
         var scene = gltf.scenes[gltf.scene];
         var sceneNodes = scene.nodes;
@@ -3580,7 +3536,6 @@ import ShadowMode from './ShadowMode.js';
                 id : sceneNodes[i]
             });
 
-            var skeletonIds = [];
             while (stack.length > 0) {
                 var n = stack.pop();
                 seen[n.id] = true;
@@ -3622,24 +3577,6 @@ import ShadowMode from './ShadowMode.js';
                                 parentRuntimeNode : runtimeNode,
                                 gltfNode : nodes[childId],
                                 id : children[j]
-                            });
-                        }
-                    }
-                }
-
-                var skin = gltfNode.skin;
-                if (defined(skin)) {
-                    skeletonIds.push(skins[skin].skeleton);
-                }
-
-                if (stack.length === 0) {
-                    for (var k = 0; k < skeletonIds.length; k++) {
-                        var skeleton = skeletonIds[k];
-                        if (!seen[skeleton]) {
-                            stack.push({
-                                parentRuntimeNode : undefined,
-                                gltfNode : nodes[skeleton],
-                                id : skeleton
                             });
                         }
                     }

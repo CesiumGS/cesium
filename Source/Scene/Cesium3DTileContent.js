@@ -39,7 +39,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         featuresLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -59,7 +60,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         pointsLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -73,7 +75,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         trianglesLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -87,7 +90,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         geometryByteLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -101,7 +105,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         texturesByteLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -115,7 +120,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         batchTableByteLength : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -132,7 +138,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         innerContents : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -146,7 +153,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         readyPromise : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -160,7 +168,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         tileset : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -174,7 +183,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         tile : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -187,7 +197,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @readonly
          */
         url : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
@@ -205,7 +216,8 @@ import DeveloperError from '../Core/DeveloperError.js';
          * @private
          */
         batchTable : {
-            get : function() {  // eslint-disable-line getter-return
+            // eslint-disable-next-line getter-return
+            get : function() {
                 DeveloperError.throwInstantiationError();
             }
         }

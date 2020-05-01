@@ -1,6 +1,19 @@
 Change Log
 ==========
 
+### 1.69.0 - 2020-05-01
+
+##### Additions :tada:
+
+* Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
+
+##### Fixes :wrench:
+
+* Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
+* Fixed an issue with glTF skinning support where an optional property `skeleton` was considered required by Cesium. [#8175](https://github.com/CesiumGS/cesium/issues/8175)
+* Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
+* Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
+
 ### 1.68.0 - 2020-04-01
 
 ##### Additions :tada:
@@ -40,7 +53,7 @@ Change Log
 * Fixed a bug that caused large, nearby geometry to be clipped when using a logarithmic depth buffer, which is the default on most systems. [#8600](https://github.com/CesiumGS/cesium/pull/8600)
 * Fixed a bug where tiles would not load if the camera was tracking a moving tileset. [#8598](https://github.com/CesiumGS/cesium/pull/8598)
 * Fixed a bug where applying a new 3D Tiles style during a flight would not update all existing tiles. [#8622](https://github.com/CesiumGS/cesium/pull/8622)
-* Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/AnalyticalGraphicsInc/cesium/pull/8568)
+* Fixed a bug where Cartesian vectors could not be packed to typed arrays [#8568](https://github.com/CesiumGS/cesium/pull/8568)
 * Updated knockout from 3.5.0 to 3.5.1. [#8424](https://github.com/CesiumGS/cesium/pull/8424)
 * Cesium's local development server now works in Node 12 & 13 [#8648](https://github.com/CesiumGS/cesium/pull/8648)
 
@@ -1958,7 +1971,7 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
 * Added `DataSourceDisplay.defaultDataSource` which is an instance of `CustomDataSource` and allows you to easily add custom entities to the display.
 * Added `Camera.viewBoundingSphere` and `Camera.flyToBoundingSphere`, which as the names imply, sets or flies to a view that encloses the provided `BoundingSphere`
 * For constant `Property` values, there is no longer a need to create an instance of `ConstantProperty` or `ConstantPositionProperty`, you can now assign a value directly to the corresponding property. The same is true for material images and colors.
-* All Entity and related classes can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically. For a more detailed overview of changes to the Entity API, see [this forum thread](https://groups.google.com/d/msg/cesium-dev/ol7edT6EtZw/a2-gvI4H0IwJ) for details.
+* All Entity and related classes can now be assigned using anonymous objects as well as be passed template objects. The correct underlying instance is created for you automatically. For a more detailed overview of changes to the Entity API, see [this forum thread](https://community.cesium.com/t/cesium-in-2015-entity-api/1863) for details.
 
 ### 1.5 - 2015-01-05
 
@@ -2069,7 +2082,7 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
 
 ### 1.0 - 2014-08-01
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+* Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
   * All `Matrix2`, `Matrix3`, `Matrix4` and `Quaternion` functions that take a `result` parameter now require the parameter, except functions starting with `from`.
   * Removed `Billboard.imageIndex` and `BillboardCollection.textureAtlas`. Instead, use `Billboard.image`.
     * Code that looked like:
@@ -2093,7 +2106,7 @@ _This is an npm-only release to fix an issue with using Cesium in Node.js.__
                 position : //...
             });
 
-  * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://groups.google.com/forum/#!topic/cesium-dev/KNl2K3Cazno) for full details.
+  * Updated the [Model Converter](http://cesiumjs.org/convertmodel.html) and `Model` to support [glTF 0.8](https://github.com/KhronosGroup/glTF/blob/schema-8/specification/README.md).  See the [forum post](https://community.cesium.com/t/cesium-and-gltf-version-compatibility/1343) for full details.
   * `Model` primitives are now rotated to be `Z`-up to match Cesium convention; glTF stores models with `Y` up.
   * `SimplePolylineGeometry` and `PolylineGeometry` now curve to follow the ellipsoid surface by default. To disable this behavior, set the option `followSurface` to `false`.
   * Renamed `DynamicScene` layer to `DataSources`.  The following types were also renamed:
@@ -2207,7 +2220,7 @@ Beta Releases
 
 ### b30 - 2014-07-01
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+* Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`.
   * All `Cartesian2`, `Cartesian3`, `Cartesian4`, `TimeInterval`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
@@ -2336,7 +2349,7 @@ Beta Releases
 
 ### b29 - 2014-06-02
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+* Breaking changes ([why so many?](https://community.cesium.com/t/moving-towards-cesium-1-0/1209))
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
   * Removed `CameraFlightPath.createAnimationCartographic`. Code that looked like:
 
@@ -2380,7 +2393,7 @@ Beta Releases
 
 ### b28 - 2014-05-01
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
+* Breaking changes ([why so many?](https://community.cesium.com/t/breaking-changes/1132)):
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
   * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `CesiumWidget.scene.globe` and `Viewer.scene.globe`.
   * Renamed `CentralBody` to `Globe`.
@@ -2710,7 +2723,7 @@ Beta Releases
 * Added `Model` for drawing 3D models using glTF.  See the [tutorial](http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/) and [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html&label=Showcases).
 * DynamicScene now makes use of [Geometry and Appearances](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/), which provides a tremendous improvements to DataSource visualization (CZML, GeoJSON, etc..).  Extruded geometries are now supported and in many use cases performance is an order of magnitude faster.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
-* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by [STK Terrain Server](https://groups.google.com/forum/#!topic/cesium-dev/cP01iP7YOCU).
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by [STK Terrain Server](https://community.cesium.com/t/stk-terrain-server-beta/1017).
 * Fixed rendering artifact on translucent objects when zooming in or out.
 * Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`.  Also see the [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html&label=Showcases).
 * Improved compatibility with Internet Explorer 11.
