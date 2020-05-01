@@ -3188,7 +3188,22 @@ Camera.prototype.cancelFlight = function () {
 Camera.prototype.completeFlight = function () {
   if (defined(this._currentFlight)) {
     this._currentFlight.cancelTween();
-    this.setView(newOptions);
+
+    var options = {
+      destination: undefined,
+      orientation: {
+        heading: undefined,
+        pitch: undefined,
+        roll: undefined,
+      },
+    };
+
+    options.destination = newOptions.destination;
+    options.orientation.heading = newOptions.heading;
+    options.orientation.pitch = newOptions.pitch;
+    options.orientation.roll = newOptions.roll;
+
+    this.setView(options);
 
     if (defined(this._currentFlight.complete)) {
       this._currentFlight.complete();
