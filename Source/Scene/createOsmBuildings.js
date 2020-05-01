@@ -1,4 +1,5 @@
 import Color from "../Core/Color.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IonResource from "../Core/IonResource.js";
@@ -12,7 +13,8 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  *
  * @exports createOsmBuildings
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {Object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
+ *        may be specified here. In addition to those, the following properties are supported:
  * @param {Color} [options.defaultColor=Color.WHITE] The default color to use for buildings
  *        that do not have a color. This parameter is ignored if `options.style` is specified.
  * @param {Cesium3DTileStyle} [options.style] The style to use with the tileset. If not
@@ -44,16 +46,19 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * }));
  */
 function createOsmBuildings(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-  var tileset = new Cesium3DTileset({
+  options = combine(options, {
     url: IonResource.fromAssetId(96188),
   });
+
+  var tileset = new Cesium3DTileset(options);
 
   var style = options.style;
 
   if (!defined(style)) {
-    var color = defaultValue(options.color, Color.WHITE).toCssColorString();
+    var color = defaultValue(
+      options.defaultColor,
+      Color.WHITE
+    ).toCssColorString();
     style = new Cesium3DTileStyle({
       color:
         "Boolean(${feature['cesium#color']}) ? color(${feature['cesium#color']}) : " +
