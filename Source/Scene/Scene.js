@@ -2,7 +2,6 @@ import BoundingRectangle from "../Core/BoundingRectangle.js";
 import BoundingSphere from "../Core/BoundingSphere.js";
 import BoxGeometry from "../Core/BoxGeometry.js";
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
 import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
@@ -11,7 +10,6 @@ import createGuid from "../Core/createGuid.js";
 import CullingVolume from "../Core/CullingVolume.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
@@ -682,7 +680,7 @@ function Scene(options) {
    * @see Scene#requestRenderMode
    *
    * @type {Number}
-   * @default 0.5
+   * @default 0.0
    */
   this.maximumRenderTimeChange = defaultValue(
     options.maximumRenderTimeChange,
@@ -781,8 +779,6 @@ function updateGlobeListeners(scene, globe) {
   }
   scene._removeGlobeCallbacks = removeGlobeCallbacks;
 }
-
-var scratchSunColor = new Cartesian4();
 
 Object.defineProperties(Scene.prototype, {
   /**
@@ -1435,6 +1431,7 @@ Object.defineProperties(Scene.prototype, {
    * Gets the scalar used to exaggerate the terrain.
    * @memberof Scene.prototype
    * @type {Number}
+   * @readonly
    */
   terrainExaggeration: {
     get: function () {
@@ -1490,6 +1487,7 @@ Object.defineProperties(Scene.prototype, {
    * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
    * @memberof Scene.prototype
    * @type {MapMode2D}
+   * @readonly
    */
   mapMode2D: {
     get: function () {
@@ -1597,6 +1595,7 @@ Object.defineProperties(Scene.prototype, {
    * Whether or not high dynamic range rendering is supported.
    * @memberof Scene.prototype
    * @type {Boolean}
+   * @readonly
    * @default true
    */
   highDynamicRangeSupported: {
@@ -1610,40 +1609,15 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Gets or sets the color of the light emitted by the sun.
-   *
+   * Whether or not the camera is underneath the globe.
    * @memberof Scene.prototype
-   * @type {Cartesian3}
-   * @default Cartesian3(1.8, 1.85, 2.0)
+   * @type {Boolean}
+   * @readonly
+   * @default false
    */
-  sunColor: {
+  cameraUnderground: {
     get: function () {
-      deprecationWarning(
-        "sun-color-removed",
-        "scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead."
-      );
-      return this.light.color;
-    },
-    set: function (value) {
-      deprecationWarning(
-        "sun-color-removed",
-        "scene.sunColor will be removed in Cesium 1.69. Use scene.light.color and scene.light.intensity instead."
-      );
-      var maximumComponent = Cartesian3.maximumComponent(value);
-      var sunColor = Cartesian4.fromElements(
-        value.x,
-        value.y,
-        value.z,
-        1.0,
-        scratchSunColor
-      );
-      var intensity = 1.0;
-      if (maximumComponent > 1.0) {
-        Cartesian3.divideByScalar(sunColor, maximumComponent, sunColor); // Don't divide alpha channel
-        intensity = maximumComponent;
-      }
-      this.light.color = Color.fromCartesian4(sunColor, this.light.color);
-      this.light.intensity = intensity;
+      return this._cameraUnderground;
     },
   },
 

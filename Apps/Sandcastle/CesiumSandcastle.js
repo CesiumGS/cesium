@@ -552,7 +552,7 @@ require({
     gutters: ["hintGutter", "errorGutter", "searchGutter", "highlightGutter"],
     lineNumbers: true,
     matchBrackets: true,
-    indentUnit: 4,
+    indentUnit: 2,
     extraKeys: {
       "Ctrl-Space": "autocomplete",
       F8: "runCesium",
@@ -568,7 +568,7 @@ require({
     mode: "text/html",
     lineNumbers: true,
     matchBrackets: true,
-    indentUnit: 4,
+    indentUnit: 2,
     extraKeys: {
       F8: "runCesium",
       Tab: "indentMore",

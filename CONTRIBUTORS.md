@@ -142,6 +142,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Ian Lilley](https://github.com/IanLilleyT)
   - [Samuel Vargas](https://github.com/Samulus)
   - [Sam Suhag](https://github.com/sanjeetsuhag)
+  - [Youssef Victor](https://github.com/YoussefV)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -253,3 +254,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Daniel Leone](https://github.com/danielleone)
 - [Zhou Jiang](https://github.com/aboutqx)
 - [SungHo Lim](https://github.com/SambaLim)
+- [Michael Fink](https://github.com/vividos)
