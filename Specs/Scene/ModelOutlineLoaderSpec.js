@@ -575,6 +575,10 @@ describe(
           }
         }
 
+        var rendererIndexBuffer =
+          model._rendererResources.buffers[triangleIndexAccessor.bufferView];
+        expect(rendererIndexBuffer.bytesPerIndex).toBe(4);
+
         builder.destroy();
       });
     });

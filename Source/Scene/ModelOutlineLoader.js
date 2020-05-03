@@ -295,6 +295,15 @@ function addOutline(
           0,
           triangleIndices.byteLength
         );
+
+        // The index componentType is also squirreled away in ModelLoadResources.
+        // Hackily update it, or else we'll end up creating the wrong type
+        // of index buffer later.
+        loadResources.indexBuffersToCreate._array.forEach(function (toCreate) {
+          if (toCreate.id === triangleIndexAccessorGltf.bufferView) {
+            toCreate.componentType = triangleIndexAccessorGltf.componentType;
+          }
+        });
       }
 
       if (unmatchableVertexIndex === i0) {
