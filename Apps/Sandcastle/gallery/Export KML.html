@@ -85,7 +85,7 @@
         });
 
         var texturePromise = Cesium.Resource.fetchBlob({
-          url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png",
+          url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.jpg",
         });
 
         // This callback allows us to set the URL of the model to use
@@ -96,7 +96,7 @@
 
           if (resource.url.indexOf("CesiumMilkTruck") !== -1) {
             externalFiles["model/CesiumMilkTruck.dae"] = daeModelPromise;
-            externalFiles["model/CesiumMilkTruck.png"] = texturePromise;
+            externalFiles["model/CesiumMilkTruck.jpg"] = texturePromise;
 
             return "model/CesiumMilkTruck.dae";
           }
