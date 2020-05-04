@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.70.0 - 2020-06-01
+
+##### Fixes :wrench:
+
+- This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+
 ### 1.69.0 - 2020-05-01
 
 ##### Breaking Changes :mega:
