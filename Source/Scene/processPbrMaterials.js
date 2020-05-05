@@ -162,6 +162,16 @@ function generateTechnique(
     false
   );
 
+  var addFeatureIdToGenerateShaders = defaultValue(
+    options.addFeatureIdToGenerateShaders,
+    false
+  );
+
+  var addFeatureIdTextureToGeneratedShaders = defaultValue(
+    options.addFeatureIdTextureToGeneratedShaders,
+    false
+  );
+
   var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
   var techniques = techniquesWebgl.techniques;
   var shaders = techniquesWebgl.shaders;
@@ -235,7 +245,8 @@ function generateTechnique(
   var hasMorphTargets = false;
   var hasNormals = false;
   var hasTangents = false;
-  var hasTexCoords = false;
+  var hasTexCoords0 = false;
+  var hasTexCoords1 = false;
   var hasOutline = false;
   var isUnlit = false;
 
@@ -246,7 +257,8 @@ function generateTechnique(
     hasMorphTargets = primitiveInfo.hasMorphTargets;
     hasNormals = primitiveInfo.hasNormals;
     hasTangents = primitiveInfo.hasTangents;
-    hasTexCoords = primitiveInfo.hasTexCoords;
+    hasTexCoords0 = primitiveInfo.hasTexCoords0;
+    hasTexCoords1 = primitiveInfo.hasTexCoords1;
     hasOutline = primitiveInfo.hasOutline;
   }
 
@@ -540,7 +552,8 @@ function generateTechnique(
   var fragmentShaderMain = "";
 
   // Add texture coordinates if the material uses them
-  var v_texCoord;
+  var v_texCoord0;
+  var v_texCoord1;
   var normalTexCoord;
   var baseColorTexCoord;
   var specularGlossinessTexCoord;
@@ -549,17 +562,17 @@ function generateTechnique(
   var occlusionTexCoord;
   var emissiveTexCoord;
 
-  if (hasTexCoords) {
+  if (hasTexCoords0) {
     techniqueAttributes.a_texcoord_0 = {
       semantic: "TEXCOORD_0",
     };
 
-    v_texCoord = "v_texcoord_0";
+    v_texCoord0 = "v_texcoord_0";
     vertexShader += "attribute vec2 a_texcoord_0;\n";
-    vertexShader += "varying vec2 " + v_texCoord + ";\n";
-    vertexShaderMain += "    " + v_texCoord + " = a_texcoord_0;\n";
+    vertexShader += "varying vec2 " + v_texCoord0 + ";\n";
+    vertexShaderMain += "    " + v_texCoord0 + " = a_texcoord_0;\n";
 
-    fragmentShader += "varying vec2 " + v_texCoord + ";\n";
+    fragmentShader += "varying vec2 " + v_texCoord0 + ";\n";
 
     var result = {
       fragmentShaderMain: fragmentShaderMain,
@@ -568,53 +581,66 @@ function generateTechnique(
       gltf,
       "u_normalTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     baseColorTexCoord = addTextureCoordinates(
       gltf,
       "u_baseColorTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     specularGlossinessTexCoord = addTextureCoordinates(
       gltf,
       "u_specularGlossinessTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     diffuseTexCoord = addTextureCoordinates(
       gltf,
       "u_diffuseTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     metallicRoughnessTexCoord = addTextureCoordinates(
       gltf,
       "u_metallicRoughnessTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     occlusionTexCoord = addTextureCoordinates(
       gltf,
       "u_occlusionTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
     emissiveTexCoord = addTextureCoordinates(
       gltf,
       "u_emmissiveTexture",
       generatedMaterialValues,
-      v_texCoord,
+      v_texCoord0,
       result
     );
 
     fragmentShaderMain = result.fragmentShaderMain;
+  }
+
+  if (hasTexCoords1) {
+    techniqueAttributes.a_texcoord_1 = {
+      semantic: "TEXCOORD_1",
+    };
+
+    v_texCoord1 = "v_texcoord_1";
+    vertexShader += "attribute vec2 a_texcoord_1;\n";
+    vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
+    vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
+
+    fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
   }
 
   // Add skinning information if available
@@ -646,6 +672,17 @@ function generateTechnique(
       semantic: "_BATCHID",
     };
     vertexShader += "attribute float a_batchId;\n";
+  }
+
+  if (addFeatureIdToGenerateShaders) {
+    techniqueAttributes.a_featureId_0 = {
+      semantic: "_FEATURE_ID_0",
+    };
+    vertexShader += "attribute float a_featureId_0;\n";
+  }
+
+  if (addFeatureIdTextureToGeneratedShaders) {
+    fragmentShader += "uniform sampler2D u_featureIdTexture;\n";
   }
 
   vertexShader += "void main(void) \n{\n";

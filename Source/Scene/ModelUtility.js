@@ -81,7 +81,8 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
       var hasMorphTargets = defined(primitive.targets);
       var hasNormals = defined(primitive.attributes.NORMAL);
       var hasTangents = defined(primitive.attributes.TANGENT);
-      var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+      var hasTexCoords0 = defined(primitive.attributes.TEXCOORD_0);
+      var hasTexCoords1 = defined(primitive.attributes.TEXCOORD_1);
       var hasOutline =
         defined(primitive.extensions) &&
         defined(primitive.extensions.CESIUM_primitive_outline);
@@ -98,7 +99,8 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
-          hasTexCoords: hasTexCoords,
+          hasTexCoords0: hasTexCoords0,
+          hasTexCoords1: hasTexCoords1,
           hasOutline: hasOutline,
         };
       } else if (
@@ -108,7 +110,8 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
         primitiveInfo.hasMorphTargets !== hasMorphTargets ||
         primitiveInfo.hasNormals !== hasNormals ||
         primitiveInfo.hasTangents !== hasTangents ||
-        primitiveInfo.hasTexCoords !== hasTexCoords ||
+        primitiveInfo.hasTexCoords0 !== hasTexCoords0 ||
+        primitiveInfo.hasTexCoords1 !== hasTexCoords1 ||
         primitiveInfo.hasOutline !== hasOutline
       ) {
         // This primitive uses the same material as another one that either:
@@ -130,7 +133,8 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
-          hasTexCoords: hasTexCoords,
+          hasTexCoords0: hasTexCoords0,
+          hasTexCoords1: hasTexCoords1,
           hasOutline: hasOutline,
         };
       }

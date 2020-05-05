@@ -294,6 +294,7 @@ function fromPlaneExtents(
   return result;
 }
 
+var scratchRectangle = new Rectangle();
 var scratchRectangleCenterCartographic = new Cartographic();
 var scratchRectangleCenter = new Cartesian3();
 var scratchPerimeterCartographicNC = new Cartographic();
@@ -348,6 +349,21 @@ OrientedBoundingBox.fromRectangle = function (
   if (!defined(rectangle)) {
     throw new DeveloperError("rectangle is required");
   }
+
+  rectangle = Rectangle.clone(rectangle, scratchRectangle);
+  if (rectangle.west > -CesiumMath.PI - CesiumMath.EPSILON5) {
+    rectangle.west = Math.max(rectangle.west, -CesiumMath.PI);
+  }
+  if (rectangle.east < CesiumMath.PI + CesiumMath.EPSILON5) {
+    rectangle.east = Math.min(rectangle.east, CesiumMath.PI);
+  }
+  if (rectangle.south > -CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON5) {
+    rectangle.south = Math.max(rectangle.south, -CesiumMath.PI_OVER_TWO);
+  }
+  if (rectangle.north < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+    rectangle.north = Math.min(rectangle.north, CesiumMath.PI_OVER_TWO);
+  }
+
   if (rectangle.width < 0.0 || rectangle.width > CesiumMath.TWO_PI) {
     throw new DeveloperError("Rectangle width must be between 0 and 2*pi");
   }
