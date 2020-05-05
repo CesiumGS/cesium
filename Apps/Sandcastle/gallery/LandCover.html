@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use Viewer to start building new applications or easily embed Cesium into existing applications."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          globe: false,
+        });
+
+        var scene = viewer.scene;
+
+        var tileset = scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(97023, {
+              accessToken:
+                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI3ODYwYzFmMS1jZjcwLTRjNzEtOWIxNy1iMTBiNzBlMGE4NWYiLCJpZCI6OSwic2NvcGVzIjpbImFzciIsImdjIl0sImlhdCI6MTU4ODY2NjQzNn0.MkDFcZUWa_judj4Yhh0kHPsl0KzBwJ4u0LrVRoRvoRc",
+            }),
+          })
+        );
+
+        tileset.readyPromise.otherwise(function (error) {
+          console.log(error);
+        });
+
+        // Currently pure white indicates the feature should not apply its color.
+        // Hack around that by setting pure white to just below pure white.
+        var style = new Cesium.Cesium3DTileStyle({
+          defines: {
+            LandCoverColor:
+              "rgb(${LandCoverColor}[0], ${LandCoverColor}[1], ${LandCoverColor}[2])",
+          },
+          color:
+            "${LandCoverColor} === vec4(1.0) ? rgb(254, 254, 254) : ${LandCoverColor}",
+        });
+
+        tileset.style = style;
+
+        var enablePicking = true;
+        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function (movement) {
+          if (enablePicking) {
+            var pickedObject = scene.pick(movement.position);
+            if (pickedObject instanceof Cesium.Cesium3DTileFeature) {
+              var message =
+                "LandCoverColor: " +
+                pickedObject.getProperty("LandCoverColor") +
+                "\n" +
+                "LandCoverLabel: " +
+                pickedObject.getProperty("LandCoverLabel");
+              console.log(message);
+            }
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Land Cover: Highlight",
+            onselect: function () {
+              tileset.style = style;
+              tileset.colorBlendMode =
+                Cesium.Cesium3DTileColorBlendMode.HIGHLIGHT;
+            },
+          },
+          {
+            text: "Land Cover: Replace",
+            onselect: function () {
+              tileset.style = style;
+              tileset.colorBlendMode =
+                Cesium.Cesium3DTileColorBlendMode.REPLACE;
+            },
+          },
+          {
+            text: "Land Cover: Hide",
+            onselect: function () {
+              tileset.style = undefined;
+            },
+          },
+        ]);
+
+        Sandcastle.addToggleButton("Enable picking", enablePicking, function (
+          checked
+        ) {
+          enablePicking = checked;
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
