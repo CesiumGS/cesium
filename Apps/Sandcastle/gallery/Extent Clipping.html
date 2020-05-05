@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw the outline of a box." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        Cesium.Ion.defaultAccessToken =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwZjViNDdlNy04MGQ4LTQ1NGQtYmUxYy01YTQ5MDYxMTk1YjUiLCJpZCI6NDQsInNjb3BlcyI6WyJhc3IiLCJnYyJdLCJpYXQiOjE1NzY4NzM0MjJ9.In6TeF5VY_BSj568CZTPa-XIe1sIYC9hsu7b-NAXrEQ";
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+        var scene = viewer.scene;
+        var globe = scene.globe;
+
+        globe.depthTestAgainstTerrain = false;
+
+        var tileset = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(91380),
+          })
+        );
+
+        tileset.readyPromise.then(function () {
+          viewer.zoomTo(tileset).otherwise(function (error) {
+            console.log(error);
+          });
+
+          Cesium.Resource.fetchJson(
+            "../../SampleData/fthood_enh_bglobe.geojson"
+          ).then(function (json) {
+            // remove the redundant point from each coordinate
+            var coordinates = json.features[0].geometry.coordinates;
+            var polygon = coordinates[0];
+            polygon.splice(coordinates.length - 1, 1);
+            var holes = [];
+            var i, j;
+            for (i = 1; i < coordinates.length; ++i) {
+              var hole = coordinates[i];
+              hole.splice(hole.length - 1, 1);
+              holes.push(hole);
+            }
+
+            // lat / long -> to ecef coordinates
+            for (i = 0; i < polygon.length; ++i) {
+              var p = polygon[i];
+              polygon[i] = Cesium.Cartesian3.fromDegrees(p[0], p[1], p[2]);
+            }
+
+            for (i = 0; i < holes.length; ++i) {
+              for (j = 0; j < holes[i].length; ++j) {
+                var h = holes[i][j];
+                holes[i][j] = Cesium.Cartesian3.fromDegrees(h[0], h[1], h[2]);
+              }
+            }
+
+            var translateToCenter = Cesium.Matrix4.inverse(
+              tileset.clippingPlanesOriginMatrix,
+              new Cesium.Matrix4()
+            );
+
+            // create clipping planes
+            var clippingPlanes = Cesium.coordinatesToClippingPlaneArray({
+              tolerance: 99,
+              toLocal: translateToCenter,
+              polygons: [polygon],
+              holes: [holes],
+              union: true,
+            });
+
+            tileset.clippingPlanes = new Cesium.ClippingPlaneCollection({
+              planes: clippingPlanes,
+              unionClippingRegions: true,
+            });
+          });
+        }); //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
