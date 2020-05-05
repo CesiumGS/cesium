@@ -12,7 +12,7 @@ import when from "../ThirdParty/when.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {String} options.name The name of the property.
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
@@ -24,13 +24,13 @@ import when from "../ThirdParty/when.js";
  */
 function GltfFeatureTableDescriptorProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var name = options.name;
   var property = options.property;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.string("options.name", name);
   Check.typeOf.object("options.property", property);
   Check.typeOf.object("options.cache", cache);
@@ -84,6 +84,15 @@ Object.defineProperties(GltfFeatureTableDescriptorProperty.prototype, {
       return this._extras;
     },
   },
+
+  /**
+   * @inheritdoc GltfFeatureTableProperty#name
+   */
+  readyPromise: {
+    get: function () {
+      return this._readyPromise;
+    },
+  },
 });
 
 /**
@@ -91,7 +100,9 @@ Object.defineProperties(GltfFeatureTableDescriptorProperty.prototype, {
  *
  * @private
  */
-GltfFeatureTableDescriptorProperty.prototype.getValue = function () {};
+GltfFeatureTableDescriptorProperty.prototype.getValue = function () {
+  return undefined;
+};
 
 /**
  * Implements the {@link GltfFeatureTableProperty} interface.

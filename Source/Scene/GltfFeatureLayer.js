@@ -4,12 +4,13 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * Feature layer in a primitive's feature metadata extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {Object} options.primitive The primitive JSON object from the glTF.
  * @param {Object} options.featureLayer The feature layer JSON object from the glTF.
  * @param {GltfFeatureTable} options.featureTable The feature table.
@@ -22,14 +23,14 @@ import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
  */
 function GltfFeatureLayer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var primitive = options.primitive;
   var featureLayer = options.featureLayer;
   var featureTable = options.featureTable;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.object("options.primitive", primitive);
   Check.typeOf.object("options.featureLayer", featureLayer);
   Check.typeOf.object("options.featureTable", featureTable);
@@ -47,7 +48,7 @@ function GltfFeatureLayer(options) {
   if (defined(textureAccessor)) {
     textureFeatureIds = getTextureFeatureIds(
       this,
-      gltf,
+      gltfContainer,
       textureAccessor,
       cache
     );
@@ -55,7 +56,7 @@ function GltfFeatureLayer(options) {
   } else {
     attributeFeatureIds = getAttributeFeatureIds(
       this,
-      gltf,
+      gltfContainer,
       primitive,
       attributeName,
       cache
@@ -93,7 +94,12 @@ Object.defineProperties(GltfFeatureLayer.prototype, {
   },
 });
 
-function getTextureFeatureIds(featureLayer, gltf, textureAccessor, cache) {
+function getTextureFeatureIds(
+  featureLayer,
+  gltfContainer,
+  textureAccessor,
+  cache
+) {
   // Clone so that this object doesn't hold on to a reference to the gltf JSON
   textureAccessor = clone(textureAccessor, true);
 
@@ -104,23 +110,29 @@ function getTextureFeatureIds(featureLayer, gltf, textureAccessor, cache) {
     readyPromise: undefined,
   });
 
+  var gltf = gltfContainer.gltf;
   var textureInfo = textureAccessor.texture;
   var textureId = textureInfo.index;
   var texture = gltf.textures[textureId];
 
   textureFeatureIds.readyPromise = cache
     .getTexture({
-      gltf: gltf,
+      gltfContainer: gltfContainer,
       texture: texture,
+      textureId: textureId,
     })
     .then(function (cacheItem) {
       if (featureLayer.isDestroyed()) {
         // The feature layer was destroyed before the request came back
         cache.releaseCacheItem(cacheItem);
+        return;
       }
-      var imageData = cacheItem.contents;
-      textureFeatureIds.imageData = imageData;
       textureFeatureIds.cacheItem = cacheItem;
+      var imageData = cacheItem.contents;
+      if (defined(imageData)) {
+        textureFeatureIds.imageData = imageData;
+      }
+      return textureFeatureIds;
     });
 
   return textureFeatureIds;
@@ -128,40 +140,52 @@ function getTextureFeatureIds(featureLayer, gltf, textureAccessor, cache) {
 
 function getAttributeFeatureIds(
   featureLayer,
-  gltf,
+  gltfContainer,
   primitive,
   attributeName,
   cache
 ) {
+  var gltf = gltfContainer.gltf;
   var attributes = primitive.attributes;
-  var accessor = attributes[attributeName];
-  var buffer = GltfFeatureMetadataUtility.getAccessorBuffer(gltf, accessor);
+  var accessorId = attributes[attributeName];
+  var accessor = gltf.accessors[accessorId];
+  var bufferId = GltfFeatureMetadataUtility.getAccessorBufferId(gltf, accessor);
 
   var attributeFeatureIds = new AttributeFeatureIds({
-    initializedWithZeroes: !defined(buffer),
+    initializedWithZeroes: !defined(bufferId),
     typedArray: undefined,
     cacheItem: undefined,
     readyPromise: undefined,
   });
 
-  if (defined(buffer)) {
+  if (defined(bufferId)) {
+    var buffer = gltf.buffers[bufferId];
     attributeFeatureIds.readyPromise = cache
       .getBuffer({
+        gltfContainer: gltfContainer,
         buffer: buffer,
+        bufferId: bufferId,
       })
       .then(function (cacheItem) {
         if (featureLayer.isDestroyed()) {
           // The feature layer was destroyed before the request came back
           cache.releaseCacheItem(cacheItem);
+          return;
         }
-        var bufferData = cacheItem.contents;
         attributeFeatureIds.cacheItem = cacheItem;
-        attributeFeatureIds.typedArray = GltfFeatureMetadataUtility.getTypedArrayForAccessor(
-          gltf,
-          accessor,
-          bufferData
-        );
+        var bufferData = cacheItem.contents;
+        if (defined(bufferData)) {
+          attributeFeatureIds.typedArray = GltfFeatureMetadataUtility.getTypedArrayForAccessor(
+            gltf,
+            accessor,
+            bufferData
+          );
+        }
+        return attributeFeatureIds;
       });
+  } else {
+    // TODO: actually handle initializeWithZeros
+    attributeFeatureIds.readyPromise = when.resolve(attributeFeatureIds);
   }
 
   return attributeFeatureIds;
@@ -216,16 +240,12 @@ GltfFeatureLayer.prototype.destroy = function () {
   var textureFeatureIds = this._textureFeatureIds;
   var attributeFeatureIds = this._attributeFeatureIds;
 
-  if (defined(textureFeatureIds.cacheItem)) {
-    cache.releaseCacheItem({
-      cacheItem: textureFeatureIds.cacheItem,
-    });
+  if (defined(textureFeatureIds) && defined(textureFeatureIds.cacheItem)) {
+    cache.releaseCacheItem(textureFeatureIds.cacheItem);
   }
 
-  if (defined(attributeFeatureIds.cacheItem)) {
-    cache.releaseCacheItem({
-      cacheItem: attributeFeatureIds.cacheItem,
-    });
+  if (defined(attributeFeatureIds) && defined(attributeFeatureIds.cacheItem)) {
+    cache.releaseCacheItem(attributeFeatureIds.cacheItem);
   }
 
   return destroyObject(this);

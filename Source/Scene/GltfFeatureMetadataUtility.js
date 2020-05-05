@@ -10,7 +10,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  */
 var GltfFeatureMetadataUtility = {};
 
-GltfFeatureMetadataUtility.getBufferDataFromPipelineExtras = function (buffer) {
+GltfFeatureMetadataUtility.getSourceDataFromPipelineExtras = function (buffer) {
   if (!defined(buffer.extras)) {
     return undefined;
   }
@@ -46,13 +46,13 @@ GltfFeatureMetadataUtility.getBufferViewData = function (
   bufferView,
   bufferData
 ) {
-  var bufferViewByteOffset = defaultValue(bufferView.byteOffset, 0);
-  var byteOffset = bufferData.byteOffset + bufferViewByteOffset;
+  var byteOffset = defaultValue(bufferView.byteOffset, 0);
+  var byteLength = bufferView.byteLength;
   // TODO: probably want to do a deep copy of the buffer if the buffer is referenced by other things in the glTF because otherwise the buffer won't get freed
-  return bufferData.subarray(byteOffset, byteOffset + bufferView.byteLength);
+  return bufferData.subarray(byteOffset, byteOffset + byteLength);
 };
 
-GltfFeatureMetadataUtility.getAccessorBuffer = function (gltf, accessor) {
+GltfFeatureMetadataUtility.getAccessorBufferId = function (gltf, accessor) {
   var bufferViewId = accessor.bufferView;
   if (!defined(bufferViewId)) {
     return undefined;
@@ -60,9 +60,8 @@ GltfFeatureMetadataUtility.getAccessorBuffer = function (gltf, accessor) {
 
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
-  var buffer = gltf.buffers[bufferId];
 
-  return buffer;
+  return bufferId;
 };
 
 var NumberOfComponentByType = {
@@ -97,7 +96,7 @@ GltfFeatureMetadataUtility.getTypedArrayForAccessor = function (
 
   return ComponentDatatype.createArrayBufferView(
     componentType,
-    bufferData,
+    bufferData.buffer,
     byteOffset,
     length
   );

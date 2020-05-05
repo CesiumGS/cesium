@@ -10,7 +10,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {String} options.name The name of the property.
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.

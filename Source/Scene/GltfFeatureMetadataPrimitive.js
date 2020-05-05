@@ -8,8 +8,8 @@ import when from "../ThirdParty/when.js";
  * A primitive contain feature layers.
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
- * @param {Object} options.primitive The primitive JSON object from the glTF
+ * @param {GltfContainer} options.gltfContainer The glTF container.
+ * @param {Object} options.primitive The primitive JSON object from the glTF.
  * @param {GltfFeatureTable[]} options.featureTables An array of feature tables.
  * @param {Number} options.meshId The mesh ID.
  * @param {Number} options.primitive The primitive ID.
@@ -22,7 +22,7 @@ import when from "../ThirdParty/when.js";
  */
 function GltfFeatureMetadataPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var primitive = options.primitive;
   var featureTables = options.featureTables;
   var meshId = options.meshId;
@@ -30,7 +30,7 @@ function GltfFeatureMetadataPrimitive(options) {
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.object("options.primitive", primitive);
   Check.defined("options.featureTables", featureTables);
   Check.typeOf.number("options.meshId", meshId);
@@ -47,7 +47,7 @@ function GltfFeatureMetadataPrimitive(options) {
     var featureLayer = featureLayers[i];
     var featureTable = featureTables[featureLayer.featureTable];
     layers[i] = new GltfFeatureLayer({
-      gltf: gltf,
+      gltfContainer: gltfContainer,
       primitive: primitive,
       featureLayer: featureLayer,
       featureTable: featureTable,
@@ -55,16 +55,14 @@ function GltfFeatureMetadataPrimitive(options) {
     });
   }
 
+  var layerPromises = layers.map(function (featureLayer) {
+    return featureLayer.readyPromise;
+  });
+
   var that = this;
-  var readyPromise = when
-    .all(
-      layers.map(function (featureLayer) {
-        return featureLayer.readyPromise;
-      })
-    )
-    .then(function () {
-      return that;
-    });
+  var readyPromise = when.all(layerPromises).then(function () {
+    return that;
+  });
 
   this._featureLayers = layers;
   this._meshId = meshId;
@@ -77,7 +75,7 @@ Object.defineProperties(GltfFeatureMetadataPrimitive.prototype, {
    * Feature layers contained by the primitive.
    *
    * @memberof GltfFeatureLayer.prototype
-   * @type {Promise.<GltfFeatureLayer>}
+   * @type {GltfFeatureLayer[]}
    * @readonly
    * @private
    */

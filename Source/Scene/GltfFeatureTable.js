@@ -21,7 +21,7 @@ import when from "../ThirdParty/when.js";
  * A feature table within the the glTF feature metadata extension.
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {Object} options.featureTable The feature table JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
@@ -32,12 +32,12 @@ import when from "../ThirdParty/when.js";
  */
 function GltfFeatureTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var featureTable = options.featureTable;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.object("options.featureTable", featureTable);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
@@ -51,21 +51,21 @@ function GltfFeatureTable(options) {
       var property;
       if (defined(featureProperty.descriptor)) {
         property = new GltfFeatureTableDescriptorProperty({
-          gltf: gltf,
+          gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
           cache: cache,
         });
       } else if (defined(featureProperty.accessor)) {
         property = new GltfFeatureTableAccessorProperty({
-          gltf: gltf,
+          gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
           cache: cache,
         });
       } else {
         property = new GltfFeatureTableArrayProperty({
-          gltf: gltf,
+          gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
           cache: cache,

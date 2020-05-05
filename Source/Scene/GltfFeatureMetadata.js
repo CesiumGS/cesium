@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
+import GltfContainer from "./GltfContainer.js";
 import GltfFeatureMetadataPrimitive from "./GltfFeatureMetadataPrimitive.js";
 import GltfFeatureTable from "./GltfFeatureTable.js";
 import defined from "../Core/defined.js";
@@ -32,10 +33,14 @@ function GltfFeatureMetadata(options) {
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
+  var gltfContainer = new GltfContainer({
+    gltf: gltf,
+  });
+
   var featureTables = featureMetadata.featureTables;
   featureTables = featureTables.map(function (featureTable) {
     return new GltfFeatureTable({
-      gltf: gltf,
+      gltfContainer: gltfContainer,
       featureTable: featureTable,
       cache: cache,
     });
@@ -43,42 +48,43 @@ function GltfFeatureMetadata(options) {
 
   var metadataPrimitives = [];
   var meshes = gltf.meshes;
-  var meshesLength = meshes.length;
-  for (var i = 0; i < meshesLength; ++i) {
-    var mesh = meshes[i];
-    var primitives = mesh.primitives;
-    var primitivesLength = primitives.length;
-    for (var j = 0; j < primitivesLength; ++j) {
-      var primitive = primitives[j];
-      var extensions = primitive.extensions;
-      if (defined(extensions)) {
-        var featureMetadataExtension = extensions.EXT_3dtiles_feature_metadata;
-        if (defined(featureMetadataExtension)) {
-          metadataPrimitives.push(
-            new GltfFeatureMetadataPrimitive({
-              gltf: gltf,
-              primitive: primitive,
-              featureTables: featureTables,
-              meshId: i,
-              primitiveId: j,
-              cache: cache,
-            })
-          );
+  if (defined(meshes)) {
+    var meshesLength = meshes.length;
+    for (var i = 0; i < meshesLength; ++i) {
+      var mesh = meshes[i];
+      var primitives = mesh.primitives;
+      var primitivesLength = primitives.length;
+      for (var j = 0; j < primitivesLength; ++j) {
+        var primitive = primitives[j];
+        var extensions = primitive.extensions;
+        if (defined(extensions)) {
+          var featureMetadataExtension =
+            extensions.EXT_3dtiles_feature_metadata;
+          if (defined(featureMetadataExtension)) {
+            metadataPrimitives.push(
+              new GltfFeatureMetadataPrimitive({
+                gltfContainer: gltfContainer,
+                primitive: primitive,
+                featureTables: featureTables,
+                meshId: i,
+                primitiveId: j,
+                cache: cache,
+              })
+            );
+          }
         }
       }
     }
   }
 
+  var primitivePromises = metadataPrimitives.map(function (primitive) {
+    return primitive.readyPromise;
+  });
+
   var that = this;
-  var readyPromise = when
-    .all(
-      metadataPrimitives.map(function (primitive) {
-        return primitive.readyPromise;
-      })
-    )
-    .then(function () {
-      return that;
-    });
+  var readyPromise = when.all(primitivePromises).then(function () {
+    return that;
+  });
 
   // Clone so that this object doesn't hold on to a reference to the gltf JSON
   var extras = clone(featureMetadata.extras, true);
