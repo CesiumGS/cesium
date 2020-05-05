@@ -254,4 +254,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Daniel Leone](https://github.com/danielleone)
 - [Zhou Jiang](https://github.com/aboutqx)
 - [SungHo Lim](https://github.com/SambaLim)
-- [Jakub Vrána](https://github.com/vrana)
+- [Michael Fink](https://github.com/vividos)
+- [Jakub Vrana](https://github.com/vrana)

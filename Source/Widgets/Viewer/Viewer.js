@@ -1288,7 +1288,7 @@ Object.defineProperties(Viewer.prototype, {
    * @memberof Viewer.prototype
    *
    * @type {Boolean}
-   * @default false
+   * @default true
    */
   useBrowserRecommendedResolution: {
     get: function () {

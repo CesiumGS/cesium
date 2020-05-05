@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.70.0 - 2020-06-01
+
+##### Fixes :wrench:
+
+- This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+
 ### 1.69.0 - 2020-05-01
 
 ##### Breaking Changes :mega:
@@ -9,18 +15,20 @@
 
 ##### Additions :tada:
 
-- Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
 - Added support for high-quality edges on solid geometry in glTF models. [#8776](https://github.com/CesiumGS/cesium/pull/8776)
+- Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 
 ##### Fixes :wrench:
 
 - Fixed several problems with polylines when the logarithmic depth buffer is enabled, which is the default on most systems. [#8706](https://github.com/CesiumGS/cesium/pull/8706)
+- Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
 - Fixed an issue with glTF skinning support where an optional property `skeleton` was considered required by Cesium. [#8175](https://github.com/CesiumGS/cesium/issues/8175)
 - Fixed an issue with clamping of non-looped glTF animations. Subscribers to animation `update` events should expect one additional event firing as an animation stops. [#7387](https://github.com/CesiumGS/cesium/issues/7387)
-- Fixed a bug with very long view ranges requiring multiple frustums even with the logarithmic depth buffer enabled. Previously, such scenes could resolve depth incorrectly. [#8727](https://github.com/CesiumGS/cesium/pull/8727)
+- Geometry instance floats now work for high precision floats on newer iOS devices. [#8805](https://github.com/CesiumGS/cesium/pull/8805)
 - Fixed a bug where the elevation contour material's alpha was not being applied. [#8749](https://github.com/CesiumGS/cesium/pull/8749)
-- Fix potential memory leak when destroying `CesiumWidget` instances.
+- Fix potential memory leak when destroying `CesiumWidget` instances. [#8591](https://github.com/CesiumGS/cesium/pull/8591)
+- Fixed displaying the Cesium ion icon when running in an Android, iOS or UWP WebView. [#8758](https://github.com/CesiumGS/cesium/pull/8758)
 
 ### 1.68.0 - 2020-04-01
 
