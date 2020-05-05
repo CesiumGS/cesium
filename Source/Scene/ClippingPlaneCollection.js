@@ -69,6 +69,7 @@ function ClippingPlaneCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   this._planes = [];
+  this._groups = [];
 
   // Do partial texture updates if just one plane is dirty.
   // If many planes are dirty, refresh the entire texture.
@@ -268,6 +269,24 @@ function setIndexDirty(collection, index) {
   collection._dirtyIndex = index;
 }
 
+function updateGroups(collection) {
+  var length = collection.length;
+  var groupIdToArrayIndex = {};
+  var groups = collection._groups;
+  groups.length = 0;
+
+  for (var i = 0; i < length; ++i) {
+    var plane = collection.get(i);
+    var group = plane.group;
+    if (!defined(groupIdToArrayIndex[group])) {
+      groupIdToArrayIndex[group] = groups.length;
+      groups.push([]);
+    }
+    var arrayIndex = groupIdToArrayIndex[group];
+    groups[arrayIndex].push(i);
+  }
+}
+
 /**
  * Adds the specified {@link ClippingPlane} to the collection to be used to selectively disable rendering
  * on the outside of each plane. Use {@link ClippingPlaneCollection#unionClippingRegions} to modify
@@ -291,6 +310,7 @@ ClippingPlaneCollection.prototype.add = function (plane) {
   setIndexDirty(this, newPlaneIndex);
   this._planes.push(plane);
   this.planeAdded.raiseEvent(plane, newPlaneIndex);
+  updateGroups(this);
 };
 
 /**
@@ -375,6 +395,7 @@ ClippingPlaneCollection.prototype.remove = function (clippingPlane) {
   planes.length = length;
 
   this.planeRemoved.raiseEvent(clippingPlane, index);
+  updateGroups(this);
 
   return true;
 };
@@ -399,6 +420,7 @@ ClippingPlaneCollection.prototype.removeAll = function () {
   }
   this._multipleDirtyPlanes = true;
   this._planes = [];
+  this._groups = [];
 };
 
 var distanceEncodeScratch = new Cartesian4();
@@ -616,37 +638,55 @@ ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = functi
   tileBoundingVolume,
   transform
 ) {
-  var planes = this._planes;
-  var length = planes.length;
-
   var modelMatrix = this.modelMatrix;
   if (defined(transform)) {
     modelMatrix = Matrix4.multiply(transform, modelMatrix, scratchMatrix);
+  }
+
+  var groups = this._groups;
+  var groupsLength = groups.length;
+
+  if (groupsLength === 0) {
+    return Intersect.INSIDE;
   }
 
   // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be
   // considered completely clipped. If the collection is set to union the clipping regions, if the volume can be
   // outside any the planes, it is considered completely clipped.
   // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
-  var intersection = Intersect.INSIDE;
-  if (!this.unionClippingRegions && length > 0) {
-    intersection = Intersect.OUTSIDE;
-  }
+  var intersectInit = this.unionClippingRegions
+    ? Intersect.INSIDE
+    : Intersect.OUTSIDE;
+  var intersectTest = this.unionClippingRegions
+    ? Intersect.OUTSIDE
+    : Intersect.INSIDE;
 
-  for (var i = 0; i < length; ++i) {
-    var plane = planes[i];
+  for (var i = 0; i < groupsLength; ++i) {
+    var intersect = intersectInit;
 
-    Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
+    var planeIndexes = groups[i];
+    var length = planeIndexes.length;
 
-    var value = tileBoundingVolume.intersectPlane(scratchPlane);
-    if (value === Intersect.INTERSECTING) {
-      intersection = value;
-    } else if (this._testIntersection(value)) {
-      return value;
+    for (var j = 0; j < length; ++j) {
+      var plane = this._planes[planeIndexes[j]];
+
+      Plane.transform(plane, modelMatrix, scratchPlane); // ClippingPlane can be used for Plane math
+
+      var value = tileBoundingVolume.intersectPlane(scratchPlane);
+      if (value === Intersect.INTERSECTING) {
+        intersect = value;
+      } else if (value === intersectTest) {
+        intersect = value;
+        break;
+      }
+    }
+
+    if (intersect !== intersectTest) {
+      return intersect;
     }
   }
 
-  return intersection;
+  return intersectTest;
 };
 
 /**

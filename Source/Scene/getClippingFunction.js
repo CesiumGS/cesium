@@ -17,7 +17,6 @@ function getClippingFunction(clippingPlaneCollection, context) {
   Check.typeOf.object("context", context);
   //>>includeEnd('debug');
   var unionClippingRegions = clippingPlaneCollection.unionClippingRegions;
-  var clippingPlanesLength = clippingPlaneCollection.length;
   var usingFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
   var textureResolution = ClippingPlaneCollection.getTextureResolution(
     clippingPlaneCollection,
@@ -26,77 +25,116 @@ function getClippingFunction(clippingPlaneCollection, context) {
   );
   var width = textureResolution.x;
   var height = textureResolution.y;
-
+  var groups = clippingPlaneCollection._groups;
   var functions = usingFloatTexture
     ? getClippingPlaneFloat(width, height)
     : getClippingPlaneUint8(width, height);
   functions += "\n";
   functions += unionClippingRegions
-    ? clippingFunctionUnion(clippingPlanesLength)
-    : clippingFunctionIntersect(clippingPlanesLength);
+    ? clippingFunctionUnion(groups)
+    : clippingFunctionIntersect(groups);
   return functions;
 }
 
-function clippingFunctionUnion(clippingPlanesLength) {
+function clippingFunctionUnion(groups) {
   var functionString =
     "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n" +
     "{\n" +
     "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
-    "    vec3 clipNormal = vec3(0.0);\n" +
-    "    vec3 clipPosition = vec3(0.0);\n" +
-    "    float clipAmount;\n" + // For union planes, we want to get the min distance. So we set the initial value to the first plane distance in the loop below.
     "    float pixelWidth = czm_metersPerPixel(position);\n" +
-    "    bool breakAndDiscard = false;\n" +
-    "    for (int i = 0; i < " +
-    clippingPlanesLength +
-    "; ++i)\n" +
+    "    bool discarded = true;\n" +
+    "    bool clipped;\n" +
+    "    vec3 clipNormal;\n" +
+    "    vec3 clipPosition;\n" +
+    "    float clipAmount;\n" +
+    "    float clipAmountMax;\n" +
+    "    vec4 clippingPlane;\n" +
+    "    float amount; \n";
+
+  var groupsLength = groups.length;
+  for (var i = 0; i < groupsLength; ++i) {
+    functionString += "    clipped = false;\n";
+
+    var clippingPlanes = groups[i];
+    var clippingPlanesLength = clippingPlanes.length;
+    for (var j = 0; j < clippingPlanesLength; ++j) {
+      var index = clippingPlanes[j];
+      functionString +=
+        "    clippingPlane = getClippingPlane(clippingPlanes, " +
+        index +
+        ", clippingPlanesMatrix);\n" +
+        "    clipNormal = clippingPlane.xyz;\n" +
+        "    clipPosition = -clippingPlane.w * clipNormal;\n" +
+        "    amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n" +
+        "    clipped = clipped || (amount <= 0.0);\n";
+
+      if (j === 0) {
+        functionString += "    clipAmount = amount;\n";
+      } else {
+        functionString += "    clipAmount = min(amount, clipAmount);\n";
+      }
+    }
+
+    functionString +=
+      "    discarded = discarded && clipped;\n" +
+      "    clipAmountMax = max(clipAmountMax, clipAmount);\n";
+  }
+
+  functionString +=
+    "    if (discarded)\n" +
     "    {\n" +
-    "        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n" +
-    "        clipNormal = clippingPlane.xyz;\n" +
-    "        clipPosition = -clippingPlane.w * clipNormal;\n" +
-    "        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n" +
-    "        clipAmount = czm_branchFreeTernary(i == 0, amount, min(amount, clipAmount));\n" +
-    "        if (amount <= 0.0)\n" +
-    "        {\n" +
-    "           breakAndDiscard = true;\n" +
-    "           break;\n" + // HLSL compiler bug if we discard here: https://bugs.chromium.org/p/angleproject/issues/detail?id=1945#c6
-    "        }\n" +
-    "    }\n" +
-    "    if (breakAndDiscard) {\n" +
     "        discard;\n" +
     "    }\n" +
-    "    return clipAmount;\n" +
-    "}\n";
+    "    return clipAmountMax;\n" +
+    "}";
+
   return functionString;
 }
 
-function clippingFunctionIntersect(clippingPlanesLength) {
+function clippingFunctionIntersect(groups) {
   var functionString =
     "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n" +
     "{\n" +
-    "    bool clipped = true;\n" +
     "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
-    "    vec3 clipNormal = vec3(0.0);\n" +
-    "    vec3 clipPosition = vec3(0.0);\n" +
-    "    float clipAmount = 0.0;\n" +
     "    float pixelWidth = czm_metersPerPixel(position);\n" +
-    "    for (int i = 0; i < " +
-    clippingPlanesLength +
-    "; ++i)\n" +
-    "    {\n" +
-    "        vec4 clippingPlane = getClippingPlane(clippingPlanes, i, clippingPlanesMatrix);\n" +
-    "        clipNormal = clippingPlane.xyz;\n" +
-    "        clipPosition = -clippingPlane.w * clipNormal;\n" +
-    "        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n" +
-    "        clipAmount = max(amount, clipAmount);\n" +
-    "        clipped = clipped && (amount <= 0.0);\n" +
-    "    }\n" +
-    "    if (clipped)\n" +
-    "    {\n" +
-    "        discard;\n" +
-    "    }\n" +
-    "    return clipAmount;\n" +
-    "}\n";
+    "    bool clipped;\n" +
+    "    vec3 clipNormal;\n" +
+    "    vec3 clipPosition;\n" +
+    "    float clipAmount;\n" +
+    "    float clipAmountMin;\n" +
+    "    vec4 clippingPlane;\n" +
+    "    float amount; \n";
+
+  var groupsLength = groups.length;
+  for (var i = 0; i < groupsLength; ++i) {
+    functionString += "    clipped = true;\n" + "    clipAmount = 0.0;\n";
+
+    var clippingPlanes = groups[i];
+    var clippingPlanesLength = clippingPlanes.length;
+    for (var j = 0; j < clippingPlanesLength; ++j) {
+      var index = clippingPlanes[j];
+      functionString +=
+        "    clippingPlane = getClippingPlane(clippingPlanes, " +
+        index +
+        ", clippingPlanesMatrix);\n" +
+        "    clipNormal = clippingPlane.xyz;\n" +
+        "    clipPosition = -clippingPlane.w * clipNormal;\n" +
+        "    amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n" +
+        "    clipAmount = max(amount, clipAmount);\n" +
+        "    clipped = clipped && (amount <= 0.0);\n";
+    }
+    functionString +=
+      "    if (clipped)\n" + "    {\n" + "        discard;\n" + "    };\n";
+
+    if (i === 0) {
+      functionString += "    clipAmountMin = clipAmount;\n";
+    } else {
+      functionString += "    clipAmountMin = min(clipAmountMin, clipAmount);\n";
+    }
+  }
+
+  functionString += "    return clipAmountMin;\n" + "}";
+
   return functionString;
 }
 
