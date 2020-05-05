@@ -13,7 +13,7 @@ import when from "../ThirdParty/when.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {String} options.name The name of the property.
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
@@ -25,19 +25,20 @@ import when from "../ThirdParty/when.js";
  */
 function GltfFeatureTableArrayProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var name = options.name;
   var property = options.property;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.string("options.name", name);
   Check.typeOf.object("options.property", property);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
   var array = property.array;
+  var type = defaultValue(array.type, "any");
   var external = array.external;
 
   var readyPromise;
@@ -49,9 +50,15 @@ function GltfFeatureTableArrayProperty(options) {
         uri: external.uri,
       })
       .then(function (cacheItem) {
-        if (defined(cacheItem)) {
-          that._values = cacheItem.contents[external.key];
-          that._cacheItem = cacheItem;
+        if (that.isDestroyed()) {
+          // The feature table property was destroyed before the request came back
+          cache.releaseCacheItem(cacheItem);
+          return;
+        }
+        that._cacheItem = cacheItem;
+        var json = cacheItem.contents;
+        if (defined(json)) {
+          that._values = json[external.key];
         }
         return that;
       });
@@ -68,7 +75,7 @@ function GltfFeatureTableArrayProperty(options) {
   this._cacheItem = undefined;
   this._name = name;
   this._semantic = property.semantic;
-  this._type = GltfFeatureTablePropertyType.getTypeFromArrayType(array.type);
+  this._type = GltfFeatureTablePropertyType.getTypeFromArrayType(type);
   this._extras = extras;
   this._readyPromise = readyPromise;
 }
@@ -148,14 +155,18 @@ GltfFeatureTableArrayProperty.prototype.getValue = function (featureId) {
  */
 GltfFeatureTableArrayProperty.prototype.setValue = function (featureId, value) {
   var values = this._values;
+  var cache = this._cache;
+  var cacheItem = this._cacheItem;
 
   if (!defined(values)) {
+    // TODO: allocate on demand? What size array?
     return;
   }
 
-  if (defined(this._cacheItem)) {
+  if (defined(cacheItem)) {
     // Clone on demand if modifying values that are in the cache
     values = clone(values, true);
+    cache.releaseCacheItem(cacheItem);
     this._values = values;
     this._cacheItem = undefined;
   }
@@ -178,9 +189,7 @@ GltfFeatureTableArrayProperty.prototype.destroy = function () {
   var cacheItem = this._cacheItem;
 
   if (defined(cacheItem)) {
-    cache.releaseCacheItem({
-      cacheItem: cacheItem,
-    });
+    cache.releaseCacheItem(cacheItem);
   }
 
   return destroyObject(this);

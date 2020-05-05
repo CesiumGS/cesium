@@ -5,6 +5,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getBinaryAccessor from "./getBinaryAccessor.js";
+import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
 import GltfFeatureTablePropertyType from "./GltfFeatureTablePropertyType.js";
 import when from "../ThirdParty/when.js";
 
@@ -15,7 +16,7 @@ import when from "../ThirdParty/when.js";
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.gltf The glTF JSON object.
+ * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {String} options.name The name of the property.
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
@@ -27,18 +28,19 @@ import when from "../ThirdParty/when.js";
  */
 function GltfFeatureTableAccessorProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltf = options.gltf;
+  var gltfContainer = options.gltfContainer;
   var name = options.name;
   var property = options.property;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.string("options.name", name);
   Check.typeOf.object("options.property", property);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
+  var gltf = gltfContainer.gltf;
   var accessorId = property.accessor;
   var accessor = gltf.accessors[accessorId];
   var type = accessor.type;
@@ -46,32 +48,35 @@ function GltfFeatureTableAccessorProperty(options) {
   var count = accessor.count;
   var binaryAccessor = getBinaryAccessor(accessor);
   var normalized = isNormalized(accessor.normalized, componentType);
-  var buffer = getBuffer(gltf, accessor);
-  var bufferSource = getBufferSource(gltf, accessor);
-  var typedArray = getTypedArrayForAccessor(
-    gltf,
-    accessor,
-    bufferSource,
-    binaryAccessor
-  );
+  var bufferId = GltfFeatureMetadataUtility.getAccessorBufferId(gltf, accessor);
 
   var readyPromise;
-
-  // TODO: always try to read from the cache because you might want to hold onto a chunk before it gets deleted
-  var that = this;
-  if (!defined(typedArray) && defined(buffer)) {
+  if (defined(bufferId)) {
+    var buffer = gltf.buffers[bufferId];
+    var that = this;
     readyPromise = cache
       .getBuffer({
+        gltfContainer: gltfContainer,
         buffer: buffer,
+        bufferId: bufferId,
       })
       .then(function (cacheItem) {
+        if (that.isDestroyed()) {
+          // The feature table property was destroyed before the request came back
+          cache.releaseCacheItem(cacheItem);
+          return;
+        }
         that._cacheItem = cacheItem;
-        that._typedArray = getTypedArrayForAccessor(
-          gltf,
-          accessor,
-          cacheItem.contents,
-          binaryAccessor
-        );
+        var bufferData = cacheItem.contents;
+        if (defined(bufferData)) {
+          that._typedArray = GltfFeatureMetadataUtility.getTypedArrayForAccessor(
+            gltf,
+            accessor,
+            bufferData
+          );
+        } else {
+          that._initializedWithZeros = true;
+        }
         return that;
       });
   } else {
@@ -86,8 +91,8 @@ function GltfFeatureTableAccessorProperty(options) {
   this._accessorType = type;
   this._count = count;
   this._classType = binaryAccessor.classType;
-  this._initializedWithZeros = !defined(accessor.bufferViewId);
-  this._typedArray = typedArray;
+  this._initializedWithZeros = !defined(bufferId);
+  this._typedArray = undefined;
   this._cache = cache;
   this._cacheItem = undefined;
   this._signed = isSignedComponentType(componentType);
@@ -147,60 +152,6 @@ Object.defineProperties(GltfFeatureTableAccessorProperty.prototype, {
     },
   },
 });
-
-function getBuffer(gltf, accessor) {
-  var bufferViewId = accessor.bufferView;
-  if (!defined(bufferViewId)) {
-    return undefined;
-  }
-
-  var bufferView = gltf.bufferViews[bufferViewId];
-  var bufferId = bufferView.buffer;
-  var buffer = gltf.buffers[bufferId];
-
-  return buffer;
-}
-
-function getBufferSource(gltf, accessor) {
-  var buffer = getBuffer(gltf, accessor);
-  if (!defined(buffer)) {
-    return undefined;
-  }
-
-  if (!defined(buffer.extras)) {
-    return undefined;
-  }
-
-  var pipelineExtras = buffer.extras._pipeline;
-
-  if (!defined(pipelineExtras) || !defined(pipelineExtras.source)) {
-    return undefined;
-  }
-
-  return pipelineExtras.source;
-}
-
-function getTypedArrayForAccessor(
-  gltf,
-  accessor,
-  bufferSource,
-  binaryAccessor
-) {
-  if (!defined(bufferSource) || !defined(accessor.bufferView)) {
-    return undefined;
-  }
-
-  var bufferView = gltf.bufferViews[accessor.bufferView];
-  var byteOffset =
-    bufferSource.byteOffset + bufferView.byteOffset + accessor.byteOffset;
-
-  // TODO: probably want to do a deep copy of the buffer if the buffer is referenced by other things in the glTF because otherwise the buffer won't get freed
-  return binaryAccessor.createArrayBufferView(
-    bufferSource,
-    byteOffset,
-    accessor.count
-  );
-}
 
 function isSignedComponentType(componentType) {
   return (
@@ -354,6 +305,8 @@ GltfFeatureTableAccessorProperty.prototype.setValue = function (
   var typedArray = this._typedArray;
   var normalized = this._normalized;
   var initializedWithZeros = this._initializedWithZeros;
+  var cache = this._cache;
+  var cacheItem = this._cacheItem;
 
   var startingIndex = featureId * componentCount;
 
@@ -371,9 +324,10 @@ GltfFeatureTableAccessorProperty.prototype.setValue = function (
     return;
   }
 
-  if (defined(this._cacheItem)) {
+  if (defined(cacheItem)) {
     // Clone on demand if modifying values that are in the cache
     typedArray = ComponentDatatype.createTypedArray(componentType, typedArray);
+    cache.releaseCacheItem(cacheItem);
     this._typedArray = typedArray;
     this._cacheItem = undefined;
   }
@@ -413,9 +367,7 @@ GltfFeatureTableAccessorProperty.prototype.destroy = function () {
   var cacheItem = this._cacheItem;
 
   if (defined(cacheItem)) {
-    cache.releaseCacheItem({
-      cacheItem: cacheItem,
-    });
+    cache.releaseCacheItem(cacheItem);
   }
 
   return destroyObject(this);
