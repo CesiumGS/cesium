@@ -4,7 +4,8 @@
 
 ##### Fixes :wrench:
 
-- Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining.
+- Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining. [#8820](https://github.com/CesiumGS/cesium/pull/8820)
+- This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
 
 ### 1.69.0 - 2020-05-01
 
