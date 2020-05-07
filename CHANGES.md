@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON.
+- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
 
 ##### Fixes :wrench:
 
