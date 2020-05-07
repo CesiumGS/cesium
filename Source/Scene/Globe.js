@@ -764,7 +764,7 @@ Globe.prototype.getHeight = function(cartographic) {
     Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
   }
 
-  var intersection = tile.data && tile.data.pick(
+  var intersection =  tile.data && tile.data.pick(
     ray,
     undefined,
     undefined,
