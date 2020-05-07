@@ -150,10 +150,12 @@ function updateFrustums(
       curFar = Math.min(far, curNear + nearToFarDistance2D);
     } else {
       curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-      curFar = farToNearRatio * curNear;
-      if (!logDepth) {
-        curFar = Math.min(far, curFar);
-      }
+      curFar = Math.min(far, farToNearRatio * curNear);
+      // curFar = farToNearRatio * curNear;
+      // if (!logDepth) {
+      //   curFar = Math.min(far, curFar);
+      // }
+      // curNear = 50.0;
     }
 
     var frustumCommands = frustumCommandsList[m];
@@ -219,7 +221,7 @@ function insertIntoBin(scene, view, command, distance) {
 var scratchCullingVolume = new CullingVolume();
 var distances = new Interval();
 
-View.prototype.createPotentiallyVisibleSet = function (scene) {
+View.prototype.createPotentiallyVisibleSet = function (scene, alreadyDone) {
   var frameState = scene.frameState;
   var camera = frameState.camera;
   var direction = camera.directionWC;
@@ -354,6 +356,9 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
+  if (alreadyDone === true) {
+    return;
+  }
   // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
   // last frame, else compute the new frustums and sort them by frustum again.
   var is2D = scene.mode === SceneMode.SCENE2D;
@@ -382,15 +387,37 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     (near !== Number.MAX_VALUE &&
       (numFrustums !== numberOfFrustums ||
         (frustumCommandsList.length !== 0 &&
-          (near < frustumCommandsList[0].near ||
-            (far > frustumCommandsList[numberOfFrustums - 1].far &&
-              (logDepth ||
-                !CesiumMath.equalsEpsilon(
-                  far,
-                  frustumCommandsList[numberOfFrustums - 1].far,
-                  CesiumMath.EPSILON8
-                )))))))
+          (!CesiumMath.equalsEpsilon(
+            near,
+            frustumCommandsList[0].near,
+            CesiumMath.EPSILON8
+          ) ||
+            !CesiumMath.equalsEpsilon(
+              far,
+              frustumCommandsList[numberOfFrustums - 1].far,
+              CesiumMath.EPSILON8
+            )))))
+    // (near < frustumCommandsList[0].near ||
+    //   (far > frustumCommandsList[numberOfFrustums - 1].far &&
+    //     (logDepth ||
+    //       !CesiumMath.equalsEpsilon(
+    //         far,
+    //         frustumCommandsList[numberOfFrustums - 1].far,
+    //         CesiumMath.EPSILON8
+    //       )))))))
   ) {
+    console.log(
+      "changed: num frustums: " +
+        numberOfFrustums +
+        " near: " +
+        near +
+        " far: " +
+        far +
+        " farToNearRatio: " +
+        farToNearRatio +
+        " command count" +
+        commandList.length
+    );
     this.updateFrustums = false;
     updateFrustums(
       near,
@@ -402,7 +429,18 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
       is2D,
       scene.nearToFarDistance2D
     );
-    this.createPotentiallyVisibleSet(scene);
+    for (var i = 0; i < frustumCommandsList.length; i++) {
+      console.log(
+        "Final " +
+          i +
+          " near: " +
+          frustumCommandsList[i].near +
+          " far: " +
+          frustumCommandsList[i].far
+      );
+    }
+
+    this.createPotentiallyVisibleSet(scene, true);
   }
 
   var frustumSplits = frameState.frustumSplits;

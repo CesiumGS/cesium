@@ -2,6 +2,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Color from "../Core/Color.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DepthFunction from "../Scene/DepthFunction.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import ClearCommand from "../Renderer/ClearCommand.js";
@@ -120,6 +121,7 @@ function createCommands(processor, context) {
     depthMask: true,
     depthTest: {
       enabled: true,
+      // func: DepthFunction.ALWAYS
     },
     stencilTest: StencilConstants.setCesium3DTileBit(),
     stencilMask: StencilConstants.CESIUM_3D_TILE_MASK,

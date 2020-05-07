@@ -12,6 +12,20 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "start"],
             "noDebug": true
-        }
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Projection",
+            "url": "http://localhost:8080/Apps/Sandcastle/index.html?src=Projection.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "PointCloud",
+            "url": "http://localhost:8080/Apps/Sandcastle/?src=3D%20Tiles%20Point%20Cloud%20Shading.html",
+            "webRoot": "${workspaceFolder}"
+        },
     ]
 }

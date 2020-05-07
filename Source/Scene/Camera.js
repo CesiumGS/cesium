@@ -1147,6 +1147,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
       scene,
       scratchRayIntersection
     );
+    rayIntersection = undefined;
 
     if (scene.pickPositionSupported) {
       depthIntersection = scene.pickPositionWorldCoordinates(
@@ -1154,6 +1155,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
         scratchDepthIntersection
       );
     }
+    depthIntersection = undefined;
 
     if (defined(rayIntersection) && defined(depthIntersection)) {
       var depthDistance = defined(depthIntersection)
@@ -1168,6 +1170,10 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
         depthIntersection,
         this.positionWC
       );
+      console.log(
+        depthIntersection + " " + this.positionWC + " " + this.frustum.width
+      );
+      var stop = 0;
     } else if (defined(rayIntersection)) {
       this.frustum.width = Cartesian3.distance(
         rayIntersection,
