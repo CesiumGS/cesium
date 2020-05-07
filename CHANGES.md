@@ -2,6 +2,10 @@
 
 ### 1.70.0 - 2020-06-01
 
+##### Additions :tada:
+
+- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON.
+
 ##### Fixes :wrench:
 
 - This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
