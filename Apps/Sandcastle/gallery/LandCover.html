@@ -50,9 +50,13 @@
           })
         );
 
-        tileset.readyPromise.otherwise(function (error) {
-          console.log(error);
-        });
+        tileset.readyPromise
+          .then(function () {
+            console.log(tileset.extensions);
+          })
+          .otherwise(function (error) {
+            console.log(error);
+          });
 
         // Currently pure white indicates the feature should not apply its color.
         // Hack around that by setting pure white to just below pure white.
