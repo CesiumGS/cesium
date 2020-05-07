@@ -39,7 +39,7 @@ import ShadowMode from "./ShadowMode.js";
 function Globe(ellipsoid) {
   ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
   var terrainProvider = new EllipsoidTerrainProvider({
-    ellipsoid: ellipsoid,
+    ellipsoid : ellipsoid,
   });
   var imageryLayerCollection = new ImageryLayerCollection();
 
@@ -50,10 +50,10 @@ function Globe(ellipsoid) {
   this._material = undefined;
 
   this._surface = new QuadtreePrimitive({
-    tileProvider: new GlobeSurfaceTileProvider({
-      terrainProvider: terrainProvider,
-      imageryLayers: imageryLayerCollection,
-      surfaceShaderSet: this._surfaceShaderSet,
+    tileProvider : new GlobeSurfaceTileProvider({
+      terrainProvider : terrainProvider,
+      imageryLayers : imageryLayerCollection,
+      surfaceShaderSet : this._surfaceShaderSet,
     }),
   });
 
@@ -72,7 +72,7 @@ function Globe(ellipsoid) {
 
   this._oceanNormalMapResourceDirty = true;
   this._oceanNormalMapResource = new Resource({
-    url: buildModuleUrl("Assets/Textures/waterNormalsSmall.jpg"),
+    url : buildModuleUrl("Assets/Textures/waterNormalsSmall.jpg"),
   });
 
   /**
@@ -296,8 +296,8 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {Ellipsoid}
    */
-  ellipsoid: {
-    get: function () {
+  ellipsoid : {
+    get : function() {
       return this._ellipsoid;
     },
   },
@@ -306,8 +306,8 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {ImageryLayerCollection}
    */
-  imageryLayers: {
-    get: function () {
+  imageryLayers : {
+    get : function() {
       return this._imageryLayerCollection;
     },
   },
@@ -318,8 +318,8 @@ Object.defineProperties(Globe.prototype, {
    * @type {Event}
    * @readonly
    */
-  imageryLayersUpdatedEvent: {
-    get: function () {
+  imageryLayersUpdatedEvent : {
+    get : function() {
       return this._surface.tileProvider.imageryLayersUpdatedEvent;
     },
   },
@@ -330,8 +330,8 @@ Object.defineProperties(Globe.prototype, {
    * @type {Boolean}
    * @readonly
    */
-  tilesLoaded: {
-    get: function () {
+  tilesLoaded : {
+    get : function() {
       if (!defined(this._surface)) {
         return true;
       }
@@ -348,11 +348,11 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {Color}
    */
-  baseColor: {
-    get: function () {
+  baseColor : {
+    get : function() {
       return this._surface.tileProvider.baseColor;
     },
-    set: function (value) {
+    set : function(value) {
       this._surface.tileProvider.baseColor = value;
     },
   },
@@ -362,11 +362,11 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {ClippingPlaneCollection}
    */
-  clippingPlanes: {
-    get: function () {
+  clippingPlanes : {
+    get : function() {
       return this._surface.tileProvider.clippingPlanes;
     },
-    set: function (value) {
+    set : function(value) {
       this._surface.tileProvider.clippingPlanes = value;
     },
   },
@@ -378,11 +378,11 @@ Object.defineProperties(Globe.prototype, {
    * @type {Rectangle}
    * @default Rectangle.MAX_VALUE
    */
-  cartographicLimitRectangle: {
-    get: function () {
+  cartographicLimitRectangle : {
+    get : function() {
       return this._surface.tileProvider.cartographicLimitRectangle;
     },
-    set: function (value) {
+    set : function(value) {
       if (!defined(value)) {
         value = Rectangle.clone(Rectangle.MAX_VALUE);
       }
@@ -396,11 +396,11 @@ Object.defineProperties(Globe.prototype, {
    * @type {String}
    * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
    */
-  oceanNormalMapUrl: {
-    get: function () {
+  oceanNormalMapUrl : {
+    get : function() {
       return this._oceanNormalMapResource.url;
     },
-    set: function (value) {
+    set : function(value) {
       this._oceanNormalMapResource.url = value;
       this._oceanNormalMapResourceDirty = true;
     },
@@ -413,11 +413,11 @@ Object.defineProperties(Globe.prototype, {
    * @type {TerrainProvider}
    *
    */
-  terrainProvider: {
-    get: function () {
+  terrainProvider : {
+    get : function() {
       return this._terrainProvider;
     },
-    set: function (value) {
+    set : function(value) {
       if (value !== this._terrainProvider) {
         this._terrainProvider = value;
         this._terrainProviderChanged.raiseEvent(value);
@@ -434,8 +434,8 @@ Object.defineProperties(Globe.prototype, {
    * @type {Event}
    * @readonly
    */
-  terrainProviderChanged: {
-    get: function () {
+  terrainProviderChanged : {
+    get : function() {
       return this._terrainProviderChanged;
     },
   },
@@ -446,8 +446,8 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {Event}
    */
-  tileLoadProgressEvent: {
-    get: function () {
+  tileLoadProgressEvent : {
+    get : function() {
       return this._surface.tileLoadProgressEvent;
     },
   },
@@ -458,11 +458,11 @@ Object.defineProperties(Globe.prototype, {
    * @memberof Globe.prototype
    * @type {Material}
    */
-  material: {
-    get: function () {
+  material : {
+    get : function() {
       return this._material;
     },
-    set: function (material) {
+    set : function(material) {
       if (this._material !== material) {
         this._material = material;
         makeShadersDirty(this);
@@ -477,7 +477,7 @@ function makeShadersDirty(globe) {
   var requireNormals =
     defined(globe._material) &&
     (globe._material.shaderSource.match(/slope/) ||
-      globe._material.shaderSource.match("normalEC"));
+     globe._material.shaderSource.match("normalEC"));
 
   var fragmentSources = [GroundAtmosphere];
   if (
@@ -493,19 +493,19 @@ function makeShadersDirty(globe) {
   fragmentSources.push(GlobeFS);
 
   globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-    sources: [GroundAtmosphere, GlobeVS],
-    defines: defines,
+    sources : [GroundAtmosphere, GlobeVS],
+    defines : defines,
   });
 
   globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-    sources: fragmentSources,
-    defines: defines,
+    sources : fragmentSources,
+    defines : defines,
   });
   globe._surfaceShaderSet.material = globe._material;
 }
 
 function createComparePickTileFunction(rayOrigin) {
-  return function (a, b) {
+  return function(a, b) {
     var aDist = BoundingSphere.distanceSquaredTo(
       a.pickBoundingSphere,
       rayOrigin
@@ -521,8 +521,8 @@ function createComparePickTileFunction(rayOrigin) {
 
 var scratchArray = [];
 var scratchSphereIntersectionResult = {
-  start: 0.0,
-  stop: 0.0,
+  start : 0.0,
+  stop : 0.0,
 };
 
 /**
@@ -535,7 +535,7 @@ var scratchSphereIntersectionResult = {
  *
  * @private
  */
-Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
+Globe.prototype.pickWorldCoordinates = function(ray, scene, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
     throw new DeveloperError("ray is required");
@@ -634,7 +634,7 @@ var cartoScratch = new Cartographic();
  * var ray = viewer.camera.getPickRay(windowCoordinates);
  * var intersection = globe.pick(ray, scene);
  */
-Globe.prototype.pick = function (ray, scene, result) {
+Globe.prototype.pick = function(ray, scene, result) {
   result = this.pickWorldCoordinates(ray, scene, result);
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
@@ -652,8 +652,8 @@ var scratchGetHeightRay = new Ray();
 
 function tileIfContainsCartographic(tile, cartographic) {
   return defined(tile) && Rectangle.contains(tile.rectangle, cartographic)
-    ? tile
-    : undefined;
+         ? tile
+         : undefined;
 }
 
 /**
@@ -662,7 +662,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Globe.prototype.getHeight = function (cartographic) {
+Globe.prototype.getHeight = function(cartographic) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartographic)) {
     throw new DeveloperError("cartographic is required");
@@ -764,7 +764,7 @@ Globe.prototype.getHeight = function (cartographic) {
     Cartesian3.subtract(cartesian, vectorToMinimumPoint, ray.origin);
   }
 
-  var intersection = tile.data.pick(
+  var intersection = tile.data && tile.data.pick(
     ray,
     undefined,
     undefined,
@@ -784,7 +784,7 @@ Globe.prototype.getHeight = function (cartographic) {
 /**
  * @private
  */
-Globe.prototype.update = function (frameState) {
+Globe.prototype.update = function(frameState) {
   if (!this.show) {
     return;
   }
@@ -797,7 +797,7 @@ Globe.prototype.update = function (frameState) {
 /**
  * @private
  */
-Globe.prototype.beginFrame = function (frameState) {
+Globe.prototype.beginFrame = function(frameState) {
   var surface = this._surface;
   var tileProvider = surface.tileProvider;
   var terrainProvider = this.terrainProvider;
@@ -813,7 +813,7 @@ Globe.prototype.beginFrame = function (frameState) {
     var oceanNormalMapUrl = oceanNormalMapResource.url;
     if (defined(oceanNormalMapUrl)) {
       var that = this;
-      when(oceanNormalMapResource.fetchImage(), function (image) {
+      when(oceanNormalMapResource.fetchImage(), function(image) {
         if (oceanNormalMapUrl !== that._oceanNormalMapResource.url) {
           // url changed while we were loading
           return;
@@ -822,8 +822,8 @@ Globe.prototype.beginFrame = function (frameState) {
         that._oceanNormalMap =
           that._oceanNormalMap && that._oceanNormalMap.destroy();
         that._oceanNormalMap = new Texture({
-          context: frameState.context,
-          source: image,
+          context : frameState.context,
+          source : image,
         });
       });
     } else {
@@ -875,7 +875,7 @@ Globe.prototype.beginFrame = function (frameState) {
 /**
  * @private
  */
-Globe.prototype.render = function (frameState) {
+Globe.prototype.render = function(frameState) {
   if (!this.show) {
     return;
   }
@@ -890,7 +890,7 @@ Globe.prototype.render = function (frameState) {
 /**
  * @private
  */
-Globe.prototype.endFrame = function (frameState) {
+Globe.prototype.endFrame = function(frameState) {
   if (!this.show) {
     return;
   }
@@ -910,7 +910,7 @@ Globe.prototype.endFrame = function (frameState) {
  *
  * @see Globe#destroy
  */
-Globe.prototype.isDestroyed = function () {
+Globe.prototype.isDestroyed = function() {
   return false;
 };
 
@@ -930,7 +930,7 @@ Globe.prototype.isDestroyed = function () {
  *
  * @see Globe#isDestroyed
  */
-Globe.prototype.destroy = function () {
+Globe.prototype.destroy = function() {
   this._surfaceShaderSet =
     this._surfaceShaderSet && this._surfaceShaderSet.destroy();
   this._surface = this._surface && this._surface.destroy();
