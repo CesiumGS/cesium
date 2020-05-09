@@ -61,6 +61,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
  * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
  * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+ * @param {Boolean} [options.preloadRequestsWhileMoving=true] Optimization option. Prioritize request for tiles that will likely be in view in the future based on the camera's movement. Disables cullRequestsWhileMoving if true. This optimization only applies to stationary tilesets.
+ * @param {Number} [options.preloadRequestsWhileMovingMultiplier=10.0] Optimization option. Multiplier used in preloading requests while moving. Larger will preload tiles further away from camera current position, smaller will preload tile closer to current position.
  * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
  * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
  * @param {Boolean} [options.preferLeaves=false] Optimization option. Prefer loading of leaves first.
@@ -221,7 +223,7 @@ function Cesium3DTileset(options) {
    */
   this.cullRequestsWhileMoving = defaultValue(
     options.cullRequestsWhileMoving,
-    true
+    false
   );
   this._cullRequestsWhileMoving = false;
 
@@ -234,6 +236,31 @@ function Cesium3DTileset(options) {
   this.cullRequestsWhileMovingMultiplier = defaultValue(
     options.cullRequestsWhileMovingMultiplier,
     60.0
+  );
+
+  /**
+   * Optimization option. Prioritize request for tiles that will likely be in view in the future based on the camera's movement. Disables cullRequestsWhileMoving if true. This optimization only applies to stationary tilesets.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.preloadRequestsWhileMoving = defaultValue(
+    options.cullRequestsWhileMoving,
+    true
+  );
+  this.cullRequestsWhileMoving = this.preloadRequestsWhileMoving
+    ? false
+    : this.cullRequestsWhileMoving;
+
+  /**
+   * Optimization option. Multiplier used in preloading requests while moving. Larger will preload tiles further away from camera current position, smaller will preload tile closer to current position.
+   *
+   * @type {Number}
+   * @default 60.0
+   */
+  this.preloadRequestsWhileMovingMultiplier = defaultValue(
+    options.cullRequestsWhileMovingMultiplier,
+    10.0
   );
 
   /**
@@ -2476,6 +2503,7 @@ Cesium3DTileset.prototype.update = function (frameState) {
   this.updateForPass(frameState, frameState.tilesetPassState);
 };
 
+var scratchAveragedDelta = new Cartesian3();
 /**
  * @private
  */
@@ -2516,6 +2544,43 @@ Cesium3DTileset.prototype.updateForPass = function (
     originalCommandList
   );
   var commandStart = commandList.length;
+
+  // TODO: if render pass and preloadMovement enabled compute the camera and cullingVolume
+  if (passOptions.isRender) {
+    Cartesian3.add(
+      originalCamera.positionWCDeltaMagnitude,
+      originalCamera.positionWCDeltaMagnitudeLastFrame,
+      scratchAveragedDelta
+    );
+    Cartesian3.multiplyByScalar(
+      scratchAveragedDelta,
+      0.5 * this.preloadRequestsWhileMovingMultiplier,
+      scratchAveragedDelta
+    );
+
+    var preloadMovmentCamera = tilesetPassState.camera;
+    Cartesian3.clone(
+      originalCamera.positionWC,
+      preloadMovmentCamera.positionWC
+    );
+    Cartesian3.add(
+      preloadMovmentCamera.positionWC,
+      scratchAveragedDelta,
+      preloadMovmentCamera.positionWC
+    );
+    Cartesian3.clone(
+      originalCamera.directionWC,
+      preloadMovmentCamera.directionWC
+    );
+    Cartesian3.clone(originalCamera.upWC, preloadMovmentCamera.upWC);
+    preloadMovmentCamera.setView({
+      destination: preloadMovmentCamera.positionWC,
+      orientation: {
+        direction: preloadMovmentCamera.directionWC,
+        up: preloadMovmentCamera.upWC,
+      },
+    });
+  }
 
   frameState.commandList = commandList;
   frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);

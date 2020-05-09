@@ -711,6 +711,24 @@ function Scene(options) {
   }
 
   /**
+   * The camera view for the scene camera movement destination. Used for preloading movement destination tiles.
+   * @type {Camera}
+   * @private
+   */
+  this.preloadMovmentCamera = Camera.clone(camera);
+
+  /**
+   * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
+   * @type {CullingVolume}
+   * @private
+   */
+  var preloadMovementCamera = this.preloadMovementCamera;
+  this.preloadMovmentCullingVolume = preloadMovementCamera.frustum.computeCullingVolume(
+    preloadMovementCamera.positionWC,
+    preloadMovementCamera.directionWC,
+    preloadMovementCamera.upWC
+  );
+  /**
    * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
    * @type {Camera}
    * @private
@@ -1806,6 +1824,8 @@ Scene.prototype.updateDerivedCommands = function (command) {
 
 var renderTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.RENDER,
+  camera: this.preloadMovmentCamera,
+  cullingVolume: this.preloadMovmentCullingVolume,
 });
 
 var preloadTilesetPassState = new Cesium3DTilePassState({
