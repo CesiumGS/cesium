@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- THis fixes a but where null or undefined name property sent to Entity constructor threw an error [#8832](https://github.com/CesiumGS/cesium/pull/8832)
 
 ### 1.69.0 - 2020-05-01
 

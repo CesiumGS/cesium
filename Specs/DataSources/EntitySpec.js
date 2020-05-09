@@ -28,18 +28,19 @@ import { WallGraphics } from "../../Source/Cesium.js";
 
 describe("DataSources/Entity", function () {
   it("should not throw when contructed with undefined or null name", function () {
+    var entity;
     var options = {
       name: undefined,
     };
 
     expect(function () {
-      var entity = new Entity(options);
+      entity = new Entity(options);
     }).not.toThrowDeveloperError();
 
     options.name = null;
 
     expect(function () {
-      var entity = new Entity(options);
+      entity = new Entity(options);
     }).not.toThrowDeveloperError();
   });
 
