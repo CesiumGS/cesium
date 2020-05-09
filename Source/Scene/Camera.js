@@ -91,6 +91,7 @@ function Camera(scene) {
    * @private
    */
   this.positionWCDeltaMagnitude = 0.0;
+  this.positionWCDelta = new Cartesian3();
 
   /**
    * The position delta magnitude last frame.
@@ -98,6 +99,7 @@ function Camera(scene) {
    * @private
    */
   this.positionWCDeltaMagnitudeLastFrame = 0.0;
+  this.positionWCDeltaLastFrame = new Cartesian3();
 
   /**
    * How long in seconds since the camera has stopped moving
@@ -321,6 +323,9 @@ function updateCameraDeltas(camera) {
       camera._oldPositionWC,
       camera._oldPositionWC
     );
+    Cartesian3.clone(camera.positionWCDelta, camera.positionWCDeltaLastFrame);
+    Cartesian3.clone(delta, camera.positionWCDelta);
+
     camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
     camera._oldPositionWC = Cartesian3.clone(
       camera.positionWC,

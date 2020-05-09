@@ -1,6 +1,7 @@
 import ApproximateTerrainHeights from "../Core/ApproximateTerrainHeights.js";
 import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
@@ -2496,6 +2497,65 @@ function update(tileset, frameState, passStatistics, passOptions) {
   return ready;
 }
 
+var scratchAveragedDelta = new Cartesian3();
+function configurePreloadMovementCamera(
+  originalCamera,
+  tilesetPassState,
+  movementMultiplier
+) {
+  Cartesian3.add(
+    originalCamera.positionWCDelta,
+    originalCamera.positionWCDeltaLastFrame,
+    scratchAveragedDelta
+  );
+  Cartesian3.multiplyByScalar(
+    scratchAveragedDelta,
+    0.5 * movementMultiplier,
+    scratchAveragedDelta
+  );
+
+  var preloadMovmentCamera = tilesetPassState.camera;
+  Cartesian3.clone(originalCamera.positionWC, preloadMovmentCamera.positionWC);
+  Cartesian3.add(
+    preloadMovmentCamera.positionWC,
+    scratchAveragedDelta,
+    preloadMovmentCamera.positionWC
+  );
+  Cartesian3.clone(
+    originalCamera.directionWC,
+    preloadMovmentCamera.directionWC
+  );
+  Cartesian3.clone(originalCamera.upWC, preloadMovmentCamera.upWC);
+  preloadMovmentCamera.setView({
+    destination: preloadMovmentCamera.positionWC,
+    orientation: {
+      direction: preloadMovmentCamera.directionWC,
+      up: preloadMovmentCamera.upWC,
+    },
+  });
+}
+
+var scartchPlaneNormal = new Cartesian3();
+function configurePreloadMovementCullingVolume(
+  originalCullingVolume,
+  tilesetPassState
+) {
+  var cullingVolume = tilesetPassState.cullingVolume;
+  // There are 6 planes, dot their normals with scratchAveragedDelta and do this:
+  // take the dest planes when they have (-) dot prod with the movement direction and current planes that have (+) dot prod. This assumes plane normals face inward.
+  var planes = cullingVolume.planes;
+  var originalPlanes = originalCullingVolume.planes;
+  for (var i = 0; i < 6; i++) {
+    var plane = planes[i];
+    scartchPlaneNormal.x = plane.x;
+    scartchPlaneNormal.y = plane.y;
+    scartchPlaneNormal.z = plane.z;
+    if (Cartesian3.dot(scartchPlaneNormal, scratchAveragedDelta) < 0) {
+      Cartesian4.clone(originalPlanes[i], plane, plane);
+    }
+  }
+}
+
 /**
  * @private
  */
@@ -2503,7 +2563,6 @@ Cesium3DTileset.prototype.update = function (frameState) {
   this.updateForPass(frameState, frameState.tilesetPassState);
 };
 
-var scratchAveragedDelta = new Cartesian3();
 /**
  * @private
  */
@@ -2547,39 +2606,15 @@ Cesium3DTileset.prototype.updateForPass = function (
 
   // TODO: if render pass and preloadMovement enabled compute the camera and cullingVolume
   if (passOptions.isRender) {
-    Cartesian3.add(
-      originalCamera.positionWCDeltaMagnitude,
-      originalCamera.positionWCDeltaMagnitudeLastFrame,
-      scratchAveragedDelta
+    configurePreloadMovementCamera(
+      originalCamera,
+      tilesetPassState,
+      this.preloadRequestsWhileMovingMultiplier
     );
-    Cartesian3.multiplyByScalar(
-      scratchAveragedDelta,
-      0.5 * this.preloadRequestsWhileMovingMultiplier,
-      scratchAveragedDelta
+    configurePreloadMovementCullingVolume(
+      originalCullingVolume,
+      tilesetPassState
     );
-
-    var preloadMovmentCamera = tilesetPassState.camera;
-    Cartesian3.clone(
-      originalCamera.positionWC,
-      preloadMovmentCamera.positionWC
-    );
-    Cartesian3.add(
-      preloadMovmentCamera.positionWC,
-      scratchAveragedDelta,
-      preloadMovmentCamera.positionWC
-    );
-    Cartesian3.clone(
-      originalCamera.directionWC,
-      preloadMovmentCamera.directionWC
-    );
-    Cartesian3.clone(originalCamera.upWC, preloadMovmentCamera.upWC);
-    preloadMovmentCamera.setView({
-      destination: preloadMovmentCamera.positionWC,
-      orientation: {
-        direction: preloadMovmentCamera.directionWC,
-        up: preloadMovmentCamera.upWC,
-      },
-    });
   }
 
   frameState.commandList = commandList;

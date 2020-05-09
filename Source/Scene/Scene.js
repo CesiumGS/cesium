@@ -715,7 +715,7 @@ function Scene(options) {
    * @type {Camera}
    * @private
    */
-  this.preloadMovmentCamera = Camera.clone(camera);
+  this.preloadMovementCamera = Camera.clone(camera);
 
   /**
    * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
@@ -723,7 +723,7 @@ function Scene(options) {
    * @private
    */
   var preloadMovementCamera = this.preloadMovementCamera;
-  this.preloadMovmentCullingVolume = preloadMovementCamera.frustum.computeCullingVolume(
+  this.preloadMovementCullingVolume = preloadMovementCamera.frustum.computeCullingVolume(
     preloadMovementCamera.positionWC,
     preloadMovementCamera.directionWC,
     preloadMovementCamera.upWC
@@ -1824,8 +1824,6 @@ Scene.prototype.updateDerivedCommands = function (command) {
 
 var renderTilesetPassState = new Cesium3DTilePassState({
   pass: Cesium3DTilePass.RENDER,
-  camera: this.preloadMovmentCamera,
-  cullingVolume: this.preloadMovmentCullingVolume,
 });
 
 var preloadTilesetPassState = new Cesium3DTilePassState({
@@ -3769,6 +3767,8 @@ function render(scene) {
   scene.updateFrameState();
   frameState.passes.render = true;
   frameState.passes.postProcess = scene.postProcessStages.hasSelected;
+  renderTilesetPassState.camera = scene.preloadMovementCamera;
+  renderTilesetPassState.cullingVolume = scene.preloadMovementCullingVolume;
   frameState.tilesetPassState = renderTilesetPassState;
 
   var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
