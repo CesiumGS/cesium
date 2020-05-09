@@ -12,6 +12,7 @@ import Intersect from "./Intersect.js";
 import Interval from "./Interval.js";
 import CesiumMath from "./Math.js";
 import Matrix3 from "./Matrix3.js";
+import Matrix4 from "./Matrix4.js";
 import Plane from "./Plane.js";
 import Rectangle from "./Rectangle.js";
 
@@ -235,6 +236,29 @@ OrientedBoundingBox.fromPoints = function (positions, result) {
   Matrix3.multiplyByScale(result.halfAxes, scale, result.halfAxes);
 
   return result;
+};
+
+var scratchRotationScale = new Matrix3();
+
+OrientedBoundingBox.toTransformation = function (box, result) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(box)) {
+    throw new DeveloperError("box is required.");
+  }
+  //>>includeEnd('debug');
+
+  if (!defined(result)) {
+    result = new Matrix4();
+  }
+
+  var translation = box.center;
+  var rotationScale = Matrix3.clone(box.halfAxes, scratchRotationScale);
+  rotationScale = Matrix3.multiplyByUniformScale(
+    rotationScale,
+    2.0,
+    rotationScale
+  );
+  return Matrix4.fromRotationTranslation(rotationScale, translation, result);
 };
 
 var scratchOffset = new Cartesian3();

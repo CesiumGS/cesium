@@ -1017,6 +1017,21 @@ Matrix3.multiplyByScale = function (matrix, scale, result) {
   return result;
 };
 
+var uniformScaleScratch = new Cartesian3();
+
+Matrix3.multiplyByUniformScale = function (matrix, scale, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.number("scale", scale);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  uniformScaleScratch.x = scale;
+  uniformScaleScratch.y = scale;
+  uniformScaleScratch.z = scale;
+  return Matrix3.multiplyByScale(matrix, uniformScaleScratch, result);
+};
+
 /**
  * Creates a negated copy of the provided matrix.
  *

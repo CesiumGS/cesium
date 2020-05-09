@@ -25,6 +25,7 @@ import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
+import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -70,6 +71,8 @@ function GlobeSurfaceTile() {
   this.isClipped = true;
 
   this.clippedByBoundaries = false;
+
+  this.trianglePicking = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTile.prototype, {
@@ -154,6 +157,11 @@ GlobeSurfaceTile.prototype.pick = function (
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
     return undefined;
+  }
+
+  var useNewVersion = true;
+  if (useNewVersion && defined(this.trianglePicking)) {
+    return this.trianglePicking.rayIntersect(ray, result);
   }
 
   var vertices = mesh.vertices;
@@ -653,6 +661,12 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
       surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(
         mesh.orientedBoundingBox,
         surfaceTile.orientedBoundingBox
+      );
+      surfaceTile.trianglePicking = new TrianglePicking(
+        mesh.indices,
+        mesh.vertices,
+        mesh.encoding,
+        mesh.orientedBoundingBox
       );
       surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(
         mesh.occludeePointInScaledSpace,

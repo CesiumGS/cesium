@@ -32,61 +32,106 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: Cesium.createWorldTerrain(),
-          shadows: true,
+        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+          url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
+          credit: "Terrain data courtesy VT MÄK",
         });
 
-        if (!viewer.scene.highDynamicRangeSupported) {
-          window.alert("This browser does not support high dynamic range.");
+        var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
+          {
+            url:
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+          }
+        );
+
+        var cesiumWorldTerrain = Cesium.createWorldTerrain();
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: cesiumWorldTerrain,
+        });
+
+        viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+        var scene = viewer.scene;
+        var camera = scene.camera;
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+
+        function switchTerrain(terrainProvider) {
+          return function () {
+            viewer.terrainProvider = terrainProvider;
+          };
         }
+
+        var options = [
+          {
+            text: "Cesium World Terrain",
+            onselect: switchTerrain(cesiumWorldTerrain),
+          },
+          {
+            text: "VRTheWorld",
+            onselect: switchTerrain(vrTheWorldProvider),
+          },
+          {
+            text: "ArcGIS",
+            onselect: switchTerrain(arcGisTerrainProvider),
+          },
+          {
+            text: "Ellipsoid",
+            onselect: switchTerrain(ellipsoidProvider),
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(options);
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
-            -1915097.7863741855,
-            -4783356.851539908,
-            3748887.43462683
+            -1919497.530180931,
+            -4780966.888096772,
+            3750968.0087956334
           ),
           orientation: new Cesium.HeadingPitchRoll(
-            6.166004548388564,
-            -0.043242401760068994,
-            0.002179961955988574
+            1.2651436727328784,
+            -0.2653619861263108,
+            0.003162627360827841
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        viewer.scene.highDynamicRange = true;
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement) {
+          var scene = viewer.scene;
+          var camera = scene.camera;
 
-        Sandcastle.addToggleButton("HDR", true, function (checked) {
-          viewer.scene.highDynamicRange = checked;
-        });
+          var mousePosition = movement.position;
+          var ray = camera.getPickRay(mousePosition);
 
-        var url =
-          "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
-        var position = Cesium.Cartesian3.fromRadians(
-          -1.9516424279517286,
-          0.6322397098422969,
-          1239.0006814631095
-        );
-        var heading = Cesium.Math.toRadians(-15.0);
-        var pitch = 0;
-        var roll = 0;
-        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
-          position,
-          hpr
-        );
-        var scale = 10.0;
+          var before = performance.now();
+          var pickPosition = scene.globe.pick(ray, scene);
+          var after = performance.now();
+          console.log(after - before);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        var entity = viewer.entities.add({
-          name: url,
-          position: position,
-          orientation: orientation,
-          model: {
-            uri: url,
-            scale: scale,
-          },
-        });
+        var handler2 = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler2.setInputAction(function (movement) {
+          var scene = viewer.scene;
+          var camera = scene.camera;
+
+          var mousePosition = movement.position;
+          var ray = camera.getPickRay(mousePosition);
+
+          var pickPosition = scene.globe.pick(ray, scene);
+
+          viewer.entities.add({
+            position: pickPosition,
+            ellipsoid: {
+              radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
+              material: Cesium.Color.RED,
+            },
+          });
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }

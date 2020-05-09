@@ -25,6 +25,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import getTimestamp from "../Core/getTimestamp.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -604,6 +605,9 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
 
   var intersection;
   length = sphereIntersections.length;
+
+  var pickStart = getTimestamp();
+
   for (i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
@@ -616,6 +620,10 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
       break;
     }
   }
+
+  var pickEnd = getTimestamp();
+
+  console.log("interior timing pick(): " + (pickEnd - pickStart));
 
   return intersection;
 };
