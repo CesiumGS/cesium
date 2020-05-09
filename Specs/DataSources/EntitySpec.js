@@ -28,6 +28,7 @@ import { WallGraphics } from "../../Source/Cesium.js";
 
 describe("DataSources/Entity", function () {
   it("should not throw when contructed with undefined or null name", function () {
+    // eslint-disable-next-line no-unused-vars
     var entity;
     var options = {
       name: undefined,
