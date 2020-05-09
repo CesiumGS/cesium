@@ -122,6 +122,7 @@
           var mousePosition = movement.position;
           var ray = camera.getPickRay(mousePosition);
 
+          // debugger;
           var pickPosition = scene.globe.pick(ray, scene);
 
           viewer.entities.add({

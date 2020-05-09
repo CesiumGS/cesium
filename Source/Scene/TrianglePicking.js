@@ -44,9 +44,9 @@ function rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ) {
   var radY = maxY - minY;
   var radZ = maxZ - minZ;
 
-  var centerX = 0.5 * (maxX - minX);
-  var centerY = 0.5 * (maxY - minY);
-  var centerZ = 0.5 * (maxZ - minZ);
+  var centerX = 0.5 * (maxX + minX);
+  var centerY = 0.5 * (maxY + minY);
+  var centerZ = 0.5 * (maxZ + minZ);
 
   var rddX = ray.direction.x;
   var rddY = ray.direction.y;
@@ -218,7 +218,8 @@ Node.prototype.rayIntersect = function (
   }
 
   var triangleCount = that.triangles.length;
-  for (var triIndex = 0; triIndex < triangleCount; triIndex++) {
+  for (var i = 0; i < triangleCount; i++) {
+    var triIndex = that.triangles[i];
     var i0 = triIndices[triIndex * 3 + 0];
     var i1 = triIndices[triIndex * 3 + 1];
     var i2 = triIndices[triIndex * 3 + 2];
@@ -380,7 +381,6 @@ Node.prototype.addTriangle = function (
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 4;
   var shouldSubdivide = overlapCount <= 2 && level < maxLevels;
-  shouldSubdivide = false;
 
   if (!shouldSubdivide) {
     // Add triangle to list and end recursion
