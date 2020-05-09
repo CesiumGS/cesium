@@ -28,7 +28,6 @@ import Transforms from "../Core/Transforms.js";
 import CameraFlightPath from "./CameraFlightPath.js";
 import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
-import JulianDate from "../Core/JulianDate.js";
 
 /**
  * The camera is defined by a position, orientation, and view frustum.
@@ -96,12 +95,12 @@ function Camera(scene) {
   this.positionWCDelta = new Cartesian3();
   this.positionWCDeltaLastFrame = new Cartesian3();
   this.positionWCDeltaSecondLastFrame = new Cartesian3();
-  this.time = new JulianDate();
-  this.timeLast = new JulianDate();
-  this.timeSecondLast = new JulianDate();
-  this.deltaSeconds = 0;
-  this.deltaSecondsLast = 0;
-  this.deltaSecondsSecondLast = 0;
+  this.time = 0;
+  this.timeLast = 0;
+  this.timeSecondLast = 0;
+  this.delta = 0;
+  this.deltaLast = 0;
+  this.deltaSecondLast = 0;
 
   /**
    * The position delta magnitude last frame.
@@ -342,20 +341,20 @@ function updateCameraDeltas(camera) {
     Cartesian3.clone(delta, camera.positionWCDelta);
 
     // JulianDates
-    JulianDate.clone(camera.timeLast, camera.timeSecondLast);
-    JulianDate.clone(camera.time, camera.timeLast);
-    JulianDate.clone(camera._scene._frameState.time, camera.time);
+    // JulianDate.clone(camera.timeLast, camera.timeSecondLast);
+    // JulianDate.clone(camera.time, camera.timeLast);
+    // JulianDate.clone(camera._scene.frameState.time, camera.time);
+    // console.log('julian time: ' + camera._scene.frameState.time);
 
     // Seconds deltas
-    camera.deltaSeconds = JulianDate.secondsDifference(
-      camera.time,
-      camera.timeLast
-    );
-    camera.deltaSecondsLast = JulianDate.secondsDifference(
-      camera.timeLast,
-      camera.timeSecondLast
-    );
+    // camera.deltaSeconds = JulianDate.secondsDifference(camera.time, camera.timeLast);
+    // camera.deltaSecondsLast = JulianDate.secondsDifference(camera.timeLast, camera.timeSecondLast);
     // camera.deltaSecondsSecondLast = JulianDate.secondsDifference(camera.timeLast, camera.timeSecondLast);
+    camera.timeSecondLast = camera.timeLast;
+    camera.timeLast = camera.time;
+    camera.time = getTimestamp();
+    camera.deltaSeconds = camera.time - camera.timeLast;
+    camera.deltaSecondsLast = camera.timeLast - camera.timeSecondLast;
 
     camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
     camera._oldPositionWC = Cartesian3.clone(

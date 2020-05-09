@@ -2497,22 +2497,49 @@ function update(tileset, frameState, passStatistics, passOptions) {
   return ready;
 }
 
+var scratchScaleDelta = new Cartesian3();
+var scratchScaleDeltaLast = new Cartesian3();
 var scratchAveragedDelta = new Cartesian3();
 function configurePreloadMovementCamera(
   originalCamera,
   tilesetPassState,
   movementMultiplier
 ) {
-  Cartesian3.add(
-    originalCamera.positionWCDelta,
-    originalCamera.positionWCDeltaLastFrame,
-    scratchAveragedDelta
-  );
-  Cartesian3.multiplyByScalar(
-    scratchAveragedDelta,
-    0.5 * movementMultiplier,
-    scratchAveragedDelta
-  );
+  var smoothTime = true;
+  if (smoothTime) {
+    var deltaSeconds = originalCamera.deltaSeconds;
+    var deltaSecondsLast = originalCamera.deltaSecondsLast;
+    var totalSeconds = deltaSeconds + deltaSecondsLast;
+    totalSeconds = totalSeconds === 0 ? 1 : totalSeconds;
+    var scale = deltaSeconds / totalSeconds;
+    var scaleLast = deltaSecondsLast / totalSeconds;
+    Cartesian3.multiplyByScalar(
+      originalCamera.positionWCDelta,
+      scale * movementMultiplier,
+      scratchScaleDelta
+    );
+    Cartesian3.multiplyByScalar(
+      originalCamera.positionWCDeltaLastFrame,
+      scaleLast * movementMultiplier,
+      scratchScaleDeltaLast
+    );
+    Cartesian3.add(
+      scratchScaleDelta,
+      scratchScaleDeltaLast,
+      scratchAveragedDelta
+    );
+  } else {
+    Cartesian3.add(
+      originalCamera.positionWCDelta,
+      originalCamera.positionWCDeltaLastFrame,
+      scratchAveragedDelta
+    );
+    Cartesian3.multiplyByScalar(
+      scratchAveragedDelta,
+      0.5 * movementMultiplier,
+      scratchAveragedDelta
+    );
+  }
 
   var preloadMovementCamera = tilesetPassState.camera;
   Cartesian3.clone(originalCamera.positionWC, preloadMovementCamera.positionWC);
