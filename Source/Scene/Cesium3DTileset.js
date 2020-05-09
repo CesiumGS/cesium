@@ -2514,25 +2514,32 @@ function configurePreloadMovementCamera(
     scratchAveragedDelta
   );
 
-  var preloadMovmentCamera = tilesetPassState.camera;
-  Cartesian3.clone(originalCamera.positionWC, preloadMovmentCamera.positionWC);
+  var preloadMovementCamera = tilesetPassState.camera;
+  Cartesian3.clone(originalCamera.positionWC, preloadMovementCamera.positionWC);
   Cartesian3.add(
-    preloadMovmentCamera.positionWC,
+    preloadMovementCamera.positionWC,
     scratchAveragedDelta,
-    preloadMovmentCamera.positionWC
+    preloadMovementCamera.positionWC
   );
   Cartesian3.clone(
     originalCamera.directionWC,
-    preloadMovmentCamera.directionWC
+    preloadMovementCamera.directionWC
   );
-  Cartesian3.clone(originalCamera.upWC, preloadMovmentCamera.upWC);
-  preloadMovmentCamera.setView({
-    destination: preloadMovmentCamera.positionWC,
+  Cartesian3.clone(originalCamera.upWC, preloadMovementCamera.upWC);
+  preloadMovementCamera.setView({
+    destination: preloadMovementCamera.positionWC,
     orientation: {
-      direction: preloadMovmentCamera.directionWC,
-      up: preloadMovmentCamera.upWC,
+      direction: preloadMovementCamera.directionWC,
+      up: preloadMovementCamera.upWC,
     },
   });
+
+  // Recompute the destination cullingVolume for the destination camera position
+  tilesetPassState.cullingVolume = preloadMovementCamera.frustum.computeCullingVolume(
+    preloadMovementCamera.positionWC,
+    preloadMovementCamera.directionWC,
+    preloadMovementCamera.upWC
+  );
 }
 
 var scartchPlaneNormal = new Cartesian3();
@@ -2550,7 +2557,7 @@ function configurePreloadMovementCullingVolume(
     scartchPlaneNormal.x = plane.x;
     scartchPlaneNormal.y = plane.y;
     scartchPlaneNormal.z = plane.z;
-    if (Cartesian3.dot(scartchPlaneNormal, scratchAveragedDelta) < 0) {
+    if (Cartesian3.dot(scartchPlaneNormal, scratchAveragedDelta) > 0) {
       Cartesian4.clone(originalPlanes[i], plane, plane);
     }
   }
