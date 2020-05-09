@@ -27,6 +27,22 @@ import { RectangleGraphics } from "../../Source/Cesium.js";
 import { WallGraphics } from "../../Source/Cesium.js";
 
 describe("DataSources/Entity", function () {
+  it("should not throw when contructed with undefined or null name", function () {
+    var options = {
+      name: undefined,
+    };
+
+    expect(function () {
+      var entity = new Entity(options);
+    }).not.toThrowDeveloperError();
+
+    options.name = null;
+
+    expect(function () {
+      var entity = new Entity(options);
+    }).not.toThrowDeveloperError();
+  });
+
   it("constructor sets expected properties.", function () {
     var entity = new Entity();
     expect(entity.id).toBeDefined();
