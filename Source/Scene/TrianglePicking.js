@@ -44,9 +44,9 @@ function rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ) {
   var radY = maxY - minY;
   var radZ = maxZ - minZ;
 
-  var centerX = 0.5 * (maxX + minX);
-  var centerY = 0.5 * (maxY + minY);
-  var centerZ = 0.5 * (maxZ + minZ);
+  var centerX = 0.5 * (minX + maxX);
+  var centerY = 0.5 * (minY + maxY);
+  var centerZ = 0.5 * (minZ + maxZ);
 
   var rddX = ray.direction.x;
   var rddY = ray.direction.y;
@@ -174,7 +174,30 @@ function Node(level, x, y, z) {
 function TraversalResult() {
   this.triangleIndex = invalidTriangleIndex;
   this.t = Number.MAX_VALUE;
+  this.level = -1;
+  this.x = -1;
+  this.y = -1;
+  this.z = -1;
 }
+
+TraversalResult.prototype.reset = function () {
+  this.triangleIndex = invalidTriangleIndex;
+  this.t = Number.MAX_VALUE;
+  this.level = -1;
+  this.x = -1;
+  this.y = -1;
+  this.z = -1;
+};
+
+TraversalResult.prototype.print = function () {
+  console.log("Traversal result:");
+  console.log("tri index: " + this.triangleIndex);
+  console.log("t: " + this.t);
+  console.log("level: " + this.level);
+  console.log("x: " + this.x);
+  console.log("y: " + this.y);
+  console.log("z: " + this.z);
+};
 
 /**
  * Intersect against root first
@@ -184,6 +207,7 @@ function TraversalResult() {
  * Recurse over sub-boxes
  * TODO: each triangle has a "tested" flag so you can avoid testing it twice.
  * TODO: bresenham or DDS for faster sub-node intersection
+ * TODO: check for tri count = 0 at max level
  *
  * @param {Ray} ray
  * @param {Ray} transformedRay
@@ -232,7 +256,11 @@ Node.prototype.rayIntersect = function (
 
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
-      result.triangleIndex = triIndex;
+      // result.triangleIndex = triIndex;
+      // result.level = that.level;
+      // result.x = that.x;
+      // result.y = that.y;
+      // result.z = that.z;
     }
   }
 
@@ -280,12 +308,12 @@ function getAabbOverlapMask(
   triAabbMaxZ
 ) {
   // 000 = 0
-  // 001 = 1
+  // 100 = 1
   // 010 = 2
-  // 011 = 3
-  // 100 = 4
+  // 110 = 3
+  // 001 = 4
   // 101 = 5
-  // 110 = 6
+  // 011 = 6
   // 111 = 7
 
   var result = 255;
@@ -361,7 +389,7 @@ Node.prototype.addTriangle = function (
   var overlapMask = getAabbOverlapMask(
     that.aabbCenterX,
     that.aabbCenterY,
-    that.aabbCenterY,
+    that.aabbCenterZ,
     triAabbMinX,
     triAabbMaxX,
     triAabbMinY,
@@ -380,7 +408,7 @@ Node.prototype.addTriangle = function (
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 4;
-  var shouldSubdivide = overlapCount <= 2 && level < maxLevels;
+  var shouldSubdivide = overlapCount <= 2 && level < maxLevels - 1;
 
   if (!shouldSubdivide) {
     // Add triangle to list and end recursion
@@ -521,8 +549,7 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   );
 
   var traversalResult = scratchTraversalResult;
-  traversalResult.t = Number.MAX_VALUE;
-  traversalResult.triangleIndex = invalidTriangleIndex;
+  traversalResult.reset();
 
   traversalResult = rootNode.rayIntersect(
     ray,

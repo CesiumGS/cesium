@@ -50,6 +50,7 @@
 
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: cesiumWorldTerrain,
+          projectionPicker: true,
         });
 
         viewer.extend(Cesium.viewerCesiumInspectorMixin);
@@ -106,33 +107,28 @@
           var camera = scene.camera;
 
           var mousePosition = movement.position;
+          // var mousePosition = new Cesium.Cartesian2(558.4765625, 545.62109375);
+
+          // debugger;
           var ray = camera.getPickRay(mousePosition);
 
           var before = performance.now();
           var pickPosition = scene.globe.pick(ray, scene);
           var after = performance.now();
-          console.log(after - before);
+          console.log("total time: " + (after - before));
+          if (!Cesium.defined(pickPosition)) {
+            console.log("not found at " + mousePosition);
+          } else {
+            viewer.entities.add({
+              position: pickPosition,
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
+                material: Cesium.Color.RED,
+              },
+            });
+          }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-        var handler2 = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler2.setInputAction(function (movement) {
-          var scene = viewer.scene;
-          var camera = scene.camera;
-
-          var mousePosition = movement.position;
-          var ray = camera.getPickRay(mousePosition);
-
-          // debugger;
-          var pickPosition = scene.globe.pick(ray, scene);
-
-          viewer.entities.add({
-            position: pickPosition,
-            ellipsoid: {
-              radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-              material: Cesium.Color.RED,
-            },
-          });
-        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }
