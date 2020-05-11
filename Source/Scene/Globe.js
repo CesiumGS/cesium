@@ -1158,6 +1158,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
+    tileProvider.translucencyEnabled = this._translucencyEnabled;
     tileProvider.frontFaceAlphaByDistance = this._frontFaceAlphaByDistanceFinal;
     tileProvider.backFaceAlphaByDistance = this._backFaceAlphaByDistanceFinal;
     tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;

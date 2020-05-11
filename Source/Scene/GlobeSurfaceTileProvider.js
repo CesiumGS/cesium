@@ -106,6 +106,7 @@ function GlobeSurfaceTileProvider(options) {
 
   this.showSkirts = true;
   this.backFaceCulling = true;
+  this.translucencyEnabled = false;
   this.frontFaceAlphaByDistance = undefined;
   this.backFaceAlphaByDistance = undefined;
   this.depthTestAgainstTerrain = false;

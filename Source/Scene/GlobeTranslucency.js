@@ -227,9 +227,14 @@ var TranslucencyMode = {
 function getTranslucencyMode(
   frontFaceAlphaByDistance,
   backFaceAlphaByDistance,
-  baseColor
+  baseColor,
+  translucencyEnabled
 ) {
-  if (!defined(frontFaceAlphaByDistance) || !defined(backFaceAlphaByDistance)) {
+  if (
+    !defined(frontFaceAlphaByDistance) ||
+    !defined(backFaceAlphaByDistance) ||
+    !translucencyEnabled
+  ) {
     return TranslucencyMode.FRONT_OPAQUE | TranslucencyMode.BACK_OPAQUE;
   }
 
@@ -289,7 +294,8 @@ function getTranslucencyModeFromGlobe(globe) {
   return getTranslucencyMode(
     frontFaceAlphaByDistance,
     backFaceAlphaByDistance,
-    globe.baseColor
+    globe.baseColor,
+    globe.translucencyEnabled
   );
 }
 
@@ -784,7 +790,8 @@ GlobeTranslucency.getNumberOfTextureUniforms = function (
   var translucencyMode = getTranslucencyMode(
     tileProvider.frontFaceAlphaByDistance,
     tileProvider.backFaceAlphaByDistance,
-    tileProvider.baseColor
+    tileProvider.baseColor,
+    tileProvider.translucencyEnabled
   );
   var translucent =
     getFrontFaceAlphaMode(translucencyMode) !== TranslucencyMode.FRONT_OPAQUE;
@@ -814,7 +821,8 @@ GlobeTranslucency.pushDerivedCommands = function (
   var translucencyMode = getTranslucencyMode(
     tileProvider.frontFaceAlphaByDistance,
     tileProvider.backFaceAlphaByDistance,
-    tileProvider.baseColor
+    tileProvider.baseColor,
+    tileProvider.translucencyEnabled
   );
 
   if (
