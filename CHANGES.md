@@ -8,6 +8,7 @@
   - Added `Globe.translucencyEnabled` for enabling globe translucency.
   - Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
   - Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
+  - Added `Globe.translucencyRectangle` for applying translucency only within a rectangular area.
 - Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent.
 
 ### 1.69.0 - 2020-05-01

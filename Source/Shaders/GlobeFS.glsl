@@ -87,6 +87,7 @@ uniform vec4 u_fillHighlightColor;
 #ifdef TRANSLUCENT
 uniform vec4 u_frontFaceAlphaByDistance;
 uniform vec4 u_backFaceAlphaByDistance;
+uniform vec4 u_translucencyRectangle;
 #endif
 
 #ifdef UNDERGROUND_COLOR
@@ -136,6 +137,17 @@ float interpolateByDistance(vec4 nearFarScalar)
 vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
 {
     return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
+}
+#endif
+
+#ifdef TRANSLUCENT
+bool inTranslucencyRectangle()
+{
+    return
+        v_textureCoordinates.x > u_translucencyRectangle.x &&
+        v_textureCoordinates.x < u_translucencyRectangle.z &&
+        v_textureCoordinates.y > u_translucencyRectangle.y &&
+        v_textureCoordinates.y < u_translucencyRectangle.w;
 }
 #endif
 
@@ -463,8 +475,11 @@ void main()
 #endif
 
 #ifdef TRANSLUCENT
-    vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
-    finalColor.a *= interpolateByDistance(alphaByDistance);
+    if (inTranslucencyRectangle())
+    {
+      vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+      finalColor.a *= interpolateByDistance(alphaByDistance);
+    }
 #endif
 
     gl_FragColor = finalColor;

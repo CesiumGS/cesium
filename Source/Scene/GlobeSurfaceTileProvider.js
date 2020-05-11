@@ -109,6 +109,7 @@ function GlobeSurfaceTileProvider(options) {
   this.translucencyEnabled = false;
   this.frontFaceAlphaByDistance = undefined;
   this.backFaceAlphaByDistance = undefined;
+  this.translucencyRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
   this.depthTestAgainstTerrain = false;
   this.undergroundColor = undefined;
   this.undergroundColorByDistance = undefined;
@@ -960,6 +961,7 @@ var modifiedModelViewScratch = new Matrix4();
 var modifiedModelViewProjectionScratch = new Matrix4();
 var tileRectangleScratch = new Cartesian4();
 var localizedCartographicLimitRectangleScratch = new Cartesian4();
+var localizedTranslucencyRectangleScratch = new Cartesian4();
 var rtcScratch = new Cartesian3();
 var centerEyeScratch = new Cartesian3();
 var southwestScratch = new Cartesian3();
@@ -1625,6 +1627,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_backFaceAlphaByDistance: function () {
       return this.properties.backFaceAlphaByDistance;
     },
+    u_translucencyRectangle: function () {
+      return this.properties.localizedTranslucencyRectangle;
+    },
     u_undergroundColor: function () {
       return this.properties.undergroundColor;
     },
@@ -1678,6 +1683,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
 
       frontFaceAlphaByDistance: new Cartesian4(),
       backFaceAlphaByDistance: new Cartesian4(),
+      localizedTranslucencyRectangle: new Cartesian4(),
       undergroundColor: Color.clone(Color.TRANSPARENT),
       undergroundColorByDistance: new Cartesian4(),
     },
@@ -2235,6 +2241,12 @@ function addDrawCommandsForTile(
       tileProvider.cartographicLimitRectangle
     );
 
+    var localizedTranslucencyRectangle = localizedTranslucencyRectangleScratch;
+    var translucencyRectangle = clipRectangleAntimeridian(
+      tile.rectangle,
+      tileProvider.translucencyRectangle
+    );
+
     Cartesian3.fromElements(
       hueShift,
       saturationShift,
@@ -2261,6 +2273,24 @@ function addDrawCommandsForTile(
     Cartesian4.clone(
       localizedCartographicLimitRectangle,
       uniformMapProperties.localizedCartographicLimitRectangle
+    );
+
+    localizedTranslucencyRectangle.x =
+      (translucencyRectangle.west - cartographicTileRectangle.west) *
+      inverseTileWidth;
+    localizedTranslucencyRectangle.y =
+      (translucencyRectangle.south - cartographicTileRectangle.south) *
+      inverseTileHeight;
+    localizedTranslucencyRectangle.z =
+      (translucencyRectangle.east - cartographicTileRectangle.west) *
+      inverseTileWidth;
+    localizedTranslucencyRectangle.w =
+      (translucencyRectangle.north - cartographicTileRectangle.south) *
+      inverseTileHeight;
+
+    Cartesian4.clone(
+      localizedTranslucencyRectangle,
+      uniformMapProperties.localizedTranslucencyRectangle
     );
 
     // For performance, use fog in the shader only when the tile is in fog.

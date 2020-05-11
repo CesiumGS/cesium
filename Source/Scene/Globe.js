@@ -707,6 +707,26 @@ Object.defineProperties(Globe.prototype, {
       );
     },
   },
+
+  /**
+   * A property specifying a {@link Rectangle} used to limit translucency to a cartographic area.
+   * Defaults to the maximum extent of cartographic coordinates.
+   *
+   * @member Globe.prototype
+   * @type {Rectangle}
+   * @default Rectangle.MAX_VALUE
+   */
+  translucencyRectangle: {
+    get: function () {
+      return this._surface.tileProvider.translucencyRectangle;
+    },
+    set: function (value) {
+      if (!defined(value)) {
+        value = Rectangle.clone(Rectangle.MAX_VALUE);
+      }
+      Rectangle.clone(value, this._surface.tileProvider.translucencyRectangle);
+    },
+  },
 });
 
 /**
