@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
+- Added `Transforms.eastNorthUp` to compute the east-north-up difference. [#8838](https://github.com/CesiumGS/cesium/pull/8838)
 
 ##### Fixes :wrench:
 

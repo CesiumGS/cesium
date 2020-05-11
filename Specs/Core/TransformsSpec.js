@@ -1639,6 +1639,38 @@ describe("Core/Transforms", function () {
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
 
+  it("eastNorthUp east", function () {
+    var left = Cartesian3.fromDegrees(11, 10);
+    var right = Cartesian3.fromDegrees(10, 10);
+    var expected = new Cartesian3(-109637, 0, 0);
+    var eastNorthUp = Transforms.eastNorthUp(left, right);
+    expect(eastNorthUp.equalsEpsilon(expected, CesiumMath.EPSILON1)).toEqual(true);
+  });
+
+  it("eastNorthUp north", function () {
+    var left = Cartesian3.fromDegrees(10, 11);
+    var right = Cartesian3.fromDegrees(10, 10);
+    var expected = new Cartesian3(0, -110609.8, 0);
+    var eastNorthUp = Transforms.eastNorthUp(left, right);
+    expect(eastNorthUp.equalsEpsilon(expected, CesiumMath.EPSILON1)).toEqual(true);
+  });
+
+  it("eastNorthUp up", function () {
+    var left = Cartesian3.fromDegrees(10, 10, 11);
+    var right = Cartesian3.fromDegrees(10, 10, 10);
+    var expected = new Cartesian3(0, 0, -1);
+    var eastNorthUp = Transforms.eastNorthUp(left, right);
+    expect(eastNorthUp.equalsEpsilon(expected, CesiumMath.EPSILON1)).toEqual(true);
+  });
+
+  it("eastNorthUp", function () {
+    var left = Cartesian3.fromDegrees(11, 11, 11);
+    var right = Cartesian3.fromDegrees(10, 10, 10);
+    var expected = new Cartesian3(-109286.4, -110610, -1);
+    var eastNorthUp = Transforms.eastNorthUp(left, right);
+    expect(eastNorthUp.equalsEpsilon(expected, CesiumMath.EPSILON1)).toEqual(true);
+  });
+
   it("pointToWindowCoordinates works at the center", function () {
     var view = Matrix4.fromCamera({
       position: Cartesian3.multiplyByScalar(

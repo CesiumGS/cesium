@@ -879,6 +879,55 @@ Transforms.computeFixedToIcrfMatrix = function (date, result) {
   return Matrix3.multiply(pfToIcrf, fToPfMtx, result);
 };
 
+var eastNorthUpScratchLeft = new Cartographic();
+var eastNorthUpScratchRight = new Cartographic();
+var eastNorthUpScratchEast = new Cartesian3();
+var eastNorthUpScratchDown = new Cartesian3();
+
+/**
+ * Computes the east-north-up difference between two points. This could be used
+ * e.g. in {@link Entity#viewFrom}.
+ *
+ * @param {Cartesian3} left The first point to compute the east-north-up from.
+ * @param {Cartesian3} right The second point to compute the east-north-up to.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+ * @returns {Cartesian3} The east-north-up difference between two points.
+ *
+ * @example
+ * // Keep camera position and just rotate it to entity.
+ * entity.viewFrom = Cesium.Transforms.eastNorthUp(entityPosition, camera.position);
+ */
+Transforms.eastNorthUp = function (left, right, ellipsoid) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("left", left);
+  Check.typeOf.object("right", right);
+  //>>includeEnd('debug');
+
+  var leftCartographic = Cartographic.fromCartesian(left, ellipsoid, eastNorthUpScratchLeft);
+  var rightCartographic = Cartographic.fromCartesian(right, ellipsoid, eastNorthUpScratchRight);
+  var leftEast = Cartesian3.fromRadians(
+    rightCartographic.longitude,
+    leftCartographic.latitude,
+    leftCartographic.height,
+    ellipsoid,
+    eastNorthUpScratchEast
+  );
+  var rightDown = Cartesian3.fromRadians(
+    rightCartographic.longitude,
+    rightCartographic.latitude,
+    leftCartographic.height,
+    ellipsoid,
+    eastNorthUpScratchDown
+  );
+  var isEast = (rightCartographic.longitude > leftCartographic.longitude);
+  var isNorth = (rightCartographic.latitude > leftCartographic.latitude);
+  return new Cartesian3(
+    Cartesian3.distance(left, leftEast) * (isEast ? 1 : -1),
+    Cartesian3.distance(leftEast, rightDown) * (isNorth ? 1 : -1),
+    rightCartographic.height - leftCartographic.height
+  );
+};
+
 var pointToWindowCoordinatesTemp = new Cartesian4();
 
 /**
