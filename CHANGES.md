@@ -1,5 +1,15 @@
 # Change Log
 
+### 1.70.0 - 2020-06-01
+
+##### Additions :tada:
+
+- Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
+  - Added `Globe.translucencyEnabled` for enabling globe translucency.
+  - Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
+  - Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
+- Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent.
+
 ### 1.69.0 - 2020-05-01
 
 ##### Breaking Changes :mega:
@@ -9,11 +19,6 @@
 
 ##### Additions :tada:
 
-- Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
-  - Added `Globe.translucencyEnabled` for enabling globe translucency.
-  - Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
-  - Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
-- Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent.
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
 - Added support for high-quality edges on solid geometry in glTF models. [#8776](https://github.com/CesiumGS/cesium/pull/8776)
