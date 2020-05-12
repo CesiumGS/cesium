@@ -73,6 +73,7 @@ import PolylineDashMaterialProperty from "./PolylineDashMaterialProperty.js";
 import PolylineGlowMaterialProperty from "./PolylineGlowMaterialProperty.js";
 import PolylineGraphics from "./PolylineGraphics.js";
 import PolylineOutlineMaterialProperty from "./PolylineOutlineMaterialProperty.js";
+import PolylineVolumeGraphics from "./PolylineVolumeGraphics.js";
 import PositionPropertyArray from "./PositionPropertyArray.js";
 import Property from "./Property.js";
 import PropertyArray from "./PropertyArray.js";
@@ -1166,6 +1167,41 @@ function processPositionPacketData(
   }
 }
 
+function processShapesPacketData(
+  object,
+  propertyName,
+  shapesData,
+  entityCollection
+) {
+  if (defined(shapesData.references)) {
+    processReferencesArrayPacketData(
+      object,
+      propertyName,
+      shapesData.references,
+      shapesData.interval,
+      entityCollection,
+      PropertyArray,
+      CompositeProperty
+    );
+  } else {
+    if (defined(shapesData.cartesian)) {
+      shapesData.array = Cartesian2.unpackArray(shapesData.cartesian);
+    }
+
+    if (defined(shapesData.array)) {
+      processPacketData(
+        Array,
+        object,
+        propertyName,
+        shapesData,
+        undefined,
+        undefined,
+        entityCollection
+      );
+    }
+  }
+}
+
 function processMaterialProperty(
   object,
   propertyName,
@@ -1921,6 +1957,25 @@ function processPositionArrayOfArrays(
       packetData,
       entityCollection
     );
+  }
+}
+
+function processShapes(object, propertyName, shapesData, entityCollection) {
+  if (!defined(shapesData)) {
+    return;
+  }
+
+  if (Array.isArray(shapesData)) {
+    for (var i = 0, length = shapesData.length; i < length; i++) {
+      processShapesPacketData(
+        object,
+        propertyName,
+        shapesData[i],
+        entityCollection
+      );
+    }
+  } else {
+    processShapesPacketData(object, propertyName, shapesData, entityCollection);
   }
 }
 
@@ -4119,6 +4174,121 @@ function processPolyline(entity, packet, entityCollection, sourceUri) {
   }
 }
 
+function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
+  var polylineVolumeData = packet.polylineVolume;
+  if (!defined(polylineVolumeData)) {
+    return;
+  }
+
+  var interval = intervalFromString(polylineVolumeData.interval);
+  var polylineVolume = entity.polylineVolume;
+  if (!defined(polylineVolume)) {
+    entity.polylineVolume = polylineVolume = new PolylineVolumeGraphics();
+  }
+
+  processPositionArray(
+    polylineVolume,
+    "positions",
+    polylineVolumeData.positions,
+    entityCollection
+  );
+  processShapes(
+    polylineVolume,
+    "shape",
+    polylineVolumeData.shape,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "show",
+    polylineVolumeData.show,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    CornerType,
+    polylineVolume,
+    "cornerType",
+    polylineVolumeData.cornerType,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "fill",
+    polylineVolumeData.fill,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processMaterialPacketData(
+    polylineVolume,
+    "material",
+    polylineVolumeData.material,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Boolean,
+    polylineVolume,
+    "outline",
+    polylineVolumeData.outline,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Color,
+    polylineVolume,
+    "outlineColor",
+    polylineVolumeData.outlineColor,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Number,
+    polylineVolume,
+    "outlineWidth",
+    polylineVolumeData.outlineWidth,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    Number,
+    polylineVolume,
+    "granularity",
+    polylineVolumeData.granularity,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    ShadowMode,
+    polylineVolume,
+    "shadows",
+    polylineVolumeData.shadows,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
+    DistanceDisplayCondition,
+    polylineVolume,
+    "distanceDisplayCondition",
+    polylineVolumeData.distanceDisplayCondition,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+}
+
 function processRectangle(entity, packet, entityCollection, sourceUri) {
   var rectangleData = packet.rectangle;
   if (!defined(rectangleData)) {
@@ -4823,6 +4993,7 @@ CzmlDataSource.updaters = [
   processPoint, //
   processPolygon, //
   processPolyline, //
+  processPolylineVolume, //
   processProperties, //
   processRectangle, //
   processPosition, //
