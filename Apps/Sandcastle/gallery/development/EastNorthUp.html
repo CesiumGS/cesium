@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="EastNorthUp" />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          requestRenderMode: true,
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+        var position = Cesium.Cartesian3.fromDegrees(13.771, 50.4065, 500);
+        var entity = viewer.entities.add({
+          position: new Cesium.SampledPositionProperty(),
+          model: {
+            uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            minimumPixelSize: 30,
+          },
+        });
+        entity.position.addSample(viewer.clock.currentTime, position);
+        entity.position.addSample(
+          Cesium.JulianDate.addMinutes(viewer.clock.currentTime, 30, new Cesium.JulianDate()),
+          Cesium.Cartesian3.fromDegrees(13.871, 50.4065, 500)
+        );
+        entity.position.forwardExtrapolationType = Cesium.ExtrapolationType.EXTRAPOLATE;
+        viewer.camera.lookAt(
+          position,
+          new Cesium.HeadingPitchRange(
+            Cesium.Math.toRadians(90),
+            Cesium.Math.toRadians(-30),
+            300
+          )
+        );
+        viewer.trackedEntity = entity; // Unlocks the camera from lookAt.
+        viewer.trackedEntity = undefined;
+
+        Sandcastle.addToolbarButton("Go/Stop", function () {
+          viewer.clock.shouldAnimate = !viewer.clock.shouldAnimate;
+          if (viewer.clock.shouldAnimate) {
+            entity.viewFrom = Cesium.Transforms.eastNorthUp(
+              entity.position.getValue(viewer.clock.currentTime),
+              viewer.camera.position
+            );
+            viewer.trackedEntity = entity;
+          } else {
+            viewer.trackedEntity = undefined;
+          }
+        });
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
