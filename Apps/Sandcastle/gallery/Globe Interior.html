@@ -39,17 +39,63 @@
           orderIndependentTranslucency: false,
         });
 
-        viewer.scene.globe.showGroundAtmosphere = false;
-        viewer.scene.globe.baseColor = Cesium.Color.TRANSPARENT;
-        viewer.scene.globe.translucencyEnabled = true;
-        viewer.scene.globe.undergroundColor = undefined;
-        viewer.scene.globe.enableLighting = true;
-        viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
-
-        // Set oceans on Bing base layer to transparent
+        var scene = viewer.scene;
+        var globe = scene.globe;
         var baseLayer = viewer.scene.imageryLayers.get(0);
-        baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
-        baseLayer.colorToAlphaThreshold = 0.2;
+
+        scene.screenSpaceCameraController.enableCollisionDetection = false;
+
+        function reset() {
+          globe.showGroundAtmosphere = true;
+          globe.baseColor = Cesium.Color.BLUE;
+          globe.translucencyEnabled = false;
+          globe.frontFaceAlpha = 1.0;
+          globe.undergroundColor = Cesium.Color.BLACK;
+          globe.enableLighting = false;
+          globe.translucencyRectangle = undefined;
+          baseLayer.colorToAlpha = undefined;
+        }
+
+        function useTranslucencyMask() {
+          globe.showGroundAtmosphere = false;
+          globe.baseColor = Cesium.Color.TRANSPARENT;
+          globe.translucencyEnabled = true;
+          globe.undergroundColor = undefined;
+          globe.enableLighting = true;
+
+          // Set oceans on Bing base layer to transparent
+          baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
+          baseLayer.colorToAlphaThreshold = 0.2;
+        }
+
+        function useTranslucencyRectangle() {
+          globe.translucencyEnabled = true;
+          globe.undergroundColor = undefined;
+          globe.frontFaceAlpha = 0.25;
+          globe.translucencyRectangle = Cesium.Rectangle.fromDegrees(
+            -120.0,
+            0.0,
+            -30.0,
+            45.0
+          );
+        }
+
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Translucency mask",
+            onselect: function () {
+              reset();
+              useTranslucencyMask();
+            },
+          },
+          {
+            text: "Translucency rectangle",
+            onselect: function () {
+              reset();
+              useTranslucencyRectangle();
+            },
+          },
+        ]);
 
         var innerCoreRadius = 1250000;
         var outerCoreRadius = 3450000;
