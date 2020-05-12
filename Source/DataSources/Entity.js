@@ -109,11 +109,7 @@ function Entity(options) {
   this._availability = undefined;
   this._id = id;
   this._definitionChanged = new Event();
-  if (options.name !== undefined && options.name !== null) {
-    this._name = options.name;
-  } else {
-    delete options.name;
-  }
+
   this._show = defaultValue(options.show, true);
   this._parent = undefined;
   this._propertyNames = [
@@ -601,7 +597,7 @@ Entity.prototype.merge = function (source) {
 
     //Custom properties that are registered on the source entity must also
     //get registered on this entity.
-    if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
+    if (!(name in this) && propertyNames.indexOf(name) === -1) {
       this.addProperty(name);
     }
 
