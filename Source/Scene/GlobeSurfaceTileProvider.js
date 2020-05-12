@@ -503,10 +503,10 @@ GlobeSurfaceTileProvider.prototype.endUpdate = function (frameState) {
 
 function pushCommand(tileProvider, command, frameState) {
   if (frameState.globeTranslucent) {
-    var firstLayer = !command.renderState.blending.enabled;
+    var isFirstLayer = !command.renderState.blending.enabled;
     GlobeTranslucency.pushDerivedCommands(
       command,
-      firstLayer,
+      isFirstLayer,
       tileProvider,
       frameState
     );

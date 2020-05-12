@@ -1441,6 +1441,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
     var depthTestAgainstTerrain =
       defined(scene.globe) && scene.globe.depthTestAgainstTerrain;
 
+    // Only do manual depth test if the globe is opaque and writes depth
     billboardCollection._shaderClampToGround =
       context.depthTexture && !globeTranslucent && depthTestAgainstTerrain;
   }

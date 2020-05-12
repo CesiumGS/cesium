@@ -87,7 +87,7 @@ function Globe(ellipsoid) {
   /**
    * Gets or sets the near and far distance for blending {@link Globe#undergroundColor} with the globe color.
    * The blending amount will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the blending amount remains clamped to the nearest bound. If undefined,
    * the underground color will not be blended with the globe color.
@@ -581,7 +581,7 @@ Object.defineProperties(Globe.prototype, {
   /**
    * Gets or sets near and far translucency properties of front faces of the globe based on the distance to the camera.
    * The translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
    * frontFaceAlphaByDistance will be disabled.
@@ -661,7 +661,7 @@ Object.defineProperties(Globe.prototype, {
   /**
    * Gets or sets near and far translucency properties of back faces of the globe based on the distance to the camera.
    * The translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
    * backFaceAlphaByDistance will be disabled.

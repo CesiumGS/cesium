@@ -479,8 +479,8 @@ function getDerivedShaderProgram(
     var attributeLocations = shaderProgram._attributeLocations;
     var vs = shaderProgram.vertexShaderSource.clone();
     var fs = shaderProgram.fragmentShaderSource.clone();
-    vs.defines = defined(vs.defines) ? vs.defines.slice(0) : [];
-    fs.defines = defined(fs.defines) ? fs.defines.slice(0) : [];
+    vs.defines = defined(vs.defines) ? vs.defines.slice() : [];
+    fs.defines = defined(fs.defines) ? fs.defines.slice() : [];
 
     getShaderProgramFunction(vs, fs);
 
@@ -814,7 +814,7 @@ GlobeTranslucency.getNumberOfTextureUniforms = function (
 
 GlobeTranslucency.pushDerivedCommands = function (
   command,
-  firstLayer,
+  isFirstLayer,
   tileProvider,
   frameState
 ) {
@@ -880,7 +880,7 @@ GlobeTranslucency.pushDerivedCommands = function (
     // Push back and front face command for classification depth.
     // Only push classification command if this command is in the first globe layer
     // Push translucent back and front face commands separately so that non-OIT blending looks better
-    if (firstLayer) {
+    if (isFirstLayer) {
       frameState.commandList.push(derivedCommands.backAndFrontFaceCommand);
     }
     if (frameState.cameraUnderground) {
@@ -897,7 +897,7 @@ GlobeTranslucency.pushDerivedCommands = function (
     // Push back and front face commands, one for the opaque pass and the other for classification depth
     // Only push classification command if this command is in the first globe layer
     // Push translucent command for the face that appears in front
-    if (firstLayer) {
+    if (isFirstLayer) {
       frameState.commandList.push(derivedCommands.backFaceCommand);
       frameState.commandList.push(derivedCommands.frontFaceCommand);
     } else {
@@ -920,12 +920,12 @@ GlobeTranslucency.pushDerivedCommands = function (
     // Push one command for classification depth and another for translucency
     // Only push classification command if this command is in the first globe layer
     if (frameState.cameraUnderground) {
-      if (firstLayer) {
+      if (isFirstLayer) {
         frameState.commandList.push(derivedCommands.backFaceCommand);
       }
       frameState.commandList.push(translucentBackFaceCommand);
     } else {
-      if (firstLayer) {
+      if (isFirstLayer) {
         frameState.commandList.push(derivedCommands.frontFaceCommand);
       }
       frameState.commandList.push(translucentFrontFaceCommand);
@@ -937,12 +937,12 @@ GlobeTranslucency.pushDerivedCommands = function (
     // Push one command for classification depth and another for translucency
     // Only push classification command if this command is in the first globe layer
     if (frameState.cameraUnderground) {
-      if (firstLayer) {
+      if (isFirstLayer) {
         frameState.commandList.push(derivedCommands.frontFaceCommand);
       }
       frameState.commandList.push(translucentFrontFaceCommand);
     } else {
-      if (firstLayer) {
+      if (isFirstLayer) {
         frameState.commandList.push(derivedCommands.backFaceCommand);
       }
       frameState.commandList.push(translucentBackFaceCommand);
