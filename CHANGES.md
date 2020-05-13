@@ -8,7 +8,8 @@
 
 ##### Fixes :wrench:
 
-- This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- This fixes a bug where a removed billboard can prevent changing of the terrainProvider. [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- Fixed a bug where `DebugCameraPrimitive` was ignoring the near and far planes of the `Camera`. [#8848](https://github.com/CesiumGS/cesium/issues/8848)
 
 ### 1.69.0 - 2020-05-01
 
