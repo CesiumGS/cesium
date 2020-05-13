@@ -406,7 +406,7 @@ function generateTechnique(
   vertexShader += "varying vec3 v_positionEC;\n";
   if (hasSkinning) {
     vertexShaderMain +=
-      "  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n";
+      "  vec4 pos = u_modelViewMatrix * skinMatrix * vec4(a_position,1.0);\n";
   } else {
     vertexShaderMain +=
       "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n";
@@ -424,7 +424,7 @@ function generateTechnique(
     vertexShader += "varying vec3 v_normal;\n";
     if (hasSkinning) {
       vertexShaderMain +=
-        "  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n";
+        "  v_normal = u_normalMatrix * mat3(skinMatrix) * a_normal;\n";
     } else {
       vertexShaderMain += "  v_normal = u_normalMatrix * a_normal;\n";
     }
@@ -449,10 +449,10 @@ function generateTechnique(
 
   if (hasSkinning) {
     techniqueAttributes.a_joint = {
-      semantic: "JOINT",
+      semantic: "JOINTS_0",
     };
     techniqueAttributes.a_weight = {
-      semantic: "WEIGHT",
+      semantic: "WEIGHTS_0",
     };
 
     vertexShader += "attribute vec4 a_joint;\n";
