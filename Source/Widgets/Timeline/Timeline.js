@@ -234,13 +234,14 @@ Timeline.prototype.destroy = function () {
 /**
  * Shows an highlighted area on the timeline
  *
- * @param {String|Color} color The highlight area color.
- * @param {number} heightInPx The height of the highlight in pixels.
- * @param {number} base The margin between the timeline bottom and the highlight.
+ * @param {Object} config
+ * @param {String|Color} config.color The highlight background color. Can be a css string or a Cesium.Color
+ * @param {number} config.height The height of the highlight area
+ * @param {number} config.base The bottom margin between the highlight range and the bottom of the timeline
+ * @param {JulianDate} config.startTime The start time of the highlight range
+ * @param {JulianDate} config.endTime The end time of the highlight range
  *
- * @returns {TimelineHighlightRange} The new HighlightRange object
- *
- * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Timeline Highlight Sandcastle}
+ * @returns {String} The new HighlightRange id
  */
 Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
   // TODO::Deprecation part - remove on deprecation
@@ -266,6 +267,12 @@ Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
   return newHighlightRange.id;
 };
 
+/**
+ * Removes an highlighted area from the timeline
+ *
+ * @param {String} highlightRangeId The highlight ID as received from the "addHighlightRange" method.
+ *
+ */
 Timeline.prototype.removeHighlightRange = function (highlightRangeId) {
   var highlightIndex = this._highlightRanges.findIndex(function (hl) {
     return hl.id === highlightRangeId;
@@ -274,6 +281,7 @@ Timeline.prototype.removeHighlightRange = function (highlightRangeId) {
   this._highlightRanges.splice(highlightIndex, 1);
   this.render();
 };
+
 /**
  * @private
  */
