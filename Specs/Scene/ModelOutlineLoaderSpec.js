@@ -499,7 +499,7 @@ describe(
       });
     });
 
-    it("switches to 32-bit indices if more than 65536 vertices are required", function () {
+    it("switches to 32-bit indices if more than 65535 vertices are required", function () {
       if (!scene.context.elementIndexUint) {
         // This extension is supported everywhere these days, except possibly
         // in our mocked WebGL context used in the tests on Travis. Consistent
@@ -513,7 +513,7 @@ describe(
       var edges = [];
 
       // Tricky model is 9 vertices. Add copies of it until we're just under 65636 vertices.
-      for (var i = 0; vertices.length / 7 + 9 <= 65536; ++i) {
+      for (var i = 0; vertices.length / 7 + 9 <= 65535; ++i) {
         createTrickyModel(vertices, indices, edges, 2, true, true, true);
       }
 
