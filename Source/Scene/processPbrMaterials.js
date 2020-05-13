@@ -5,7 +5,6 @@ import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
 import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
