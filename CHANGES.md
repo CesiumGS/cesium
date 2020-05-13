@@ -2,6 +2,10 @@
 
 ### 1.70.0 - 2020-06-01
 
+##### Additions :tada:
+
+- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
+
 ##### Fixes :wrench:
 
 - Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining. [#8820](https://github.com/CesiumGS/cesium/pull/8820)
