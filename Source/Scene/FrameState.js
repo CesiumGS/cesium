@@ -136,20 +136,12 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.cameraUnderground = false;
 
   /**
-   * Whether the globe is translucent.
+   * The {@link GlobeTranslucencyState} object used by the scene.
    *
-   * @type {Boolean}
-   * @default false
-   */
-  this.globeTranslucent = false;
-
-  /**
-   * The {@link GlobeTranslucency} object used by the scene.
-   *
-   * @type {GlobeTranslucency}
+   * @type {GlobeTranslucencyState}
    * @default undefined
    */
-  this.globeTranslucency = undefined;
+  this.globeTranslucencyState = undefined;
 
   /**
    * The culling volume.

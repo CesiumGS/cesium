@@ -66,10 +66,8 @@ function Globe(ellipsoid) {
   this._translucencyEnabled = false;
   this._frontFaceAlpha = 1.0;
   this._frontFaceAlphaByDistance = undefined;
-  this._frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
   this._backFaceAlpha = 1.0;
   this._backFaceAlphaByDistance = undefined;
-  this._backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
   /**
    * The color to render the back side of the globe when the camera is underground or the globe is translucent,
@@ -729,58 +727,6 @@ Object.defineProperties(Globe.prototype, {
   },
 });
 
-/**
- * @private
- */
-Globe.prototype.getAlphaByDistanceFinal = function (results) {
-  updateFrontFaceAlphaByDistance(this);
-  updateBackFaceAlphaByDistance(this);
-  results[0] = this._frontFaceAlphaByDistanceFinal;
-  results[1] = this._backFaceAlphaByDistanceFinal;
-  return results;
-};
-
-function updateFrontFaceAlphaByDistance(globe) {
-  updateAlphaByDistance(
-    globe._translucencyEnabled,
-    globe._frontFaceAlpha,
-    globe._frontFaceAlphaByDistance,
-    globe._frontFaceAlphaByDistanceFinal
-  );
-}
-
-function updateBackFaceAlphaByDistance(globe) {
-  updateAlphaByDistance(
-    globe._translucencyEnabled,
-    globe._backFaceAlpha,
-    globe._backFaceAlphaByDistance,
-    globe._backFaceAlphaByDistanceFinal
-  );
-}
-
-function updateAlphaByDistance(
-  translucencyEnabled,
-  alpha,
-  alphaByDistance,
-  alphaByDistanceFinal
-) {
-  if (!translucencyEnabled) {
-    alphaByDistanceFinal.nearValue = 1.0;
-    alphaByDistanceFinal.farValue = 1.0;
-    return;
-  }
-
-  if (!defined(alphaByDistance)) {
-    alphaByDistanceFinal.nearValue = alpha;
-    alphaByDistanceFinal.farValue = alpha;
-    return;
-  }
-
-  NearFarScalar.clone(alphaByDistance, alphaByDistanceFinal);
-  alphaByDistanceFinal.nearValue *= alpha;
-  alphaByDistanceFinal.farValue *= alpha;
-}
-
 function makeShadersDirty(globe) {
   var defines = [];
 
@@ -1178,10 +1124,6 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
-    tileProvider.translucencyEnabled = this._translucencyEnabled;
-    tileProvider.frontFaceAlphaByDistance = this._frontFaceAlphaByDistanceFinal;
-    tileProvider.backFaceAlphaByDistance = this._backFaceAlphaByDistanceFinal;
-    tileProvider.depthTestAgainstTerrain = this.depthTestAgainstTerrain;
     tileProvider.undergroundColor = this.undergroundColor;
     tileProvider.undergroundColorByDistance = this.undergroundColorByDistance;
     surface.beginFrame(frameState);

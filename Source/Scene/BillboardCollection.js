@@ -1439,7 +1439,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
   if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
     var scene = billboardCollection._scene;
     var context = frameState.context;
-    var globeTranslucent = frameState.globeTranslucent;
+    var globeTranslucent = frameState.globeTranslucencyState.translucent;
     var depthTestAgainstTerrain =
       defined(scene.globe) && scene.globe.depthTestAgainstTerrain;
 

@@ -160,7 +160,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var context = frameState.context;
 
   var colorCorrect = hasColorCorrection(this);
-  var globeTranslucent = frameState.globeTranslucent;
+  var globeTranslucent = frameState.globeTranslucencyState.translucent;
 
   var command = this._command;
 

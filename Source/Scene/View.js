@@ -12,7 +12,7 @@ import PassState from "../Renderer/PassState.js";
 import Camera from "./Camera.js";
 import FrustumCommands from "./FrustumCommands.js";
 import GlobeDepth from "./GlobeDepth.js";
-import GlobeTranslucency from "./GlobeTranslucency.js";
+import GlobeTranslucencyFramebuffer from "./GlobeTranslucencyFramebuffer.js";
 import OIT from "./OIT.js";
 import PickDepthFramebuffer from "./PickDepthFramebuffer.js";
 import PickFramebuffer from "./PickFramebuffer.js";
@@ -71,7 +71,7 @@ function View(scene, camera, viewport) {
   this.pickDepthFramebuffer = new PickDepthFramebuffer();
   this.sceneFramebuffer = new SceneFramebuffer();
   this.globeDepth = globeDepth;
-  this.globeTranslucency = new GlobeTranslucency();
+  this.globeTranslucencyFramebuffer = new GlobeTranslucencyFramebuffer();
   this.oit = oit;
   this.pickDepths = [];
   this.debugGlobeDepths = [];
@@ -425,8 +425,9 @@ View.prototype.destroy = function () {
     this.sceneFramebuffer && this.sceneFramebuffer.destroy();
   this.globeDepth = this.globeDepth && this.globeDepth.destroy();
   this.oit = this.oit && this.oit.destroy();
-  this.globeTranslucency =
-    this.globeTranslucency && this.globeTranslucency.destroy();
+  this.globeTranslucencyFramebuffer =
+    this.globeTranslucencyFramebuffer &&
+    this.globeTranslucencyFramebuffer.destroy();
 
   var i;
   var length;

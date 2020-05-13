@@ -51,6 +51,7 @@ import DeviceOrientationCameraController from "./DeviceOrientationCameraControll
 import Fog from "./Fog.js";
 import FrameState from "./FrameState.js";
 import GlobeDepth from "./GlobeDepth.js";
+import GlobeTranslucencyState from "./GlobeTranslucencyState.js";
 import InvertClassification from "./InvertClassification.js";
 import JobScheduler from "./JobScheduler.js";
 import MapMode2D from "./MapMode2D.js";
@@ -71,7 +72,6 @@ import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
-import GlobeTranslucency from "./GlobeTranslucency.js";
 
 var requestRenderAfterFrame = function (scene) {
   return function () {
@@ -207,6 +207,7 @@ function Scene(options) {
   this._context = context;
   this._computeEngine = new ComputeEngine(context);
   this._globe = undefined;
+  this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
 
@@ -1824,7 +1825,7 @@ var requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
 var scratchOccluderBoundingSphere = new BoundingSphere();
 var scratchOccluder;
 
-function getOccluder(scene, globeTranslucent) {
+function getOccluder(scene) {
   // TODO: The occluder is the top-level globe. When we add
   //       support for multiple central bodies, this should be the closest one.
   var globe = scene.globe;
@@ -1833,7 +1834,7 @@ function getOccluder(scene, globeTranslucent) {
     defined(globe) &&
     globe.show &&
     !scene._cameraUnderground &&
-    !globeTranslucent
+    !scene._globeTranslucencyState.translucent
   ) {
     var ellipsoid = globe.ellipsoid;
     var minimumTerrainHeight = scene.frameState.minimumTerrainHeight;
@@ -1873,10 +1874,19 @@ function updateFrameNumber(scene, frameNumber, time) {
 Scene.prototype.updateFrameState = function () {
   var camera = this.camera;
   var globe = this.globe;
-  var globeTranslucency = this._view.globeTranslucency;
-  var globeTranslucent = GlobeTranslucency.isTranslucent(globe);
-
+  var globeTranslucencyState = this._globeTranslucencyState;
+  var globeTranslucencyFramebuffer = this._view.globeTranslucencyFramebuffer;
   var frameState = this._frameState;
+
+  frameState.cameraUnderground = this._cameraUnderground;
+  frameState.globeTranslucencyState = globeTranslucencyState;
+
+  globeTranslucencyState.update(
+    globe,
+    globeTranslucencyFramebuffer,
+    frameState
+  );
+
   frameState.commandList.length = 0;
   frameState.shadowMaps.length = 0;
   frameState.brdfLutGenerator = this._brdfLutGenerator;
@@ -1890,7 +1900,7 @@ Scene.prototype.updateFrameState = function () {
     camera.directionWC,
     camera.upWC
   );
-  frameState.occluder = getOccluder(this, globeTranslucent);
+  frameState.occluder = getOccluder(this);
   frameState.terrainExaggeration = this._terrainExaggeration;
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
@@ -1902,9 +1912,6 @@ Scene.prototype.updateFrameState = function () {
       this.camera.frustum instanceof OrthographicOffCenterFrustum
     );
   frameState.light = this.light;
-  frameState.cameraUnderground = this._cameraUnderground;
-  frameState.globeTranslucent = globeTranslucent;
-  frameState.globeTranslucency = globeTranslucency;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -2480,8 +2487,9 @@ function executeCommands(scene, passState) {
 
   var clearGlobeDepth = environmentState.clearGlobeDepth;
   var useDepthPlane = environmentState.useDepthPlane;
-  var globeTranslucent = frameState.globeTranslucent;
-  var globeTranslucency = view.globeTranslucency;
+  var globeTranslucencyState = scene._globeTranslucencyState;
+  var globeTranslucent = globeTranslucencyState.translucent;
+  var globeTranslucencyFramebuffer = view.globeTranslucencyFramebuffer;
   var separatePrimitiveFramebuffer = (environmentState.separatePrimitiveFramebuffer = false);
   var clearDepth = scene._depthClearCommand;
   var clearStencil = scene._stencilClearCommand;
@@ -2553,7 +2561,7 @@ function executeCommands(scene, passState) {
     var length = frustumCommands.indices[Pass.GLOBE];
 
     if (globeTranslucent) {
-      globeTranslucency.executeGlobeCommands(
+      globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeCommand,
         scene,
@@ -2584,7 +2592,7 @@ function executeCommands(scene, passState) {
       length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
 
       if (globeTranslucent) {
-        globeTranslucency.executeGlobeClassificationCommands(
+        globeTranslucencyState.executeGlobeClassificationCommands(
           frustumCommands,
           executeCommand,
           scene,
@@ -2804,7 +2812,7 @@ function executeCommands(scene, passState) {
     length = frustumCommands.indices[Pass.GLOBE];
 
     if (globeTranslucent) {
-      globeTranslucency.executeGlobeCommands(
+      globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeIdCommand,
         scene,
@@ -3284,20 +3292,13 @@ Scene.prototype.updateEnvironment = function () {
   var offscreenPass = frameState.passes.offscreen;
   var skyAtmosphere = this.skyAtmosphere;
   var globe = this.globe;
-  var cameraUnderground = this._cameraUnderground;
-  var environmentVisible = GlobeTranslucency.isEnvironmentVisible(
-    globe,
-    cameraUnderground
-  );
-  var sunVisibleThroughGlobe =
-    environmentVisible &&
-    GlobeTranslucency.isSunVisibleThroughGlobe(globe, cameraUnderground);
+  var globeTranslucencyState = this._globeTranslucencyState;
 
   if (
     !renderPass ||
     (this._mode !== SceneMode.SCENE2D &&
       view.camera.frustum instanceof OrthographicFrustum) ||
-    !environmentVisible
+    !globeTranslucencyState.environmentVisible
   ) {
     environmentState.skyAtmosphereCommand = undefined;
     environmentState.skyBoxCommand = undefined;
@@ -3346,7 +3347,7 @@ Scene.prototype.updateEnvironment = function () {
   var useDepthPlane = (environmentState.useDepthPlane =
     clearGlobeDepth &&
     this.mode === SceneMode.SCENE3D &&
-    GlobeTranslucency.useDepthPlane(globe, cameraUnderground));
+    globeTranslucencyState.useDepthPlane);
   if (useDepthPlane) {
     // Update the depth plane that is rendered in 3D when the primitives are
     // not depth tested against terrain so primitives on the backface
@@ -3359,7 +3360,8 @@ Scene.prototype.updateEnvironment = function () {
     this._useWebVR && this.mode !== SceneMode.SCENE2D && !offscreenPass;
 
   var occluder =
-    frameState.mode === SceneMode.SCENE3D && !sunVisibleThroughGlobe
+    frameState.mode === SceneMode.SCENE3D &&
+    !globeTranslucencyState.sunVisibleThroughGlobe
       ? frameState.occluder
       : undefined;
   var cullingVolume = frameState.cullingVolume;
@@ -3608,8 +3610,8 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     }
   }
 
-  if (frameState.globeTranslucent) {
-    view.globeTranslucency.updateAndClear(
+  if (scene._globeTranslucencyState.translucent) {
+    view.globeTranslucencyFramebuffer.updateAndClear(
       scene._hdr,
       view.viewport,
       context,
