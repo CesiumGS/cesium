@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 
 ### 1.69.0 - 2020-05-01
 
