@@ -245,14 +245,14 @@ Timeline.prototype.destroy = function () {
 Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
   // TODO::Deprecation part - remove on deprecation
   if (typeof config === "string") {
-    var newHighlightRange = new TimelineHighlightRange(
+    var newDeprecatedHighlightRange = new TimelineHighlightRange(
       config,
       heightInPx,
       base
     );
-    this._highlightRanges.push(newHighlightRange);
+    this._highlightRanges.push(newDeprecatedHighlightRange);
     this.resize();
-    return newHighlightRange;
+    return newDeprecatedHighlightRange;
   }
 
   var newHighlightRange = new TimelineHighlightRange(
