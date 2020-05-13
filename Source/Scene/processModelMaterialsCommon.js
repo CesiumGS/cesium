@@ -389,44 +389,12 @@ function generateTechnique(
   // Add attributes with semantics
   var vertexShaderMain = "";
   if (hasSkinning) {
-    var i, j;
-    var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
-    var matrix = false;
-    if (skinningInfo.type.indexOf("MAT") === 0) {
-      matrix = true;
-      numberOfComponents = Math.sqrt(numberOfComponents);
-    }
-    if (!matrix) {
-      for (i = 0; i < numberOfComponents; i++) {
-        if (i === 0) {
-          vertexShaderMain += "  mat4 skinMat = ";
-        } else {
-          vertexShaderMain += "  skinMat += ";
-        }
-        vertexShaderMain +=
-          "a_weight[" + i + "] * u_jointMatrix[int(a_joint[" + i + "])];\n";
-      }
-    } else {
-      for (i = 0; i < numberOfComponents; i++) {
-        for (j = 0; j < numberOfComponents; j++) {
-          if (i === 0 && j === 0) {
-            vertexShaderMain += "  mat4 skinMat = ";
-          } else {
-            vertexShaderMain += "  skinMat += ";
-          }
-          vertexShaderMain +=
-            "a_weight[" +
-            i +
-            "][" +
-            j +
-            "] * u_jointMatrix[int(a_joint[" +
-            i +
-            "][" +
-            j +
-            "])];\n";
-        }
-      }
-    }
+    vertexShaderMain +=
+      "    mat4 skinMatrix =\n" +
+      "        a_weight.x * u_jointMatrix[int(a_joint.x)] +\n" +
+      "        a_weight.y * u_jointMatrix[int(a_joint.y)] +\n" +
+      "        a_weight.z * u_jointMatrix[int(a_joint.z)] +\n" +
+      "        a_weight.w * u_jointMatrix[int(a_joint.w)];\n";
   }
 
   // Add position always
@@ -481,7 +449,6 @@ function generateTechnique(
   }
 
   if (hasSkinning) {
-    var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
     techniqueAttributes.a_joint = {
       semantic: "JOINT",
     };
@@ -489,8 +456,8 @@ function generateTechnique(
       semantic: "WEIGHT",
     };
 
-    vertexShader += "attribute " + attributeType + " a_joint;\n";
-    vertexShader += "attribute " + attributeType + " a_weight;\n";
+    vertexShader += "attribute vec4 a_joint;\n";
+    vertexShader += "attribute vec4 a_weight;\n";
   }
 
   if (hasVertexColors) {
