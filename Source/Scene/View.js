@@ -40,7 +40,6 @@ function View(scene, camera, viewport) {
     far,
     farToNearRatio,
     numFrustums,
-    scene.logarithmicDepthBuffer,
     frustumCommandsList,
     false,
     undefined
@@ -132,7 +131,6 @@ function updateFrustums(
   far,
   farToNearRatio,
   numFrustums,
-  logDepth,
   frustumCommandsList,
   is2D,
   nearToFarDistance2D
@@ -150,12 +148,8 @@ function updateFrustums(
       curFar = Math.min(far, curNear + nearToFarDistance2D);
     } else {
       curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-      curFar = farToNearRatio * curNear;
-      if (!logDepth) {
-        curFar = Math.min(far, curFar);
-      }
+      curFar = Math.min(far, farToNearRatio * curNear);
     }
-
     var frustumCommands = frustumCommandsList[m];
     if (!defined(frustumCommands)) {
       frustumCommands = frustumCommandsList[m] = new FrustumCommands(
@@ -382,14 +376,16 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     (near !== Number.MAX_VALUE &&
       (numFrustums !== numberOfFrustums ||
         (frustumCommandsList.length !== 0 &&
-          (near < frustumCommandsList[0].near ||
-            (far > frustumCommandsList[numberOfFrustums - 1].far &&
-              (logDepth ||
-                !CesiumMath.equalsEpsilon(
-                  far,
-                  frustumCommandsList[numberOfFrustums - 1].far,
-                  CesiumMath.EPSILON8
-                )))))))
+          (!CesiumMath.equalsEpsilon(
+            near,
+            frustumCommandsList[0].near,
+            CesiumMath.EPSILON8
+          ) ||
+            !CesiumMath.equalsEpsilon(
+              far,
+              frustumCommandsList[numberOfFrustums - 1].far,
+              CesiumMath.EPSILON8
+            )))))
   ) {
     this.updateFrustums = false;
     updateFrustums(
@@ -397,7 +393,6 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
       far,
       farToNearRatio,
       numFrustums,
-      logDepth,
       frustumCommandsList,
       is2D,
       scene.nearToFarDistance2D
