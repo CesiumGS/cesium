@@ -232,13 +232,38 @@ Timeline.prototype.destroy = function () {
 };
 
 /**
- * @private
+ * Shows an highlighted area on the timeline
+ *
+ * @param {String|Color} color The highlight area color.
+ * @param {number} heightInPx The height of the highlight in pixels.
+ * @param {number} base The margin between the timeline bottom and the highlight.
+ *
+ * @returns {TimelineHighlightRange} The new HighlightRange object
+ *
+ * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Timeline Highlight Sandcastle}
  */
-Timeline.prototype.addHighlightRange = function (color, heightInPx, base) {
-  var newHighlightRange = new TimelineHighlightRange(color, heightInPx, base);
+Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
+  // TODO::Deprecation part - remove on deprecation
+  if (typeof config === "string") {
+    var newHighlightRange = new TimelineHighlightRange(
+      config,
+      heightInPx,
+      base
+    );
+    this._highlightRanges.push(newHighlightRange);
+    this.resize();
+    return newHighlightRange;
+  }
+
+  var newHighlightRange = new TimelineHighlightRange(
+    config.color,
+    config.height,
+    config.base
+  );
+  newHighlightRange.setRange(config.startTime, config.endTime);
   this._highlightRanges.push(newHighlightRange);
-  this.resize();
-  return newHighlightRange;
+  this.render();
+  return newHighlightRange.id;
 };
 
 /**
@@ -1006,15 +1031,11 @@ function createTouchMoveCallback(timeline) {
 }
 
 /**
- * Resizes the widget to match the container size.
+ * Renders the timeline and matches to container size
  */
-Timeline.prototype.resize = function () {
+Timeline.prototype.render = function () {
   var width = this.container.clientWidth;
   var height = this.container.clientHeight;
-
-  if (width === this._lastWidth && height === this._lastHeight) {
-    return;
-  }
 
   this._trackContainer.style.height = height + "px";
 
@@ -1031,4 +1052,18 @@ Timeline.prototype.resize = function () {
   this._lastWidth = width;
   this._lastHeight = height;
 };
+
+/**
+ * Rerenders the widget only if the size has changed
+ */
+Timeline.prototype.resize = function () {
+  var width = this.container.clientWidth;
+  var height = this.container.clientHeight;
+
+  if (width === this._lastWidth && height === this._lastHeight) {
+    return;
+  }
+  this.render();
+};
+
 export default Timeline;
