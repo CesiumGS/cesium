@@ -266,6 +266,14 @@ Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
   return newHighlightRange.id;
 };
 
+Timeline.prototype.removeHighlightRange = function (highlightRangeId) {
+  var highlightIndex = this._highlightRanges.findIndex(function (hl) {
+    return hl.id === highlightRangeId;
+  });
+
+  this._highlightRanges.splice(highlightIndex, 1);
+  this.render();
+};
 /**
  * @private
  */

@@ -134,7 +134,7 @@ describe("Widgets/Timeline/Timeline", function () {
     });
 
     describe("removeHighlightRange", function () {
-      xit("should remove highlightrange from the timeline", function () {
+      it("should remove highlightrange from the timeline", function () {
         const highlightRangeConfig = {
           color: "red",
           height: 15,
@@ -145,9 +145,13 @@ describe("Widgets/Timeline/Timeline", function () {
 
         const highlightId = timeline.addHighlightRange(highlightRangeConfig);
 
+        const numberOfElementsBeforeRemoval = getHighlightElements(
+          timelineElement
+        ).length;
         timeline.removeHighlightRange(highlightId);
-        const highlightElement = getHighlightElements(timelineElement)[0];
+        const highlightElements = getHighlightElements(timelineElement);
 
+        expect(numberOfElementsBeforeRemoval).toEqual(1);
         expect(highlightElements.length).toEqual(0);
       });
     });
