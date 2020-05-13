@@ -10,7 +10,7 @@ import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 
 // glTF does not allow an index value of 65535 because this is the primitive
 // restart value in some APIs.
-const MAX_GLTF_UINT16_INDEX = 65534;
+var MAX_GLTF_UINT16_INDEX = 65534;
 
 /**
  * Creates face outlines for glTF primitives with the `CESIUM_primitive_outline` extension.
