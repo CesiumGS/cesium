@@ -8,6 +8,10 @@ import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js"
 import TextureWrap from "../Renderer/TextureWrap.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 
+// glTF does not allow an index value of 65535 because this is the primitive
+// restart value in some APIs.
+var MAX_GLTF_UINT16_INDEX = 65534;
+
 /**
  * Creates face outlines for glTF primitives with the `CESIUM_primitive_outline` extension.
  * @private
@@ -273,7 +277,10 @@ function addOutline(
         vertexCopies[unmatchableVertexIndex] = copy;
       }
 
-      if (copy >= 65536 && triangleIndices instanceof Uint16Array) {
+      if (
+        copy > MAX_GLTF_UINT16_INDEX &&
+        triangleIndices instanceof Uint16Array
+      ) {
         // We outgrew a 16-bit index buffer, switch to 32-bit.
         triangleIndices = new Uint32Array(triangleIndices);
         triangleIndexAccessorGltf.componentType = 5125; // UNSIGNED_INT
@@ -295,6 +302,15 @@ function addOutline(
           0,
           triangleIndices.byteLength
         );
+
+        // The index componentType is also squirreled away in ModelLoadResources.
+        // Hackily update it, or else we'll end up creating the wrong type
+        // of index buffer later.
+        loadResources.indexBuffersToCreate._array.forEach(function (toCreate) {
+          if (toCreate.id === triangleIndexAccessorGltf.bufferView) {
+            toCreate.componentType = triangleIndexAccessorGltf.componentType;
+          }
+        });
       }
 
       if (unmatchableVertexIndex === i0) {
