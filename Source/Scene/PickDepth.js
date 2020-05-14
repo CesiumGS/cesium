@@ -159,6 +159,11 @@ var packedDepthScale = new Cartesian4(
 );
 
 PickDepth.prototype.getDepth = function (context, x, y) {
+  // If this function is called before the framebuffer is created, the depth is undefined.
+  if (!defined(this._framebuffer)) {
+    return undefined;
+  }
+
   var pixels = context.readPixels({
     x: x,
     y: y,
