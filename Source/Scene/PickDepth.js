@@ -189,9 +189,11 @@ PickDepth.prototype.destroy = function () {
   destroyTextures(this);
   destroyFramebuffers(this);
 
-  this._copyDepthCommand.shaderProgram =
-    defined(this._copyDepthCommand.shaderProgram) &&
-    this._copyDepthCommand.shaderProgram.destroy();
+  if (defined(this._copyDepthCommand)) {
+    this._copyDepthCommand.shaderProgram =
+      defined(this._copyDepthCommand.shaderProgram) &&
+      this._copyDepthCommand.shaderProgram.destroy();
+  }
 
   return destroyObject(this);
 };
