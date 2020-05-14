@@ -21,6 +21,7 @@ import equalsMethodEqualityTester from "./equalsMethodEqualityTester.js";
 
 // set this for uniform test resolution across devices
 window.devicePixelRatio = 1;
+window.location.reload = function () {};
 
 function getQueryParameter(name) {
   var match = new RegExp("[?&]" + name + "=([^&]*)").exec(

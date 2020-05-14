@@ -795,6 +795,7 @@ gulp.task('test', function(done) {
     var release = argv.release ? argv.release : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+    global.tdd = argv.tdd ? argv.tdd : false;
 
     var browsers = ['Chrome'];
     if (argv.browsers) {
