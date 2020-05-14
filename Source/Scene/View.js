@@ -31,26 +31,6 @@ function CommandExtent() {
 function View(scene, camera, viewport) {
   var context = scene.context;
 
-  var frustumCommandsList = [];
-
-  // Initial guess at frustums.
-  var near = camera.frustum.near;
-  var far = camera.frustum.far;
-  var farToNearRatio = scene.logarithmicDepthBuffer
-    ? scene.logarithmicDepthFarToNearRatio
-    : scene.farToNearRatio;
-
-  var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-  updateFrustums(
-    near,
-    far,
-    farToNearRatio,
-    numFrustums,
-    frustumCommandsList,
-    false,
-    undefined
-  );
-
   var globeDepth;
   if (context.depthTexture) {
     globeDepth = new GlobeDepth();
@@ -78,7 +58,7 @@ function View(scene, camera, viewport) {
   this.oit = oit;
   this.pickDepths = [];
   this.debugGlobeDepths = [];
-  this.frustumCommandsList = frustumCommandsList;
+  this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
   this.updateFrustums = false;
 
@@ -134,6 +114,30 @@ View.prototype.checkForCameraUpdates = function (scene) {
 
   return false;
 };
+
+function shouldUpdateFrustums(view, near, far, numFrustums) {
+  var frustumCommandsList = view.frustumCommandsList;
+  var numFrustumsOld = frustumCommandsList.length;
+
+  if (view.updateFrustums || numFrustums !== numFrustumsOld) {
+    return true;
+  }
+
+  if (numFrustums > 0 && numFrustumsOld > 0) {
+    var oldNear = frustumCommandsList[0].near;
+    var oldFar = frustumCommandsList[numFrustumsOld - 1].far;
+
+    var eps = CesiumMath.EPSILON8;
+    var nearChanged = !CesiumMath.equalsEpsilon(near, oldNear, eps);
+    var farChanged = !CesiumMath.equalsEpsilon(far, oldFar, eps);
+
+    if (nearChanged || farChanged) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function updateFrustums(
   near,
@@ -366,8 +370,6 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
-  // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
-  // last frame, else compute the new frustums and sort them by frustum again.
   var is2D = scene.mode === SceneMode.SCENE2D;
   var logDepth = frameState.useLogDepth;
   var farToNearRatio = logDepth
@@ -389,22 +391,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
   }
 
-  if (
-    this.updateFrustums ||
-    (near !== Number.MAX_VALUE &&
-      (numFrustums !== numberOfFrustums ||
-        (frustumCommandsList.length !== 0 &&
-          (!CesiumMath.equalsEpsilon(
-            near,
-            frustumCommandsList[0].near,
-            CesiumMath.EPSILON8
-          ) ||
-            !CesiumMath.equalsEpsilon(
-              far,
-              frustumCommandsList[numberOfFrustums - 1].far,
-              CesiumMath.EPSILON8
-            )))))
-  ) {
+  if (shouldUpdateFrustums(this, near, far, numFrustums)) {
     this.updateFrustums = false;
     updateFrustums(
       near,
