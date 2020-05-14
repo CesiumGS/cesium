@@ -101,6 +101,7 @@
     "start": "node server.cjs",
     "startPublic": "node server.cjs --public",
     "build": "gulp build",
+    "build-typescript": "tsc Source/Cesium.ts --allowJs --outDir Build/TypeScript --target es5 --module es6",
     "build-watch": "gulp build-watch",
     "buildApps": "gulp buildApps",
     "clean": "gulp clean",

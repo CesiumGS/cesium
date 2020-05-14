@@ -7,7 +7,12 @@ import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import scaleToGeodeticSurface from "./scaleToGeodeticSurface.js";
 
-function initialize(ellipsoid, x, y, z) {
+function initialize(
+  ellipsoid: Ellipsoid,
+  x: number,
+  y: number,
+  z: number
+): void {
   x = defaultValue(x, 0.0);
   y = defaultValue(y, 0.0);
   z = defaultValue(z, 0.0);
@@ -105,7 +110,7 @@ class Ellipsoid {
    * @type {Cartesian3}
    * @readonly
    */
-  get radii() {
+  get radii(): Cartesian3 {
     return this._radii;
   }
 
@@ -115,7 +120,7 @@ class Ellipsoid {
    * @type {Cartesian3}
    * @readonly
    */
-  get radiiSquared() {
+  get radiiSquared(): Cartesian3 {
     return this._radiiSquared;
   }
   /**
@@ -124,7 +129,7 @@ class Ellipsoid {
    * @type {Cartesian3}
    * @readonly
    */
-  get radiiToTheFourth() {
+  get radiiToTheFourth(): Cartesian3 {
     return this._radiiToTheFourth;
   }
   /**
@@ -133,7 +138,7 @@ class Ellipsoid {
    * @type {Cartesian3}
    * @readonly
    */
-  get oneOverRadii() {
+  get oneOverRadii(): Cartesian3 {
     return this._oneOverRadii;
   }
   /**
@@ -142,7 +147,7 @@ class Ellipsoid {
    * @type {Cartesian3}
    * @readonly
    */
-  get oneOverRadiiSquared() {
+  get oneOverRadiiSquared(): Cartesian3 {
     return this._oneOverRadiiSquared;
   }
   /**
@@ -151,7 +156,7 @@ class Ellipsoid {
    * @type {Number}
    * @readonly
    */
-  get minimumRadius() {
+  get minimumRadius(): number {
     return this._minimumRadius;
   }
   /**
@@ -160,7 +165,7 @@ class Ellipsoid {
    * @type {Number}
    * @readonly
    */
-  get maximumRadius() {
+  get maximumRadius(): number {
     return this._maximumRadius;
   }
 

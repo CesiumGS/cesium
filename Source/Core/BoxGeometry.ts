@@ -238,6 +238,7 @@ class BoxGeometry {
     if (Cartesian3.equals(min, max)) {
       return;
     }
+    // @ts-ignore TS_TODO
     var attributes = new GeometryAttributes();
     var indices;
     var positions;
@@ -784,6 +785,7 @@ class BoxGeometry {
       var offsetValue =
         boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
       arrayFill(applyOffset, offsetValue);
+      // @ts-ignore TS_TODO
       attributes.applyOffset = new GeometryAttribute({
         componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
         componentsPerAttribute: 1,
@@ -795,6 +797,7 @@ class BoxGeometry {
       indices: indices,
       primitiveType: PrimitiveType.TRIANGLES,
       boundingSphere: new BoundingSphere(Cartesian3.ZERO, radius),
+      // @ts-ignore TS_TODO
       offsetAttribute: boxGeometry._offsetAttribute,
     });
   }
