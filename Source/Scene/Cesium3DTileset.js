@@ -147,6 +147,7 @@ function Cesium3DTileset(options) {
   this._properties = undefined; // Metadata for per-model/point/etc properties
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
   this._extensionsUsed = undefined;
+  this._extensions = undefined;
   this._gltfUpAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
@@ -916,6 +917,7 @@ function Cesium3DTileset(options) {
       that._properties = tilesetJson.properties;
       that._geometricError = tilesetJson.geometricError;
       that._extensionsUsed = tilesetJson.extensionsUsed;
+      that._extensions = tilesetJson.extensions;
       that._gltfUpAxis = gltfUpAxis;
       that._extras = tilesetJson.extras;
 
@@ -1010,6 +1012,31 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._asset;
     },
   },
+
+  /**
+   * Gets the tileset's extensions object property.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Object}
+   * @readonly
+   *
+   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+   */
+  extensions: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this.ready) {
+        throw new DeveloperError(
+          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
+      return this._extensions;
+    },
+  },
+
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
    *

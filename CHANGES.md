@@ -2,9 +2,18 @@
 
 ### 1.70.0 - 2020-06-01
 
+##### Additions :tada:
+
+- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
+- Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
+
 ##### Fixes :wrench:
 
-- This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining. [#8820](https://github.com/CesiumGS/cesium/pull/8820)
+- Fixed a bug where a removed billboard could prevent changing of the `TerrainProvider`. [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
+- Fixed a bug where `DebugCameraPrimitive` was ignoring the near and far planes of the `Camera`. [#8848](https://github.com/CesiumGS/cesium/issues/8848)
+- Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 
 ### 1.69.0 - 2020-05-01
 
