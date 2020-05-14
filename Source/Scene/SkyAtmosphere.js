@@ -142,7 +142,7 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
 /**
  * @private
  */
-SkyAtmosphere.prototype.update = function (frameState) {
+SkyAtmosphere.prototype.update = function (frameState, globe) {
   if (!this.show) {
     return undefined;
   }
@@ -160,7 +160,11 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var context = frameState.context;
 
   var colorCorrect = hasColorCorrection(this);
-  var globeTranslucent = frameState.globeTranslucencyState.translucent;
+  var translucent = frameState.globeTranslucencyState.translucent;
+  var perFragmentAtmosphere =
+    translucent ||
+    (defined(globe) &&
+      (!globe.show || globe._surface._tilesToRender.length === 0));
 
   var command = this._command;
 
@@ -193,7 +197,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
     });
   }
 
-  var flags = colorCorrect | (globeTranslucent << 2);
+  var flags = colorCorrect | (perFragmentAtmosphere << 2);
 
   if (flags !== this._flags) {
     this._flags = flags;
@@ -204,8 +208,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
       defines.push("COLOR_CORRECT");
     }
 
-    if (globeTranslucent) {
-      defines.push("GLOBE_TRANSLUCENT");
+    if (perFragmentAtmosphere) {
+      defines.push("PER_FRAGMENT_ATMOSPHERE");
     }
 
     var vs = new ShaderSource({

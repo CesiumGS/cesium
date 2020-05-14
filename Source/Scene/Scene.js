@@ -633,7 +633,6 @@ function Scene(options) {
 
     isSunVisible: false,
     isMoonVisible: false,
-    isReadyForAtmosphere: false,
     isSkyAtmosphereVisible: false,
 
     clearGlobeDepth: false,
@@ -3311,11 +3310,11 @@ Scene.prototype.updateEnvironment = function () {
           globe.enableLighting && globe.dynamicAtmosphereLighting,
           globe.dynamicAtmosphereLightingFromSun
         );
-        environmentState.isReadyForAtmosphere =
-          environmentState.isReadyForAtmosphere ||
-          globe._surface._tilesToRender.length > 0;
       }
-      environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
+      environmentState.skyAtmosphereCommand = skyAtmosphere.update(
+        frameState,
+        this._globe
+      );
       if (defined(environmentState.skyAtmosphereCommand)) {
         this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
       }
@@ -3342,6 +3341,7 @@ Scene.prototype.updateEnvironment = function () {
 
   var clearGlobeDepth = (environmentState.clearGlobeDepth =
     defined(globe) &&
+    globe.show &&
     (!globe.depthTestAgainstTerrain || this.mode === SceneMode.SCENE2D));
   var useDepthPlane = (environmentState.useDepthPlane =
     clearGlobeDepth &&
@@ -3373,9 +3373,9 @@ Scene.prototype.updateEnvironment = function () {
   cullingVolume = scratchCullingVolume;
 
   // Determine visibility of celestial and terrestrial environment effects.
-  environmentState.isSkyAtmosphereVisible =
-    defined(environmentState.skyAtmosphereCommand) &&
-    environmentState.isReadyForAtmosphere;
+  environmentState.isSkyAtmosphereVisible = defined(
+    environmentState.skyAtmosphereCommand
+  );
   environmentState.isSunVisible = this.isVisible(
     environmentState.sunDrawCommand,
     cullingVolume,
