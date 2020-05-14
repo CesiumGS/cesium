@@ -35,49 +35,21 @@
 
 varying vec3 v_outerPositionWC;
 
-#ifndef GLOBE_TRANSLUCENT
+#ifndef PER_FRAGMENT_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
-// Enlarge the ellipsoid slightly to avoid atmosphere artifacts when the camera is slightly below the ellipsoid
-const float epsilon = 1.000001;
-
 void main (void)
 {
-#ifdef GLOBE_TRANSLUCENT
-    vec3 outerPositionWC = v_outerPositionWC;
-    vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
-    vec3 directionEC = czm_viewRotation * directionWC;
-    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = czm_rayEllipsoidIntersectionInterval(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * epsilon);
-    bool intersectsEllipsoid = raySegment.start >= 0.0;
-
-    vec3 startPositionWC = czm_viewerPositionWC;
-    if (intersectsEllipsoid)
-    {
-        startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
-    }
-
-    vec3 toCamera = startPositionWC - outerPositionWC;
-    vec3 lightDirection = getLightDirection(startPositionWC);
-
-    vec3 mieColor;
-    vec3 rayleighColor;
-
-    calculateMieColorAndRayleighColor(
-        startPositionWC,
-        outerPositionWC,
-        lightDirection,
-        intersectsEllipsoid,
-        mieColor,
-        rayleighColor
-    );
-
-    gl_FragColor = calculateFinalColor(startPositionWC, toCamera, lightDirection, rayleighColor, mieColor);
-#else
     vec3 toCamera = czm_viewerPositionWC - v_outerPositionWC;
     vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+#ifdef PER_FRAGMENT_ATMOSPHERE
+    vec3 mieColor;
+    vec3 rayleighColor;
+    calculateMieColorAndRayleighColor(v_outerPositionWC, 1.0, mieColor, rayleighColor);
+    gl_FragColor = calculateFinalColor(czm_viewerPositionWC, toCamera, lightDirection, rayleighColor, mieColor);
+#else
     gl_FragColor = calculateFinalColor(czm_viewerPositionWC, toCamera, lightDirection, v_rayleighColor, v_mieColor);
 #endif
 }

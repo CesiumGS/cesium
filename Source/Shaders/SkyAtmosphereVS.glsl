@@ -37,22 +37,15 @@ attribute vec4 position;
 
 varying vec3 v_outerPositionWC;
 
-#ifndef GLOBE_TRANSLUCENT
+#ifndef PER_FRAGMENT_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
 void main(void)
 {
-#ifndef GLOBE_TRANSLUCENT
-    calculateMieColorAndRayleighColor(
-        czm_viewerPositionWC,
-        position.xyz,
-        getLightDirection(czm_viewerPositionWC),
-        false,
-        v_mieColor,
-        v_rayleighColor
-    );
+#ifndef PER_FRAGMENT_ATMOSPHERE
+    calculateMieColorAndRayleighColor(position.xyz, 1.002, v_mieColor, v_rayleighColor);
 #endif
     v_outerPositionWC = position.xyz;
     gl_Position = czm_modelViewProjection * position;

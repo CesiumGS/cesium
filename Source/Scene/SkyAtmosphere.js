@@ -51,6 +51,15 @@ function SkyAtmosphere(ellipsoid) {
    */
   this.show = true;
 
+  /**
+   * Compute atmosphere per-fragment instead of per-vertex.
+   * This produces better looking atmosphere with a slight performance penalty.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.perFragmentAtmosphere = true;
+
   this._ellipsoid = ellipsoid;
   this._command = new DrawCommand({
     owner: this,
@@ -160,7 +169,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var context = frameState.context;
 
   var colorCorrect = hasColorCorrection(this);
-  var globeTranslucent = frameState.globeTranslucencyState.translucent;
+  var translucent = frameState.globeTranslucencyState.translucent;
+  var perFragmentAtmosphere = this.perFragmentAtmosphere || translucent;
 
   var command = this._command;
 
@@ -193,7 +203,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
     });
   }
 
-  var flags = colorCorrect | (globeTranslucent << 2);
+  var flags = colorCorrect | (perFragmentAtmosphere << 2);
 
   if (flags !== this._flags) {
     this._flags = flags;
@@ -204,8 +214,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
       defines.push("COLOR_CORRECT");
     }
 
-    if (globeTranslucent) {
-      defines.push("GLOBE_TRANSLUCENT");
+    if (perFragmentAtmosphere) {
+      defines.push("PER_FRAGMENT_ATMOSPHERE");
     }
 
     var vs = new ShaderSource({
