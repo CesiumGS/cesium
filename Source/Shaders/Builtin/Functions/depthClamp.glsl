@@ -4,20 +4,20 @@ varying float v_WindowZ;
 #endif
 
 /**
- * Clamps a vertex to the far plane.
+ * Clamps a vertex to the near and far planes.
  *
- * @name czm_depthClampFarPlane
+ * @name czm_depthClamp
  * @glslFunction
  *
  * @param {vec4} coords The vertex in clip coordinates.
- * @returns {vec4} The vertex clipped to the far plane.
+ * @returns {vec4} The vertex clipped to the near and far planes.
  *
  * @example
- * gl_Position = czm_depthClampFarPlane(czm_modelViewProjection * vec4(position, 1.0));
+ * gl_Position = czm_depthClamp(czm_modelViewProjection * vec4(position, 1.0));
  *
- * @see czm_writeDepthClampedToFarPlane
+ * @see czm_writeDepthClamp
  */
-vec4 czm_depthClampFarPlane(vec4 coords)
+vec4 czm_depthClamp(vec4 coords)
 {
 #ifndef LOG_DEPTH
     v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
