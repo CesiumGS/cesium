@@ -21,7 +21,7 @@ vec4 czm_depthClampFarPlane(vec4 coords)
 {
 #ifndef LOG_DEPTH
     v_WindowZ = (0.5 * (coords.z / coords.w) + 0.5) * coords.w;
-    coords.z = min(coords.z, coords.w);
+    coords.z = clamp(coords.z, -coords.w, +coords.w);
 #endif
     return coords;
 }

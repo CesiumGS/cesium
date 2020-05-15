@@ -1141,7 +1141,7 @@ function depthClampVS(vertexShaderSource) {
     "    czm_non_depth_clamp_main();\n" +
     "    vec4 position = gl_Position;\n" +
     "    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n" +
-    "    position.z = min(position.z, position.w);\n" +
+    "    position.z = clamp(position.z, -position.w, +position.w);\n" +
     "    gl_Position = position;\n" +
     "}\n";
   return modifiedVS;
