@@ -60,7 +60,6 @@ function View(scene, camera, viewport) {
   this.debugGlobeDepths = [];
   this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
-  this.updateFrustums = false;
 
   // Array of all commands that get rendered into frustums along with their their near / far values.
   this._commandExtents = [];
@@ -115,39 +114,37 @@ View.prototype.checkForCameraUpdates = function (scene) {
   return false;
 };
 
-function shouldUpdateFrustums(view, near, far, numFrustums) {
+function updateFrustums(view, scene, near, far) {
+  var frameState = scene.frameState;
+  var camera = frameState.camera;
+  var farToNearRatio = frameState.useLogDepth
+    ? scene.logarithmicDepthFarToNearRatio
+    : scene.farToNearRatio;
+  var is2D = scene.mode === SceneMode.SCENE2D;
+  var nearToFarDistance2D = scene.nearToFarDistance2D;
+
+  // The computed near plane must be between the user defined near and far planes.
+  // The computed far plane must between the user defined far and computed near.
+  // This will handle the case where the computed near plane is further than the user defined far plane.
+  near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+  far = Math.max(Math.min(far, camera.frustum.far), near);
+
+  var numFrustums;
+  if (is2D) {
+    // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+    // the camera is moved to just before the frustum and the frustum depth is scaled
+    // to be in [1.0, nearToFarDistance2D].
+    far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+    near = Math.min(near, far);
+    numFrustums = Math.ceil(
+      Math.max(1.0, far - near) / scene.nearToFarDistance2D
+    );
+  } else {
+    // The multifrustum for 3D/CV is non-uniformly distributed.
+    numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+  }
+
   var frustumCommandsList = view.frustumCommandsList;
-  var numFrustumsOld = frustumCommandsList.length;
-
-  if (view.updateFrustums || numFrustums !== numFrustumsOld) {
-    return true;
-  }
-
-  if (numFrustums > 0 && numFrustumsOld > 0) {
-    var oldNear = frustumCommandsList[0].near;
-    var oldFar = frustumCommandsList[numFrustumsOld - 1].far;
-
-    var eps = CesiumMath.EPSILON8;
-    var nearChanged = !CesiumMath.equalsEpsilon(near, oldNear, eps);
-    var farChanged = !CesiumMath.equalsEpsilon(far, oldFar, eps);
-
-    if (nearChanged || farChanged) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-function updateFrustums(
-  near,
-  far,
-  farToNearRatio,
-  numFrustums,
-  frustumCommandsList,
-  is2D,
-  nearToFarDistance2D
-) {
   frustumCommandsList.length = numFrustums;
   for (var m = 0; m < numFrustums; ++m) {
     var curNear;
@@ -176,7 +173,7 @@ function updateFrustums(
   }
 }
 
-function insertIntoBin(scene, view, command, commandNear, commandFar) {
+function insertIntoBin(view, scene, command, commandNear, commandFar) {
   if (scene.debugShowFrustums) {
     command.debugOverlappingFrustums = 0;
   }
@@ -349,12 +346,6 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     }
   }
 
-  // The computed near plane must be between the user defined near and far planes.
-  // The computed far plane must between the user defined far and computed near.
-  // This will handle the case where the computed near plane is further than the user defined far plane.
-  near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
-  far = Math.max(Math.min(far, camera.frustum.far), near);
-
   if (shadowsEnabled) {
     shadowNear = Math.min(
       Math.max(shadowNear, camera.frustum.near),
@@ -370,45 +361,14 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
-  var is2D = scene.mode === SceneMode.SCENE2D;
-  var logDepth = frameState.useLogDepth;
-  var farToNearRatio = logDepth
-    ? scene.logarithmicDepthFarToNearRatio
-    : scene.farToNearRatio;
-  var numFrustums;
-
-  if (is2D) {
-    // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
-    // the camera is moved to just before the frustum and the frustum depth is scaled
-    // to be in [1.0, nearToFarDistance2D].
-    far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
-    near = Math.min(near, far);
-    numFrustums = Math.ceil(
-      Math.max(1.0, far - near) / scene.nearToFarDistance2D
-    );
-  } else {
-    // The multifrustum for 3D/CV is non-uniformly distributed.
-    numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-  }
-
-  if (shouldUpdateFrustums(this, near, far, numFrustums)) {
-    this.updateFrustums = false;
-    updateFrustums(
-      near,
-      far,
-      farToNearRatio,
-      numFrustums,
-      frustumCommandsList,
-      is2D,
-      scene.nearToFarDistance2D
-    );
-  }
+  updateFrustums(this, scene, near, far);
 
   for (var c = 0; c < commandExtentCount; c++) {
     var ce = commandExtents[c];
-    insertIntoBin(scene, this, ce.command, ce.near, ce.far);
+    insertIntoBin(this, scene, ce.command, ce.near, ce.far);
   }
 
+  var numFrustums = frustumCommandsList.length;
   var frustumSplits = frameState.frustumSplits;
   frustumSplits.length = numFrustums + 1;
   for (var j = 0; j < numFrustums; ++j) {
