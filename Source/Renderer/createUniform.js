@@ -131,10 +131,6 @@ function UniformFloatVec3(gl, activeUniform, uniformName, location) {
 UniformFloatVec3.prototype.set = function () {
   var v = this.value;
 
-  if (!defined(v)) {
-    console.log(this.name);
-  }
-
   if (defined(v.red)) {
     if (!Color.equals(v, this._value)) {
       this._value = Color.clone(v, this._value);

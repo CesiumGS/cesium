@@ -1,4 +1,5 @@
 import combine from "../Core/combine.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -171,7 +172,7 @@ GlobeTranslucencyState.prototype.update = function (
   this._environmentVisible = isEnvironmentVisible(this, frameState);
   this._useDepthPlane = useDepthPlane(this, frameState);
   this._requiresManualDepthTest = requiresManualDepthTest(this, frameState);
-  this._numberOfTextureUniforms = getNumberOfTextureUniforms(this, frameState);
+  this._numberOfTextureUniforms = getNumberOfTextureUniforms(this);
   this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
   gatherDerivedCommandRequirements(this, frameState);
@@ -219,19 +220,13 @@ function updateAlphaByDistance(
 }
 
 function getTranslucencyMode(state, globe) {
+  if (!state._translucencyEnabled) {
+    return TranslucencyMode.OPAQUE;
+  }
+
   var frontFaceAlphaByDistance = state._frontFaceAlphaByDistanceFinal;
   var backFaceAlphaByDistance = state._backFaceAlphaByDistanceFinal;
   var baseColor = globe.baseColor;
-  var translucencyEnabled = state._translucencyEnabled;
-
-  if (
-    !defined(frontFaceAlphaByDistance) ||
-    !defined(backFaceAlphaByDistance) ||
-    !translucencyEnabled
-  ) {
-    return TranslucencyMode.FRONT_OPAQUE | TranslucencyMode.BACK_OPAQUE;
-  }
-
   var baseLayerTranslucent = baseColor.alpha < 1.0;
 
   var frontInvisible =
@@ -307,7 +302,7 @@ function requiresManualDepthTest(state, frameState) {
   );
 }
 
-function getNumberOfTextureUniforms(state, frameState) {
+function getNumberOfTextureUniforms(state) {
   var translucent = state._translucent;
 
   var numberOfTextureUniforms = 0;
@@ -370,13 +365,10 @@ function gatherDerivedCommandRequirements(state, frameState) {
   state._derivedCommandsToUpdateLength = derivedCommandsToUpdateLength;
 
   var derivedCommandsDirty = derivedCommandKey !== state._derivedCommandKey;
-  if (derivedCommandsDirty) {
-    state._derivedCommandKey = derivedCommandKey;
-  }
-
+  state._derivedCommandKey = derivedCommandKey;
   state._derivedCommandsDirty = derivedCommandsDirty;
 
-  if (!defined(state._derivedCommandPacks)) {
+  if (!defined(state._derivedCommandPacks) && state._translucent) {
     state._derivedCommandPacks = createDerivedCommandPacks();
   }
 }
@@ -527,7 +519,7 @@ function getOpaqueBackFaceShaderProgram(vs, fs) {
 
 function getDepthOnlyShaderProgram(vs, fs) {
   if (fs.defines.indexOf("TILE_LIMIT_RECTANGLE") > -1) {
-    // Execute the shader normally if discard is called
+    // Need to execute the full shader if discard is called
     return;
   }
 
@@ -567,8 +559,14 @@ function getTranslucentShaderProgram(vs, fs) {
     "#endif \n" +
     "    czm_globe_translucency_main(); \n" +
     "    vec4 classificationColor = texture2D(u_classificationTexture, st); \n" +
+    "    if (classificationColor.a > 0.0) \n" +
+    "    { \n" +
+    "        // Reverse premultiplication process to get the correct composited result of the classification primitives \n" +
+    "        classificationColor.rgb /= classificationColor.a; \n" +
+    "    } \n" +
     "    gl_FragColor = classificationColor * vec4(classificationColor.aaa, 1.0) + gl_FragColor * (1.0 - classificationColor.a); \n" +
     "} \n";
+
   sources.push(globeTranslucencyMain);
 }
 
@@ -594,7 +592,6 @@ function getTranslucentBackFaceManualDepthTestShaderProgram(vs, fs) {
 
 function getPickShaderProgram(vs, fs) {
   var pickShader =
-    "\n\n" +
     "uniform sampler2D u_classificationTexture; \n" +
     "void main() \n" +
     "{ \n" +
@@ -613,11 +610,17 @@ function getPickShaderProgram(vs, fs) {
 function getDerivedShaderProgram(
   context,
   shaderProgram,
+  derivedShaderProgram,
+  shaderProgramDirty,
   getShaderProgramFunction,
   cacheName
 ) {
   if (!defined(getShaderProgramFunction)) {
     return shaderProgram;
+  }
+
+  if (!shaderProgramDirty && defined(derivedShaderProgram)) {
+    return derivedShaderProgram;
   }
 
   var shader = context.shaderCache.getDerivedShaderProgram(
@@ -715,9 +718,19 @@ function getPickBackFaceRenderState(renderState) {
   renderState.blending.enabled = false;
 }
 
-function getDerivedRenderState(renderState, getRenderStateFunction, cache) {
+function getDerivedRenderState(
+  renderState,
+  derivedRenderState,
+  renderStateDirty,
+  getRenderStateFunction,
+  cache
+) {
   if (!defined(getRenderStateFunction)) {
     return renderState;
+  }
+
+  if (!renderStateDirty && defined(derivedRenderState)) {
+    return derivedRenderState;
   }
 
   var cachedRenderState = cache[renderState.id];
@@ -743,18 +756,18 @@ function getDerivedUniformMap(
   state,
   uniformMap,
   derivedUniformMap,
-  uniformMapChanged,
+  uniformMapDirty,
   getDerivedUniformMapFunction
 ) {
   if (!defined(getDerivedUniformMapFunction)) {
     return uniformMap;
   }
 
-  if (uniformMapChanged) {
-    return combine(uniformMap, getDerivedUniformMapFunction(state), false);
+  if (!uniformMapDirty && defined(derivedUniformMap)) {
+    return derivedUniformMap;
   }
 
-  return derivedUniformMap;
+  return combine(uniformMap, getDerivedUniformMapFunction(state), false);
 }
 
 function DerivedCommandPack(options) {
@@ -859,11 +872,6 @@ function createDerivedCommandPacks() {
   ];
 }
 
-var derivedCommands = new Array(derivedCommandsMaximumLength);
-var shaders = new Array(derivedCommandsMaximumLength);
-var renderStates = new Array(derivedCommandsMaximumLength);
-var uniformMaps = new Array(derivedCommandsMaximumLength);
-
 var derivedCommandNames = new Array(derivedCommandsMaximumLength);
 var derivedCommandPacks = new Array(derivedCommandsMaximumLength);
 
@@ -907,88 +915,136 @@ function updateDerivedCommands(
   var derivedCommandsDirty = state._derivedCommandsDirty;
 
   if (
-    !defined(derivedCommandsObject) ||
     command.dirty ||
+    !defined(derivedCommandsObject) ||
     derivedCommandsDirty
   ) {
     command.dirty = false;
-    derivedCommandsObject = defined(derivedCommandsObject)
-      ? derivedCommandsObject
-      : {};
 
-    var i;
-    var derivedCommandPack;
-
-    for (i = 0; i < derivedCommandsLength; ++i) {
-      derivedCommands[i] = derivedCommandsObject[derivedCommandNames[i]];
+    if (!defined(derivedCommandsObject)) {
+      derivedCommandsObject = {};
+      command.derivedCommands.globeTranslucency = derivedCommandsObject;
     }
 
-    for (i = 0; i < derivedCommandsLength; ++i) {
-      if (defined(derivedCommands[i])) {
-        shaders[i] = derivedCommands[i].shaderProgram;
-        renderStates[i] = derivedCommands[i].renderState;
-        uniformMaps[i] = derivedCommands[i].uniformMap;
-      } else {
-        shaders[i] = undefined;
-        renderStates[i] = undefined;
-        uniformMaps[i] = undefined;
-      }
-    }
+    var frameNumber = frameState.frameNumber;
 
-    var uniformMapChanged = false;
-    if (derivedCommandsObject.uniformMap !== command.uniformMap) {
-      derivedCommandsObject.uniformMap = command.uniformMap;
-      uniformMapChanged = true;
-    }
+    var uniformMapDirtyFrame = defaultValue(
+      derivedCommandsObject.uniformMapDirtyFrame,
+      0
+    );
+    var shaderProgramDirtyFrame = defaultValue(
+      derivedCommandsObject.shaderProgramDirtyFrame,
+      0
+    );
+    var renderStateDirtyFrame = defaultValue(
+      derivedCommandsObject.renderStateDirtyFrame,
+      0
+    );
 
-    if (derivedCommandsDirty) {
-      uniformMapChanged = true;
-    }
+    var uniformMapDirty =
+      derivedCommandsObject.uniformMap !== command.uniformMap;
 
-    var shaderProgramChanged =
-      derivedCommandsDirty ||
+    var shaderProgramDirty =
       derivedCommandsObject.shaderProgramId !== command.shaderProgram.id;
 
-    if (shaderProgramChanged) {
-      derivedCommandsObject.shaderProgramId = command.shaderProgram.id;
+    var renderStateDirty =
+      derivedCommandsObject.renderStateId !== command.renderState.id;
+
+    if (uniformMapDirty) {
+      derivedCommandsObject.uniformMapDirtyFrame = frameNumber;
+    }
+    if (shaderProgramDirty) {
+      derivedCommandsObject.shaderProgramDirtyFrame = frameNumber;
+    }
+    if (renderStateDirty) {
+      derivedCommandsObject.renderStateDirtyFrame = frameNumber;
     }
 
-    for (i = 0; i < derivedCommandsLength; ++i) {
-      derivedCommandPack = derivedCommandPacks[i];
-      derivedCommands[i] = DrawCommand.shallowClone(
-        command,
-        derivedCommands[i]
+    derivedCommandsObject.uniformMap = command.uniformMap;
+    derivedCommandsObject.shaderProgramId = command.shaderProgram.id;
+    derivedCommandsObject.renderStateId = command.renderState.id;
+
+    for (var i = 0; i < derivedCommandsLength; ++i) {
+      var derivedCommandPack = derivedCommandPacks[i];
+      var derivedCommandType = derivedCommandTypes[i];
+      var derivedCommandName = derivedCommandNames[i];
+      var derivedCommand = derivedCommandsObject[derivedCommandName];
+
+      var derivedUniformMap;
+      var derivedShaderProgram;
+      var derivedRenderState;
+
+      if (defined(derivedCommand)) {
+        derivedUniformMap = derivedCommand.uniformMap;
+        derivedShaderProgram = derivedCommand.shaderProgram;
+        derivedRenderState = derivedCommand.renderState;
+      } else {
+        derivedUniformMap = undefined;
+        derivedShaderProgram = undefined;
+        derivedRenderState = undefined;
+      }
+
+      derivedCommand = DrawCommand.shallowClone(command, derivedCommand);
+      derivedCommandsObject[derivedCommandName] = derivedCommand;
+
+      var derivedUniformMapDirtyFrame = defaultValue(
+        derivedCommand.derivedCommands.uniformMapDirtyFrame,
+        0
       );
-      derivedCommands[i].derivedCommands.type = derivedCommandTypes[i];
-      derivedCommands[i].pass = derivedCommandPack.pass;
-      derivedCommands[i].pickOnly = derivedCommandPack.pickOnly;
-      derivedCommands[i].uniformMap = getDerivedUniformMap(
+      var derivedShaderProgramDirtyFrame = defaultValue(
+        derivedCommand.derivedCommands.shaderProgramDirtyFrame,
+        0
+      );
+      var derivedRenderStateDirtyFrame = defaultValue(
+        derivedCommand.derivedCommands.renderStateDirtyFrame,
+        0
+      );
+
+      var derivedUniformMapDirty =
+        uniformMapDirty || derivedUniformMapDirtyFrame < uniformMapDirtyFrame;
+      var derivedShaderProgramDirty =
+        shaderProgramDirty ||
+        derivedShaderProgramDirtyFrame < shaderProgramDirtyFrame;
+      var derivedRenderStateDirty =
+        renderStateDirtyFrame ||
+        derivedRenderStateDirtyFrame < renderStateDirtyFrame;
+
+      if (derivedUniformMapDirty) {
+        derivedCommand.derivedCommands.uniformMapDirtyFrame = frameNumber;
+      }
+      if (derivedShaderProgramDirty) {
+        derivedCommand.derivedCommands.shaderProgramDirtyFrame = frameNumber;
+      }
+      if (derivedRenderStateDirty) {
+        derivedCommand.derivedCommands.renderStateDirtyFrame = frameNumber;
+      }
+
+      derivedCommand.derivedCommands.type = derivedCommandType;
+      derivedCommand.pass = derivedCommandPack.pass;
+      derivedCommand.pickOnly = derivedCommandPack.pickOnly;
+      derivedCommand.uniformMap = getDerivedUniformMap(
         state,
         command.uniformMap,
-        uniformMaps[i],
-        uniformMapChanged,
+        derivedUniformMap,
+        derivedUniformMapDirty,
         derivedCommandPack.getUniformMapFunction
       );
-      if (shaderProgramChanged || !defined(shaders[i])) {
-        derivedCommands[i].shaderProgram = getDerivedShaderProgram(
-          frameState.context,
-          command.shaderProgram,
-          derivedCommandPack.getShaderProgramFunction,
-          derivedCommandNames[i]
-        );
-        derivedCommands[i].renderState = getDerivedRenderState(
-          command.renderState,
-          derivedCommandPack.getRenderStateFunction,
-          derivedCommandPack.renderStateCache
-        );
-      } else {
-        derivedCommands[i].shaderProgram = shaders[i];
-        derivedCommands[i].renderState = renderStates[i];
-      }
-      derivedCommandsObject[derivedCommandNames[i]] = derivedCommands[i];
+      derivedCommand.shaderProgram = getDerivedShaderProgram(
+        frameState.context,
+        command.shaderProgram,
+        derivedShaderProgram,
+        derivedShaderProgramDirty,
+        derivedCommandPack.getShaderProgramFunction,
+        derivedCommandName
+      );
+      derivedCommand.renderState = getDerivedRenderState(
+        command.renderState,
+        derivedRenderState,
+        derivedRenderStateDirty,
+        derivedCommandPack.getRenderStateFunction,
+        derivedCommandPack.renderStateCache
+      );
     }
-
-    command.derivedCommands.globeTranslucency = derivedCommandsObject;
   }
 }
 
@@ -1049,6 +1105,19 @@ function executeCommandsMatchingType(
     if (!defined(types) || types.indexOf(type) > -1) {
       executeCommandFunction(command, scene, context, passState);
     }
+  }
+}
+
+function executeCommands(
+  commands,
+  commandsLength,
+  executeCommandFunction,
+  scene,
+  context,
+  passState
+) {
+  for (var i = 0; i < commandsLength; ++i) {
+    executeCommandFunction(commands[i], scene, context, passState);
   }
 }
 
@@ -1120,14 +1189,13 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
 
   if (frontOpaque || backOpaque) {
     // Render classification on opaque faces like normal
-    executeCommandsMatchingType(
+    executeCommands(
       classificationCommands,
       classificationCommandsLength,
       executeCommandFunction,
       scene,
       context,
-      passState,
-      undefined
+      passState
     );
   }
 
@@ -1165,14 +1233,13 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   }
 
   // Render classification on translucent faces
-  executeCommandsMatchingType(
+  executeCommands(
     classificationCommands,
     classificationCommandsLength,
     executeCommandFunction,
     scene,
     context,
-    passState,
-    undefined
+    passState
   );
 
   // Unset temporary state

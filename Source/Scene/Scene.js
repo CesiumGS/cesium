@@ -2489,7 +2489,6 @@ function executeCommands(scene, passState) {
   var useDepthPlane = environmentState.useDepthPlane;
   var globeTranslucencyState = scene._globeTranslucencyState;
   var globeTranslucent = globeTranslucencyState.translucent;
-  var globeTranslucencyFramebuffer = view.globeTranslucencyFramebuffer;
   var separatePrimitiveFramebuffer = (environmentState.separatePrimitiveFramebuffer = false);
   var clearDepth = scene._depthClearCommand;
   var clearStencil = scene._stencilClearCommand;
