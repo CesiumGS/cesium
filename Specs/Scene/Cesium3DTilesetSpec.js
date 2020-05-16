@@ -496,6 +496,15 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("throws when getting extensions and tileset is not ready", function () {
+      var tileset = new Cesium3DTileset({
+        url: tilesetUrl,
+      });
+      expect(function () {
+        return tileset.extensions;
+      }).toThrowDeveloperError();
+    });
+
     it("throws when getting properties and tileset is not ready", function () {
       var tileset = new Cesium3DTileset({
         url: tilesetUrl,

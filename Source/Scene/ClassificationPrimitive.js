@@ -589,8 +589,7 @@ function createShaderProgram(classificationPrimitive, frameState) {
   var shadowVolumeAppearance = new ShadowVolumeAppearance(
     cullFragmentsUsingExtents,
     planarExtents,
-    classificationPrimitive.appearance,
-    context.floatTextureSixPlaces
+    classificationPrimitive.appearance
   );
 
   classificationPrimitive._spStencil = ShaderProgram.replaceCache({

@@ -1,6 +1,5 @@
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 
 /**
  * A directional light source that originates from the Sun.
@@ -19,9 +18,7 @@ function SunLight(options) {
    * @type {Color}
    * @default Color.WHITE
    */
-  this.color = defined(options.color)
-    ? Color.clone(options.color)
-    : Color.WHITE;
+  this.color = Color.clone(defaultValue(options.color, Color.WHITE));
 
   /**
    * The intensity of the light.

@@ -3,6 +3,11 @@ import DeveloperError from "../Core/DeveloperError.js";
 import getTimestamp from "../Core/getTimestamp.js";
 import JobType from "./JobType.js";
 
+/**
+ *
+ * @private
+ * @constructor
+ */
 function JobTypeBudget(total) {
   /**
    * Total budget, in milliseconds, allowed for one frame

@@ -805,14 +805,12 @@ GroundPrimitive.prototype.update = function (frameState) {
         var textureCoordinateRotationPoints =
           geometry.textureCoordinateRotationPoints;
 
-        var useFloatBatchTable = frameState.context.floatTextureSixPlaces;
         if (usePlanarExtents) {
           attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
             boundingRectangle,
             textureCoordinateRotationPoints,
             ellipsoid,
             frameState.mapProjection,
-            useFloatBatchTable,
             this._maxHeight
           );
         } else {
@@ -820,8 +818,7 @@ GroundPrimitive.prototype.update = function (frameState) {
             boundingRectangle,
             textureCoordinateRotationPoints,
             ellipsoid,
-            frameState.mapProjection,
-            useFloatBatchTable
+            frameState.mapProjection
           );
         }
 

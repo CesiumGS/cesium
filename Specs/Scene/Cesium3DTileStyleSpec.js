@@ -4121,11 +4121,11 @@ describe("Scene/Cesium3DTileStyle", function () {
     // The default color style is white, the default show style is true, and the default pointSize is 1.0,
     // but the generated generated shader functions should just be undefined. We don't want all the points to be white.
     var style = new Cesium3DTileStyle({});
-    var colorFunction = style.getColorShaderFunction("getColor", "", {});
-    var showFunction = style.getShowShaderFunction("getShow", "", {});
+    var colorFunction = style.getColorShaderFunction("getColor", {}, {});
+    var showFunction = style.getShowShaderFunction("getShow", {}, {});
     var pointSizeFunction = style.getPointSizeShaderFunction(
       "getPointSize",
-      "",
+      {},
       {}
     );
     expect(colorFunction).toBeUndefined();

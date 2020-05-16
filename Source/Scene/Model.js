@@ -68,6 +68,7 @@ import ModelLoadResources from "./ModelLoadResources.js";
 import ModelMaterial from "./ModelMaterial.js";
 import ModelMesh from "./ModelMesh.js";
 import ModelNode from "./ModelNode.js";
+import ModelOutlineLoader from "./ModelOutlineLoader.js";
 import ModelUtility from "./ModelUtility.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
@@ -3603,6 +3604,13 @@ function createUniformMaps(model, context) {
     u.values = uniforms.values; // material parameter name -> ModelMaterial for modifying the parameter at runtime
     u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
     u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
+
+    if (defined(technique.attributes.a_outlineCoordinates)) {
+      var outlineTexture = ModelOutlineLoader.createTexture(model, context);
+      u.uniformMap.u_outlineTexture = function () {
+        return outlineTexture;
+      };
+    }
   });
 }
 
@@ -4380,7 +4388,7 @@ function applySkins(model) {
         computedJointMatrices[m]
       );
       if (defined(bindShapeMatrix)) {
-        // Optimization for when bind shape matrix is the identity.
+        // NOTE: bindShapeMatrix is glTF 1.0 only, removed in glTF 2.0.
         computedJointMatrices[m] = Matrix4.multiplyTransformation(
           computedJointMatrices[m],
           bindShapeMatrix,
@@ -5249,6 +5257,7 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
+        ModelOutlineLoader.outlinePrimitives(this);
         createResources(this, frameState);
       }
     }

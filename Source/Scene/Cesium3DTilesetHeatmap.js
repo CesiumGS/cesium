@@ -35,6 +35,7 @@ function Cesium3DTilesetHeatmap(tilePropertyName) {
 
 /**
  * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
+ * @private
  */
 function getHeatmapValue(tileValue, tilePropertyName) {
   var value;

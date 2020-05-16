@@ -120,7 +120,7 @@ function addAttribs(f) {
           attrib +
           '">' +
           htmlsafe(attrib) +
-          "</span>"
+          "</span> "
         );
       })
       .join("");

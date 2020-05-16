@@ -1466,6 +1466,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
  * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
  * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
  * @returns {Number} The level with the specified texel spacing or less.
+ * @private
  */
 function getLevelWithMaximumTexelSpacing(
   layer,
