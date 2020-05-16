@@ -62,7 +62,7 @@ function computeDepthQuad(ellipsoid, frameState) {
     scratchCartesian4
   );
 
-  var center, eastOffset, northOffset, scalar;
+  var center, eastOffset, northOffset;
 
   if (frameState.camera.frustum instanceof OrthographicFrustum) {
     center = Cartesian3.ZERO;
@@ -80,7 +80,7 @@ function computeDepthQuad(ellipsoid, frameState) {
       1.0 / qMagnitude,
       scratchCartesian1
     );
-    scalar = wMagnitude / qMagnitude;
+    var scalar = wMagnitude / qMagnitude;
     eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
     northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
   }
