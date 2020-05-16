@@ -675,7 +675,7 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.maximumRequestsPerServer = 0;
 
     function requestFunction() {
-      return when.resolve();
+      return Promise.resolve();
     }
 
     RequestScheduler.throttleRequests = true;

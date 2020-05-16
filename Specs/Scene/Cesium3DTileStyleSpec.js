@@ -2124,26 +2124,28 @@ describe("Scene/Cesium3DTileStyle", function () {
     };
     var style = new Cesium3DTileStyle({ defines: defines });
 
-    style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
-    expect(style.style.backgroundEnabled).toEqual(
-      "${height} * ${backgroundFactor} >= 1000"
-    );
+    return style.readyPromise.then(function () {
+      style.backgroundEnabled = "${height} * ${backgroundFactor} >= 1000";
+      expect(style.style.backgroundEnabled).toEqual(
+        "${height} * ${backgroundFactor} >= 1000"
+      );
 
-    style.backgroundEnabled = false;
-    expect(style.style.backgroundEnabled).toEqual("false");
+      style.backgroundEnabled = false;
+      expect(style.style.backgroundEnabled).toEqual("false");
 
-    var jsonExp = {
-      conditions: [
-        ["${height} > ${backgroundFactor}", "false"],
-        ["true", "true"],
-      ],
-    };
+      var jsonExp = {
+        conditions: [
+          ["${height} > ${backgroundFactor}", "false"],
+          ["true", "true"],
+        ],
+      };
 
-    style.backgroundEnabled = jsonExp;
-    expect(style.style.backgroundEnabled).toEqual(jsonExp);
+      style.backgroundEnabled = jsonExp;
+      expect(style.style.backgroundEnabled).toEqual(jsonExp);
 
-    style.backgroundEnabled = undefined;
-    expect(style.style.backgroundEnabled).toBeUndefined();
+      style.backgroundEnabled = undefined;
+      expect(style.style.backgroundEnabled).toBeUndefined();
+    });
   });
 
   it("sets scaleByDistance value to undefined if value not present", function () {
@@ -3636,21 +3638,23 @@ describe("Scene/Cesium3DTileStyle", function () {
     };
     var style = new Cesium3DTileStyle({ defines: defines });
 
-    style.labelVerticalOrigin = -1;
-    expect(style.style.labelVerticalOrigin).toEqual("-1");
+    return style.readyPromise.then(function () {
+      style.labelVerticalOrigin = -1;
+      expect(style.style.labelVerticalOrigin).toEqual("-1");
 
-    style.labelVerticalOrigin = "${targetOrigin}";
-    expect(style.style.labelVerticalOrigin).toEqual("${targetOrigin}");
+      style.labelVerticalOrigin = "${targetOrigin}";
+      expect(style.style.labelVerticalOrigin).toEqual("${targetOrigin}");
 
-    var jsonExp = {
-      conditions: [
-        ["${height} > 2", "1"],
-        ["true", "${targetOrigin}"],
-      ],
-    };
+      var jsonExp = {
+        conditions: [
+          ["${height} > 2", "1"],
+          ["true", "${targetOrigin}"],
+        ],
+      };
 
-    style.labelVerticalOrigin = jsonExp;
-    expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+      style.labelVerticalOrigin = jsonExp;
+      expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+    });
   });
 
   it("throws on accessing style if not ready", function () {
@@ -3918,22 +3922,18 @@ describe("Scene/Cesium3DTileStyle", function () {
 
   it("default meta has no properties", function () {
     var style = new Cesium3DTileStyle({});
-    expect(style.meta).toEqual({});
-
-    style = new Cesium3DTileStyle({
-      meta: {},
-    });
-    expect(style.meta).toEqual({});
-  });
-
-  it("default meta has no properties", function () {
-    var style = new Cesium3DTileStyle({});
-    expect(style.meta).toEqual({});
-
-    style = new Cesium3DTileStyle({
-      meta: {},
-    });
-    expect(style.meta).toEqual({});
+    return style.readyPromise
+      .then(function () {
+        expect(style.meta).toEqual({});
+      })
+      .then(function () {
+        style = new Cesium3DTileStyle({
+          meta: {},
+        });
+        return style.readyPromise.then(function () {
+          expect(style.meta).toEqual({});
+        });
+      });
   });
 
   it("throws on accessing meta if not ready", function () {
@@ -3954,9 +3954,11 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointSize: "1.0",
     });
 
-    expect(style.show.evaluate(undefined)).toEqual(true);
-    expect(style.color.evaluateColor(undefined)).toEqual(Color.WHITE);
-    expect(style.pointSize.evaluate(undefined)).toEqual(1.0);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(undefined)).toEqual(true);
+      expect(style.color.evaluateColor(undefined)).toEqual(Color.WHITE);
+      expect(style.pointSize.evaluate(undefined)).toEqual(1.0);
+    });
   });
 
   it("applies show style with variable", function () {
@@ -3964,8 +3966,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       show: "${ZipCode} === '19341'",
     });
 
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+    });
   });
 
   it("applies show style with regexp and variables", function () {
@@ -3973,8 +3977,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       show: "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)",
     });
 
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+    });
   });
 
   it("applies show style with conditional", function () {
@@ -3990,28 +3996,34 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.show.evaluate(feature1)).toEqual(false);
-    expect(style.show.evaluate(feature2)).toEqual(true);
+    return style.readyPromise.then(function () {
+      expect(style.show.evaluate(feature1)).toEqual(false);
+      expect(style.show.evaluate(feature2)).toEqual(true);
+    });
   });
 
   it("applies color style variables", function () {
     var style = new Cesium3DTileStyle({
       color: "(${Temperature} > 90) ? color('red') : color('white')",
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.WHITE);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.RED);
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.WHITE);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.RED);
+    });
   });
 
   it("applies color style with new color", function () {
     var style = new Cesium3DTileStyle({
       color: "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))",
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(
-      new Color(38 / 255, 255 / 255, 82 / 255, 0.5)
-    );
-    expect(style.color.evaluateColor(feature2)).toEqual(
-      new Color(255 / 255, 30 / 255, 30 / 255, 1.0)
-    );
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(
+        new Color(38 / 255, 255 / 255, 82 / 255, 0.5)
+      );
+      expect(style.color.evaluateColor(feature2)).toEqual(
+        new Color(255 / 255, 30 / 255, 30 / 255, 1.0)
+      );
+    });
   });
 
   it("applies color style that maps id to color", function () {
@@ -4027,8 +4039,10 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.LIME);
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.LIME);
+    });
   });
 
   it("applies color style with conditional", function () {
@@ -4044,8 +4058,11 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.BLUE);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.YELLOW);
+
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.BLUE);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.YELLOW);
+    });
   });
 
   it("applies pointSize style with variable", function () {
@@ -4053,8 +4070,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointSize: "${Temperature} / 10.0",
     });
 
-    expect(style.pointSize.evaluate(feature1)).toEqual(7.8);
-    expect(style.pointSize.evaluate(feature2)).toEqual(9.2);
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(7.8);
+      expect(style.pointSize.evaluate(feature2)).toEqual(9.2);
+    });
   });
 
   it("applies pointSize style with regexp and variables", function () {
@@ -4062,8 +4081,10 @@ describe("Scene/Cesium3DTileStyle", function () {
       pointSize: "(regExp('^Chest').test(${County})) ? 2.0 : 1.0",
     });
 
-    expect(style.pointSize.evaluate(feature1)).toEqual(2.0);
-    expect(style.pointSize.evaluate(feature2)).toEqual(1.0);
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(2.0);
+      expect(style.pointSize.evaluate(feature2)).toEqual(1.0);
+    });
   });
 
   it("applies pointSize style with conditional", function () {
@@ -4079,8 +4100,11 @@ describe("Scene/Cesium3DTileStyle", function () {
         ],
       },
     });
-    expect(style.pointSize.evaluate(feature1)).toEqual(6);
-    expect(style.pointSize.evaluate(feature2)).toEqual(3);
+
+    return style.readyPromise.then(function () {
+      expect(style.pointSize.evaluate(feature1)).toEqual(6);
+      expect(style.pointSize.evaluate(feature2)).toEqual(3);
+    });
   });
 
   it("applies with defines", function () {
@@ -4103,33 +4127,37 @@ describe("Scene/Cesium3DTileStyle", function () {
       },
     });
 
-    expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
-    expect(style.color.evaluateColor(feature2)).toEqual(Color.BLUE);
-    expect(style.show.evaluate(feature1)).toEqual(true);
-    expect(style.show.evaluate(feature2)).toEqual(false);
-    expect(style.pointSize.evaluate(feature1)).toEqual(114);
-    expect(style.pointSize.evaluate(feature2)).toEqual(44);
-    expect(style.meta.description.evaluate(feature1)).toEqual(
-      "Half height is 50"
-    );
-    expect(style.meta.description.evaluate(feature2)).toEqual(
-      "Half height is 19"
-    );
+    return style.readyPromise.then(function () {
+      expect(style.color.evaluateColor(feature1)).toEqual(Color.RED);
+      expect(style.color.evaluateColor(feature2)).toEqual(Color.BLUE);
+      expect(style.show.evaluate(feature1)).toEqual(true);
+      expect(style.show.evaluate(feature2)).toEqual(false);
+      expect(style.pointSize.evaluate(feature1)).toEqual(114);
+      expect(style.pointSize.evaluate(feature2)).toEqual(44);
+      expect(style.meta.description.evaluate(feature1)).toEqual(
+        "Half height is 50"
+      );
+      expect(style.meta.description.evaluate(feature2)).toEqual(
+        "Half height is 19"
+      );
+    });
   });
 
   it("return undefined shader functions when the style is empty", function () {
     // The default color style is white, the default show style is true, and the default pointSize is 1.0,
     // but the generated generated shader functions should just be undefined. We don't want all the points to be white.
     var style = new Cesium3DTileStyle({});
-    var colorFunction = style.getColorShaderFunction("getColor", {}, {});
-    var showFunction = style.getShowShaderFunction("getShow", {}, {});
-    var pointSizeFunction = style.getPointSizeShaderFunction(
-      "getPointSize",
-      {},
-      {}
-    );
-    expect(colorFunction).toBeUndefined();
-    expect(showFunction).toBeUndefined();
-    expect(pointSizeFunction).toBeUndefined();
+    return style.readyPromise.then(function () {
+      var colorFunction = style.getColorShaderFunction("getColor", {}, {});
+      var showFunction = style.getShowShaderFunction("getShow", {}, {});
+      var pointSizeFunction = style.getPointSizeShaderFunction(
+        "getPointSize",
+        {},
+        {}
+      );
+      expect(colorFunction).toBeUndefined();
+      expect(showFunction).toBeUndefined();
+      expect(pointSizeFunction).toBeUndefined();
+    });
   });
 });
