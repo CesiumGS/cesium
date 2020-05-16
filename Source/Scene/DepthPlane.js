@@ -41,15 +41,15 @@ var scratchCartesian5 = new Cartesian3();
 
 function computeDepthQuad(ellipsoid, frameState) {
   var radii = ellipsoid.radii;
-
+  var camera = frameState.camera;
   var center, eastOffset, northOffset;
 
-  if (frameState.camera.frustum instanceof OrthographicFrustum) {
+  if (camera.frustum instanceof OrthographicFrustum) {
     center = Cartesian3.ZERO;
-    eastOffset = frameState.camera.rightWC;
-    northOffset = frameState.camera.upWC;
+    eastOffset = camera.rightWC;
+    northOffset = camera.upWC;
   } else {
-    var p = frameState.camera.positionWC;
+    var p = camera.positionWC;
 
     // Find the corresponding position in the scaled space of the ellipsoid.
     var q = Cartesian3.multiplyComponents(
