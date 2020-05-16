@@ -773,7 +773,7 @@ function waitForReady(scene, model) {
     .then(function () {
       return model;
     })
-    .otherwise(function () {
+    .catch(function () {
       return Promise.reject(model);
     });
 }

@@ -889,16 +889,18 @@ describe(
     });
 
     it("throws if style references the NORMAL semantic but the point cloud does not have per-point normals", function () {
-      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(
-        function (tileset) {
+      return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl)
+        .then(function (tileset) {
           tileset.style = new Cesium3DTileStyle({
             color: "${NORMAL}[0] > 0.5",
           });
+          return tileset.style.readyPromise;
+        })
+        .then(function () {
           expect(function () {
             scene.renderForSpecs();
           }).toThrowRuntimeError();
-        }
-      );
+        });
     });
 
     it("throws when shader style reference a non-existent property", function () {

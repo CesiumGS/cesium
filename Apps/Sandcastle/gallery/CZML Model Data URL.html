@@ -167,7 +167,7 @@
           .then(function (dataSource) {
             viewer.trackedEntity = dataSource.entities.getById("cube");
           })
-          .otherwise(function (error) {
+          .catch(function (error) {
             window.alert(error);
           });
 
