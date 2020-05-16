@@ -5,6 +5,7 @@ import defined from "../Core/defined.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Geometry from "../Core/Geometry.js";
 import GeometryAttribute from "../Core/GeometryAttribute.js";
+import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -36,6 +37,7 @@ var scratchCartesian1 = new Cartesian3();
 var scratchCartesian2 = new Cartesian3();
 var scratchCartesian3 = new Cartesian3();
 var scratchCartesian4 = new Cartesian3();
+var scratchCartesian5 = new Cartesian3();
 
 function computeDepthQuad(ellipsoid, frameState) {
   var radii = ellipsoid.radii;
@@ -48,7 +50,6 @@ function computeDepthQuad(ellipsoid, frameState) {
     scratchCartesian1
   );
 
-  var qMagnitude = Cartesian3.magnitude(q);
   var qUnit = Cartesian3.normalize(q, scratchCartesian2);
 
   // Determine the east and north directions at q.
@@ -61,44 +62,46 @@ function computeDepthQuad(ellipsoid, frameState) {
     scratchCartesian4
   );
 
-  // Determine the radius of the 'limb' of the ellipsoid.
-  var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
+  var center, eastOffset, northOffset, scalar;
 
-  // Compute the center and offsets.
-  var center = Cartesian3.multiplyByScalar(
-    qUnit,
-    1.0 / qMagnitude,
-    scratchCartesian1
-  );
-  var scalar = wMagnitude / qMagnitude;
-  var eastOffset = Cartesian3.multiplyByScalar(
-    eUnit,
-    scalar,
-    scratchCartesian2
-  );
-  var northOffset = Cartesian3.multiplyByScalar(
-    nUnit,
-    scalar,
-    scratchCartesian3
-  );
+  if (frameState.camera.frustum instanceof OrthographicFrustum) {
+    center = Cartesian3.ZERO;
+    eastOffset = eUnit;
+    northOffset = nUnit;
+  } else {
+    var qMagnitude = Cartesian3.magnitude(q);
+
+    // Determine the radius of the 'limb' of the ellipsoid.
+    var wMagnitude = Math.sqrt(qMagnitude * qMagnitude - 1.0);
+
+    // Compute the center and offsets.
+    center = Cartesian3.multiplyByScalar(
+      qUnit,
+      1.0 / qMagnitude,
+      scratchCartesian1
+    );
+    scalar = wMagnitude / qMagnitude;
+    eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
+    northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
+  }
 
   // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-  var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
+  var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian5);
   Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
   Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
   Cartesian3.pack(upperLeft, depthQuadScratch, 0);
 
-  var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+  var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian5);
   Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
   Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
   Cartesian3.pack(lowerLeft, depthQuadScratch, 3);
 
-  var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
+  var upperRight = Cartesian3.add(center, northOffset, scratchCartesian5);
   Cartesian3.add(upperRight, eastOffset, upperRight);
   Cartesian3.multiplyComponents(radii, upperRight, upperRight);
   Cartesian3.pack(upperRight, depthQuadScratch, 6);
 
-  var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+  var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian5);
   Cartesian3.add(lowerRight, eastOffset, lowerRight);
   Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
   Cartesian3.pack(lowerRight, depthQuadScratch, 9);
