@@ -374,6 +374,10 @@ function removeDefine(defines, defineToRemove) {
   }
 }
 
+function hasDefine(defines, define) {
+  return defines.indexOf(define) > -1;
+}
+
 function getOpaqueFrontFaceShaderProgram(vs, fs) {
   removeDefine(vs.defines, "TRANSLUCENT");
   removeDefine(fs.defines, "TRANSLUCENT");
@@ -389,7 +393,10 @@ function getOpaqueBackFaceShaderProgram(vs, fs) {
 }
 
 function getDepthOnlyShaderProgram(vs, fs) {
-  if (fs.defines.indexOf("TILE_LIMIT_RECTANGLE") > -1) {
+  if (
+    hasDefine(fs.defines, "TILE_LIMIT_RECTANGLE") ||
+    hasDefine(fs.defines, "ENABLE_CLIPPING_PLANES")
+  ) {
     // Need to execute the full shader if discard is called
     return;
   }
