@@ -220,6 +220,7 @@ function requiresManualDepthTest(state, frameState, globe) {
     state._frontFaceTranslucent &&
     !state._backFaceTranslucent &&
     !globe.depthTestAgainstTerrain &&
+    frameState.mode !== SceneMode.SCENE2D &&
     frameState.context.depthTexture
   );
 }
@@ -310,12 +311,6 @@ function getDerivedCommandTypes(
     return length;
   }
 
-  if (frameState.mode === SceneMode.SCENE2D) {
-    types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_FACE;
-    types[length++] = DerivedCommandType.TRANSLUCENT_FRONT_FACE;
-    return length;
-  }
-
   var cameraUnderground = frameState.cameraUnderground;
   var requiresManualDepthTest = state._requiresManualDepthTest;
 
@@ -330,6 +325,12 @@ function getDerivedCommandTypes(
     : requiresManualDepthTest
     ? DerivedCommandType.TRANSLUCENT_BACK_FACE_MANUAL_DEPTH_TEST
     : DerivedCommandType.TRANSLUCENT_BACK_FACE;
+
+  if (frameState.mode === SceneMode.SCENE2D) {
+    types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_FACE;
+    types[length++] = translucentFrontFaceCommandType;
+    return length;
+  }
 
   if (backTranslucent) {
     // Push depth-only command for classification. Blend commands do not need to write depth.
