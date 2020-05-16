@@ -107,17 +107,14 @@
           var camera = scene.camera;
 
           var mousePosition = movement.position;
-          // var mousePosition = new Cesium.Cartesian2(558.4765625, 545.62109375);
-
-          // debugger;
           var ray = camera.getPickRay(mousePosition);
 
           var before = performance.now();
           var pickPosition = scene.globe.pick(ray, scene);
           var after = performance.now();
-          console.log("total time: " + (after - before));
+          console.log("Single pick time: " + (after - before));
           if (!Cesium.defined(pickPosition)) {
-            console.log("not found at " + mousePosition);
+            console.log("no pick found at " + mousePosition);
           } else {
             viewer.entities.add({
               position: pickPosition,
@@ -128,6 +125,78 @@
             });
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        Sandcastle.addToggleButton("Fast Pick", true, function (checked) {
+          viewer.scene.globe.useNewPicking = checked;
+        });
+
+        function multiPick(drawShape) {
+          var scene = viewer.scene;
+          var camera = scene.camera;
+
+          var width = viewer.canvas.clientWidth;
+          var height = viewer.canvas.clientHeight;
+
+          var numPicksDim = 10;
+          var numPicksTotal = numPicksDim * numPicksDim;
+
+          var rays = new Array(numPicksTotal);
+          var pickPositions = new Array(numPicksTotal);
+
+          for (var x = 0; x < numPicksDim; x++) {
+            for (var y = 0; y < numPicksDim; y++) {
+              var mouseX = width * (x / (numPicksDim - 1));
+              var mouseY = height * (y / (numPicksDim - 1));
+              var mousePosition = Cesium.Cartesian2.fromElements(
+                mouseX,
+                mouseY
+              );
+              var ray = camera.getPickRay(mousePosition);
+              var index = x * numPicksDim + y;
+              rays[index] = ray;
+              pickPositions[index] = new Cesium.Cartesian3();
+            }
+          }
+
+          var before = performance.now();
+          for (var i = 0; i < numPicksTotal; i++) {
+            pickPositions[i] = scene.globe.pick(
+              rays[i],
+              scene,
+              pickPositions[i]
+            );
+          }
+          var after = performance.now();
+
+          console.log(
+            "Total time (ms) for " +
+              numPicksTotal +
+              " picks: " +
+              (after - before)
+          );
+
+          viewer.entities.removeAll();
+
+          if (drawShape) {
+            for (var ii = 0; ii < numPicksTotal; ii++) {
+              var pos = pickPositions[ii];
+              viewer.entities.add({
+                position: pos,
+                ellipsoid: {
+                  radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
+                  material: Cesium.Color.RED,
+                },
+              });
+            }
+          }
+        }
+        Sandcastle.addToolbarButton("Multi Pick", function () {
+          multiPick(false);
+        });
+
+        Sandcastle.addToolbarButton("Multi Pick + Draw", function () {
+          multiPick(true);
+        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();

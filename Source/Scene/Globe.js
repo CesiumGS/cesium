@@ -50,6 +50,8 @@ function Globe(ellipsoid) {
   this._surfaceShaderSet = new GlobeSurfaceShaderSet();
   this._material = undefined;
 
+  this.useNewPicking = true;
+
   this._surface = new QuadtreePrimitive({
     tileProvider: new GlobeSurfaceTileProvider({
       terrainProvider: terrainProvider,
@@ -606,24 +608,19 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
   var intersection;
   length = sphereIntersections.length;
 
-  var pickStart = getTimestamp();
-
   for (i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
       scene.mode,
       scene.mapProjection,
       true,
-      result
+      result,
+      this.useNewPicking
     );
     if (defined(intersection)) {
       break;
     }
   }
-
-  var pickEnd = getTimestamp();
-
-  console.log("interior timing pick(): " + (pickEnd - pickStart));
 
   return intersection;
 };

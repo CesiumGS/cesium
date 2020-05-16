@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
@@ -152,15 +153,16 @@ GlobeSurfaceTile.prototype.pick = function (
   mode,
   projection,
   cullBackFaces,
-  result
+  result,
+  useNewPicking
 ) {
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
     return undefined;
   }
 
-  var useNewVersion = true;
-  if (useNewVersion && defined(this.trianglePicking)) {
+  useNewPicking = defaultValue(useNewPicking, true);
+  if (useNewPicking && defined(this.trianglePicking)) {
     return this.trianglePicking.rayIntersect(ray, result);
   }
 
