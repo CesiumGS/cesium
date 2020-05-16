@@ -42,41 +42,19 @@ var DerivedCommandNames = [
   "pickBackFaceCommand",
 ];
 
-var TranslucencyMode = {
-  FRONT_INVISIBLE: 1,
-  FRONT_OPAQUE: 2,
-  FRONT_TRANSLUCENT: 3,
-  BACK_INVISIBLE: 4,
-  BACK_OPAQUE: 8,
-  BACK_TRANSLUCENT: 12,
-  INVISIBLE: 5, // Shorthand for FRONT_INVISIBLE | BACK_INVISIBLE
-  OPAQUE: 10, // Shorthand for FRONT_OPAQUE | BACK_OPAQUE
-  FRONT_MASK: 3, // Mask front bits (0-1)
-  BACK_MASK: 12, // Mask front bits (2-3)
-};
-
 /**
  * @private
  */
 function GlobeTranslucencyState() {
-  this._translucencyEnabled = false;
-  this._frontFaceAlpha = 1.0;
-  this._frontFaceAlphaByDistance = undefined;
-  this._backFaceAlpha = 1.0;
-  this._backFaceAlphaByDistance = undefined;
-  this._depthTestAgainstTerrain = false;
+  this._frontFaceAlphaByDistance = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
+  this._backFaceAlphaByDistance = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
 
-  this._frontFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
-  this._backFaceAlphaByDistanceFinal = new NearFarScalar(0.0, 1.0, 0.0, 1.0);
-
-  this._translucencyMode = TranslucencyMode.OPAQUE;
-  this._frontFaceTranslucencyMode = TranslucencyMode.FRONT_OPAQUE;
-  this._backFaceTranslucencyMode = TranslucencyMode.BACK_OPAQUE;
-  this._translucent = false;
+  this._frontFaceTranslucent = false;
+  this._backFaceTranslucent = false;
+  this._requiresManualDepthTest = false;
   this._sunVisibleThroughGlobe = false;
   this._environmentVisible = false;
   this._useDepthPlane = false;
-  this._requiresManualDepthTest = false;
   this._numberOfTextureUniforms = 0;
   this._globeTranslucencyFramebuffer = undefined;
 
@@ -98,17 +76,17 @@ function GlobeTranslucencyState() {
 Object.defineProperties(GlobeTranslucencyState.prototype, {
   frontFaceAlphaByDistance: {
     get: function () {
-      return this._frontFaceAlphaByDistanceFinal;
+      return this._frontFaceAlphaByDistance;
     },
   },
   backFaceAlphaByDistance: {
     get: function () {
-      return this._backFaceAlphaByDistanceFinal;
+      return this._backFaceAlphaByDistance;
     },
   },
   translucent: {
     get: function () {
-      return this._translucent;
+      return this._frontFaceTranslucent;
     },
   },
   sunVisibleThroughGlobe: {
@@ -142,172 +120,114 @@ GlobeTranslucencyState.prototype.update = function (
   frameState
 ) {
   if (!defined(globe) || !globe.show) {
-    this._translucent = false;
+    this._frontFaceTranslucent = false;
+    this._backFaceTranslucent = false;
     this._sunVisibleThroughGlobe = true;
     this._environmentVisible = true;
     this._useDepthPlane = false;
     return;
   }
 
-  this._translucencyEnabled = globe.translucencyEnabled;
-  this._frontFaceAlpha = globe.frontFaceAlpha;
-  this._frontFaceAlphaByDistance = globe.frontFaceAlphaByDistance;
-  this._backFaceAlpha = globe.backFaceAlpha;
-  this._backFaceAlphaByDistance = globe.backFaceAlphaByDistance;
-  this._depthTestAgainstTerrain = globe.depthTestAgainstTerrain;
+  this._frontFaceAlphaByDistance = updateAlphaByDistance(
+    globe.translucencyEnabled,
+    globe.frontFaceAlpha,
+    globe.frontFaceAlphaByDistance,
+    this._frontFaceAlphaByDistance
+  );
+  this._backFaceAlphaByDistance = updateAlphaByDistance(
+    globe.translucencyEnabled,
+    globe.backFaceAlpha,
+    globe.backFaceAlphaByDistance,
+    this._backFaceAlphaByDistance
+  );
 
-  updateFrontFaceAlphaByDistance(this);
-  updateBackFaceAlphaByDistance(this);
+  this._frontFaceTranslucent = isFaceTranslucent(
+    this._frontFaceAlphaByDistance,
+    globe
+  );
+  this._backFaceTranslucent = isFaceTranslucent(
+    this._backFaceAlphaByDistance,
+    globe
+  );
 
-  var translucencyMode = getTranslucencyMode(this, globe);
-  var frontFaceTranslucencyMode =
-    translucencyMode & TranslucencyMode.FRONT_MASK;
-  var backFaceTranslucencyMode = translucencyMode & TranslucencyMode.BACK_MASK;
+  this._requiresManualDepthTest = requiresManualDepthTest(
+    this,
+    frameState,
+    globe
+  );
 
-  this._translucencyMode = translucencyMode;
-  this._frontFaceTranslucencyMode = frontFaceTranslucencyMode;
-  this._backFaceTranslucencyMode = backFaceTranslucencyMode;
-  this._translucent = isTranslucent(this);
   this._sunVisibleThroughGlobe = isSunVisibleThroughGlobe(this, frameState);
   this._environmentVisible = isEnvironmentVisible(this, frameState);
   this._useDepthPlane = useDepthPlane(this, frameState);
-  this._requiresManualDepthTest = requiresManualDepthTest(this, frameState);
   this._numberOfTextureUniforms = getNumberOfTextureUniforms(this);
   this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
   gatherDerivedCommandRequirements(this, frameState);
 };
 
-function updateFrontFaceAlphaByDistance(state) {
-  updateAlphaByDistance(
-    state._translucencyEnabled,
-    state._frontFaceAlpha,
-    state._frontFaceAlphaByDistance,
-    state._frontFaceAlphaByDistanceFinal
-  );
-}
-
-function updateBackFaceAlphaByDistance(state) {
-  updateAlphaByDistance(
-    state._translucencyEnabled,
-    state._backFaceAlpha,
-    state._backFaceAlphaByDistance,
-    state._backFaceAlphaByDistanceFinal
-  );
-}
-
 function updateAlphaByDistance(
   translucencyEnabled,
   alpha,
   alphaByDistance,
-  alphaByDistanceFinal
+  result
 ) {
   if (!translucencyEnabled) {
-    alphaByDistanceFinal.nearValue = 1.0;
-    alphaByDistanceFinal.farValue = 1.0;
-    return;
+    result.nearValue = 1.0;
+    result.farValue = 1.0;
+    return result;
   }
 
   if (!defined(alphaByDistance)) {
-    alphaByDistanceFinal.nearValue = alpha;
-    alphaByDistanceFinal.farValue = alpha;
-    return;
+    result.nearValue = alpha;
+    result.farValue = alpha;
+    return result;
   }
 
-  NearFarScalar.clone(alphaByDistance, alphaByDistanceFinal);
-  alphaByDistanceFinal.nearValue *= alpha;
-  alphaByDistanceFinal.farValue *= alpha;
+  NearFarScalar.clone(alphaByDistance, result);
+  result.nearValue *= alpha;
+  result.farValue *= alpha;
+  return result;
 }
 
-function getTranslucencyMode(state, globe) {
-  if (!state._translucencyEnabled) {
-    return TranslucencyMode.OPAQUE;
-  }
-
-  var frontFaceAlphaByDistance = state._frontFaceAlphaByDistanceFinal;
-  var backFaceAlphaByDistance = state._backFaceAlphaByDistanceFinal;
-  var baseColor = globe.baseColor;
-  var baseLayerTranslucent = baseColor.alpha < 1.0;
-
-  var frontInvisible =
-    frontFaceAlphaByDistance.nearValue === 0.0 &&
-    frontFaceAlphaByDistance.farValue === 0.0;
-  var frontOpaque =
-    !baseLayerTranslucent &&
-    frontFaceAlphaByDistance.nearValue === 1.0 &&
-    frontFaceAlphaByDistance.farValue === 1.0;
-
-  var backInvisible =
-    backFaceAlphaByDistance.nearValue === 0.0 &&
-    backFaceAlphaByDistance.farValue === 0.0;
-  var backOpaque =
-    !baseLayerTranslucent &&
-    backFaceAlphaByDistance.nearValue === 1.0 &&
-    backFaceAlphaByDistance.farValue === 1.0;
-
-  var translucencyMode = 0;
-
-  if (frontInvisible) {
-    translucencyMode += TranslucencyMode.FRONT_INVISIBLE;
-  } else if (frontOpaque) {
-    translucencyMode += TranslucencyMode.FRONT_OPAQUE;
-  } else {
-    translucencyMode += TranslucencyMode.FRONT_TRANSLUCENT;
-  }
-
-  if (backInvisible) {
-    translucencyMode += TranslucencyMode.BACK_INVISIBLE;
-  } else if (backOpaque) {
-    translucencyMode += TranslucencyMode.BACK_OPAQUE;
-  } else {
-    translucencyMode += TranslucencyMode.BACK_TRANSLUCENT;
-  }
-
-  return translucencyMode;
-}
-
-function isTranslucent(state) {
-  return state._frontFaceTranslucencyMode !== TranslucencyMode.FRONT_OPAQUE;
+function isFaceTranslucent(alphaByDistance, globe) {
+  return (
+    globe.baseColor.alpha < 1.0 ||
+    alphaByDistance.nearValue < 1.0 ||
+    alphaByDistance.farValue < 1.0
+  );
 }
 
 function isSunVisibleThroughGlobe(state, frameState) {
-  var frontOpaque =
-    state._frontFaceTranslucencyMode === TranslucencyMode.FRONT_OPAQUE;
-  var backOpaque =
-    state._backFaceTranslucencyMode === TranslucencyMode.BACK_OPAQUE;
-
   // The sun is visible through the globe if the front and back faces are translucent when above ground
   // or if front faces are translucent when below ground
-  return !frontOpaque && (frameState.cameraUnderground || !backOpaque);
+  var frontTranslucent = state._frontFaceTranslucent;
+  var backTranslucent = state._backFaceTranslucent;
+  return frontTranslucent && (frameState.cameraUnderground || backTranslucent);
 }
 
 function isEnvironmentVisible(state, frameState) {
   // The environment is visible if the camera is above ground or underground with translucency
-  return !frameState.cameraUnderground || state._translucent;
+  return !frameState.cameraUnderground || state._frontFaceTranslucent;
 }
 
 function useDepthPlane(state, frameState) {
   // Use the depth plane when the camera is above ground and the globe is opaque
-  return !frameState.cameraUnderground && !state._translucent;
+  return !frameState.cameraUnderground && !state._frontFaceTranslucent;
 }
 
-function requiresManualDepthTest(state, frameState) {
-  var translucentOpaqueMode =
-    TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE;
-
+function requiresManualDepthTest(state, frameState, globe) {
   return (
-    state._translucencyMode === translucentOpaqueMode &&
-    !state._depthTestAgainstTerrain &&
+    state._frontFaceTranslucent &&
+    !state._backFaceTranslucent &&
+    !globe.depthTestAgainstTerrain &&
     frameState.context.depthTexture
   );
 }
 
 function getNumberOfTextureUniforms(state) {
-  var translucent = state._translucent;
-
   var numberOfTextureUniforms = 0;
 
-  if (translucent) {
+  if (state._frontFaceTranslucent) {
     ++numberOfTextureUniforms; // classification texture
   }
 
@@ -368,7 +288,7 @@ function gatherDerivedCommandRequirements(state, frameState) {
   state._derivedCommandKey = derivedCommandKey;
   state._derivedCommandsDirty = derivedCommandsDirty;
 
-  if (!defined(state._derivedCommandPacks) && state._translucent) {
+  if (!defined(state._derivedCommandPacks) && state._frontFaceTranslucent) {
     state._derivedCommandPacks = createDerivedCommandPacks();
   }
 }
@@ -381,14 +301,11 @@ function getDerivedCommandTypes(
   types
 ) {
   var length = 0;
-  var translucencyMode = state._translucencyMode;
 
-  if (translucencyMode === TranslucencyMode.INVISIBLE) {
-    // Don't use derived commands if both front and back faces are invisible
-    return length;
-  }
+  var frontTranslucent = state._frontFaceTranslucent;
+  var backTranslucent = state._backFaceTranslucent;
 
-  if (state._frontFaceTranslucencyMode === TranslucencyMode.FRONT_OPAQUE) {
+  if (!frontTranslucent) {
     // Don't use derived commands if the globe is opaque
     return length;
   }
@@ -414,12 +331,9 @@ function getDerivedCommandTypes(
     ? DerivedCommandType.TRANSLUCENT_BACK_FACE_MANUAL_DEPTH_TEST
     : DerivedCommandType.TRANSLUCENT_BACK_FACE;
 
-  if (
-    translucencyMode ===
-    (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_TRANSLUCENT)
-  ) {
+  if (backTranslucent) {
     // Push depth-only command for classification. Blend commands do not need to write depth.
-    // Push translucent front and back face commands.
+    // Push translucent commands for front and back faces.
     if (!isBlendCommand) {
       types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_AND_BACK_FACE;
     }
@@ -430,12 +344,10 @@ function getDerivedCommandTypes(
       types[length++] = translucentBackFaceCommandType;
       types[length++] = translucentFrontFaceCommandType;
     }
-  } else if (
-    translucencyMode ===
-    (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_OPAQUE)
-  ) {
+  } else {
     // Push opaque command for the face that appears in back.
     // Push depth-only command and translucent command for the face that appears in front.
+    // eslint-disable-next-line no-lonely-if
     if (cameraUnderground) {
       if (!isBlendCommand) {
         types[length++] = DerivedCommandType.DEPTH_ONLY_BACK_FACE;
@@ -448,48 +360,6 @@ function getDerivedCommandTypes(
       }
       types[length++] = DerivedCommandType.OPAQUE_BACK_FACE;
       types[length++] = translucentFrontFaceCommandType;
-    }
-  } else if (
-    translucencyMode ===
-    (TranslucencyMode.FRONT_TRANSLUCENT | TranslucencyMode.BACK_INVISIBLE)
-  ) {
-    // Push depth-only command and translucent command for the face that appears in front.
-    if (cameraUnderground) {
-      if (!isBlendCommand) {
-        types[length++] = DerivedCommandType.DEPTH_ONLY_BACK_FACE;
-      }
-      types[length++] = translucentBackFaceCommandType;
-    } else {
-      if (!isBlendCommand) {
-        types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_FACE;
-      }
-      types[length++] = translucentFrontFaceCommandType;
-    }
-  } else if (
-    translucencyMode ===
-    (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_TRANSLUCENT)
-  ) {
-    // Push depth-only command and translucent command for the face that appears in back.
-    if (cameraUnderground) {
-      if (!isBlendCommand) {
-        types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_FACE;
-      }
-      types[length++] = translucentFrontFaceCommandType;
-    } else {
-      if (!isBlendCommand) {
-        types[length++] = DerivedCommandType.DEPTH_ONLY_BACK_FACE;
-      }
-      types[length++] = translucentBackFaceCommandType;
-    }
-  } else if (
-    translucencyMode ===
-    (TranslucencyMode.FRONT_INVISIBLE | TranslucencyMode.BACK_OPAQUE)
-  ) {
-    // Push command for the opaque pass
-    if (frameState.cameraUnderground) {
-      types[length++] = DerivedCommandType.OPAQUE_FRONT_FACE;
-    } else {
-      types[length++] = DerivedCommandType.OPAQUE_BACK_FACE;
     }
   }
 
@@ -1053,12 +923,6 @@ GlobeTranslucencyState.prototype.pushDerivedCommands = function (
   isBlendCommand,
   frameState
 ) {
-  var translucencyMode = this._translucencyMode;
-  if (translucencyMode === TranslucencyMode.INVISIBLE) {
-    // Don't push any commands if both front and back faces are invisible
-    return;
-  }
-
   var picking = frameState.passes.pick;
   if (picking && isBlendCommand) {
     // No need to push blend commands in the pick pass
@@ -1177,17 +1041,10 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
     return;
   }
 
-  var frontFaceTranslucencyMode = this._frontFaceTranslucencyMode;
-  var backFaceTranslucencyMode = this._backFaceTranslucencyMode;
+  var frontTranslucent = this._frontFaceTranslucent;
+  var backTranslucent = this._backFaceTranslucent;
 
-  var frontOpaque = frontFaceTranslucencyMode === TranslucencyMode.FRONT_OPAQUE;
-  var backOpaque = backFaceTranslucencyMode === TranslucencyMode.BACK_OPAQUE;
-  var frontTranslucent =
-    frontFaceTranslucencyMode === TranslucencyMode.FRONT_TRANSLUCENT;
-  var backTranslucent =
-    backFaceTranslucencyMode === TranslucencyMode.BACK_TRANSLUCENT;
-
-  if (frontOpaque || backOpaque) {
+  if (!frontTranslucent || !backTranslucent) {
     // Render classification on opaque faces like normal
     executeCommands(
       classificationCommands,
