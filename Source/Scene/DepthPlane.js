@@ -41,34 +41,35 @@ var scratchCartesian5 = new Cartesian3();
 
 function computeDepthQuad(ellipsoid, frameState) {
   var radii = ellipsoid.radii;
-  var p = frameState.camera.positionWC;
-
-  // Find the corresponding position in the scaled space of the ellipsoid.
-  var q = Cartesian3.multiplyComponents(
-    ellipsoid.oneOverRadii,
-    p,
-    scratchCartesian1
-  );
-
-  var qUnit = Cartesian3.normalize(q, scratchCartesian2);
-
-  // Determine the east and north directions at q.
-  var eUnit = Cartesian3.normalize(
-    Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3),
-    scratchCartesian3
-  );
-  var nUnit = Cartesian3.normalize(
-    Cartesian3.cross(qUnit, eUnit, scratchCartesian4),
-    scratchCartesian4
-  );
 
   var center, eastOffset, northOffset;
 
   if (frameState.camera.frustum instanceof OrthographicFrustum) {
     center = Cartesian3.ZERO;
-    eastOffset = eUnit;
-    northOffset = nUnit;
+    eastOffset = frameState.camera.rightWC;
+    northOffset = frameState.camera.upWC;
   } else {
+    var p = frameState.camera.positionWC;
+
+    // Find the corresponding position in the scaled space of the ellipsoid.
+    var q = Cartesian3.multiplyComponents(
+      ellipsoid.oneOverRadii,
+      p,
+      scratchCartesian1
+    );
+
+    var qUnit = Cartesian3.normalize(q, scratchCartesian2);
+
+    // Determine the east and north directions at q.
+    var eUnit = Cartesian3.normalize(
+      Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3),
+      scratchCartesian3
+    );
+    var nUnit = Cartesian3.normalize(
+      Cartesian3.cross(qUnit, eUnit, scratchCartesian4),
+      scratchCartesian4
+    );
+
     var qMagnitude = Cartesian3.magnitude(q);
 
     // Determine the radius of the 'limb' of the ellipsoid.

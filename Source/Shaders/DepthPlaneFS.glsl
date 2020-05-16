@@ -6,7 +6,10 @@ void main()
     vec3 direction;
     if (czm_orthographicIn3D == 1.0)
     {
-        position = czm_windowToEyeCoordinates(vec4(gl_FragCoord.xy, 0.0, 1.0)).xyz;
+        vec2 uv = (gl_FragCoord.xy -  czm_viewport.xy) / czm_viewport.zw;
+        vec2 minPlane = vec2(czm_frustumPlanes.z, czm_frustumPlanes.y); // left, bottom
+        vec2 maxPlane = vec2(czm_frustumPlanes.w, czm_frustumPlanes.x); // right, top
+        position = vec3(mix(minPlane, maxPlane, uv), 0.0);
         direction = vec3(0.0, 0.0, -1.0);
     } 
     else 
