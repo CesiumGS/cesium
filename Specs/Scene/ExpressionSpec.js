@@ -3417,7 +3417,7 @@ describe("Scene/Expression", function () {
     var expression = new Expression("true");
     var shaderFunction = expression.getShaderFunction(
       "getShow",
-      "",
+      {},
       {},
       "bool"
     );
@@ -3428,169 +3428,194 @@ describe("Scene/Expression", function () {
 
   it("gets shader expression for variable", function () {
     var expression = new Expression("${property}");
-    var shaderExpression = expression.getShaderExpression("prefix_", {});
-    var expected = "prefix_property";
+    var propertyNameMap = {
+      property: "a_property",
+    };
+    var shaderExpression = expression.getShaderExpression(propertyNameMap, {});
+    var expected = "a_property";
+    expect(shaderExpression).toEqual(expected);
+  });
+
+  it("gets shader expression for feature variable with bracket notation", function () {
+    var expression = new Expression("${feature['property']}");
+    var propertyNameMap = {
+      property: "a_property",
+    };
+    var shaderExpression = expression.getShaderExpression(propertyNameMap, {});
+    var expected = "a_property";
+    expect(shaderExpression).toEqual(expected);
+  });
+
+  it("gets shader expression for feature variable with dot notation", function () {
+    var expression = new Expression("${feature.property}");
+    var propertyNameMap = {
+      property: "a_property",
+    };
+    var shaderExpression = expression.getShaderExpression(propertyNameMap, {});
+    var expected = "a_property";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for unary not", function () {
     var expression = new Expression("!true");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "!true";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for unary negative", function () {
     var expression = new Expression("-5.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "-5.0";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for unary positive", function () {
     var expression = new Expression("+5.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "+5.0";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for converting to literal boolean", function () {
     var expression = new Expression("Boolean(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "bool(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for converting to literal number", function () {
     var expression = new Expression("Number(true)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "float(true)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary addition", function () {
     var expression = new Expression("1.0 + 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 + 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary subtraction", function () {
     var expression = new Expression("1.0 - 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 - 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary multiplication", function () {
     var expression = new Expression("1.0 * 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 * 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary division", function () {
     var expression = new Expression("1.0 / 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 / 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary modulus", function () {
     var expression = new Expression("1.0 % 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "mod(1.0, 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary equals strict", function () {
     var expression = new Expression("1.0 === 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 == 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary not equals strict", function () {
     var expression = new Expression("1.0 !== 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 != 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary less than", function () {
     var expression = new Expression("1.0 < 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 < 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary less than or equals", function () {
     var expression = new Expression("1.0 <= 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 <= 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary greater than", function () {
     var expression = new Expression("1.0 > 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 > 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for binary greater than or equals", function () {
     var expression = new Expression("1.0 >= 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 >= 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for logical and", function () {
     var expression = new Expression("true && false");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(true && false)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for logical or", function () {
     var expression = new Expression("true || false");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(true || false)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for ternary conditional", function () {
     var expression = new Expression("true ? 1.0 : 2.0");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(true ? 1.0 : 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for array indexing", function () {
+    var propertyNameMap = { property: "property" };
+
     var expression = new Expression("${property[0]}");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     var expected = "property[0]";
     expect(shaderExpression).toEqual(expected);
 
     expression = new Expression("${property[4 / 2]}");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     expected = "property[int((4.0 / 2.0))]";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for array", function () {
     var expression = new Expression("[1.0, 2.0]");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "vec2(1.0, 2.0)";
     expect(shaderExpression).toEqual(expected);
 
     expression = new Expression("[1.0, 2.0, 3.0]");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression({}, {});
     expected = "vec3(1.0, 2.0, 3.0)";
     expect(shaderExpression).toEqual(expected);
 
     expression = new Expression("[1.0, 2.0, 3.0, 4.0]");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression({}, {});
     expected = "vec4(1.0, 2.0, 3.0, 4.0)";
     expect(shaderExpression).toEqual(expected);
   });
@@ -3598,136 +3623,179 @@ describe("Scene/Expression", function () {
   it("throws when getting shader expression for array of invalid length", function () {
     var expression = new Expression("[]");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
 
     expression = new Expression("[1.0]");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
 
     expression = new Expression("[1.0, 2.0, 3.0, 4.0, 5.0]");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("gets shader expression for boolean", function () {
     var expression = new Expression("true || false");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(true || false)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for integer", function () {
     var expression = new Expression("1");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "1.0";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for float", function () {
     var expression = new Expression("1.02");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "1.02";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for color", function () {
+    var propertyNameMap = { property: "property" };
     var shaderState = { translucent: false };
     var expression = new Expression("color()");
-    var shaderExpression = expression.getShaderExpression("", shaderState);
+    var shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     var expected = "vec4(1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression('color("red")');
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression('color("#FFF")');
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(vec3(1.0, 1.0, 1.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression('color("#FF0000")');
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression('color("rgb(255, 0, 0)")');
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression('color("red", 0.5)');
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(vec3(1.0, 0.0, 0.0), 0.5)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(true);
 
     shaderState = { translucent: false };
     expression = new Expression("rgb(255, 0, 0)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(1.0, 0.0, 0.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression("rgb(255, ${property}, 0)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(255.0 / 255.0, property / 255.0, 0.0 / 255.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression("rgba(255, 0, 0, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(1.0, 0.0, 0.0, 0.5)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(true);
 
     shaderState = { translucent: false };
     expression = new Expression("rgba(255, ${property}, 0, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(255.0 / 255.0, property / 255.0, 0.0 / 255.0, 0.5)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(true);
 
     shaderState = { translucent: false };
     expression = new Expression("hsl(1.0, 0.5, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(0.75, 0.25, 0.25, 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression("hsla(1.0, 0.5, 0.5, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(0.75, 0.25, 0.25, 0.5)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(true);
 
     shaderState = { translucent: false };
     expression = new Expression("hsl(1.0, ${property}, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(czm_HSLToRGB(vec3(1.0, property, 0.5)), 1.0)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(false);
 
     shaderState = { translucent: false };
     expression = new Expression("hsla(1.0, ${property}, 0.5, 0.5)");
-    shaderExpression = expression.getShaderExpression("", shaderState);
+    shaderExpression = expression.getShaderExpression(
+      propertyNameMap,
+      shaderState
+    );
     expected = "vec4(czm_HSLToRGB(vec3(1.0, property, 0.5)), 0.5)";
     expect(shaderExpression).toEqual(expected);
     expect(shaderState.translucent).toBe(true);
@@ -3738,7 +3806,7 @@ describe("Scene/Expression", function () {
     var expression = new Expression(
       "color().r + color().g + color().b + color().a"
     );
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected =
       "(((vec4(1.0)[0] + vec4(1.0)[1]) + vec4(1.0)[2]) + vec4(1.0)[3])";
     expect(shaderExpression).toEqual(expected);
@@ -3747,34 +3815,38 @@ describe("Scene/Expression", function () {
     expression = new Expression(
       "color().x + color().y + color().z + color().w"
     );
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
 
     // [0], [1], [2], [3]
     expression = new Expression(
       "color()[0] + color()[1] + color()[2] + color()[3]"
     );
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for vector", function () {
+    var propertyNameMap = {
+      property: "property",
+    };
+
     var expression = new Expression("vec4(1, 2, 3, 4)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     expect(shaderExpression).toEqual("vec4(1.0, 2.0, 3.0, 4.0)");
 
     expression = new Expression("vec4(1) + vec4(2)");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     expect(shaderExpression).toEqual("(vec4(1.0) + vec4(2.0))");
 
     expression = new Expression("vec4(1, ${property}, vec2(1, 2).x, 0)");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     expect(shaderExpression).toEqual(
       "vec4(1.0, property, vec2(1.0, 2.0)[0], 0.0)"
     );
 
     expression = new Expression("vec4(vec3(2), 1.0)");
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression(propertyNameMap, {});
     expect(shaderExpression).toEqual("vec4(vec3(2.0), 1.0)");
   });
 
@@ -3783,7 +3855,7 @@ describe("Scene/Expression", function () {
     var expression = new Expression(
       "vec4(1).x + vec4(1).y + vec4(1).z + vec4(1).w"
     );
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected =
       "(((vec4(1.0)[0] + vec4(1.0)[1]) + vec4(1.0)[2]) + vec4(1.0)[3])";
     expect(shaderExpression).toEqual(expected);
@@ -3792,202 +3864,202 @@ describe("Scene/Expression", function () {
     expression = new Expression(
       "vec4(1)[0] + vec4(1)[1] + vec4(1)[2] + vec4(1)[3]"
     );
-    shaderExpression = expression.getShaderExpression("", {});
+    shaderExpression = expression.getShaderExpression({}, {});
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for tiles3d_tileset_time", function () {
     var expression = new Expression("${tiles3d_tileset_time}");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "u_time";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for abs", function () {
     var expression = new Expression("abs(-1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "abs(-1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for cos", function () {
     var expression = new Expression("cos(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "cos(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for sin", function () {
     var expression = new Expression("sin(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "sin(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for tan", function () {
     var expression = new Expression("tan(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "tan(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for acos", function () {
     var expression = new Expression("acos(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "acos(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for asin", function () {
     var expression = new Expression("asin(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "asin(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for atan", function () {
     var expression = new Expression("atan(0.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "atan(0.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for sqrt", function () {
     var expression = new Expression("sqrt(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "sqrt(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for sign", function () {
     var expression = new Expression("sign(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "sign(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for floor", function () {
     var expression = new Expression("floor(1.5)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "floor(1.5)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for ceil", function () {
     var expression = new Expression("ceil(1.2)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "ceil(1.2)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for round", function () {
     var expression = new Expression("round(1.2)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "floor(1.2 + 0.5)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for exp", function () {
     var expression = new Expression("exp(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "exp(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for exp2", function () {
     var expression = new Expression("exp2(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "exp2(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for log", function () {
     var expression = new Expression("log(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "log(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for log2", function () {
     var expression = new Expression("log2(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "log2(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for fract", function () {
     var expression = new Expression("fract(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "fract(1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for clamp", function () {
     var expression = new Expression("clamp(50.0, 0.0, 100.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "clamp(50.0, 0.0, 100.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for mix", function () {
     var expression = new Expression("mix(0.0, 2.0, 0.5)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "mix(0.0, 2.0, 0.5)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for atan2", function () {
     var expression = new Expression("atan2(0.0,1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "atan(0.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for pow", function () {
     var expression = new Expression("pow(2.0,2.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "pow(2.0, 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for min", function () {
     var expression = new Expression("min(3.0,5.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "min(3.0, 5.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for max", function () {
     var expression = new Expression("max(3.0,5.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "max(3.0, 5.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for length", function () {
     var expression = new Expression("length(3.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "length(3.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for normalize", function () {
     var expression = new Expression("normalize(3.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "normalize(3.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for distance", function () {
     var expression = new Expression("distance(0.0, 1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "distance(0.0, 1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for dot", function () {
     var expression = new Expression("dot(1.0, 2.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "dot(1.0, 2.0)";
     expect(shaderExpression).toEqual(expected);
   });
@@ -3996,35 +4068,35 @@ describe("Scene/Expression", function () {
     var expression = new Expression(
       "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))"
     );
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for isNaN", function () {
     var expression = new Expression("isNaN(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(1.0 != 1.0)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for isFinite", function () {
     var expression = new Expression("isFinite(1.0)");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "(abs(1.0) < czm_infinity)";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for null", function () {
     var expression = new Expression("null");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "czm_infinity";
     expect(shaderExpression).toEqual(expected);
   });
 
   it("gets shader expression for undefined", function () {
     var expression = new Expression("undefined");
-    var shaderExpression = expression.getShaderExpression("", {});
+    var shaderExpression = expression.getShaderExpression({}, {});
     var expected = "czm_infinity";
     expect(shaderExpression).toEqual(expected);
   });
@@ -4032,85 +4104,85 @@ describe("Scene/Expression", function () {
   it("throws when getting shader expression for regex", function () {
     var expression = new Expression('regExp("a").test("abc")');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
 
     expression = new Expression('regExp("a(.)", "i").exec("Abc")');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
 
     expression = new Expression('regExp("a") =~ "abc"');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
 
     expression = new Expression('regExp("a") !~ "abc"');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for member expression with dot", function () {
     var expression = new Expression("${property.name}");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for string member expression with brackets", function () {
     var expression = new Expression('${property["name"]}');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for String", function () {
     var expression = new Expression("String(1.0)");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for toString", function () {
     var expression = new Expression('color("red").toString()');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for literal string", function () {
     var expression = new Expression('"name"');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for variable in string", function () {
     var expression = new Expression('"${property}"');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for isExactClass", function () {
     var expression = new Expression('isExactClass("door")');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for isClass", function () {
     var expression = new Expression('isClass("door")');
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 
   it("throws when getting shader expression for getExactClassName", function () {
     var expression = new Expression("getExactClassName()");
     expect(function () {
-      return expression.getShaderExpression("", {});
+      return expression.getShaderExpression({}, {});
     }).toThrowRuntimeError();
   });
 });
