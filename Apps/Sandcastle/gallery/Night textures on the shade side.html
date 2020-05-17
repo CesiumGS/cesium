@@ -45,7 +45,7 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.IonImageryProvider({ assetId: 3845 }),
           clockViewModel: new Cesium.ClockViewModel(clock),
-          globe
+          globe: globe
         });
 
         var nightLayer = viewer.imageryLayers.addImageryProvider(
