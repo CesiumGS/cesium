@@ -32,23 +32,23 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        const globe = new Cesium.Globe();
+        var globe = new Cesium.Globe();
         globe.enableLighting = true;
         globe.dynamicAtmosphereLightingFromSun = true;
         globe.showGroundAtmosphere = true;
 
-        const clock = new Cesium.Clock({
+        var clock = new Cesium.Clock({
           multiplier: 4000,
           shouldAnimate: true,
         });
 
-        const viewer = new Cesium.Viewer("cesiumContainer", {
+        var viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.IonImageryProvider({ assetId: 3845 }),
           clockViewModel: new Cesium.ClockViewModel(clock),
           globe,
         });
 
-        const nightLayer = viewer.imageryLayers.addImageryProvider(
+        var nightLayer = viewer.imageryLayers.addImageryProvider(
           new Cesium.IonImageryProvider({ assetId: 3812 })
         );
 
