@@ -84,6 +84,11 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
+#ifdef UNDERGROUND_COLOR
+uniform vec4 u_undergroundColor;
+uniform vec4 u_undergroundColorByDistance;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -96,8 +101,11 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR)
 varying float v_distance;
+#endif
+
+#if defined(FOG) || defined(GROUND_ATMOSPHERE)
 varying vec3 v_fogRayleighColor;
 varying vec3 v_fogMieColor;
 #endif
@@ -105,6 +113,25 @@ varying vec3 v_fogMieColor;
 #ifdef GROUND_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
+#endif
+
+#ifdef UNDERGROUND_COLOR
+float interpolateByDistance(vec4 nearFarScalar)
+{
+    float startDistance = nearFarScalar.x;
+    float startValue = nearFarScalar.y;
+    float endDistance = nearFarScalar.z;
+    float endValue = nearFarScalar.w;
+    float t = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    return mix(startValue, endValue, t);
+}
+#endif
+
+#ifdef(UNDERGROUND_COLOR)
+vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
+{
+    return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
+}
 #endif
 
 vec4 sampleAndBlend(
@@ -423,6 +450,16 @@ void main()
 #endif
 
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+#endif
+
+#ifdef UNDERGROUND_COLOR
+    // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
+    if (gl_FrontFacing == false)
+    {
+        float blendAmount = interpolateByDistance(u_undergroundColorByDistance);
+        vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
+        finalColor = alphaBlend(undergroundColor, finalColor);
+    }
 #endif
 
     gl_FragColor = finalColor;

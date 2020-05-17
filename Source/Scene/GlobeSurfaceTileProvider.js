@@ -19,6 +19,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
+import NearFarScalar from "../Core/NearFarScalar.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
@@ -104,6 +105,8 @@ function GlobeSurfaceTileProvider(options) {
 
   this.showSkirts = true;
   this.backFaceCulling = true;
+  this.undergroundColor = undefined;
+  this.undergroundColorByDistance = undefined;
 
   this._quadtree = undefined;
   this._terrainProvider = options.terrainProvider;
@@ -1584,6 +1587,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_colorsToAlpha: function () {
       return this.properties.colorsToAlpha;
     },
+    u_undergroundColor: function () {
+      return this.properties.undergroundColor;
+    },
+    u_undergroundColorByDistance: function () {
+      return this.properties.undergroundColorByDistance;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1628,6 +1637,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       clippingPlanesEdgeWidth: 0.0,
 
       localizedCartographicLimitRectangle: new Cartesian4(),
+
+      undergroundColor: Color.clone(Color.TRANSPARENT),
+      undergroundColorByDistance: new Cartesian4(),
     },
   };
 
@@ -1821,6 +1833,8 @@ var surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
 };
 
+var defaultUndergroundColorByDistance = new NearFarScalar();
+
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var surfaceTile = tile.data;
 
@@ -1859,6 +1873,21 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   }
 
   var cameraUnderground = frameState.cameraUnderground;
+
+  var undergroundColor = defaultValue(
+    tileProvider.undergroundColor,
+    Color.TRANSPARENT
+  );
+  var undergroundColorByDistance = defaultValue(
+    tileProvider.undergroundColorByDistance,
+    defaultUndergroundColorByDistance
+  );
+  var showUndergroundColor =
+    cameraUnderground &&
+    frameState.mode === SceneMode.SCENE3D &&
+    undergroundColor.alpha > 0.0 &&
+    (undergroundColorByDistance.nearValue > 0.0 ||
+      undergroundColorByDistance.farValue > 0.0);
 
   var showReflectiveOcean =
     tileProvider.hasWaterMask && defined(waterMaskTexture);
@@ -2086,6 +2115,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
     uniformMapProperties.zoomedOutOceanSpecularIntensity =
       tileProvider.zoomedOutOceanSpecularIntensity;
+
+    Cartesian4.fromElements(
+      undergroundColorByDistance.near,
+      undergroundColorByDistance.nearValue,
+      undergroundColorByDistance.far,
+      undergroundColorByDistance.farValue,
+      uniformMapProperties.undergroundColorByDistance
+    );
+    Color.clone(undergroundColor, uniformMapProperties.undergroundColor);
 
     var highlightFillTile =
       !defined(surfaceTile.vertexArray) &&
@@ -2370,6 +2408,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
+    surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
 
     var count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {
