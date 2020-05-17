@@ -161,7 +161,7 @@ GlobeSurfaceTile.prototype.pick = function (
     return undefined;
   }
 
-  useNewPicking = defaultValue(useNewPicking, true);
+  useNewPicking = defaultValue(useNewPicking, false);
   if (useNewPicking && defined(this.trianglePicking)) {
     return this.trianglePicking.rayIntersect(ray, result);
   }

@@ -101,21 +101,24 @@
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler.setInputAction(function (movement) {
+        function singlePick(mousePosition) {
           var scene = viewer.scene;
           var camera = scene.camera;
 
-          var mousePosition = movement.position;
           var ray = camera.getPickRay(mousePosition);
 
           var before = performance.now();
           var pickPosition = scene.globe.pick(ray, scene);
           var after = performance.now();
-          console.log("Single pick time: " + (after - before));
-          if (!Cesium.defined(pickPosition)) {
-            console.log("no pick found at " + mousePosition);
-          } else {
+
+          var foundPick = Cesium.defined(pickPosition);
+          console.log("Single pick at " + mousePosition);
+          console.log("Found: " + foundPick);
+          console.log("Time: " + (after - before));
+
+          viewer.entities.removeAll();
+
+          if (foundPick) {
             viewer.entities.add({
               position: pickPosition,
               ellipsoid: {
@@ -124,11 +127,7 @@
               },
             });
           }
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-        Sandcastle.addToggleButton("Fast Pick", true, function (checked) {
-          viewer.scene.globe.useNewPicking = checked;
-        });
+        }
 
         function multiPick(drawShape) {
           var scene = viewer.scene;
@@ -190,6 +189,24 @@
             }
           }
         }
+
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+        handler.setInputAction(function (movement) {
+          singlePick(movement.position);
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        Sandcastle.addToggleButton("Fast Pick", true, function (checked) {
+          viewer.scene.globe.useNewPicking = checked;
+        });
+
+        Sandcastle.addToolbarButton("Pick Center", function () {
+          var x = viewer.canvas.clientWidth / 2.0;
+          var y = viewer.canvas.clientHeight / 2.0;
+
+          var position = Cesium.Cartesian2.fromElements(x, y);
+          singlePick(position);
+        });
+
         Sandcastle.addToolbarButton("Multi Pick", function () {
           multiPick(false);
         });

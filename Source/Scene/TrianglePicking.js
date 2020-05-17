@@ -5,7 +5,7 @@ import Matrix4 from "../Core/Matrix4.js";
 import Ray from "../Core/Ray.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
-var invalidIntersection = -1.0;
+var invalidIntersection = Number.MAX_VALUE;
 var invalidTriangleIndex = -1;
 
 /**
@@ -39,22 +39,16 @@ function rayTriangleIntersect(ray, v0, v1, v2) {
  * @param {Number} maxZ
  * @returns {Number} t
  */
-function rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ) {
-  var radX = maxX - minX;
-  var radY = maxY - minY;
-  var radZ = maxZ - minZ;
-
-  var centerX = 0.5 * (minX + maxX);
-  var centerY = 0.5 * (minY + maxY);
-  var centerZ = 0.5 * (minZ + maxZ);
+function rayCubeIntersectFromOutside(ray) {
+  var size = 0.5;
 
   var rddX = ray.direction.x;
   var rddY = ray.direction.y;
   var rddZ = ray.direction.z;
 
-  var rooX = ray.origin.x - centerX;
-  var rooY = ray.origin.y - centerY;
-  var rooZ = ray.origin.z - centerZ;
+  var rooX = ray.origin.x;
+  var rooY = ray.origin.y;
+  var rooZ = ray.origin.z;
 
   var mX = 1.0 / rddX;
   var mY = 1.0 / rddY;
@@ -64,9 +58,9 @@ function rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ) {
   var nY = mY * rooY;
   var nZ = mZ * rooZ;
 
-  var kX = Math.abs(mX) * radX;
-  var kY = Math.abs(mY) * radY;
-  var kZ = Math.abs(mZ) * radZ;
+  var kX = Math.abs(mX) * size;
+  var kY = Math.abs(mY) * size;
+  var kZ = Math.abs(mZ) * size;
 
   var t1X = -nX - kX;
   var t1Y = -nY - kY;
@@ -96,35 +90,30 @@ function rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ) {
  * @param {Number} maxZ
  * @returns {Boolean}
  */
-function rayInsideAabb(ray, minX, maxX, minY, maxY, minZ, maxZ) {
-  var rayPos = ray.origin;
-
+function positionInsideAabb(pX, pY, pZ, minX, maxX, minY, maxY, minZ, maxZ) {
   return (
-    rayPos.x >= minX &&
-    rayPos.x <= maxX &&
-    rayPos.y >= minY &&
-    rayPos.y <= maxY &&
-    rayPos.z >= minZ &&
-    rayPos.z <= maxZ
+    pX >= minX &&
+    pX <= maxX &&
+    pY >= minY &&
+    pY <= maxY &&
+    pZ >= minZ &&
+    pZ <= maxZ
   );
 }
 
 /**
  * @param {Ray} ray
- * @param {Number} minX
- * @param {Number} maxX
- * @param {Number} minY
- * @param {Number} maxY
- * @param {Number} minZ
- * @param {Number} maxZ
  * @returns {Number} t
  */
-function rayAabbIntersect(ray, minX, maxX, minY, maxY, minZ, maxZ) {
-  if (rayInsideAabb(ray, minX, maxX, minY, maxY, minZ, maxZ)) {
+function rayCubeIntersect(ray) {
+  var pX = ray.origin.x;
+  var pY = ray.origin.y;
+  var pZ = ray.origin.z;
+  if (positionInsideAabb(pX, pY, pZ, -0.5, +0.5, -0.5, +0.5, -0.5, +0.5)) {
     return 0.0;
   }
 
-  return rayAabbIntersectFromOutside(ray, minX, maxX, minY, maxY, minZ, maxZ);
+  return rayCubeIntersectFromOutside(ray);
 }
 
 var scratchV0 = new Cartesian3();
@@ -173,7 +162,7 @@ function Node(level, x, y, z) {
  */
 function TraversalResult() {
   this.triangleIndex = invalidTriangleIndex;
-  this.t = Number.MAX_VALUE;
+  this.t = invalidIntersection;
   this.level = -1;
   this.x = -1;
   this.y = -1;
@@ -182,7 +171,7 @@ function TraversalResult() {
 
 TraversalResult.prototype.reset = function () {
   this.triangleIndex = invalidTriangleIndex;
-  this.t = Number.MAX_VALUE;
+  this.t = invalidIntersection;
   this.level = -1;
   this.x = -1;
   this.y = -1;
@@ -199,48 +188,14 @@ TraversalResult.prototype.print = function () {
   console.log("z: " + this.z);
 };
 
-/**
- * Intersect against root first
- * Check against all triangles in the root, and get the closest T
- * Intersect the ray against all the children boxes
- * Only test sub-boxes whose intersections are are closer than T
- * Recurse over sub-boxes
- * TODO: each triangle has a "tested" flag so you can avoid testing it twice.
- * TODO: bresenham or DDS for faster sub-node intersection
- * TODO: check for tri count = 0 at max level
- *
- * @param {Ray} ray
- * @param {Ray} transformedRay
- * @param {Uint8Array|Uint16Array|Uint32Array} triIndices
- * @param {Float32Array} triVertices
- * @param {TerrainEncoding} triEncoding
- * @param {TraversalResult} result
- * @returns {TraversalResult}
- */
-Node.prototype.rayIntersect = function (
+Node.prototype._intersectTriangles = function (
   ray,
-  transformedRay,
   triIndices,
   triVertices,
   triEncoding,
   result
 ) {
   var that = this;
-
-  var rayAabbT = rayAabbIntersect(
-    transformedRay,
-    that.aabbMinX,
-    that.aabbMaxX,
-    that.aabbMinY,
-    that.aabbMaxY,
-    that.aabbMinZ,
-    that.aabbMaxZ
-  );
-  if (rayAabbT === invalidIntersection || rayAabbT > result.t) {
-    // Ray missed entirely or intersection point is beyond minimum
-    return result;
-  }
-
   var triangleCount = that.triangles.length;
   for (var i = 0; i < triangleCount; i++) {
     var triIndex = that.triangles[i];
@@ -256,29 +211,128 @@ Node.prototype.rayIntersect = function (
 
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
-      // result.triangleIndex = triIndex;
-      // result.level = that.level;
-      // result.x = that.x;
-      // result.y = that.y;
-      // result.z = that.z;
+      result.triangleIndex = triIndex;
+      result.level = that.level;
+      result.x = that.x;
+      result.y = that.y;
+      result.z = that.z;
+    }
+  }
+};
+
+/**
+ * Intersect against root first
+ * Check against all triangles in the root, and get the closest T
+ * Intersect the ray against all the children boxes
+ * Only test sub-boxes whose intersections are are closer than T
+ * Recurse over sub-boxes
+ * TODO: each triangle has a "tested" flag so you can avoid testing it twice.
+ * TODO: bresenham or DDS for faster sub-node intersection
+ * TODO: check for tri count = 0 at max level
+ *
+ * @param {Ray} ray
+ * @param {Ray} transformedRay
+ * @param {Number} t
+ * @param {Uint8Array|Uint16Array|Uint32Array} triIndices
+ * @param {Float32Array} triVertices
+ * @param {TerrainEncoding} triEncoding
+ * @param {TraversalResult} result
+ * @returns {TraversalResult}
+ */
+Node.prototype.rayIntersect = function (
+  ray,
+  transformedRay,
+  t,
+  triIndices,
+  triVertices,
+  triEncoding,
+  result
+) {
+  var that = this;
+
+  that._intersectTriangles(ray, triIndices, triVertices, triEncoding, result);
+  if (!defined(that.children)) {
+    return result;
+  }
+
+  var dirX = transformedRay.direction.x;
+  var dirY = transformedRay.direction.y;
+  var dirZ = transformedRay.direction.z;
+  var originX = transformedRay.origin.x + t * dirX;
+  var originY = transformedRay.origin.y + t * dirY;
+  var originZ = transformedRay.origin.z + t * dirZ;
+
+  var sideX = originX >= that.aabbCenterX;
+  var sideY = originY >= that.aabbCenterY;
+  var sideZ = originZ >= that.aabbCenterZ;
+
+  var xDist =
+    sideX !== dirX >= 0.0
+      ? Math.abs((that.aabbCenterX - originX) / dirX)
+      : invalidIntersection;
+  var yDist =
+    sideY !== dirY >= 0.0
+      ? Math.abs((that.aabbCenterY - originY) / dirY)
+      : invalidIntersection;
+  var zDist =
+    sideZ !== dirZ >= 0.0
+      ? Math.abs((that.aabbCenterZ - originZ) / dirZ)
+      : invalidIntersection;
+
+  var minDist = 0;
+  for (var i = 0; i < 4; i++) {
+    var childIdx = (sideX ? 1 : 0) | (sideY ? 2 : 0) | (sideZ ? 4 : 0);
+
+    var child = that.children[childIdx];
+    child.rayIntersect(
+      ray,
+      transformedRay,
+      t + minDist,
+      triIndices,
+      triVertices,
+      triEncoding,
+      result
+    );
+    minDist = Math.min(xDist, yDist, zDist);
+    if (minDist === invalidIntersection) {
+      return result;
+    }
+    if (t + minDist >= result.t) {
+      return result;
+    }
+
+    var rayPosX = originX + dirX * minDist;
+    var rayPosY = originY + dirY * minDist;
+    var rayPosZ = originZ + dirZ * minDist;
+
+    if (
+      !positionInsideAabb(
+        rayPosX,
+        rayPosY,
+        rayPosZ,
+        that.aabbMinX,
+        that.aabbMaxX,
+        that.aabbMinY,
+        that.aabbMaxY,
+        that.aabbMinZ,
+        that.aabbMaxZ
+      )
+    ) {
+      return result;
+    }
+
+    if (minDist === xDist) {
+      sideX = !sideX;
+      xDist = invalidIntersection;
+    } else if (minDist === yDist) {
+      sideY = !sideY;
+      yDist = invalidIntersection;
+    } else if (minDist === zDist) {
+      sideZ = !sideZ;
+      zDist = invalidIntersection;
     }
   }
 
-  // Recurse over children nodes if there are any
-  var children = that.children;
-  if (defined(children)) {
-    for (var childIndex = 0; childIndex < 8; childIndex++) {
-      var child = children[childIndex];
-      child.rayIntersect(
-        ray,
-        transformedRay,
-        triIndices,
-        triVertices,
-        triEncoding,
-        result
-      );
-    }
-  }
   return result;
 };
 
@@ -551,9 +605,15 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   var traversalResult = scratchTraversalResult;
   traversalResult.reset();
 
+  var t = rayCubeIntersect(transformedRay);
+  if (t === invalidIntersection) {
+    return undefined;
+  }
+
   traversalResult = rootNode.rayIntersect(
     ray,
     transformedRay,
+    t,
     triIndices,
     triVertices,
     triEncoding,
@@ -561,12 +621,11 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   );
 
   // var triangleIndex = traversalResult.triangleIndex;
-  var t = traversalResult.t;
-  if (t === Number.MAX_VALUE) {
+  if (traversalResult.t === invalidIntersection) {
     return undefined;
   }
 
-  result = Ray.getPoint(ray, t, result);
+  result = Ray.getPoint(ray, traversalResult.t, result);
   return result;
 };
 
