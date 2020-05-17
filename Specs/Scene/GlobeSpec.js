@@ -417,34 +417,6 @@ describe(
       });
     });
 
-    it("sets alpha by distance when translucency is disabled", function () {
-      var results = new Array(2);
-      globe.getAlphaByDistanceFinal(results);
-      expect(results[0].nearValue).toBe(1.0);
-      expect(results[0].farValue).toBe(1.0);
-      expect(results[1].nearValue).toBe(1.0);
-      expect(results[1].farValue).toBe(1.0);
-    });
-
-    it("sets alpha by distance when translucency is enabled", function () {
-      globe.translucencyEnabled = true;
-      globe.frontFaceAlpha = 0.5;
-      globe.backFaceAlpha = 0.25;
-      var results = new Array(2);
-      globe.getAlphaByDistanceFinal(results);
-      expect(results[0].nearValue).toBe(0.5);
-      expect(results[0].farValue).toBe(0.5);
-      expect(results[1].nearValue).toBe(0.25);
-      expect(results[1].farValue).toBe(0.25);
-
-      globe.frontFaceAlphaByDistance = new NearFarScalar(0.0, 0.5, 1.0, 0.75);
-      globe.getAlphaByDistanceFinal(results);
-      expect(results[0].nearValue).toBe(0.25);
-      expect(results[0].farValue).toBe(0.375);
-      expect(results[1].nearValue).toBe(0.25);
-      expect(results[1].farValue).toBe(0.25);
-    });
-
     it("sets underground color", function () {
       globe.undergroundColor = Color.RED;
 

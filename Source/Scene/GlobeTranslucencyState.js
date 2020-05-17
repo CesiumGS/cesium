@@ -884,7 +884,7 @@ function updateDerivedCommands(
         shaderProgramDirty ||
         derivedShaderProgramDirtyFrame < shaderProgramDirtyFrame;
       var derivedRenderStateDirty =
-        renderStateDirtyFrame ||
+        renderStateDirty ||
         derivedRenderStateDirtyFrame < renderStateDirtyFrame;
 
       if (derivedUniformMapDirty) {
