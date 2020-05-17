@@ -54,6 +54,14 @@ import TileImagery from "./TileImagery.js";
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile.
+ * @param {Number|Function} [options.nightAlpha=0.0] The alpha blending value of this layer in the shade side of the globe, from 0.0 to 1.0.
+ *                          If value is greater than <code>0.0</code>, the layer will be rendered only on the shade side of the globe.
+ *                          This only takes effect when <code>enableLighting</code> is true.
+ *                          This can either be a simple number or a function with the signature
+ *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+ *                          current frame state, this layer, and the x, y, and level coordinates of the
+ *                          imagery tile for which the alpha is required, and it is expected to return
+ *                          the alpha value to use for the tile.
  * @param {Number|Function} [options.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
  *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
  *                          This can either be a simple number or a function with the signature
@@ -129,6 +137,11 @@ function ImageryLayer(imageryProvider, options) {
   this.alpha = defaultValue(
     options.alpha,
     defaultValue(imageryProvider.defaultAlpha, 1.0)
+  );
+
+  this.nightAlpha = defaultValue(
+    options.nightAlpha,
+    defaultValue(imageryProvider.defaultNightAlpha, 0.0)
   );
 
   /**

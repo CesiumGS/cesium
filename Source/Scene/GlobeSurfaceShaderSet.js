@@ -80,6 +80,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   var applySaturation = options.applySaturation;
   var applyGamma = options.applyGamma;
   var applyAlpha = options.applyAlpha;
+  var applyNightAlpha = options.applyNightAlpha;
   var applySplit = options.applySplit;
   var showReflectiveOcean = options.showReflectiveOcean;
   var showOceanWaves = options.showOceanWaves;
@@ -151,7 +152,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (imageryCutoutFlag << 22) |
     (colorCorrect << 23) |
     (highlightFillTile << 24) |
-    (colorToAlpha << 25);
+    (colorToAlpha << 25) |
+    (applyNightAlpha << 26);
 
   var currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -216,6 +218,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     }
     if (applyAlpha) {
       fs.defines.push("APPLY_ALPHA");
+    }
+    if (applyNightAlpha) {
+      fs.defines.push("APPLY_NIGHT_ALPHA");
     }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
@@ -322,6 +327,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
         ",\n\
             " +
+        (applyNightAlpha ? "u_dayTextureNightAlpha[" + i + "]" : "0.0") +
+        ",\n" +
         (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
         ",\n\
             " +
@@ -355,6 +362,98 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     }";
 
     fs.sources.push(computeDayColor);
+
+    if (applyNightAlpha) {
+      var computeNightColor =
+        "\
+  vec4 computeNightColor(vec4 initialColor, vec3 textureCoordinates, float nightIntensity)\n\
+  {\n\
+      vec4 color = initialColor;\n";
+
+      if (hasImageryLayerCutout) {
+        computeNightColor +=
+          "\
+      vec4 cutoutAndColorResult;\n\
+      bool texelUnclipped;\n";
+      }
+
+      for (var i = 0; i < numberOfDayTextures; ++i) {
+        if (hasImageryLayerCutout) {
+          computeNightColor +=
+            "\
+        cutoutAndColorResult = u_dayTextureCutoutRectangles[" +
+            i +
+            "];\n\
+        texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
+        cutoutAndColorResult = sampleAndBlend(\n";
+        } else {
+          computeNightColor += "\
+        color = sampleAndBlend(\n";
+        }
+
+        computeNightColor +=
+          "\
+            color,\n\
+            u_dayTextures[" +
+          i +
+          "],\n\
+            u_dayTextureUseWebMercatorT[" +
+          i +
+          "] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+            u_dayTextureTexCoordsRectangle[" +
+          i +
+          "],\n\
+            u_dayTextureTranslationAndScale[" +
+          i +
+          "],\n\
+            " +
+          /* Here is a little trick. We swap the night alpha with alpha and set the night alpha to zero, 
+          it let's to use the same sampleAndBlend function because it thinks that is a normal texture (not night).
+          Also we recalculate alpha depend on night intensity (inverted diffuse intensity)
+        */
+          "u_dayTextureNightAlpha[" +
+          i +
+          "] * nightIntensity * " +
+          (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
+          ",\n\
+        " +
+          "0.0" +
+          ",\n\
+            " +
+          (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (applyContrast ? "u_dayTextureContrast[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (applyHue ? "u_dayTextureHue[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (applySaturation ? "u_dayTextureSaturation[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (applyGamma ? "u_dayTextureOneOverGamma[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (applySplit ? "u_dayTextureSplit[" + i + "]" : "0.0") +
+          ",\n\
+            " +
+          (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
+          "\n\
+        );\n";
+        if (hasImageryLayerCutout) {
+          computeNightColor +=
+            "\
+        color = czm_branchFreeTernary(texelUnclipped, cutoutAndColorResult, color);\n";
+        }
+      }
+
+      computeNightColor += "\
+        return color;\n\
+    }";
+
+      fs.sources.push(computeNightColor);
+    }
 
     vs.sources.push(getPositionMode(sceneMode));
     vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));

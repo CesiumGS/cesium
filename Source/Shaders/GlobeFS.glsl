@@ -9,6 +9,10 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_NIGHT_ALPHA
+uniform float u_dayTextureNightAlpha[TEXTURE_UNITS];
+#endif
+
 #ifdef APPLY_SPLIT
 uniform float u_dayTextureSplit[TEXTURE_UNITS];
 #endif
@@ -114,13 +118,15 @@ vec4 sampleAndBlend(
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
+    float textureNightAlpha,
     float textureBrightness,
     float textureContrast,
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
     float split,
-    vec4 colorToAlpha)
+    vec4 colorToAlpha
+    )
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -134,6 +140,9 @@ vec4 sampleAndBlend(
 
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+    // if night alpha is presented, it means that this texture is for night side, so set alpha to zero
+    textureAlpha = step(textureNightAlpha, 0.0) * textureAlpha;
 
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
@@ -227,6 +236,10 @@ vec3 colorCorrect(vec3 rgb) {
 
 vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
+
+#ifdef APPLY_NIGHT_ALPHA
+vec4 computeNightColor(vec4 initialColor, vec3 textureCoordinates, float nightIntensity);
+#endif
 
 void main()
 {
@@ -322,9 +335,20 @@ void main()
 
 #ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
+     #ifdef APPLY_NIGHT_ALPHA
+        // Here we blend the night textures depend on diffuse intensity
+        float nightIntensity = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+        color = computeNightColor(color, clamp(v_textureCoordinates, 0.0, 1.0), nightIntensity);
+    #endif
     vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    #ifdef APPLY_NIGHT_ALPHA
+        // Here we blend the night textures depend on diffuse intensity
+        float nightIntensity = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+        color = computeNightColor(color, clamp(v_textureCoordinates, 0.0, 1.0), nightIntensity);
+    #endif
+    // continue on diffuse intensity
     diffuseIntensity = mix(1.0, diffuseIntensity, fade);
     vec4 finalColor = vec4(color.rgb * czm_lightColor * diffuseIntensity, color.a);
 #else

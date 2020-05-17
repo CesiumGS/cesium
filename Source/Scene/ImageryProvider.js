@@ -41,6 +41,14 @@ function ImageryProvider() {
   this.defaultAlpha = undefined;
 
   /**
+   * The default night alpha blending value of this provider, with 0.0 representing that image is not using for night.
+   *
+   * @type {Number}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
