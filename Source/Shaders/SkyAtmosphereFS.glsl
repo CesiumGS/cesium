@@ -27,64 +27,29 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Modifications made by Analytical Graphics, Inc.
+ * Modifications made by Cesium GS, Inc.
  */
 
  // Code:  http://sponeil.net/
  // GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
-#ifdef COLOR_CORRECT
-uniform vec3 u_hsbShift; // Hue, saturation, brightness
-#endif
+varying vec3 v_outerPositionWC;
 
-uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
-
-const float g = -0.95;
-const float g2 = g * g;
-
+#ifndef PER_FRAGMENT_ATMOSPHERE
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
-varying vec3 v_toCamera;
-varying vec3 v_positionEC;
+#endif
 
 void main (void)
 {
-    float lightEnum = u_cameraAndRadiiAndDynamicAtmosphereColor.w;
-    vec3 lightDirection =
-        czm_viewerPositionWC * float(lightEnum == 0.0) +
-        czm_lightDirectionWC * float(lightEnum == 1.0) +
-        czm_sunDirectionWC * float(lightEnum == 2.0);
-    lightDirection = normalize(lightDirection);
-
-    // Extra normalize added for Android
-    float cosAngle = dot(lightDirection, normalize(v_toCamera)) / length(v_toCamera);
-    float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
-    float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
-
-    vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
-
-#ifndef HDR
-    const float exposure = 2.0;
-    rgb = vec3(1.0) - exp(-exposure * rgb);
+    vec3 toCamera = czm_viewerPositionWC - v_outerPositionWC;
+    vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+#ifdef PER_FRAGMENT_ATMOSPHERE
+    vec3 mieColor;
+    vec3 rayleighColor;
+    calculateMieColorAndRayleighColor(v_outerPositionWC, 1.0, mieColor, rayleighColor);
+    gl_FragColor = calculateFinalColor(czm_viewerPositionWC, toCamera, lightDirection, rayleighColor, mieColor);
+#else
+    gl_FragColor = calculateFinalColor(czm_viewerPositionWC, toCamera, lightDirection, v_rayleighColor, v_mieColor);
 #endif
-
-#ifdef COLOR_CORRECT
-    // Convert rgb color to hsb
-    vec3 hsb = czm_RGBToHSB(rgb);
-    // Perform hsb shift
-    hsb.x += u_hsbShift.x; // hue
-    hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
-    hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
-    // Convert shifted hsb back to rgb
-    rgb = czm_HSBToRGB(hsb);
-#endif
-
-    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.x) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
-
-    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), lightDirection), 0.0, 1.0) : 1.0;
-    atmosphereAlpha *= pow(nightAlpha, 0.5);
-
-    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }
