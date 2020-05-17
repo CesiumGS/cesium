@@ -227,8 +227,7 @@ Node.prototype._intersectTriangles = function (
  * Only test sub-boxes whose intersections are are closer than T
  * Recurse over sub-boxes
  * TODO: each triangle has a "tested" flag so you can avoid testing it twice.
- * TODO: bresenham or DDS for faster sub-node intersection
- * TODO: check for tri count = 0 at max level
+ * Adapted from https://daeken.svbtle.com/a-stupidly-simple-fast-octree-traversal-for-ray-intersection
  *
  * @param {Ray} ray
  * @param {Ray} transformedRay
@@ -266,23 +265,25 @@ Node.prototype.rayIntersect = function (
   var sideY = originY >= that.aabbCenterY;
   var sideZ = originZ >= that.aabbCenterZ;
 
-  var xDist =
-    sideX !== dirX >= 0.0
-      ? Math.abs((that.aabbCenterX - originX) / dirX)
-      : invalidIntersection;
-  var yDist =
-    sideY !== dirY >= 0.0
-      ? Math.abs((that.aabbCenterY - originY) / dirY)
-      : invalidIntersection;
-  var zDist =
-    sideZ !== dirZ >= 0.0
-      ? Math.abs((that.aabbCenterZ - originZ) / dirZ)
-      : invalidIntersection;
+  var canCrossX = sideX !== dirX >= 0.0;
+  var canCrossY = sideY !== dirY >= 0.0;
+  var canCrossZ = sideZ !== dirZ >= 0.0;
+
+  var distX = canCrossX
+    ? (that.aabbCenterX - originX) / dirX
+    : invalidIntersection;
+  var distY = canCrossY
+    ? (that.aabbCenterY - originY) / dirY
+    : invalidIntersection;
+  var distZ = canCrossZ
+    ? (that.aabbCenterZ - originZ) / dirZ
+    : invalidIntersection;
 
   var minDist = 0;
-  for (var i = 0; i < 4; i++) {
-    var childIdx = (sideX ? 1 : 0) | (sideY ? 2 : 0) | (sideZ ? 4 : 0);
+  var childIdx = sideX | (sideY << 1) | (sideZ << 2);
 
+  // There are a total of four possible cell overlaps, but usually it's less than that.
+  for (var i = 0; i < 4; i++) {
     var child = that.children[childIdx];
     child.rayIntersect(
       ray,
@@ -293,23 +294,16 @@ Node.prototype.rayIntersect = function (
       triEncoding,
       result
     );
-    minDist = Math.min(xDist, yDist, zDist);
-    if (minDist === invalidIntersection) {
-      return result;
-    }
-    if (t + minDist >= result.t) {
-      return result;
-    }
 
-    var rayPosX = originX + dirX * minDist;
-    var rayPosY = originY + dirY * minDist;
-    var rayPosZ = originZ + dirZ * minDist;
+    minDist = Math.min(distX, distY, distZ);
 
     if (
+      minDist === invalidIntersection || // no more axes to check
+      t + minDist >= result.t || // there is already a closer intersection
       !positionInsideAabb(
-        rayPosX,
-        rayPosY,
-        rayPosZ,
+        originX + minDist * dirX,
+        originY + minDist * dirY,
+        originZ + minDist * dirZ,
         that.aabbMinX,
         that.aabbMaxX,
         that.aabbMinY,
@@ -318,18 +312,18 @@ Node.prototype.rayIntersect = function (
         that.aabbMaxZ
       )
     ) {
-      return result;
+      break;
     }
 
-    if (minDist === xDist) {
-      sideX = !sideX;
-      xDist = invalidIntersection;
-    } else if (minDist === yDist) {
-      sideY = !sideY;
-      yDist = invalidIntersection;
-    } else if (minDist === zDist) {
-      sideZ = !sideZ;
-      zDist = invalidIntersection;
+    if (minDist === distX) {
+      distX = invalidIntersection;
+      childIdx ^= 1; // toggle X bit
+    } else if (minDist === distY) {
+      distY = invalidIntersection;
+      childIdx ^= 2; // toggle Y bit
+    } else if (minDist === distZ) {
+      distZ = invalidIntersection;
+      childIdx ^= 4; // toggle Z bit
     }
   }
 
