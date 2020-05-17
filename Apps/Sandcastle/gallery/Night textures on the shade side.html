@@ -39,13 +39,13 @@
 
         var clock = new Cesium.Clock({
           multiplier: 4000,
-          shouldAnimate: true
+          shouldAnimate: true,
         });
 
         var viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.IonImageryProvider({ assetId: 3845 }),
           clockViewModel: new Cesium.ClockViewModel(clock),
-          globe: globe
+          globe: globe,
         });
 
         var nightLayer = viewer.imageryLayers.addImageryProvider(
