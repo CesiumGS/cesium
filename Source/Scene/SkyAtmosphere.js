@@ -161,10 +161,7 @@ SkyAtmosphere.prototype.update = function (frameState, globe) {
 
   var colorCorrect = hasColorCorrection(this);
   var translucent = frameState.globeTranslucencyState.translucent;
-  var perFragmentAtmosphere =
-    translucent ||
-    (defined(globe) &&
-      (!globe.show || globe._surface._tilesToRender.length === 0));
+  var perFragmentAtmosphere = !defaultValue(this.perVertex, true);
 
   var command = this._command;
 
