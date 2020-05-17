@@ -377,12 +377,12 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
       bool texelUnclipped;\n";
       }
 
-      for (var i = 0; i < numberOfDayTextures; ++i) {
+      for (var j = 0; j < numberOfDayTextures; ++j) {
         if (hasImageryLayerCutout) {
           computeNightColor +=
             "\
         cutoutAndColorResult = u_dayTextureCutoutRectangles[" +
-            i +
+            j +
             "];\n\
         texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
         cutoutAndColorResult = sampleAndBlend(\n";
@@ -395,16 +395,16 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
           "\
             color,\n\
             u_dayTextures[" +
-          i +
+          j +
           "],\n\
             u_dayTextureUseWebMercatorT[" +
-          i +
+          j +
           "] ? textureCoordinates.xz : textureCoordinates.xy,\n\
             u_dayTextureTexCoordsRectangle[" +
-          i +
+          j +
           "],\n\
             u_dayTextureTranslationAndScale[" +
-          i +
+          j +
           "],\n\
             " +
           /* Here is a little trick. We swap the night alpha with alpha and set the night alpha to zero, 
@@ -412,33 +412,33 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
           Also we recalculate alpha depend on night intensity (inverted diffuse intensity)
         */
           "u_dayTextureNightAlpha[" +
-          i +
+          j +
           "] * nightIntensity * " +
-          (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
+          (applyAlpha ? "u_dayTextureAlpha[" + j + "]" : "1.0") +
           ",\n\
         " +
           "0.0" +
           ",\n\
             " +
-          (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
+          (applyBrightness ? "u_dayTextureBrightness[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (applyContrast ? "u_dayTextureContrast[" + i + "]" : "0.0") +
+          (applyContrast ? "u_dayTextureContrast[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (applyHue ? "u_dayTextureHue[" + i + "]" : "0.0") +
+          (applyHue ? "u_dayTextureHue[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (applySaturation ? "u_dayTextureSaturation[" + i + "]" : "0.0") +
+          (applySaturation ? "u_dayTextureSaturation[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (applyGamma ? "u_dayTextureOneOverGamma[" + i + "]" : "0.0") +
+          (applyGamma ? "u_dayTextureOneOverGamma[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (applySplit ? "u_dayTextureSplit[" + i + "]" : "0.0") +
+          (applySplit ? "u_dayTextureSplit[" + j + "]" : "0.0") +
           ",\n\
             " +
-          (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
+          (colorToAlpha ? "u_colorsToAlpha[" + j + "]" : "vec4(0.0)") +
           "\n\
         );\n";
         if (hasImageryLayerCutout) {
