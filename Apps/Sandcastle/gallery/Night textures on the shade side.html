@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Night textures on the shade side" />
+    <meta name="cesium-sandcastle-labels" content="Beginner" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const globe = new Cesium.Globe();
+        globe.enableLighting = true;
+        globe.dynamicAtmosphereLightingFromSun = true;
+        globe.showGroundAtmosphere = true;
+
+        const clock = new Cesium.Clock({
+          multiplier: 4000,
+          shouldAnimate: true,
+        });
+
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          imageryProvider: new Cesium.IonImageryProvider({ assetId: 3845 }),
+          clockViewModel: new Cesium.ClockViewModel(clock),
+          globe,
+        });
+
+        const nightLayer = viewer.imageryLayers.addImageryProvider(
+          new Cesium.IonImageryProvider({ assetId: 3812 })
+        );
+
+        nightLayer.nightAlpha = 1.0; // This sets that nightLayer is only visible on the shade side of the globe//Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
