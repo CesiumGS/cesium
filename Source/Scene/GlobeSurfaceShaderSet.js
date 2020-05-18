@@ -80,6 +80,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   var applySaturation = options.applySaturation;
   var applyGamma = options.applyGamma;
   var applyAlpha = options.applyAlpha;
+  var applyDayNightAlpha = options.applyDayNightAlpha;
   var applySplit = options.applySplit;
   var showReflectiveOcean = options.showReflectiveOcean;
   var showOceanWaves = options.showOceanWaves;
@@ -151,7 +152,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (imageryCutoutFlag << 22) |
     (colorCorrect << 23) |
     (highlightFillTile << 24) |
-    (colorToAlpha << 25);
+    (colorToAlpha << 25) |
+    (applyDayNightAlpha << 26);
 
   var currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -217,6 +219,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (applyAlpha) {
       fs.defines.push("APPLY_ALPHA");
     }
+    if (applyDayNightAlpha) {
+      fs.defines.push("APPLY_DAY_NIGHT_ALPHA");
+    }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
       vs.defines.push("SHOW_REFLECTIVE_OCEAN");
@@ -279,7 +284,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     var computeDayColor =
       "\
-    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightIntensity)\n\
     {\n\
         vec4 color = initialColor;\n";
 
@@ -322,6 +327,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
         ",\n\
             " +
+        (applyDayNightAlpha ? "u_dayTextureNightAlpha[" + i + "]" : "1.0") +
+        ",\n" +
+        (applyDayNightAlpha ? "u_dayTextureDayAlpha[" + i + "]" : "1.0") +
+        ",\n" +
         (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
         ",\n\
             " +
@@ -341,7 +350,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         ",\n\
             " +
         (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
-        "\n\
+        ",\n\
+        nightIntensity\
         );\n";
       if (hasImageryLayerCutout) {
         computeDayColor +=
