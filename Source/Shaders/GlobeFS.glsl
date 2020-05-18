@@ -127,7 +127,7 @@ float interpolateByDistance(vec4 nearFarScalar)
 }
 #endif
 
-#ifdef(UNDERGROUND_COLOR)
+#ifdef UNDERGROUND_COLOR
 vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
 {
     return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
