@@ -3351,6 +3351,7 @@ function updateDebugFrustumPlanes(scene) {
       scene._debugFrustumPlanes = new DebugCameraPrimitive({
         camera: scene.camera,
         updateOnChange: false,
+        frustumSplits: frameState.frustumSplits,
       });
     } else {
       scene._debugFrustumPlanes =
