@@ -417,6 +417,10 @@ describe(
       });
     });
 
+    it("gets underground color", function () {
+      expect(globe.undergroundColor).toEqual(Color.BLACK);
+    });
+
     it("sets underground color", function () {
       globe.undergroundColor = Color.RED;
 
@@ -436,6 +440,10 @@ describe(
       return updateUntilDone(globe).then(function () {
         expect(scene).toRender([255, 0, 0, 255]);
       });
+    });
+
+    it("gets underground color by distance", function () {
+      expect(globe.undergroundColorByDistance).toBeDefined();
     });
 
     it("sets underground color by distance", function () {
@@ -468,6 +476,17 @@ describe(
           expect(rgba[0]).toBeLessThan(255);
         });
       });
+    });
+
+    it("throws if underground color by distance far is less than near", function () {
+      expect(function () {
+        globe.undergroundColorByDistance = new NearFarScalar(
+          1.0,
+          0.0,
+          0.0,
+          1.0
+        );
+      }).toThrowDeveloperError();
     });
   },
   "WebGL"

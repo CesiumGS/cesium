@@ -2505,8 +2505,8 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
-    surfaceShaderSetOptions.translucent = translucent;
     surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
+    surfaceShaderSetOptions.translucent = translucent;
 
     var count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {

@@ -281,7 +281,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 
   /**
    * Gets the URL template to use to use to pick features.  If this property is not specified,
-   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined, indicating no
    * features picked.  The URL template supports all of the keywords supported by the
    * {@link UrlTemplateImageryProvider#url} property, plus the following:
    * <ul>
