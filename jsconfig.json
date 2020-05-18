@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+      "checkJs": true,
+      "module": "commonJS",
+      "target": "es5",
+    },
+}

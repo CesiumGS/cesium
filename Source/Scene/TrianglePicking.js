@@ -8,6 +8,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
 // TODO: Recurse downwards as long as the number of triangles inside is greater than some amount
+// TODO: Pass vertex read function instead of using encoding / vbo / idx etc
 
 var invalidIntersection = Number.MAX_VALUE;
 var invalidTriangleIndex = -1;
@@ -35,12 +36,6 @@ function rayTriangleIntersect(ray, v0, v1, v2) {
 // https://www.shadertoy.com/view/ld23DV
 /**
  * @param {Ray} ray
- * @param {Number} minX
- * @param {Number} maxX
- * @param {Number} minY
- * @param {Number} maxY
- * @param {Number} minZ
- * @param {Number} maxZ
  * @returns {Number} t
  */
 function rayCubeIntersectFromOutside(ray) {
@@ -85,7 +80,9 @@ function rayCubeIntersectFromOutside(ray) {
 }
 
 /**
- * @param {Ray} ray
+ * @param {Number} pX
+ * @param {Number} pY
+ * @param {Number} pZ
  * @param {Number} minX
  * @param {Number} maxX
  * @param {Number} minY
@@ -134,7 +131,7 @@ var scratchV2 = new Cartesian3();
  * @param {Number} aabbMinZ
  * @param {Number} aabbMaxZ
  */
-function TempTriangle(
+function Triangle(
   index,
   aabbMinX,
   aabbMaxX,
@@ -150,7 +147,6 @@ function TempTriangle(
   this.aabbMaxY = aabbMaxY;
   this.aabbMinZ = aabbMinZ;
   this.aabbMaxZ = aabbMaxZ;
-  this.overlapMask = 0;
 }
 
 /**
@@ -188,11 +184,6 @@ function Node(level, x, y, z) {
    * @type {Number[]}
    */
   this.triangles = new Array();
-
-  /**
-   * @type {TempTriangle[]}
-   */
-  this.tempTriangles = new Array();
 }
 
 /**
@@ -317,7 +308,8 @@ Node.prototype.rayIntersect = function (
     : invalidIntersection;
 
   var minDist = 0;
-  var childIdx = sideX | (sideY << 1) | (sideZ << 2);
+  var childIdx =
+    (sideX ? 1 : 0) | ((sideY ? 1 : 0) << 1) | ((sideZ ? 1 : 0) << 2);
 
   // There are a total of four possible cell overlaps, but usually it's less than that.
   for (var i = 0; i < 4; i++) {
@@ -374,23 +366,13 @@ function clearBit(val, bit) {
  * @param {Number} nodeAabbCenterX
  * @param {Number} nodeAabbCenterY
  * @param {Number} nodeAabbCenterZ
- * @param {Number} triAabbMinX
- * @param {Number} triAabbMaxX
- * @param {Number} triAabbMinY
- * @param {Number} triAabbMaxY
- * @param {Number} triAabbMinZ
- * @param {Number} triAabbMaxZ
+ * @param {Triangle} triangle
  */
 function getAabbOverlapMask(
   nodeAabbCenterX,
   nodeAabbCenterY,
   nodeAabbCenterZ,
-  triAabbMinX,
-  triAabbMaxX,
-  triAabbMinY,
-  triAabbMaxY,
-  triAabbMinZ,
-  triAabbMaxZ
+  triangle
 ) {
   // 000 = 0
   // 100 = 1
@@ -403,37 +385,37 @@ function getAabbOverlapMask(
 
   var result = 255;
 
-  if (triAabbMinX > nodeAabbCenterX) {
+  if (triangle.aabbMinX > nodeAabbCenterX) {
     result = clearBit(result, 0);
     result = clearBit(result, 2);
     result = clearBit(result, 4);
     result = clearBit(result, 6);
   }
-  if (triAabbMaxX < nodeAabbCenterX) {
+  if (triangle.aabbMaxX < nodeAabbCenterX) {
     result = clearBit(result, 1);
     result = clearBit(result, 3);
     result = clearBit(result, 5);
     result = clearBit(result, 7);
   }
-  if (triAabbMinY > nodeAabbCenterY) {
+  if (triangle.aabbMinY > nodeAabbCenterY) {
     result = clearBit(result, 0);
     result = clearBit(result, 1);
     result = clearBit(result, 4);
     result = clearBit(result, 5);
   }
-  if (triAabbMaxY < nodeAabbCenterY) {
+  if (triangle.aabbMaxY < nodeAabbCenterY) {
     result = clearBit(result, 2);
     result = clearBit(result, 3);
     result = clearBit(result, 6);
     result = clearBit(result, 7);
   }
-  if (triAabbMinZ > nodeAabbCenterZ) {
+  if (triangle.aabbMinZ > nodeAabbCenterZ) {
     result = clearBit(result, 0);
     result = clearBit(result, 1);
     result = clearBit(result, 2);
     result = clearBit(result, 3);
   }
-  if (triAabbMaxZ < nodeAabbCenterZ) {
+  if (triangle.aabbMaxZ < nodeAabbCenterZ) {
     result = clearBit(result, 4);
     result = clearBit(result, 5);
     result = clearBit(result, 6);
@@ -443,26 +425,33 @@ function getAabbOverlapMask(
   return result;
 }
 
+function getBitCount(bits) {
+  var bitCount = 0;
+  for (var i = 0; i < 8; i++) {
+    if ((bits & (1 << i)) > 0) {
+      bitCount++;
+    }
+  }
+  return bitCount;
+}
+
 /**
- * @param {TempTriangle} tempTriangle
+ * @param {Number} triIdx
+ * @param {Triangle[]} triangles
+ * @param {Number} overlapMask
  */
-Node.prototype._addTempTriangle = function (tempTriangle) {
+Node.prototype._addTriangleToChildren = function (
+  triIdx,
+  triangles,
+  overlapMask
+) {
   var that = this;
-  var tempMask = tempTriangle.overlapMask;
+
   for (var childIdx = 0; childIdx < 8; childIdx++) {
-    var overlapsChild = (tempMask & (1 << childIdx)) > 0;
+    var overlapsChild = (overlapMask & (1 << childIdx)) > 0;
     if (overlapsChild) {
       var childNode = that.children[childIdx];
-      var newTemp = new TempTriangle(
-        tempTriangle.index,
-        tempTriangle.aabbMinX,
-        tempTriangle.aabbMaxX,
-        tempTriangle.aabbMinY,
-        tempTriangle.aabbMaxY,
-        tempTriangle.aabbMinZ,
-        tempTriangle.aabbMaxZ
-      );
-      childNode.addTriangle(newTemp);
+      childNode.addTriangle(triIdx, triangles);
     }
   }
 };
@@ -471,54 +460,43 @@ Node.prototype._addTempTriangle = function (tempTriangle) {
  * Adds triangle to tree.
  * If it's small enough, recursively add to child nodes.
  * There's potential for a triangle to belong to more than one child.
- * @param {TempTriangle} tempTriangle
+ * @param {Number} triIdx
+ * @param {Triangle[]} triangles
  */
 
-Node.prototype.addTriangle = function (tempTriangle) {
+Node.prototype.addTriangle = function (triIdx, triangles) {
   var that = this;
   var level = that.level;
   var x = that.x;
   var y = that.y;
   var z = that.z;
 
+  var tri = triangles[triIdx];
+
+  var aabbCenterX = that.aabbCenterX;
+  var aabbCenterY = that.aabbCenterY;
+  var aabbCenterZ = that.aabbCenterZ;
   var overlapMask = getAabbOverlapMask(
-    that.aabbCenterX,
-    that.aabbCenterY,
-    that.aabbCenterZ,
-    tempTriangle.aabbMinX,
-    tempTriangle.aabbMaxX,
-    tempTriangle.aabbMinY,
-    tempTriangle.aabbMaxY,
-    tempTriangle.aabbMinZ,
-    tempTriangle.aabbMaxZ
+    aabbCenterX,
+    aabbCenterY,
+    aabbCenterZ,
+    tri
   );
-
-  tempTriangle.overlapMask = overlapMask;
-
-  var childIdx;
-  var overlapCount = 0;
-  for (childIdx = 0; childIdx < 8; childIdx++) {
-    if ((overlapMask & (1 << childIdx)) > 0) {
-      overlapCount++;
-    }
-  }
+  var overlapCount = getBitCount(overlapMask);
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 100;
   var maxTriangles = 30;
   var smallOverlapCount = 2;
 
-  var triangles = that.triangles;
-  var tempTriangles = that.tempTriangles;
-  var smallCount = tempTriangles.length;
-  var largeCount = triangles.length;
-  var count = smallCount + largeCount;
+  var triangleIdxs = that.triangles;
+  var triangleCount = triangleIdxs.length;
   var hasChildren = defined(that.children);
   var atMaxLevel = level === maxLevels - 1;
 
   var isSmall = overlapCount <= smallOverlapCount;
   var shouldSubdivide =
-    isSmall && count >= maxTriangles && !hasChildren && !atMaxLevel;
+    isSmall && triangleCount >= maxTriangles && !hasChildren && !atMaxLevel;
 
   if (shouldSubdivide) {
     var childLevel = level + 1;
@@ -540,21 +518,40 @@ Node.prototype.addTriangle = function (tempTriangle) {
       new Node(childLevel, childXMax, childYMax, childZMax)
     );
 
-    for (var t = 0; t < tempTriangles.length; t++) {
-      that._addTempTriangle(tempTriangles[t]);
+    var t;
+    for (t = triangleIdxs.length - 1; t >= 0; t--) {
+      var overflowTriIdx = triangleIdxs[t];
+      var overflowTri = triangles[overflowTriIdx];
+      var overflowOverlapMask = getAabbOverlapMask(
+        aabbCenterX,
+        aabbCenterY,
+        aabbCenterZ,
+        overflowTri
+      );
+      var overflowOverlapCount = getBitCount(overflowOverlapMask);
+      if (overflowOverlapCount > smallOverlapCount) {
+        // all the remaining triangles are too large
+        break;
+      }
+
+      that._addTriangleToChildren(
+        overflowTriIdx,
+        triangles,
+        overflowOverlapMask
+      );
     }
-    tempTriangles.length = 0;
+    triangleIdxs.length = t + 1;
   }
 
   hasChildren = defined(that.children);
   var shouldFilterDown = isSmall && hasChildren && !atMaxLevel;
 
   if (shouldFilterDown) {
-    that._addTempTriangle(tempTriangle);
+    that._addTriangleToChildren(triIdx, triangles, overlapMask);
   } else if (isSmall) {
-    tempTriangles.push(tempTriangle);
+    triangleIdxs.push(triIdx);
   } else {
-    triangles.push(tempTriangle.index);
+    triangleIdxs.unshift(triIdx);
   }
 };
 
@@ -568,7 +565,7 @@ var scratchTransform = new Matrix4();
  * @param {Uint8Array|Uint16Array|Uint32Array} triIndices
  * @param {Float32Array} triVertices
  * @param {TerrainEncoding} triEncoding
- * @param {Matrix4} tileTransform
+ * @param {Matrix4} tileOrientedBoundingBox
  */
 function TrianglePicking(
   triIndices,
@@ -588,12 +585,15 @@ function TrianglePicking(
   this.invTransform = Matrix4.inverse(transform, new Matrix4());
   var invTransform = this.invTransform;
 
-  // Build the octree by adding each triangle one at a time.
   var triCount = triIndices.length / 3;
-  for (var triIndex = 0; triIndex < triCount; triIndex++) {
-    var idx0 = triIndices[triIndex * 3 + 0];
-    var idx1 = triIndices[triIndex * 3 + 1];
-    var idx2 = triIndices[triIndex * 3 + 2];
+  var triangles = new Array(triCount);
+
+  // Get local space AABBs for all triangles
+  var triIdx = 0;
+  for (triIdx = 0; triIdx < triCount; triIdx++) {
+    var idx0 = triIndices[triIdx * 3 + 0];
+    var idx1 = triIndices[triIdx * 3 + 1];
+    var idx2 = triIndices[triIdx * 3 + 2];
 
     var v0 = triEncoding.decodePosition(triVertices, idx0, scratchV0);
     var v1 = triEncoding.decodePosition(triVertices, idx1, scratchV1);
@@ -610,8 +610,8 @@ function TrianglePicking(
     var triAabbMinZ = Math.min(v0Local.z, v1Local.z, v2Local.z);
     var triAabbMaxZ = Math.max(v0Local.z, v1Local.z, v2Local.z);
 
-    var tempTriangle = new TempTriangle(
-      triIndex,
+    triangles[triIdx] = new Triangle(
+      triIdx,
       triAabbMinX,
       triAabbMaxX,
       triAabbMinY,
@@ -619,25 +619,12 @@ function TrianglePicking(
       triAabbMinZ,
       triAabbMaxZ
     );
-
-    this.rootNode.addTriangle(tempTriangle);
   }
 
-  function cleanTempTriangles(node) {
-    var triangles = node.triangles;
-    var tempTriangles = node.tempTriangles;
-    for (var t = 0; t < tempTriangles.length; t++) {
-      triangles.push(tempTriangles[t].index);
-    }
-    node.tempTriangles = undefined;
-    var children = node.children;
-    if (defined(children)) {
-      for (var c = 0; c < 8; c++) {
-        cleanTempTriangles(children[c]);
-      }
-    }
+  // Build the octree by adding each triangle one at a time.
+  for (triIdx = 0; triIdx < triCount; triIdx++) {
+    this.rootNode.addTriangle(triIdx, triangles);
   }
-  cleanTempTriangles(this.rootNode);
 }
 
 var scratchTraversalResult = new TraversalResult();
