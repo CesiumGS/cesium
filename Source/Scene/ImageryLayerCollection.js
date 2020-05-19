@@ -74,7 +74,7 @@ Object.defineProperties(ImageryLayerCollection.prototype, {
  *
  * @param {ImageryLayer} layer the layer to add.
  * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
- *                         added on top of all existing layers.
+ *                         be added on top of all existing layers.
  *
  * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
  */
