@@ -83,5 +83,5 @@ void main(void)
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
 
-    czm_writeDepthClampedToFarPlane();
+    czm_writeDepthClamp();
 }
