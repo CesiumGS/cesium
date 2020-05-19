@@ -56,7 +56,7 @@ const float g2 = g * g;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
-uniform vec3 u_radiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
+uniform vec4 u_radiiAndDynamicAtmosphereColorAndInverseScale; // outer radius, inner radius, dynamic atmosphere color flag, inverse scale
 
 float scale(float cosAngle)
 {
@@ -66,7 +66,7 @@ float scale(float cosAngle)
 
 vec3 getLightDirection(vec3 positionWC)
 {
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    float lightEnum = u_radiiAndDynamicAtmosphereColorAndInverseScale.z;
     vec3 lightDirection =
         positionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
@@ -116,8 +116,8 @@ czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 ellipsoid_center, vec3
       return czm_emptyRaySegment;
     }
     discriminant = sqrt(discriminant);
-    float t1 = (-b + (-discriminant)) / a;
-    float t2 = (-b + (discriminant)) / a;
+    float t1 = (-b - discriminant) / a;
+    float t2 = (-b + discriminant) / a;
 
     if (t1 < 0.0 && t2 < 0.0)
     {
@@ -132,12 +132,17 @@ czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 ellipsoid_center, vec3
     return czm_raySegment(t1, t2);
 }
 
-void calculateMieColorAndRayleighColor(vec3 outerPositionWC, float ellipsoidScaleFactor, out vec3 mieColor, out vec3 rayleighColor)
+void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, out vec3 rayleighColor)
 {
+    // Unpack attributes
+    float outerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.y;
+    float inverseScale = u_radiiAndDynamicAtmosphereColorAndInverseScale.w;
+
     vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
     vec3 directionEC = czm_viewRotation * directionWC;
     czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * ellipsoidScaleFactor);
+    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * inverseScale);
     bool intersectsEllipsoid = raySegment.start >= 0.0;
 
     vec3 startPositionWC = czm_viewerPositionWC;
@@ -147,10 +152,6 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, float ellipsoidScal
     }
 
     vec3 lightDirection = getLightDirection(startPositionWC);
-
-    // Unpack attributes
-    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
     // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
     vec3 ray = outerPositionWC - startPositionWC;
@@ -200,7 +201,7 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, float ellipsoidScal
     rayleighColor = frontColor * (InvWavelength * KrESun);
 }
 
-vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 rayleighColor, vec3 mieColor)
+vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 mieColor, vec3 rayleighColor)
 {
     // Extra normalize added for Android
     float cosAngle = dot(lightDirection, normalize(toCamera)) / length(toCamera);
@@ -227,9 +228,9 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     rgb = czm_HSBToRGB(hsb);
 #endif
 
-    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
-    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
+    float outerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.y;
+    float lightEnum = u_radiiAndDynamicAtmosphereColorAndInverseScale.z;
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((outerRadius - length(positionWC)) / (outerRadius - innerRadius), 0.0, 1.0);

@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import Cartesian4 from "../Core/Cartesian4.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -95,23 +96,28 @@ function SkyAtmosphere(ellipsoid) {
 
   this._hueSaturationBrightness = new Cartesian3();
 
-  // camera height, outer radius, inner radius, dynamic atmosphere color flag
-  var radiiAndDynamicAtmosphereColor = new Cartesian3();
+  // outer radius, inner radius, dynamic atmosphere color flag, inverse scale
+  var radiiAndDynamicAtmosphereColorAndInverseScale = new Cartesian4();
 
-  // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-  radiiAndDynamicAtmosphereColor.z = 0;
-  radiiAndDynamicAtmosphereColor.x = Cartesian3.maximumComponent(
+  radiiAndDynamicAtmosphereColorAndInverseScale.x = Cartesian3.maximumComponent(
     Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3())
   );
-  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
+  radiiAndDynamicAtmosphereColorAndInverseScale.y = ellipsoid.maximumRadius;
 
-  this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
+  // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
+  radiiAndDynamicAtmosphereColorAndInverseScale.z = 0;
+
+  // Controls the distance below the horizon at which atmosphere transitions from its brightest to a more neutral blue color
+  // Higher values push the transition point further below the horizon
+  radiiAndDynamicAtmosphereColorAndInverseScale.w = 1.003;
+
+  this._radiiAndDynamicAtmosphereColorAndInverseScale = radiiAndDynamicAtmosphereColorAndInverseScale;
 
   var that = this;
 
   this._command.uniformMap = {
-    u_radiiAndDynamicAtmosphereColor: function () {
-      return that._radiiAndDynamicAtmosphereColor;
+    u_radiiAndDynamicAtmosphereColorAndInverseScale: function () {
+      return that._radiiAndDynamicAtmosphereColorAndInverseScale;
     },
     u_hsbShift: function () {
       that._hueSaturationBrightness.x = that.hueShift;
@@ -145,7 +151,7 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   useSunDirection
 ) {
   var lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
-  this._radiiAndDynamicAtmosphereColor.z = lightEnum;
+  this._radiiAndDynamicAtmosphereColorAndInverseScale.z = lightEnum;
 };
 
 /**
@@ -253,7 +259,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var cameraPosition = frameState.camera.positionWC;
   var cameraHeight = Cartesian3.magnitude(cameraPosition);
 
-  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
+  if (cameraHeight > this._radiiAndDynamicAtmosphereColorAndInverseScale.x) {
     // Camera in space
     command.shaderProgram = this._spSkyFromSpace;
   } else {
