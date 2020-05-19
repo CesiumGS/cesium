@@ -157,8 +157,10 @@ void main()
 
     vec3 position3DWC = position + u_center3D;
     gl_Position = getPosition(position, height, textureCoordinates);
-
     v_textureCoordinates = vec3(textureCoordinates, webMercatorT);
+#if defined(ENABLE_CLIPPING_POLYGON)
+    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
+#endif
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL) || defined(APPLY_MATERIAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;

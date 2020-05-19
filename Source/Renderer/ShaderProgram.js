@@ -500,6 +500,7 @@ function reinitialize(shader) {
     program,
     gl.ACTIVE_ATTRIBUTES
   );
+
   var uniforms = findUniforms(gl, program);
   var partitionedUniforms = partitionUniforms(shader, uniforms.uniformsByName);
 

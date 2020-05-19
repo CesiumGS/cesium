@@ -167,6 +167,14 @@ function GlobeSurfaceTileProvider(options) {
   this._clippingPlanes = undefined;
 
   /**
+   * A property specifying a {@alink ClippingPolygon} used to selectively
+   * disable rendering inside or outside of the clipping polygon
+   * @type {ClippingPolygon}
+   * @private
+   */
+  this._clippingPolygon = undefined;
+
+  /**
    * A property specifying a {@link Rectangle} used to selectively limit terrain and imagery rendering.
    * @type {Rectangle}
    */
@@ -315,6 +323,24 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
     },
   },
+
+  /**
+   * The {@link ClippingPolygon} used to selectively enable or disable
+   * rendering inside of a specific region
+   *
+   * @type {ClippingPlaneCollection}
+   *
+   * @private
+   */
+  clippingPolygon: {
+    get: function () {
+      return this._clippingPolygon;
+    },
+    set: function (value) {
+      this._clippingPolygon = value;
+      //ClippingPolygon.setOwner(value, this, "_clippingPolygon");
+    },
+  },
 });
 
 function sortTileImageryByLayerIndex(a, b) {
@@ -404,6 +430,12 @@ GlobeSurfaceTileProvider.prototype.beginUpdate = function (frameState) {
   if (defined(clippingPlanes) && clippingPlanes.enabled) {
     clippingPlanes.update(frameState);
   }
+
+  var clippingPolygon = this._clippingPolygon;
+  if (defined(clippingPolygon)) {
+    clippingPolygon.update(frameState);
+  }
+
   this._usedDrawCommands = 0;
 
   this._hasLoadedTilesThisFrame = false;
@@ -1489,6 +1521,8 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
 };
 
 var scratchClippingPlaneMatrix = new Matrix4();
+var scratchClippingPolygonEyeToWorldMatrix = new Matrix4();
+
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   var uniformMap = {
     u_initialColor: function () {
@@ -1634,6 +1668,95 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       style.alpha = this.properties.clippingPlanesEdgeWidth;
       return style;
     },
+
+    u_clippingPolygonAccelerationGrid: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.gridTexture)) {
+        return clippingPolygon.gridTexture;
+      }
+    },
+
+    u_clippingPolygonAccelerationGridPixelDimensions: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (
+        defined(clippingPolygon) &&
+        defined(clippingPolygon.gridPixelDimensions)
+      ) {
+        return clippingPolygon.gridPixelDimensions;
+      }
+    },
+
+    u_clippingPolygonMeshPositions: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.meshPositions)) {
+        return clippingPolygon.meshPositionsTexture;
+      }
+    },
+
+    u_clippingPolygonMeshPositionPixelDimensions: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (
+        defined(clippingPolygon) &&
+        defined(clippingPolygon.meshPositionPixelDimensions)
+      ) {
+        return clippingPolygon.meshPositionPixelDimensions;
+      }
+    },
+
+    u_clippingPolygonOverlappingTriangleIndices: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (
+        defined(clippingPolygon) &&
+        defined(clippingPolygon.overlappingTriangleIndicesTexture)
+      ) {
+        return clippingPolygon.overlappingTriangleIndicesTexture;
+      }
+    },
+
+    u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (
+        defined(clippingPolygon) &&
+        defined(clippingPolygon.overlappingTrianglePixelIndicesDimensions)
+      ) {
+        return clippingPolygon.overlappingTrianglePixelIndicesDimensions;
+      }
+    },
+
+    u_clippingPolygonBoundingBox: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.boundingBox)) {
+        return clippingPolygon.boundingBox;
+      }
+    },
+
+    u_clippingPolygonCellDimensions: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.cellDimensions)) {
+        return clippingPolygon.cellDimensions;
+      }
+    },
+
+    u_clippingPolygonMinimumZ: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.minimumZ)) {
+        return clippingPolygon.minimumZ;
+      }
+    },
+
+    u_clippingPolygonEyeToWorldToENU: function () {
+      var clippingPolygon = globeSurfaceTileProvider._clippingPolygon;
+      if (defined(clippingPolygon) && defined(clippingPolygon.worldToENU)) {
+        var eyeToWorld = frameState.context.uniformState.inverseView3D;
+        var eyeToWorldToENU = Matrix4.multiply(
+          clippingPolygon.worldToENU,
+          eyeToWorld,
+          scratchClippingPolygonEyeToWorldMatrix
+        );
+        return eyeToWorldToENU;
+      }
+    },
+
     u_minimumBrightness: function () {
       return frameState.fog.minimumBrightness;
     },
@@ -1901,6 +2024,7 @@ var surfaceShaderSetOptionsScratch = {
   useWebMercatorProjection: undefined,
   enableFog: undefined,
   enableClippingPlanes: undefined,
+  enableClippingPolygon: undefined,
   clippingPlanes: undefined,
   clippedByBoundaries: undefined,
   hasImageryLayerCutout: undefined,
@@ -2020,6 +2144,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     defined(tileProvider.clippingPlanes) &&
     tileProvider.clippingPlanes.enabled
   ) {
+    --maxTextures;
+  }
+
+  if (defined(tileProvider.clippingPolygon)) {
     --maxTextures;
   }
 
@@ -2542,6 +2670,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
     }
 
+    // update clipping polygon
+    var clippingPolygon = tileProvider._clippingPolygon;
+    var clippingPolygonEnabled =
+      defined(clippingPolygon) && clippingPolygon.enabled;
+
+    if (defined(tileProvider.uniformMap)) {
+      uniformMap = combine(uniformMap, tileProvider.uniformMap);
+    }
+
     surfaceShaderSetOptions.numberOfDayTextures = numberOfDayTextures;
     surfaceShaderSetOptions.applyBrightness = applyBrightness;
     surfaceShaderSetOptions.applyContrast = applyContrast;
@@ -2553,7 +2690,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.applySplit = applySplit;
     surfaceShaderSetOptions.enableFog = applyFog;
     surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
+    surfaceShaderSetOptions.enableClippingPolygon = clippingPolygonEnabled;
     surfaceShaderSetOptions.clippingPlanes = clippingPlanes;
+    surfaceShaderSetOptions.clippingPolygon = clippingPolygon;
     surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;

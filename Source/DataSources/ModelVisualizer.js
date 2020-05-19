@@ -199,6 +199,10 @@ ModelVisualizer.prototype.update = function (time) {
       modelGraphics._clippingPlanes,
       time
     );
+    model.clippingPolygon = Property.getValueOrUndefined(
+      modelGraphics._clippingPolygon,
+      time
+    );
     model.clampAnimations = Property.getValueOrDefault(
       modelGraphics._clampAnimations,
       time,

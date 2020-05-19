@@ -77,6 +77,7 @@ uniform mat4 u_clippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
+
 #if defined(FOG) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
 uniform float u_minimumBrightness;
 #endif
@@ -298,6 +299,11 @@ void main()
         {
             discard;
         }
+#endif
+
+#ifdef ENABLE_CLIPPING_POLYGON
+    vec4 positionENU = u_clippingPolygonEyeToWorldToENU * vec4(v_positionEC.xyz, 1.0);
+    clippingPolygon(positionENU.xyz);
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES

@@ -81,6 +81,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
  * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
+ * @param {ClippingPolygon} [options.clippingPolygon] The {@link ClippingPolygon} used to selectively disable rendering the tileset.
  * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
  * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
@@ -694,6 +695,9 @@ function Cesium3DTileset(options) {
   this._clippingPlanes = undefined;
   this.clippingPlanes = options.clippingPlanes;
 
+  this._clippingPolygon = undefined;
+  this.clippingPolygon = options.clippingPolygon;
+
   this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
   Cartesian2.clone(
     options.imageBasedLightingFactor,
@@ -1051,6 +1055,22 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+    },
+  },
+
+  /**
+   * The {@link ClippingPolygon} used to selectively disable rendering the tileset.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {ClippingPolygon}
+   */
+  clippingPolygon: {
+    get: function () {
+      return this._clippingPolygon;
+    },
+    set: function (value) {
+      this._clippingPolygon = value;
     },
   },
 
@@ -1902,6 +1922,11 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     clippingPlanes.update(frameState);
   }
 
+  var clippingPolygon = this._clippingPolygon;
+  if (defined(clippingPolygon)) {
+    clippingPolygon.update(frameState);
+  }
+
   if (!defined(this._loadTimestamp)) {
     this._loadTimestamp = JulianDate.clone(frameState.time);
   }
@@ -1911,8 +1936,7 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
   );
 
   this._skipLevelOfDetail =
-    this.skipLevelOfDetail &&
-    !defined(this._classificationType) &&
+    this.skipLevelOfDetail & !defined(this._classificationType) &&
     !this._disableSkipLevelOfDetail &&
     !this._allTilesAdditive;
 

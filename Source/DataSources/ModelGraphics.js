@@ -107,6 +107,7 @@ function ModelGraphics(options) {
   this._clippingPlanes = undefined;
   this._clippingPlanesSubscription = undefined;
 
+  this._clippingPolygon = undefined;
   this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
 }
 
@@ -309,6 +310,13 @@ Object.defineProperties(ModelGraphics.prototype, {
    * @type {Property|undefined}
    */
   clippingPlanes: createPropertyDescriptor("clippingPlanes"),
+
+  /**
+   * A property specifying the {@link ClippingPolygon} used to selectively disable rendering the model.
+   * @memberof ModelGraphics.prototype
+   * @type {Property}
+   */
+  clippingPolygon: createPropertyDescriptor("clippingPolygon"),
 });
 
 /**
@@ -341,6 +349,7 @@ ModelGraphics.prototype.clone = function (result) {
   result.nodeTransformations = this.nodeTransformations;
   result.articulations = this.articulations;
   result.clippingPlanes = this.clippingPlanes;
+  result.clippingPolygon = this.clippingPolygon;
   return result;
 };
 
@@ -408,6 +417,10 @@ ModelGraphics.prototype.merge = function (source) {
   this.clippingPlanes = defaultValue(
     this.clippingPlanes,
     source.clippingPlanes
+  );
+  this.clippingPolygon = defaultValue(
+    this.clippingPolygon,
+    source.clippingPolygon
   );
 
   var sourceNodeTransformations = source.nodeTransformations;

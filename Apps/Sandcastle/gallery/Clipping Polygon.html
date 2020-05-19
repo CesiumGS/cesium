@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Clip a region using a polygon from a collection of PolygonHierarchies"
+    />
+    <meta name="cesium-sandcastle-labels" content="Development" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+
+        var usaCenter = new Cesium.Cartesian3(
+          -984946.2463947034,
+          -4995052.768398607,
+          3818834.1934458236
+        );
+        var usaOffset = new Cesium.Cartesian3(0.0, -4790000.0, 4930000.0);
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+        viewer.scene.debugShowFramesPerSecond = true;
+
+        var agiHQ = viewer.scene.primitives.add(
+          new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(40866),
+          })
+        );
+
+        var scene = viewer.scene;
+        var globe = scene.globe;
+
+        var planePosition = Cesium.Cartesian3.fromDegrees(
+          -75.59777,
+          40.03883,
+          100.0
+        );
+        var clipLeftWing = new Cesium.PolygonHierarchy([
+          new Cesium.Cartesian3(
+            1216279.2851882933,
+            -4736275.764533498,
+            4081383.2333191256
+          ),
+          new Cesium.Cartesian3(
+            1216287.9884816587,
+            -4736310.404236561,
+            4081341.1907344083
+          ),
+          new Cesium.Cartesian3(
+            1216259.9448554032,
+            -4736317.064841869,
+            4081340.829167194
+          ),
+          new Cesium.Cartesian3(
+            1216251.6286461134,
+            -4736275.999319812,
+            4081390.5544632627
+          ),
+        ]);
+        var clipRightWing = new Cesium.PolygonHierarchy([
+          new Cesium.Cartesian3(
+            1216261.4951234236,
+            -4736324.417099766,
+            4081332.02351222
+          ),
+          new Cesium.Cartesian3(
+            1216288.7109729438,
+            -4736318.910556756,
+            4081331.1796776913
+          ),
+          new Cesium.Cartesian3(
+            1216299.8961190586,
+            -4736359.395006259,
+            4081280.385587998
+          ),
+          new Cesium.Cartesian3(
+            1216270.4363272334,
+            -4736364.395094256,
+            4081282.622042688
+          ),
+        ]);
+
+        var entity = viewer.entities.add({
+          model: {
+            uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+            scale: 3.5,
+          },
+          position: planePosition,
+        });
+
+        Cesium.when(entity.readyPromise).then(function () {
+          var clippingPolygon = new Cesium.ClippingPolygon.fromPolygonHierarchies(
+            {
+              polygonHierarchies: [clipLeftWing, clipRightWing],
+              splits: 30,
+              union: false,
+            }
+          );
+
+          entity.model.clippingPolygon = clippingPolygon;
+        });
+
+        var buildingA = new Cesium.PolygonHierarchy(
+          [
+            new Cesium.Cartesian3(
+              1216335.4692176618,
+              -4736234.273048087,
+              4081414.0688713226
+            ),
+            new Cesium.Cartesian3(
+              1216359.4181151898,
+              -4736252.730856823,
+              4081385.8799068998
+            ),
+            new Cesium.Cartesian3(
+              1216302.1444276813,
+              -4736292.976523577,
+              4081357.0107095335
+            ),
+            new Cesium.Cartesian3(
+              1216274.468470202,
+              -4736272.0662878025,
+              4081388.5189117747
+            ),
+          ],
+          [
+            new Cesium.PolygonHierarchy([
+              new Cesium.Cartesian3(
+                1216332.2970046282,
+                -4736263.478558096,
+                4081414.263822046
+              ),
+              new Cesium.Cartesian3(
+                1216340.693113207,
+                -4736269.420463324,
+                4081405.1830219375
+              ),
+              new Cesium.Cartesian3(
+                1216324.680988761,
+                -4736279.80429823,
+                4081397.6264834483
+              ),
+              new Cesium.Cartesian3(
+                1216316.676168708,
+                -4736273.766704102,
+                4081406.8020385574
+              ),
+            ]),
+            new Cesium.PolygonHierarchy(
+              [
+                new Cesium.Cartesian3(
+                  1216311.8910242282,
+                  -4736276.397388818,
+                  4081405.163266593
+                ),
+                new Cesium.Cartesian3(
+                  1216321.0595440713,
+                  -4736282.49462921,
+                  4081395.511212183
+                ),
+                new Cesium.Cartesian3(
+                  1216303.9081666076,
+                  -4736293.245508595,
+                  4081387.9788456657
+                ),
+                new Cesium.Cartesian3(
+                  1216296.034191086,
+                  -4736287.427129692,
+                  4081397.144982464
+                ),
+              ],
+              [
+                new Cesium.PolygonHierarchy([
+                  new Cesium.Cartesian3(
+                    1216307.1270653468,
+                    -4736262.89760623,
+                    4081390.2192411255
+                  ),
+                  new Cesium.Cartesian3(
+                    1216313.1291953332,
+                    -4736267.060786344,
+                    4081383.7294626334
+                  ),
+                  new Cesium.Cartesian3(
+                    1216302.2683940628,
+                    -4736273.932456723,
+                    4081378.844436456
+                  ),
+                  new Cesium.Cartesian3(
+                    1216297.427098538,
+                    -4736269.608951435,
+                    4081385.132078839
+                  ),
+                ]),
+              ]
+            ),
+          ]
+        );
+
+        agiHQ.readyPromise.then(function () {
+          zoomToAGI();
+
+          agiHQ.clippingPolygon = Cesium.ClippingPolygon.fromPolygonHierarchies(
+            {
+              polygonHierarchies: [buildingA],
+              union: true,
+              splits: 127,
+            }
+          );
+        });
+
+        Sandcastle.addToolbarButton("Clip Tileset / 3D Model", zoomToAGI);
+        Sandcastle.addToolbarButton("Clip USA", showUSA);
+
+        var usa = Cesium.GeoJsonDataSource.load(
+          "../../SampleData/ne_10m_us_states.topojson"
+        ).then(function (dataSource) {
+          // create list of polygonHierarchies
+          var polygonHierarchies = [];
+          var values = dataSource.entities.values;
+          var i;
+
+          for (i = 0; i < values.length; ++i) {
+            var polygon = values[i].polygon;
+            if (!Cesium.defined(polygon)) {
+              continue;
+            }
+            polygonHierarchies.push(polygon.hierarchy.getValue());
+          }
+
+          globe.clippingPolygon = new Cesium.ClippingPolygon.fromPolygonHierarchies(
+            {
+              polygonHierarchies: polygonHierarchies,
+              simplify: 80,
+              splits: 30,
+              union: false,
+              enabled: false,
+            }
+          );
+        });
+
+        function zoomToAGI() {
+          viewer.zoomTo(agiHQ);
+          globe.clippingPolygon.enabled = false;
+        }
+
+        function showUSA() {
+          viewer.scene.camera.lookAt(usaCenter, usaOffset);
+          globe.clippingPolygon.enabled = true;
+        }
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

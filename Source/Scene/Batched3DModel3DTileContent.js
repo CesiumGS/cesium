@@ -548,6 +548,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
         : undefined;
   }
 
+  var tilesetClippingPolygon = this._tileset.clippingPolygon;
+  if (defined(tilesetClippingPolygon)) {
+    // TODO: This should be behind a dirty flag like clippingPlanes
+    this._model._clippingPolygon = this._tileset.clippingPolygon;
+  }
+
   // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
   // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
   if (
