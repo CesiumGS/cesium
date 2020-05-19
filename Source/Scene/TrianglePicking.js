@@ -7,7 +7,6 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
-// TODO: Recurse downwards as long as the number of triangles inside is greater than some amount
 // TODO: Pass vertex read function instead of using encoding / vbo / idx etc
 
 var invalidIntersection = Number.MAX_VALUE;
@@ -359,81 +358,77 @@ Node.prototype.rayIntersect = function (
   return result;
 };
 
-function clearBit(val, bit) {
-  return val & ~(1 << bit);
-}
+/**
+ * @typedef {Object} Overlap
+ * @property {Number} bitMask
+ * @property {Number} bitCount
+ */
+
 /**
  * @param {Number} nodeAabbCenterX
  * @param {Number} nodeAabbCenterY
  * @param {Number} nodeAabbCenterZ
  * @param {Triangle} triangle
+ * @param {Overlap} result
+ * @returns {Overlap}
  */
-function getAabbOverlapMask(
+function getOverlap(
   nodeAabbCenterX,
   nodeAabbCenterY,
   nodeAabbCenterZ,
-  triangle
+  triangle,
+  result
 ) {
-  // 000 = 0
-  // 100 = 1
-  // 010 = 2
-  // 110 = 3
-  // 001 = 4
-  // 101 = 5
-  // 011 = 6
-  // 111 = 7
+  // 000 = child 0
+  // 001 = child 1
+  // 010 = child 2
+  // 011 = child 3
+  // 100 = child 4
+  // 101 = child 5
+  // 110 = child 6
+  // 111 = child 7
 
-  var result = 255;
+  var bitMask = 255; // 11111111
+  var bitCount = 8;
 
   if (triangle.aabbMinX > nodeAabbCenterX) {
-    result = clearBit(result, 0);
-    result = clearBit(result, 2);
-    result = clearBit(result, 4);
-    result = clearBit(result, 6);
-  }
-  if (triangle.aabbMaxX < nodeAabbCenterX) {
-    result = clearBit(result, 1);
-    result = clearBit(result, 3);
-    result = clearBit(result, 5);
-    result = clearBit(result, 7);
-  }
-  if (triangle.aabbMinY > nodeAabbCenterY) {
-    result = clearBit(result, 0);
-    result = clearBit(result, 1);
-    result = clearBit(result, 4);
-    result = clearBit(result, 5);
-  }
-  if (triangle.aabbMaxY < nodeAabbCenterY) {
-    result = clearBit(result, 2);
-    result = clearBit(result, 3);
-    result = clearBit(result, 6);
-    result = clearBit(result, 7);
-  }
-  if (triangle.aabbMinZ > nodeAabbCenterZ) {
-    result = clearBit(result, 0);
-    result = clearBit(result, 1);
-    result = clearBit(result, 2);
-    result = clearBit(result, 3);
-  }
-  if (triangle.aabbMaxZ < nodeAabbCenterZ) {
-    result = clearBit(result, 4);
-    result = clearBit(result, 5);
-    result = clearBit(result, 6);
-    result = clearBit(result, 7);
+    bitMask &= 170; // 10101010
+    bitCount /= 2;
+  } else if (triangle.aabbMaxX < nodeAabbCenterX) {
+    bitMask &= 85; // 01010101
+    bitCount /= 2;
   }
 
+  if (triangle.aabbMinY > nodeAabbCenterY) {
+    bitMask &= 204; // 11001100
+    bitCount /= 2;
+  } else if (triangle.aabbMaxY < nodeAabbCenterY) {
+    bitMask &= 51; // 00110011
+    bitCount /= 2;
+  }
+
+  if (triangle.aabbMinZ > nodeAabbCenterZ) {
+    bitMask &= 240; // 11110000
+    bitCount /= 2;
+  } else if (triangle.aabbMaxZ < nodeAabbCenterZ) {
+    bitMask &= 15; // 00001111
+    bitCount /= 2;
+  }
+
+  result.bitMask = bitMask;
+  result.bitCount = bitCount;
   return result;
 }
 
-function getBitCount(bits) {
-  var bitCount = 0;
-  for (var i = 0; i < 8; i++) {
-    if ((bits & (1 << i)) > 0) {
-      bitCount++;
-    }
-  }
-  return bitCount;
-}
+var scratchOverlap0 = {
+  bitMask: 0,
+  bitCount: 0,
+};
+
+var scratchOverlap1 = {
+  bitMask: 0,
+  bitCount: 0,
+};
 
 /**
  * @param {Number} triIdx
@@ -476,13 +471,13 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   var aabbCenterX = that.aabbCenterX;
   var aabbCenterY = that.aabbCenterY;
   var aabbCenterZ = that.aabbCenterZ;
-  var overlapMask = getAabbOverlapMask(
+  var overlap = getOverlap(
     aabbCenterX,
     aabbCenterY,
     aabbCenterZ,
-    tri
+    tri,
+    scratchOverlap0
   );
-  var overlapCount = getBitCount(overlapMask);
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 100;
@@ -494,7 +489,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   var hasChildren = defined(that.children);
   var atMaxLevel = level === maxLevels - 1;
 
-  var isSmall = overlapCount <= smallOverlapCount;
+  var isSmall = overlap.bitCount <= smallOverlapCount;
   var shouldSubdivide =
     isSmall && triangleCount >= maxTriangles && !hasChildren && !atMaxLevel;
 
@@ -522,14 +517,14 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     for (t = triangleIdxs.length - 1; t >= 0; t--) {
       var overflowTriIdx = triangleIdxs[t];
       var overflowTri = triangles[overflowTriIdx];
-      var overflowOverlapMask = getAabbOverlapMask(
+      var overflowOverlap = getOverlap(
         aabbCenterX,
         aabbCenterY,
         aabbCenterZ,
-        overflowTri
+        overflowTri,
+        scratchOverlap1
       );
-      var overflowOverlapCount = getBitCount(overflowOverlapMask);
-      if (overflowOverlapCount > smallOverlapCount) {
+      if (overflowOverlap.bitCount > smallOverlapCount) {
         // all the remaining triangles are too large
         break;
       }
@@ -537,7 +532,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
       that._addTriangleToChildren(
         overflowTriIdx,
         triangles,
-        overflowOverlapMask
+        overflowOverlap.bitMask
       );
     }
     triangleIdxs.length = t + 1;
@@ -547,7 +542,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   var shouldFilterDown = isSmall && hasChildren && !atMaxLevel;
 
   if (shouldFilterDown) {
-    that._addTriangleToChildren(triIdx, triangles, overlapMask);
+    that._addTriangleToChildren(triIdx, triangles, overlap.bitMask);
   } else if (isSmall) {
     triangleIdxs.push(triIdx);
   } else {
