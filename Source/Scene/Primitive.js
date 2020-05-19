@@ -1132,9 +1132,6 @@ function depthClampVS(vertexShaderSource) {
     vertexShaderSource,
     "czm_non_depth_clamp_main"
   );
-  // The varying should be surround by #ifdef GL_EXT_frag_depth as an optimization.
-  // It is not to workaround an issue with Edge:
-  //     https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12120362/
   modifiedVS +=
     "void main() {\n" +
     "    czm_non_depth_clamp_main();\n" +
