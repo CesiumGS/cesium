@@ -13,6 +13,7 @@
 - Fixed a bug where a removed billboard could prevent changing of the `TerrainProvider`. [#8766](https://github.com/CesiumGS/cesium/pull/8766)
 - Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
 - Fixed a bug where `DebugCameraPrimitive` was ignoring the near and far planes of the `Camera`. [#8848](https://github.com/CesiumGS/cesium/issues/8848)
+- Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
 
 ### 1.69.0 - 2020-05-01
 
