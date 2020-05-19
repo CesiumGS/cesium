@@ -155,8 +155,12 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
 
     // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
     vec3 ray = outerPositionWC - startPositionWC;
-    float far = length(ray);
-    ray /= far;
+    float distance = length(ray);
+    ray /= distance;
+
+    float maxDistance = intersectsEllipsoid ? innerRadius * 0.1 : distance;
+    float far = min(distance, maxDistance);
+
     float atmosphereScale = 1.0 / (outerRadius - innerRadius);
 
     vec3 start;
