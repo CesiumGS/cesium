@@ -480,8 +480,8 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   );
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
-  var maxLevels = 100;
-  var maxTriangles = 30;
+  var maxLevels = 50;
+  var maxTrianglesPerNode = 50;
   var smallOverlapCount = 2;
 
   var triangleIdxs = that.triangles;
@@ -491,7 +491,12 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
 
   var isSmall = overlap.bitCount <= smallOverlapCount;
   var shouldSubdivide =
-    isSmall && triangleCount >= maxTriangles && !hasChildren && !atMaxLevel;
+    isSmall &&
+    triangleCount >= maxTrianglesPerNode &&
+    !hasChildren &&
+    !atMaxLevel;
+  var shouldFilterDown =
+    isSmall && (hasChildren || shouldSubdivide) && !atMaxLevel;
 
   if (shouldSubdivide) {
     var childLevel = level + 1;
@@ -537,9 +542,6 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     }
     triangleIdxs.length = t + 1;
   }
-
-  hasChildren = defined(that.children);
-  var shouldFilterDown = isSmall && hasChildren && !atMaxLevel;
 
   if (shouldFilterDown) {
     that._addTriangleToChildren(triIdx, triangles, overlap.bitMask);
@@ -642,7 +644,9 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   var triEncoding = that.triEncoding;
 
   // var triCount = 0;
+  // var triCountLeaf = 0;
   // var nodeCount = 0;
+  // var nodeCountLeaf = 0;
   // function getTriCount(node) {
   //   var isLeaf = defined(node.children);
   //   // console.log(
@@ -658,8 +662,13 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   //   //     ") : " +
   //   //     node.triangles.length
   //   // );
-  //   triCount += node.triangles.length;
-  //   nodeCount++;
+  //   var triCountNode = node.triangles.length;
+  //   if (triCountNode > 0) {
+  //     triCount += triCountNode;
+  //     triCountLeaf += isLeaf ? triCountNode : 0;
+  //     nodeCount += 1;
+  //     nodeCountLeaf += isLeaf ? 1 : 0;
+  //   }
 
   //   var children = node.children;
   //   if (defined(children)) {
@@ -668,8 +677,17 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   //     }
   //   }
   // }
-  // getTriCount(rootNode, triCount, nodeCount);
-  // console.log("ratio: " + triCount / nodeCount);
+  // getTriCount(rootNode);
+  // console.log(
+  //   "tri count: " +
+  //     triCount +
+  //     " node count: " +
+  //     nodeCount +
+  //     " ratio: " +
+  //     triCount / nodeCount +
+  //     " ratio leaf: " +
+  //     triCountLeaf / nodeCountLeaf
+  // );
 
   var transformedRay = scratchTransformedRay;
   transformedRay.origin = Matrix4.multiplyByPoint(
