@@ -453,8 +453,7 @@ void main()
 #endif
 
 #ifdef UNDERGROUND_COLOR
-    // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
-    if (gl_FrontFacing == false)
+    if (czm_backFacing())
     {
         float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
         float distance = max(v_distance - distanceFromEllipsoid, 0.0);
