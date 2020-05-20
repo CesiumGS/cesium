@@ -60,9 +60,9 @@ function SkyAtmosphere(ellipsoid) {
    * This produces better looking atmosphere with a slight performance penalty.
    *
    * @type {Boolean}
-   * @default true
+   * @default false
    */
-  this.perFragmentAtmosphere = true;
+  this.perFragmentAtmosphere = false;
 
   this._ellipsoid = ellipsoid;
 

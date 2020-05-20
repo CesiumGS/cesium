@@ -6,7 +6,7 @@
 
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
 - Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
-- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. Atmosphere is shaded per-fragment by default which looks better but may cause a slight performance penalty. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 
 ##### Fixes :wrench:
 
