@@ -1833,6 +1833,7 @@ var surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
 };
 
+var defaultUndergroundColor = Color.TRANSPARENT;
 var defaultundergroundColorAlphaByDistance = new NearFarScalar();
 
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1876,7 +1877,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
 
   var undergroundColor = defaultValue(
     tileProvider.undergroundColor,
-    Color.TRANSPARENT
+    defaultUndergroundColor
   );
   var undergroundColorAlphaByDistance = defaultValue(
     tileProvider.undergroundColorAlphaByDistance,
