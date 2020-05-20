@@ -1073,7 +1073,14 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
-  uniformState._cameraHeight = camera.positionCartographic.height;
+
+  var positionCartographic = camera.positionCartographic;
+  if (!defined(positionCartographic)) {
+    uniformState._cameraHeight = -uniformState._ellipsoid.maximumComponent;
+  } else {
+    uniformState._cameraHeight = positionCartographic.height;
+  }
+
   uniformState._encodedCameraPositionMCDirty = true;
 }
 

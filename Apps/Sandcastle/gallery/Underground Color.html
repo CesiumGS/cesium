@@ -213,10 +213,10 @@
           var farAlpha = Number(viewModel.farAlpha);
           farAlpha = isNaN(farAlpha) ? 1.0 : farAlpha;
 
-          globe.undergroundColorByDistance.near = nearDistance;
-          globe.undergroundColorByDistance.far = farDistance;
-          globe.undergroundColorByDistance.nearValue = nearAlpha;
-          globe.undergroundColorByDistance.farValue = farAlpha;
+          globe.undergroundColorAlphaByDistance.near = nearDistance;
+          globe.undergroundColorAlphaByDistance.far = farDistance;
+          globe.undergroundColorAlphaByDistance.nearValue = nearAlpha;
+          globe.undergroundColorAlphaByDistance.farValue = farAlpha;
         }
         update(); //Sandcastle_End
         Sandcastle.finishedLoading();

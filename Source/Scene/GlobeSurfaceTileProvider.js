@@ -106,7 +106,7 @@ function GlobeSurfaceTileProvider(options) {
   this.showSkirts = true;
   this.backFaceCulling = true;
   this.undergroundColor = undefined;
-  this.undergroundColorByDistance = undefined;
+  this.undergroundColorAlphaByDistance = undefined;
 
   this._quadtree = undefined;
   this._terrainProvider = options.terrainProvider;
@@ -1590,8 +1590,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_undergroundColor: function () {
       return this.properties.undergroundColor;
     },
-    u_undergroundColorByDistance: function () {
-      return this.properties.undergroundColorByDistance;
+    u_undergroundColorAlphaByDistance: function () {
+      return this.properties.undergroundColorAlphaByDistance;
     },
 
     // make a separate object so that changes to the properties are seen on
@@ -1639,7 +1639,7 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       localizedCartographicLimitRectangle: new Cartesian4(),
 
       undergroundColor: Color.clone(Color.TRANSPARENT),
-      undergroundColorByDistance: new Cartesian4(),
+      undergroundColorAlphaByDistance: new Cartesian4(),
     },
   };
 
@@ -1833,7 +1833,7 @@ var surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
 };
 
-var defaultUndergroundColorByDistance = new NearFarScalar();
+var defaultundergroundColorAlphaByDistance = new NearFarScalar();
 
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var surfaceTile = tile.data;
@@ -1878,16 +1878,16 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     tileProvider.undergroundColor,
     Color.TRANSPARENT
   );
-  var undergroundColorByDistance = defaultValue(
-    tileProvider.undergroundColorByDistance,
-    defaultUndergroundColorByDistance
+  var undergroundColorAlphaByDistance = defaultValue(
+    tileProvider.undergroundColorAlphaByDistance,
+    defaultundergroundColorAlphaByDistance
   );
   var showUndergroundColor =
     cameraUnderground &&
     frameState.mode === SceneMode.SCENE3D &&
     undergroundColor.alpha > 0.0 &&
-    (undergroundColorByDistance.nearValue > 0.0 ||
-      undergroundColorByDistance.farValue > 0.0);
+    (undergroundColorAlphaByDistance.nearValue > 0.0 ||
+      undergroundColorAlphaByDistance.farValue > 0.0);
 
   var showReflectiveOcean =
     tileProvider.hasWaterMask && defined(waterMaskTexture);
@@ -2117,11 +2117,11 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       tileProvider.zoomedOutOceanSpecularIntensity;
 
     Cartesian4.fromElements(
-      undergroundColorByDistance.near,
-      undergroundColorByDistance.nearValue,
-      undergroundColorByDistance.far,
-      undergroundColorByDistance.farValue,
-      uniformMapProperties.undergroundColorByDistance
+      undergroundColorAlphaByDistance.near,
+      undergroundColorAlphaByDistance.nearValue,
+      undergroundColorAlphaByDistance.far,
+      undergroundColorAlphaByDistance.farValue,
+      uniformMapProperties.undergroundColorAlphaByDistance
     );
     Color.clone(undergroundColor, uniformMapProperties.undergroundColor);
 

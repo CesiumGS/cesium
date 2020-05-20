@@ -86,7 +86,7 @@ uniform vec4 u_fillHighlightColor;
 
 #ifdef UNDERGROUND_COLOR
 uniform vec4 u_undergroundColor;
-uniform vec4 u_undergroundColorByDistance;
+uniform vec4 u_undergroundColorAlphaByDistance;
 #endif
 
 varying vec3 v_positionMC;
@@ -458,7 +458,7 @@ void main()
     {
         float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
         float distance = max(v_distance - distanceFromEllipsoid, 0.0);
-        float blendAmount = interpolateByDistance(u_undergroundColorByDistance, distance);
+        float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
         vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
         finalColor = alphaBlend(undergroundColor, finalColor);
     }
