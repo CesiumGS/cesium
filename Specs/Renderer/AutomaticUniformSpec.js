@@ -1,5 +1,6 @@
 import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartographic } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
 import { DirectionalLight } from "../../Source/Cesium.js";
@@ -73,6 +74,7 @@ describe(
         ),
         rightWC: defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)),
         upWC: defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y)),
+        positionCartographic: new Cartographic(0.0, 0.0, 10.0),
       };
     }
 
@@ -2163,6 +2165,20 @@ describe(
         "  bool b1 = roundNumber(czm_ellipsoidInverseRadii.y) == 2.0;" +
         "  bool b2 = roundNumber(czm_ellipsoidInverseRadii.z) == 3.0;" +
         "  gl_FragColor = vec4(b0 && b1 && b2);" +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
+    it("has czm_cameraHeight", function () {
+      var frameState = createFrameState(context, createMockCamera());
+      context.uniformState.update(frameState);
+
+      var fs =
+        "void main() { " +
+        "  gl_FragColor = vec4(czm_cameraHeight == 10.0); " +
         "}";
       expect({
         context: context,

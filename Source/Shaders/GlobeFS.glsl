@@ -116,13 +116,13 @@ varying vec3 v_mieColor;
 #endif
 
 #ifdef UNDERGROUND_COLOR
-float interpolateByDistance(vec4 nearFarScalar)
+float interpolateByDistance(vec4 nearFarScalar, float distance)
 {
     float startDistance = nearFarScalar.x;
     float startValue = nearFarScalar.y;
     float endDistance = nearFarScalar.z;
     float endValue = nearFarScalar.w;
-    float t = clamp((v_distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
+    float t = clamp((distance - startDistance) / (endDistance - startDistance), 0.0, 1.0);
     return mix(startValue, endValue, t);
 }
 #endif
@@ -456,7 +456,9 @@ void main()
     // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
     if (gl_FrontFacing == false)
     {
-        float blendAmount = interpolateByDistance(u_undergroundColorByDistance);
+        float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
+        float distance = max(v_distance - distanceFromEllipsoid, 0.0);
+        float blendAmount = interpolateByDistance(u_undergroundColorByDistance, distance);
         vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
         finalColor = alphaBlend(undergroundColor, finalColor);
     }

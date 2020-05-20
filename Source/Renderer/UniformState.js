@@ -141,6 +141,7 @@ function UniformState() {
   this._cameraDirection = new Cartesian3();
   this._cameraRight = new Cartesian3();
   this._cameraUp = new Cartesian3();
+  this._cameraHeight = 0.0;
   this._frustum2DWidth = 0.0;
   this._eyeHeight2D = new Cartesian2();
   this._pixelRatio = 1.0;
@@ -1010,6 +1011,18 @@ Object.defineProperties(UniformState.prototype, {
       return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
     },
   },
+
+  /**
+   * The camera's height above the ellipsoid.
+   *
+   * @memberof UniformState.prototype
+   * @type {Number}
+   */
+  cameraHeight: {
+    get: function () {
+      return this._cameraHeight;
+    },
+  },
 });
 
 function setView(uniformState, matrix) {
@@ -1060,6 +1073,7 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
+  uniformState._cameraHeight = camera.positionCartographic.height;
   uniformState._encodedCameraPositionMCDirty = true;
 }
 

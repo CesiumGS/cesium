@@ -1896,5 +1896,19 @@ var AutomaticUniforms = {
       return uniformState.ellipsoid.oneOverRadii;
     },
   }),
+
+  /**
+   * An automatic GLSL uniform that stores the camera's height above the ellipsoid.
+   *
+   * @alias czm_cameraHeight
+   * @glslUniform
+   */
+  czm_cameraHeight: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.cameraHeight;
+    },
+  }),
 };
 export default AutomaticUniforms;
