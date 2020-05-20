@@ -255,6 +255,12 @@ vec3 colorCorrect(vec3 rgb) {
 vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
 
+#ifdef GROUND_ATMOSPHERE
+vec3 computeGroundAtmosphereColor(vec3 fogColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist);
+#endif
+
+const float fExposure = 2.0;
+
 void main()
 {
 #ifdef TILE_LIMIT_RECTANGLE
@@ -376,7 +382,6 @@ void main()
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
     vec3 fogColor = colorCorrect(v_fogMieColor) + finalColor.rgb * colorCorrect(v_fogRayleighColor);
 #ifndef HDR
-    const float fExposure = 2.0;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 #endif
 #endif
@@ -408,6 +413,30 @@ void main()
         return;
     }
 
+    if (!czm_backFacing())
+    {
+        vec3 groundAtmosphereColor = computeGroundAtmosphereColor(fogColor, finalColor, atmosphereLightDirection, cameraDist);
+        finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
+    }
+#endif
+
+#ifdef UNDERGROUND_COLOR
+    if (czm_backFacing())
+    {
+        float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
+        float distance = max(v_distance - distanceFromEllipsoid, 0.0);
+        float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
+        vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
+        finalColor = alphaBlend(undergroundColor, finalColor);
+    }
+#endif
+
+    gl_FragColor = finalColor;
+}
+
+#ifdef GROUND_ATMOSPHERE
+vec3 computeGroundAtmosphereColor(vec3 fogColor, vec4 finalColor, vec3 atmosphereLightDirection, float cameraDist)
+{
 #if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && defined(DYNAMIC_ATMOSPHERE_LIGHTING) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0), 1.0);
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
@@ -449,22 +478,9 @@ void main()
     groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
-    finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
-#endif
-
-#ifdef UNDERGROUND_COLOR
-    if (czm_backFacing())
-    {
-        float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
-        float distance = max(v_distance - distanceFromEllipsoid, 0.0);
-        float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
-        vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
-        finalColor = alphaBlend(undergroundColor, finalColor);
-    }
-#endif
-
-    gl_FragColor = finalColor;
+    return groundAtmosphereColor;
 }
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
 
