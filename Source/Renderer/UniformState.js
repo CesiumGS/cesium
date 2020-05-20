@@ -1076,7 +1076,7 @@ function setCamera(uniformState, camera) {
 
   var positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
-    uniformState._cameraHeight = -uniformState._ellipsoid.maximumComponent;
+    uniformState._cameraHeight = -uniformState._ellipsoid.maximumRadius;
   } else {
     uniformState._cameraHeight = positionCartographic.height;
   }
