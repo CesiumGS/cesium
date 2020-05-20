@@ -143,7 +143,7 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     vec3 directionEC = czm_viewRotation * directionWC;
     czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
     czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * inverseScale);
-    bool intersectsEllipsoid = raySegment.start >= 0.0;
+    bool intersectsEllipsoid = false;//raySegment.start >= 0.0;
 
     vec3 startPositionWC = czm_viewerPositionWC;
     if (intersectsEllipsoid)
@@ -212,7 +212,15 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    vec3 rgb = rayleighPhase * rayleighColor + miePhase * mieColor;
+    vec3 rayleighFinal = rayleighPhase * rayleighColor;
+    vec3 mieFinal = miePhase * mieColor;
+    vec3 rgb = rayleighFinal + mieFinal;
+
+    if (rgb.b > 1000000.0)
+    {
+        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
+        return vec4(0.0);
+    }
 
     const float exposure = 2.0;
     vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
@@ -243,5 +251,14 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
-    return vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
+    vec4 finalColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
+
+    float strength = mieFinal.b * rayleighColor.b * 0.05;
+    float minStrength = 0.0;
+    float maxStrength = 1.0;
+    strength = clamp(strength, minStrength, maxStrength);
+    float alpha = (strength - minStrength) / maxStrength;
+    finalColor.a = (1.0 - alpha);
+
+    return finalColor;
 }
