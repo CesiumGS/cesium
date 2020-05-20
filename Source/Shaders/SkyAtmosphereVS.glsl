@@ -9,9 +9,11 @@ varying vec3 v_rayleighColor;
 
 void main(void)
 {
+    vec4 positionWC = czm_model * position;
+
 #ifndef PER_FRAGMENT_ATMOSPHERE
-    calculateMieColorAndRayleighColor(position.xyz, v_mieColor, v_rayleighColor);
+    calculateMieColorAndRayleighColor(positionWC.xyz, v_mieColor, v_rayleighColor);
 #endif
-    v_outerPositionWC = position.xyz;
+    v_outerPositionWC = positionWC.xyz;
     gl_Position = czm_modelViewProjection * position;
 }
