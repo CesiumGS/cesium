@@ -73,7 +73,7 @@ void main(void)
 #ifdef CULL_FRAGMENTS
     if (0.0 <= uv.x && uv.x <= 1.0 && 0.0 <= uv.y && uv.y <= 1.0) {
         gl_FragColor.a = 1.0; // 0.0 alpha leads to discard from ShaderSource.createPickFragmentShaderSource
-        czm_writeDepthClampedToFarPlane();
+        czm_writeDepthClamp();
     }
 #else // CULL_FRAGMENTS
         gl_FragColor.a = 1.0;
@@ -147,6 +147,6 @@ void main(void)
 #endif // FLAT
 
 #endif // PER_INSTANCE_COLOR
-    czm_writeDepthClampedToFarPlane();
+    czm_writeDepthClamp();
 #endif // PICK
 }

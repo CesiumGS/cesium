@@ -1286,10 +1286,14 @@ UniformState.prototype.update = function (frameState) {
   var fov = camera.frustum.fov;
   var viewport = this._viewport;
   var pixelSizePerMeter;
-  if (viewport.height > viewport.width) {
-    pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.height;
+  if (defined(fov)) {
+    if (viewport.height > viewport.width) {
+      pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.height;
+    } else {
+      pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.width;
+    }
   } else {
-    pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.width;
+    pixelSizePerMeter = 1.0 / Math.max(viewport.width, viewport.height);
   }
 
   this._geometricToleranceOverMeter =
