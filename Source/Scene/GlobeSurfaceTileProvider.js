@@ -602,6 +602,32 @@ function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
   return splitRectangle;
 }
 
+function isUndergroundVisible(tileProvider, frameState) {
+  if (frameState.cameraUnderground) {
+    return true;
+  }
+
+  if (tileProvider.backFaceCulling) {
+    return false;
+  }
+
+  var clippingPlanes = tileProvider._clippingPlanes;
+  if (defined(clippingPlanes) && clippingPlanes.enabled) {
+    return true;
+  }
+
+  if (
+    !Rectangle.equals(
+      tileProvider.cartographicLimitRectangle,
+      Rectangle.MAX_VALUE
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
  * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
@@ -621,7 +647,9 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   var distance = this.computeDistanceToTile(tile, frameState);
   tile._distance = distance;
 
-  if (frameState.fog.enabled && !frameState.cameraUnderground) {
+  var undergroundVisible = isUndergroundVisible(this, frameState);
+
+  if (frameState.fog.enabled && !undergroundVisible) {
     if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
       // Tile is completely in fog so return that it is not visible.
       return Visibility.NONE;
@@ -716,7 +744,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     frameState.mode === SceneMode.SCENE3D &&
     !ortho3D &&
     defined(occluders) &&
-    !frameState.cameraUnderground
+    !undergroundVisible
   ) {
     var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
     if (!defined(occludeePointInScaledSpace)) {
@@ -1884,7 +1912,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     defaultundergroundColorAlphaByDistance
   );
   var showUndergroundColor =
-    cameraUnderground &&
+    isUndergroundVisible(tileProvider, frameState) &&
     frameState.mode === SceneMode.SCENE3D &&
     undergroundColor.alpha > 0.0 &&
     (undergroundColorAlphaByDistance.nearValue > 0.0 ||
