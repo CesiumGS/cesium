@@ -1898,7 +1898,7 @@ var AutomaticUniforms = {
   }),
 
   /**
-   * An automatic GLSL uniform that stores the camera's height above the ellipsoid.
+   * An automatic GLSL uniform that stores the camera's height above or below the ellipsoid.
    *
    * @alias czm_cameraHeight
    * @glslUniform

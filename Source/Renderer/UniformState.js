@@ -1013,7 +1013,7 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The camera's height above the ellipsoid.
+   * The camera's height above or below the ellipsoid.
    *
    * @memberof UniformState.prototype
    * @type {Number}
