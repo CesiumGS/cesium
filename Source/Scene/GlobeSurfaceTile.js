@@ -27,6 +27,7 @@ import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
 import TrianglePicking from "./TrianglePicking.js";
+import getTimestamp from "../Core/getTimestamp.js";
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -664,12 +665,23 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
         mesh.orientedBoundingBox,
         surfaceTile.orientedBoundingBox
       );
+      // var time0 = getTimestamp();
+      function getVerticesFromTriIdx(triIdx, v0, v1, v2) {
+        var idx0 = mesh.indices[triIdx * 3 + 0];
+        var idx1 = mesh.indices[triIdx * 3 + 1];
+        var idx2 = mesh.indices[triIdx * 3 + 2];
+
+        mesh.encoding.decodePosition(mesh.vertices, idx0, v0);
+        mesh.encoding.decodePosition(mesh.vertices, idx1, v1);
+        mesh.encoding.decodePosition(mesh.vertices, idx2, v2);
+      }
       surfaceTile.trianglePicking = new TrianglePicking(
-        mesh.indices,
-        mesh.vertices,
-        mesh.encoding,
+        mesh.indices.length / 3,
+        getVerticesFromTriIdx,
         mesh.orientedBoundingBox
       );
+      // var time1 = getTimestamp();
+      // console.log('time: ' + (mesh.indices.length/3) + ' ' + (time1 - time0));
       surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(
         mesh.occludeePointInScaledSpace,
         surfaceTile.occludeePointInScaledSpace

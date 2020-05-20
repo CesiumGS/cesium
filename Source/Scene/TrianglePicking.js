@@ -7,7 +7,8 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
-// TODO: Pass vertex read function instead of using encoding / vbo / idx etc
+// TODO: need to hanfle 2d picking somehow
+// TODO: overlapCount 4 sometimes misses raycast
 
 var invalidIntersection = Number.MAX_VALUE;
 var invalidTriangleIndex = -1;
@@ -216,25 +217,25 @@ TraversalResult.prototype.print = function () {
   console.log("z: " + this.z);
 };
 
+/**
+ * @param {Ray} ray
+ * @param {Function} getVerticesFromTriIdx
+ * @param {TraversalResult} result
+ */
 Node.prototype._intersectTriangles = function (
   ray,
-  triIndices,
-  triVertices,
-  triEncoding,
+  getVerticesFromTriIdx,
   result
 ) {
   var that = this;
   var triangleCount = that.triangles.length;
   for (var i = 0; i < triangleCount; i++) {
     var triIndex = that.triangles[i];
-    var i0 = triIndices[triIndex * 3 + 0];
-    var i1 = triIndices[triIndex * 3 + 1];
-    var i2 = triIndices[triIndex * 3 + 2];
 
-    var v0 = triEncoding.decodePosition(triVertices, i0, scratchV0);
-    var v1 = triEncoding.decodePosition(triVertices, i1, scratchV1);
-    var v2 = triEncoding.decodePosition(triVertices, i2, scratchV2);
-
+    var v0 = scratchV0;
+    var v1 = scratchV1;
+    var v2 = scratchV2;
+    getVerticesFromTriIdx(triIndex, v0, v1, v2);
     var triT = rayTriangleIntersect(ray, v0, v1, v2);
 
     if (triT !== invalidIntersection && triT < result.t) {
@@ -259,9 +260,7 @@ Node.prototype._intersectTriangles = function (
  * @param {Ray} ray
  * @param {Ray} transformedRay
  * @param {Number} t
- * @param {Uint8Array|Uint16Array|Uint32Array} triIndices
- * @param {Float32Array} triVertices
- * @param {TerrainEncoding} triEncoding
+ * @param {Function} getVerticesFromTriIdx
  * @param {TraversalResult} result
  * @returns {TraversalResult}
  */
@@ -269,14 +268,12 @@ Node.prototype.rayIntersect = function (
   ray,
   transformedRay,
   t,
-  triIndices,
-  triVertices,
-  triEncoding,
+  getVerticesFromTriIdx,
   result
 ) {
   var that = this;
 
-  that._intersectTriangles(ray, triIndices, triVertices, triEncoding, result);
+  that._intersectTriangles(ray, getVerticesFromTriIdx, result);
   if (!defined(that.children)) {
     return result;
   }
@@ -317,9 +314,7 @@ Node.prototype.rayIntersect = function (
       ray,
       transformedRay,
       t + minDist,
-      triIndices,
-      triVertices,
-      triEncoding,
+      getVerticesFromTriIdx,
       result
     );
 
@@ -552,53 +547,35 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   }
 };
 
-var scratchV0Local = new Cartesian3();
-var scratchV1Local = new Cartesian3();
-var scratchV2Local = new Cartesian3();
 var scratchTransform = new Matrix4();
 
 /**
  * @constructor
- * @param {Uint8Array|Uint16Array|Uint32Array} triIndices
- * @param {Float32Array} triVertices
- * @param {TerrainEncoding} triEncoding
- * @param {Matrix4} tileOrientedBoundingBox
+ * @param {Number} triCount
+ * @param {Function} getVerticesFromTriIdx
+ * @param {OrientedBoundingBox} orientedBoundingBox
  */
-function TrianglePicking(
-  triIndices,
-  triVertices,
-  triEncoding,
-  tileOrientedBoundingBox
-) {
-  this.rootNode = new Node(0, 0, 0, 0);
-  this.triIndices = triIndices;
-  this.triVertices = triVertices;
-  this.triEncoding = triEncoding;
+function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
+  this.getVerticesFromTriIdx = getVerticesFromTriIdx;
 
+  this.rootNode = new Node(0, 0, 0, 0);
   var transform = OrientedBoundingBox.toTransformation(
-    tileOrientedBoundingBox,
+    orientedBoundingBox,
     scratchTransform
   );
   this.invTransform = Matrix4.inverse(transform, new Matrix4());
   var invTransform = this.invTransform;
 
-  var triCount = triIndices.length / 3;
   var triangles = new Array(triCount);
 
   // Get local space AABBs for all triangles
   var triIdx = 0;
   for (triIdx = 0; triIdx < triCount; triIdx++) {
-    var idx0 = triIndices[triIdx * 3 + 0];
-    var idx1 = triIndices[triIdx * 3 + 1];
-    var idx2 = triIndices[triIdx * 3 + 2];
+    this.getVerticesFromTriIdx(triIdx, scratchV0, scratchV1, scratchV2);
 
-    var v0 = triEncoding.decodePosition(triVertices, idx0, scratchV0);
-    var v1 = triEncoding.decodePosition(triVertices, idx1, scratchV1);
-    var v2 = triEncoding.decodePosition(triVertices, idx2, scratchV2);
-
-    var v0Local = Matrix4.multiplyByPoint(invTransform, v0, scratchV0Local);
-    var v1Local = Matrix4.multiplyByPoint(invTransform, v1, scratchV1Local);
-    var v2Local = Matrix4.multiplyByPoint(invTransform, v2, scratchV2Local);
+    var v0Local = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
+    var v1Local = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
+    var v2Local = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
 
     var triAabbMinX = Math.min(v0Local.x, v1Local.x, v2Local.x);
     var triAabbMaxX = Math.max(v0Local.x, v1Local.x, v2Local.x);
@@ -639,9 +616,6 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   var that = this;
   var invTransform = that.invTransform;
   var rootNode = that.rootNode;
-  var triIndices = that.triIndices;
-  var triVertices = that.triVertices;
-  var triEncoding = that.triEncoding;
 
   // var triCount = 0;
   // var triCountLeaf = 0;
@@ -713,9 +687,7 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
     ray,
     transformedRay,
     t,
-    triIndices,
-    triVertices,
-    triEncoding,
+    that.getVerticesFromTriIdx,
     traversalResult
   );
 
