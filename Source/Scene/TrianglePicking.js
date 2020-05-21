@@ -7,8 +7,7 @@ import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
-// TODO: need to hanfle 2d picking somehow
-// TODO: overlapCount 4 sometimes misses raycast
+// TODO: need to handle 2d picking somehow
 
 var invalidIntersection = Number.MAX_VALUE;
 var invalidTriangleIndex = -1;
@@ -473,18 +472,20 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     tri,
     scratchOverlap0
   );
+  var overlapBitCount = overlap.bitCount;
+  var overlapBitMask = overlap.bitMask;
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 50;
   var maxTrianglesPerNode = 50;
-  var smallOverlapCount = 2;
+  var smallOverlapCount = 4;
 
   var triangleIdxs = that.triangles;
   var triangleCount = triangleIdxs.length;
   var hasChildren = defined(that.children);
   var atMaxLevel = level === maxLevels - 1;
 
-  var isSmall = overlap.bitCount <= smallOverlapCount;
+  var isSmall = overlapBitCount <= smallOverlapCount;
   var shouldSubdivide =
     isSmall &&
     triangleCount >= maxTrianglesPerNode &&
@@ -539,7 +540,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   }
 
   if (shouldFilterDown) {
-    that._addTriangleToChildren(triIdx, triangles, overlap.bitMask);
+    that._addTriangleToChildren(triIdx, triangles, overlapBitMask);
   } else if (isSmall) {
     triangleIdxs.push(triIdx);
   } else {
