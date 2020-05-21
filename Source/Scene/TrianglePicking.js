@@ -32,41 +32,33 @@ function rayTriangleIntersect(ray, v0, v1, v2) {
   return valid ? t : invalidIntersection;
 }
 
-// https://www.shadertoy.com/view/ld23DV
 /**
+ * Ray - cube intersection for unit sized cube (-0.5 to +0.5)
+ * Adapted from: https://www.shadertoy.com/view/ld23DV
  * @param {Ray} ray
  * @returns {Number} t
  */
 function rayCubeIntersectFromOutside(ray) {
-  var size = 0.5;
+  var mX = 1.0 / ray.direction.x;
+  var mY = 1.0 / ray.direction.y;
+  var mZ = 1.0 / ray.direction.z;
 
-  var rddX = ray.direction.x;
-  var rddY = ray.direction.y;
-  var rddZ = ray.direction.z;
+  var nX = -mX * ray.origin.x;
+  var nY = -mY * ray.origin.y;
+  var nZ = -mZ * ray.origin.z;
 
-  var rooX = ray.origin.x;
-  var rooY = ray.origin.y;
-  var rooZ = ray.origin.z;
+  var rad = 0.5;
+  var kX = Math.abs(mX) * rad;
+  var kY = Math.abs(mY) * rad;
+  var kZ = Math.abs(mZ) * rad;
 
-  var mX = 1.0 / rddX;
-  var mY = 1.0 / rddY;
-  var mZ = 1.0 / rddZ;
+  var t1X = nX - kX;
+  var t1Y = nY - kY;
+  var t1Z = nZ - kZ;
 
-  var nX = mX * rooX;
-  var nY = mY * rooY;
-  var nZ = mZ * rooZ;
-
-  var kX = Math.abs(mX) * size;
-  var kY = Math.abs(mY) * size;
-  var kZ = Math.abs(mZ) * size;
-
-  var t1X = -nX - kX;
-  var t1Y = -nY - kY;
-  var t1Z = -nZ - kZ;
-
-  var t2X = -nX + kX;
-  var t2Y = -nY + kY;
-  var t2Z = -nZ + kZ;
+  var t2X = nX + kX;
+  var t2Y = nY + kY;
+  var t2Z = nZ + kZ;
 
   var tN = Math.max(Math.max(t1X, t1Y), t1Z);
   var tF = Math.min(Math.min(t2X, t2Y), t2Z);
@@ -476,7 +468,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   var overlapBitMask = overlap.bitMask;
 
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
-  var maxLevels = 50;
+  var maxLevels = 10;
   var maxTrianglesPerNode = 50;
   var smallOverlapCount = 4;
 
@@ -618,52 +610,6 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
   var invTransform = that.invTransform;
   var rootNode = that.rootNode;
 
-  // var triCount = 0;
-  // var triCountLeaf = 0;
-  // var nodeCount = 0;
-  // var nodeCountLeaf = 0;
-  // function getTriCount(node) {
-  //   var isLeaf = defined(node.children);
-  //   // console.log(
-  //   //   node.level +
-  //   //     " " +
-  //   //     node.x +
-  //   //     " " +
-  //   //     node.y +
-  //   //     " " +
-  //   //     node.z +
-  //   //     "(" +
-  //   //     isLeaf +
-  //   //     ") : " +
-  //   //     node.triangles.length
-  //   // );
-  //   var triCountNode = node.triangles.length;
-  //   if (triCountNode > 0) {
-  //     triCount += triCountNode;
-  //     triCountLeaf += isLeaf ? triCountNode : 0;
-  //     nodeCount += 1;
-  //     nodeCountLeaf += isLeaf ? 1 : 0;
-  //   }
-
-  //   var children = node.children;
-  //   if (defined(children)) {
-  //     for (var i = 0; i < 8; i++) {
-  //       getTriCount(children[i]);
-  //     }
-  //   }
-  // }
-  // getTriCount(rootNode);
-  // console.log(
-  //   "tri count: " +
-  //     triCount +
-  //     " node count: " +
-  //     nodeCount +
-  //     " ratio: " +
-  //     triCount / nodeCount +
-  //     " ratio leaf: " +
-  //     triCountLeaf / nodeCountLeaf
-  // );
-
   var transformedRay = scratchTransformedRay;
   transformedRay.origin = Matrix4.multiplyByPoint(
     invTransform,
@@ -692,13 +638,54 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
     traversalResult
   );
 
-  // var triangleIndex = traversalResult.triangleIndex;
   if (traversalResult.t === invalidIntersection) {
     return undefined;
   }
 
   result = Ray.getPoint(ray, traversalResult.t, result);
   return result;
+};
+
+TrianglePicking.prototype._printDebugInformation = function () {
+  var that = this;
+  var rootNode = that.rootNode;
+
+  var triCount = 0;
+  var triCountLeaf = 0;
+  var nodeCount = 0;
+  var nodeCountLeaf = 0;
+
+  function accumTriCount(node) {
+    var isLeaf = defined(node.children);
+
+    var triCountNode = node.triangles.length;
+    if (triCountNode > 0) {
+      triCount += triCountNode;
+      triCountLeaf += isLeaf ? triCountNode : 0;
+      nodeCount += 1;
+      nodeCountLeaf += isLeaf ? 1 : 0;
+    }
+
+    var children = node.children;
+    if (defined(children)) {
+      for (var i = 0; i < 8; i++) {
+        accumTriCount(children[i]);
+      }
+    }
+  }
+
+  accumTriCount(rootNode);
+
+  console.log(
+    "tri count: " +
+      triCount +
+      " node count: " +
+      nodeCount +
+      " ratio: " +
+      triCount / nodeCount +
+      " ratio leaf: " +
+      triCountLeaf / nodeCountLeaf
+  );
 };
 
 export default TrianglePicking;
