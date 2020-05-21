@@ -480,13 +480,13 @@ Node.prototype.addTriangle = function (triangle) {
   var triangleCount = triangleIdxs.length;
   var exceedsTriCount = triangleCount >= maxTrianglesPerNode;
 
-  var atMaxLevel = level === maxLevels - 1;
   var isSmall = overlapBitCount <= smallOverlapCount;
-  var canFilterDown = isSmall && !atMaxLevel;
+  var atMaxLevel = level === maxLevels - 1;
+  var shouldFilterDown = isSmall && !atMaxLevel;
 
   var hasChildren = defined(that.children);
-  var subdivide = canFilterDown && !hasChildren && exceedsTriCount;
-  var filterDown = canFilterDown && (hasChildren || subdivide);
+  var subdivide = shouldFilterDown && !hasChildren && exceedsTriCount;
+  var filterDown = shouldFilterDown && (hasChildren || subdivide);
 
   if (subdivide) {
     var childLevel = level + 1;
@@ -508,8 +508,8 @@ Node.prototype.addTriangle = function (triangle) {
       new Node(childLevel, childXMax, childYMax, childZMax)
     );
 
-    var t;
-    for (t = 0; t < tempTriangles.length; t++) {
+    var tempTriangleLength = tempTriangles.length;
+    for (var t = 0; t < tempTriangleLength; t++) {
       var overflowTri = tempTriangles[t];
       var overflowOverlap = getOverlap(
         aabbCenterX,
