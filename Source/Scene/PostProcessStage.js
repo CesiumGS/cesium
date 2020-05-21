@@ -23,15 +23,25 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 
 /**
  * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
+ * <p>
+ * 对已被场景渲染的纹理进行后期处理或对上一个后期处理的结果再进行后期处理。
+ * </p>
+ * <p>参考：{@link https://learnopengl-cn.readthedocs.io/zh/latest/04%20Advanced%20OpenGL/05%20Framebuffers/ 帧缓冲}</p>
  *
  * @alias PostProcessStage
  * @constructor
  *
- * @param {Object} options An object with the following properties:
+ * @param {Object} options An object with the following properties:<br/>接收对象类型参数，它的属性值如下：
  * @param {String} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
+ * <br/> 片段着色器代码。默认有两个全局取样器<code>uniforms</code> <code>sampler2D</code>变量：<code>colorTexture</code>和<code>depthTexture</code>；其中颜色纹理（color texture）来自场景渲染的纹理或上一个后期处理，深度纹理（depth texture）来自场景的渲染纹理；着色器中必须至少要包含其中一个<code>uniforms</code>。
+ * <br/> 此外还提供了<code>vec2 varying v_textureCoordinates</code>,可用于纹理采样。
  * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
+ * <br/> 一个对象，为片段着色器中自定义的<code>uniforms</code>变量赋对应的值。值可以是一个常量或一个函数，当为常量时也可以是一个<code>URI</code>,<code>data URI</code>或者HTML元素（作为一个纹理）。
  * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
+ * <br/> 设置纹理尺寸的缩放，可选的范围为：(0.0, 1.0]。当为1时，此后期处理的纹理大小将与视口大小一致
  * @param {Boolean} [options.forcePowerOfTwo=false] Whether or not to force the texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
+ * <br/>强制设置纹理的尺寸为2的幂。（后面意思是关于怎么取值的，没看明白，(lll￢ω￢)）。
+ * <br/>参考：{@link https://qastack.cn/gamedev/26187/why-are-textures-always-square-powers-of-two-what-if-they-arent 为什么纹理总是平方为2的幂？}、{@link https://www.zhihu.com/question/24622091 为何上传到显卡的纹理尺寸最好是2的次幂？}、{@link https://gameinstitute.qq.com/community/detail/114710 如何把WebGL显存占用减少84.2% }
  * @param {PostProcessStageSampleMode} [options.sampleMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
  * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
