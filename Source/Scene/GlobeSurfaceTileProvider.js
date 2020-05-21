@@ -19,6 +19,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
+import NearFarScalar from "../Core/NearFarScalar.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
 import PrimitiveType from "../Core/PrimitiveType.js";
@@ -104,6 +105,8 @@ function GlobeSurfaceTileProvider(options) {
 
   this.showSkirts = true;
   this.backFaceCulling = true;
+  this.undergroundColor = undefined;
+  this.undergroundColorAlphaByDistance = undefined;
 
   this._quadtree = undefined;
   this._terrainProvider = options.terrainProvider;
@@ -599,6 +602,32 @@ function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
   return splitRectangle;
 }
 
+function isUndergroundVisible(tileProvider, frameState) {
+  if (frameState.cameraUnderground) {
+    return true;
+  }
+
+  if (tileProvider.backFaceCulling) {
+    return false;
+  }
+
+  var clippingPlanes = tileProvider._clippingPlanes;
+  if (defined(clippingPlanes) && clippingPlanes.enabled) {
+    return true;
+  }
+
+  if (
+    !Rectangle.equals(
+      tileProvider.cartographicLimitRectangle,
+      Rectangle.MAX_VALUE
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
  * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
@@ -618,7 +647,9 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   var distance = this.computeDistanceToTile(tile, frameState);
   tile._distance = distance;
 
-  if (frameState.fog.enabled && !frameState.cameraUnderground) {
+  var undergroundVisible = isUndergroundVisible(this, frameState);
+
+  if (frameState.fog.enabled && !undergroundVisible) {
     if (CesiumMath.fog(distance, frameState.fog.density) >= 1.0) {
       // Tile is completely in fog so return that it is not visible.
       return Visibility.NONE;
@@ -713,7 +744,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     frameState.mode === SceneMode.SCENE3D &&
     !ortho3D &&
     defined(occluders) &&
-    !frameState.cameraUnderground
+    !undergroundVisible
   ) {
     var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
     if (!defined(occludeePointInScaledSpace)) {
@@ -1584,6 +1615,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_colorsToAlpha: function () {
       return this.properties.colorsToAlpha;
     },
+    u_undergroundColor: function () {
+      return this.properties.undergroundColor;
+    },
+    u_undergroundColorAlphaByDistance: function () {
+      return this.properties.undergroundColorAlphaByDistance;
+    },
 
     // make a separate object so that changes to the properties are seen on
     // derived commands that combine another uniform map with this one.
@@ -1628,6 +1665,9 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       clippingPlanesEdgeWidth: 0.0,
 
       localizedCartographicLimitRectangle: new Cartesian4(),
+
+      undergroundColor: Color.clone(Color.TRANSPARENT),
+      undergroundColorAlphaByDistance: new Cartesian4(),
     },
   };
 
@@ -1821,6 +1861,9 @@ var surfaceShaderSetOptionsScratch = {
   colorToAlpha: undefined,
 };
 
+var defaultUndergroundColor = Color.TRANSPARENT;
+var defaultundergroundColorAlphaByDistance = new NearFarScalar();
+
 function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var surfaceTile = tile.data;
 
@@ -1859,6 +1902,21 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   }
 
   var cameraUnderground = frameState.cameraUnderground;
+
+  var undergroundColor = defaultValue(
+    tileProvider.undergroundColor,
+    defaultUndergroundColor
+  );
+  var undergroundColorAlphaByDistance = defaultValue(
+    tileProvider.undergroundColorAlphaByDistance,
+    defaultundergroundColorAlphaByDistance
+  );
+  var showUndergroundColor =
+    isUndergroundVisible(tileProvider, frameState) &&
+    frameState.mode === SceneMode.SCENE3D &&
+    undergroundColor.alpha > 0.0 &&
+    (undergroundColorAlphaByDistance.nearValue > 0.0 ||
+      undergroundColorAlphaByDistance.farValue > 0.0);
 
   var showReflectiveOcean =
     tileProvider.hasWaterMask && defined(waterMaskTexture);
@@ -2086,6 +2144,15 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     uniformMapProperties.nightFadeDistance.y = tileProvider.nightFadeInDistance;
     uniformMapProperties.zoomedOutOceanSpecularIntensity =
       tileProvider.zoomedOutOceanSpecularIntensity;
+
+    Cartesian4.fromElements(
+      undergroundColorAlphaByDistance.near,
+      undergroundColorAlphaByDistance.nearValue,
+      undergroundColorAlphaByDistance.far,
+      undergroundColorAlphaByDistance.farValue,
+      uniformMapProperties.undergroundColorAlphaByDistance
+    );
+    Color.clone(undergroundColor, uniformMapProperties.undergroundColor);
 
     var highlightFillTile =
       !defined(surfaceTile.vertexArray) &&
@@ -2370,6 +2437,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorCorrect = colorCorrect;
     surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
+    surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
 
     var count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {
