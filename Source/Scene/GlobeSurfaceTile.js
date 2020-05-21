@@ -1,6 +1,7 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
+import Cartographic from "../Core/Cartographic.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -132,12 +133,17 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
   },
 });
 
+var scratchCartographic = new Cartographic();
+
 function getPosition(encoding, mode, projection, vertices, index, result) {
   encoding.decodePosition(vertices, index, result);
 
   if (defined(mode) && mode !== SceneMode.SCENE3D) {
     var ellipsoid = projection.ellipsoid;
-    var positionCart = ellipsoid.cartesianToCartographic(result);
+    var positionCart = ellipsoid.cartesianToCartographic(
+      result,
+      scratchCartographic
+    );
     projection.project(positionCart, result);
     Cartesian3.fromElements(result.z, result.x, result.y, result);
   }
@@ -157,14 +163,19 @@ GlobeSurfaceTile.prototype.pick = function (
   result,
   useNewPicking
 ) {
+  // Fast acceleration structure picking that only works in 3D
+  useNewPicking = defaultValue(useNewPicking, false);
+  if (
+    useNewPicking &&
+    defined(this.trianglePicking) &&
+    mode === SceneMode.SCENE3D
+  ) {
+    return this.trianglePicking.rayIntersect(ray, cullBackFaces, result);
+  }
+
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
     return undefined;
-  }
-
-  useNewPicking = defaultValue(useNewPicking, false);
-  if (useNewPicking && defined(this.trianglePicking)) {
-    return this.trianglePicking.rayIntersect(ray, result);
   }
 
   var vertices = mesh.vertices;

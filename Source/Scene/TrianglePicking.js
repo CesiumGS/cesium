@@ -17,16 +17,16 @@ var invalidTriangleIndex = -1;
  * @param {Cartesian3} v0
  * @param {Cartesian3} v1
  * @param {Cartesian3} v2
+ * @param {Boolean} cullBackFaces
  * @returns {Number} t
  */
-function rayTriangleIntersect(ray, v0, v1, v2) {
-  var cullBackfaces = false;
+function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
   var t = IntersectionTests.rayTriangleParametric(
     ray,
     v0,
     v1,
     v2,
-    cullBackfaces
+    cullBackFaces
   );
   var valid = defined(t) && t >= 0.0;
   return valid ? t : invalidIntersection;
@@ -60,8 +60,8 @@ function rayCubeIntersectFromOutside(ray) {
   var t2Y = nY + kY;
   var t2Z = nZ + kZ;
 
-  var tN = Math.max(Math.max(t1X, t1Y), t1Z);
-  var tF = Math.min(Math.min(t2X, t2Y), t2Z);
+  var tN = Math.max(t1X, t1Y, t1Z);
+  var tF = Math.min(t2X, t2Y, t2Z);
 
   if (tN > tF || tF < 0.0) {
     return invalidIntersection;
@@ -210,11 +210,13 @@ TraversalResult.prototype.print = function () {
 
 /**
  * @param {Ray} ray
+ * @param {Boolean} cullBackFaces
  * @param {Function} getVerticesFromTriIdx
  * @param {TraversalResult} result
  */
 Node.prototype._intersectTriangles = function (
   ray,
+  cullBackFaces,
   getVerticesFromTriIdx,
   result
 ) {
@@ -227,7 +229,7 @@ Node.prototype._intersectTriangles = function (
     var v1 = scratchV1;
     var v2 = scratchV2;
     getVerticesFromTriIdx(triIndex, v0, v1, v2);
-    var triT = rayTriangleIntersect(ray, v0, v1, v2);
+    var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
@@ -251,6 +253,7 @@ Node.prototype._intersectTriangles = function (
  * @param {Ray} ray
  * @param {Ray} transformedRay
  * @param {Number} t
+ * @param {Boolean} cullBackFaces
  * @param {Function} getVerticesFromTriIdx
  * @param {TraversalResult} result
  * @returns {TraversalResult}
@@ -259,12 +262,13 @@ Node.prototype.rayIntersect = function (
   ray,
   transformedRay,
   t,
+  cullBackFaces,
   getVerticesFromTriIdx,
   result
 ) {
   var that = this;
 
-  that._intersectTriangles(ray, getVerticesFromTriIdx, result);
+  that._intersectTriangles(ray, cullBackFaces, getVerticesFromTriIdx, result);
   if (!defined(that.children)) {
     return result;
   }
@@ -305,6 +309,7 @@ Node.prototype.rayIntersect = function (
       ray,
       transformedRay,
       t + minDist,
+      cullBackFaces,
       getVerticesFromTriIdx,
       result
     );
@@ -602,7 +607,7 @@ var scratchTransformedRay = new Ray();
  * @param {Cartesian3} result
  * @returns {Cartesian3} result
  */
-TrianglePicking.prototype.rayIntersect = function (ray, result) {
+TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -634,6 +639,7 @@ TrianglePicking.prototype.rayIntersect = function (ray, result) {
     ray,
     transformedRay,
     t,
+    cullBackFaces,
     that.getVerticesFromTriIdx,
     traversalResult
   );
