@@ -112,9 +112,8 @@ function SkyAtmosphere(ellipsoid) {
   // outer radius, inner radius, dynamic atmosphere color flag, inverse scale
   var radiiAndDynamicAtmosphereColorAndInverseScale = new Cartesian4();
 
-  radiiAndDynamicAtmosphereColorAndInverseScale.x = Cartesian3.maximumComponent(
-    Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3())
-  );
+  radiiAndDynamicAtmosphereColorAndInverseScale.x =
+    ellipsoid.maximumRadius * 1.025;
   radiiAndDynamicAtmosphereColorAndInverseScale.y = ellipsoid.maximumRadius;
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
