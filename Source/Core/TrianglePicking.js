@@ -218,13 +218,13 @@ TraversalResult.prototype.print = function () {
 /**
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
- * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
+ * @param {TrianglePicking~VerticesFromTriangleIndex} verticesFromTriangleIndexCallback
  * @param {TraversalResult} result
  */
 Node.prototype._intersectTriangles = function (
   ray,
   cullBackFaces,
-  triangleVerticesFromIndexCallback,
+  verticesFromTriangleIndexCallback,
   result
 ) {
   var triangleCount = this.triangles.length;
@@ -234,7 +234,7 @@ Node.prototype._intersectTriangles = function (
     var v0 = scratchV0;
     var v1 = scratchV1;
     var v2 = scratchV2;
-    triangleVerticesFromIndexCallback(triIndex, v0, v1, v2);
+    verticesFromTriangleIndexCallback(triIndex, v0, v1, v2);
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
     if (triT !== invalidIntersection && triT < result.t) {
@@ -257,7 +257,7 @@ Node.prototype._intersectTriangles = function (
  * @param {Ray} transformedRay
  * @param {Number} t
  * @param {Boolean} cullBackFaces
- * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
+ * @param {TrianglePicking~VerticesFromTriangleIndex} verticesFromTriangleIndexCallback
  * @param {TraversalResult} result
  * @returns {TraversalResult}
  */
@@ -266,13 +266,13 @@ Node.prototype.rayIntersect = function (
   transformedRay,
   t,
   cullBackFaces,
-  triangleVerticesFromIndexCallback,
+  verticesFromTriangleIndexCallback,
   result
 ) {
   this._intersectTriangles(
     ray,
     cullBackFaces,
-    triangleVerticesFromIndexCallback,
+    verticesFromTriangleIndexCallback,
     result
   );
 
@@ -319,7 +319,7 @@ Node.prototype.rayIntersect = function (
       transformedRay,
       t + minDist,
       cullBackFaces,
-      triangleVerticesFromIndexCallback,
+      verticesFromTriangleIndexCallback,
       result
     );
 
@@ -580,17 +580,17 @@ var scratchTransform = new Matrix4();
 /**
  * @constructor
  * @param {Number} triCount
- * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
+ * @param {TrianglePicking~VerticesFromTriangleIndex} verticesFromTriangleIndexCallback
  * @param {OrientedBoundingBox} orientedBoundingBox
  */
 function TrianglePicking(
   triCount,
-  triangleVerticesFromIndexCallback,
+  verticesFromTriangleIndexCallback,
   orientedBoundingBox
 ) {
   var time0 = getTimestamp();
 
-  this._triangleVerticesFromIndexCallback = triangleVerticesFromIndexCallback;
+  this._verticesFromTriangleIndexCallback = verticesFromTriangleIndexCallback;
 
   this._rootNode = new Node(0, 0, 0, 0);
 
@@ -605,7 +605,7 @@ function TrianglePicking(
   // Build the octree by adding each triangle one at a time.
   var triIdx = 0;
   for (triIdx = 0; triIdx < triCount; triIdx++) {
-    this._triangleVerticesFromIndexCallback(
+    this._verticesFromTriangleIndexCallback(
       triIdx,
       scratchV0,
       scratchV1,
@@ -642,18 +642,18 @@ Object.defineProperties(TrianglePicking.prototype, {
   /**
    * Gets or set the function for retrieving the three triangle vertices from a triangle index.
    * @memberof TrianglePicking.prototype
-   * @type {TrianglePicking~TriangleVerticesFromIndex}
+   * @type {TrianglePicking~VerticesFromTriangleIndex}
    */
-  triangleVerticesFromIndexCallback: {
+  verticesFromTriangleIndexCallback: {
     get: function () {
-      return this._triangleVerticesFromIndexCallback;
+      return this._verticesFromTriangleIndexCallback;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.func("triangleVerticesFromIndexCallback", value);
+      Check.typeOf.func("verticesFromTriangleIndexCallback", value);
       //>>includeEnd('debug');
 
-      this._triangleVerticesFromIndexCallback = value;
+      this._verticesFromTriangleIndexCallback = value;
     },
   },
 });
@@ -698,7 +698,7 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
     transformedRay,
     t,
     cullBackFaces,
-    this._triangleVerticesFromIndexCallback,
+    this._verticesFromTriangleIndexCallback,
     traversalResult
   );
 
@@ -713,9 +713,9 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
 };
 
 /**
- * A function that gets the three triangle vertices from a triangle index
+ * A function that gets the three vertices from a triangle index
  *
- * @callback TrianglePicking~TriangleVerticesFromIndex
+ * @callback TrianglePicking~VerticesFromTriangleIndex
  * @param {Number} triangleIndex
  * @param {Cartesian3} v0 The first vertex
  * @param {Cartesian3} v1 The second vertex
