@@ -518,14 +518,9 @@ Node.prototype.addTriangle = function (triangle) {
         overflowTri,
         scratchOverlap1
       );
-      if (overflowOverlap.bitCount > smallOverlapCount) {
-        // all the remaining triangles are too large
-        break;
-      }
-
       that._addTriangleToChildren(overflowTri, overflowOverlap.bitMask);
     }
-    triangleIdxs.length = tempTriangles.length - t;
+    triangleIdxs.length -= tempTriangles.length;
     that.tempTriangles = undefined;
   }
 
