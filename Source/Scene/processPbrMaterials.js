@@ -767,7 +767,6 @@ function generateTechnique(
       fragmentShader += "    vec3 n = ng;\n";
     }
     if (material.doubleSided) {
-      // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
       fragmentShader += "    if (czm_backFacing())\n";
       fragmentShader += "    {\n";
       fragmentShader += "        n = -n;\n";

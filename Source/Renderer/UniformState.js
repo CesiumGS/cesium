@@ -141,8 +141,8 @@ function UniformState() {
   this._cameraDirection = new Cartesian3();
   this._cameraRight = new Cartesian3();
   this._cameraUp = new Cartesian3();
-  this._cameraHeight = 0.0;
   this._frustum2DWidth = 0.0;
+  this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
   this._pixelRatio = 1.0;
   this._orthographicIn3D = false;
@@ -673,9 +673,20 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The the height (<code>x</code>) and the height squared (<code>y</code>)
-   * in meters of the camera above the 2D world plane. This uniform is only valid
-   * when the {@link SceneMode} equal to <code>SCENE2D</code>.
+   * The height in meters of the eye (camera) above or below the ellipsoid.
+   * @memberof UniformState.prototype
+   * @type {Number}
+   */
+  eyeHeight: {
+    get: function () {
+      return this._eyeHeight;
+    },
+  },
+
+  /**
+   * The height (<code>x</code>) and the height squared (<code>y</code>)
+   * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
+   * when the {@link SceneMode} is <code>SCENE2D</code>.
    * @memberof UniformState.prototype
    * @type {Cartesian2}
    */
@@ -1011,18 +1022,6 @@ Object.defineProperties(UniformState.prototype, {
       return defaultValue(this._ellipsoid, Ellipsoid.WGS84);
     },
   },
-
-  /**
-   * The camera's height above or below the ellipsoid.
-   *
-   * @memberof UniformState.prototype
-   * @type {Number}
-   */
-  cameraHeight: {
-    get: function () {
-      return this._cameraHeight;
-    },
-  },
 });
 
 function setView(uniformState, matrix) {
@@ -1076,9 +1075,9 @@ function setCamera(uniformState, camera) {
 
   var positionCartographic = camera.positionCartographic;
   if (!defined(positionCartographic)) {
-    uniformState._cameraHeight = -uniformState._ellipsoid.maximumRadius;
+    uniformState._eyeHeight = -uniformState._ellipsoid.maximumRadius;
   } else {
-    uniformState._cameraHeight = positionCartographic.height;
+    uniformState._eyeHeight = positionCartographic.height;
   }
 
   uniformState._encodedCameraPositionMCDirty = true;

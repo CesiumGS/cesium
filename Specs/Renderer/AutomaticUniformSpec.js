@@ -1947,6 +1947,20 @@ describe(
       }).contextToRender();
     });
 
+    it("has czm_eyeHeight", function () {
+      var frameState = createFrameState(context, createMockCamera());
+      context.uniformState.update(frameState);
+
+      var fs =
+        "void main() { " +
+        "  gl_FragColor = vec4(czm_eyeHeight == 10.0); " +
+        "}";
+      expect({
+        context: context,
+        fragmentShader: fs,
+      }).contextToRender();
+    });
+
     it("has czm_eyeHeight2D == 0,0 in Scene3D", function () {
       var fs =
         "void main() { " +
@@ -2165,20 +2179,6 @@ describe(
         "  bool b1 = roundNumber(czm_ellipsoidInverseRadii.y) == 2.0;" +
         "  bool b2 = roundNumber(czm_ellipsoidInverseRadii.z) == 3.0;" +
         "  gl_FragColor = vec4(b0 && b1 && b2);" +
-        "}";
-      expect({
-        context: context,
-        fragmentShader: fs,
-      }).contextToRender();
-    });
-
-    it("has czm_cameraHeight", function () {
-      var frameState = createFrameState(context, createMockCamera());
-      context.uniformState.update(frameState);
-
-      var fs =
-        "void main() { " +
-        "  gl_FragColor = vec4(czm_cameraHeight == 10.0); " +
         "}";
       expect({
         context: context,

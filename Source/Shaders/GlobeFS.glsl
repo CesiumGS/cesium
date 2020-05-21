@@ -423,7 +423,7 @@ void main()
 #ifdef UNDERGROUND_COLOR
     if (czm_backFacing())
     {
-        float distanceFromEllipsoid = max(czm_cameraHeight, 0.0);
+        float distanceFromEllipsoid = max(czm_eyeHeight, 0.0);
         float distance = max(v_distance - distanceFromEllipsoid, 0.0);
         float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
         vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
