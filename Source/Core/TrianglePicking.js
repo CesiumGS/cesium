@@ -1,10 +1,10 @@
-import Cartesian3 from "../Core/Cartesian3.js";
-import getTimestamp from "../Core/getTimestamp.js";
-import defined from "../Core/defined.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
-import Matrix4 from "../Core/Matrix4.js";
-import Ray from "../Core/Ray.js";
-import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
+import Cartesian3 from "./Cartesian3.js";
+import defined from "./defined.js";
+import getTimestamp from "./getTimestamp.js";
+import IntersectionTests from "./IntersectionTests.js";
+import Matrix4 from "./Matrix4.js";
+import Ray from "./Ray.js";
+import OrientedBoundingBox from "./OrientedBoundingBox.js";
 
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed

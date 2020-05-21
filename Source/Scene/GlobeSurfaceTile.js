@@ -27,7 +27,6 @@ import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
-import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -73,8 +72,6 @@ function GlobeSurfaceTile() {
   this.isClipped = true;
 
   this.clippedByBoundaries = false;
-
-  this.trianglePicking = undefined;
 }
 
 Object.defineProperties(GlobeSurfaceTile.prototype, {
@@ -162,19 +159,15 @@ GlobeSurfaceTile.prototype.pick = function (
   result,
   useNewPicking
 ) {
-  // Fast acceleration structure picking that only works in 3D
-  useNewPicking = defaultValue(useNewPicking, false);
-  if (
-    useNewPicking &&
-    defined(this.trianglePicking) &&
-    mode === SceneMode.SCENE3D
-  ) {
-    return this.trianglePicking.rayIntersect(ray, cullBackFaces, result);
-  }
-
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
     return undefined;
+  }
+
+  // Fast acceleration structure picking that only works in 3D
+  useNewPicking = defaultValue(useNewPicking, true);
+  if (useNewPicking && mode === SceneMode.SCENE3D) {
+    return mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
   }
 
   var vertices = mesh.vertices;
@@ -674,20 +667,6 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
       surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(
         mesh.orientedBoundingBox,
         surfaceTile.orientedBoundingBox
-      );
-      function getVerticesFromTriIdx(triIdx, v0, v1, v2) {
-        var idx0 = mesh.indices[triIdx * 3 + 0];
-        var idx1 = mesh.indices[triIdx * 3 + 1];
-        var idx2 = mesh.indices[triIdx * 3 + 2];
-
-        mesh.encoding.decodePosition(mesh.vertices, idx0, v0);
-        mesh.encoding.decodePosition(mesh.vertices, idx1, v1);
-        mesh.encoding.decodePosition(mesh.vertices, idx2, v2);
-      }
-      surfaceTile.trianglePicking = new TrianglePicking(
-        mesh.indices.length / 3,
-        getVerticesFromTriIdx,
-        mesh.orientedBoundingBox
       );
       surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(
         mesh.occludeePointInScaledSpace,
