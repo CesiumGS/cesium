@@ -1,10 +1,11 @@
 import Cartesian3 from "./Cartesian3.js";
+import Check from "./Check.js";
 import defined from "./defined.js";
 import getTimestamp from "./getTimestamp.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
-import Ray from "./Ray.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
+import Ray from "./Ray.js";
 
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
@@ -217,50 +218,46 @@ TraversalResult.prototype.print = function () {
 /**
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
- * @param {Function} getVerticesFromTriIdx
+ * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
  * @param {TraversalResult} result
  */
 Node.prototype._intersectTriangles = function (
   ray,
   cullBackFaces,
-  getVerticesFromTriIdx,
+  triangleVerticesFromIndexCallback,
   result
 ) {
-  var that = this;
-  var triangleCount = that.triangles.length;
+  var triangleCount = this.triangles.length;
   for (var i = 0; i < triangleCount; i++) {
-    var triIndex = that.triangles[i];
+    var triIndex = this.triangles[i];
 
     var v0 = scratchV0;
     var v1 = scratchV1;
     var v2 = scratchV2;
-    getVerticesFromTriIdx(triIndex, v0, v1, v2);
+    triangleVerticesFromIndexCallback(triIndex, v0, v1, v2);
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
       result.triangleIndex = triIndex;
-      result.level = that.level;
-      result.x = that.x;
-      result.y = that.y;
-      result.z = that.z;
+      result.level = this.level;
+      result.x = this.x;
+      result.y = this.y;
+      result.z = this.z;
     }
   }
 };
 
 /**
- * Intersect against root first
- * Check against all triangles in the root, and get the closest T
- * Intersect the ray against all the children boxes
- * Only test sub-boxes whose intersections are are closer than T
- * Recurse over sub-boxes
+ * Find the closest intersection against the node's triangles, if there are any,
+ * and recurse over children that might have a closer intersection.
  * Adapted from https://daeken.svbtle.com/a-stupidly-simple-fast-octree-traversal-for-ray-intersection
  *
  * @param {Ray} ray
  * @param {Ray} transformedRay
  * @param {Number} t
  * @param {Boolean} cullBackFaces
- * @param {Function} getVerticesFromTriIdx
+ * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
  * @param {TraversalResult} result
  * @returns {TraversalResult}
  */
@@ -269,54 +266,60 @@ Node.prototype.rayIntersect = function (
   transformedRay,
   t,
   cullBackFaces,
-  getVerticesFromTriIdx,
+  triangleVerticesFromIndexCallback,
   result
 ) {
-  var that = this;
+  this._intersectTriangles(
+    ray,
+    cullBackFaces,
+    triangleVerticesFromIndexCallback,
+    result
+  );
 
-  that._intersectTriangles(ray, cullBackFaces, getVerticesFromTriIdx, result);
-  if (!defined(that.children)) {
+  if (!defined(this.children)) {
     return result;
   }
 
   var dirX = transformedRay.direction.x;
   var dirY = transformedRay.direction.y;
   var dirZ = transformedRay.direction.z;
+
   var originX = transformedRay.origin.x + t * dirX;
   var originY = transformedRay.origin.y + t * dirY;
   var originZ = transformedRay.origin.z + t * dirZ;
 
-  var sideX = originX >= that.aabbCenterX;
-  var sideY = originY >= that.aabbCenterY;
-  var sideZ = originZ >= that.aabbCenterZ;
+  var sideX = originX >= this.aabbCenterX;
+  var sideY = originY >= this.aabbCenterY;
+  var sideZ = originZ >= this.aabbCenterZ;
 
   var canCrossX = sideX !== dirX >= 0.0;
   var canCrossY = sideY !== dirY >= 0.0;
   var canCrossZ = sideZ !== dirZ >= 0.0;
 
   var distX = canCrossX
-    ? (that.aabbCenterX - originX) / dirX
+    ? (this.aabbCenterX - originX) / dirX
     : invalidIntersection;
   var distY = canCrossY
-    ? (that.aabbCenterY - originY) / dirY
+    ? (this.aabbCenterY - originY) / dirY
     : invalidIntersection;
   var distZ = canCrossZ
-    ? (that.aabbCenterZ - originZ) / dirZ
+    ? (this.aabbCenterZ - originZ) / dirZ
     : invalidIntersection;
 
   var minDist = 0;
   var childIdx =
     (sideX ? 1 : 0) | ((sideY ? 1 : 0) << 1) | ((sideZ ? 1 : 0) << 2);
 
-  // There are a total of four possible cell overlaps, but usually it's less than that.
+  // There is a maximum of four possible child overlaps, but usually it's less than that.
+  // Start by checking the one that the ray is inside, then move to the next closest, etc.
   for (var i = 0; i < 4; i++) {
-    var child = that.children[childIdx];
+    var child = this.children[childIdx];
     child.rayIntersect(
       ray,
       transformedRay,
       t + minDist,
       cullBackFaces,
-      getVerticesFromTriIdx,
+      triangleVerticesFromIndexCallback,
       result
     );
 
@@ -329,12 +332,12 @@ Node.prototype.rayIntersect = function (
         originX + minDist * dirX,
         originY + minDist * dirY,
         originZ + minDist * dirZ,
-        that.aabbMinX,
-        that.aabbMaxX,
-        that.aabbMinY,
-        that.aabbMaxY,
-        that.aabbMinZ,
-        that.aabbMaxZ
+        this.aabbMinX,
+        this.aabbMaxX,
+        this.aabbMinY,
+        this.aabbMaxY,
+        this.aabbMinZ,
+        this.aabbMaxZ
       )
     ) {
       break;
@@ -432,12 +435,10 @@ var scratchOverlap1 = {
  * @param {Number} overlapMask
  */
 Node.prototype._addTriangleToChildren = function (triangle, overlapMask) {
-  var that = this;
-
   for (var childIdx = 0; childIdx < 8; childIdx++) {
     var overlapsChild = (overlapMask & (1 << childIdx)) > 0;
     if (overlapsChild) {
-      var childNode = that.children[childIdx];
+      var childNode = this.children[childIdx];
       childNode.addTriangle(triangle);
     }
   }
@@ -451,15 +452,14 @@ Node.prototype._addTriangleToChildren = function (triangle, overlapMask) {
  */
 
 Node.prototype.addTriangle = function (triangle) {
-  var that = this;
-  var level = that.level;
-  var x = that.x;
-  var y = that.y;
-  var z = that.z;
+  var level = this.level;
+  var x = this.x;
+  var y = this.y;
+  var z = this.z;
 
-  var aabbCenterX = that.aabbCenterX;
-  var aabbCenterY = that.aabbCenterY;
-  var aabbCenterZ = that.aabbCenterZ;
+  var aabbCenterX = this.aabbCenterX;
+  var aabbCenterY = this.aabbCenterY;
+  var aabbCenterZ = this.aabbCenterZ;
   var overlap = getOverlap(
     aabbCenterX,
     aabbCenterY,
@@ -475,8 +475,8 @@ Node.prototype.addTriangle = function (triangle) {
   var maxTrianglesPerNode = 50;
   var smallOverlapCount = 2;
 
-  var tempTriangles = that.tempTriangles;
-  var triangleIdxs = that.triangles;
+  var tempTriangles = this.tempTriangles;
+  var triangleIdxs = this.triangles;
   var triangleCount = triangleIdxs.length;
   var exceedsTriCount = triangleCount >= maxTrianglesPerNode;
 
@@ -484,7 +484,7 @@ Node.prototype.addTriangle = function (triangle) {
   var atMaxLevel = level === maxLevels - 1;
   var shouldFilterDown = isSmall && !atMaxLevel;
 
-  var hasChildren = defined(that.children);
+  var hasChildren = defined(this.children);
   var subdivide = shouldFilterDown && !hasChildren && exceedsTriCount;
   var filterDown = shouldFilterDown && (hasChildren || subdivide);
 
@@ -497,7 +497,7 @@ Node.prototype.addTriangle = function (triangle) {
     var childZMin = z * 2 + 0;
     var childZMax = z * 2 + 1;
 
-    that.children = new Array(
+    this.children = new Array(
       new Node(childLevel, childXMin, childYMin, childZMin),
       new Node(childLevel, childXMax, childYMin, childZMin),
       new Node(childLevel, childXMin, childYMax, childZMin),
@@ -518,14 +518,14 @@ Node.prototype.addTriangle = function (triangle) {
         overflowTri,
         scratchOverlap1
       );
-      that._addTriangleToChildren(overflowTri, overflowOverlap.bitMask);
+      this._addTriangleToChildren(overflowTri, overflowOverlap.bitMask);
     }
     triangleIdxs.length -= tempTriangles.length;
-    that.tempTriangles = undefined;
+    this.tempTriangles = undefined;
   }
 
   if (filterDown) {
-    that._addTriangleToChildren(triangle, overlapBitMask);
+    this._addTriangleToChildren(triangle, overlapBitMask);
   } else if (isSmall) {
     triangleIdxs.push(triangle.index);
     tempTriangles.push(triangle);
@@ -534,117 +534,8 @@ Node.prototype.addTriangle = function (triangle) {
   }
 };
 
-var scratchTransform = new Matrix4();
-
-/**
- * @constructor
- * @param {Number} triCount
- * @param {Function} getVerticesFromTriIdx
- * @param {OrientedBoundingBox} orientedBoundingBox
- */
-function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
-  var time0 = getTimestamp();
-
-  this.getVerticesFromTriIdx = getVerticesFromTriIdx;
-
-  this.rootNode = new Node(0, 0, 0, 0);
-  var transform = OrientedBoundingBox.toTransformation(
-    orientedBoundingBox,
-    scratchTransform
-  );
-  this.invTransform = Matrix4.inverse(transform, new Matrix4());
-  var invTransform = this.invTransform;
-
-  // Get local space AABBs for all triangles
-  // Build the octree by adding each triangle one at a time.
-  var triIdx = 0;
-  for (triIdx = 0; triIdx < triCount; triIdx++) {
-    this.getVerticesFromTriIdx(triIdx, scratchV0, scratchV1, scratchV2);
-
-    var v0Local = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
-    var v1Local = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
-    var v2Local = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
-
-    var triAabbMinX = Math.min(v0Local.x, v1Local.x, v2Local.x);
-    var triAabbMaxX = Math.max(v0Local.x, v1Local.x, v2Local.x);
-    var triAabbMinY = Math.min(v0Local.y, v1Local.y, v2Local.y);
-    var triAabbMaxY = Math.max(v0Local.y, v1Local.y, v2Local.y);
-    var triAabbMinZ = Math.min(v0Local.z, v1Local.z, v2Local.z);
-    var triAabbMaxZ = Math.max(v0Local.z, v1Local.z, v2Local.z);
-
-    var triangle = new Triangle(
-      triIdx,
-      triAabbMinX,
-      triAabbMaxX,
-      triAabbMinY,
-      triAabbMaxY,
-      triAabbMinZ,
-      triAabbMaxZ
-    );
-    this.rootNode.addTriangle(triangle);
-  }
-  var time1 = getTimestamp();
-  console.log("time: " + triCount + " " + (time1 - time0));
-}
-
-var scratchTraversalResult = new TraversalResult();
-var scratchTransformedRay = new Ray();
-
-/**
- * @param {Ray} ray
- * @param {Cartesian3} result
- * @returns {Cartesian3} result
- */
-TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
-  if (!defined(result)) {
-    result = new Cartesian3();
-  }
-  var that = this;
-  var invTransform = that.invTransform;
-  var rootNode = that.rootNode;
-
-  var transformedRay = scratchTransformedRay;
-  transformedRay.origin = Matrix4.multiplyByPoint(
-    invTransform,
-    ray.origin,
-    transformedRay.origin
-  );
-  transformedRay.direction = Matrix4.multiplyByPointAsVector(
-    invTransform,
-    ray.direction,
-    transformedRay.direction
-  );
-
-  var traversalResult = scratchTraversalResult;
-  traversalResult.reset();
-
-  var t = rayCubeIntersect(transformedRay);
-  if (t === invalidIntersection) {
-    return undefined;
-  }
-
-  traversalResult = rootNode.rayIntersect(
-    ray,
-    transformedRay,
-    t,
-    cullBackFaces,
-    that.getVerticesFromTriIdx,
-    traversalResult
-  );
-
-  if (traversalResult.t === invalidIntersection) {
-    return undefined;
-  }
-
-  // that._printDebugInformation();
-
-  result = Ray.getPoint(ray, traversalResult.t, result);
-  return result;
-};
-
-TrianglePicking.prototype._printDebugInformation = function () {
-  var that = this;
-  var rootNode = that.rootNode;
+function printDebugInfo(that) {
+  var rootNode = that._rootNode;
 
   var triCount = 0;
   var triCountLeaf = 0;
@@ -682,6 +573,152 @@ TrianglePicking.prototype._printDebugInformation = function () {
       " ratio leaf: " +
       triCountLeaf / nodeCountLeaf
   );
+}
+
+var scratchTransform = new Matrix4();
+
+/**
+ * @constructor
+ * @param {Number} triCount
+ * @param {TrianglePicking~TriangleVerticesFromIndex} triangleVerticesFromIndexCallback
+ * @param {OrientedBoundingBox} orientedBoundingBox
+ */
+function TrianglePicking(
+  triCount,
+  triangleVerticesFromIndexCallback,
+  orientedBoundingBox
+) {
+  var time0 = getTimestamp();
+
+  this._triangleVerticesFromIndexCallback = triangleVerticesFromIndexCallback;
+
+  this._rootNode = new Node(0, 0, 0, 0);
+
+  var transform = OrientedBoundingBox.toTransformation(
+    orientedBoundingBox,
+    scratchTransform
+  );
+  this._invTransform = Matrix4.inverse(transform, new Matrix4());
+  var invTransform = this._invTransform;
+
+  // Get local space AABBs for all triangles
+  // Build the octree by adding each triangle one at a time.
+  var triIdx = 0;
+  for (triIdx = 0; triIdx < triCount; triIdx++) {
+    this._triangleVerticesFromIndexCallback(
+      triIdx,
+      scratchV0,
+      scratchV1,
+      scratchV2
+    );
+
+    var v0Local = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
+    var v1Local = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
+    var v2Local = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
+
+    var triAabbMinX = Math.min(v0Local.x, v1Local.x, v2Local.x);
+    var triAabbMaxX = Math.max(v0Local.x, v1Local.x, v2Local.x);
+    var triAabbMinY = Math.min(v0Local.y, v1Local.y, v2Local.y);
+    var triAabbMaxY = Math.max(v0Local.y, v1Local.y, v2Local.y);
+    var triAabbMinZ = Math.min(v0Local.z, v1Local.z, v2Local.z);
+    var triAabbMaxZ = Math.max(v0Local.z, v1Local.z, v2Local.z);
+
+    var triangle = new Triangle(
+      triIdx,
+      triAabbMinX,
+      triAabbMaxX,
+      triAabbMinY,
+      triAabbMaxY,
+      triAabbMinZ,
+      triAabbMaxZ
+    );
+    this._rootNode.addTriangle(triangle);
+  }
+  var time1 = getTimestamp();
+  console.log("time: " + triCount + " " + (time1 - time0));
+}
+
+Object.defineProperties(TrianglePicking.prototype, {
+  /**
+   * Gets or set the function for retrieving the three triangle vertices from a triangle index.
+   * @memberof TrianglePicking.prototype
+   * @type {TrianglePicking~TriangleVerticesFromIndex}
+   */
+  triangleVerticesFromIndexCallback: {
+    get: function () {
+      return this._triangleVerticesFromIndexCallback;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.func("triangleVerticesFromIndexCallback", value);
+      //>>includeEnd('debug');
+
+      this._triangleVerticesFromIndexCallback = value;
+    },
+  },
+});
+
+var scratchTraversalResult = new TraversalResult();
+var scratchTransformedRay = new Ray();
+
+/**
+ * @param {Ray} ray
+ * @param {Cartesian3} result
+ * @returns {Cartesian3} result
+ */
+TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
+  if (!defined(result)) {
+    result = new Cartesian3();
+  }
+  var invTransform = this._invTransform;
+  var rootNode = this._rootNode;
+
+  var transformedRay = scratchTransformedRay;
+  transformedRay.origin = Matrix4.multiplyByPoint(
+    invTransform,
+    ray.origin,
+    transformedRay.origin
+  );
+  transformedRay.direction = Matrix4.multiplyByPointAsVector(
+    invTransform,
+    ray.direction,
+    transformedRay.direction
+  );
+
+  var traversalResult = scratchTraversalResult;
+  traversalResult.reset();
+
+  var t = rayCubeIntersect(transformedRay);
+  if (t === invalidIntersection) {
+    return undefined;
+  }
+
+  traversalResult = rootNode.rayIntersect(
+    ray,
+    transformedRay,
+    t,
+    cullBackFaces,
+    this._triangleVerticesFromIndexCallback,
+    traversalResult
+  );
+
+  if (traversalResult.t === invalidIntersection) {
+    return undefined;
+  }
+
+  // printDebugInformation(this);
+
+  result = Ray.getPoint(ray, traversalResult.t, result);
+  return result;
 };
 
+/**
+ * A function that gets the three triangle vertices from a triangle index
+ *
+ * @callback TrianglePicking~TriangleVerticesFromIndex
+ * @param {Number} triangleIndex
+ * @param {Cartesian3} v0 The first vertex
+ * @param {Cartesian3} v1 The second vertex
+ * @param {Cartesian3} v2 The third vertex
+ */
 export default TrianglePicking;
