@@ -1,4 +1,5 @@
 import Cartesian3 from "../Core/Cartesian3.js";
+import getTimestamp from "../Core/getTimestamp.js";
 import defined from "../Core/defined.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -175,6 +176,11 @@ function Node(level, x, y, z) {
    * @type {Number[]}
    */
   this.triangles = new Array();
+
+  /**
+   * @type {Triangle[]}
+   */
+  this.tempTriangles = new Array();
 }
 
 /**
@@ -422,22 +428,17 @@ var scratchOverlap1 = {
 };
 
 /**
- * @param {Number} triIdx
- * @param {Triangle[]} triangles
+ * @param {Triangle} triangle
  * @param {Number} overlapMask
  */
-Node.prototype._addTriangleToChildren = function (
-  triIdx,
-  triangles,
-  overlapMask
-) {
+Node.prototype._addTriangleToChildren = function (triangle, overlapMask) {
   var that = this;
 
   for (var childIdx = 0; childIdx < 8; childIdx++) {
     var overlapsChild = (overlapMask & (1 << childIdx)) > 0;
     if (overlapsChild) {
       var childNode = that.children[childIdx];
-      childNode.addTriangle(triIdx, triangles);
+      childNode.addTriangle(triangle);
     }
   }
 };
@@ -446,18 +447,15 @@ Node.prototype._addTriangleToChildren = function (
  * Adds triangle to tree.
  * If it's small enough, recursively add to child nodes.
  * There's potential for a triangle to belong to more than one child.
- * @param {Number} triIdx
- * @param {Triangle[]} triangles
+ * @param {Triangle} triangle
  */
 
-Node.prototype.addTriangle = function (triIdx, triangles) {
+Node.prototype.addTriangle = function (triangle) {
   var that = this;
   var level = that.level;
   var x = that.x;
   var y = that.y;
   var z = that.z;
-
-  var tri = triangles[triIdx];
 
   var aabbCenterX = that.aabbCenterX;
   var aabbCenterY = that.aabbCenterY;
@@ -466,7 +464,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     aabbCenterX,
     aabbCenterY,
     aabbCenterZ,
-    tri,
+    triangle,
     scratchOverlap0
   );
   var overlapBitCount = overlap.bitCount;
@@ -475,8 +473,9 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
   // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
   var maxLevels = 10;
   var maxTrianglesPerNode = 50;
-  var smallOverlapCount = 4;
+  var smallOverlapCount = 2;
 
+  var tempTriangles = that.tempTriangles;
   var triangleIdxs = that.triangles;
   var triangleCount = triangleIdxs.length;
   var exceedsTriCount = triangleCount >= maxTrianglesPerNode;
@@ -510,9 +509,8 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     );
 
     var t;
-    for (t = triangleIdxs.length - 1; t >= 0; t--) {
-      var overflowTriIdx = triangleIdxs[t];
-      var overflowTri = triangles[overflowTriIdx];
+    for (t = 0; t < tempTriangles.length; t++) {
+      var overflowTri = tempTriangles[t];
       var overflowOverlap = getOverlap(
         aabbCenterX,
         aabbCenterY,
@@ -525,21 +523,19 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
         break;
       }
 
-      that._addTriangleToChildren(
-        overflowTriIdx,
-        triangles,
-        overflowOverlap.bitMask
-      );
+      that._addTriangleToChildren(overflowTri, overflowOverlap.bitMask);
     }
-    triangleIdxs.length = t + 1;
+    triangleIdxs.length = tempTriangles.length - t;
+    that.tempTriangles = undefined;
   }
 
   if (filterDown) {
-    that._addTriangleToChildren(triIdx, triangles, overlapBitMask);
+    that._addTriangleToChildren(triangle, overlapBitMask);
   } else if (isSmall) {
-    triangleIdxs.push(triIdx);
+    triangleIdxs.push(triangle.index);
+    tempTriangles.push(triangle);
   } else {
-    triangleIdxs.unshift(triIdx);
+    triangleIdxs.unshift(triangle.index);
   }
 };
 
@@ -552,6 +548,8 @@ var scratchTransform = new Matrix4();
  * @param {OrientedBoundingBox} orientedBoundingBox
  */
 function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
+  var time0 = getTimestamp();
+
   this.getVerticesFromTriIdx = getVerticesFromTriIdx;
 
   this.rootNode = new Node(0, 0, 0, 0);
@@ -562,9 +560,8 @@ function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
   this.invTransform = Matrix4.inverse(transform, new Matrix4());
   var invTransform = this.invTransform;
 
-  var triangles = new Array(triCount);
-
   // Get local space AABBs for all triangles
+  // Build the octree by adding each triangle one at a time.
   var triIdx = 0;
   for (triIdx = 0; triIdx < triCount; triIdx++) {
     this.getVerticesFromTriIdx(triIdx, scratchV0, scratchV1, scratchV2);
@@ -580,7 +577,7 @@ function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
     var triAabbMinZ = Math.min(v0Local.z, v1Local.z, v2Local.z);
     var triAabbMaxZ = Math.max(v0Local.z, v1Local.z, v2Local.z);
 
-    triangles[triIdx] = new Triangle(
+    var triangle = new Triangle(
       triIdx,
       triAabbMinX,
       triAabbMaxX,
@@ -589,12 +586,10 @@ function TrianglePicking(triCount, getVerticesFromTriIdx, orientedBoundingBox) {
       triAabbMinZ,
       triAabbMaxZ
     );
+    this.rootNode.addTriangle(triangle);
   }
-
-  // Build the octree by adding each triangle one at a time.
-  for (triIdx = 0; triIdx < triCount; triIdx++) {
-    this.rootNode.addTriangle(triIdx, triangles);
-  }
+  var time1 = getTimestamp();
+  console.log("time: " + triCount + " " + (time1 - time0));
 }
 
 var scratchTraversalResult = new TraversalResult();
