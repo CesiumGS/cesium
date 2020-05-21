@@ -479,19 +479,17 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
 
   var triangleIdxs = that.triangles;
   var triangleCount = triangleIdxs.length;
-  var hasChildren = defined(that.children);
+  var exceedsTriCount = triangleCount >= maxTrianglesPerNode;
+
   var atMaxLevel = level === maxLevels - 1;
-
   var isSmall = overlapBitCount <= smallOverlapCount;
-  var shouldSubdivide =
-    isSmall &&
-    triangleCount >= maxTrianglesPerNode &&
-    !hasChildren &&
-    !atMaxLevel;
-  var shouldFilterDown =
-    isSmall && (hasChildren || shouldSubdivide) && !atMaxLevel;
+  var canFilterDown = isSmall && !atMaxLevel;
 
-  if (shouldSubdivide) {
+  var hasChildren = defined(that.children);
+  var subdivide = canFilterDown && !hasChildren && exceedsTriCount;
+  var filterDown = canFilterDown && (hasChildren || subdivide);
+
+  if (subdivide) {
     var childLevel = level + 1;
     var childXMin = x * 2 + 0;
     var childXMax = x * 2 + 1;
@@ -536,7 +534,7 @@ Node.prototype.addTriangle = function (triIdx, triangles) {
     triangleIdxs.length = t + 1;
   }
 
-  if (shouldFilterDown) {
+  if (filterDown) {
     that._addTriangleToChildren(triIdx, triangles, overlapBitMask);
   } else if (isSmall) {
     triangleIdxs.push(triIdx);
@@ -647,6 +645,8 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   if (traversalResult.t === invalidIntersection) {
     return undefined;
   }
+
+  // that._printDebugInformation();
 
   result = Ray.getPoint(ray, traversalResult.t, result);
   return result;
