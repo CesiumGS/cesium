@@ -2,6 +2,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -10,6 +11,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidTerrainProvider from "../Core/EllipsoidTerrainProvider.js";
 import Event from "../Core/Event.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
+import NearFarScalar from "../Core/NearFarScalar.js";
 import Ray from "../Core/Ray.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
@@ -59,6 +61,14 @@ function Globe(ellipsoid) {
 
   this._terrainProvider = terrainProvider;
   this._terrainProviderChanged = new Event();
+
+  this._undergroundColor = Color.clone(Color.BLACK);
+  this._undergroundColorAlphaByDistance = new NearFarScalar(
+    ellipsoid.maximumRadius / 1000.0,
+    0.0,
+    ellipsoid.maximumRadius / 5.0,
+    1.0
+  );
 
   makeShadersDirty(this);
 
@@ -469,6 +479,63 @@ Object.defineProperties(Globe.prototype, {
       }
     },
   },
+
+  /**
+   * The color to render the back side of the globe when the camera is underground or the globe is translucent,
+   * blended with the globe color based on the camera's distance.
+   * <br /><br />
+   * To disable underground coloring, set <code>undergroundColor</code> to <code>undefined</code>.
+   *
+   * @memberof Globe.prototype
+   * @type {Color}
+   * @default {@link Color.BLACK}
+   *
+   * @see Globe#undergroundColorAlphaByDistance
+   */
+  undergroundColor: {
+    get: function () {
+      return this._undergroundColor;
+    },
+    set: function (value) {
+      this._undergroundColor = Color.clone(value, this._undergroundColor);
+    },
+  },
+
+  /**
+   * Gets or sets the near and far distance for blending {@link Globe#undergroundColor} with the globe color.
+   * The alpha will interpolate between the {@link NearFarScalar#nearValue} and
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
+   * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+   * Outside of these ranges the alpha remains clamped to the nearest bound. If undefined,
+   * the underground color will not be blended with the globe color.
+   * <br /> <br />
+   * When the camera is above the ellipsoid the distance is computed from the nearest
+   * point on the ellipsoid instead of the camera's position.
+   *
+   * @memberof Globe.prototype
+   * @type {NearFarScalar}
+   *
+   * @see Globe#undergroundColor
+   *
+   */
+  undergroundColorAlphaByDistance: {
+    get: function () {
+      return this._undergroundColorAlphaByDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far < value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance."
+        );
+      }
+      //>>includeEnd('debug');
+      this._undergroundColorAlphaByDistance = NearFarScalar.clone(
+        value,
+        this._undergroundColorAlphaByDistance
+      );
+    },
+  },
 });
 
 function makeShadersDirty(globe) {
@@ -868,6 +935,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
+    tileProvider.undergroundColor = this._undergroundColor;
+    tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     surface.beginFrame(frameState);
   }
 };
