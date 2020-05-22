@@ -26,7 +26,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * <p>
  * 对已被场景渲染的纹理进行后期处理或对上一个后期处理的结果再进行后期处理。
  * </p>
- * <p>参考：{@link https://learnopengl-cn.readthedocs.io/zh/latest/04%20Advanced%20OpenGL/05%20Framebuffers/ 帧缓冲}</p>
+ * <p>参考：{@link https://learnopengl-cn.readthedocs.io/zh/latest/04%20Advanced%20OpenGL/05%20Framebuffers/ 帧缓冲}、{@link https://www.cnblogs.com/webgl-angela/p/9272810.html Cesium源码剖析}</p>
  *
  * @alias PostProcessStage
  * @constructor
@@ -43,20 +43,30 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  * <br/>强制设置纹理的尺寸为2的幂。（后面意思是关于怎么取值的，没看明白，(lll￢ω￢)）。
  * <br/>参考：{@link https://qastack.cn/gamedev/26187/why-are-textures-always-square-powers-of-two-what-if-they-arent 为什么纹理总是平方为2的幂？}、{@link https://www.zhihu.com/question/24622091 为何上传到显卡的纹理尺寸最好是2的次幂？}、{@link https://gameinstitute.qq.com/community/detail/114710 如何把WebGL显存占用减少84.2% }
  * @param {PostProcessStageSampleMode} [options.sampleMode=PostProcessStageSampleMode.NEAREST] How to sample the input color texture.
+ * <br/>输入的纹理的颜色采样方式。
  * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The color pixel format of the output texture.
+ * <br/>输出纹理的像素颜色格式。
  * @param {PixelDatatype} [options.pixelDatatype=PixelDatatype.UNSIGNED_BYTE] The pixel data type of the output texture.
+ * <br/>输出纹理像素的数据类型。
  * @param {Color} [options.clearColor=Color.BLACK] The color to clear the output texture to.
+ * <br/>清除输出纹理时的颜色。
  * @param {BoundingRectangle} [options.scissorRectangle] The rectangle to use for the scissor test.
+ * <br/>设置裁剪测试的矩形区域。
+ * <br/>参考：{@link https://juejin.im/post/5b3c2f8cf265da0f955ca8da OpenGL 裁剪测试及注意点}
  * @param {String} [options.name=createGuid()] The unique name of this post-process stage for reference by other stages in a composite. If a name is not supplied, a GUID will be generated.
+ * <br/>指定唯一的name，可选，如果没有提供，则内部会生成一个唯一的name值。
  *
  * @exception {DeveloperError} options.textureScale must be greater than 0.0 and less than or equal to 1.0.
+ * <br/>textureScale的值必须大于0.0且小于或等于1.0。
  * @exception {DeveloperError} options.pixelFormat must be a color format.
+ * <br/>pixelFormat必须是一个颜色格式
  * @exception {DeveloperError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
- *
+ * <br/>当pixelDatatype是<code>FLOAT</code>类型，那么需要WebGL支持<code>OES_texture_float</code>扩展。检查<code>context.floatingPointTexture</code>（没明白，(lll￢ω￢)）。
  * @see PostProcessStageComposite
  *
  * @example
  * // Simple stage to change the color
+ * // 更改颜色
  * var fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
@@ -78,7 +88,9 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @example
  * // Simple stage to change the color of what is selected.
+ * // 更改选中对象的颜色
  * // If czm_selected returns true, the current fragment belongs to geometry in the selected array.
+ * // 当czm_selected返回true，那么当前片段着色器应用于selected数组中的几何图形。
  * var fs =
  *     'uniform sampler2D colorTexture;\n' +
  *     'varying vec2 v_textureCoordinates;\n' +
