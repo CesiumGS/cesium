@@ -1,5 +1,5 @@
 {
-    "extends": "./Tools/eslint-config-cesium/browser.js",
+    "extends": ["./Tools/eslint-config-cesium/browser.js", "prettier"],
     "plugins": [
         "html"
     ],

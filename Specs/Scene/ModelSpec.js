@@ -212,10 +212,25 @@ describe('Scene/Model', function() {
 
     function verifyRender(model) {
         expect(model.ready).toBe(true);
+
+        expect({
+            scene : scene,
+            time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+        }).toRenderAndCall(function(rgba) {
+            expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+
         expect(scene).toRender([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
-        expect(scene).notToRender([0, 0, 0, 255]);
+
+        expect({
+            scene : scene,
+            time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+        }).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
         model.show = false;
     }
 
@@ -2479,7 +2494,8 @@ describe('Scene/Model', function() {
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            expect(scene).toRenderAndCall(function(rgba) { //eslint-disable-line no-loop-func
+            //eslint-disable-next-line no-loop-func
+            expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 expect(rgba).not.toEqual(oldPixelColor);
                 oldPixelColor = rgba;

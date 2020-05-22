@@ -1608,7 +1608,7 @@ import View from './View.js';
          */
         opaqueFrustumNearOffset : {
             get : function() {
-                return this._frameState.useLogDepth ? 0.9 : 0.9999;
+                return 0.9999;
             }
         }
     });

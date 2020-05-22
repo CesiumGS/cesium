@@ -31,7 +31,8 @@ import Resource from './Resource.js';
         a.href = url;
 
         // IE only absolutizes href on get, not set
-        a.href = a.href; // eslint-disable-line no-self-assign
+        // eslint-disable-next-line no-self-assign
+        a.href = a.href;
         return a.href;
     }
 

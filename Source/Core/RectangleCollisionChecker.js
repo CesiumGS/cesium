@@ -1,4 +1,4 @@
-import rbush from '../ThirdParty/rbush.js';
+import RBush from '../ThirdParty/rbush.js';
 import Check from './Check.js';
 
     /**
@@ -6,7 +6,7 @@ import Check from './Check.js';
      * @private
      */
     function RectangleCollisionChecker() {
-        this._tree = rbush();
+        this._tree = new RBush();
     }
 
     function RectangleWithId() {

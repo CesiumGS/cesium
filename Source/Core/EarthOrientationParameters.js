@@ -81,9 +81,9 @@ import TimeStandard from './TimeStandard.js';
 
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(resource.fetchJson(), function(eopData) {
+            this._downloadPromise = resource.fetchJson().then(function(eopData) {
                 onDataReady(that, eopData);
-            }, function() {
+            }).otherwise(function() {
                 that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + resource.url + '.';
             });
         } else {
@@ -100,7 +100,7 @@ import TimeStandard from './TimeStandard.js';
      */
     EarthOrientationParameters.NONE = Object.freeze({
             getPromiseToLoad : function() {
-                return when();
+                return when.resolve();
             },
             compute : function(date, result) {
                 if (!defined(result)) {
@@ -121,8 +121,6 @@ import TimeStandard from './TimeStandard.js';
      * ready to use.
      *
      * @returns {Promise} The promise.
-     *
-     * @see when
      */
     EarthOrientationParameters.prototype.getPromiseToLoad = function() {
         return when(this._downloadPromise);

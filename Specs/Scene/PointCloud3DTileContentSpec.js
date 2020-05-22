@@ -448,7 +448,8 @@ describe('Scene/PointCloud3DTileContent', function() {
                 /* jshint loopfunc: true */
                 while (defined(picked)) {
                     picked.show = false;
-                    expect(scene).toPickAndCall(function(result) { //eslint-disable-line no-loop-func
+                    //eslint-disable-next-line no-loop-func
+                    expect(scene).toPickAndCall(function(result) {
                         picked = result;
                     });
                     ++pickedCountCulling;
@@ -471,7 +472,8 @@ describe('Scene/PointCloud3DTileContent', function() {
                 /* jshint loopfunc: true */
                 while (defined(picked)) {
                     picked.show = false;
-                    expect(scene).toPickAndCall(function(result) { //eslint-disable-line no-loop-func
+                    //eslint-disable-next-line no-loop-func
+                    expect(scene).toPickAndCall(function(result) {
                         picked = result;
                     });
                     ++pickedCount;

@@ -15,14 +15,14 @@ import Property from './Property.js';
      * @param {Object} [value] An object, containing key-value mapping of property names to properties.
      * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
      */
-    var PropertyBag = function(value, createPropertyCallback) {
+    function PropertyBag(value, createPropertyCallback) {
         this._propertyNames = [];
         this._definitionChanged = new Event();
 
         if (defined(value)) {
             this.merge(value, createPropertyCallback);
         }
-    };
+    }
 
     Object.defineProperties(PropertyBag.prototype, {
         /**

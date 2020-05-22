@@ -132,7 +132,6 @@ import AttributeType from './AttributeType.js';
                         weights : controlPoints
                     });
                 }
-                // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
             }
 
             if (defined(model.cacheKey)) {
