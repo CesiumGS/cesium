@@ -82,6 +82,9 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
       var hasNormals = defined(primitive.attributes.NORMAL);
       var hasTangents = defined(primitive.attributes.TANGENT);
       var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+      var hasOutline =
+        defined(primitive.extensions) &&
+        defined(primitive.extensions.CESIUM_primitive_outline);
 
       var primitiveInfo = primitiveInfoByMaterial[materialIndex];
       if (!defined(primitiveInfo)) {
@@ -96,6 +99,7 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasOutline: hasOutline,
         };
       } else if (
         primitiveInfo.skinning.skinned !== isSkinned ||
@@ -104,12 +108,14 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
         primitiveInfo.hasMorphTargets !== hasMorphTargets ||
         primitiveInfo.hasNormals !== hasNormals ||
         primitiveInfo.hasTangents !== hasTangents ||
-        primitiveInfo.hasTexCoords !== hasTexCoords
+        primitiveInfo.hasTexCoords !== hasTexCoords ||
+        primitiveInfo.hasOutline !== hasOutline
       ) {
         // This primitive uses the same material as another one that either:
         // * Isn't skinned
         // * Uses a different type to store joints and weights
         // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
+        // * Doesn't have a CESIUM_primitive_outline extension.
         var clonedMaterial = clone(material, true);
         // Split this off as a separate material
         materialIndex = addToArray(materials, clonedMaterial);
@@ -125,6 +131,7 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasOutline: hasOutline,
         };
       }
     });

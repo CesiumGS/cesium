@@ -36,6 +36,7 @@ var DEFAULT_SHOW_VALUE = true;
 
 /**
  * @private
+ * @constructor
  */
 function Cesium3DTileBatchTable(
   content,

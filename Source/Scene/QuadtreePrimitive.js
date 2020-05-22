@@ -378,6 +378,7 @@ QuadtreePrimitive.prototype.render = function (frameState) {
 /**
  * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
  * a new change event at the end of the render cycle.
+ * @private
  */
 function updateTileLoadProgress(primitive, frameState) {
   var currentLoadQueueLength =
