@@ -208,7 +208,7 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
         float minDistance = outerRadius;
         float maxDistance = outerRadius * 3.0;
         float maxStrengthLerp = 1.0 - clamp((maxDistance - cameraHeight) / (maxDistance - minDistance), 0.0, 1.0);
-        float maxStrength = mix(100.0, 10000000.0, maxStrengthLerp);
+        float maxStrength = mix(100.0, 10000.0, maxStrengthLerp);
         strength = min(strength, maxStrength);
         float alpha = 1.0 - (strength / maxStrength);
         finalColor.a = alpha;
