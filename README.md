@@ -1,4 +1,6 @@
-<p></p>
+<p>
+    这边的工作主要是将源代码中的英文注释转译为中文。使用JSDOC生成API文档后就会看到对应的中文。
+</p>
 <p align="center">
 <img src="https://github.com/CesiumGS/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
 </p>
