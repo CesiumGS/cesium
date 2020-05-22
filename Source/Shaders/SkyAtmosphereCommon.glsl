@@ -206,8 +206,9 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     mieColor = frontColor * KmESun;
     rayleighColor = frontColor * (InvWavelength * KrESun);
 
-    mieColor = min(mieColor, vec3(100.0));
-    rayleighColor = min(rayleighColor, vec3(100.0));
+    // Cap mie and rayleigh colors to prevent NaNs when vertex interpolation happens
+    mieColor = min(mieColor, vec3(10000000.0));
+    rayleighColor = min(rayleighColor, vec3(10000000.0));
 
 }
 
@@ -245,24 +246,27 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     float lightEnum = u_radiiAndDynamicAtmosphereColorAndInverseScale.z;
 
     float cameraHeight = czm_eyeHeight + innerRadius;
-    vec3 adjustedPositionWC = normalize(positionWC) * cameraHeight;
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((outerRadius - length(adjustedPositionWC)) / (outerRadius - innerRadius), 0.0, 1.0);
+    float atmosphereAlpha = clamp((outerRadius - cameraHeight) / (outerRadius - innerRadius), 0.0, 1.0);
 
     // Alter alpha based on time of day (0.0 = night , 1.0 = day)
-    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(adjustedPositionWC), lightDirection), 0.0, 1.0) : 1.0;
+    float nightAlpha = (lightEnum != 0.0) ? clamp(dot(normalize(positionWC), lightDirection), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
     vec4 finalColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 
     if (mieColor.b > 1.0)
     {
-        float strength = mieFinal.b * rayleighFinal.b * 0.05;
-        float minStrength = 0.0;
-        float maxStrength = 1.0;
-        strength = clamp(strength, minStrength, maxStrength);
-        float alpha = 1.0 - (strength - minStrength) / (maxStrength - minStrength);
+        // Fade atmosphere below the ellipsoid. As the camera zooms further away from the ellipsoid draw
+        // a larger atmosphere ring to cover empty space of lower LOD globe tiles.
+        float strength = mieColor.b;
+        float minDistance = outerRadius;
+        float maxDistance = outerRadius * 3.0;
+        float maxStrengthLerp = 1.0 - clamp((maxDistance - cameraHeight) / (maxDistance - minDistance), 0.0, 1.0);
+        float maxStrength = mix(100.0, 10000000.0, maxStrengthLerp);
+        strength = min(strength, maxStrength);
+        float alpha = 1.0 - (strength / maxStrength);
         finalColor.a = alpha;
     }
 
