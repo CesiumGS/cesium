@@ -56,7 +56,7 @@ const float g2 = g * g;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
-uniform vec4 u_radiiAndDynamicAtmosphereColorAndInverseScale; // outer radius, inner radius, dynamic atmosphere color flag, inverse scale
+uniform vec3 u_radiiAndDynamicAtmosphereColor; // outer radius, inner radius, dynamic atmosphere color flag
 
 float scale(float cosAngle)
 {
@@ -66,7 +66,7 @@ float scale(float cosAngle)
 
 vec3 getLightDirection(vec3 positionWC)
 {
-    float lightEnum = u_radiiAndDynamicAtmosphereColorAndInverseScale.z;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
     vec3 lightDirection =
         positionWC * float(lightEnum == 0.0) +
         czm_lightDirectionWC * float(lightEnum == 1.0) +
@@ -104,64 +104,18 @@ void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float 
     startOffset = depth*scale(startAngle);
 }
 
-czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 ellipsoid_center, vec3 ellipsoid_inverseRadii)
-{
-    vec3 o = ellipsoid_inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
-    vec3 d = ellipsoid_inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
-
-    float a = dot(d, d);
-    float b = dot(d, o);
-    float c = dot(o, o) - 1.0;
-    float discriminant = b * b - a * c;
-    if (discriminant < 0.0)
-    {
-      return czm_emptyRaySegment;
-    }
-    discriminant = sqrt(discriminant);
-    float t1 = (-b - discriminant) / a;
-    float t2 = (-b + discriminant) / a;
-
-    if (t1 < 0.0 && t2 < 0.0)
-    {
-      return czm_emptyRaySegment;
-    }
-
-    if (t1 < 0.0 && t2 >= 0.0)
-    {
-      t1 = 0.0;
-    }
-
-    return czm_raySegment(t1, t2);
-}
-
 void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, out vec3 rayleighColor)
 {
     // Unpack attributes
-    float outerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.y;
-    float inverseScale = u_radiiAndDynamicAtmosphereColorAndInverseScale.w;
+    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
-    vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
-    vec3 directionEC = czm_viewRotation * directionWC;
-    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, vec3(czm_view[3]), czm_ellipsoidInverseRadii * inverseScale);
-    bool intersectsEllipsoid = false;//raySegment.start >= 0.0;
-
-    vec3 startPositionWC = czm_viewerPositionWC;
-    if (intersectsEllipsoid)
-    {
-        startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
-    }
-
-    vec3 lightDirection = getLightDirection(startPositionWC);
+    vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
 
     // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 ray = outerPositionWC - startPositionWC;
-    float distance = length(ray);
-    ray /= distance;
-
-    float maxDistance = intersectsEllipsoid ? innerRadius * 0.1 : distance;
-    float far = min(distance, maxDistance);
+    vec3 ray = outerPositionWC - czm_viewerPositionWC;
+    float far = length(ray);
+    ray /= far;
 
     float atmosphereScale = 1.0 / (outerRadius - innerRadius);
 
@@ -169,16 +123,9 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     float startOffset;
 
 #ifdef SKY_FROM_SPACE
-    if (intersectsEllipsoid)
-    {
-        calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
-    }
-    else
-    {
-        calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
-    }
+    calculateRayScatteringFromSpace(czm_viewerPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
 #else
-    calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
+    calculateRayScatteringFromGround(czm_viewerPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
 #endif
 
     // Initialize the scattering loop variables
@@ -209,7 +156,6 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     // Cap mie and rayleigh colors to prevent NaNs when vertex interpolation happens
     mieColor = min(mieColor, vec3(10000000.0));
     rayleighColor = min(rayleighColor, vec3(10000000.0));
-
 }
 
 vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 mieColor, vec3 rayleighColor)
@@ -219,9 +165,7 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    vec3 rayleighFinal = rayleighPhase * rayleighColor;
-    vec3 mieFinal = miePhase * mieColor;
-    vec3 rgb = rayleighFinal + mieFinal;
+    vec3 rgb = rayleighPhase * rayleighColor + miePhase * mieColor;
 
     const float exposure = 2.0;
     vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
@@ -241,9 +185,9 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     rgb = czm_HSBToRGB(hsb);
 #endif
 
-    float outerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.x;
-    float innerRadius = u_radiiAndDynamicAtmosphereColorAndInverseScale.y;
-    float lightEnum = u_radiiAndDynamicAtmosphereColorAndInverseScale.z;
+    float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
+    float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
+    float lightEnum = u_radiiAndDynamicAtmosphereColor.z;
 
     float cameraHeight = czm_eyeHeight + innerRadius;
 

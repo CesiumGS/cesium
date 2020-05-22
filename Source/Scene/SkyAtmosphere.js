@@ -1,5 +1,4 @@
 import Cartesian3 from "../Core/Cartesian3.js";
-import Cartesian4 from "../Core/Cartesian4.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -7,7 +6,6 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import CesiumMath from "../Core/Math.js";
-import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -109,27 +107,22 @@ function SkyAtmosphere(ellipsoid) {
 
   this._hueSaturationBrightness = new Cartesian3();
 
-  // outer radius, inner radius, dynamic atmosphere color flag, inverse scale
-  var radiiAndDynamicAtmosphereColorAndInverseScale = new Cartesian4();
+  // outer radius, inner radius, dynamic atmosphere color flag
+  var radiiAndDynamicAtmosphereColor = new Cartesian3();
 
-  radiiAndDynamicAtmosphereColorAndInverseScale.x =
-    ellipsoid.maximumRadius * 1.025;
-  radiiAndDynamicAtmosphereColorAndInverseScale.y = ellipsoid.maximumRadius;
+  radiiAndDynamicAtmosphereColor.x = ellipsoid.maximumRadius * 1.025;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-  radiiAndDynamicAtmosphereColorAndInverseScale.z = 0;
+  radiiAndDynamicAtmosphereColor.z = 0;
 
-  // Controls the distance below the horizon at which atmosphere transitions from its brightest to a more neutral blue color
-  // Higher values push the transition point further below the horizon
-  radiiAndDynamicAtmosphereColorAndInverseScale.w = 1.003;
-
-  this._radiiAndDynamicAtmosphereColorAndInverseScale = radiiAndDynamicAtmosphereColorAndInverseScale;
+  this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
 
   var that = this;
 
   this._command.uniformMap = {
-    u_radiiAndDynamicAtmosphereColorAndInverseScale: function () {
-      return that._radiiAndDynamicAtmosphereColorAndInverseScale;
+    u_radiiAndDynamicAtmosphereColor: function () {
+      return that._radiiAndDynamicAtmosphereColor;
     },
     u_hsbShift: function () {
       that._hueSaturationBrightness.x = that.hueShift;
@@ -163,7 +156,7 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   useSunDirection
 ) {
   var lightEnum = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
-  this._radiiAndDynamicAtmosphereColorAndInverseScale.z = lightEnum;
+  this._radiiAndDynamicAtmosphereColor.z = lightEnum;
 };
 
 var scratchModelMatrix = new Matrix4();
@@ -288,7 +281,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var cameraPosition = frameState.camera.positionWC;
   var cameraHeight = Cartesian3.magnitude(cameraPosition);
 
-  if (cameraHeight > this._radiiAndDynamicAtmosphereColorAndInverseScale.x) {
+  if (cameraHeight > this._radiiAndDynamicAtmosphereColor.x) {
     // Camera in space
     command.shaderProgram = this._spSkyFromSpace;
   } else {
