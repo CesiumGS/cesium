@@ -458,8 +458,8 @@ vec3 computeGroundAtmosphereColor(vec3 fogColor, vec4 finalColor, vec3 atmospher
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
 #endif
 
-    fadeInDist = u_nightFadeDistance.x;
-    fadeOutDist = u_nightFadeDistance.y;
+    float fadeInDist = u_nightFadeDistance.x;
+    float fadeOutDist = u_nightFadeDistance.y;
 
     float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
 
