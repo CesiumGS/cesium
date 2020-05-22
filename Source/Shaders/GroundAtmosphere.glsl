@@ -78,7 +78,7 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLightin
     float fFar = length(v3Ray);
     v3Ray /= fFar;
 
-    float fCameraHeight = czm_eyeHeight + fInnerRadius;
+    float fCameraHeight = length(czm_viewerPositionWC);
     float fCameraHeight2 = fCameraHeight * fCameraHeight;
 
     // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray),
