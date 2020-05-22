@@ -166,7 +166,6 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   this._radiiAndDynamicAtmosphereColorAndInverseScale.z = lightEnum;
 };
 
-var scratchRotationMatrix = new Matrix3();
 var scratchModelMatrix = new Matrix4();
 
 /**
@@ -189,10 +188,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
 
   // Align the ellipsoid geometry so it always faces the same direction as the
   // camera to reduce artifacts when rendering atmosphere per-vertex
-  var view = frameState.context.uniformState.viewRotation;
-  var inverseView = Matrix3.inverse(view, scratchRotationMatrix);
   var rotationMatrix = Matrix4.fromRotationTranslation(
-    inverseView,
+    frameState.context.uniformState.inverseViewRotation,
     Cartesian3.ZERO,
     scratchModelMatrix
   );
