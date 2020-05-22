@@ -205,6 +205,10 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
     mieColor = frontColor * KmESun;
     rayleighColor = frontColor * (InvWavelength * KrESun);
+
+    mieColor = min(mieColor, vec3(100.0));
+    rayleighColor = min(rayleighColor, vec3(100.0));
+
 }
 
 vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, vec3 mieColor, vec3 rayleighColor)
@@ -217,12 +221,6 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     vec3 rayleighFinal = rayleighPhase * rayleighColor;
     vec3 mieFinal = miePhase * mieColor;
     vec3 rgb = rayleighFinal + mieFinal;
-
-    if (rgb.b > 1000000.0)
-    {
-        // Discard colors that exceed some large number value to prevent against NaN's from the exponent calculation below
-        return vec4(0.0);
-    }
 
     const float exposure = 2.0;
     vec3 rgbExposure = vec3(1.0) - exp(-exposure * rgb);
@@ -249,7 +247,6 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
     float cameraHeight = czm_eyeHeight + innerRadius;
     vec3 adjustedPositionWC = normalize(positionWC) * cameraHeight;
 
-
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((outerRadius - length(adjustedPositionWC)) / (outerRadius - innerRadius), 0.0, 1.0);
 
@@ -259,12 +256,15 @@ vec4 calculateFinalColor(vec3 positionWC, vec3 toCamera, vec3 lightDirection, ve
 
     vec4 finalColor = vec4(rgb, mix(clamp(rgbExposure.b, 0.0, 1.0), 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 
-    float strength = mieFinal.b * rayleighColor.b * 0.05;
-    float minStrength = 0.0;
-    float maxStrength = 1.0;
-    strength = clamp(strength, minStrength, maxStrength);
-    float alpha = (strength - minStrength) / maxStrength;
-    finalColor.a = (1.0 - alpha);
+    if (mieColor.b > 1.0)
+    {
+        float strength = mieFinal.b * rayleighFinal.b * 0.05;
+        float minStrength = 0.0;
+        float maxStrength = 1.0;
+        strength = clamp(strength, minStrength, maxStrength);
+        float alpha = 1.0 - (strength - minStrength) / (maxStrength - minStrength);
+        finalColor.a = alpha;
+    }
 
     return finalColor;
 }
