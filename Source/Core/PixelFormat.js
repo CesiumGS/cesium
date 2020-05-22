@@ -3,13 +3,14 @@ import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * The format of a pixel, i.e., the number of components it has and what they represent.
- *
+ * <br/>像素的格式，也就是说每个像素中颜色由哪些组成以及如何展示。
  * @exports PixelFormat
  */
 var PixelFormat = {
   /**
    * A pixel format containing a depth value.
-   *
+   * <br/>包含有一个深度值。
+   * <br/>
    * @type {Number}
    * @constant
    */
@@ -17,7 +18,8 @@ var PixelFormat = {
 
   /**
    * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8}.
-   *
+   * <br/>包含有深度值和模板（stencil）值，常常与{@link PixelDatatype.UNSIGNED_INT_24_8}一起使用。
+   * <br/>参考：{@link https://gavinkg.github.io/ILearnVulkanFromScratch-CN/mdroot/Vulkan%20%E8%BF%9B%E9%98%B6/%E6%A8%A1%E6%9D%BF%E7%BC%93%E5%86%B2%E5%92%8C%E6%A8%A1%E6%9D%BF%E6%B5%8B%E8%AF%95.html 模板缓冲和模板测试}、{@link https://learnopengl-cn.readthedocs.io/zh/latest/04%20Advanced%20OpenGL/02%20Stencil%20testing/ 模板测试}
    * @type {Number}
    * @constant
    */
@@ -25,7 +27,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing an alpha channel.
-   *
+   * <br/>包含有一个阿尔法通道
    * @type {Number}
    * @constant
    */
@@ -33,7 +35,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels.
-   *
+   * <br/>包含有红、绿、蓝三个通道
    * @type {Number}
    * @constant
    */
@@ -41,7 +43,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels.
-   *
+   * <br/>包含有红、绿、蓝、阿尔法四个通道
    * @type {Number}
    * @constant
    */
@@ -49,7 +51,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing a luminance (intensity) channel.
-   *
+   * <br/>包含有一个亮度通道
    * @type {Number}
    * @constant
    */
@@ -57,7 +59,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing luminance (intensity) and alpha channels.
-   *
+   * <br/>包含有一个亮度和阿尔法通道
    * @type {Number}
    * @constant
    */
@@ -65,7 +67,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is DXT1 compressed.
-   *
+   * <br/>包含有经过DXT1压缩过的红、绿、蓝通道
    * @type {Number}
    * @constant
    */
@@ -73,7 +75,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT1 compressed.
-   *
+   * <br/>包含有经过DXT1压缩过的红、绿、蓝、阿尔法通道
    * @type {Number}
    * @constant
    */
@@ -81,7 +83,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT3 compressed.
-   *
+   * <br/>包含有经过DXT3压缩过的红、绿、蓝、阿尔法通道
    * @type {Number}
    * @constant
    */
@@ -89,7 +91,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is DXT5 compressed.
-   *
+   * <br/>包含有经过DXT5压缩过的红、绿、蓝、阿尔法通道
    * @type {Number}
    * @constant
    */
@@ -97,6 +99,8 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is PVR 4bpp compressed.
+   * <br/>包含有经过PVR 4bpp压缩过的红、绿、蓝通道
+   * <br/>参考：{@link https://oedx.github.io/2019/06/20/CocosCreator-TextureCompression-Plugin/#PVRTC PVRTC}
    *
    * @type {Number}
    * @constant
@@ -105,6 +109,8 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is PVR 2bpp compressed.
+   * <br/>包含有经过PVR 2bpp压缩过的红、绿、蓝通道
+   * <br/>参考：{@link https://oedx.github.io/2019/06/20/CocosCreator-TextureCompression-Plugin/#PVRTC PVRTC}
    *
    * @type {Number}
    * @constant
@@ -113,6 +119,8 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 4bpp compressed.
+   * <br/>包含有经过PVR 4bpp压缩过的红、绿、蓝、阿尔法通道
+   * <br/>参考：{@link https://oedx.github.io/2019/06/20/CocosCreator-TextureCompression-Plugin/#PVRTC PVRTC}
    *
    * @type {Number}
    * @constant
@@ -121,6 +129,8 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, blue, and alpha channels that is PVR 2bpp compressed.
+   * <br/>包含有经过PVR 2bpp压缩过的红、绿、蓝、阿尔法通道
+   * <br/>参考：{@link https://oedx.github.io/2019/06/20/CocosCreator-TextureCompression-Plugin/#PVRTC PVRTC}
    *
    * @type {Number}
    * @constant
@@ -129,6 +139,7 @@ var PixelFormat = {
 
   /**
    * A pixel format containing red, green, and blue channels that is ETC1 compressed.
+   * <br/>包含有经过ETC1压缩过的红、绿、蓝通道
    *
    * @type {Number}
    * @constant
