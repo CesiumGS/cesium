@@ -51,7 +51,6 @@
           globe.translucencyEnabled = false;
           globe.frontFaceAlpha = 1.0;
           globe.undergroundColor = Cesium.Color.BLACK;
-          globe.enableLighting = false;
           globe.translucencyRectangle = undefined;
           baseLayer.colorToAlpha = undefined;
         }
@@ -61,7 +60,6 @@
           globe.baseColor = Cesium.Color.TRANSPARENT;
           globe.translucencyEnabled = true;
           globe.undergroundColor = undefined;
-          globe.enableLighting = true;
 
           // Set oceans on Bing base layer to transparent
           baseLayer.colorToAlpha = new Cesium.Color(0.0, 0.016, 0.059);
