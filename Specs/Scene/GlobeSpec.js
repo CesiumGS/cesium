@@ -443,14 +443,14 @@ describe(
     });
 
     it("gets underground color by distance", function () {
-      expect(globe.undergroundColorByDistance).toBeDefined();
+      expect(globe.undergroundColorAlphaByDistance).toBeDefined();
     });
 
     it("sets underground color by distance", function () {
       globe.baseColor = Color.BLACK;
       globe.undergroundColor = Color.RED;
       var radius = globe.ellipsoid.maximumRadius;
-      globe.undergroundColorByDistance = new NearFarScalar(
+      globe.undergroundColorAlphaByDistance = new NearFarScalar(
         radius * 0.25,
         0.0,
         radius * 2.0,
@@ -480,7 +480,7 @@ describe(
 
     it("throws if underground color by distance far is less than near", function () {
       expect(function () {
-        globe.undergroundColorByDistance = new NearFarScalar(
+        globe.undergroundColorAlphaByDistance = new NearFarScalar(
           1.0,
           0.0,
           0.0,

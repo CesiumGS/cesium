@@ -6,6 +6,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidGeometry from "../Core/EllipsoidGeometry.js";
 import GeometryPipeline from "../Core/GeometryPipeline.js";
 import CesiumMath from "../Core/Math.js";
+import Matrix4 from "../Core/Matrix4.js";
 import VertexFormat from "../Core/VertexFormat.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
@@ -16,6 +17,7 @@ import VertexArray from "../Renderer/VertexArray.js";
 import SkyAtmosphereCommon from "../Shaders/SkyAtmosphereCommon.js";
 import SkyAtmosphereFS from "../Shaders/SkyAtmosphereFS.js";
 import SkyAtmosphereVS from "../Shaders/SkyAtmosphereVS.js";
+import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
 import CullFace from "./CullFace.js";
 import SceneMode from "./SceneMode.js";
@@ -56,13 +58,23 @@ function SkyAtmosphere(ellipsoid) {
    * This produces better looking atmosphere with a slight performance penalty.
    *
    * @type {Boolean}
-   * @default true
+   * @default false
    */
-  this.perFragmentAtmosphere = true;
+  this.perFragmentAtmosphere = false;
 
   this._ellipsoid = ellipsoid;
+
+  var scaleVector = Cartesian3.multiplyByScalar(
+    ellipsoid.radii,
+    1.025,
+    new Cartesian3()
+  );
+  this._scaleMatrix = Matrix4.fromScale(scaleVector);
+  this._modelMatrix = new Matrix4();
+
   this._command = new DrawCommand({
     owner: this,
+    modelMatrix: this._modelMatrix,
   });
   this._spSkyFromSpace = undefined;
   this._spSkyFromAtmosphere = undefined;
@@ -95,15 +107,14 @@ function SkyAtmosphere(ellipsoid) {
 
   this._hueSaturationBrightness = new Cartesian3();
 
-  // camera height, outer radius, inner radius, dynamic atmosphere color flag
+  // outer radius, inner radius, dynamic atmosphere color flag
   var radiiAndDynamicAtmosphereColor = new Cartesian3();
+
+  radiiAndDynamicAtmosphereColor.x = ellipsoid.maximumRadius * 1.025;
+  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
   // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
   radiiAndDynamicAtmosphereColor.z = 0;
-  radiiAndDynamicAtmosphereColor.x = Cartesian3.maximumComponent(
-    Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3())
-  );
-  radiiAndDynamicAtmosphereColor.y = ellipsoid.maximumRadius;
 
   this._radiiAndDynamicAtmosphereColor = radiiAndDynamicAtmosphereColor;
 
@@ -148,6 +159,8 @@ SkyAtmosphere.prototype.setDynamicAtmosphereColor = function (
   this._radiiAndDynamicAtmosphereColor.z = lightEnum;
 };
 
+var scratchModelMatrix = new Matrix4();
+
 /**
  * @private
  */
@@ -166,6 +179,25 @@ SkyAtmosphere.prototype.update = function (frameState) {
     return undefined;
   }
 
+  // Align the ellipsoid geometry so it always faces the same direction as the
+  // camera to reduce artifacts when rendering atmosphere per-vertex
+  var rotationMatrix = Matrix4.fromRotationTranslation(
+    frameState.context.uniformState.inverseViewRotation,
+    Cartesian3.ZERO,
+    scratchModelMatrix
+  );
+  var rotationOffsetMatrix = Matrix4.multiplyTransformation(
+    rotationMatrix,
+    Axis.Y_UP_TO_Z_UP,
+    scratchModelMatrix
+  );
+  var modelMatrix = Matrix4.multiply(
+    this._scaleMatrix,
+    rotationOffsetMatrix,
+    scratchModelMatrix
+  );
+  Matrix4.clone(modelMatrix, this._modelMatrix);
+
   var context = frameState.context;
 
   var colorCorrect = hasColorCorrection(this);
@@ -177,11 +209,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
   if (!defined(command.vertexArray)) {
     var geometry = EllipsoidGeometry.createGeometry(
       new EllipsoidGeometry({
-        radii: Cartesian3.multiplyByScalar(
-          this._ellipsoid.radii,
-          1.025,
-          new Cartesian3()
-        ),
+        radii: new Cartesian3(1.0, 1.0, 1.0),
         slicePartitions: 256,
         stackPartitions: 256,
         vertexFormat: VertexFormat.POSITION_ONLY,

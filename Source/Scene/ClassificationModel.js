@@ -628,7 +628,7 @@ function createProgram(model) {
     uniformDecl +
     "void main() {\n" +
     computePosition +
-    "    gl_Position = czm_depthClampFarPlane(positionInClipCoords);\n" +
+    "    gl_Position = czm_depthClamp(positionInClipCoords);\n" +
     "}\n";
   var fs =
     "#ifdef GL_EXT_frag_depth\n" +
@@ -637,7 +637,7 @@ function createProgram(model) {
     "void main() \n" +
     "{ \n" +
     "    gl_FragColor = vec4(1.0); \n" +
-    "    czm_writeDepthClampedToFarPlane();\n" +
+    "    czm_writeDepthClamp();\n" +
     "}\n";
 
   if (model.extensionsUsed.WEB3D_quantized_attributes) {

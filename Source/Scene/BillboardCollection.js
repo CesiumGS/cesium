@@ -785,7 +785,7 @@ function createVAF(
     attributes.push({
       index: attributeLocations.a_batchId,
       componentsPerAttribute: 1,
-      componentDatatyps: ComponentDatatype.FLOAT,
+      componentDatatype: ComponentDatatype.FLOAT,
       bufferUsage: BufferUsage.STATIC_DRAW,
     });
   }

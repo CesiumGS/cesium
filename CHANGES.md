@@ -11,8 +11,8 @@
   - Added `Globe.translucencyRectangle` for applying translucency only within a rectangular area.
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
 - Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
-- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. Atmosphere is shaded per-fragment by default which looks better but may cause a slight performance penalty. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
-- Added `Globe.undergroundColor` and `Globe.undergroundColorByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
+- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
 
 ##### Fixes :wrench:
 
@@ -21,6 +21,8 @@
 - Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
 - Fixed a bug where `DebugCameraPrimitive` was ignoring the near and far planes of the `Camera`. [#8848](https://github.com/CesiumGS/cesium/issues/8848)
 - Fixed sky atmosphere artifacts below the horizon. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Fixed ground primitives in orthographic mode. [#5110](https://github.com/CesiumGS/cesium/issues/5110)
+- Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
 
 ### 1.69.0 - 2020-05-01
 

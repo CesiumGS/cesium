@@ -85,7 +85,7 @@
                 type="range"
                 min="0.0"
                 max="1.0"
-                step="0.1"
+                step="0.01"
                 data-bind="value: nearAlpha, valueUpdate: 'input'"
               />
               <input type="text" size="5" data-bind="value: nearAlpha" />
@@ -98,7 +98,7 @@
                 type="range"
                 min="0.0"
                 max="1.0"
-                step="0.1"
+                step="0.01"
                 data-bind="value: farAlpha, valueUpdate: 'input'"
               />
               <input type="text" size="5" data-bind="value: farAlpha" />
@@ -213,10 +213,10 @@
           var farAlpha = Number(viewModel.farAlpha);
           farAlpha = isNaN(farAlpha) ? 1.0 : farAlpha;
 
-          globe.undergroundColorByDistance.near = nearDistance;
-          globe.undergroundColorByDistance.far = farDistance;
-          globe.undergroundColorByDistance.nearValue = nearAlpha;
-          globe.undergroundColorByDistance.farValue = farAlpha;
+          globe.undergroundColorAlphaByDistance.near = nearDistance;
+          globe.undergroundColorAlphaByDistance.far = farDistance;
+          globe.undergroundColorAlphaByDistance.nearValue = nearAlpha;
+          globe.undergroundColorAlphaByDistance.farValue = farAlpha;
         }
         update(); //Sandcastle_End
         Sandcastle.finishedLoading();

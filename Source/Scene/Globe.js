@@ -64,7 +64,7 @@ function Globe(ellipsoid) {
   this._terrainProviderChanged = new Event();
 
   this._undergroundColor = Color.clone(Color.BLACK);
-  this._undergroundColorByDistance = new NearFarScalar(
+  this._undergroundColorAlphaByDistance = new NearFarScalar(
     ellipsoid.maximumRadius / 1000.0,
     0.0,
     ellipsoid.maximumRadius / 5.0,
@@ -497,7 +497,7 @@ Object.defineProperties(Globe.prototype, {
    * @type {Color}
    * @default {@link Color.BLACK}
    *
-   * @see Globe#undergroundColorByDistance
+   * @see Globe#undergroundColorAlphaByDistance
    */
   undergroundColor: {
     get: function () {
@@ -510,11 +510,14 @@ Object.defineProperties(Globe.prototype, {
 
   /**
    * Gets or sets the near and far distance for blending {@link Globe#undergroundColor} with the globe color.
-   * The blending amount will interpolate between the {@link NearFarScalar#nearValue} and
+   * The alpha will interpolate between the {@link NearFarScalar#nearValue} and
    * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
-   * Outside of these ranges the blending amount remains clamped to the nearest bound. If undefined,
+   * Outside of these ranges the alpha remains clamped to the nearest bound. If undefined,
    * the underground color will not be blended with the globe color.
+   * <br /> <br />
+   * When the camera is above the ellipsoid the distance is computed from the nearest
+   * point on the ellipsoid instead of the camera's position.
    *
    * @memberof Globe.prototype
    * @type {NearFarScalar}
@@ -522,9 +525,9 @@ Object.defineProperties(Globe.prototype, {
    * @see Globe#undergroundColor
    *
    */
-  undergroundColorByDistance: {
+  undergroundColorAlphaByDistance: {
     get: function () {
-      return this._undergroundColorByDistance;
+      return this._undergroundColorAlphaByDistance;
     },
     set: function (value) {
       //>>includeStart('debug', pragmas.debug);
@@ -534,9 +537,9 @@ Object.defineProperties(Globe.prototype, {
         );
       }
       //>>includeEnd('debug');
-      this._undergroundColorByDistance = NearFarScalar.clone(
+      this._undergroundColorAlphaByDistance = NearFarScalar.clone(
         value,
-        this._undergroundColorByDistance
+        this._undergroundColorAlphaByDistance
       );
     },
   },
@@ -1154,7 +1157,7 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
     tileProvider.undergroundColor = this._undergroundColor;
-    tileProvider.undergroundColorByDistance = this._undergroundColorByDistance;
+    tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     surface.beginFrame(frameState);
   }
 };
