@@ -1,0 +1,7208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cesium3DTileset - Cesium Documentation</title>
+
+    <!--[if lt IE 9]>
+      <script src="javascript/html5.js"></script>
+    <![endif]-->
+    <link href="styles/jsdoc-default.css" rel="stylesheet">
+    <link href="styles/prism.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">
+        <a href="index.html"><img src="Images/CesiumLogo.png" class="cesiumLogo"></a>
+        Cesium3DTileset
+        <div class="titleCenterer"></div>
+    </h1>
+
+    
+
+
+
+
+<section>
+
+<header>
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+
+    
+        
+    <div class="nameContainer">
+    <h4 class="name" id="Cesium3DTileset">
+        <a href="#Cesium3DTileset" class="doc-link"></a>
+        new Cesium.Cesium3DTileset<span class="signature">(options)</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L136">Scene/Cesium3DTileset.js 136</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    A <a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification">3D Tiles tileset</a>,used for streaming massive heterogeneous 3D geospatial datasets.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                Object with the following properties:
+                
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Default</th>
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>url</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Resource.html">Resource</a></span>
+|
+
+<span class="param-type">String</span>
+|
+
+<span class="param-type">Promise.&lt;<a href="Resource.html">Resource</a>></span>
+|
+
+<span class="param-type">Promise.&lt;String></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                
+
+                
+            
+                The url to a tileset JSON file.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>show</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Determines if the tileset will be shown.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>modelMatrix</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Matrix4.html">Matrix4</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">Matrix4.IDENTITY</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A 4x4 transformation matrix that transforms the tileset's root tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>shadows</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ShadowMode.html">ShadowMode</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">ShadowMode.ENABLED</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Determines whether the tileset casts or receives shadows from light sources.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maximumScreenSpaceError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">16</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The maximum screen space error used to drive level of detail refinement.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>maximumMemoryUsage</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">512</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The maximum amount of memory in MB that can be used by the tileset.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cullWithChildrenBounds</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Whether to cull tiles using the union of their children bounding volumes.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cullRequestsWhileMoving</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>cullRequestsWhileMovingMultiplier</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">60.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>preloadWhenHidden</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>preloadFlightDestinations</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>preferLeaves</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Prefer loading of leaves first.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dynamicScreenSpaceError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Reduce the screen space error for tiles that are further away from the camera.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dynamicScreenSpaceErrorDensity</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.00278</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Density used to adjust the dynamic screen space error, similar to fog density.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dynamicScreenSpaceErrorFactor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">4.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A factor used to increase the computed dynamic screen space error.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>dynamicScreenSpaceErrorHeightFalloff</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.25</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A ratio of the tileset's height at which the density starts to falloff.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>progressiveResolutionHeightFraction</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.3</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>foveatedScreenSpaceError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">true</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the <a href="Cesium3DTileset.html#foveatedConeSize"><code>Cesium3DTileset#foveatedConeSize</code></a> are loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>foveatedConeSize</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by <a href="Cesium3DTileset.html#foveatedInterpolationCallback"><code>Cesium3DTileset#foveatedInterpolationCallback</code></a> and <a href="Cesium3DTileset.html#foveatedMinimumScreenSpaceErrorRelaxation"><code>Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation</code></a>. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>foveatedMinimumScreenSpaceErrorRelaxation</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.0</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to <a href="Cesium3DTileset.html#maximumScreenSpaceError"><code>Cesium3DTileset#maximumScreenSpaceError</code></a> based on the provided <a href="Cesium3DTileset.html#foveatedInterpolationCallback"><code>Cesium3DTileset#foveatedInterpolationCallback</code></a>.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>foveatedInterpolationCallback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cesium3DTileset.html#~foveatedInterpolationCallback">Cesium3DTileset~foveatedInterpolationCallback</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">Math.lerp</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between <a href="Cesium3DTileset.html#foveatedMinimumScreenSpaceErrorRelaxation"><code>Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation</code></a> and <a href="Cesium3DTileset.html#maximumScreenSpaceError"><code>Cesium3DTileset#maximumScreenSpaceError</code></a></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>foveatedTimeDelay</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.2</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>skipLevelOfDetail</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Optimization option. Determines if level of detail skipping should be applied during the traversal.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>baseScreenSpaceError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">1024</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>skipScreenSpaceErrorFactor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">16</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>skipLevels</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">1</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>immediatelyLoadDesiredLevelOfDetail</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>loadSiblings</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>clippingPlanes</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ClippingPlaneCollection.html">ClippingPlaneCollection</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The <a href="ClippingPlaneCollection.html"><code>ClippingPlaneCollection</code></a> used to selectively disable rendering the tileset.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>classificationType</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="ClassificationType.html">ClassificationType</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Determines whether terrain, 3D Tiles or both will be classified by this tileset. See <a href="Cesium3DTileset.html#classificationType"><code>Cesium3DTileset#classificationType</code></a> for details about restrictions and limitations.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ellipsoid</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Ellipsoid.html">Ellipsoid</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">Ellipsoid.WGS84</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The ellipsoid determining the size and shape of the globe.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>pointCloudShading</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Options for constructing a <a href="PointCloudShading.html"><code>PointCloudShading</code></a> object to control point attenuation based on geometric error and lighting.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>imageBasedLightingFactor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian2.html">Cartesian2</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">new Cartesian2(1.0, 1.0)</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>lightColor</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Cartesian3.html">Cartesian3</a></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The light color when shading models. When <code>undefined</code> the scene's light color is used instead.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>luminanceAtZenith</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">0.2</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>sphericalHarmonicCoefficients</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;<a href="Cartesian3.html">Cartesian3</a>></span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>specularEnvironmentMaps</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugHeatmapTilePropertyName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugFreezeFrame</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. Determines if only the tiles from last frame should be used for rendering.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugColorizeTiles</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, assigns a random color to each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugWireframe</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, render's each tile's content as a wireframe.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowBoundingVolume</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, renders the bounding volume for each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowContentBoundingVolume</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, renders the bounding volume for each tile's content.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowViewerRequestVolume</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, renders the viewer request volume for each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowGeometricError</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, draws labels to indicate the geometric error of each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowRenderingStatistics</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowMemoryUsage</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>debugShowUrl</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+                <td class="default">
+                
+                    <code class="language-javascript">false</code>
+                
+                </td>
+            
+
+            <td class="description last">
+            
+                
+                        <span class="optional">optional</span>
+                
+                
+
+                
+            
+                For debugging only. When true, draws labels to indicate the url of each tile.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+            </td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: The tileset must be 3D Tiles version 0.0 or 1.0.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Examples:</h5>
+        
+    <pre><code class="language-javascript">var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'}));</code></pre>
+
+    <pre><code class="language-javascript">// Common setting for the skipLevelOfDetail optimizationvar tileset = scene.primitives.add(new Cesium.Cesium3DTileset({     url : 'http://localhost:8002/tilesets/Seattle/tileset.json',     skipLevelOfDetail : true,     baseScreenSpaceError : 1024,     skipScreenSpaceErrorFactor : 16,     skipLevels : 1,     immediatelyLoadDesiredLevelOfDetail : false,     loadSiblings : false,     cullWithChildrenBounds : true}));</code></pre>
+
+    <pre><code class="language-javascript">// Common settings for the dynamicScreenSpaceError optimizationvar tileset = scene.primitives.add(new Cesium.Cesium3DTileset({     url : 'http://localhost:8002/tilesets/Seattle/tileset.json',     dynamicScreenSpaceError : true,     dynamicScreenSpaceErrorDensity : 0.00278,     dynamicScreenSpaceErrorFactor : 4.0,     dynamicScreenSpaceErrorHeightFalloff : 0.25}));</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification">3D Tiles specification</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Members</h3>
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="allTilesLoaded">
+    <a href="#allTilesLoaded" class="doc-link"></a>
+    allTilesLoaded<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L485">Scene/Cesium3DTileset.js 485</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate that all tiles that meet the screen space error this frame are loaded. The tilesetis completely loaded for this view.<p>This event is fired at the end of the frame after the scene is rendered.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.allTilesLoaded.addEventListener(function() {    console.log('All tiles are loaded');});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#tilesLoaded">Cesium3DTileset#tilesLoaded</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="asset">
+    <a href="#asset" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> asset<span class="type-signature"> : Object</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1002">Scene/Cesium3DTileset.js 1002</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the tileset's asset object property, which contains metadata about the tileset.<p>See the <a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-asset">asset schema reference</a>in the 3D Tiles spec for the full set of properties.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="basePath">
+    <a href="#basePath" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> <span class="type-signature attribute-deprecated">deprecated</span> basePath<span class="type-signature"> : String</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1178">Scene/Cesium3DTileset.js 1178</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The base path that non-absolute paths in tileset JSON file are relative to.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+    <p>
+        <span class="details-header important">Deprecated:</span>
+        <span>true</span>
+    </p>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="baseScreenSpaceError">
+    <a href="#baseScreenSpaceError" class="doc-link"></a>
+    baseScreenSpaceError<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L636">Scene/Cesium3DTileset.js 636</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The screen space error that must be reached before skipping levels of detail.<p>Only used when <a href="Cesium3DTileset.html#skipLevelOfDetail"><code>Cesium3DTileset#skipLevelOfDetail</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1024</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="boundingSphere">
+    <a href="#boundingSphere" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> boundingSphere<span class="type-signature"> : <a href="BoundingSphere.html">BoundingSphere</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1356">Scene/Cesium3DTileset.js 1356</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The tileset's bounding sphere.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({    url : 'http://localhost:8002/tilesets/Seattle/tileset.json'}));tileset.readyPromise.then(function(tileset) {    // Set the camera to view the newly added tileset    viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="classificationType">
+    <a href="#classificationType" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> classificationType<span class="type-signature"> : <a href="ClassificationType.html">ClassificationType</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1502">Scene/Cesium3DTileset.js 1502</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines whether terrain, 3D Tiles or both will be classified by this tileset.<p>This option is only applied to tilesets containing batched 3D models, geometry data, or vector data. Even when undefined, vector data and geometry datamust render as classifications and will default to rendering on both terrain and other 3D Tiles tilesets.</p><p>When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:<ul>    <li>POSITION and _BATCHID semantics are required.</li>    <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>    <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>    <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>    <li>Only one node is supported.</li>    <li>Only one mesh per node is supported.</li>    <li>Only one primitive per mesh is supported.</li></ul></p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+    <div class="tag-experimental">
+        <h5>Experimental</h5>
+        
+            <p>This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.</p>
+        
+    </div>
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="clippingPlanes">
+    <a href="#clippingPlanes" class="doc-link"></a>
+    clippingPlanes<span class="type-signature"> : <a href="ClippingPlaneCollection.html">ClippingPlaneCollection</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1047">Scene/Cesium3DTileset.js 1047</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The <a href="ClippingPlaneCollection.html"><code>ClippingPlaneCollection</code></a> used to selectively disable rendering the tileset.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="colorBlendAmount">
+    <a href="#colorBlendAmount" class="doc-link"></a>
+    colorBlendAmount<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L431">Scene/Cesium3DTileset.js 431</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Defines the value used to linearly interpolate between the source color and feature color when the <a href="Cesium3DTileset.html#colorBlendMode"><code>Cesium3DTileset#colorBlendMode</code></a> is <code>MIX</code>.A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-betweenresulting in a mix of the source color and feature color.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.5</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="colorBlendMode">
+    <a href="#colorBlendMode" class="doc-link"></a>
+    colorBlendMode<span class="type-signature"> : <a href="Cesium3DTileColorBlendMode.html">Cesium3DTileColorBlendMode</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L421">Scene/Cesium3DTileset.js 421</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors fromthe original feature, e.g. glTF material or per-point color in the tile.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Cesium3DTileColorBlendMode.HIGHLIGHT</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="cullRequestsWhileMoving">
+    <a href="#cullRequestsWhileMoving" class="doc-link"></a>
+    cullRequestsWhileMoving<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L222">Scene/Cesium3DTileset.js 222</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement. This optimization only applies to stationary tilesets.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="cullRequestsWhileMovingMultiplier">
+    <a href="#cullRequestsWhileMovingMultiplier" class="doc-link"></a>
+    cullRequestsWhileMovingMultiplier<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L234">Scene/Cesium3DTileset.js 234</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">60.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugColorizeTiles">
+    <a href="#debugColorizeTiles" class="doc-link"></a>
+    debugColorizeTiles<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L776">Scene/Cesium3DTileset.js 776</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, assigns a random color to each tile.  This is useful for visualizingwhat features belong to what tiles, especially with additive refinement where featuresfrom parent tiles may be interleaved with features from child tiles.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugFreezeFrame">
+    <a href="#debugFreezeFrame" class="doc-link"></a>
+    debugFreezeFrame<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L763">Scene/Cesium3DTileset.js 763</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>Determines if only the tiles from last frame should be used for rendering.  Thiseffectively "freezes" the tileset to the previous frame so it is possible to zoomout and see what was rendered.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowBoundingVolume">
+    <a href="#debugShowBoundingVolume" class="doc-link"></a>
+    debugShowBoundingVolume<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L800">Scene/Cesium3DTileset.js 800</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, renders the bounding volume for each visible tile.  The bounding volume iswhite if the tile has a content bounding volume or is empty; otherwise, it is red.  Tiles that don't meet thescreen space error and are still refining to their descendants are yellow.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowContentBoundingVolume">
+    <a href="#debugShowContentBoundingVolume" class="doc-link"></a>
+    debugShowContentBoundingVolume<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L815">Scene/Cesium3DTileset.js 815</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, renders the bounding volume for each visible tile's content. The bounding volume isblue if the tile has a content bounding volume; otherwise it is red.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowGeometricError">
+    <a href="#debugShowGeometricError" class="doc-link"></a>
+    debugShowGeometricError<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L848">Scene/Cesium3DTileset.js 848</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, draws labels to indicate the geometric error of each tile.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowMemoryUsage">
+    <a href="#debugShowMemoryUsage" class="doc-link"></a>
+    debugShowMemoryUsage<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L876">Scene/Cesium3DTileset.js 876</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, draws labels to indicate the geometry and texture memory usage of each tile.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowRenderingStatistics">
+    <a href="#debugShowRenderingStatistics" class="doc-link"></a>
+    debugShowRenderingStatistics<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L862">Scene/Cesium3DTileset.js 862</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, draws labels to indicate the number of commands, points, triangles and features of each tile.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowUrl">
+    <a href="#debugShowUrl" class="doc-link"></a>
+    debugShowUrl<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L887">Scene/Cesium3DTileset.js 887</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, draws labels to indicate the url of each tile.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugShowViewerRequestVolume">
+    <a href="#debugShowViewerRequestVolume" class="doc-link"></a>
+    debugShowViewerRequestVolume<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L829">Scene/Cesium3DTileset.js 829</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, renders the viewer request volume for each tile.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="debugWireframe">
+    <a href="#debugWireframe" class="doc-link"></a>
+    debugWireframe<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L787">Scene/Cesium3DTileset.js 787</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This property is for debugging only; it is not optimized for production use.<p>When true, renders each tile's content as a wireframe.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="dynamicScreenSpaceError">
+    <a href="#dynamicScreenSpaceError" class="doc-link"></a>
+    dynamicScreenSpaceError<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L304">Scene/Cesium3DTileset.js 304</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are furtheraway will be rendered with lower detail than closer tiles. This improves performance by rendering fewertiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.The algorithm is biased towards "street views" where the camera is close to the ground plane of the tileset and lookingat the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="dynamicScreenSpaceErrorDensity">
+    <a href="#dynamicScreenSpaceErrorDensity" class="doc-link"></a>
+    dynamicScreenSpaceErrorDensity<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L366">Scene/Cesium3DTileset.js 366</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    A scalar that determines the density used to adjust the dynamic screen space error, similar to <a href="Fog.html"><code>Fog</code></a>. Increasing thisvalue has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tilesbeyond a certain distance all roughly having an error of 1.0.<p>The dynamic error is in the range [0.0, 1.0) and is multiplied by <code>dynamicScreenSpaceErrorFactor</code> to produce thefinal dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.</p><p>Increasing <code>dynamicScreenSpaceErrorDensity</code> has the effect of moving the error midpoint closer to the camera.It is analogous to moving fog closer to the camera.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.00278</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="dynamicScreenSpaceErrorFactor">
+    <a href="#dynamicScreenSpaceErrorFactor" class="doc-link"></a>
+    dynamicScreenSpaceErrorFactor<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L375">Scene/Cesium3DTileset.js 375</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases less tilesare requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">4.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="dynamicScreenSpaceErrorHeightFalloff">
+    <a href="#dynamicScreenSpaceErrorHeightFalloff" class="doc-link"></a>
+    dynamicScreenSpaceErrorHeightFalloff<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L388">Scene/Cesium3DTileset.js 388</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height thefull computed density is applied, otherwise the density falls off. This has the effect of higher density atstreet level views.<p>Valid values are between 0.0 and 1.0.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.25</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="ellipsoid">
+    <a href="#ellipsoid" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> ellipsoid<span class="type-signature"> : <a href="Ellipsoid.html">Ellipsoid</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1516">Scene/Cesium3DTileset.js 1516</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets an ellipsoid describing the shape of the globe.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="extensions">
+    <a href="#extensions" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> extensions<span class="type-signature"> : Object</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1026">Scene/Cesium3DTileset.js 1026</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the tileset's extensions object property.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="extras">
+    <a href="#extras" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> extras<span class="type-signature"> : *</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1590">Scene/Cesium3DTileset.js 1590</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns the <code>extras</code> property at the top-level of the tileset JSON, which contains application specific metadata.Returns <code>undefined</code> if <code>extras</code> does not exist.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras">Extras in the 3D Tiles specification.</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="foveatedConeSize">
+    <a href="#foveatedConeSize" class="doc-link"></a>
+    foveatedConeSize<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1532">Scene/Cesium3DTileset.js 1532</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control the cone size that determines which tiles are deferred.Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and <a href="Cesium3DTileset.html#foveatedInterpolationCallback"><code>Cesium3DTileset#foveatedInterpolationCallback</code></a> and <a href="Cesium3DTileset.html#foveatedMinimumScreenSpaceErrorRelaxation"><code>Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation</code></a>.Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.3</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="foveatedInterpolationCallback">
+    <a href="#foveatedInterpolationCallback" class="doc-link"></a>
+    foveatedInterpolationCallback<span class="type-signature"> : <a href="Cesium3DTileset.html#~foveatedInterpolationCallback">Cesium3DTileset~foveatedInterpolationCallback</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L332">Scene/Cesium3DTileset.js 332</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets a function that will update the foveated screen space error for a tile.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="foveatedMinimumScreenSpaceErrorRelaxation">
+    <a href="#foveatedMinimumScreenSpaceErrorRelaxation" class="doc-link"></a>
+    foveatedMinimumScreenSpaceErrorRelaxation<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1555">Scene/Cesium3DTileset.js 1555</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control the starting screen space error relaxation for tiles outside the foveated cone.The screen space error will be raised starting with this value up to <a href="Cesium3DTileset.html#maximumScreenSpaceError"><code>Cesium3DTileset#maximumScreenSpaceError</code></a> based on the provided <a href="Cesium3DTileset.html#foveatedInterpolationCallback"><code>Cesium3DTileset#foveatedInterpolationCallback</code></a>.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.0</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="foveatedScreenSpaceError">
+    <a href="#foveatedScreenSpaceError" class="doc-link"></a>
+    foveatedScreenSpaceError<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L317">Scene/Cesium3DTileset.js 317</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising thescreen space error for tiles around the edge of the screen. Screen space error returns to normal once allthe tiles in the center of the screen as determined by the <a href="Cesium3DTileset.html#foveatedConeSize"><code>Cesium3DTileset#foveatedConeSize</code></a> are loaded.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="foveatedTimeDelay">
+    <a href="#foveatedTimeDelay" class="doc-link"></a>
+    foveatedTimeDelay<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L346">Scene/Cesium3DTileset.js 346</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Used when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to controlhow long in seconds to wait after the camera stops moving before deferred tiles start loading in.This time delay prevents requesting tiles around the edges of the screen when the camera is moving.Setting this to 0.0 will immediately request all tiles in any given view.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.2</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="imageBasedLightingFactor">
+    <a href="#imageBasedLightingFactor" class="doc-link"></a>
+    imageBasedLightingFactor<span class="type-signature"> : <a href="Cartesian2.html">Cartesian2</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1613">Scene/Cesium3DTileset.js 1613</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the finaldiffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Cartesian2(1.0, 1.0)</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="immediatelyLoadDesiredLevelOfDetail">
+    <a href="#immediatelyLoadDesiredLevelOfDetail" class="doc-link"></a>
+    immediatelyLoadDesiredLevelOfDetail<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L676">Scene/Cesium3DTileset.js 676</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When true, only tiles that meet the maximum screen space error will ever be downloaded.Skipping factors are ignored and just the desired tiles are loaded.<p>Only used when <a href="Cesium3DTileset.html#skipLevelOfDetail"><code>Cesium3DTileset#skipLevelOfDetail</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="initialTilesLoaded">
+    <a href="#initialTilesLoaded" class="doc-link"></a>
+    initialTilesLoaded<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L504">Scene/Cesium3DTileset.js 504</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate that all tiles that meet the screen space error this frame are loaded. This eventis fired once when all tiles in the initial view are loaded.<p>This event is fired at the end of the frame after the scene is rendered.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.initialTilesLoaded.addEventListener(function() {    console.log('Initial tiles are loaded');});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#allTilesLoaded">Cesium3DTileset#allTilesLoaded</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="lightColor">
+    <a href="#lightColor" class="doc-link"></a>
+    lightColor<span class="type-signature"> : <a href="Cartesian3.html">Cartesian3</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L712">Scene/Cesium3DTileset.js 712</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The light color when shading models. When <code>undefined</code> the scene's light color is used instead.<p>For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0)</code> will make themodel much darker. Here, increasing the intensity of the light source will make the model brighter.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="loadProgress">
+    <a href="#loadProgress" class="doc-link"></a>
+    loadProgress<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L466">Scene/Cesium3DTileset.js 466</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate progress of loading new tiles.  This event is fired when a new tileis requested, when a requested tile is finished downloading, and when a downloaded tile has beenprocessed and is ready to render.<p>The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tilesprocessing, <code>numberOfTilesProcessing</code> are passed to the event listener.</p><p>This event is fired at the end of the frame after the scene is rendered.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {    if ((numberOfPendingRequests === 0) &amp;&amp; (numberOfTilesProcessing === 0)) {        console.log('Stopped loading');        return;    }    console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="loadSiblings">
+    <a href="#loadSiblings" class="doc-link"></a>
+    loadSiblings<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L691">Scene/Cesium3DTileset.js 691</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines whether siblings of visible tiles are always downloaded during traversal.This may be useful for ensuring that tiles are already available when the viewer turns left/right.<p>Only used when <a href="Cesium3DTileset.html#skipLevelOfDetail"><code>Cesium3DTileset#skipLevelOfDetail</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="luminanceAtZenith">
+    <a href="#luminanceAtZenith" class="doc-link"></a>
+    luminanceAtZenith<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L723">Scene/Cesium3DTileset.js 723</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.This is used when <a href="Cesium3DTileset.html#specularEnvironmentMaps"><code>Cesium3DTileset#specularEnvironmentMaps</code></a> and <a href="Cesium3DTileset.html#sphericalHarmonicCoefficients"><code>Cesium3DTileset#sphericalHarmonicCoefficients</code></a> are not defined.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.2</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="maximumMemoryUsage">
+    <a href="#maximumMemoryUsage" class="doc-link"></a>
+    maximumMemoryUsage<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1299">Scene/Cesium3DTileset.js 1299</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The maximum amount of GPU memory (in MB) that may be used to cache tiles. This value is estimated fromgeometry, textures, and batch table textures of loaded tiles. For point clouds, this value alsoincludes per-point metadata.<p>Tiles not in view are unloaded to enforce this.</p><p>If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.</p><p>If tiles sized more than <code>maximumMemoryUsage</code> are neededto meet the desired screen space error, determined by <a href="Cesium3DTileset.html#maximumScreenSpaceError"><code>Cesium3DTileset#maximumScreenSpaceError</code></a>,for the current view, then the memory usage of the tiles loaded will exceed<code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but300 MB of tiles are needed to meet the screen space error, then 300 MB of tiles may be loaded.  Whenthese tiles go out of view, they will be unloaded.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">512</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#totalMemoryUsageInBytes">Cesium3DTileset#totalMemoryUsageInBytes</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="maximumScreenSpaceError">
+    <a href="#maximumScreenSpaceError" class="doc-link"></a>
+    maximumScreenSpaceError<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1255">Scene/Cesium3DTileset.js 1255</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tilerefines to its descendants, and therefore plays a major role in balancing performance with visual quality.<p>A tile's screen space error is roughly equivalent to the number of pixels wide that would be drawn if a sphere with aradius equal to the tile's <b>geometric error</b> were rendered at the tile's position. If this value exceeds<code>maximumScreenSpaceError</code> the tile refines to its descendants.</p><p>Depending on the tileset, <code>maximumScreenSpaceError</code> may need to be tweaked to achieve the right balance.Higher values provide better performance but lower visual quality.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">16</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="modelMatrix">
+    <a href="#modelMatrix" class="doc-link"></a>
+    modelMatrix<span class="type-signature"> : <a href="Matrix4.html">Matrix4</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1389">Scene/Cesium3DTileset.js 1389</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    A 4x4 transformation matrix that transforms the entire tileset.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Matrix4.IDENTITY</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">// Adjust a tileset's height from the globe's surface.var heightOffset = 20.0;var boundingSphere = tileset.boundingSphere;var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="pointCloudShading">
+    <a href="#pointCloudShading" class="doc-link"></a>
+    pointCloudShading<span class="type-signature"> : <a href="PointCloudShading.html">PointCloudShading</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L437">Scene/Cesium3DTileset.js 437</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Options for controlling point size based on geometric error and eye dome lighting.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="preferLeaves">
+    <a href="#preferLeaves" class="doc-link"></a>
+    preferLeaves<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L257">Scene/Cesium3DTileset.js 257</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Prefer loading of leaves first.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="preloadFlightDestinations">
+    <a href="#preloadFlightDestinations" class="doc-link"></a>
+    preloadFlightDestinations<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L288">Scene/Cesium3DTileset.js 288</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="preloadWhenHidden">
+    <a href="#preloadWhenHidden" class="doc-link"></a>
+    preloadWhenHidden<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L280">Scene/Cesium3DTileset.js 280</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="progressiveResolutionHeightFraction">
+    <a href="#progressiveResolutionHeightFraction" class="doc-link"></a>
+    progressiveResolutionHeightFraction<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L245">Scene/Cesium3DTileset.js 245</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">0.3</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="properties">
+    <a href="#properties" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> properties<span class="type-signature"> : Object</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1077">Scene/Cesium3DTileset.js 1077</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.<p>See the <a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification#reference-properties">properties schema reference</a>in the 3D Tiles spec for the full set of properties.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">console.log('Maximum building height: ' + tileset.properties.height.maximum);console.log('Minimum building height: ' + tileset.properties.height.minimum);</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileFeature.html#getProperty">Cesium3DTileFeature#getProperty</a></li>
+    
+        <li><a href="Cesium3DTileFeature.html#setProperty">Cesium3DTileFeature#setProperty</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="ready">
+    <a href="#ready" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> ready<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1102">Scene/Cesium3DTileset.js 1102</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, the tileset's root tile is loaded and the tileset is ready to render.This is set to <code>true</code> right before <a href="Cesium3DTileset.html#readyPromise"><code>Cesium3DTileset#readyPromise</code></a> is resolved.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="readyPromise">
+    <a href="#readyPromise" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> readyPromise<span class="type-signature"> : Promise.&lt;<a href="Cesium3DTileset.html">Cesium3DTileset</a>></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1130">Scene/Cesium3DTileset.js 1130</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Gets the promise that will be resolved when the tileset's root tile is loaded and the tileset is ready to render.<p>This promise is resolved at the end of the frame before the first frame the tileset is rendered in.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.readyPromise.then(function(tileset) {    // tile.properties is not defined until readyPromise resolves.    var properties = tileset.properties;    if (Cesium.defined(properties)) {        for (var name in properties) {            console.log(properties[name]);        }    }});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="root">
+    <a href="#root" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> root<span class="type-signature"> : <a href="Cesium3DTile.html">Cesium3DTile</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1322">Scene/Cesium3DTileset.js 1322</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The root tile.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="shadows">
+    <a href="#shadows" class="doc-link"></a>
+    shadows<span class="type-signature"> : <a href="ShadowMode.html">ShadowMode</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L404">Scene/Cesium3DTileset.js 404</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines whether the tileset casts or receives shadows from light sources.<p>Enabling shadows has a performance impact. A tileset that casts shadows must be rendered twice, once from the camera and again from the light's point of view.</p><p>Shadows are rendered only when <a href="Viewer.html#shadows"><code>Viewer#shadows</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">ShadowMode.ENABLED</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="show">
+    <a href="#show" class="doc-link"></a>
+    show<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L412">Scene/Cesium3DTileset.js 412</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Determines if the tileset will be shown.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="skipLevelOfDetail">
+    <a href="#skipLevelOfDetail" class="doc-link"></a>
+    skipLevelOfDetail<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L623">Scene/Cesium3DTileset.js 623</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Optimization option. Determines if level of detail skipping should be applied during the traversal.<p>The common strategy for replacement-refinement traversal is to store all levels of the tree in memory and requireall children to be loaded before the parent can refine. With this optimization levels of the tree can be skippedentirely and children can be rendered alongside their parents. The tileset requires significantly less memory whenusing this optimization.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">true</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="skipLevels">
+    <a href="#skipLevels" class="doc-link"></a>
+    skipLevels<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L664">Scene/Cesium3DTileset.js 664</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped.For example, if a tile is level 1, no tiles will be loaded unless they are at level greater than 2.<p>Only used when <a href="Cesium3DTileset.html#skipLevelOfDetail"><code>Cesium3DTileset#skipLevelOfDetail</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">1</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="skipScreenSpaceErrorFactor">
+    <a href="#skipScreenSpaceErrorFactor" class="doc-link"></a>
+    skipScreenSpaceErrorFactor<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L649">Scene/Cesium3DTileset.js 649</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Multiplier defining the minimum screen space error to skip.For example, if a tile has screen space error of 100, no tiles will be loaded unless theyare leaves or have a screen space error <code><= 100 / skipScreenSpaceErrorFactor</code>.<p>Only used when <a href="Cesium3DTileset.html#skipLevelOfDetail"><code>Cesium3DTileset#skipLevelOfDetail</code></a> is <code>true</code>.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">16</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="specularEnvironmentMaps">
+    <a href="#specularEnvironmentMaps" class="doc-link"></a>
+    specularEnvironmentMaps<span class="type-signature"> : String</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L750">Scene/Cesium3DTileset.js 750</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Demo:</h5>
+    <ul class="see-list">
+        <li><a href="https://sandcastle.cesium.com/index.html?src=Image-Based%20Lighting.html">Sandcastle Image Based Lighting Demo</a></li>
+    </ul>
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#sphericalHarmonicCoefficients">Cesium3DTileset#sphericalHarmonicCoefficients</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="sphericalHarmonicCoefficients">
+    <a href="#sphericalHarmonicCoefficients" class="doc-link"></a>
+    sphericalHarmonicCoefficients<span class="type-signature"> : Array.&lt;<a href="Cartesian3.html">Cartesian3</a>></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L741">Scene/Cesium3DTileset.js 741</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiancecomputed from the atmosphere color is used.<p>There are nine <code>Cartesian3</code> coefficients.The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub></p>These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of<a href="https://github.com/google/filament/releases">Google's Filament project</a>. This will also generate a KTX file that can besupplied to <a href="Cesium3DTileset.html#specularEnvironmentMaps"><code>Cesium3DTileset#specularEnvironmentMaps</code></a>.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>Demo:</h5>
+    <ul class="see-list">
+        <li><a href="https://sandcastle.cesium.com/index.html?src=Image-Based%20Lighting.html">Sandcastle Image Based Lighting Demo</a></li>
+    </ul>
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://graphics.stanford.edu/papers/envmap/envmap.pdf">An Efficient Representation for Irradiance Environment Maps</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="style">
+    <a href="#style" class="doc-link"></a>
+    style<span class="type-signature"> : <a href="Cesium3DTileStyle.html">Cesium3DTileStyle</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1226">Scene/Cesium3DTileset.js 1226</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The style, defined using the<a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling">3D Tiles Styling language</a>,applied to each feature in the tileset.<p>Assign <code>undefined</code> to remove the style, which will restore the visualappearance of the tileset to its default when no style was applied.</p><p>The style is applied to a tile before the <a href="Cesium3DTileset.html#tileVisible"><code>Cesium3DTileset#tileVisible</code></a>event is raised, so code in <code>tileVisible</code> can manually set a feature'sproperties (e.g. color and show) after the style is applied. Whena new style is assigned any manually set properties are overwritten.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">undefined</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.style = new Cesium.Cesium3DTileStyle({   color : {       conditions : [           ['${Height} >= 100', 'color("purple", 0.5)'],           ['${Height} >= 50', 'color("red")'],           ['true', 'color("blue")']       ]   },   show : '${Height} > 0',   meta : {       description : '"Building id ${id} has height ${Height}."'   }});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling">3D Tiles Styling language</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="tileFailed">
+    <a href="#tileFailed" class="doc-link"></a>
+    tileFailed<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L572">Scene/Cesium3DTileset.js 572</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate that a tile's content failed to load.<p>If there are no event listeners, error messages will be logged to the console.</p><p>The error object passed to the listener contains two properties:<ul><li><code>url</code>: the url of the failed tile.</li><li><code>message</code>: the error message.</li></ul>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.tileFailed.addEventListener(function(error) {    console.log('An error occurred loading tile: ' + error.url);    console.log('Error: ' + error.message);});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="tileLoad">
+    <a href="#tileLoad" class="doc-link"></a>
+    tileLoad<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L525">Scene/Cesium3DTileset.js 525</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate that a tile's content was loaded.<p>The loaded <a href="Cesium3DTile.html"><code>Cesium3DTile</code></a> is passed to the event listener.</p><p>This event is fired during the tileset traversal while the frame is being renderedso that updates to the tile take effect in the same frame.  Do not create or modifyCesium entities or primitives during the event listener.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.tileLoad.addEventListener(function(tile) {    console.log('A tile was loaded.');});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="tilesLoaded">
+    <a href="#tilesLoaded" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> tilesLoaded<span class="type-signature"> : Boolean</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1149">Scene/Cesium3DTileset.js 1149</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    When <code>true</code>, all tiles that meet the screen space error this frame are loaded. The tileset iscompletely loaded for this view.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">false</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#allTilesLoaded">Cesium3DTileset#allTilesLoaded</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="tileUnload">
+    <a href="#tileUnload" class="doc-link"></a>
+    tileUnload<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L549">Scene/Cesium3DTileset.js 549</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The event fired to indicate that a tile's content was unloaded.<p>The unloaded <a href="Cesium3DTile.html"><code>Cesium3DTile</code></a> is passed to the event listener.</p><p>This event is fired immediately before the tile's content is unloaded while the frame is beingrendered so that the event listener has access to the tile's content.  Do not createor modify Cesium entities or primitives during the event listener.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset.tileUnload.addEventListener(function(tile) {    console.log('A tile was unloaded from the cache.');});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#maximumMemoryUsage">Cesium3DTileset#maximumMemoryUsage</a></li>
+    
+        <li><a href="Cesium3DTileset.html#trimLoadedTiles">Cesium3DTileset#trimLoadedTiles</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="tileVisible">
+    <a href="#tileVisible" class="doc-link"></a>
+    tileVisible<span class="type-signature"> : <a href="Event.html">Event</a></span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L609">Scene/Cesium3DTileset.js 609</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    This event fires once for each visible tile in a frame.  This can be used to manuallystyle a tileset.<p>The visible <a href="Cesium3DTile.html"><code>Cesium3DTile</code></a> is passed to the event listener.</p><p>This event is fired during the tileset traversal while the frame is being renderedso that updates to the tile take effect in the same frame.  Do not create or modifyCesium entities or primitives during the event listener.</p>
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">new Event()</code>
+    
+
+    
+        <h5>Examples:</h5>
+        
+    <pre><code class="language-javascript">tileset.tileVisible.addEventListener(function(tile) {    if (tile.content instanceof Cesium.Batched3DModel3DTileContent) {        console.log('A Batched 3D Model tile is visible.');    }});</code></pre>
+
+    <pre><code class="language-javascript">// Apply a red style and then manually set random colors for every other feature when the tile becomes visible.tileset.style = new Cesium.Cesium3DTileStyle({    color : 'color("red")'});tileset.tileVisible.addEventListener(function(tile) {    var content = tile.content;    var featuresLength = content.featuresLength;    for (var i = 0; i &lt; featuresLength; i+=2) {        content.getFeature(i).color = Cesium.Color.fromRandom();    }});</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="timeSinceLoad">
+    <a href="#timeSinceLoad" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> timeSinceLoad<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1406">Scene/Cesium3DTileset.js 1406</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    Returns the time, in milliseconds, since the tileset was loaded and first updated.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="totalMemoryUsageInBytes">
+    <a href="#totalMemoryUsageInBytes" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> totalMemoryUsageInBytes<span class="type-signature"> : Number</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1424">Scene/Cesium3DTileset.js 1424</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The total amount of GPU memory in bytes used by the tileset. This value is estimated fromgeometry, texture, and batch table textures of loaded tiles. For point clouds, this value alsoincludes per-point metadata.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#maximumMemoryUsage">Cesium3DTileset#maximumMemoryUsage</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+<div class="nameContainer">
+<h4 class="name" id="url">
+    <a href="#url" class="doc-link"></a>
+    <span class="type-signature attribute-readonly">readonly</span> url<span class="type-signature"> : String</span>
+    
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1163">Scene/Cesium3DTileset.js 1163</a>
+</div>
+
+
+</h4>
+
+</div>
+
+
+
+<div class="description">
+    The url to a tileset JSON file.
+</div>
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id=".loadJson">
+        <a href="#.loadJson" class="doc-link"></a>
+        <span class="type-signature attribute-static">static</span> Cesium.Cesium3DTileset.loadJson<span class="signature">(tilesetUrl)</span> &rarr; <span class="type-signature returnType">Promise.&lt;Object></span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1652">Scene/Cesium3DTileset.js 1652</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Provides a hook to override the method used to request the tileset jsonuseful when fetching tilesets from remote servers
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>tilesetUrl</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Resource.html">Resource</a></span>
+|
+
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The url of the json file to be fetched</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    A promise that resolves with the fetched json data
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="destroy">
+        <a href="#destroy" class="doc-link"></a>
+        destroy<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L2591">Scene/Cesium3DTileset.js 2591</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Destroys the WebGL resources held by this object.  Destroying an object allows for deterministicrelease of WebGL resources, instead of relying on the garbage collector to destroy this object.<br /><br />Once an object is destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.  Therefore,assign the return value (<code>undefined</code>) to the object as done in the example.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Throws:</h5>
+<ul>
+        <li>
+
+    <div class="param-desc">
+        
+<span class="param-type"><a href="DeveloperError.html">DeveloperError</a></span>
+
+: This object was destroyed, i.e., destroy() was called.
+    </div>
+
+</li>
+    </ul>
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h5>Example:</h5>
+        
+    <pre><code class="language-javascript">tileset = tileset &amp;&amp; tileset.destroy();</code></pre>
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#isDestroyed">Cesium3DTileset#isDestroyed</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="hasExtension">
+        <a href="#hasExtension" class="doc-link"></a>
+        hasExtension<span class="signature">(extensionName)</span> &rarr; <span class="type-signature returnType">Boolean</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L2554">Scene/Cesium3DTileset.js 2554</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>extensionName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The name of the extension to check.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="isDestroyed">
+        <a href="#isDestroyed" class="doc-link"></a>
+        isDestroyed<span class="signature">()</span> &rarr; <span class="type-signature returnType">Boolean</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L2572">Scene/Cesium3DTileset.js 2572</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Returns true if this object was destroyed; otherwise, false.<br /><br />If this object was destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <h5>See:</h5>
+    <ul class="see-list">
+        <li><a href="Cesium3DTileset.html#destroy">Cesium3DTileset#destroy</a></li>
+    </ul>
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="makeStyleDirty">
+        <a href="#makeStyleDirty" class="doc-link"></a>
+        makeStyleDirty<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L1661">Scene/Cesium3DTileset.js 1661</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Marks the tileset's <a href="Cesium3DTileset.html#style"><code>Cesium3DTileset#style</code></a> as dirty, which forces allfeatures to re-evaluate the style in the next frame each is visible.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+            
+    <div class="nameContainer">
+    <h4 class="name" id="trimLoadedTiles">
+        <a href="#trimLoadedTiles" class="doc-link"></a>
+        trimLoadedTiles<span class="signature">()</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L2342">Scene/Cesium3DTileset.js 2342</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Unloads all tiles that weren't selected the previous frame.  This can be used toexplicitly manage the tile cache and reduce the total number of tiles loaded below<a href="Cesium3DTileset.html#maximumMemoryUsage"><code>Cesium3DTileset#maximumMemoryUsage</code></a>.<p>Tile unloads occur at the next frame to keep all the WebGL delete callswithin the render loop.</p>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+        
+    
+
+    
+        <h3 class="subsection-title">Type Definitions</h3>
+
+        
+                
+    <div class="nameContainer">
+    <h4 class="name" id="~foveatedInterpolationCallback">
+        <a href="#~foveatedInterpolationCallback" class="doc-link"></a>
+        foveatedInterpolationCallback<span class="signature">(p, q, time)</span> &rarr; <span class="type-signature returnType">Number</span>
+        
+
+<div class="source-link rightLinks">
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/Cesium3DTileset.js#L2617">Scene/Cesium3DTileset.js 2617</a>
+</div>
+
+
+    </h4>
+
+    </div>
+
+    
+
+
+<div class="description">
+    Optimization option. Used as a callback when <a href="Cesium3DTileset.html#foveatedScreenSpaceError"><code>Cesium3DTileset#foveatedScreenSpaceError</code></a> is true to control how much to raise the screen space error for tiles outside the foveated cone,interpolating between <a href="Cesium3DTileset.html#foveatedMinimumScreenSpaceErrorRelaxation"><code>Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation</code></a> and <a href="Cesium3DTileset.html#maximumScreenSpaceError"><code>Cesium3DTileset#maximumScreenSpaceError</code></a>.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>p</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The start value to interpolate.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>q</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The end value to interpolate.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>time</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+
+            <td class="description last">
+            
+                The time of interpolation generally in the range <code>[0.0, 1.0]</code>.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The interpolated value.
+</div>
+
+
+    
+
+
+
+
+<dl class="details">
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript">Math.lerp</code>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+            
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+    <footer>
+        Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.4</a>
+    </footer>
+</div>
+
+<div class="nav">
+    <div class="menu">
+        <input type="text" class="classFilter" id="ClassFilter" placeholder="Search">
+        <ul id="ClassList"><li data-name="Animation"><a href="Animation.html">Animation</a></li><li data-name="AnimationViewModel"><a href="AnimationViewModel.html">AnimationViewModel</a></li><li data-name="Appearance"><a href="Appearance.html">Appearance</a></li><li data-name="ArcGisMapServerImageryProvider"><a href="ArcGisMapServerImageryProvider.html">ArcGisMapServerImageryProvider</a></li><li data-name="ArcGISTiledElevationTerrainProvider"><a href="ArcGISTiledElevationTerrainProvider.html">ArcGISTiledElevationTerrainProvider</a></li><li data-name="ArcType"><a href="ArcType.html">ArcType</a></li><li data-name="AssociativeArray"><a href="AssociativeArray.html">AssociativeArray</a></li><li data-name="AxisAlignedBoundingBox"><a href="AxisAlignedBoundingBox.html">AxisAlignedBoundingBox</a></li><li data-name="barycentricCoordinates"><a href="barycentricCoordinates.html">barycentricCoordinates</a></li><li data-name="BaseLayerPicker"><a href="BaseLayerPicker.html">BaseLayerPicker</a></li><li data-name="BaseLayerPickerViewModel"><a href="BaseLayerPickerViewModel.html">BaseLayerPickerViewModel</a></li><li data-name="Billboard"><a href="Billboard.html">Billboard</a></li><li data-name="BillboardCollection"><a href="BillboardCollection.html">BillboardCollection</a></li><li data-name="BillboardGraphics"><a href="BillboardGraphics.html">BillboardGraphics</a></li><li data-name="BillboardVisualizer"><a href="BillboardVisualizer.html">BillboardVisualizer</a></li><li data-name="binarySearch"><a href="binarySearch.html">binarySearch</a></li><li data-name="BingMapsApi"><a href="BingMapsApi.html">BingMapsApi</a></li><li data-name="BingMapsGeocoderService"><a href="BingMapsGeocoderService.html">BingMapsGeocoderService</a></li><li data-name="BingMapsImageryProvider"><a href="BingMapsImageryProvider.html">BingMapsImageryProvider</a></li><li data-name="BingMapsStyle"><a href="BingMapsStyle.html">BingMapsStyle</a></li><li data-name="BlendEquation"><a href="BlendEquation.html">BlendEquation</a></li><li data-name="BlendFunction"><a href="BlendFunction.html">BlendFunction</a></li><li data-name="BlendingState"><a href="BlendingState.html">BlendingState</a></li><li data-name="BlendOption"><a href="BlendOption.html">BlendOption</a></li><li data-name="BoundingRectangle"><a href="BoundingRectangle.html">BoundingRectangle</a></li><li data-name="BoundingSphere"><a href="BoundingSphere.html">BoundingSphere</a></li><li data-name="BoxEmitter"><a href="BoxEmitter.html">BoxEmitter</a></li><li data-name="BoxGeometry"><a href="BoxGeometry.html">BoxGeometry</a></li><li data-name="BoxGeometryUpdater"><a href="BoxGeometryUpdater.html">BoxGeometryUpdater</a></li><li data-name="BoxGraphics"><a href="BoxGraphics.html">BoxGraphics</a></li><li data-name="BoxOutlineGeometry"><a href="BoxOutlineGeometry.html">BoxOutlineGeometry</a></li><li data-name="CallbackProperty"><a href="CallbackProperty.html">CallbackProperty</a></li><li data-name="Camera"><a href="Camera.html">Camera</a></li><li data-name="CameraEventAggregator"><a href="CameraEventAggregator.html">CameraEventAggregator</a></li><li data-name="CameraEventType"><a href="CameraEventType.html">CameraEventType</a></li><li data-name="cancelAnimationFrame"><a href="cancelAnimationFrame.html">cancelAnimationFrame</a></li><li data-name="Cartesian2"><a href="Cartesian2.html">Cartesian2</a></li><li data-name="Cartesian3"><a href="Cartesian3.html">Cartesian3</a></li><li data-name="Cartesian4"><a href="Cartesian4.html">Cartesian4</a></li><li data-name="Cartographic"><a href="Cartographic.html">Cartographic</a></li><li data-name="CartographicGeocoderService"><a href="CartographicGeocoderService.html">CartographicGeocoderService</a></li><li data-name="CatmullRomSpline"><a href="CatmullRomSpline.html">CatmullRomSpline</a></li><li data-name="Cesium3DTile"><a href="Cesium3DTile.html">Cesium3DTile</a></li><li data-name="Cesium3DTileColorBlendMode"><a href="Cesium3DTileColorBlendMode.html">Cesium3DTileColorBlendMode</a></li><li data-name="Cesium3DTileContent"><a href="Cesium3DTileContent.html">Cesium3DTileContent</a></li><li data-name="Cesium3DTileFeature"><a href="Cesium3DTileFeature.html">Cesium3DTileFeature</a></li><li data-name="Cesium3DTilePointFeature"><a href="Cesium3DTilePointFeature.html">Cesium3DTilePointFeature</a></li><li data-name="Cesium3DTileset"><a href="Cesium3DTileset.html">Cesium3DTileset</a></li><li data-name="Cesium3DTilesetGraphics"><a href="Cesium3DTilesetGraphics.html">Cesium3DTilesetGraphics</a></li><li data-name="Cesium3DTilesetVisualizer"><a href="Cesium3DTilesetVisualizer.html">Cesium3DTilesetVisualizer</a></li><li data-name="Cesium3DTilesInspector"><a href="Cesium3DTilesInspector.html">Cesium3DTilesInspector</a></li><li data-name="Cesium3DTilesInspectorViewModel"><a href="Cesium3DTilesInspectorViewModel.html">Cesium3DTilesInspectorViewModel</a></li><li data-name="Cesium3DTileStyle"><a href="Cesium3DTileStyle.html">Cesium3DTileStyle</a></li><li data-name="CesiumInspector"><a href="CesiumInspector.html">CesiumInspector</a></li><li data-name="CesiumInspectorViewModel"><a href="CesiumInspectorViewModel.html">CesiumInspectorViewModel</a></li><li data-name="CesiumTerrainProvider"><a href="CesiumTerrainProvider.html">CesiumTerrainProvider</a></li><li data-name="CesiumWidget"><a href="CesiumWidget.html">CesiumWidget</a></li><li data-name="CheckerboardMaterialProperty"><a href="CheckerboardMaterialProperty.html">CheckerboardMaterialProperty</a></li><li data-name="CircleEmitter"><a href="CircleEmitter.html">CircleEmitter</a></li><li data-name="CircleGeometry"><a href="CircleGeometry.html">CircleGeometry</a></li><li data-name="CircleOutlineGeometry"><a href="CircleOutlineGeometry.html">CircleOutlineGeometry</a></li><li data-name="ClassificationPrimitive"><a href="ClassificationPrimitive.html">ClassificationPrimitive</a></li><li data-name="ClassificationType"><a href="ClassificationType.html">ClassificationType</a></li><li data-name="ClippingPlane"><a href="ClippingPlane.html">ClippingPlane</a></li><li data-name="ClippingPlaneCollection"><a href="ClippingPlaneCollection.html">ClippingPlaneCollection</a></li><li data-name="Clock"><a href="Clock.html">Clock</a></li><li data-name="ClockRange"><a href="ClockRange.html">ClockRange</a></li><li data-name="ClockStep"><a href="ClockStep.html">ClockStep</a></li><li data-name="ClockViewModel"><a href="ClockViewModel.html">ClockViewModel</a></li><li data-name="clone"><a href="clone.html">clone</a></li><li data-name="Color"><a href="Color.html">Color</a></li><li data-name="ColorBlendMode"><a href="ColorBlendMode.html">ColorBlendMode</a></li><li data-name="ColorGeometryInstanceAttribute"><a href="ColorGeometryInstanceAttribute.html">ColorGeometryInstanceAttribute</a></li><li data-name="ColorMaterialProperty"><a href="ColorMaterialProperty.html">ColorMaterialProperty</a></li><li data-name="combine"><a href="combine.html">combine</a></li><li data-name="Command"><a href="Command.html">Command</a></li><li data-name="ComponentDatatype"><a href="ComponentDatatype.html">ComponentDatatype</a></li><li data-name="CompositeEntityCollection"><a href="CompositeEntityCollection.html">CompositeEntityCollection</a></li><li data-name="CompositeMaterialProperty"><a href="CompositeMaterialProperty.html">CompositeMaterialProperty</a></li><li data-name="CompositePositionProperty"><a href="CompositePositionProperty.html">CompositePositionProperty</a></li><li data-name="CompositeProperty"><a href="CompositeProperty.html">CompositeProperty</a></li><li data-name="CompressedTextureBuffer"><a href="CompressedTextureBuffer.html">CompressedTextureBuffer</a></li><li data-name="ConditionsExpression"><a href="ConditionsExpression.html">ConditionsExpression</a></li><li data-name="ConeEmitter"><a href="ConeEmitter.html">ConeEmitter</a></li><li data-name="ConstantPositionProperty"><a href="ConstantPositionProperty.html">ConstantPositionProperty</a></li><li data-name="ConstantProperty"><a href="ConstantProperty.html">ConstantProperty</a></li><li data-name="CoplanarPolygonGeometry"><a href="CoplanarPolygonGeometry.html">CoplanarPolygonGeometry</a></li><li data-name="CoplanarPolygonOutlineGeometry"><a href="CoplanarPolygonOutlineGeometry.html">CoplanarPolygonOutlineGeometry</a></li><li data-name="CornerType"><a href="CornerType.html">CornerType</a></li><li data-name="CorridorGeometry"><a href="CorridorGeometry.html">CorridorGeometry</a></li><li data-name="CorridorGeometryUpdater"><a href="CorridorGeometryUpdater.html">CorridorGeometryUpdater</a></li><li data-name="CorridorGraphics"><a href="CorridorGraphics.html">CorridorGraphics</a></li><li data-name="CorridorOutlineGeometry"><a href="CorridorOutlineGeometry.html">CorridorOutlineGeometry</a></li><li data-name="createCommand"><a href="createCommand.html">createCommand</a></li><li data-name="createGuid"><a href="createGuid.html">createGuid</a></li><li data-name="createOsmBuildings"><a href="createOsmBuildings.html">createOsmBuildings</a></li><li data-name="createTangentSpaceDebugPrimitive"><a href="createTangentSpaceDebugPrimitive.html">createTangentSpaceDebugPrimitive</a></li><li data-name="createWorldImagery"><a href="createWorldImagery.html">createWorldImagery</a></li><li data-name="createWorldTerrain"><a href="createWorldTerrain.html">createWorldTerrain</a></li><li data-name="Credit"><a href="Credit.html">Credit</a></li><li data-name="CreditDisplay"><a href="CreditDisplay.html">CreditDisplay</a></li><li data-name="CubicRealPolynomial"><a href="CubicRealPolynomial.html">CubicRealPolynomial</a></li><li data-name="CullFace"><a href="CullFace.html">CullFace</a></li><li data-name="CullingVolume"><a href="CullingVolume.html">CullingVolume</a></li><li data-name="CustomDataSource"><a href="CustomDataSource.html">CustomDataSource</a></li><li data-name="CylinderGeometry"><a href="CylinderGeometry.html">CylinderGeometry</a></li><li data-name="CylinderGeometryUpdater"><a href="CylinderGeometryUpdater.html">CylinderGeometryUpdater</a></li><li data-name="CylinderGraphics"><a href="CylinderGraphics.html">CylinderGraphics</a></li><li data-name="CylinderOutlineGeometry"><a href="CylinderOutlineGeometry.html">CylinderOutlineGeometry</a></li><li data-name="CzmlDataSource"><a href="CzmlDataSource.html">CzmlDataSource</a></li><li data-name="DataSource"><a href="DataSource.html">DataSource</a></li><li data-name="DataSourceClock"><a href="DataSourceClock.html">DataSourceClock</a></li><li data-name="DataSourceCollection"><a href="DataSourceCollection.html">DataSourceCollection</a></li><li data-name="DataSourceDisplay"><a href="DataSourceDisplay.html">DataSourceDisplay</a></li><li data-name="DebugAppearance"><a href="DebugAppearance.html">DebugAppearance</a></li><li data-name="DebugCameraPrimitive"><a href="DebugCameraPrimitive.html">DebugCameraPrimitive</a></li><li data-name="DebugModelMatrixPrimitive"><a href="DebugModelMatrixPrimitive.html">DebugModelMatrixPrimitive</a></li><li data-name="DefaultProxy"><a href="DefaultProxy.html">DefaultProxy</a></li><li data-name="defaultValue"><a href="defaultValue.html">defaultValue</a></li><li data-name="defined"><a href="defined.html">defined</a></li><li data-name="DepthFunction"><a href="DepthFunction.html">DepthFunction</a></li><li data-name="destroyObject"><a href="destroyObject.html">destroyObject</a></li><li data-name="DeveloperError"><a href="DeveloperError.html">DeveloperError</a></li><li data-name="DirectionalLight"><a href="DirectionalLight.html">DirectionalLight</a></li><li data-name="DiscardEmptyTileImagePolicy"><a href="DiscardEmptyTileImagePolicy.html">DiscardEmptyTileImagePolicy</a></li><li data-name="DiscardMissingTileImagePolicy"><a href="DiscardMissingTileImagePolicy.html">DiscardMissingTileImagePolicy</a></li><li data-name="DistanceDisplayCondition"><a href="DistanceDisplayCondition.html">DistanceDisplayCondition</a></li><li data-name="DistanceDisplayConditionGeometryInstanceAttribute"><a href="DistanceDisplayConditionGeometryInstanceAttribute.html">DistanceDisplayConditionGeometryInstanceAttribute</a></li><li data-name="EasingFunction"><a href="EasingFunction.html">EasingFunction</a></li><li data-name="EllipseGeometry"><a href="EllipseGeometry.html">EllipseGeometry</a></li><li data-name="EllipseGeometryUpdater"><a href="EllipseGeometryUpdater.html">EllipseGeometryUpdater</a></li><li data-name="EllipseGraphics"><a href="EllipseGraphics.html">EllipseGraphics</a></li><li data-name="EllipseOutlineGeometry"><a href="EllipseOutlineGeometry.html">EllipseOutlineGeometry</a></li><li data-name="Ellipsoid"><a href="Ellipsoid.html">Ellipsoid</a></li><li data-name="EllipsoidGeodesic"><a href="EllipsoidGeodesic.html">EllipsoidGeodesic</a></li><li data-name="EllipsoidGeometry"><a href="EllipsoidGeometry.html">EllipsoidGeometry</a></li><li data-name="EllipsoidGeometryUpdater"><a href="EllipsoidGeometryUpdater.html">EllipsoidGeometryUpdater</a></li><li data-name="EllipsoidGraphics"><a href="EllipsoidGraphics.html">EllipsoidGraphics</a></li><li data-name="EllipsoidOutlineGeometry"><a href="EllipsoidOutlineGeometry.html">EllipsoidOutlineGeometry</a></li><li data-name="EllipsoidRhumbLine"><a href="EllipsoidRhumbLine.html">EllipsoidRhumbLine</a></li><li data-name="EllipsoidSurfaceAppearance"><a href="EllipsoidSurfaceAppearance.html">EllipsoidSurfaceAppearance</a></li><li data-name="EllipsoidTangentPlane"><a href="EllipsoidTangentPlane.html">EllipsoidTangentPlane</a></li><li data-name="EllipsoidTerrainProvider"><a href="EllipsoidTerrainProvider.html">EllipsoidTerrainProvider</a></li><li data-name="Entity"><a href="Entity.html">Entity</a></li><li data-name="EntityCluster"><a href="EntityCluster.html">EntityCluster</a></li><li data-name="EntityCollection"><a href="EntityCollection.html">EntityCollection</a></li><li data-name="EntityView"><a href="EntityView.html">EntityView</a></li><li data-name="Event"><a href="Event.html">Event</a></li><li data-name="EventHelper"><a href="EventHelper.html">EventHelper</a></li><li data-name="exportKml"><a href="exportKml.html">exportKml</a></li><li data-name="Expression"><a href="Expression.html">Expression</a></li><li data-name="ExtrapolationType"><a href="ExtrapolationType.html">ExtrapolationType</a></li><li data-name="FeatureDetection"><a href="FeatureDetection.html">FeatureDetection</a></li><li data-name="Fog"><a href="Fog.html">Fog</a></li><li data-name="formatError"><a href="formatError.html">formatError</a></li><li data-name="FrameRateMonitor"><a href="FrameRateMonitor.html">FrameRateMonitor</a></li><li data-name="FrustumGeometry"><a href="FrustumGeometry.html">FrustumGeometry</a></li><li data-name="FrustumOutlineGeometry"><a href="FrustumOutlineGeometry.html">FrustumOutlineGeometry</a></li><li data-name="Fullscreen"><a href="Fullscreen.html">Fullscreen</a></li><li data-name="FullscreenButton"><a href="FullscreenButton.html">FullscreenButton</a></li><li data-name="FullscreenButtonViewModel"><a href="FullscreenButtonViewModel.html">FullscreenButtonViewModel</a></li><li data-name="Geocoder"><a href="Geocoder.html">Geocoder</a></li><li data-name="GeocoderService"><a href="GeocoderService.html">GeocoderService</a></li><li data-name="GeocoderViewModel"><a href="GeocoderViewModel.html">GeocoderViewModel</a></li><li data-name="GeocodeType"><a href="GeocodeType.html">GeocodeType</a></li><li data-name="GeographicProjection"><a href="GeographicProjection.html">GeographicProjection</a></li><li data-name="GeographicTilingScheme"><a href="GeographicTilingScheme.html">GeographicTilingScheme</a></li><li data-name="GeoJsonDataSource"><a href="GeoJsonDataSource.html">GeoJsonDataSource</a></li><li data-name="Geometry"><a href="Geometry.html">Geometry</a></li><li data-name="GeometryAttribute"><a href="GeometryAttribute.html">GeometryAttribute</a></li><li data-name="GeometryAttributes"><a href="GeometryAttributes.html">GeometryAttributes</a></li><li data-name="GeometryInstance"><a href="GeometryInstance.html">GeometryInstance</a></li><li data-name="GeometryInstanceAttribute"><a href="GeometryInstanceAttribute.html">GeometryInstanceAttribute</a></li><li data-name="GeometryPipeline"><a href="GeometryPipeline.html">GeometryPipeline</a></li><li data-name="GeometryUpdater"><a href="GeometryUpdater.html">GeometryUpdater</a></li><li data-name="GeometryVisualizer"><a href="GeometryVisualizer.html">GeometryVisualizer</a></li><li data-name="getAbsoluteUri"><a href="getAbsoluteUri.html">getAbsoluteUri</a></li><li data-name="getBaseUri"><a href="getBaseUri.html">getBaseUri</a></li><li data-name="getExtensionFromUri"><a href="getExtensionFromUri.html">getExtensionFromUri</a></li><li data-name="GetFeatureInfoFormat"><a href="GetFeatureInfoFormat.html">GetFeatureInfoFormat</a></li><li data-name="getFilenameFromUri"><a href="getFilenameFromUri.html">getFilenameFromUri</a></li><li data-name="getImagePixels"><a href="getImagePixels.html">getImagePixels</a></li><li data-name="getTimestamp"><a href="getTimestamp.html">getTimestamp</a></li><li data-name="Globe"><a href="Globe.html">Globe</a></li><li data-name="GoogleEarthEnterpriseImageryProvider"><a href="GoogleEarthEnterpriseImageryProvider.html">GoogleEarthEnterpriseImageryProvider</a></li><li data-name="GoogleEarthEnterpriseMapsProvider"><a href="GoogleEarthEnterpriseMapsProvider.html">GoogleEarthEnterpriseMapsProvider</a></li><li data-name="GoogleEarthEnterpriseMetadata"><a href="GoogleEarthEnterpriseMetadata.html">GoogleEarthEnterpriseMetadata</a></li><li data-name="GoogleEarthEnterpriseTerrainData"><a href="GoogleEarthEnterpriseTerrainData.html">GoogleEarthEnterpriseTerrainData</a></li><li data-name="GoogleEarthEnterpriseTerrainProvider"><a href="GoogleEarthEnterpriseTerrainProvider.html">GoogleEarthEnterpriseTerrainProvider</a></li><li data-name="GregorianDate"><a href="GregorianDate.html">GregorianDate</a></li><li data-name="GridImageryProvider"><a href="GridImageryProvider.html">GridImageryProvider</a></li><li data-name="GridMaterialProperty"><a href="GridMaterialProperty.html">GridMaterialProperty</a></li><li data-name="GroundGeometryUpdater"><a href="GroundGeometryUpdater.html">GroundGeometryUpdater</a></li><li data-name="GroundPolylineGeometry"><a href="GroundPolylineGeometry.html">GroundPolylineGeometry</a></li><li data-name="GroundPolylinePrimitive"><a href="GroundPolylinePrimitive.html">GroundPolylinePrimitive</a></li><li data-name="GroundPrimitive"><a href="GroundPrimitive.html">GroundPrimitive</a></li><li data-name="HeadingPitchRange"><a href="HeadingPitchRange.html">HeadingPitchRange</a></li><li data-name="HeadingPitchRoll"><a href="HeadingPitchRoll.html">HeadingPitchRoll</a></li><li data-name="HeightmapEncoding"><a href="HeightmapEncoding.html">HeightmapEncoding</a></li><li data-name="HeightmapTerrainData"><a href="HeightmapTerrainData.html">HeightmapTerrainData</a></li><li data-name="HeightReference"><a href="HeightReference.html">HeightReference</a></li><li data-name="HermitePolynomialApproximation"><a href="HermitePolynomialApproximation.html">HermitePolynomialApproximation</a></li><li data-name="HermiteSpline"><a href="HermiteSpline.html">HermiteSpline</a></li><li data-name="HomeButton"><a href="HomeButton.html">HomeButton</a></li><li data-name="HomeButtonViewModel"><a href="HomeButtonViewModel.html">HomeButtonViewModel</a></li><li data-name="HorizontalOrigin"><a href="HorizontalOrigin.html">HorizontalOrigin</a></li><li data-name="ImageMaterialProperty"><a href="ImageMaterialProperty.html">ImageMaterialProperty</a></li><li data-name="ImageryLayer"><a href="ImageryLayer.html">ImageryLayer</a></li><li data-name="ImageryLayerCollection"><a href="ImageryLayerCollection.html">ImageryLayerCollection</a></li><li data-name="ImageryLayerFeatureInfo"><a href="ImageryLayerFeatureInfo.html">ImageryLayerFeatureInfo</a></li><li data-name="ImageryProvider"><a href="ImageryProvider.html">ImageryProvider</a></li><li data-name="ImagerySplitDirection"><a href="ImagerySplitDirection.html">ImagerySplitDirection</a></li><li data-name="IndexDatatype"><a href="IndexDatatype.html">IndexDatatype</a></li><li data-name="InfoBox"><a href="InfoBox.html">InfoBox</a></li><li data-name="InfoBoxViewModel"><a href="InfoBoxViewModel.html">InfoBoxViewModel</a></li><li data-name="InterpolationAlgorithm"><a href="InterpolationAlgorithm.html">InterpolationAlgorithm</a></li><li data-name="Intersect"><a href="Intersect.html">Intersect</a></li><li data-name="Intersections2D"><a href="Intersections2D.html">Intersections2D</a></li><li data-name="IntersectionTests"><a href="IntersectionTests.html">IntersectionTests</a></li><li data-name="Interval"><a href="Interval.html">Interval</a></li><li data-name="Ion"><a href="Ion.html">Ion</a></li><li data-name="IonGeocoderService"><a href="IonGeocoderService.html">IonGeocoderService</a></li><li data-name="IonImageryProvider"><a href="IonImageryProvider.html">IonImageryProvider</a></li><li data-name="IonResource"><a href="IonResource.html">IonResource</a></li><li data-name="IonWorldImageryStyle"><a href="IonWorldImageryStyle.html">IonWorldImageryStyle</a></li><li data-name="isLeapYear"><a href="isLeapYear.html">isLeapYear</a></li><li data-name="Iso8601"><a href="Iso8601.html">Iso8601</a></li><li data-name="JulianDate"><a href="JulianDate.html">JulianDate</a></li><li data-name="KeyboardEventModifier"><a href="KeyboardEventModifier.html">KeyboardEventModifier</a></li><li data-name="KmlCamera"><a href="KmlCamera.html">KmlCamera</a></li><li data-name="KmlDataSource"><a href="KmlDataSource.html">KmlDataSource</a></li><li data-name="KmlFeatureData"><a href="KmlFeatureData.html">KmlFeatureData</a></li><li data-name="KmlLookAt"><a href="KmlLookAt.html">KmlLookAt</a></li><li data-name="KmlTour"><a href="KmlTour.html">KmlTour</a></li><li data-name="KmlTourFlyTo"><a href="KmlTourFlyTo.html">KmlTourFlyTo</a></li><li data-name="KmlTourWait"><a href="KmlTourWait.html">KmlTourWait</a></li><li data-name="Label"><a href="Label.html">Label</a></li><li data-name="LabelCollection"><a href="LabelCollection.html">LabelCollection</a></li><li data-name="LabelGraphics"><a href="LabelGraphics.html">LabelGraphics</a></li><li data-name="LabelStyle"><a href="LabelStyle.html">LabelStyle</a></li><li data-name="LabelVisualizer"><a href="LabelVisualizer.html">LabelVisualizer</a></li><li data-name="LagrangePolynomialApproximation"><a href="LagrangePolynomialApproximation.html">LagrangePolynomialApproximation</a></li><li data-name="LeapSecond"><a href="LeapSecond.html">LeapSecond</a></li><li data-name="Light"><a href="Light.html">Light</a></li><li data-name="LinearApproximation"><a href="LinearApproximation.html">LinearApproximation</a></li><li data-name="LinearSpline"><a href="LinearSpline.html">LinearSpline</a></li><li data-name="loadCRN"><a href="loadCRN.html">loadCRN</a></li><li data-name="loadKTX"><a href="loadKTX.html">loadKTX</a></li><li data-name="MapboxApi"><a href="MapboxApi.html">MapboxApi</a></li><li data-name="MapboxImageryProvider"><a href="MapboxImageryProvider.html">MapboxImageryProvider</a></li><li data-name="MapboxStyleImageryProvider"><a href="MapboxStyleImageryProvider.html">MapboxStyleImageryProvider</a></li><li data-name="MapMode2D"><a href="MapMode2D.html">MapMode2D</a></li><li data-name="MapProjection"><a href="MapProjection.html">MapProjection</a></li><li data-name="Material"><a href="Material.html">Material</a></li><li data-name="MaterialAppearance"><a href="MaterialAppearance.html">MaterialAppearance</a></li><li data-name="MaterialSupport"><a href="MaterialAppearance.module_MaterialSupport.html">MaterialSupport</a></li><li data-name="MaterialProperty"><a href="MaterialProperty.html">MaterialProperty</a></li><li data-name="Math"><a href="Math.html">Math</a></li><li data-name="Matrix2"><a href="Matrix2.html">Matrix2</a></li><li data-name="Matrix3"><a href="Matrix3.html">Matrix3</a></li><li data-name="Matrix4"><a href="Matrix4.html">Matrix4</a></li><li data-name="mergeSort"><a href="mergeSort.html">mergeSort</a></li><li data-name="Model"><a href="Model.html">Model</a></li><li data-name="ModelAnimation"><a href="ModelAnimation.html">ModelAnimation</a></li><li data-name="ModelAnimationCollection"><a href="ModelAnimationCollection.html">ModelAnimationCollection</a></li><li data-name="ModelAnimationLoop"><a href="ModelAnimationLoop.html">ModelAnimationLoop</a></li><li data-name="ModelGraphics"><a href="ModelGraphics.html">ModelGraphics</a></li><li data-name="ModelMaterial"><a href="ModelMaterial.html">ModelMaterial</a></li><li data-name="ModelMesh"><a href="ModelMesh.html">ModelMesh</a></li><li data-name="ModelNode"><a href="ModelNode.html">ModelNode</a></li><li data-name="ModelVisualizer"><a href="ModelVisualizer.html">ModelVisualizer</a></li><li data-name="Moon"><a href="Moon.html">Moon</a></li><li data-name="NavigationHelpButton"><a href="NavigationHelpButton.html">NavigationHelpButton</a></li><li data-name="NavigationHelpButtonViewModel"><a href="NavigationHelpButtonViewModel.html">NavigationHelpButtonViewModel</a></li><li data-name="NearFarScalar"><a href="NearFarScalar.html">NearFarScalar</a></li><li data-name="NeverTileDiscardPolicy"><a href="NeverTileDiscardPolicy.html">NeverTileDiscardPolicy</a></li><li data-name="NodeTransformationProperty"><a href="NodeTransformationProperty.html">NodeTransformationProperty</a></li><li data-name="objectToQuery"><a href="objectToQuery.html">objectToQuery</a></li><li data-name="Occluder"><a href="Occluder.html">Occluder</a></li><li data-name="OpenCageGeocoderService"><a href="OpenCageGeocoderService.html">OpenCageGeocoderService</a></li><li data-name="OpenStreetMapImageryProvider"><a href="OpenStreetMapImageryProvider.html">OpenStreetMapImageryProvider</a></li><li data-name="OrientedBoundingBox"><a href="OrientedBoundingBox.html">OrientedBoundingBox</a></li><li data-name="OrthographicFrustum"><a href="OrthographicFrustum.html">OrthographicFrustum</a></li><li data-name="OrthographicOffCenterFrustum"><a href="OrthographicOffCenterFrustum.html">OrthographicOffCenterFrustum</a></li><li data-name="Packable"><a href="Packable.html">Packable</a></li><li data-name="PackableForInterpolation"><a href="PackableForInterpolation.html">PackableForInterpolation</a></li><li data-name="Particle"><a href="Particle.html">Particle</a></li><li data-name="ParticleBurst"><a href="ParticleBurst.html">ParticleBurst</a></li><li data-name="ParticleEmitter"><a href="ParticleEmitter.html">ParticleEmitter</a></li><li data-name="ParticleSystem"><a href="ParticleSystem.html">ParticleSystem</a></li><li data-name="PathGraphics"><a href="PathGraphics.html">PathGraphics</a></li><li data-name="PathVisualizer"><a href="PathVisualizer.html">PathVisualizer</a></li><li data-name="PeliasGeocoderService"><a href="PeliasGeocoderService.html">PeliasGeocoderService</a></li><li data-name="PerformanceWatchdog"><a href="PerformanceWatchdog.html">PerformanceWatchdog</a></li><li data-name="PerformanceWatchdogViewModel"><a href="PerformanceWatchdogViewModel.html">PerformanceWatchdogViewModel</a></li><li data-name="PerInstanceColorAppearance"><a href="PerInstanceColorAppearance.html">PerInstanceColorAppearance</a></li><li data-name="PerspectiveFrustum"><a href="PerspectiveFrustum.html">PerspectiveFrustum</a></li><li data-name="PerspectiveOffCenterFrustum"><a href="PerspectiveOffCenterFrustum.html">PerspectiveOffCenterFrustum</a></li><li data-name="PinBuilder"><a href="PinBuilder.html">PinBuilder</a></li><li data-name="PixelFormat"><a href="PixelFormat.html">PixelFormat</a></li><li data-name="Plane"><a href="Plane.html">Plane</a></li><li data-name="PlaneGeometry"><a href="PlaneGeometry.html">PlaneGeometry</a></li><li data-name="PlaneGeometryUpdater"><a href="PlaneGeometryUpdater.html">PlaneGeometryUpdater</a></li><li data-name="PlaneGraphics"><a href="PlaneGraphics.html">PlaneGraphics</a></li><li data-name="PlaneOutlineGeometry"><a href="PlaneOutlineGeometry.html">PlaneOutlineGeometry</a></li><li data-name="PointCloudShading"><a href="PointCloudShading.html">PointCloudShading</a></li><li data-name="PointGraphics"><a href="PointGraphics.html">PointGraphics</a></li><li data-name="pointInsideTriangle"><a href="pointInsideTriangle.html">pointInsideTriangle</a></li><li data-name="PointPrimitive"><a href="PointPrimitive.html">PointPrimitive</a></li><li data-name="PointPrimitiveCollection"><a href="PointPrimitiveCollection.html">PointPrimitiveCollection</a></li><li data-name="PointVisualizer"><a href="PointVisualizer.html">PointVisualizer</a></li><li data-name="PolygonGeometry"><a href="PolygonGeometry.html">PolygonGeometry</a></li><li data-name="PolygonGeometryUpdater"><a href="PolygonGeometryUpdater.html">PolygonGeometryUpdater</a></li><li data-name="PolygonGraphics"><a href="PolygonGraphics.html">PolygonGraphics</a></li><li data-name="PolygonHierarchy"><a href="PolygonHierarchy.html">PolygonHierarchy</a></li><li data-name="PolygonOutlineGeometry"><a href="PolygonOutlineGeometry.html">PolygonOutlineGeometry</a></li><li data-name="Polyline"><a href="Polyline.html">Polyline</a></li><li data-name="PolylineArrowMaterialProperty"><a href="PolylineArrowMaterialProperty.html">PolylineArrowMaterialProperty</a></li><li data-name="PolylineCollection"><a href="PolylineCollection.html">PolylineCollection</a></li><li data-name="PolylineColorAppearance"><a href="PolylineColorAppearance.html">PolylineColorAppearance</a></li><li data-name="PolylineDashMaterialProperty"><a href="PolylineDashMaterialProperty.html">PolylineDashMaterialProperty</a></li><li data-name="PolylineGeometry"><a href="PolylineGeometry.html">PolylineGeometry</a></li><li data-name="PolylineGeometryUpdater"><a href="PolylineGeometryUpdater.html">PolylineGeometryUpdater</a></li><li data-name="PolylineGlowMaterialProperty"><a href="PolylineGlowMaterialProperty.html">PolylineGlowMaterialProperty</a></li><li data-name="PolylineGraphics"><a href="PolylineGraphics.html">PolylineGraphics</a></li><li data-name="PolylineMaterialAppearance"><a href="PolylineMaterialAppearance.html">PolylineMaterialAppearance</a></li><li data-name="PolylineOutlineMaterialProperty"><a href="PolylineOutlineMaterialProperty.html">PolylineOutlineMaterialProperty</a></li><li data-name="PolylineVisualizer"><a href="PolylineVisualizer.html">PolylineVisualizer</a></li><li data-name="PolylineVolumeGeometry"><a href="PolylineVolumeGeometry.html">PolylineVolumeGeometry</a></li><li data-name="PolylineVolumeGeometryUpdater"><a href="PolylineVolumeGeometryUpdater.html">PolylineVolumeGeometryUpdater</a></li><li data-name="PolylineVolumeGraphics"><a href="PolylineVolumeGraphics.html">PolylineVolumeGraphics</a></li><li data-name="PolylineVolumeOutlineGeometry"><a href="PolylineVolumeOutlineGeometry.html">PolylineVolumeOutlineGeometry</a></li><li data-name="PositionProperty"><a href="PositionProperty.html">PositionProperty</a></li><li data-name="PositionPropertyArray"><a href="PositionPropertyArray.html">PositionPropertyArray</a></li><li data-name="PostProcessStage"><a href="PostProcessStage.html">PostProcessStage</a></li><li data-name="PostProcessStageCollection"><a href="PostProcessStageCollection.html">PostProcessStageCollection</a></li><li data-name="PostProcessStageComposite"><a href="PostProcessStageComposite.html">PostProcessStageComposite</a></li><li data-name="PostProcessStageLibrary"><a href="PostProcessStageLibrary.html">PostProcessStageLibrary</a></li><li data-name="PostProcessStageSampleMode"><a href="PostProcessStageSampleMode.html">PostProcessStageSampleMode</a></li><li data-name="Primitive"><a href="Primitive.html">Primitive</a></li><li data-name="PrimitiveCollection"><a href="PrimitiveCollection.html">PrimitiveCollection</a></li><li data-name="PrimitiveType"><a href="PrimitiveType.html">PrimitiveType</a></li><li data-name="ProjectionPicker"><a href="ProjectionPicker.html">ProjectionPicker</a></li><li data-name="ProjectionPickerViewModel"><a href="ProjectionPickerViewModel.html">ProjectionPickerViewModel</a></li><li data-name="Property"><a href="Property.html">Property</a></li><li data-name="PropertyArray"><a href="PropertyArray.html">PropertyArray</a></li><li data-name="PropertyBag"><a href="PropertyBag.html">PropertyBag</a></li><li data-name="ProviderViewModel"><a href="ProviderViewModel.html">ProviderViewModel</a></li><li data-name="QuadraticRealPolynomial"><a href="QuadraticRealPolynomial.html">QuadraticRealPolynomial</a></li><li data-name="QuantizedMeshTerrainData"><a href="QuantizedMeshTerrainData.html">QuantizedMeshTerrainData</a></li><li data-name="QuarticRealPolynomial"><a href="QuarticRealPolynomial.html">QuarticRealPolynomial</a></li><li data-name="Quaternion"><a href="Quaternion.html">Quaternion</a></li><li data-name="QuaternionSpline"><a href="QuaternionSpline.html">QuaternionSpline</a></li><li data-name="queryToObject"><a href="queryToObject.html">queryToObject</a></li><li data-name="Queue"><a href="Queue.html">Queue</a></li><li data-name="Ray"><a href="Ray.html">Ray</a></li><li data-name="Rectangle"><a href="Rectangle.html">Rectangle</a></li><li data-name="RectangleGeometry"><a href="RectangleGeometry.html">RectangleGeometry</a></li><li data-name="RectangleGeometryUpdater"><a href="RectangleGeometryUpdater.html">RectangleGeometryUpdater</a></li><li data-name="RectangleGraphics"><a href="RectangleGraphics.html">RectangleGraphics</a></li><li data-name="RectangleOutlineGeometry"><a href="RectangleOutlineGeometry.html">RectangleOutlineGeometry</a></li><li data-name="ReferenceFrame"><a href="ReferenceFrame.html">ReferenceFrame</a></li><li data-name="ReferenceProperty"><a href="ReferenceProperty.html">ReferenceProperty</a></li><li data-name="Request"><a href="Request.html">Request</a></li><li data-name="requestAnimationFrame"><a href="requestAnimationFrame.html">requestAnimationFrame</a></li><li data-name="RequestErrorEvent"><a href="RequestErrorEvent.html">RequestErrorEvent</a></li><li data-name="RequestScheduler"><a href="RequestScheduler.html">RequestScheduler</a></li><li data-name="RequestState"><a href="RequestState.html">RequestState</a></li><li data-name="RequestType"><a href="RequestType.html">RequestType</a></li><li data-name="Resource"><a href="Resource.html">Resource</a></li><li data-name="Rotation"><a href="Rotation.html">Rotation</a></li><li data-name="RuntimeError"><a href="RuntimeError.html">RuntimeError</a></li><li data-name="SampledPositionProperty"><a href="SampledPositionProperty.html">SampledPositionProperty</a></li><li data-name="SampledProperty"><a href="SampledProperty.html">SampledProperty</a></li><li data-name="sampleTerrain"><a href="sampleTerrain.html">sampleTerrain</a></li><li data-name="sampleTerrainMostDetailed"><a href="sampleTerrainMostDetailed.html">sampleTerrainMostDetailed</a></li><li data-name="Scene"><a href="Scene.html">Scene</a></li><li data-name="SceneMode"><a href="SceneMode.html">SceneMode</a></li><li data-name="SceneModePicker"><a href="SceneModePicker.html">SceneModePicker</a></li><li data-name="SceneModePickerViewModel"><a href="SceneModePickerViewModel.html">SceneModePickerViewModel</a></li><li data-name="SceneTransforms"><a href="SceneTransforms.html">SceneTransforms</a></li><li data-name="ScreenSpaceCameraController"><a href="ScreenSpaceCameraController.html">ScreenSpaceCameraController</a></li><li data-name="ScreenSpaceEventHandler"><a href="ScreenSpaceEventHandler.html">ScreenSpaceEventHandler</a></li><li data-name="ScreenSpaceEventType"><a href="ScreenSpaceEventType.html">ScreenSpaceEventType</a></li><li data-name="SelectionIndicator"><a href="SelectionIndicator.html">SelectionIndicator</a></li><li data-name="SelectionIndicatorViewModel"><a href="SelectionIndicatorViewModel.html">SelectionIndicatorViewModel</a></li><li data-name="ShadowMap"><a href="ShadowMap.html">ShadowMap</a></li><li data-name="ShadowMode"><a href="ShadowMode.html">ShadowMode</a></li><li data-name="ShowGeometryInstanceAttribute"><a href="ShowGeometryInstanceAttribute.html">ShowGeometryInstanceAttribute</a></li><li data-name="Simon1994PlanetaryPositions"><a href="Simon1994PlanetaryPositions.html">Simon1994PlanetaryPositions</a></li><li data-name="SimplePolylineGeometry"><a href="SimplePolylineGeometry.html">SimplePolylineGeometry</a></li><li data-name="SingleTileImageryProvider"><a href="SingleTileImageryProvider.html">SingleTileImageryProvider</a></li><li data-name="SkyAtmosphere"><a href="SkyAtmosphere.html">SkyAtmosphere</a></li><li data-name="SkyBox"><a href="SkyBox.html">SkyBox</a></li><li data-name="SphereEmitter"><a href="SphereEmitter.html">SphereEmitter</a></li><li data-name="SphereGeometry"><a href="SphereGeometry.html">SphereGeometry</a></li><li data-name="SphereOutlineGeometry"><a href="SphereOutlineGeometry.html">SphereOutlineGeometry</a></li><li data-name="Spherical"><a href="Spherical.html">Spherical</a></li><li data-name="Spline"><a href="Spline.html">Spline</a></li><li data-name="StencilFunction"><a href="StencilFunction.html">StencilFunction</a></li><li data-name="StencilOperation"><a href="StencilOperation.html">StencilOperation</a></li><li data-name="StripeMaterialProperty"><a href="StripeMaterialProperty.html">StripeMaterialProperty</a></li><li data-name="StripeOrientation"><a href="StripeOrientation.html">StripeOrientation</a></li><li data-name="StyleExpression"><a href="StyleExpression.html">StyleExpression</a></li><li data-name="subdivideArray"><a href="subdivideArray.html">subdivideArray</a></li><li data-name="Sun"><a href="Sun.html">Sun</a></li><li data-name="SunLight"><a href="SunLight.html">SunLight</a></li><li data-name="SvgPathBindingHandler"><a href="SvgPathBindingHandler.html">SvgPathBindingHandler</a></li><li data-name="TaskProcessor"><a href="TaskProcessor.html">TaskProcessor</a></li><li data-name="TerrainData"><a href="TerrainData.html">TerrainData</a></li><li data-name="TerrainProvider"><a href="TerrainProvider.html">TerrainProvider</a></li><li data-name="TextureMagnificationFilter"><a href="TextureMagnificationFilter.html">TextureMagnificationFilter</a></li><li data-name="TextureMinificationFilter"><a href="TextureMinificationFilter.html">TextureMinificationFilter</a></li><li data-name="TileAvailability"><a href="TileAvailability.html">TileAvailability</a></li><li data-name="TileCoordinatesImageryProvider"><a href="TileCoordinatesImageryProvider.html">TileCoordinatesImageryProvider</a></li><li data-name="TileDiscardPolicy"><a href="TileDiscardPolicy.html">TileDiscardPolicy</a></li><li data-name="TileMapServiceImageryProvider"><a href="TileMapServiceImageryProvider.html">TileMapServiceImageryProvider</a></li><li data-name="TileProviderError"><a href="TileProviderError.html">TileProviderError</a></li><li data-name="TilingScheme"><a href="TilingScheme.html">TilingScheme</a></li><li data-name="TimeDynamicImagery"><a href="TimeDynamicImagery.html">TimeDynamicImagery</a></li><li data-name="TimeDynamicPointCloud"><a href="TimeDynamicPointCloud.html">TimeDynamicPointCloud</a></li><li data-name="TimeInterval"><a href="TimeInterval.html">TimeInterval</a></li><li data-name="TimeIntervalCollection"><a href="TimeIntervalCollection.html">TimeIntervalCollection</a></li><li data-name="TimeIntervalCollectionPositionProperty"><a href="TimeIntervalCollectionPositionProperty.html">TimeIntervalCollectionPositionProperty</a></li><li data-name="TimeIntervalCollectionProperty"><a href="TimeIntervalCollectionProperty.html">TimeIntervalCollectionProperty</a></li><li data-name="Timeline"><a href="Timeline.html">Timeline</a></li><li data-name="TimeStandard"><a href="TimeStandard.html">TimeStandard</a></li><li data-name="ToggleButtonViewModel"><a href="ToggleButtonViewModel.html">ToggleButtonViewModel</a></li><li data-name="Transforms"><a href="Transforms.html">Transforms</a></li><li data-name="TranslationRotationScale"><a href="TranslationRotationScale.html">TranslationRotationScale</a></li><li data-name="TridiagonalSystemSolver"><a href="TridiagonalSystemSolver.html">TridiagonalSystemSolver</a></li><li data-name="TrustedServers"><a href="TrustedServers.html">TrustedServers</a></li><li data-name="UrlTemplateImageryProvider"><a href="UrlTemplateImageryProvider.html">UrlTemplateImageryProvider</a></li><li data-name="VelocityOrientationProperty"><a href="VelocityOrientationProperty.html">VelocityOrientationProperty</a></li><li data-name="VelocityVectorProperty"><a href="VelocityVectorProperty.html">VelocityVectorProperty</a></li><li data-name="VertexFormat"><a href="VertexFormat.html">VertexFormat</a></li><li data-name="VerticalOrigin"><a href="VerticalOrigin.html">VerticalOrigin</a></li><li data-name="VideoSynchronizer"><a href="VideoSynchronizer.html">VideoSynchronizer</a></li><li data-name="Viewer"><a href="Viewer.html">Viewer</a></li><li data-name="viewerCesium3DTilesInspectorMixin"><a href="viewerCesium3DTilesInspectorMixin.html">viewerCesium3DTilesInspectorMixin</a></li><li data-name="viewerCesiumInspectorMixin"><a href="viewerCesiumInspectorMixin.html">viewerCesiumInspectorMixin</a></li><li data-name="viewerDragDropMixin"><a href="viewerDragDropMixin.html">viewerDragDropMixin</a></li><li data-name="viewerPerformanceWatchdogMixin"><a href="viewerPerformanceWatchdogMixin.html">viewerPerformanceWatchdogMixin</a></li><li data-name="ViewportQuad"><a href="ViewportQuad.html">ViewportQuad</a></li><li data-name="Visibility"><a href="Visibility.html">Visibility</a></li><li data-name="Visualizer"><a href="Visualizer.html">Visualizer</a></li><li data-name="VRButton"><a href="VRButton.html">VRButton</a></li><li data-name="VRButtonViewModel"><a href="VRButtonViewModel.html">VRButtonViewModel</a></li><li data-name="VRTheWorldTerrainProvider"><a href="VRTheWorldTerrainProvider.html">VRTheWorldTerrainProvider</a></li><li data-name="WallGeometry"><a href="WallGeometry.html">WallGeometry</a></li><li data-name="WallGeometryUpdater"><a href="WallGeometryUpdater.html">WallGeometryUpdater</a></li><li data-name="WallGraphics"><a href="WallGraphics.html">WallGraphics</a></li><li data-name="WallOutlineGeometry"><a href="WallOutlineGeometry.html">WallOutlineGeometry</a></li><li data-name="WebGLConstants"><a href="WebGLConstants.html">WebGLConstants</a></li><li data-name="WebMapServiceImageryProvider"><a href="WebMapServiceImageryProvider.html">WebMapServiceImageryProvider</a></li><li data-name="WebMapTileServiceImageryProvider"><a href="WebMapTileServiceImageryProvider.html">WebMapTileServiceImageryProvider</a></li><li data-name="WebMercatorProjection"><a href="WebMercatorProjection.html">WebMercatorProjection</a></li><li data-name="WebMercatorTilingScheme"><a href="WebMercatorTilingScheme.html">WebMercatorTilingScheme</a></li><li data-name="WeightSpline"><a href="WeightSpline.html">WeightSpline</a></li><li data-name="WindingOrder"><a href="WindingOrder.html">WindingOrder</a></li><li data-name="writeTextToCanvas"><a href="writeTextToCanvas.html">writeTextToCanvas</a></li></ul>
+    </div>
+</div>
+
+<script>
+if (window.frameElement) {
+    document.body.className = 'embedded';
+
+    var ele = document.createElement('a');
+    ele.className = 'popout';
+    ele.target = '_blank';
+    ele.href = window.location.href;
+    ele.title = 'Pop out';
+    document.getElementById('main').appendChild(ele);
+}
+
+// Set targets on external links.  Sandcastle and GitHub shouldn't be embedded in any iframe.
+Array.prototype.forEach.call(document.getElementsByTagName('a'), function(a) {
+    if (/^https?:/i.test(a.getAttribute('href'))) {
+        a.target='_blank';
+    }
+});
+</script>
+
+<script src="javascript/prism.js"></script>
+<script src="javascript/cesiumDoc.js"></script>
+
+</body>
+</html>
