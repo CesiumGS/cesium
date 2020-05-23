@@ -2,6 +2,7 @@ import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
+import Rectangle from "../Core/Rectangle.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
@@ -57,6 +58,7 @@ function GlobeTranslucencyState() {
   this._useDepthPlane = false;
   this._numberOfTextureUniforms = 0;
   this._globeTranslucencyFramebuffer = undefined;
+  this._rectangle = Rectangle.clone(Rectangle.MAX_VALUE);
 
   this._derivedCommandKey = 0;
   this._derivedCommandsDirty = false;
@@ -109,11 +111,13 @@ Object.defineProperties(GlobeTranslucencyState.prototype, {
       return this._numberOfTextureUniforms;
     },
   },
+  rectangle: {
+    get: function () {
+      return this._rectangle;
+    },
+  },
 });
 
-/**
- * @private
- */
 GlobeTranslucencyState.prototype.update = function (
   globe,
   globeTranslucencyFramebuffer,
@@ -129,15 +133,15 @@ GlobeTranslucencyState.prototype.update = function (
   }
 
   this._frontFaceAlphaByDistance = updateAlphaByDistance(
-    globe.translucencyEnabled,
-    globe.frontFaceAlpha,
-    globe.frontFaceAlphaByDistance,
+    globe.translucency.enabled,
+    globe.translucency.frontFaceAlpha,
+    globe.translucency.frontFaceAlphaByDistance,
     this._frontFaceAlphaByDistance
   );
   this._backFaceAlphaByDistance = updateAlphaByDistance(
-    globe.translucencyEnabled,
-    globe.backFaceAlpha,
-    globe.backFaceAlphaByDistance,
+    globe.translucency.enabled,
+    globe.translucency.backFaceAlpha,
+    globe.translucency.backFaceAlphaByDistance,
     this._backFaceAlphaByDistance
   );
 
@@ -162,16 +166,16 @@ GlobeTranslucencyState.prototype.update = function (
   this._numberOfTextureUniforms = getNumberOfTextureUniforms(this);
   this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
+  this._rectangle = Rectangle.clone(
+    globe.translucency.rectangle,
+    this._rectangle
+  );
+
   gatherDerivedCommandRequirements(this, frameState);
 };
 
-function updateAlphaByDistance(
-  translucencyEnabled,
-  alpha,
-  alphaByDistance,
-  result
-) {
-  if (!translucencyEnabled) {
+function updateAlphaByDistance(enabled, alpha, alphaByDistance, result) {
+  if (!enabled) {
     result.nearValue = 1.0;
     result.farValue = 1.0;
     return result;

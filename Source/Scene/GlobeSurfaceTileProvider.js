@@ -105,7 +105,6 @@ function GlobeSurfaceTileProvider(options) {
 
   this.showSkirts = true;
   this.backFaceCulling = true;
-  this.translucencyRectangle = Rectangle.clone(Rectangle.MAX_VALUE);
   this.undergroundColor = undefined;
   this.undergroundColorAlphaByDistance = undefined;
 
@@ -1947,6 +1946,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
   var frontFaceAlphaByDistance =
     globeTranslucencyState.frontFaceAlphaByDistance;
   var backFaceAlphaByDistance = globeTranslucencyState.backFaceAlphaByDistance;
+  var translucencyRectangle = globeTranslucencyState.rectangle;
 
   var undergroundColor = defaultValue(
     tileProvider.undergroundColor,
@@ -2260,9 +2260,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     );
 
     var localizedTranslucencyRectangle = localizedTranslucencyRectangleScratch;
-    var translucencyRectangle = clipRectangleAntimeridian(
+    var clippedTranslucencyRectangle = clipRectangleAntimeridian(
       tile.rectangle,
-      tileProvider.translucencyRectangle
+      translucencyRectangle
     );
 
     Cartesian3.fromElements(
@@ -2294,16 +2294,16 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     );
 
     localizedTranslucencyRectangle.x =
-      (translucencyRectangle.west - cartographicTileRectangle.west) *
+      (clippedTranslucencyRectangle.west - cartographicTileRectangle.west) *
       inverseTileWidth;
     localizedTranslucencyRectangle.y =
-      (translucencyRectangle.south - cartographicTileRectangle.south) *
+      (clippedTranslucencyRectangle.south - cartographicTileRectangle.south) *
       inverseTileHeight;
     localizedTranslucencyRectangle.z =
-      (translucencyRectangle.east - cartographicTileRectangle.west) *
+      (clippedTranslucencyRectangle.east - cartographicTileRectangle.west) *
       inverseTileWidth;
     localizedTranslucencyRectangle.w =
-      (translucencyRectangle.north - cartographicTileRectangle.south) *
+      (clippedTranslucencyRectangle.north - cartographicTileRectangle.south) *
       inverseTileHeight;
 
     Cartesian4.clone(

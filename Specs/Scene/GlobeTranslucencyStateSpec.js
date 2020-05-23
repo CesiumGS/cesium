@@ -21,11 +21,11 @@ var framebuffer;
 
 function reset() {
   globe.show = true;
-  globe.translucencyEnabled = false;
-  globe.frontFaceAlpha = 1.0;
-  globe.frontFaceAlphaByDistance = undefined;
-  globe.backFaceAlpha = 1.0;
-  globe.backFaceAlphaByDistance = undefined;
+  globe.translucency.enabled = false;
+  globe.translucency.frontFaceAlpha = 1.0;
+  globe.translucency.frontFaceAlphaByDistance = undefined;
+  globe.translucency.backFaceAlpha = 1.0;
+  globe.translucency.backFaceAlphaByDistance = undefined;
   globe.baseColor = Color.WHITE;
   globe.depthTestAgainstTerrain = false;
 
@@ -106,9 +106,9 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front and back translucent
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
-    globe.backFaceAlpha = 0.25;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
+    globe.translucency.backFaceAlpha = 0.25;
     state.update(globe, framebuffer, frameState);
     expect(frontFaceAlphaByDistance.nearValue).toBe(0.5);
     expect(frontFaceAlphaByDistance.farValue).toBe(0.5);
@@ -117,10 +117,15 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front and back translucent with alpha by distance
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
-    globe.backFaceAlpha = 0.25;
-    globe.frontFaceAlphaByDistance = new NearFarScalar(0.0, 0.5, 1.0, 0.75);
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
+    globe.translucency.backFaceAlpha = 0.25;
+    globe.translucency.frontFaceAlphaByDistance = new NearFarScalar(
+      0.0,
+      0.5,
+      1.0,
+      0.75
+    );
     state.update(globe, framebuffer, frameState);
     expect(frontFaceAlphaByDistance.nearValue).toBe(0.25);
     expect(frontFaceAlphaByDistance.farValue).toBe(0.375);
@@ -147,15 +152,15 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Returns true when base color is translucent
     reset();
-    globe.translucencyEnabled = true;
+    globe.translucency.enabled = true;
     globe.baseColor = Color.TRANSPARENT;
     state.update(globe, framebuffer, frameState);
     expect(state.translucent).toBe(true);
 
     // Returns true when front face alpha is less than 1.0
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     expect(state.translucent).toBe(true);
   });
@@ -179,23 +184,23 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Returns true if front face and back face are translucent and camera is above ground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
-    globe.backFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
+    globe.translucency.backFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     expect(state.sunVisibleThroughGlobe).toBe(true);
 
     // Returns false if front face is translucent and back face is opaque and camera is above ground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     expect(state.sunVisibleThroughGlobe).toBe(false);
 
     // Returns true if front face is translucent and camera is underground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     frameState.cameraUnderground = true;
     state.update(globe, framebuffer, frameState);
     expect(state.sunVisibleThroughGlobe).toBe(true);
@@ -226,8 +231,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Returns true if front faces are translucent and camera is underground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     frameState.cameraUnderground = true;
     state.update(globe, framebuffer, frameState);
     expect(state.environmentVisible).toBe(true);
@@ -253,8 +258,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Return false when globe is translucent
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     expect(state.useDepthPlane).toBe(false);
   });
@@ -267,15 +272,15 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Returns two when globe is translucent and manual depth testing is required
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     expect(state.numberOfTextureUniforms).toBe(1 + scene.context.depthTexture);
 
     // Returns one when globe is translucent and manual depth testing is not required
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     expect(state.numberOfTextureUniforms).toBe(1);
@@ -311,8 +316,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back opaque
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
@@ -324,8 +329,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back opaque, manual depth test
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
       [2, 1, 7],
@@ -336,8 +341,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back opaque, manual depth test, camera underground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     frameState.cameraUnderground = true;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
@@ -349,9 +354,9 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back translucent
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
-    globe.backFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
+    globe.translucency.backFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
       [4, 6, 5],
@@ -362,9 +367,9 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back translucent, camera underground
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
-    globe.backFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
+    globe.translucency.backFaceAlpha = 0.5;
     frameState.cameraUnderground = true;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
@@ -376,8 +381,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Translucent, 2D
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     frameState.mode = SceneMode.SCENE2D;
     state.update(globe, framebuffer, frameState);
     checkTypes(state, [
@@ -395,16 +400,16 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // Front translucent, back opaque
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     expect(state._derivedCommandsDirty).toBe(true);
 
     // Same state
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     expect(state._derivedCommandsDirty).toBe(false);
@@ -427,8 +432,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     var renderState = command.renderState;
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -459,8 +464,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     });
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -480,8 +485,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     command.renderState = renderState;
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -497,8 +502,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     var command = createDrawCommand();
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     frameState.passes.pick = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -524,8 +529,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // isBlendCommand = false
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -540,8 +545,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // isBlendCommand = true
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -554,8 +559,8 @@ describe("Scene/GlobeTranslucencyState", function () {
 
     // picking
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     frameState.passes.pick = true;
     state.update(globe, framebuffer, frameState);
@@ -578,8 +583,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     spyOn(GlobeTranslucencyFramebuffer.prototype, "clearClassification");
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);
@@ -637,8 +642,8 @@ describe("Scene/GlobeTranslucencyState", function () {
     spyOn(GlobeTranslucencyFramebuffer.prototype, "clearClassification");
 
     reset();
-    globe.translucencyEnabled = true;
-    globe.frontFaceAlpha = 0.5;
+    globe.translucency.enabled = true;
+    globe.translucency.frontFaceAlpha = 0.5;
     globe.depthTestAgainstTerrain = true;
     state.update(globe, framebuffer, frameState);
     state.updateDerivedCommands(command, frameState);

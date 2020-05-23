@@ -2209,8 +2209,8 @@ describe(
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(0);
 
-      scene.globe.translucencyEnabled = true;
-      scene.globe.frontFaceAlpha = 0.5;
+      scene.globe.translucency.enabled = true;
+      scene.globe.translucency.frontFaceAlpha = 0.5;
 
       scene.renderForSpecs();
       expect(getFrustumCommandsLength(scene, Pass.OPAQUE)).toBe(1);
@@ -2242,12 +2242,12 @@ describe(
         var time = JulianDate.fromIso8601(
           "2020-04-25T03:07:26.04924034334544558Z"
         );
-        globe.translucencyEnabled = true;
-        globe.frontFaceAlpha = 0.5;
+        globe.translucency.enabled = true;
+        globe.translucency.frontFaceAlpha = 0.5;
         scene.renderForSpecs(time);
 
         expect(scene.environmentState.isSunVisible).toBe(true);
-        globe.translucencyEnabled = false;
+        globe.translucency.enabled = false;
         scene.renderForSpecs(time);
         expect(scene.environmentState.isSunVisible).toBe(false);
         scene.destroyForSpecs(time);
@@ -2278,8 +2278,8 @@ describe(
           opaqueColor = rgba;
         });
 
-        globe.translucencyEnabled = true;
-        globe.frontFaceAlpha = 0.5;
+        globe.translucency.enabled = true;
+        globe.translucency.frontFaceAlpha = 0.5;
 
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual(opaqueColor);
@@ -2292,8 +2292,8 @@ describe(
       var globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
-      globe.translucencyEnabled = true;
-      globe.frontFaceAlpha = 0.5;
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
 
       scene.camera.setView({
         destination: new Cartesian3(
@@ -2342,8 +2342,8 @@ describe(
       var globe = new Globe();
       scene.globe = globe;
       globe.baseColor = Color.BLACK;
-      globe.translucencyEnabled = true;
-      globe.frontFaceAlpha = 0.5;
+      globe.translucency.enabled = true;
+      globe.translucency.frontFaceAlpha = 0.5;
 
       scene.camera.setView({
         destination: new Cartesian3(

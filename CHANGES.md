@@ -5,10 +5,10 @@
 ##### Additions :tada:
 
 - Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
-  - Added `Globe.translucencyEnabled` for enabling globe translucency.
-  - Added `Globe.frontFaceAlpha` and `Globe.frontFaceAlphaByDistance` for controlling the alpha of front faces.
-  - Added `Globe.backFaceAlpha` and `Globe.backFaceAlphaByDistance` for controlling the alpha of back faces.
-  - Added `Globe.translucencyRectangle` for applying translucency only within a rectangular area.
+  - Added `globe.translucency.enabled` to enable globe translucency.
+  - Added `globe.translucency.frontFaceAlpha` and `globe.translucency.frontFaceAlphaByDistance` for controlling the alpha of front faces.
+  - Added `globe.translucency.backFaceAlpha` and `globe.translucency.backFaceAlphaByDistance` for controlling the alpha of back faces.
+  - Added `globe.translucency.rectangle` for applying translucency only within a rectangular area.
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
 - Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
 - Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)

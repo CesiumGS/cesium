@@ -2,7 +2,6 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -24,6 +23,7 @@ import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
+import GlobeTranslucency from "./GlobeTranslucency.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
@@ -71,11 +71,7 @@ function Globe(ellipsoid) {
     1.0
   );
 
-  this._translucencyEnabled = false;
-  this._frontFaceAlpha = 1.0;
-  this._frontFaceAlphaByDistance = undefined;
-  this._backFaceAlpha = 1.0;
-  this._backFaceAlphaByDistance = undefined;
+  this._translucency = new GlobeTranslucency();
 
   makeShadersDirty(this);
 
@@ -545,216 +541,14 @@ Object.defineProperties(Globe.prototype, {
   },
 
   /**
-   * When true, the globe is rendered as a translucent surface.
-   * <br /><br />
-   * The alpha is computed by blending {@link Globe#material}, {@link Globe#imageryLayers},
-   * and {@link Globe#baseColor}, all of which may contain translucency, and then multiplying by
-   * {@link Globe#frontFaceAlpha} and {@link Globe#frontFaceAlphaByDistance} for front faces and
-   * {@link Globe#backFaceAlpha} and {@link Globe#backFaceAlphaByDistance} for back faces.
-   * When the camera is underground back faces and front faces are swapped, i.e. back-facing geometry
-   * is considered front facing.
-   * <br /><br />
-   * Translucency is disabled by default.
+   * Properties for controlling globe translucency.
    *
    * @memberof Globe.prototype
-   *
-   * @type {Boolean}
-   * @default false
-   *
-   * @see Globe#frontFaceAlpha
-   * @see Globe#frontFaceAlphaByDistance
-   * @see Globe#backFaceAlpha
-   * @see Globe#backFaceAlphaByDistance
+   * @type {GlobeTranslucency}
    */
-  translucencyEnabled: {
+  translucency: {
     get: function () {
-      return this._translucencyEnabled;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.bool("translucencyEnabled", value);
-      //>>includeEnd('debug');
-      this._translucencyEnabled = value;
-    },
-  },
-
-  /**
-   * A constant translucency to apply to front faces of the globe.
-   * <br /><br />
-   * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
-   *
-   * @memberof Globe.prototype
-   *
-   * @type {Number}
-   * @default 1.0
-   *
-   * @see Globe#translucencyEnabled
-   * @see Globe#frontFaceAlphaByDistance
-   *
-   * @example
-   * // Set front face translucency to 0.5.
-   * globe.frontFaceAlpha = 0.5;
-   * globe.translucencyEnabled = true;
-   */
-  frontFaceAlpha: {
-    get: function () {
-      return this._frontFaceAlpha;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number.greaterThanOrEquals("frontFaceAlpha", value, 0.0);
-      Check.typeOf.number.lessThanOrEquals("frontFaceAlpha", value, 1.0);
-      //>>includeEnd('debug');
-      this._frontFaceAlpha = value;
-    },
-  },
-  /**
-   * Gets or sets near and far translucency properties of front faces of the globe based on the distance to the camera.
-   * The translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
-   * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
-   * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
-   * frontFaceAlphaByDistance will be disabled.
-   * <br /><br />
-   * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
-   *
-   * @memberof Globe.prototype
-   *
-   * @type {NearFarScalar}
-   * @default undefined
-   *
-   * @see Globe#translucencyEnabled
-   * @see Globe#frontFaceAlpha
-   *
-   * @example
-   * // Example 1.
-   * // Set front face translucency to 0.5 when the
-   * // camera is 1500 meters from the surface and 1.0
-   * // as the camera distance approaches 8.0e6 meters.
-   * globe.frontFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
-   * globe.translucencyEnabled = true;
-   *
-   * @example
-   * // Example 2.
-   * // Disable front face translucency by distance
-   * globe.frontFaceAlphaByDistance = undefined;
-   */
-  frontFaceAlphaByDistance: {
-    get: function () {
-      return this._frontFaceAlphaByDistance;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far < value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
-      }
-      //>>includeEnd('debug');
-      this._frontFaceAlphaByDistance = NearFarScalar.clone(
-        value,
-        this._frontFaceAlphaByDistance
-      );
-    },
-  },
-
-  /**
-   * A constant translucency to apply to back faces of the globe.
-   * <br /><br />
-   * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
-   *
-   * @memberof Globe.prototype
-   *
-   * @type {Number}
-   * @default 1.0
-   *
-   * @see Globe#translucencyEnabled
-   * @see Globe#backFaceAlphaByDistance
-   *
-   * @example
-   * // Set back face translucency to 0.5.
-   * globe.backFaceAlpha = 0.5;
-   * globe.translucencyEnabled = true;
-   */
-  backFaceAlpha: {
-    get: function () {
-      return this._backFaceAlpha;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      Check.typeOf.number.greaterThanOrEquals("backFaceAlpha", value, 0.0);
-      Check.typeOf.number.lessThanOrEquals("backFaceAlpha", value, 1.0);
-      //>>includeEnd('debug');
-      this._backFaceAlpha = value;
-    },
-  },
-  /**
-   * Gets or sets near and far translucency properties of back faces of the globe based on the distance to the camera.
-   * The translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
-   * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
-   * Outside of these ranges the translucency remains clamped to the nearest bound.  If undefined,
-   * backFaceAlphaByDistance will be disabled.
-   * <br /><br />
-   * {@link Globe#translucencyEnabled} must be set to true for this option to take effect.
-   *
-   * @memberof Globe.prototype
-   *
-   * @type {NearFarScalar}
-   * @default undefined
-   *
-   * @see Globe#translucencyEnabled
-   * @see Globe#backFaceAlpha
-   *
-   * @example
-   * // Example 1.
-   * // Set back face translucency to 0.5 when the
-   * // camera is 1500 meters from the surface and 1.0
-   * // as the camera distance approaches 8.0e6 meters.
-   * globe.backFaceAlphaByDistance = new Cesium.NearFarScalar(1.5e2, 0.5, 8.0e6, 1.0);
-   * globe.translucencyEnabled = true;
-   *
-   * @example
-   * // Example 2.
-   * // Disable back face translucency by distance
-   * globe.backFaceAlphaByDistance = undefined;
-   */
-  backFaceAlphaByDistance: {
-    get: function () {
-      return this._backFaceAlphaByDistance;
-    },
-    set: function (value) {
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(value) && value.far < value.near) {
-        throw new DeveloperError(
-          "far distance must be greater than near distance."
-        );
-      }
-      //>>includeEnd('debug');
-      this._backFaceAlphaByDistance = NearFarScalar.clone(
-        value,
-        this._backFaceAlphaByDistance
-      );
-    },
-  },
-
-  /**
-   * A property specifying a {@link Rectangle} used to limit translucency to a cartographic area.
-   * Defaults to the maximum extent of cartographic coordinates.
-   *
-   * @member Globe.prototype
-   * @type {Rectangle}
-   * @default Rectangle.MAX_VALUE
-   */
-  translucencyRectangle: {
-    get: function () {
-      return this._surface.tileProvider.translucencyRectangle;
-    },
-    set: function (value) {
-      if (!defined(value)) {
-        value = Rectangle.clone(Rectangle.MAX_VALUE);
-      }
-      Rectangle.clone(value, this._surface.tileProvider.translucencyRectangle);
+      return this._translucency;
     },
   },
 });

@@ -48,17 +48,17 @@
         function reset() {
           globe.showGroundAtmosphere = true;
           globe.baseColor = Cesium.Color.BLUE;
-          globe.translucencyEnabled = false;
-          globe.frontFaceAlpha = 1.0;
+          globe.translucency.enabled = false;
+          globe.translucency.frontFaceAlpha = 1.0;
           globe.undergroundColor = Cesium.Color.BLACK;
-          globe.translucencyRectangle = undefined;
+          globe.translucency.rectangle = undefined;
           baseLayer.colorToAlpha = undefined;
         }
 
         function useTranslucencyMask() {
           globe.showGroundAtmosphere = false;
           globe.baseColor = Cesium.Color.TRANSPARENT;
-          globe.translucencyEnabled = true;
+          globe.translucency.enabled = true;
           globe.undergroundColor = undefined;
 
           // Set oceans on Bing base layer to transparent
@@ -67,10 +67,10 @@
         }
 
         function useTranslucencyRectangle() {
-          globe.translucencyEnabled = true;
+          globe.translucency.enabled = true;
           globe.undergroundColor = undefined;
-          globe.frontFaceAlpha = 0.25;
-          globe.translucencyRectangle = Cesium.Rectangle.fromDegrees(
+          globe.translucency.frontFaceAlpha = 0.25;
+          globe.translucency.rectangle = Cesium.Rectangle.fromDegrees(
             -120.0,
             0.0,
             -30.0,
