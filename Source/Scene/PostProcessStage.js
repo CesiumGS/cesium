@@ -33,8 +33,8 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
  *
  * @param {Object} options An object with the following properties:<br/>接收对象类型参数，它的属性值如下：
  * @param {String} options.fragmentShader The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.
- * <br/> 片段着色器代码。默认有两个全局取样器<code>uniforms</code> <code>sampler2D</code>变量：<code>colorTexture</code>和<code>depthTexture</code>；其中颜色纹理（color texture）来自场景渲染的纹理或上一个后期处理，深度纹理（depth texture）来自场景的渲染纹理；着色器中必须至少要包含其中一个<code>uniforms</code>。
- * <br/> 此外还提供了<code>vec2 varying v_textureCoordinates</code>,可用于纹理采样。
+ * <br/> 片段着色器代码。默认有两个全局取样器<code>uniform</code> <code>sampler2D</code>变量：<code>colorTexture</code>和<code>depthTexture</code>；其中颜色纹理（color texture）来自场景渲染的纹理或上一个后期处理，深度纹理（depth texture）来自场景的渲染纹理；着色器中必须至少要包含其中一个<code>uniform</code>。
+ * <br/> 此外还必须提供<code>vec2 varying v_textureCoordinates</code>,用于纹理采样。
  * @param {Object} [options.uniforms] An object whose properties will be used to set the shaders uniforms. The properties can be constant values or a function. A constant value can also be a URI, data URI, or HTML element to use as a texture.
  * <br/> 一个对象，为片段着色器中自定义的<code>uniforms</code>变量赋对应的值。值可以是一个常量或一个函数，当为常量时也可以是一个<code>URI</code>,<code>data URI</code>或者HTML元素（作为一个纹理）。
  * @param {Number} [options.textureScale=1.0] A number in the range (0.0, 1.0] used to scale the texture dimensions. A scale of 1.0 will render this post-process stage  to a texture the size of the viewport.
@@ -210,6 +210,10 @@ Object.defineProperties(PostProcessStage.prototype, {
    * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
    * and {@link PostProcessStage#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
    * to load.
+   * <p>
+   *    确定此后期处理阶段是否已准备好执行。后期处理阶段只有在<code>ready</code>和{@link PostProcessStage#enabled}都为<code>true</code>的时候才能执行。
+   *    当等待纹理加载的时候,<code>ready</code>状态为<code>false</code>。
+   * </p>
    *
    * @memberof PostProcessStage.prototype
    * @type {Boolean}
@@ -222,6 +226,9 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The unique name of this post-process stage for reference by other stages in a {@link PostProcessStageComposite}.
+   * <p>
+   *    用于在{@link PostProcessStageComposite}中与其它后期处理阶段进行区分的唯一名称。
+   * </p>
    *
    * @memberof PostProcessStage.prototype
    * @type {String}
@@ -234,14 +241,17 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * The fragment shader to use when execute this post-process stage.
+   * <p>在此后期处理阶段执行的片段着色器代码。</p>
    * <p>
    * The shader must contain a sampler uniform declaration for <code>colorTexture</code>, <code>depthTexture</code>,
    * or both.
    * </p>
+   * <p>片段着色器代码中必须包含其中一个或两个<code>uniform sampler2D</code>声明的 <code>colorTexture</code>, <code>depthTexture</code>变量。</p>
    * <p>
    * The shader must contain a <code>vec2</code> varying declaration for <code>v_textureCoordinates</code> for sampling
    * the texture uniforms.
    * </p>
+   * <p>片段着色器还必须提供<code>vec2 varying v_textureCoordinates</code>,用于纹理采样</p>
    *
    * @memberof PostProcessStage.prototype
    * @type {String}
@@ -254,12 +264,19 @@ Object.defineProperties(PostProcessStage.prototype, {
   },
   /**
    * An object whose properties are used to set the uniforms of the fragment shader.
+   * <p>一个对象,它的属性名称与片段着色器中<code>uniform</code>声明的变量名称一致,并将值赋给对应的片段着色器中的<code>uniform</code>变量</p>
    * <p>
    * The object property values can be either a constant or a function. The function will be called
    * each frame before the post-process stage is executed.
    * </p>
    * <p>
+   *  对象的属性值可以是一个常量或一个函数。当为一个函数时,将会在后期处理阶段执行完毕前每一帧都调用。
+   * </p>
+   * <p>
    * A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.
+   * </p>
+   * <p>
+   *  常量值也可以是一个图片的URI地址,或data URI,或一个作为纹理的HTML标签(比如<img>标签或<canvas>标签)。
    * </p>
    * <p>
    * If this post-process stage is part of a {@link PostProcessStageComposite} that does not execute in series, the constant value can also be
