@@ -1878,15 +1878,6 @@ Scene.prototype.updateFrameState = function () {
   var globeTranslucencyFramebuffer = this._view.globeTranslucencyFramebuffer;
   var frameState = this._frameState;
 
-  frameState.cameraUnderground = this._cameraUnderground;
-  frameState.globeTranslucencyState = globeTranslucencyState;
-
-  globeTranslucencyState.update(
-    globe,
-    globeTranslucencyFramebuffer,
-    frameState
-  );
-
   frameState.commandList.length = 0;
   frameState.shadowMaps.length = 0;
   frameState.brdfLutGenerator = this._brdfLutGenerator;
@@ -1900,7 +1891,6 @@ Scene.prototype.updateFrameState = function () {
     camera.directionWC,
     camera.upWC
   );
-  frameState.occluder = getOccluder(this);
   frameState.terrainExaggeration = this._terrainExaggeration;
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
@@ -1912,6 +1902,8 @@ Scene.prototype.updateFrameState = function () {
       this.camera.frustum instanceof OrthographicOffCenterFrustum
     );
   frameState.light = this.light;
+  frameState.cameraUnderground = this._cameraUnderground;
+  frameState.globeTranslucencyState = globeTranslucencyState;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -1941,6 +1933,14 @@ Scene.prototype.updateFrameState = function () {
   } else {
     frameState.maximumScreenSpaceError = 2;
   }
+
+  globeTranslucencyState.update(
+    globe,
+    globeTranslucencyFramebuffer,
+    frameState
+  );
+
+  frameState.occluder = getOccluder(this);
 
   this.clearPasses(frameState.passes);
 
