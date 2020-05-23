@@ -107,7 +107,7 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(TRANSLUCENT) || defined(UNDERGROUND_COLOR)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
 varying float v_distance;
 #endif
 
