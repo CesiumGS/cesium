@@ -143,10 +143,12 @@ GlobeTranslucencyState.prototype.update = function (scene) {
   );
 
   this._frontFaceTranslucent = isFaceTranslucent(
+    globe.translucency.enabled,
     this._frontFaceAlphaByDistance,
     globe
   );
   this._backFaceTranslucent = isFaceTranslucent(
+    globe.translucency.enabled,
     this._backFaceAlphaByDistance,
     globe
   );
@@ -185,11 +187,12 @@ function updateAlphaByDistance(enabled, alpha, alphaByDistance, result) {
   return result;
 }
 
-function isFaceTranslucent(alphaByDistance, globe) {
+function isFaceTranslucent(translucencyEnabled, alphaByDistance, globe) {
   return (
-    globe.baseColor.alpha < 1.0 ||
-    alphaByDistance.nearValue < 1.0 ||
-    alphaByDistance.farValue < 1.0
+    translucencyEnabled &&
+    (globe.baseColor.alpha < 1.0 ||
+      alphaByDistance.nearValue < 1.0 ||
+      alphaByDistance.farValue < 1.0)
   );
 }
 
