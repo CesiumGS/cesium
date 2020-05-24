@@ -1873,11 +1873,8 @@ function updateFrameNumber(scene, frameNumber, time) {
  */
 Scene.prototype.updateFrameState = function () {
   var camera = this.camera;
-  var globe = this.globe;
-  var globeTranslucencyState = this._globeTranslucencyState;
-  var globeTranslucencyFramebuffer = this._view.globeTranslucencyFramebuffer;
-  var frameState = this._frameState;
 
+  var frameState = this._frameState;
   frameState.commandList.length = 0;
   frameState.shadowMaps.length = 0;
   frameState.brdfLutGenerator = this._brdfLutGenerator;
@@ -1891,6 +1888,7 @@ Scene.prototype.updateFrameState = function () {
     camera.directionWC,
     camera.upWC
   );
+  frameState.occluder = getOccluder(this);
   frameState.terrainExaggeration = this._terrainExaggeration;
   frameState.minimumTerrainHeight = 0.0;
   frameState.minimumDisableDepthTestDistance = this._minimumDisableDepthTestDistance;
@@ -1903,7 +1901,7 @@ Scene.prototype.updateFrameState = function () {
     );
   frameState.light = this.light;
   frameState.cameraUnderground = this._cameraUnderground;
-  frameState.globeTranslucencyState = globeTranslucencyState;
+  frameState.globeTranslucencyState = this._globeTranslucencyState;
 
   if (
     defined(this._specularEnvironmentMapAtlas) &&
@@ -1928,19 +1926,11 @@ Scene.prototype.updateFrameState = function () {
 
   frameState.invertClassificationColor = this._actualInvertClassificationColor;
 
-  if (defined(globe)) {
-    frameState.maximumScreenSpaceError = globe.maximumScreenSpaceError;
+  if (defined(this.globe)) {
+    frameState.maximumScreenSpaceError = this.globe.maximumScreenSpaceError;
   } else {
     frameState.maximumScreenSpaceError = 2;
   }
-
-  globeTranslucencyState.update(
-    globe,
-    globeTranslucencyFramebuffer,
-    frameState
-  );
-
-  frameState.occluder = getOccluder(this);
 
   this.clearPasses(frameState.passes);
 
@@ -2489,6 +2479,7 @@ function executeCommands(scene, passState) {
   var useDepthPlane = environmentState.useDepthPlane;
   var globeTranslucencyState = scene._globeTranslucencyState;
   var globeTranslucent = globeTranslucencyState.translucent;
+  var globeTranslucencyFramebuffer = scene._view.globeTranslucencyFramebuffer;
   var separatePrimitiveFramebuffer = (environmentState.separatePrimitiveFramebuffer = false);
   var clearDepth = scene._depthClearCommand;
   var clearStencil = scene._stencilClearCommand;
@@ -2563,6 +2554,7 @@ function executeCommands(scene, passState) {
       globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeCommand,
+        globeTranslucencyFramebuffer,
         scene,
         passState
       );
@@ -2594,6 +2586,7 @@ function executeCommands(scene, passState) {
         globeTranslucencyState.executeGlobeClassificationCommands(
           frustumCommands,
           executeCommand,
+          globeTranslucencyFramebuffer,
           scene,
           passState
         );
@@ -2814,6 +2807,7 @@ function executeCommands(scene, passState) {
       globeTranslucencyState.executeGlobeCommands(
         frustumCommands,
         executeIdCommand,
+        globeTranslucencyFramebuffer,
         scene,
         passState
       );
@@ -3756,6 +3750,8 @@ Scene.prototype.initializeFrame = function () {
   this.camera._updateCameraChanged();
 
   this._cameraUnderground = isCameraUnderground(this);
+
+  this._globeTranslucencyState.update(this);
 };
 
 function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {

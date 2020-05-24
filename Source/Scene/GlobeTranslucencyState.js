@@ -118,11 +118,8 @@ Object.defineProperties(GlobeTranslucencyState.prototype, {
   },
 });
 
-GlobeTranslucencyState.prototype.update = function (
-  globe,
-  globeTranslucencyFramebuffer,
-  frameState
-) {
+GlobeTranslucencyState.prototype.update = function (scene) {
+  var globe = scene.globe;
   if (!defined(globe) || !globe.show) {
     this._frontFaceTranslucent = false;
     this._backFaceTranslucent = false;
@@ -154,24 +151,19 @@ GlobeTranslucencyState.prototype.update = function (
     globe
   );
 
-  this._requiresManualDepthTest = requiresManualDepthTest(
-    this,
-    frameState,
-    globe
-  );
+  this._requiresManualDepthTest = requiresManualDepthTest(this, scene, globe);
 
-  this._sunVisibleThroughGlobe = isSunVisibleThroughGlobe(this, frameState);
-  this._environmentVisible = isEnvironmentVisible(this, frameState);
-  this._useDepthPlane = useDepthPlane(this, frameState);
+  this._sunVisibleThroughGlobe = isSunVisibleThroughGlobe(this, scene);
+  this._environmentVisible = isEnvironmentVisible(this, scene);
+  this._useDepthPlane = useDepthPlane(this, scene);
   this._numberOfTextureUniforms = getNumberOfTextureUniforms(this);
-  this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
   this._rectangle = Rectangle.clone(
     globe.translucency.rectangle,
     this._rectangle
   );
 
-  gatherDerivedCommandRequirements(this, frameState);
+  gatherDerivedCommandRequirements(this, scene);
 };
 
 function updateAlphaByDistance(enabled, alpha, alphaByDistance, result) {
@@ -201,31 +193,31 @@ function isFaceTranslucent(alphaByDistance, globe) {
   );
 }
 
-function isSunVisibleThroughGlobe(state, frameState) {
+function isSunVisibleThroughGlobe(state, scene) {
   // The sun is visible through the globe if the front and back faces are translucent when above ground
   // or if front faces are translucent when below ground
   var frontTranslucent = state._frontFaceTranslucent;
   var backTranslucent = state._backFaceTranslucent;
-  return frontTranslucent && (frameState.cameraUnderground || backTranslucent);
+  return frontTranslucent && (scene.cameraUnderground || backTranslucent);
 }
 
-function isEnvironmentVisible(state, frameState) {
+function isEnvironmentVisible(state, scene) {
   // The environment is visible if the camera is above ground or underground with translucency
-  return !frameState.cameraUnderground || state._frontFaceTranslucent;
+  return !scene.cameraUnderground || state._frontFaceTranslucent;
 }
 
-function useDepthPlane(state, frameState) {
+function useDepthPlane(state, scene) {
   // Use the depth plane when the camera is above ground and the globe is opaque
-  return !frameState.cameraUnderground && !state._frontFaceTranslucent;
+  return !scene.cameraUnderground && !state._frontFaceTranslucent;
 }
 
-function requiresManualDepthTest(state, frameState, globe) {
+function requiresManualDepthTest(state, scene, globe) {
   return (
     state._frontFaceTranslucent &&
     !state._backFaceTranslucent &&
     !globe.depthTestAgainstTerrain &&
-    frameState.mode !== SceneMode.SCENE2D &&
-    frameState.context.depthTexture
+    scene.mode !== SceneMode.SCENE2D &&
+    scene.context.depthTexture
   );
 }
 
@@ -243,10 +235,10 @@ function getNumberOfTextureUniforms(state) {
   return numberOfTextureUniforms;
 }
 
-function gatherDerivedCommandRequirements(state, frameState) {
+function gatherDerivedCommandRequirements(state, scene) {
   state._derivedCommandsLength = getDerivedCommandTypes(
     state,
-    frameState,
+    scene,
     false,
     false,
     state._derivedCommandTypes
@@ -254,7 +246,7 @@ function gatherDerivedCommandRequirements(state, frameState) {
 
   state._derivedBlendCommandsLength = getDerivedCommandTypes(
     state,
-    frameState,
+    scene,
     true,
     false,
     state._derivedBlendCommandTypes
@@ -262,7 +254,7 @@ function gatherDerivedCommandRequirements(state, frameState) {
 
   state._derivedPickCommandsLength = getDerivedCommandTypes(
     state,
-    frameState,
+    scene,
     false,
     true,
     state._derivedPickCommandTypes
@@ -300,7 +292,7 @@ function gatherDerivedCommandRequirements(state, frameState) {
 
 function getDerivedCommandTypes(
   state,
-  frameState,
+  scene,
   isBlendCommand,
   isPickCommand,
   types
@@ -315,7 +307,7 @@ function getDerivedCommandTypes(
     return length;
   }
 
-  var cameraUnderground = frameState.cameraUnderground;
+  var cameraUnderground = scene.cameraUnderground;
   var requiresManualDepthTest = state._requiresManualDepthTest;
 
   var translucentFrontFaceCommandType = isPickCommand
@@ -330,7 +322,7 @@ function getDerivedCommandTypes(
     ? DerivedCommandType.TRANSLUCENT_BACK_FACE_MANUAL_DEPTH_TEST
     : DerivedCommandType.TRANSLUCENT_BACK_FACE;
 
-  if (frameState.mode === SceneMode.SCENE2D) {
+  if (scene.mode === SceneMode.SCENE2D) {
     types[length++] = DerivedCommandType.DEPTH_ONLY_FRONT_FACE;
     types[length++] = translucentFrontFaceCommandType;
     return length;
@@ -1010,6 +1002,7 @@ var depthOnlyTypes = [
 GlobeTranslucencyState.prototype.executeGlobeCommands = function (
   frustumCommands,
   executeCommandFunction,
+  globeTranslucencyFramebuffer,
   scene,
   passState
 ) {
@@ -1021,7 +1014,8 @@ GlobeTranslucencyState.prototype.executeGlobeCommands = function (
     return;
   }
 
-  this._globeTranslucencyFramebuffer.clearClassification(context, passState);
+  this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
+  globeTranslucencyFramebuffer.clearClassification(context, passState);
 
   // Render opaque commands like normal
   executeCommandsMatchingType(
@@ -1038,6 +1032,7 @@ GlobeTranslucencyState.prototype.executeGlobeCommands = function (
 GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
   frustumCommands,
   executeCommandFunction,
+  globeTranslucencyFramebuffer,
   scene,
   passState
 ) {
@@ -1073,7 +1068,7 @@ GlobeTranslucencyState.prototype.executeGlobeClassificationCommands = function (
     return;
   }
 
-  var globeTranslucencyFramebuffer = this._globeTranslucencyFramebuffer;
+  this._globeTranslucencyFramebuffer = globeTranslucencyFramebuffer;
 
   var originalGlobeDepthTexture = context.uniformState.globeDepthTexture;
   var originalFramebuffer = passState.framebuffer;
