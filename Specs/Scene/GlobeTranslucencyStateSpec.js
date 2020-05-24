@@ -332,12 +332,22 @@ describe("Scene/GlobeTranslucencyState", function () {
     globe.translucency.enabled = true;
     globe.translucency.frontFaceAlpha = 0.5;
     state.update(globe, framebuffer, frameState);
-    checkTypes(state, [
-      [2, 1, 7],
-      [1, 7],
-      [2, 1, 9],
-      [1, 2, 7, 9],
-    ]);
+
+    if (frameState.context.depthTexture) {
+      checkTypes(state, [
+        [2, 1, 7],
+        [1, 7],
+        [2, 1, 9],
+        [1, 2, 7, 9],
+      ]);
+    } else {
+      checkTypes(state, [
+        [2, 1, 5],
+        [1, 5],
+        [2, 1, 9],
+        [1, 2, 5, 9],
+      ]);
+    }
 
     // Front translucent, back opaque, manual depth test, camera underground
     reset();
@@ -345,12 +355,21 @@ describe("Scene/GlobeTranslucencyState", function () {
     globe.translucency.frontFaceAlpha = 0.5;
     frameState.cameraUnderground = true;
     state.update(globe, framebuffer, frameState);
-    checkTypes(state, [
-      [3, 0, 8],
-      [0, 8],
-      [3, 0, 10],
-      [0, 3, 8, 10],
-    ]);
+    if (frameState.context.depthTexture) {
+      checkTypes(state, [
+        [3, 0, 8],
+        [0, 8],
+        [3, 0, 10],
+        [0, 3, 8, 10],
+      ]);
+    } else {
+      checkTypes(state, [
+        [3, 0, 6],
+        [0, 6],
+        [3, 0, 10],
+        [0, 3, 6, 10],
+      ]);
+    }
 
     // Front translucent, back translucent
     reset();
