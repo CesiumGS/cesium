@@ -104,16 +104,58 @@ void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float 
     startOffset = depth*scale(startAngle);
 }
 
+czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 inverseRadii)
+{
+    vec3 o = inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
+    vec3 d = inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
+
+    float a = dot(d, d);
+    float b = dot(d, o);
+    float c = dot(o, o) - 1.0;
+    float discriminant = b * b - a * c;
+    if (discriminant < 0.0)
+    {
+        return czm_emptyRaySegment;
+    }
+    discriminant = sqrt(discriminant);
+    float t1 = (-b - discriminant) / a;
+    float t2 = (-b + discriminant) / a;
+
+    if (t1 < 0.0 && t2 < 0.0)
+    {
+        return czm_emptyRaySegment;
+    }
+
+    if (t1 < 0.0 && t2 >= 0.0)
+    {
+        t1 = 0.0;
+    }
+
+    return czm_raySegment(t1, t2);
+}
+
 void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, out vec3 rayleighColor)
 {
     // Unpack attributes
     float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
     float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
-    vec3 lightDirection = getLightDirection(czm_viewerPositionWC);
+    vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
+    vec3 directionEC = czm_viewRotation * directionWC;
+    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
+    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, czm_ellipsoidInverseRadii);
+    bool intersectsEllipsoid = raySegment.start >= 0.0;
+
+    vec3 startPositionWC = czm_viewerPositionWC;
+    if (intersectsEllipsoid)
+    {
+        startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
+    }
+
+    vec3 lightDirection = getLightDirection(startPositionWC);
 
     // Get the ray from the start position to the outer position and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 ray = outerPositionWC - czm_viewerPositionWC;
+    vec3 ray = outerPositionWC - startPositionWC;
     float far = length(ray);
     ray /= far;
 
@@ -123,9 +165,16 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     float startOffset;
 
 #ifdef SKY_FROM_SPACE
-    calculateRayScatteringFromSpace(czm_viewerPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
+    if (intersectsEllipsoid)
+    {
+        calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
+    }
+    else
+    {
+        calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
+    }
 #else
-    calculateRayScatteringFromGround(czm_viewerPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
+    calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
 #endif
 
     // Initialize the scattering loop variables
