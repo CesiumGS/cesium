@@ -77,16 +77,14 @@ vec3 getLightDirection(vec3 positionWC)
 void calculateRayScatteringFromSpace(in vec3 positionWC, in vec3 ray, in float innerRadius, in float outerRadius, inout float far, out vec3 start, out float startOffset)
 {
     // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
-    float cameraHeight = czm_eyeHeight + innerRadius;
-    vec3 adjustedPositionWC = normalize(positionWC) * cameraHeight;
-
-    float B = 2.0 * dot(adjustedPositionWC, ray);
+    float cameraHeight = length(positionWC);
+    float B = 2.0 * dot(positionWC, ray);
     float C = cameraHeight * cameraHeight - outerRadius * outerRadius;
     float det = max(0.0, B * B - 4.0 * C);
     float near = 0.5 * (-B - sqrt(det));
 
     // Calculate the ray's starting position, then calculate its scattering offset
-    start = adjustedPositionWC + ray * near;
+    start = positionWC + ray * near;
     far -= near;
     float startAngle = dot(ray, start) / outerRadius;
     float startDepth = exp(-1.0 / rayleighScaleDepth);
@@ -96,8 +94,8 @@ void calculateRayScatteringFromSpace(in vec3 positionWC, in vec3 ray, in float i
 void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float atmosphereScale, in float innerRadius, out vec3 start, out float startOffset)
 {
     // Calculate the ray's starting position, then calculate its scattering offset
-    float cameraHeight = czm_eyeHeight + innerRadius;
-    start = normalize(positionWC) * cameraHeight;
+    float cameraHeight = length(positionWC);
+    start = positionWC;
     float height = length(start);
     float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
     float startAngle = dot(ray, start) / height;
@@ -134,6 +132,29 @@ czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 inverseRadii)
     return czm_raySegment(t1, t2);
 }
 
+vec3 getAdjustedPosition(vec3 positionWC, float innerRadius)
+{
+  // Adjust the camera position so that atmosphere color looks the same wherever the eye height is the same
+  float cameraHeight = czm_eyeHeight + innerRadius;
+  return normalize(positionWC) * cameraHeight;
+}
+
+vec3 getTranslucentPosition(vec3 positionWC, vec3 outerPositionWC, float innerRadius, out bool intersectsEllipsoid)
+{
+    vec3 directionWC = normalize(outerPositionWC - positionWC);
+    vec3 directionEC = czm_viewRotation * directionWC;
+    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
+    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, czm_ellipsoidInverseRadii);
+    intersectsEllipsoid = raySegment.start >= 0.0;
+
+    if (intersectsEllipsoid)
+    {
+        return positionWC + raySegment.stop * directionWC;
+    }
+
+    return getAdjustedPosition(positionWC, innerRadius);
+}
+
 void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, out vec3 rayleighColor)
 {
     // Unpack attributes
@@ -141,19 +162,10 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
 #ifdef GLOBE_TRANSLUCENT
-    vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
-    vec3 directionEC = czm_viewRotation * directionWC;
-    czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
-    czm_raySegment raySegment = rayEllipsoidIntersection(viewRay, czm_ellipsoidInverseRadii);
-    bool intersectsEllipsoid = raySegment.start >= 0.0;
-
-    vec3 startPositionWC = czm_viewerPositionWC;
-    if (intersectsEllipsoid)
-    {
-        startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
-    }
+    bool intersectsEllipsoid = false;
+    vec3 startPositionWC = getTranslucentPosition(czm_viewerPositionWC, outerPositionWC, innerRadius, intersectsEllipsoid);
 #else
-    vec3 startPositionWC = czm_viewerPositionWC;
+    vec3 startPositionWC = getAdjustedPosition(czm_viewerPositionWC, innerRadius);
 #endif
 
     vec3 lightDirection = getLightDirection(startPositionWC);
