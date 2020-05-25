@@ -276,7 +276,7 @@ Object.defineProperties(PostProcessStage.prototype, {
    * A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.
    * </p>
    * <p>
-   *  常量值也可以是一个图片的URI地址,或data URI,或一个作为纹理的HTML标签(比如<img>标签或<canvas>标签)。
+   *  常量值也可以是一个图片的URI地址,或data URI,或一个作为纹理的HTML标签(比如img标签或canvas标签)。
    * </p>
    * <p>
    * If this post-process stage is part of a {@link PostProcessStageComposite} that does not execute in series, the constant value can also be
