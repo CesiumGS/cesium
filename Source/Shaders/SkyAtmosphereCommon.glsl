@@ -106,8 +106,8 @@ void calculateRayScatteringFromGround(in vec3 positionWC, in vec3 ray, in float 
 
 czm_raySegment rayEllipsoidIntersection(czm_ray ray, vec3 inverseRadii)
 {
-    vec3 o = inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
-    vec3 d = inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
+    vec3 o = inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
+    vec3 d = inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
 
     float a = dot(d, d);
     float b = dot(d, o);
