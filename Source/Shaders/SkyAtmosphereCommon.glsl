@@ -140,6 +140,7 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     float outerRadius = u_radiiAndDynamicAtmosphereColor.x;
     float innerRadius = u_radiiAndDynamicAtmosphereColor.y;
 
+#ifdef GLOBE_TRANSLUCENT
     vec3 directionWC = normalize(outerPositionWC - czm_viewerPositionWC);
     vec3 directionEC = czm_viewRotation * directionWC;
     czm_ray viewRay = czm_ray(vec3(0.0), directionEC);
@@ -151,6 +152,9 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     {
         startPositionWC = czm_viewerPositionWC + raySegment.stop * directionWC;
     }
+#else
+    vec3 startPositionWC = czm_viewerPositionWC;
+#endif
 
     vec3 lightDirection = getLightDirection(startPositionWC);
 
@@ -165,6 +169,7 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     float startOffset;
 
 #ifdef SKY_FROM_SPACE
+#ifdef GLOBE_TRANSLUCENT
     if (intersectsEllipsoid)
     {
         calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
@@ -173,6 +178,9 @@ void calculateMieColorAndRayleighColor(vec3 outerPositionWC, out vec3 mieColor, 
     {
         calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
     }
+#else
+    calculateRayScatteringFromSpace(startPositionWC, ray, innerRadius, outerRadius, far, start, startOffset);
+#endif
 #else
     calculateRayScatteringFromGround(startPositionWC, ray, atmosphereScale, innerRadius, start, startOffset);
 #endif
