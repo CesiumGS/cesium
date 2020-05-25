@@ -159,7 +159,7 @@
 
                 
             
-                The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.<br/> 片段着色器代码。默认有两个全局取样器<code>uniforms</code> <code>sampler2D</code>变量：<code>colorTexture</code>和<code>depthTexture</code>；其中颜色纹理（color texture）来自场景渲染的纹理或上一个后期处理，深度纹理（depth texture）来自场景的渲染纹理；着色器中必须至少要包含其中一个<code>uniforms</code>。<br/> 此外还提供了<code>vec2 varying v_textureCoordinates</code>,可用于纹理采样。</td>
+                The fragment shader to use. The default <code>sampler2D</code> uniforms are <code>colorTexture</code> and <code>depthTexture</code>. The color texture is the output of rendering the scene or the previous stage. The depth texture is the output from rendering the scene. The shader should contain one or both uniforms. There is also a <code>vec2</code> varying named <code>v_textureCoordinates</code> that can be used to sample the textures.<br/> 片段着色器代码。默认有两个全局取样器<code>uniform</code> <code>sampler2D</code>变量：<code>colorTexture</code>和<code>depthTexture</code>；其中颜色纹理（color texture）来自场景渲染的纹理或上一个后期处理，深度纹理（depth texture）来自场景的渲染纹理；着色器中必须至少要包含其中一个<code>uniform</code>。<br/> 此外还必须提供<code>vec2 varying v_textureCoordinates</code>,用于纹理采样。</td>
         </tr>
 
     
@@ -612,7 +612,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L345">Scene/PostProcessStage.js 345</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L363">Scene/PostProcessStage.js 363</a>
 </div>
 
 
@@ -623,7 +623,7 @@
 
 
 <div class="description">
-    The color to clear the output texture to.
+    The color to clear the output texture to.<br/>清除输出纹理时的颜色。
 </div>
 
 
@@ -732,7 +732,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L297">Scene/PostProcessStage.js 297</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L315">Scene/PostProcessStage.js 315</a>
 </div>
 
 
@@ -743,7 +743,7 @@
 
 
 <div class="description">
-    Whether or not to force the output texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.
+    Whether or not to force the output texture dimensions to be both equal powers of two. The power of two will be the next power of two of the minimum of the dimensions.<br/>强制设置纹理的尺寸为2的幂。（后面意思是关于怎么取值的，没看明白，(lll￢ω￢)）。
 </div>
 
 
@@ -792,7 +792,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L250">Scene/PostProcessStage.js 250</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L260">Scene/PostProcessStage.js 260</a>
 </div>
 
 
@@ -803,7 +803,7 @@
 
 
 <div class="description">
-    The fragment shader to use when execute this post-process stage.<p>The shader must contain a sampler uniform declaration for <code>colorTexture</code>, <code>depthTexture</code>,or both.</p><p>The shader must contain a <code>vec2</code> varying declaration for <code>v_textureCoordinates</code> for samplingthe texture uniforms.</p>
+    The fragment shader to use when execute this post-process stage.<p>在此后期处理阶段执行的片段着色器代码。</p><p>The shader must contain a sampler uniform declaration for <code>colorTexture</code>, <code>depthTexture</code>,or both.</p><p>片段着色器代码中必须包含其中一个或两个<code>uniform sampler2D</code>声明的 <code>colorTexture</code>, <code>depthTexture</code>变量。</p><p>The shader must contain a <code>vec2</code> varying declaration for <code>v_textureCoordinates</code> for samplingthe texture uniforms.</p><p>片段着色器还必须提供<code>vec2 varying v_textureCoordinates</code>,用于纹理采样</p>
 </div>
 
 
@@ -852,7 +852,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L230">Scene/PostProcessStage.js 230</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L237">Scene/PostProcessStage.js 237</a>
 </div>
 
 
@@ -863,7 +863,7 @@
 
 
 <div class="description">
-    The unique name of this post-process stage for reference by other stages in a <a href="PostProcessStageComposite.html"><code>PostProcessStageComposite</code></a>.
+    The unique name of this post-process stage for reference by other stages in a <a href="PostProcessStageComposite.html"><code>PostProcessStageComposite</code></a>.<p>   用于在<a href="PostProcessStageComposite.html"><code>PostProcessStageComposite</code></a>中与其它后期处理阶段进行区分的唯一名称。</p>
 </div>
 
 
@@ -912,7 +912,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L333">Scene/PostProcessStage.js 333</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L351">Scene/PostProcessStage.js 351</a>
 </div>
 
 
@@ -923,7 +923,7 @@
 
 
 <div class="description">
-    The pixel data type of the output texture.
+    The pixel data type of the output texture.<br/>输出纹理像素的数据类型。
 </div>
 
 
@@ -972,7 +972,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L321">Scene/PostProcessStage.js 321</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L339">Scene/PostProcessStage.js 339</a>
 </div>
 
 
@@ -983,7 +983,7 @@
 
 
 <div class="description">
-    The color pixel format of the output texture.
+    The color pixel format of the output texture.<br/>输出纹理的像素颜色格式。
 </div>
 
 
@@ -1032,7 +1032,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L218">Scene/PostProcessStage.js 218</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L222">Scene/PostProcessStage.js 222</a>
 </div>
 
 
@@ -1043,7 +1043,7 @@
 
 
 <div class="description">
-    Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>and <a href="PostProcessStage.html#enabled"><code>PostProcessStage#enabled</code></a> are <code>true</code>. A stage will not be ready while it is waiting on texturesto load.
+    Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>and <a href="PostProcessStage.html#enabled"><code>PostProcessStage#enabled</code></a> are <code>true</code>. A stage will not be ready while it is waiting on texturesto load.<p>   确定此后期处理阶段是否已准备好执行。后期处理阶段只有在<code>ready</code>和<a href="PostProcessStage.html#enabled"><code>PostProcessStage#enabled</code></a>都为<code>true</code>的时候才能执行。   当等待纹理加载的时候,<code>ready</code>状态为<code>false</code>。</p>
 </div>
 
 
@@ -1092,7 +1092,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L309">Scene/PostProcessStage.js 309</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L327">Scene/PostProcessStage.js 327</a>
 </div>
 
 
@@ -1103,7 +1103,7 @@
 
 
 <div class="description">
-    How to sample the input color texture.
+    How to sample the input color texture.<br/>输入的纹理的颜色采样方式。
 </div>
 
 
@@ -1152,7 +1152,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L357">Scene/PostProcessStage.js 357</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L375">Scene/PostProcessStage.js 375</a>
 </div>
 
 
@@ -1163,7 +1163,7 @@
 
 
 <div class="description">
-    The <a href="BoundingRectangle.html"><code>BoundingRectangle</code></a> to use for the scissor test. A default bounding rectangle will disable the scissor test.
+    The <a href="BoundingRectangle.html"><code>BoundingRectangle</code></a> to use for the scissor test. A default bounding rectangle will disable the scissor test.<br/>设置裁剪测试的矩形区域。
 </div>
 
 
@@ -1212,7 +1212,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L398">Scene/PostProcessStage.js 398</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L419">Scene/PostProcessStage.js 419</a>
 </div>
 
 
@@ -1223,7 +1223,7 @@
 
 
 <div class="description">
-    The features selected for applying the post-process.<p>In the fragment shader, use <code>czm_selected</code> to determine whether or not to apply the post-processstage to that fragment. For example:<code>if (czm_selected(v_textureCoordinates)) {    // apply post-process stage} else {    gl_FragColor = texture2D(colorTexture, v_textureCordinates);}</code></p>
+    The features selected for applying the post-process.<p>给后期处理阶段使用的选中的features</p><p>In the fragment shader, use <code>czm_selected</code> to determine whether or not to apply the post-processstage to that fragment. For example:<br/>在片段着色器中，使用<code>czm_selected</code> 判断是否可以再次后期处理阶段使用。示例如下：<br/><code>if (czm_selected(v_textureCoordinates)) {    // apply post-process stage} else {    gl_FragColor = texture2D(colorTexture, v_textureCordinates);}</code></p>
 </div>
 
 
@@ -1272,7 +1272,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L285">Scene/PostProcessStage.js 285</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L303">Scene/PostProcessStage.js 303</a>
 </div>
 
 
@@ -1283,7 +1283,7 @@
 
 
 <div class="description">
-    A number in the range (0.0, 1.0] used to scale the output texture dimensions. A scale of 1.0 will render this post-process stage to a texture the size of the viewport.
+    A number in the range (0.0, 1.0] used to scale the output texture dimensions. A scale of 1.0 will render this post-process stage to a texture the size of the viewport.<br/>设置纹理尺寸的缩放，可选的范围为：(0.0, 1.0]。当为1时，此后期处理的纹理大小将与视口大小一致。
 </div>
 
 
@@ -1332,7 +1332,7 @@
     
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L273">Scene/PostProcessStage.js 273</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L291">Scene/PostProcessStage.js 291</a>
 </div>
 
 
@@ -1343,7 +1343,7 @@
 
 
 <div class="description">
-    An object whose properties are used to set the uniforms of the fragment shader.<p>The object property values can be either a constant or a function. The function will be calledeach frame before the post-process stage is executed.</p><p>A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.</p><p>If this post-process stage is part of a <a href="PostProcessStageComposite.html"><code>PostProcessStageComposite</code></a> that does not execute in series, the constant value can also bethe name of another stage in a composite. This will set the uniform to the output texture the stage with that name.</p>
+    An object whose properties are used to set the uniforms of the fragment shader.<p>一个对象,它的属性名称与片段着色器中<code>uniform</code>声明的变量名称一致,并将值赋给对应的片段着色器中的<code>uniform</code>变量</p><p>The object property values can be either a constant or a function. The function will be calledeach frame before the post-process stage is executed.</p><p> 对象的属性值可以是一个常量或一个函数。当为一个函数时,将会在后期处理阶段执行完毕前每一帧都调用。</p><p>A constant value can also be a URI to an image, a data URI, or an HTML element that can be used as a texture, such as HTMLImageElement or HTMLCanvasElement.</p><p> 常量值也可以是一个图片的URI地址,或data URI,或一个作为纹理的HTML标签(比如img标签或canvas标签)。</p><p>If this post-process stage is part of a <a href="PostProcessStageComposite.html"><code>PostProcessStageComposite</code></a> that does not execute in series, the constant value can also bethe name of another stage in a composite. This will set the uniform to the output texture the stage with that name.</p><p>（不明白，(lll￢ω￢)）</p>
 </div>
 
 
@@ -1398,7 +1398,7 @@
         
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L1039">Scene/PostProcessStage.js 1039</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L1072">Scene/PostProcessStage.js 1072</a>
 </div>
 
 
@@ -1410,7 +1410,7 @@
 
 
 <div class="description">
-    Destroys the WebGL resources held by this object.  Destroying an object allows for deterministicrelease of WebGL resources, instead of relying on the garbage collector to destroy this object.<p>Once an object is destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.  Therefore,assign the return value (<code>undefined</code>) to the object as done in the example.</p>
+    Destroys the WebGL resources held by this object.  Destroying an object allows for deterministicrelease of WebGL resources, instead of relying on the garbage collector to destroy this object.<br/>销毁WebGL资源（主动销毁，而不依赖垃圾回收）。<p>Once an object is destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.  Therefore,assign the return value (<code>undefined</code>) to the object as done in the example.</p><p> 如果已销毁，就不要再调用任何方法；否则将会出现<a href="DeveloperError.html"><code>DeveloperError</code></a>错误。返回<code>undefined</code>意味着对象已被销毁。</p>
 </div>
 
 
@@ -1498,7 +1498,7 @@
         
 
 <div class="source-link rightLinks">
-    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L1022">Scene/PostProcessStage.js 1022</a>
+    <a href="https://github.com/CesiumGS/cesium/blob/1.69/Source/Scene/PostProcessStage.js#L1051">Scene/PostProcessStage.js 1051</a>
 </div>
 
 
@@ -1510,7 +1510,7 @@
 
 
 <div class="description">
-    Returns true if this object was destroyed; otherwise, false.<p>If this object was destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.</p>
+    Returns true if this object was destroyed; otherwise, false.判定是否已销毁，true为已销毁，否则未销毁。<p>If this object was destroyed, it should not be used; calling any function other than<code>isDestroyed</code> will result in a <a href="DeveloperError.html"><code>DeveloperError</code></a> exception.</p><p> 如果已销毁，就不要再调用任何方法；否则将会出现<a href="DeveloperError.html"><code>DeveloperError</code></a>错误</p>
 </div>
 
 
@@ -1537,7 +1537,7 @@
 
         
 <div class="param-desc">
-    <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+    <code>true</code> if this object was destroyed; otherwise, <code>false</code>.<br/>已销毁返回true,否则返回false。
 </div>
 
 
