@@ -416,7 +416,7 @@ function getColorRenderState(enableStencil) {
       enabled: false,
     },
     depthMask: false,
-    blending: BlendingState.ALPHA_BLEND,
+    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
   };
 }
 

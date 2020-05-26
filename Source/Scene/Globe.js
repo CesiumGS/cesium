@@ -23,6 +23,7 @@ import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
+import GlobeTranslucency from "./GlobeTranslucency.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
@@ -69,6 +70,8 @@ function Globe(ellipsoid) {
     ellipsoid.maximumRadius / 5.0,
     1.0
   );
+
+  this._translucency = new GlobeTranslucency();
 
   makeShadersDirty(this);
 
@@ -281,7 +284,7 @@ function Globe(ellipsoid) {
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
-   * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+   * Skirts are always hidden when the camera is underground or translucency is enabled.
    *
    * @type {Boolean}
    * @default true
@@ -289,7 +292,7 @@ function Globe(ellipsoid) {
   this.showSkirts = true;
 
   /**
-   * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
+   * Whether to cull back-facing terrain. Back faces are not culled when the camera is underground or translucency is enabled.
    *
    * @type {Boolean}
    * @default true
@@ -536,6 +539,18 @@ Object.defineProperties(Globe.prototype, {
       );
     },
   },
+
+  /**
+   * Properties for controlling globe translucency.
+   *
+   * @memberof Globe.prototype
+   * @type {GlobeTranslucency}
+   */
+  translucency: {
+    get: function () {
+      return this._translucency;
+    },
+  },
 });
 
 function makeShadersDirty(globe) {
@@ -553,9 +568,9 @@ function makeShadersDirty(globe) {
   ) {
     fragmentSources.push(globe._material.shaderSource);
     defines.push("APPLY_MATERIAL");
-    globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+    globe._surface._tileProvider.materialUniformMap = globe._material._uniforms;
   } else {
-    globe._surface._tileProvider.uniformMap = undefined;
+    globe._surface._tileProvider.materialUniformMap = undefined;
   }
   fragmentSources.push(GlobeFS);
 

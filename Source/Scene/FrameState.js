@@ -136,6 +136,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.cameraUnderground = false;
 
   /**
+   * The {@link GlobeTranslucencyState} object used by the scene.
+   *
+   * @type {GlobeTranslucencyState}
+   * @default undefined
+   */
+  this.globeTranslucencyState = undefined;
+
+  /**
    * The culling volume.
    *
    * @type {CullingVolume}

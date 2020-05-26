@@ -203,7 +203,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
   var context = frameState.context;
 
   var colorCorrect = hasColorCorrection(this);
-  var perFragmentAtmosphere = this.perFragmentAtmosphere;
+  var translucent = frameState.globeTranslucencyState.translucent;
+  var perFragmentAtmosphere = this.perFragmentAtmosphere || translucent;
 
   var command = this._command;
 
@@ -232,7 +233,7 @@ SkyAtmosphere.prototype.update = function (frameState) {
     });
   }
 
-  var flags = colorCorrect | (perFragmentAtmosphere << 2);
+  var flags = colorCorrect | (perFragmentAtmosphere << 2) | (translucent << 3);
 
   if (flags !== this._flags) {
     this._flags = flags;
@@ -245,6 +246,10 @@ SkyAtmosphere.prototype.update = function (frameState) {
 
     if (perFragmentAtmosphere) {
       defines.push("PER_FRAGMENT_ATMOSPHERE");
+    }
+
+    if (translucent) {
+      defines.push("GLOBE_TRANSLUCENT");
     }
 
     var vs = new ShaderSource({

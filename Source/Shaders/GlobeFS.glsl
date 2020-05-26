@@ -84,6 +84,12 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 uniform vec4 u_fillHighlightColor;
 #endif
 
+#ifdef TRANSLUCENT
+uniform vec4 u_frontFaceAlphaByDistance;
+uniform vec4 u_backFaceAlphaByDistance;
+uniform vec4 u_translucencyRectangle;
+#endif
+
 #ifdef UNDERGROUND_COLOR
 uniform vec4 u_undergroundColor;
 uniform vec4 u_undergroundColorAlphaByDistance;
@@ -101,7 +107,7 @@ varying float v_slope;
 varying float v_aspect;
 #endif
 
-#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR)
+#if defined(FOG) || defined(GROUND_ATMOSPHERE) || defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
 varying float v_distance;
 #endif
 
@@ -115,7 +121,7 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 #endif
 
-#ifdef UNDERGROUND_COLOR
+#if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT)
 float interpolateByDistance(vec4 nearFarScalar, float distance)
 {
     float startDistance = nearFarScalar.x;
@@ -127,10 +133,21 @@ float interpolateByDistance(vec4 nearFarScalar, float distance)
 }
 #endif
 
-#ifdef UNDERGROUND_COLOR
+#if defined(UNDERGROUND_COLOR) || defined(TRANSLUCENT) || defined(APPLY_MATERIAL)
 vec4 alphaBlend(vec4 sourceColor, vec4 destinationColor)
 {
     return sourceColor * vec4(sourceColor.aaa, 1.0) + destinationColor * (1.0 - sourceColor.a);
+}
+#endif
+
+#ifdef TRANSLUCENT
+bool inTranslucencyRectangle()
+{
+    return
+        v_textureCoordinates.x > u_translucencyRectangle.x &&
+        v_textureCoordinates.x < u_translucencyRectangle.z &&
+        v_textureCoordinates.y > u_translucencyRectangle.y &&
+        v_textureCoordinates.y < u_translucencyRectangle.w;
 }
 #endif
 
@@ -350,7 +367,8 @@ void main()
     materialInput.height = v_height;
     materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
-    color.xyz = mix(color.xyz, material.diffuse, material.alpha);
+    vec4 materialColor = vec4(material.diffuse, material.alpha);
+    color = alphaBlend(materialColor, color);
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
@@ -407,12 +425,6 @@ void main()
 #endif
 
 #ifdef GROUND_ATMOSPHERE
-    if (czm_sceneMode != czm_sceneMode3D)
-    {
-        gl_FragColor = finalColor;
-        return;
-    }
-
     if (!czm_backFacing())
     {
         vec3 groundAtmosphereColor = computeGroundAtmosphereColor(fogColor, finalColor, atmosphereLightDirection, cameraDist);
@@ -428,6 +440,14 @@ void main()
         float blendAmount = interpolateByDistance(u_undergroundColorAlphaByDistance, distance);
         vec4 undergroundColor = vec4(u_undergroundColor.rgb, u_undergroundColor.a * blendAmount);
         finalColor = alphaBlend(undergroundColor, finalColor);
+    }
+#endif
+
+#ifdef TRANSLUCENT
+    if (inTranslucencyRectangle())
+    {
+      vec4 alphaByDistance = gl_FrontFacing ? u_frontFaceAlphaByDistance : u_backFaceAlphaByDistance;
+      finalColor.a *= interpolateByDistance(alphaByDistance, v_distance);
     }
 #endif
 

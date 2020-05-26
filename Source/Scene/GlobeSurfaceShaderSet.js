@@ -100,6 +100,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   var highlightFillTile = options.highlightFillTile;
   var colorToAlpha = options.colorToAlpha;
   var showUndergroundColor = options.showUndergroundColor;
+  var translucent = options.translucent;
 
   var quantization = 0;
   var quantizationDefine = "";
@@ -153,7 +154,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (colorCorrect << 23) |
     (highlightFillTile << 24) |
     (colorToAlpha << 25) |
-    (showUndergroundColor << 26);
+    (showUndergroundColor << 26) |
+    (translucent << 27);
 
   var currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -232,6 +234,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (showUndergroundColor) {
       vs.defines.push("UNDERGROUND_COLOR");
       fs.defines.push("UNDERGROUND_COLOR");
+    }
+    if (translucent) {
+      vs.defines.push("TRANSLUCENT");
+      fs.defines.push("TRANSLUCENT");
     }
     if (enableLighting) {
       if (hasVertexNormals) {
