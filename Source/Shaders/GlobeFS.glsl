@@ -172,7 +172,7 @@ vec4 sampleAndBlend(
     float textureOneOverGamma,
     float split,
     vec4 colorToAlpha,
-    float nightIntensity)
+    float nightBlend)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -188,7 +188,7 @@ vec4 sampleAndBlend(
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
 
 #if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
-    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightIntensity);
+    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
 #endif
 
     vec2 translation = textureCoordinateTranslationAndScale.xy;
@@ -281,7 +281,7 @@ vec3 colorCorrect(vec3 rgb) {
     return rgb;
 }
 
-vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightIntensity);
+vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
 
 #ifdef GROUND_ATMOSPHERE
@@ -310,16 +310,16 @@ void main()
 #endif
 
 #if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
-    float nightIntensity = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+    float nightBlend = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
 #else
-    float nightIntensity = 0.0;
+    float nightBlend = 0.0;
 #endif
 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0), nightIntensity);
+    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0), nightBlend);
 
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||

@@ -295,7 +295,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     var computeDayColor =
       "\
-    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightIntensity)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend)\n\
     {\n\
         vec4 color = initialColor;\n";
 
@@ -362,7 +362,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
             " +
         (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
         ",\n\
-        nightIntensity\
+        nightBlend\
         );\n";
       if (hasImageryLayerCutout) {
         computeDayColor +=

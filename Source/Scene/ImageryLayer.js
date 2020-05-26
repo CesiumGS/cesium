@@ -144,8 +144,8 @@ function ImageryLayer(imageryProvider, options) {
   );
 
   /**
-   * The alpha blending value of this layer a the night side of the globe, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque. This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
    *
    * @type {Number}
    * @default 1.0
@@ -156,8 +156,8 @@ function ImageryLayer(imageryProvider, options) {
   );
 
   /**
-   * The alpha blending value of this layer a the day side of the globe, with 0.0 representing fully transparent and
-   * 1.0 representing fully opaque. This only takes effect when <code>enableLighting</code> is <code>true</code>.
+   * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
    *
    * @type {Number}
    * @default 1.0

@@ -13,6 +13,7 @@
 - Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
 - Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 - Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
+- Added `nightAlpha` and `dayAlpha` properties to `ImageryLayer` to control alpha separately for the night and day sides of the globe. [#8868](https://github.com/CesiumGS/cesium/pull/8868)
 
 ##### Fixes :wrench:
 
@@ -33,7 +34,6 @@
 
 ##### Additions :tada:
 
-- Added `nightAlpha` and `dayAlpha` to the `ImageryLayer`. It lets to control alpha separately on the day and night sides of the globe.
 - Added `RequestScheduler` to the public API; this allows users to have more control over the requests made by CesiumJS. [#8384](https://github.com/CesiumGS/cesium/issues/8384)
 - Added support for high-quality edges on solid geometry in glTF models. [#8776](https://github.com/CesiumGS/cesium/pull/8776)
 - Added `Scene.cameraUnderground` for checking whether the camera is underneath the globe. [#8765](https://github.com/CesiumGS/cesium/pull/8765)
