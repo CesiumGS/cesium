@@ -959,6 +959,12 @@ Creative Commons Attribution 3.0
 (c) copyright 2012, Dennis Haupt
 http://www.blendswap.com/blends/view/61653
 
+### Perc Lead Mine
+
+Creative Commons Attribution 4.0 International
+(c) copyright 2019, Dr Edward Alan Lockhart
+https://sketchfab.com/3d-models/parc-lead-mine-4759a23abbff454c8c682ff9b02ba111
+
 ### GitHub logo
 
 https://github.com/logos

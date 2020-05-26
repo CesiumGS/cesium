@@ -1044,8 +1044,27 @@ var AutomaticUniforms = {
   }),
 
   /**
+   * An automatic GLSL uniform containing the height in meters of the
+   * eye (camera) above or below the ellipsoid.
+   *
+   * @alias czm_eyeHeight
+   * @namespace
+   * @glslUniform
+   *
+   * @see UniformState#eyeHeight
+   */
+  czm_eyeHeight: new AutomaticUniform({
+    size: 1,
+    datatype: WebGLConstants.FLOAT,
+    getValue: function (uniformState) {
+      return uniformState.eyeHeight;
+    },
+  }),
+
+  /**
    * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
-   *  of the eye (camera) in the 2D scene in meters.
+   * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
+   * when the {@link SceneMode} is <code>SCENE2D</code>.
    *
    * @alias czm_eyeHeight2D
    * @namespace
