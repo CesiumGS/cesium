@@ -12,6 +12,7 @@ import RuntimeError from "./RuntimeError.js";
  * Constructor parameters are in row-major order for code readability.
  * @alias Matrix4
  * @constructor
+ * @implements {ArrayLike<number>}
  *
  * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
  * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
