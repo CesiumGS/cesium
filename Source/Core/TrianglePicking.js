@@ -592,7 +592,6 @@ var scratchTransform = new Matrix4();
 /**
  * @constructor
  * @param {Object} options
- * @param {Number} options.triangleCount
  * @param {OrientedBoundingBox} options.orientedBoundingBox
  * @param {TrianglePicking~TriangleVerticesCallback} [options.triangleVerticesCallback]
  */
@@ -651,7 +650,8 @@ TrianglePicking.prototype.addTriangles = function (
   //>>includeEnd('debug');
 
   // Build the octree by adding each triangle one at a time.
-  for (var triIdx = triangleIndex; triIdx < triangleCount; triIdx++) {
+  var triangleIndexEnd = triangleIndex + triangleCount;
+  for (var triIdx = triangleIndex; triIdx < triangleIndexEnd; triIdx++) {
     triangleVerticesCallback(triIdx, scratchV0, scratchV1, scratchV2);
 
     var v0Local = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
@@ -679,7 +679,7 @@ TrianglePicking.prototype.addTriangles = function (
   }
 
   // var time1 = getTimestamp();
-  // console.log("time: " + triCount + " " + (time1 - time0));
+  // console.log("time: " + triangleCount + " " + (time1 - time0));
 };
 
 var scratchTraversalResult = new TraversalResult();

@@ -13,6 +13,7 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import Transforms from "./Transforms.js";
+import TrianglePicking from "../Core/TrianglePicking.js";
 import WebMercatorProjection from "./WebMercatorProjection.js";
 
 /**
@@ -264,6 +265,7 @@ HeightmapTessellator.computeVertices = function (options) {
   var hMin = Number.POSITIVE_INFINITY;
 
   var gridVertexCount = width * height;
+  var gridTriangleCount = (width - 1) * (height - 1) * 2;
   var edgeVertexCount = skirtHeight > 0.0 ? width * 2 + height * 2 : 0;
   var vertexCount = gridVertexCount + edgeVertexCount;
 
@@ -454,6 +456,7 @@ HeightmapTessellator.computeVertices = function (options) {
 
   var boundingSphere3D = BoundingSphere.fromPoints(positions);
   var orientedBoundingBox;
+  var trianglePicking;
   if (defined(rectangle)) {
     orientedBoundingBox = OrientedBoundingBox.fromRectangle(
       rectangle,
@@ -461,6 +464,28 @@ HeightmapTessellator.computeVertices = function (options) {
       maximumHeight,
       ellipsoid
     );
+
+    trianglePicking = new TrianglePicking({
+      orientedBoundingBox: orientedBoundingBox,
+      triangleVerticesCallback: function (triIdx, v0, v1, v2) {
+        var trianglesPerRow = (width - 1) * 2;
+        var base =
+          width * Math.floor(triIdx / trianglesPerRow) +
+          Math.floor((triIdx % trianglesPerRow) / 2);
+        var isEven = triIdx % 2 === 0;
+        // isEven: TL, BL, TR
+        // isOdd: TR, BL, BR
+        var idx0 = base + (isEven ? 0 : 1);
+        var idx1 = base + width;
+        var idx2 = base + 1 + (isEven ? 0 : width);
+        Cartesian3.clone(positions[idx0], v0);
+        Cartesian3.clone(positions[idx1], v1);
+        Cartesian3.clone(positions[idx2], v2);
+      },
+    });
+    trianglePicking.addTriangles(0, gridTriangleCount);
+    // Unset to avoid error when transferring back from worker (can't serialize functions)
+    trianglePicking.triangleVerticesCallback = undefined;
   }
 
   var occludeePointInScaledSpace;
@@ -505,6 +530,7 @@ HeightmapTessellator.computeVertices = function (options) {
     boundingSphere3D: boundingSphere3D,
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
+    trianglePicking: trianglePicking,
   };
 };
 export default HeightmapTessellator;

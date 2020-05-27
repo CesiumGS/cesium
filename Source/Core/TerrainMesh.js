@@ -1,4 +1,5 @@
 import defaultValue from "./defaultValue.js";
+import defined from "./defined.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -162,20 +163,23 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
-  /**
-   * Acceleration structure for triangle picking.
-   * @type {TrianglePicking}
-   */
-  var that = this;
-  trianglePicking.triangleVerticesCallback = function (triIdx, v0, v1, v2) {
-    var idx0 = that.indices[triIdx * 3 + 0];
-    var idx1 = that.indices[triIdx * 3 + 1];
-    var idx2 = that.indices[triIdx * 3 + 2];
+  // TODO: remove defined
+  if (defined(trianglePicking)) {
+    /**
+     * Acceleration structure for triangle picking.
+     * @type {TrianglePicking}
+     */
+    var that = this;
+    trianglePicking.triangleVerticesCallback = function (triIdx, v0, v1, v2) {
+      var idx0 = that.indices[triIdx * 3 + 0];
+      var idx1 = that.indices[triIdx * 3 + 1];
+      var idx2 = that.indices[triIdx * 3 + 2];
 
-    that.encoding.decodePosition(that.vertices, idx0, v0);
-    that.encoding.decodePosition(that.vertices, idx1, v1);
-    that.encoding.decodePosition(that.vertices, idx2, v2);
-  };
-  this.trianglePicking = trianglePicking;
+      that.encoding.decodePosition(that.vertices, idx0, v0);
+      that.encoding.decodePosition(that.vertices, idx1, v1);
+      that.encoding.decodePosition(that.vertices, idx2, v2);
+    };
+    this.trianglePicking = trianglePicking;
+  }
 }
 export default TerrainMesh;

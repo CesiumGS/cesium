@@ -14,6 +14,7 @@ import TaskProcessor from "./TaskProcessor.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
+import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -295,7 +296,8 @@ HeightmapTerrainData.prototype.createMesh = function (
       indicesAndEdges.westIndicesSouthToNorth,
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
-      indicesAndEdges.northIndicesWestToEast
+      indicesAndEdges.northIndicesWestToEast,
+      TrianglePicking.clone(result.trianglePicking)
     );
 
     // Free memory received from server after mesh is created.
