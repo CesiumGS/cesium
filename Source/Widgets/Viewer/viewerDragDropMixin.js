@@ -12,8 +12,8 @@ import getElement from "../getElement.js";
  * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
- * @exports viewerDragDropMixin
- * @namespace
+ * @function viewerDragDropMixin
+
  * @param {Viewer} viewer The viewer instance.
  * @param {Object} [options] Object with the following properties:
  * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.

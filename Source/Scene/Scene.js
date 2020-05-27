@@ -126,7 +126,7 @@ var requestRenderAfterFrame = function (scene) {
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
+ * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
@@ -787,7 +787,7 @@ Object.defineProperties(Scene.prototype, {
    * Gets the canvas element to which this scene is bound.
    * @memberof Scene.prototype
    *
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
    * @readonly
    */
   canvas: {

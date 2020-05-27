@@ -7,7 +7,7 @@ import PerformanceWatchdog from "../PerformanceWatchdog/PerformanceWatchdog.js";
  * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
- * @exports viewerPerformanceWatchdogMixin
+ * @function
  *
  * @param {Viewer} viewer The viewer instance.
  * @param {Object} [options] An object with properties.

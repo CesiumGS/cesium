@@ -10,7 +10,7 @@ import defined from "./defined.js";
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Heap~ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+ * @param {Heap.ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
 function Heap(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -78,7 +78,7 @@ Object.defineProperties(Heap.prototype, {
    *
    * @memberof Heap.prototype
    *
-   * @type {Heap~ComparatorCallback}
+   * @type {Heap.ComparatorCallback}
    */
   comparator: {
     get: function () {
@@ -216,7 +216,7 @@ Heap.prototype.pop = function (index) {
 
 /**
  * The comparator to use for the heap.
- * @callback Heap~ComparatorCallback
+ * @callback Heap.ComparatorCallback
  * @param {*} a An element in the heap.
  * @param {*} b An element in the heap.
  * @returns {Number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.

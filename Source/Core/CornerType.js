@@ -4,7 +4,7 @@
  * @demo The {@link https://sandcastle.cesium.com/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
  * demonstrates the three corner types, as used by {@link CorridorGraphics}.
  *
- * @exports CornerType
+ * @enum {Number}
  */
 var CornerType = {
   /**

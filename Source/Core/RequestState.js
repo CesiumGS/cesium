@@ -1,7 +1,7 @@
 /**
  * State of the request.
  *
- * @exports RequestState
+ * @enum {Number}
  */
 var RequestState = {
   /**

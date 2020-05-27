@@ -11,7 +11,7 @@ import TimeStandard from "./TimeStandard.js";
  * Contains functions for finding the Cartesian coordinates of the sun and the moon in the
  * Earth-centered inertial frame.
  *
- * @exports Simon1994PlanetaryPositions
+ * @namespace Simon1994PlanetaryPositions
  */
 var Simon1994PlanetaryPositions = {};
 

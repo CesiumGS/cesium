@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a URI, returns the base path of the URI.
- * @exports getBaseUri
+ * @function
  *
  * @param {String} uri The Uri.
  * @param {Boolean} [includeQuery = false] Whether or not to include the query string and fragment form the uri

@@ -404,7 +404,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * Gets the canvas.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
    */
   canvas: {
     get: function () {

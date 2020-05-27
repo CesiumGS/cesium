@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines how two pixels' values are combined.
  *
- * @exports BlendEquation
+ * @enum {Number}
  */
 var BlendEquation = {
   /**

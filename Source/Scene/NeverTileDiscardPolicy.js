@@ -19,7 +19,7 @@ NeverTileDiscardPolicy.prototype.isReady = function () {
 /**
  * Given a tile image, decide whether to discard that image.
  *
- * @param {Image} image An image to test.
+ * @param {HTMLImageElement} image An image to test.
  * @returns {Boolean} True if the image should be discarded; otherwise, false.
  */
 NeverTileDiscardPolicy.prototype.shouldDiscardImage = function (image) {

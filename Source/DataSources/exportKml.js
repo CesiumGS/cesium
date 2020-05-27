@@ -232,12 +232,12 @@ IdManager.prototype.get = function (id) {
  * as gx:Track Features. Not all Materials are representable in KML, so for more advanced Materials just the primary
  * color is used. Canvas objects are exported as PNG images.
  *
- * @exports exportKml
+ * @function exportKml
  *
  * @param {Object} options An object with the following properties:
  * @param {EntityCollection} options.entities The EntityCollection to export as KML.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
- * @param {exportKml~ModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
+ * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
  * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
  * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
@@ -1503,7 +1503,7 @@ function colorToString(color) {
  * It can also be used to add additional files to the <code>externalFiles</code> object, which is the list of files embedded in the exported KMZ,
  * or otherwise returned with the KML string when exporting.
  *
- * @callback exportKml~ModelCallback
+ * @callback exportKmlModelCallback
  *
  * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
  * @param {JulianDate} time The time that any properties should use to get the value.

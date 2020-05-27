@@ -7,7 +7,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Math functions.
  *
- * @exports CesiumMath
+ * @namespace CesiumMath
  * @alias Math
  */
 var CesiumMath = {};
@@ -580,7 +580,7 @@ CesiumMath.mod = function (m, n) {
  *
  * @param {Number} left The first value to compare.
  * @param {Number} right The other value to compare.
- * @param {Number} relativeEpsilon The maximum inclusive delta between <code>left</code> and <code>right</code> for the relative tolerance test.
+ * @param {Number} [relativeEpsilon=0] The maximum inclusive delta between <code>left</code> and <code>right</code> for the relative tolerance test.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The maximum inclusive delta between <code>left</code> and <code>right</code> for the absolute tolerance test.
  * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
  *
@@ -603,10 +603,9 @@ CesiumMath.equalsEpsilon = function (
   if (!defined(right)) {
     throw new DeveloperError("right is required.");
   }
-  if (!defined(relativeEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
-  }
   //>>includeEnd('debug');
+
+  relativeEpsilon = defaultValue(relativeEpsilon, 0.0);
   absoluteEpsilon = defaultValue(absoluteEpsilon, relativeEpsilon);
   var absDiff = Math.abs(left - right);
   return (

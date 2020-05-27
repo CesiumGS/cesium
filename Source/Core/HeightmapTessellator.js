@@ -18,7 +18,7 @@ import WebMercatorProjection from "./WebMercatorProjection.js";
 /**
  * Contains functions to create a mesh from a heightmap image.
  *
- * @exports HeightmapTessellator
+ * @namespace HeightmapTessellator
  *
  * @private
  */
@@ -47,7 +47,7 @@ var maximumScratch = new Cartesian3();
  * Fills an array of vertices from a heightmap image.
  *
  * @param {Object} options Object with the following properties:
- * @param {TypedArray} options.heightmap The heightmap to tessellate.
+ * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} options.heightmap The heightmap to tessellate.
  * @param {Number} options.width The width of the heightmap, in height samples.
  * @param {Number} options.height The height of the heightmap, in height samples.
  * @param {Number} options.skirtHeight The height of skirts to drape at the edges of the heightmap.

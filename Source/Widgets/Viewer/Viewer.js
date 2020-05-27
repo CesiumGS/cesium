@@ -1065,7 +1065,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets the canvas.
    * @memberof Viewer.prototype
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
    * @readonly
    */
   canvas: {
@@ -1439,7 +1439,7 @@ Object.defineProperties(Viewer.prototype, {
  * A mixin may add additional properties, functions, or other behavior
  * to the provided viewer instance.
  *
- * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
+ * @param {Viewer.ViewerMixin} mixin The Viewer mixin to add to this instance.
  * @param {Object} [options] The options object to be passed to the mixin function.
  *
  * @see viewerDragDropMixin
@@ -2311,7 +2311,7 @@ function updateTrackedEntity(viewer) {
 
 /**
  * A function that augments a Viewer instance with additional functionality.
- * @callback Viewer~ViewerMixin
+ * @callback Viewer.ViewerMixin
  * @param {Viewer} viewer The viewer instance.
  * @param {Object} options Options object to be passed to the mixin function.
  *

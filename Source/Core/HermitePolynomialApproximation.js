@@ -64,7 +64,7 @@ function calculateCoefficientTerm(
 /**
  * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
  *
- * @exports HermitePolynomialApproximation
+ * @namespace HermitePolynomialApproximation
  */
 var HermitePolynomialApproximation = {
   type: "Hermite",

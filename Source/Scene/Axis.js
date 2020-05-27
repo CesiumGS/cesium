@@ -6,7 +6,7 @@ import Matrix4 from "../Core/Matrix4.js";
 /**
  * An enum describing the x, y, and z axes and helper conversion functions.
  *
- * @exports Axis
+ * @enum {Number}
  * @private
  */
 var Axis = {

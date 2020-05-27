@@ -131,7 +131,7 @@ HeadingPitchRoll.equals = function (left, right) {
  *
  * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
  * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
@@ -193,7 +193,7 @@ HeadingPitchRoll.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
