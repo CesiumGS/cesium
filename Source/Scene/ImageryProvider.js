@@ -19,6 +19,7 @@ import Resource from "../Core/Resource.js";
  * @see GoogleEarthEnterpriseImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
  * @see GridImageryProvider
+ * @see IonImageryProvider
  * @see MapboxImageryProvider
  * @see MapboxStyleImageryProvider
  * @see SingleTileImageryProvider
@@ -257,7 +258,6 @@ Object.defineProperties(ImageryProvider.prototype, {
 
 /**
  * Gets the credits to be displayed when a given tile is displayed.
- * @function
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -266,13 +266,13 @@ Object.defineProperties(ImageryProvider.prototype, {
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.getTileCredits =
-  DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.getTileCredits = function (x, y, level) {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * Requests the image for a given tile.  This function should
  * not be called before {@link ImageryProvider#ready} returns true.
- * @function
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -285,7 +285,9 @@ ImageryProvider.prototype.getTileCredits =
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.requestImage = function (x, y, level, request) {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
@@ -306,7 +308,15 @@ ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
  *
  * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
-ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
+ImageryProvider.prototype.pickFeatures = function (
+  x,
+  y,
+  level,
+  longitude,
+  latitude
+) {
+  DeveloperError.throwInstantiationError();
+};
 
 var ktxRegex = /\.ktx$/i;
 var crnRegex = /\.crn$/i;

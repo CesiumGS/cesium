@@ -226,7 +226,7 @@ IdManager.prototype.get = function (id) {
  * @typedef exportKmlResultKml
  * @type {Object}
  * @property {String} kml The generated KML.
- * @property {Object.<String, Blob>} externalFiles An object dictionary of external files
+ * @property {Object.<string, Blob>} externalFiles An object dictionary of external files
  */
 
 /**

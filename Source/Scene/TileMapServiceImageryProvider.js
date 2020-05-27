@@ -19,6 +19,7 @@ import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
  *
  * @alias TileMapServiceImageryProvider
  * @constructor
+ * @extends UrlTemplateImageryProvider
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Resource|String|Promise<Resource>|Promise<String>} [options.url='.'] Path to image tiles on server.
