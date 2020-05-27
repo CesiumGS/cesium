@@ -1585,7 +1585,7 @@ function createTypeScriptDefinitions() {
   fs.writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  child_process.execSync("node_modules/.bin/tsc Source/Cesium.d.ts --noEmit", {
+  child_process.execSync("node_modules/.bin/tsc -p Tools/jsdoc/tsconfig.json", {
     stdio: "inherit",
   });
 
