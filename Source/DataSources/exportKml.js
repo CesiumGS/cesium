@@ -223,6 +223,19 @@ IdManager.prototype.get = function (id) {
 };
 
 /**
+ * @typedef exportKmlResultKml
+ * @type {Object}
+ * @property {String} kml The generated KML.
+ * @property {Object.<String, Blob>} externalFiles An object dictionary of external files
+ */
+
+/**
+ * @typedef exportKmlResultKmz
+ * @type {Object}
+ * @property {Blob} kmz The generated kmz file.
+ */
+
+/**
  * Exports an EntityCollection as a KML document. Only Point, Billboard, Model, Path, Polygon, Polyline geometries
  * will be exported. Note that there is not a 1 to 1 mapping of Entity properties to KML Feature properties. For
  * example, entity properties that are time dynamic but cannot be dynamic in KML are exported with their values at
@@ -243,7 +256,7 @@ IdManager.prototype.get = function (id) {
  * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
  * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
  *
- * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
+ * @returns {Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
  * @example
  * Cesium.exportKml({
