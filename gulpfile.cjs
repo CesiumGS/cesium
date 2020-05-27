@@ -1570,7 +1570,7 @@ function createTypeScriptDefinitions() {
  * Private interface to support PropertyBag being a dictionary-like object.
  */
 interface DictionaryLike {
-    [index: string]: Property;
+    [index: string]: any;
 }
 
 ${source}

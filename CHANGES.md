@@ -16,6 +16,12 @@
 
 ### 1.70.0 - 2020-06-01
 
+##### Major Announcements :loudspeaker:
+
+- Cesium now ships with official TypeScript type definitions!
+  - If you import Cesium as a module, the new definitions will automatically be used by TypeScript and related tooling.
+  - If you import individual Cesium source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+
 ##### Additions :tada:
 
 - Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
