@@ -1564,7 +1564,7 @@ function createTypeScriptDefinitions() {
     );
 
   // Wrap the source to actually be inside of a declared cesium module.
-  source = 'declare module "cesium" {\n' + source + "}\n";
+  source = 'declare module "terriajs-cesium" {\n' + source + "}\n";
 
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
@@ -1577,7 +1577,7 @@ function createTypeScriptDefinitions() {
     var assignmentName = path.basename(file, path.extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "cesium/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
+      source += `declare module "terriajs-cesium/Source/${moduleId}" { import { ${assignmentName} } from 'terriajs-cesium'; export default ${assignmentName}; }\n`;
     }
   });
 

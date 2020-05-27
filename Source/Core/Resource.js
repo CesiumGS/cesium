@@ -1376,7 +1376,7 @@ Resource.prototype.fetchXHR = function (options) {
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
  * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
- * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+ * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.

@@ -718,7 +718,7 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {IntersectedTriangle|undefined} The intersection or <code>undefined</code> if none was found.
+ * @returns {{ intersection: Cartesian3, v0: Cartesian3, v1: Cartesian3, v2: Cartesian3 } | undefined} The intersection or <code>undefined</code> if none was found.
  *
  * @example
  * // find intersection of ray through a pixel and the globe

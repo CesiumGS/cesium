@@ -184,7 +184,7 @@ if (defined(Object.create)) {
 
 /**
  * A function that will be called to retry the operation.
- * @param {Promise} promise A promise to wait for before retrying the operation. This promise may already
+ * @param {Promise<void>} promise A promise to wait for before retrying the operation. This promise may already
  *                          be resolved if no waiting is necessary.
  * @callback TileProviderError.RetryFunction
  */
