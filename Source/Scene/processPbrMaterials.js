@@ -775,7 +775,7 @@ function generateTechnique(
   }
 
   // Add base color to fragment shader
-  if (defined(generatedMaterialValues.u_baseColorTexture)) {
+  if (defined(generatedMaterialValues.u_baseColorTexture) && hasTexCoords) {
     fragmentShader +=
       "    vec4 baseColorWithAlpha = SRGBtoLINEAR4(texture2D(u_baseColorTexture, " +
       baseColorTexCoord +
