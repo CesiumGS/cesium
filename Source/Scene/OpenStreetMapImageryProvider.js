@@ -19,6 +19,7 @@ var defaultCredit = new Credit(
  *
  * @alias OpenStreetMapImageryProvider
  * @constructor
+ * @extends UrlTemplateImageryProvider
  *
  * @param {Object} [options] Object with the following properties:
  * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.

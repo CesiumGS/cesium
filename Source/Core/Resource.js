@@ -223,7 +223,7 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -291,7 +291,7 @@ function Resource(options) {
   /**
    * A proxy to be used when loading the resource.
    *
-   * @type {DefaultProxy}
+   * @type {Proxy}
    */
   this.proxy = options.proxy;
 
@@ -630,7 +630,7 @@ Resource.prototype.setTemplateValues = function (template, useAsDefault) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be combined with those of the current instance.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
  * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -793,7 +793,7 @@ Resource.prototype.fetchArrayBuffer = function () {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -837,7 +837,7 @@ Resource.prototype.fetchBlob = function () {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1044,7 +1044,7 @@ function fetchImage(options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Boolean} [options.flipY=false] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
@@ -1102,7 +1102,7 @@ Resource.prototype.fetchText = function () {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1163,7 +1163,7 @@ Resource.prototype.fetchJson = function () {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1212,7 +1212,7 @@ Resource.prototype.fetchXML = function () {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1315,7 +1315,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1562,7 +1562,7 @@ Resource.prototype.fetch = function (options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1626,7 +1626,7 @@ Resource.prototype.delete = function (options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1690,7 +1690,7 @@ Resource.prototype.head = function (options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1753,7 +1753,7 @@ Resource.prototype.options = function (options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1822,7 +1822,7 @@ Resource.prototype.post = function (data, options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1890,7 +1890,7 @@ Resource.prototype.put = function (data, options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1958,7 +1958,7 @@ Resource.prototype.patch = function (data, options) {
  * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
  * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
  * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+ * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.

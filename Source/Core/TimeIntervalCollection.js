@@ -157,7 +157,7 @@ TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
  * Gets the interval at the specified index.
  *
  * @param {Number} index The index of the interval to retrieve.
- * @returns {TimeInterval} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
+ * @returns {TimeInterval|undefined} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
  */
 TimeIntervalCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -274,7 +274,7 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
  * @param {JulianDate} [options.stop] The stop time of the interval.
  * @param {Boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
  * @param {Boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
- * @returns {TimeInterval} The first interval in the collection that matches the specified parameters.
+ * @returns {TimeInterval|undefined} The first interval in the collection that matches the specified parameters.
  */
 TimeIntervalCollection.prototype.findInterval = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

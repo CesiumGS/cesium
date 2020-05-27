@@ -156,4 +156,18 @@ Object.defineProperties(CustomDataSource.prototype, {
     },
   },
 });
+
+/**
+ * Updates the data source to the provided time.  This function is optional and
+ * is not required to be implemented.  It is provided for data sources which
+ * retrieve data based on the current animation time or scene state.
+ * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
+ *
+ * @param {JulianDate} time The simulation time.
+ * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ */
+CustomDataSource.prototype.update = function (time) {
+  return true;
+};
+
 export default CustomDataSource;
