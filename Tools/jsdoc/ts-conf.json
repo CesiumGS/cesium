@@ -25,7 +25,7 @@
     },
     "opts": {
         "destination": "Source",
-        "template": "./node_modules/tsd-jsdoc/dist",
+        "template": "tsd-jsdoc/dist",
         "outFile": "Cesium.d.ts",
         "recurse": true
     }
