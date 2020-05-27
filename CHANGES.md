@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.69.1 - 2020-06-01
+
+##### Fixes :wrench:
+
+- Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining.
+
 ### 1.69.0 - 2020-05-01
 
 ##### Breaking Changes :mega:
