@@ -293,7 +293,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

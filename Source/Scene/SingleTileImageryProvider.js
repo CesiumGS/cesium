@@ -119,7 +119,7 @@ Object.defineProperties(SingleTileImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof SingleTileImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

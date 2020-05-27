@@ -242,7 +242,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

@@ -39,7 +39,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof TileCoordinatesImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

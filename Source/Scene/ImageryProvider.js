@@ -233,7 +233,7 @@ Object.defineProperties(ImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof ImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

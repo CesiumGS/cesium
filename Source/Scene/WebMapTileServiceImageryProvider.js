@@ -300,7 +300,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

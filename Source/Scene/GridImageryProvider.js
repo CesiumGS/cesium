@@ -63,7 +63,7 @@ Object.defineProperties(GridImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof GridImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

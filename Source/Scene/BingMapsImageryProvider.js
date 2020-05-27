@@ -246,7 +246,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

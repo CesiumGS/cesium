@@ -394,7 +394,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {

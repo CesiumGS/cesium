@@ -308,7 +308,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    * @default undefined
    */

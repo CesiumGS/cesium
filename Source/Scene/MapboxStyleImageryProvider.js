@@ -276,7 +276,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof MapboxStyleImageryProvider.prototype
-   * @type {DefaultProxy}
+   * @type {Proxy}
    * @readonly
    */
   proxy: {
