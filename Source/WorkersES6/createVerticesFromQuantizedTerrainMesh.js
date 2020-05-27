@@ -15,6 +15,7 @@ import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
 import Transforms from "../Core/Transforms.js";
+import TrianglePicking from "../Core/TrianglePicking.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -171,19 +172,18 @@ function createVerticesFromQuantizedTerrainMesh(
     return uvs[a].x - uvs[b].x;
   });
 
-  var orientedBoundingBox;
   var boundingSphere;
-
   if (exaggeration !== 1.0) {
-    // Bounding volumes need to be recomputed since the tile payload assumes no exaggeration.
+    // Bounding sphere needs to be recomputed since the tile payload assumes no exaggeration.
     boundingSphere = BoundingSphere.fromPoints(positions);
-    orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-      rectangle,
-      minimumHeight,
-      maximumHeight,
-      ellipsoid
-    );
   }
+
+  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+    rectangle,
+    minimumHeight,
+    maximumHeight,
+    ellipsoid
+  );
 
   var occludeePointInScaledSpace;
   if (exaggeration !== 1.0 || minimumHeight < 0.0) {
@@ -195,6 +195,22 @@ function createVerticesFromQuantizedTerrainMesh(
       minimumHeight
     );
   }
+
+  var trianglePicking = new TrianglePicking({
+    orientedBoundingBox: orientedBoundingBox,
+    triangleVerticesCallback: function (triIdx, v0, v1, v2) {
+      var idx0 = parameters.indices[triIdx * 3 + 0];
+      var idx1 = parameters.indices[triIdx * 3 + 1];
+      var idx2 = parameters.indices[triIdx * 3 + 2];
+
+      Cartesian3.clone(positions[idx0], v0);
+      Cartesian3.clone(positions[idx1], v1);
+      Cartesian3.clone(positions[idx2], v2);
+    },
+  });
+  trianglePicking.addTriangles(0, parameters.indices.length / 3);
+  // Unset to avoid error when transferring back from worker (can't serialize functions)
+  trianglePicking.triangleVerticesCallback = undefined;
 
   var hMin = minimumHeight;
   hMin = Math.min(
@@ -435,6 +451,7 @@ function createVerticesFromQuantizedTerrainMesh(
     occludeePointInScaledSpace: occludeePointInScaledSpace,
     encoding: encoding,
     indexCountWithoutSkirts: parameters.indices.length,
+    trianglePicking: trianglePicking,
   };
 }
 

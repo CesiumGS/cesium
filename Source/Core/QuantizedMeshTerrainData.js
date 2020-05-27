@@ -12,6 +12,7 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import TaskProcessor from "./TaskProcessor.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
+import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -364,6 +365,7 @@ QuantizedMeshTerrainData.prototype.createMesh = function (
     );
     var stride = result.vertexStride;
     var terrainEncoding = TerrainEncoding.clone(result.encoding);
+    var trianglePicking = TrianglePicking.clone(result.trianglePicking);
 
     // Clone complex result objects because the transfer from the web worker
     // has stripped them down to JSON-style objects.
@@ -384,7 +386,8 @@ QuantizedMeshTerrainData.prototype.createMesh = function (
       result.westIndicesSouthToNorth,
       result.southIndicesEastToWest,
       result.eastIndicesNorthToSouth,
-      result.northIndicesWestToEast
+      result.northIndicesWestToEast,
+      trianglePicking
     );
 
     // Free memory received from server after mesh is created.

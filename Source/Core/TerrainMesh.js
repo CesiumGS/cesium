@@ -1,5 +1,4 @@
 import defaultValue from "./defaultValue.js";
-import TrianglePicking from "./TrianglePicking.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -50,7 +49,8 @@ function TerrainMesh(
   westIndicesSouthToNorth,
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
-  northIndicesWestToEast
+  northIndicesWestToEast,
+  trianglePicking
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -162,8 +162,12 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
+  /**
+   * Acceleration structure for triangle picking.
+   * @type {TrianglePicking}
+   */
   var that = this;
-  function getVerticesFromTriIdx(triIdx, v0, v1, v2) {
+  trianglePicking.triangleVerticesCallback = function (triIdx, v0, v1, v2) {
     var idx0 = that.indices[triIdx * 3 + 0];
     var idx1 = that.indices[triIdx * 3 + 1];
     var idx2 = that.indices[triIdx * 3 + 2];
@@ -171,16 +175,7 @@ function TerrainMesh(
     that.encoding.decodePosition(that.vertices, idx0, v0);
     that.encoding.decodePosition(that.vertices, idx1, v1);
     that.encoding.decodePosition(that.vertices, idx2, v2);
-  }
-
-  /**
-   * Acceleration structure for triangle picking.
-   * @type {TrianglePicking}
-   */
-  this.trianglePicking = new TrianglePicking(
-    this.indices.length / 3,
-    getVerticesFromTriIdx,
-    this.orientedBoundingBox
-  );
+  };
+  this.trianglePicking = trianglePicking;
 }
 export default TerrainMesh;

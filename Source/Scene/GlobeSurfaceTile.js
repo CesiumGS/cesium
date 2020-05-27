@@ -166,7 +166,11 @@ GlobeSurfaceTile.prototype.pick = function (
 
   // Fast acceleration structure picking that only works in 3D
   useNewPicking = defaultValue(useNewPicking, true);
-  if (useNewPicking && mode === SceneMode.SCENE3D) {
+  if (
+    useNewPicking &&
+    mode === SceneMode.SCENE3D &&
+    defined(mesh.trianglePicking)
+  ) {
     return mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
   }
 
