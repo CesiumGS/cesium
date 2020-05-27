@@ -46,7 +46,8 @@ import SceneMode from "./SceneMode.js";
  * @param {Scene} scene The scene.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
+ * @demo {@link https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
  *
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -136,7 +137,7 @@ function Camera(scene) {
   /**
    * The region of space in view.
    *
-   * @type {Frustum}
+   * @type {PerspectiveFrustum|PerspectiveOffCenterFrustum|OrthographicFrustum}
    * @default PerspectiveFrustum()
    *
    * @see PerspectiveFrustum
@@ -3190,15 +3191,15 @@ Camera.prototype.cancelFlight = function () {
  * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
  * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
  * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
- * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
- * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+ * @param {Camera.FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+ * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
  * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
- * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+ * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  *
  * @exception {DeveloperError} If either direction or up is given, then both are required.
  *
@@ -3458,14 +3459,14 @@ var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
  * @param {Object} [options] Object with the following properties:
  * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
  * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
- * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
- * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
+ * @param {Camera.FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
+ * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
- * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
+ * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  */
 Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
   //>>includeStart('debug', pragmas.debug);
@@ -3851,11 +3852,11 @@ Camera.clone = function (camera, result) {
 
 /**
  * A function that will execute when a flight completes.
- * @callback Camera~FlightCompleteCallback
+ * @callback Camera.FlightCompleteCallback
  */
 
 /**
  * A function that will execute when a flight is cancelled.
- * @callback Camera~FlightCancelledCallback
+ * @callback Camera.FlightCancelledCallback
  */
 export default Camera;

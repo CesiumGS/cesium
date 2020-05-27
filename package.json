@@ -34,6 +34,7 @@
   },
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
+  "types": "./Source/Cesium.d.ts",
   "exports": {
     "require": "./index.cjs",
     "import": "./Source/Cesium.js"
@@ -89,7 +90,9 @@
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^2.2.0",
-    "yargs": "^14.0.0"
+    "tsd-jsdoc": "^2.5.0",
+    "typescript": "^3.9.2",
+    "yargs": "^15.0.1"
   },
   "husky": {
     "hooks": {
@@ -102,6 +105,7 @@
     "startPublic": "node server.cjs --public",
     "build": "gulp build",
     "build-watch": "gulp build-watch",
+    "build-ts": "gulp build-ts",
     "buildApps": "gulp buildApps",
     "clean": "gulp clean",
     "cloc": "gulp cloc",

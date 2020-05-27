@@ -70,13 +70,13 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
 
       var jointAccessorId = primitive.attributes.JOINTS_0;
       var componentType;
-      var type;
+      var accessorType;
       if (defined(jointAccessorId)) {
         var jointAccessor = accessors[jointAccessorId];
         componentType = jointAccessor.componentType;
-        type = jointAccessor.type;
+        accessorType = jointAccessor.type;
       }
-      var isSkinned = defined(jointAccessorId);
+      var isSkinned = defined(jointAccessorId) && accessorType === "VEC4";
       var hasVertexColors = defined(primitive.attributes.COLOR_0);
       var hasMorphTargets = defined(primitive.targets);
       var hasNormals = defined(primitive.attributes.NORMAL);
@@ -92,7 +92,6 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,
@@ -103,7 +102,6 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
         };
       } else if (
         primitiveInfo.skinning.skinned !== isSkinned ||
-        primitiveInfo.skinning.type !== type ||
         primitiveInfo.hasVertexColors !== hasVertexColors ||
         primitiveInfo.hasMorphTargets !== hasMorphTargets ||
         primitiveInfo.hasNormals !== hasNormals ||
@@ -124,7 +122,6 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,

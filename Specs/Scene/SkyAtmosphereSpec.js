@@ -57,7 +57,7 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(1);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(1);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();
@@ -72,7 +72,7 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(2);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(2);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();
@@ -87,7 +87,7 @@ describe(
 
       var command = s.update(scene.frameState);
       expect(command).toBeDefined();
-      expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(0);
+      expect(s._radiiAndDynamicAtmosphereColor.z).toBe(0);
       command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
       s.destroy();

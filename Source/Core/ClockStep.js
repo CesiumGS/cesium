@@ -2,7 +2,7 @@
  * Constants to determine how much time advances with each call
  * to {@link Clock#tick}.
  *
- * @exports ClockStep
+ * @enum {Number}
  *
  * @see Clock
  * @see ClockRange

@@ -7,7 +7,6 @@ var defaultAccessToken =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiNWMwZmFjMy04ZmRmLTRhMjktYjUzYi00YWQ4N2ZiNmIwNjUiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTg4MzQxMTA4fQ.scXa4kn5vzNVSgsEYKNYP0szYXPq1Djx1SH0KcAOrrk";
 /**
  * Default settings for accessing the Cesium ion API.
- * @exports Ion
  *
  * An ion access token is only required if you are using any ion related APIs.
  * A default access token is provided for evaluation purposes only.
@@ -18,6 +17,7 @@ var defaultAccessToken =
  * @see IonGeocoderService
  * @see createWorldImagery
  * @see createWorldTerrain
+ * @namespace Ion
  */
 var Ion = {};
 

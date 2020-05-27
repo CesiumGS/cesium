@@ -55,6 +55,7 @@ describe(
     it("constructs with options", function () {
       var p = new DebugCameraPrimitive({
         camera: camera,
+        frustumSplits: [0.1, 1000.0],
         color: Color.YELLOW,
         updateOnChange: false,
         show: false,

@@ -281,7 +281,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 
   /**
    * Gets the URL template to use to use to pick features.  If this property is not specified,
-   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined, indicating no
    * features picked.  The URL template supports all of the keywords supported by the
    * {@link UrlTemplateImageryProvider#url} property, plus the following:
    * <ul>
@@ -308,7 +308,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Proxy}
+   * @type {DefaultProxy}
    * @readonly
    * @default undefined
    */
@@ -660,7 +660,7 @@ UrlTemplateImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

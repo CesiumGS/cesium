@@ -7,7 +7,7 @@ import defined from "./defined.js";
  * or {@link BingMapsGeocoderService}. You can create your own key at
  * {@link https://www.bingmapsportal.com/}.
  *
- * @exports BingMapsApi
+ * @namespace BingMapsApi
  */
 var BingMapsApi = {};
 

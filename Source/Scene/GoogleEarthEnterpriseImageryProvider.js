@@ -16,6 +16,9 @@ import TileProviderError from "../Core/TileProviderError.js";
 import protobuf from "../ThirdParty/protobuf-minimal.js";
 import when from "../ThirdParty/when.js";
 
+/**
+ * @private
+ */
 function GoogleEarthEnterpriseDiscardPolicy() {
   this._image = new Image();
 }
@@ -31,7 +34,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
 /**
  * Given a tile image, decide whether to discard that image.
  *
- * @param {Image} image An image to test.
+ * @param {HTMLImageElement} image An image to test.
  * @returns {Boolean} True if the image should be discarded; otherwise, false.
  */
 GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
@@ -182,7 +185,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
   /**
    * Gets the proxy used by this provider.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Proxy}
+   * @type {DefaultProxy}
    * @readonly
    */
   proxy: {
@@ -451,7 +454,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

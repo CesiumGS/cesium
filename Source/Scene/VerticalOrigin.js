@@ -8,7 +8,7 @@
  * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
  * </div>
  *
- * @exports VerticalOrigin
+ * @enum {Number}
  *
  * @see Billboard#verticalOrigin
  * @see Label#verticalOrigin

@@ -72,7 +72,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
  * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
  * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
- * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
+ * @param {Cesium3DTileset.foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
  * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
  * @param {Boolean} [options.skipLevelOfDetail=false] Optimization option. Determines if level of detail skipping should be applied during the traversal.
  * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
@@ -147,6 +147,7 @@ function Cesium3DTileset(options) {
   this._properties = undefined; // Metadata for per-model/point/etc properties
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
   this._extensionsUsed = undefined;
+  this._extensions = undefined;
   this._gltfUpAxis = undefined;
   this._cache = new Cesium3DTilesetCache();
   this._processingQueue = [];
@@ -324,9 +325,10 @@ function Cesium3DTileset(options) {
   );
 
   /**
-   * Gets a function that will update the foveated screen space error for a tile.
+   * Gets or sets a callback to control how much to raise the screen space error for tiles outside the foveated cone,
+   * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
    *
-   * @type {Cesium3DTileset~foveatedInterpolationCallback} A callback to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
+   * @type {Cesium3DTileset.foveatedInterpolationCallback}
    */
   this.foveatedInterpolationCallback = defaultValue(
     options.foveatedInterpolationCallback,
@@ -916,6 +918,7 @@ function Cesium3DTileset(options) {
       that._properties = tilesetJson.properties;
       that._geometricError = tilesetJson.geometricError;
       that._extensionsUsed = tilesetJson.extensionsUsed;
+      that._extensions = tilesetJson.extensions;
       that._gltfUpAxis = gltfUpAxis;
       that._extras = tilesetJson.extras;
 
@@ -1010,6 +1013,31 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       return this._asset;
     },
   },
+
+  /**
+   * Gets the tileset's extensions object property.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Object}
+   * @readonly
+   *
+   * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+   */
+  extensions: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug);
+      if (!this.ready) {
+        throw new DeveloperError(
+          "The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true."
+        );
+      }
+      //>>includeEnd('debug');
+
+      return this._extensions;
+    },
+  },
+
   /**
    * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
    *
@@ -2192,7 +2220,7 @@ function updateTiles(tileset, frameState, passOptions) {
   tileset._backfaceCommands.trim();
 
   if (bivariateVisibilityTest) {
-    /**
+    /*
      * Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
      * but they are currently our effective leaves because they do not have selected descendants. These tiles
      * are those where with tile._finalResolution === true.
@@ -2591,7 +2619,7 @@ Cesium3DTileset.prototype.destroy = function () {
  * Optimization option. Used as a callback when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
  * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
  *
- * @callback Cesium3DTileset~foveatedInterpolationCallback
+ * @callback Cesium3DTileset.foveatedInterpolationCallback
  * @default Math.lerp
  *
  * @param {Number} p The start value to interpolate.

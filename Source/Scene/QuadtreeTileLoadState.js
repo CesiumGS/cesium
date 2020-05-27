@@ -1,6 +1,6 @@
 /**
  * The state of a {@link QuadtreeTile} in the tile load pipeline.
- * @exports QuadtreeTileLoadState
+ * @enum {Number}
  * @private
  */
 var QuadtreeTileLoadState = {

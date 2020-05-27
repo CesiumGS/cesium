@@ -7,7 +7,7 @@ import WebGLConstants from "./WebGLConstants.js";
  * WebGL component datatypes.  Components are intrinsics,
  * which form attributes, which form vertices.
  *
- * @exports ComponentDatatype
+ * @enum {Number}
  */
 var ComponentDatatype = {
   /**
@@ -137,7 +137,7 @@ ComponentDatatype.getSizeInBytes = function (componentDatatype) {
 /**
  * Gets the {@link ComponentDatatype} for the provided TypedArray instance.
  *
- * @param {TypedArray} array The typed array.
+ * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} array The typed array.
  * @returns {ComponentDatatype} The ComponentDatatype for the provided array, or undefined if the array is not a TypedArray.
  */
 ComponentDatatype.fromTypedArray = function (array) {

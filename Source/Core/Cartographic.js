@@ -233,13 +233,11 @@ Cartographic.equals = function (left, right) {
  *
  * @param {Cartographic} [left] The first cartographic.
  * @param {Cartographic} [right] The second cartographic.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartographic.equalsEpsilon = function (left, right, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -286,7 +284,7 @@ Cartographic.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Cartographic} [right] The second cartographic.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Cartographic.prototype.equalsEpsilon = function (right, epsilon) {

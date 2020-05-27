@@ -148,7 +148,7 @@ Object.defineProperties(GoogleEarthEnterpriseMetadata.prototype, {
   /**
    * Gets the proxy used for metadata requests.
    * @memberof GoogleEarthEnterpriseMetadata.prototype
-   * @type {Proxy}
+   * @type {DefaultProxy}
    * @readonly
    */
   proxy: {

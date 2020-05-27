@@ -37,7 +37,7 @@ function createPolygonHierarchyProperty(value) {
  * @param {Property} [options.outline=false] A boolean Property specifying whether the polygon is outlined.
  * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
  * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
+ * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the height of each position is used.
  * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
  * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
  * @param {Property} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.

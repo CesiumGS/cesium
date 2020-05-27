@@ -4430,7 +4430,7 @@ function applySkins(model) {
         computedJointMatrices[m]
       );
       if (defined(bindShapeMatrix)) {
-        // Optimization for when bind shape matrix is the identity.
+        // NOTE: bindShapeMatrix is glTF 1.0 only, removed in glTF 2.0.
         computedJointMatrices[m] = Matrix4.multiplyTransformation(
           computedJointMatrices[m],
           bindShapeMatrix,
