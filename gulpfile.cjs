@@ -1563,8 +1563,18 @@ function createTypeScriptDefinitions() {
       (match, p1) => `= WebGLConstants.${p1}`
     );
 
-  // Wrap the source to actually be inside of a declared cesium module.
-  source = 'declare module "cesium" {\n' + source + "}\n";
+  // Wrap the source to actually be inside of a declared cesium module
+  // and any any workaround and private utility types.
+  source = `declare module "cesium" {
+/**
+ * Private interface to support PropertyBag being a dictionary-like object.
+ */
+interface DictionaryLike {
+    [index: string]: Property;
+}
+
+${source}
+}`;
 
   // Map individual modules back to their source file so that TS still works
   // when importing individual files instead of the entire cesium module.
