@@ -6,19 +6,26 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} PathGraphics.ConstructorOptions
+ *
+ * Initialization options for the PathGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the path.
+ * @property {Property | number} [leadTime] A Property specifying the number of seconds in front the object to show.
+ * @property {Property | number} [trailTime] A Property specifying the number of seconds behind of the object to show.
+ * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
+ * @property {Property | number} [resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the path.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
+ */
+
+/**
  * Describes a polyline defined as the path made by an {@link Entity} as it moves over time.
  *
  * @alias PathGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
- * @param {Property} [options.leadTime] A Property specifying the number of seconds in front the object to show.
- * @param {Property} [options.trailTime] A Property specifying the number of seconds behind of the object to show.
- * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
- * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
+ * @param {PathGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function PathGraphics(options) {
   this._definitionChanged = new Event();

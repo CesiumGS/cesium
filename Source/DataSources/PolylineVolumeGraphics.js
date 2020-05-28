@@ -6,25 +6,32 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} PolylineVolumeGraphics.ConstructorOptions
+ *
+ * Initialization options for the PolylineVolumeGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the volume.
+ * @property {Property | Array<Cartesian3>} [positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
+ * @property {Property | Array<Cartesian2>} [shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
+ * @property {Property | CornerType} [cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
+ * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the volume is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the volume.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the volume is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the volume casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this volume will be displayed.
+ */
+
+/**
  * Describes a polyline volume defined as a line strip and corresponding two dimensional shape which is extruded along it.
  * The resulting volume conforms to the curvature of the globe.
  *
  * @alias PolylineVolumeGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the volume.
- * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
- * @param {Property} [options.shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
- * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
- * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the volume is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the volume.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the volume is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the volume casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this volume will be displayed.
+ * @param {PolylineVolumeGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}

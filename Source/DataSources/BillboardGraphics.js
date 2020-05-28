@@ -5,6 +5,33 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} BillboardGraphics.ConstructorOptions
+ *
+ * Initialization options for the BillboardGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
+ * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
+ * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
+ * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+ * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
+ * @property {Property | HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
+ * @property {Property | VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
+ * @property {Property | number} [rotation=0] A numeric Property specifying the rotation about the alignedAxis.
+ * @property {Property | Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
+ * @property {Property | boolean} [sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
+ * @property {Property | number} [width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
+ * @property {Property | number} [height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
+ * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
+ * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+ * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
+ * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ */
+
+/**
  * Describes a two dimensional icon located at the position of the containing {@link Entity}.
  * <p>
  * <div align='center'>
@@ -16,27 +43,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias BillboardGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the billboard.
- * @param {Property} [options.image] A Property specifying the Image, URI, or Canvas to use for the billboard.
- * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the image size.
- * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
- * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
- * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
- * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
- * @param {Property} [options.rotation=0] A numeric Property specifying the rotation about the alignedAxis.
- * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
- * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
- * @param {Property} [options.width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
- * @param {Property} [options.height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
- * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
- * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
- * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
- * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @param {BillboardGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */

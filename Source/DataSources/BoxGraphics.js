@@ -7,16 +7,19 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
  * @typedef {Object} BoxGraphics.ConstructorOptions
- * @property {Property|boolean} [show=true] A boolean Property specifying the visibility of the box.
- * @property {Property|Cartesian3} [dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
- * @property {Property|HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
- * @property {Property|boolean} [fill=true] A boolean Property specifying whether the box is filled with the provided material.
- * @property {MaterialProperty|Color} [material=Color.WHITE] A Property specifying the material used to fill the box.
- * @property {Property|boolean} [outline=false] A boolean Property specifying whether the box is outlined.
- * @property {Property|Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @property {Property|number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @property {Property|ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from light sources.
- * @property {Property|DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
+ *
+ * Initialization options for the BoxGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the box.
+ * @property {Property | Cartesian3} [dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the box is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the box.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the box is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
  *
  */
 
@@ -26,7 +29,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias BoxGraphics
  * @constructor
  *
- * @param {BoxGraphics.ConstructorOptions} [options] Object with the following properties:
+ * @param {BoxGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
  */
