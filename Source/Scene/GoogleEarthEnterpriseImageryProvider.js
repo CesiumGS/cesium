@@ -44,6 +44,20 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
 };
 
 /**
+ * @typedef {Object} GoogleEarthEnterpriseImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the GoogleEarthEnterpriseImageryProvider constructor
+ *
+ * @property {Resource|String} url The url of the Google Earth Enterprise server hosting the imagery.
+ * @property {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
+ *        is invalid and should be discarded. If this value is not specified, a default
+ *        is to discard tiles that fail to download.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * Provides tiled imagery using the Google Earth Enterprise REST API.
  *
  * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
@@ -52,14 +66,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @alias GoogleEarthEnterpriseImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
- * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
- *        is invalid and should be discarded. If this value is not specified, a default
- *        is to discard tiles that fail to download.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider
  * @see ArcGisMapServerImageryProvider
