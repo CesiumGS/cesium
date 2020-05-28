@@ -7,6 +7,7 @@ import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Ray from "./Ray.js";
 
+// For heightmap: https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20160007698.pdf
 // TODO: each triangle has a "tested" flag so you can avoid testing it twice.
 // TODO: don't allocate all children, just do the ones needed
 // TODO: need to handle 2d picking somehow
