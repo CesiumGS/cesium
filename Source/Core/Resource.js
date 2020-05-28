@@ -1357,9 +1357,11 @@ Resource.prototype._makeRequest = function (options) {
 
   return promise
     .then(function (data) {
+      request.cancelFunction = undefined;
       return data;
     })
     .otherwise(function (e) {
+      request.cancelFunction = undefined;
       if (request.state !== RequestState.FAILED) {
         return when.reject(e);
       }
