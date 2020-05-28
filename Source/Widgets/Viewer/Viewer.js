@@ -1321,7 +1321,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets or sets the Entity instance currently being tracked by the camera.
    * @memberof Viewer.prototype
-   * @type {Entity}
+   * @type {Entity | undefined}
    */
   trackedEntity: {
     get: function () {
@@ -1370,7 +1370,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets or sets the object instance for which to display a selection indicator.
    * @memberof Viewer.prototype
-   * @type {Entity}
+   * @type {Entity | undefined}
    */
   selectedEntity: {
     get: function () {
