@@ -45,7 +45,7 @@ Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the model.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -53,14 +53,14 @@ Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
   /**
    * Gets or sets the string Property specifying the URI of the glTF asset.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   uri: createPropertyDescriptor("uri"),
 
   /**
    * Gets or sets the maximum screen space error used to drive level of detail refinement.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   maximumScreenSpaceError: createPropertyDescriptor("maximumScreenSpaceError"),
 });

@@ -56,7 +56,7 @@ Object.defineProperties(PathGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the path.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -64,21 +64,21 @@ Object.defineProperties(PathGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of seconds in front of the object to show.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   leadTime: createPropertyDescriptor("leadTime"),
 
   /**
    * Gets or sets the Property specifying the number of seconds behind the object to show.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   trailTime: createPropertyDescriptor("trailTime"),
 
   /**
    * Gets or sets the numeric Property specifying the width in pixels.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   width: createPropertyDescriptor("width"),
@@ -86,7 +86,7 @@ Object.defineProperties(PathGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the maximum number of seconds to step when sampling the position.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 60
    */
   resolution: createPropertyDescriptor("resolution"),
@@ -102,7 +102,7 @@ Object.defineProperties(PathGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this path will be displayed.
    * @memberof PathGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"

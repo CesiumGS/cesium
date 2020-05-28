@@ -220,7 +220,7 @@ Object.defineProperties(Entity.prototype, {
    * If availability exists, the objects other properties will only
    * provide valid data if queried within the given interval.
    * @memberof Entity.prototype
-   * @type {TimeIntervalCollection}
+   * @type {TimeIntervalCollection|undefined}
    */
   availability: createRawPropertyDescriptor("availability"),
   /**
@@ -249,7 +249,7 @@ Object.defineProperties(Entity.prototype, {
    * Gets or sets the name of the object.  The name is intended for end-user
    * consumption and does not need to be unique.
    * @memberof Entity.prototype
-   * @type {String}
+   * @type {String|undefined}
    */
   name: createRawPropertyDescriptor("name"),
   /**
@@ -302,7 +302,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the parent object.
    * @memberof Entity.prototype
-   * @type {Entity}
+   * @type {Entity|undefined}
    */
   parent: {
     get: function () {
@@ -338,7 +338,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets the names of all properties registered on this instance.
    * @memberof Entity.prototype
-   * @type {Array}
+   * @type {string[]}
    */
   propertyNames: {
     get: function () {
@@ -348,103 +348,103 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the billboard.
    * @memberof Entity.prototype
-   * @type {BillboardGraphics}
+   * @type {BillboardGraphics|undefined}
    */
   billboard: createPropertyTypeDescriptor("billboard", BillboardGraphics),
   /**
    * Gets or sets the box.
    * @memberof Entity.prototype
-   * @type {BoxGraphics}
+   * @type {BoxGraphics|undefined}
    */
   box: createPropertyTypeDescriptor("box", BoxGraphics),
   /**
    * Gets or sets the corridor.
    * @memberof Entity.prototype
-   * @type {CorridorGraphics}
+   * @type {CorridorGraphics|undefined}
    */
   corridor: createPropertyTypeDescriptor("corridor", CorridorGraphics),
   /**
    * Gets or sets the cylinder.
    * @memberof Entity.prototype
-   * @type {CylinderGraphics}
+   * @type {CylinderGraphics|undefined}
    */
   cylinder: createPropertyTypeDescriptor("cylinder", CylinderGraphics),
   /**
    * Gets or sets the description.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   description: createPropertyDescriptor("description"),
   /**
    * Gets or sets the ellipse.
    * @memberof Entity.prototype
-   * @type {EllipseGraphics}
+   * @type {EllipseGraphics|undefined}
    */
   ellipse: createPropertyTypeDescriptor("ellipse", EllipseGraphics),
   /**
    * Gets or sets the ellipsoid.
    * @memberof Entity.prototype
-   * @type {EllipsoidGraphics}
+   * @type {EllipsoidGraphics|undefined}
    */
   ellipsoid: createPropertyTypeDescriptor("ellipsoid", EllipsoidGraphics),
   /**
    * Gets or sets the label.
    * @memberof Entity.prototype
-   * @type {LabelGraphics}
+   * @type {LabelGraphics|undefined}
    */
   label: createPropertyTypeDescriptor("label", LabelGraphics),
   /**
    * Gets or sets the model.
    * @memberof Entity.prototype
-   * @type {ModelGraphics}
+   * @type {ModelGraphics|undefined}
    */
   model: createPropertyTypeDescriptor("model", ModelGraphics),
   /**
    * Gets or sets the tileset.
    * @memberof Entity.prototype
-   * @type {Cesium3DTilesetGraphics}
+   * @type {Cesium3DTilesetGraphics|undefined}
    */
   tileset: createPropertyTypeDescriptor("tileset", Cesium3DTilesetGraphics),
   /**
    * Gets or sets the orientation.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   orientation: createPropertyDescriptor("orientation"),
   /**
    * Gets or sets the path.
    * @memberof Entity.prototype
-   * @type {PathGraphics}
+   * @type {PathGraphics|undefined}
    */
   path: createPropertyTypeDescriptor("path", PathGraphics),
   /**
    * Gets or sets the plane.
    * @memberof Entity.prototype
-   * @type {PlaneGraphics}
+   * @type {PlaneGraphics|undefined}
    */
   plane: createPropertyTypeDescriptor("plane", PlaneGraphics),
   /**
    * Gets or sets the point graphic.
    * @memberof Entity.prototype
-   * @type {PointGraphics}
+   * @type {PointGraphics|undefined}
    */
   point: createPropertyTypeDescriptor("point", PointGraphics),
   /**
    * Gets or sets the polygon.
    * @memberof Entity.prototype
-   * @type {PolygonGraphics}
+   * @type {PolygonGraphics|undefined}
    */
   polygon: createPropertyTypeDescriptor("polygon", PolygonGraphics),
   /**
    * Gets or sets the polyline.
    * @memberof Entity.prototype
-   * @type {PolylineGraphics}
+   * @type {PolylineGraphics|undefined}
    */
   polyline: createPropertyTypeDescriptor("polyline", PolylineGraphics),
   /**
    * Gets or sets the polyline volume.
    * @memberof Entity.prototype
-   * @type {PolylineVolumeGraphics}
+   * @type {PolylineVolumeGraphics|undefined}
    */
   polylineVolume: createPropertyTypeDescriptor(
     "polylineVolume",
@@ -453,19 +453,19 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the bag of arbitrary properties associated with this entity.
    * @memberof Entity.prototype
-   * @type {PropertyBag}
+   * @type {PropertyBag|undefined}
    */
   properties: createPropertyTypeDescriptor("properties", PropertyBag),
   /**
    * Gets or sets the position.
    * @memberof Entity.prototype
-   * @type {PositionProperty}
+   * @type {PositionProperty|undefined}
    */
   position: createPositionPropertyDescriptor("position"),
   /**
    * Gets or sets the rectangle.
    * @memberof Entity.prototype
-   * @type {RectangleGraphics}
+   * @type {RectangleGraphics|undefined}
    */
   rectangle: createPropertyTypeDescriptor("rectangle", RectangleGraphics),
   /**
@@ -473,13 +473,13 @@ Object.defineProperties(Entity.prototype, {
    * The offset is typically defined in the east-north-up reference frame,
    * but may be another frame depending on the object's velocity.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   viewFrom: createPropertyDescriptor("viewFrom"),
   /**
    * Gets or sets the wall.
    * @memberof Entity.prototype
-   * @type {WallGraphics}
+   * @type {WallGraphics|undefined}
    */
   wall: createPropertyTypeDescriptor("wall", WallGraphics),
 });

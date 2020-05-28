@@ -3897,10 +3897,9 @@ function updateMostDetailedRayPicks(scene) {
 }
 
 /**
- * Update and render the scene.
+ * Update and render the scene. It is usually not necessary to call this function
+ * directly because {@link CesiumWidget} or {@link Viewer} do it automatically.
  * @param {JulianDate} [time] The simulation time at which to render.
- *
- * @private
  */
 Scene.prototype.render = function (time) {
   /**
@@ -4112,7 +4111,7 @@ Scene.prototype.pickPosition = function (windowPosition, result) {
  * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
  * @param {Number} [width=3] Width of the pick rectangle.
  * @param {Number} [height=3] Height of the pick rectangle.
- * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+ * @returns {Array.<*>} Array of objects, each containing 1 picked primitives.
  *
  * @exception {DeveloperError} windowPosition is undefined.
  *

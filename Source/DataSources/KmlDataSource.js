@@ -3434,7 +3434,7 @@ function KmlDataSource(options) {
  * Creates a Promise to a new instance loaded with the provided KML data.
  *
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {Object} options An object with the following properties:
+ * @param {Object} [options] An object with the following properties:
  * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
  * @param {HTMLCanvasElement} options.canvas The canvas that is used for sending viewer properties to network links.
  * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.

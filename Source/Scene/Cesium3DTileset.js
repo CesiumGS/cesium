@@ -1203,7 +1203,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {Cesium3DTileStyle}
+   * @type {Cesium3DTileStyle|undefined}
    *
    * @default undefined
    *
