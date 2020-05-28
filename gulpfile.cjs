@@ -1561,6 +1561,11 @@ function createTypeScriptDefinitions() {
     .replace(/String\[]/gm, "string[]")
     .replace(/Boolean\[]/gm, "boolean[]")
     .replace(/Object\[]/gm, "object[]")
+    // This is an ugly hack but @template doesn't actually seem to work
+    .replace(
+      /export class Event {/gm,
+      "export class Event<Listener extends Function = Function> {"
+    )
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       (match, p1) => `= WebGLConstants.${p1}`

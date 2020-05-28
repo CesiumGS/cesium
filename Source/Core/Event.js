@@ -7,6 +7,7 @@ import defined from "./defined.js";
  * exposed as a property for others to subscribe to.
  *
  * @alias Event
+ * @template Listener the function call signature for this event's listeners
  * @constructor
  * @example
  * MyObject.prototype.myListener = function(arg1, arg2) {
@@ -46,7 +47,7 @@ Object.defineProperties(Event.prototype, {
  * An optional scope can be provided to serve as the <code>this</code> pointer
  * in which the function will execute.
  *
- * @param {Function} listener The function to be executed when the event is raised.
+ * @param {Listener} listener The function to be executed when the event is raised.
  * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
  * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
@@ -71,7 +72,7 @@ Event.prototype.addEventListener = function (listener, scope) {
 /**
  * Unregisters a previously registered callback.
  *
- * @param {Function} listener The function to be unregistered.
+ * @param {Listener} listener The function to be unregistered.
  * @param {Object} [scope] The scope that was originally passed to addEventListener.
  * @returns {Boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
  *
