@@ -2804,8 +2804,9 @@ function pickMapColumbusView(camera, windowPosition, projection, result) {
  * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
- * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+ * @returns {Cartesian3 | undefined} If the ellipsoid or map was picked,
+ * returns the point on the surface of the ellipsoid or map in world
+ * coordinates. If the ellipsoid or map was not picked, returns undefined.
  *
  * @example
  * var canvas = viewer.scene.canvas;
