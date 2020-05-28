@@ -1122,7 +1122,7 @@ Resource.fetchText = function (options) {
  * adds 'Accept: application/json,&#42;&#47;&#42;;q=0.01' to the request headers, if not
  * already specified.
  *
- * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1167,7 +1167,7 @@ Resource.prototype.fetchJson = function () {
  * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
- * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJson = function (options) {
   var resource = new Resource(options);
@@ -1227,7 +1227,7 @@ Resource.fetchXML = function (options) {
  * Requests a resource using JSONP.
  *
  * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
- * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
  *
  * @example
@@ -1320,7 +1320,7 @@ function fetchJsonp(resource, callbackParameterName, functionName) {
  * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
- * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.fetchJsonp = function (options) {
   var resource = new Resource(options);
@@ -1530,10 +1530,14 @@ function decodeDataUri(dataUriRegexResult, responseType) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1568,10 +1572,14 @@ Resource.prototype.fetch = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.fetch = function (options) {
   var resource = new Resource(options);
@@ -1593,10 +1601,14 @@ Resource.fetch = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1632,10 +1644,14 @@ Resource.prototype.delete = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.delete = function (options) {
   var resource = new Resource(options);
@@ -1658,10 +1674,14 @@ Resource.delete = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1696,10 +1716,14 @@ Resource.prototype.head = function (options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.head = function (options) {
   var resource = new Resource(options);
@@ -1721,10 +1745,14 @@ Resource.head = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1762,7 +1790,7 @@ Resource.prototype.options = function (options) {
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
- * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  */
 Resource.options = function (options) {
   var resource = new Resource(options);
@@ -1786,10 +1814,14 @@ Resource.options = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1828,10 +1860,14 @@ Resource.prototype.post = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.post = function (options) {
   var resource = new Resource(options);
@@ -1854,10 +1890,14 @@ Resource.post = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1896,10 +1936,14 @@ Resource.prototype.put = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.put = function (options) {
   var resource = new Resource(options);
@@ -1922,10 +1966,14 @@ Resource.put = function (options) {
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {Object} [options.headers] Additional HTTP headers to send with the request, if any.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  *
  *
  * @example
@@ -1964,10 +2012,14 @@ Resource.prototype.patch = function (data, options) {
  * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
  * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
  * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+<<<<<<< HEAD
  * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
  *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
  *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
  * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+=======
+ * @returns {Promise.<*>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+>>>>>>> upstream/typescript-definitions
  */
 Resource.patch = function (options) {
   var resource = new Resource(options);
