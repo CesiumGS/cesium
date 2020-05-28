@@ -3339,6 +3339,19 @@ function load(dataSource, entityCollection, data, options) {
 }
 
 /**
+ * @typedef {Object} KmlDataSource.LoadOptions
+ *
+ * Initialization options for the `load` method.
+ *
+ * @property {Camera} camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+ * @property {HTMLCanvasElement} canvas The canvas that is used for sending viewer properties to network links.
+ * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
  * <p>
  * KML support in Cesium is incomplete, but a large amount of the standard,
@@ -3434,13 +3447,7 @@ function KmlDataSource(options) {
  * Creates a Promise to a new instance loaded with the provided KML data.
  *
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {Object} [options] An object with the following properties:
- * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
- * @param {HTMLCanvasElement} options.canvas The canvas that is used for sending viewer properties to network links.
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
- * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
