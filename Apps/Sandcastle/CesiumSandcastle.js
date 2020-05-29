@@ -550,7 +550,7 @@ require({
     lineNumbers: true,
     matchBrackets: true,
     indentUnit: 2,
-    viewportMargin: Infinity,
+    viewportMargin: 1300,
     extraKeys: {
       "Ctrl-Space": "autocomplete",
       F8: "runCesium",
@@ -567,7 +567,7 @@ require({
     lineNumbers: true,
     matchBrackets: true,
     indentUnit: 2,
-    viewportMargin: Infinity,
+    viewportMargin: 1300,
     extraKeys: {
       F8: "runCesium",
       Tab: "indentMore",
