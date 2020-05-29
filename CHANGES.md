@@ -13,6 +13,7 @@
 - Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
 - Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 - Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
+- Added a new sandcastle example to show how to add fog using a `PostProcessStage` [#8798](https://github.com/CesiumGS/cesium/pull/8798)
 
 ##### Fixes :wrench:
 
