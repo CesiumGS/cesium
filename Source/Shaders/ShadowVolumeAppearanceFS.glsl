@@ -110,6 +110,9 @@ void main(void)
     gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
 #endif // FLAT
 
+    // Premultiply alpha. Required for classification primitives on translucent globe.
+    gl_FragColor.rgb *= gl_FragColor.a;
+
 #else // PER_INSTANCE_COLOR
 
     // Material support.
@@ -145,6 +148,9 @@ void main(void)
 #else // FLAT
     gl_FragColor = czm_phong(normalize(-eyeCoordinate.xyz), material, czm_lightDirectionEC);
 #endif // FLAT
+
+    // Premultiply alpha. Required for classification primitives on translucent globe.
+    gl_FragColor.rgb *= gl_FragColor.a;
 
 #endif // PER_INSTANCE_COLOR
     czm_writeDepthClamp();
