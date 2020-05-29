@@ -212,21 +212,35 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
   return result;
 }
 
+/** @typedef {string | number | boolean} QueryValue */
+/**
+ * @typedef {Object.<string, QueryValue | QueryValue[] | undefined>} Resource.QueryParameters
+ * QueryParameters must be an object whose keys are parameter names and whose
+ * values are a primitive (string, number, boolean) or an array thereof.
+ * */
+
+/**
+ * @typedef {Object} Resource.ConstructorOptions
+ *
+ * Initialization options for the Resource constructor
+ *
+ * @property {String} url The url of the resource.
+ * @property {Resource.QueryParameters} [queryParameters] An object containing query parameters that will be sent when retrieving the resource.
+ * @property {Object} [templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
+ * @property {Object} [headers={}] Additional HTTP headers that will be sent.
+ * @property {Proxy} [proxy] A proxy to be used when loading the resource.
+ * @property {Resource.RetryCallback} [retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
+ * @property {Number} [retryAttempts=0] The number of times the retryCallback should be called before giving up.
+ * @property {Request} [request] A Request object that will be used. Intended for internal use only.
+ */
+
 /**
  * A resource that includes the location and any other parameters we need to retrieve it or create derived resources. It also provides the ability to retry requests.
  *
  * @alias Resource
  * @constructor
  *
- * @param {String|Object} options A url or an object with the following properties
- * @param {String} options.url The url of the resource.
- * @param {Object} [options.queryParameters] An object containing query parameters that will be sent when retrieving the resource.
- * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
- * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
- * @param {Proxy} [options.proxy] A proxy to be used when loading the resource.
- * @param {Resource.RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
- * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
- * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
+ * @param {String|Resource.ConstructorOptions} options A url or an object describing initialization options
  *
  * @example
  * function refreshTokenRetryCallback(resource, error) {
@@ -575,7 +589,7 @@ Resource.prototype.getUrlComponent = function (query, proxy) {
  * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
  *  as opposed to adding them one at a time to the queryParameters property. If a value is already set, it will be replaced with the new value.
  *
- * @param {Object} params The query parameters
+ * @param {Resource.QueryParameters} params The query parameters
  * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
  */
 Resource.prototype.setQueryParameters = function (params, useAsDefault) {
