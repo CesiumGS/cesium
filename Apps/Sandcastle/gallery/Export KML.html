@@ -49,8 +49,8 @@
             version: "1.0",
           },
           {
-            id: "aircraft model",
-            name: "Cesium Air",
+            id: "truck model",
+            name: "Cesium Milk Truck",
             position: {
               cartographicDegrees: [-77, 37, 0],
             },
@@ -85,7 +85,7 @@
         });
 
         var texturePromise = Cesium.Resource.fetchBlob({
-          url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png",
+          url: "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.jpg",
         });
 
         // This callback allows us to set the URL of the model to use
@@ -96,7 +96,7 @@
 
           if (resource.url.indexOf("CesiumMilkTruck") !== -1) {
             externalFiles["model/CesiumMilkTruck.dae"] = daeModelPromise;
-            externalFiles["model/CesiumMilkTruck.png"] = texturePromise;
+            externalFiles["model/CesiumMilkTruck.jpg"] = texturePromise;
 
             return "model/CesiumMilkTruck.dae";
           }
@@ -132,7 +132,7 @@
                   .add(dataSourcePromise)
                   .then(function (dataSource) {
                     viewer.trackedEntity = dataSource.entities.getById(
-                      "aircraft model"
+                      "truck model"
                     );
                   });
               },
@@ -152,7 +152,8 @@
             })
             .then(function (result) {
               downloadBlob(filenameToSave, result.kmz);
-            });
+            })
+            .otherwise(console.error);
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();
