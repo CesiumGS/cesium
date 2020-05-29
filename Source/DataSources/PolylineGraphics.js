@@ -16,9 +16,6 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if arcType is not ArcType.NONE.
  * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the polyline.
  * @property {MaterialProperty | Color} [depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
- *
- * **** TODO **** this was originally only ArcType, not a Property (!) -- pretty sure that was wrong?
- *
  * @property {Property | ArcType} [arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
  * @property {Property | boolean} [clampToGround=false] A boolean Property specifying whether the Polyline should be clamped to the ground.
  * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from light sources.

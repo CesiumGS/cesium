@@ -1481,9 +1481,10 @@ function createCesiumJs() {
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  child_process.execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
-    stdio: "inherit",
-  });
+  child_process.execSync(
+    "node_modules/.bin/jsdoc --configure Tools/jsdoc/ts-conf.json",
+    { stdio: "inherit" }
+  );
 
   var source = fs.readFileSync("Source/Cesium.d.ts").toString();
 
@@ -1561,11 +1562,10 @@ function createTypeScriptDefinitions() {
     .replace(/String\[]/gm, "string[]")
     .replace(/Boolean\[]/gm, "boolean[]")
     .replace(/Object\[]/gm, "object[]")
-    // This is an ugly hack but @template doesn't actually seem to work
-    .replace(
-      /export class Event {/gm,
-      "export class Event<Listener extends Function = Function> {"
-    )
+    .replace(/<Number>/gm, "<number>")
+    .replace(/<String>/gm, "<string>")
+    .replace(/<Boolean>/gm, "<boolean>")
+    .replace(/<Object>/gm, "<object>")
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       (match, p1) => `= WebGLConstants.${p1}`
@@ -1578,19 +1578,9 @@ function createTypeScriptDefinitions() {
 /**
  * Private interfaces to support PropertyBag being a dictionary-like object.
  */
-interface PropertyDictionary {
-  [key: string]: Property | undefined;
+interface DictionaryLike {
+    [index: string]: any;
 }
-class PropertyBagBase {
-  readonly propertyNames: string[];
-  constructor(value?: object, createPropertyCallback?: Function);
-  addProperty(propertyName: string, value?: any, createPropertyCallback?: Function): void;
-  hasProperty(propertyName: string): boolean;
-  merge(source: Object, createPropertyCallback?: Function): void;
-  removeProperty(propertyName: string): void;
-}
-/** This has to be in the workaround section because JSDoc doesn't support Intersection Types */
-type PropertyBagType = PropertyDictionary & Property & PropertyBagBase;
 
 ${source}
 }
@@ -1616,7 +1606,7 @@ ${source}
   fs.writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  child_process.execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+  child_process.execSync("node_modules/.bin/tsc -p Tools/jsdoc/tsconfig.json", {
     stdio: "inherit",
   });
 
