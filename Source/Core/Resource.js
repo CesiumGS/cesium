@@ -212,9 +212,12 @@ function combineQueryParameters(q1, q2, preserveQueryParameters) {
   return result;
 }
 
-// QueryParameters must be a one-deep object whose values are a primtive or array thereof
 /** @typedef {string | number | boolean} QueryValue */
-/** @typedef {Object.<string, QueryValue | QueryValue[] | undefined>} Resource.QueryParameters */
+/**
+ * @typedef {Object.<string, QueryValue | QueryValue[] | undefined>} Resource.QueryParameters
+ * QueryParameters must be an object whose keys are parameter names and whose
+ * values are a primitive (string, number, boolean) or an array thereof.
+ * */
 
 /**
  * @typedef {Object} Resource.ConstructorOptions
