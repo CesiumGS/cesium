@@ -58,7 +58,7 @@ Object.defineProperties(DataSource.prototype, {
   /**
    * Gets an event that will be raised if an error is encountered during processing.
    * @memberof DataSource.prototype
-   * @type {Event}
+   * @type {Event<function(this, RequestErrorEvent)>}
    */
   errorEvent: {
     get: DeveloperError.throwInstantiationError,
@@ -66,7 +66,7 @@ Object.defineProperties(DataSource.prototype, {
   /**
    * Gets an event that will be raised when the value of isLoading changes.
    * @memberof DataSource.prototype
-   * @type {Event}
+   * @type {Event<function(this, boolean)>}
    */
   loadingEvent: {
     get: DeveloperError.throwInstantiationError,
