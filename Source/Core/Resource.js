@@ -1357,6 +1357,7 @@ Resource.prototype._makeRequest = function (options) {
 
   return promise
     .then(function (data) {
+      // explicitly set to undefined to ensure GC of request response data. See #8843
       request.cancelFunction = undefined;
       return data;
     })

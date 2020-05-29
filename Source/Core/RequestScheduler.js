@@ -181,6 +181,7 @@ function getRequestReceivedFunction(request) {
     requestCompletedEvent.raiseEvent();
     request.state = RequestState.RECEIVED;
     request.deferred.resolve(results);
+    // explicitly set to undefined to ensure GC of request data. See #8843
     request.deferred = undefined;
   };
 }
