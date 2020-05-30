@@ -6,7 +6,9 @@ import JulianDate from "../../Core/JulianDate.js";
 import getElement from "../getElement.js";
 import TimelineHighlightRange from "./TimelineHighlightRange.js";
 import TimelineTrack from "./TimelineTrack.js";
+import deprecationWarning from "../../Core/deprecationWarning.js";
 
+var smallestTicInPixels = 7.0;
 var timelineWheelDelta = 1e12;
 
 var timelineMouseMode = {
@@ -89,6 +91,315 @@ var timelineMonthNames = [
   "Nov",
   "Dec",
 ];
+
+function makeTics(timeline) {
+  var timeBar = timeline._timeBarEle;
+
+  var seconds = JulianDate.secondsDifference(
+    timeline._scrubJulian,
+    timeline._startJulian
+  );
+  var xPos = Math.round(
+    (seconds * timeline._topDiv.clientWidth) / timeline._timeBarSecondsSpan
+  );
+  var scrubX = xPos - 8,
+    tic;
+  var widget = this;
+
+  timeline._needleEle.style.left = xPos.toString() + "px";
+
+  var tics = "";
+
+  var minimumDuration = 0.01;
+  var maximumDuration = 31536000000.0; // ~1000 years
+  var epsilon = 1e-10;
+
+  // If time step size is known, enter it here...
+  var minSize = 0;
+
+  var duration = timeline._timeBarSecondsSpan;
+  if (duration < minimumDuration) {
+    duration = minimumDuration;
+    timeline._timeBarSecondsSpan = minimumDuration;
+    timeline._endJulian = JulianDate.addSeconds(
+      timeline._startJulian,
+      minimumDuration,
+      new JulianDate()
+    );
+  } else if (duration > maximumDuration) {
+    duration = maximumDuration;
+    timeline._timeBarSecondsSpan = maximumDuration;
+    timeline._endJulian = JulianDate.addSeconds(
+      timeline._startJulian,
+      maximumDuration,
+      new JulianDate()
+    );
+  }
+
+  var timeBarWidth = timeline._timeBarEle.clientWidth;
+  if (timeBarWidth < 10) {
+    timeBarWidth = 10;
+  }
+  var startJulian = timeline._startJulian;
+
+  // epsilonTime: a small fraction of one pixel width of the timeline, measured in seconds.
+  var epsilonTime = Math.min((duration / timeBarWidth) * 1e-5, 0.4);
+
+  // epochJulian: a nearby time to be considered "zero seconds", should be a round-ish number by human standards.
+  var epochJulian;
+  var gregorianDate = JulianDate.toGregorianDate(startJulian);
+  if (duration > 315360000) {
+    // 3650+ days visible, epoch is start of the first visible century.
+    epochJulian = JulianDate.fromDate(
+      new Date(Date.UTC(Math.floor(gregorianDate.year / 100) * 100, 0))
+    );
+  } else if (duration > 31536000) {
+    // 365+ days visible, epoch is start of the first visible decade.
+    epochJulian = JulianDate.fromDate(
+      new Date(Date.UTC(Math.floor(gregorianDate.year / 10) * 10, 0))
+    );
+  } else if (duration > 86400) {
+    // 1+ day(s) visible, epoch is start of the year.
+    epochJulian = JulianDate.fromDate(
+      new Date(Date.UTC(gregorianDate.year, 0))
+    );
+  } else {
+    // Less than a day on timeline, epoch is midnight of the visible day.
+    epochJulian = JulianDate.fromDate(
+      new Date(
+        Date.UTC(gregorianDate.year, gregorianDate.month, gregorianDate.day)
+      )
+    );
+  }
+
+  // startTime: Seconds offset of the left side of the timeline from epochJulian.
+  var startTime = JulianDate.secondsDifference(
+    timeline._startJulian,
+    JulianDate.addSeconds(epochJulian, epsilonTime, new JulianDate())
+  );
+  // endTime: Seconds offset of the right side of the timeline from epochJulian.
+  var endTime = startTime + duration;
+  timeline._epochJulian = epochJulian;
+
+  function getStartTic(ticScale) {
+    return Math.floor(startTime / ticScale) * ticScale;
+  }
+
+  function getNextTic(tic, ticScale) {
+    return Math.ceil(tic / ticScale + 0.5) * ticScale;
+  }
+
+  function getAlpha(time) {
+    return (time - startTime) / duration;
+  }
+
+  function remainder(x, y) {
+    //return x % y;
+    return x - y * Math.round(x / y);
+  }
+
+  // Width in pixels of a typical label, plus padding
+  timeline._rulerEle.innerHTML = timeline.makeLabel(
+    JulianDate.addSeconds(
+      timeline._endJulian,
+      -minimumDuration,
+      new JulianDate()
+    )
+  );
+  var sampleWidth = timeline._rulerEle.offsetWidth + 20;
+  if (sampleWidth < 30) {
+    // Workaround an apparent IE bug with measuring the width after going full-screen from inside an iframe.
+    sampleWidth = 180;
+  }
+
+  var origMinSize = minSize;
+  minSize -= epsilon;
+
+  var renderState = {
+    startTime: startTime,
+    startJulian: startJulian,
+    epochJulian: epochJulian,
+    duration: duration,
+    timeBarWidth: timeBarWidth,
+    getAlpha: getAlpha,
+  };
+  timeline._highlightRanges.forEach(function (highlightRange) {
+    tics += highlightRange.render(renderState);
+  });
+
+  // Calculate tic mark label spacing in the TimeBar.
+  var mainTic = 0.0,
+    subTic = 0.0,
+    tinyTic = 0.0;
+  // Ideal labeled tic as percentage of zoom interval
+  var idealTic = sampleWidth / timeBarWidth;
+  if (idealTic > 1.0) {
+    // Clamp to width of window, for thin windows.
+    idealTic = 1.0;
+  }
+  // Ideal labeled tic size in seconds
+  idealTic *= timeline._timeBarSecondsSpan;
+  var ticIndex = -1,
+    smallestIndex = -1;
+
+  var i,
+    ticScaleLen = timelineTicScales.length;
+  for (i = 0; i < ticScaleLen; ++i) {
+    var sc = timelineTicScales[i];
+    ++ticIndex;
+    mainTic = sc;
+    // Find acceptable main tic size not smaller than ideal size.
+    if (sc > idealTic && sc > minSize) {
+      break;
+    }
+    if (
+      smallestIndex < 0 &&
+      timeBarWidth * (sc / timeline._timeBarSecondsSpan) >= smallestTicInPixels
+    ) {
+      smallestIndex = ticIndex;
+    }
+  }
+  if (ticIndex > 0) {
+    while (ticIndex > 0) {
+      // Compute sub-tic size that evenly divides main tic.
+      --ticIndex;
+      if (Math.abs(remainder(mainTic, timelineTicScales[ticIndex])) < 0.00001) {
+        if (timelineTicScales[ticIndex] >= minSize) {
+          subTic = timelineTicScales[ticIndex];
+        }
+        break;
+      }
+    }
+
+    if (smallestIndex >= 0) {
+      while (smallestIndex < ticIndex) {
+        // Compute tiny tic size that evenly divides sub-tic.
+        if (
+          Math.abs(remainder(subTic, timelineTicScales[smallestIndex])) <
+            0.00001 &&
+          timelineTicScales[smallestIndex] >= minSize
+        ) {
+          tinyTic = timelineTicScales[smallestIndex];
+          break;
+        }
+        ++smallestIndex;
+      }
+    }
+  }
+
+  minSize = origMinSize;
+  if (
+    minSize > epsilon &&
+    tinyTic < 0.00001 &&
+    Math.abs(minSize - mainTic) > epsilon
+  ) {
+    tinyTic = minSize;
+    if (minSize <= mainTic + epsilon) {
+      subTic = 0.0;
+    }
+  }
+
+  var lastTextLeft = -999999,
+    textWidth;
+  if (timeBarWidth * (tinyTic / timeline._timeBarSecondsSpan) >= 3.0) {
+    for (
+      tic = getStartTic(tinyTic);
+      tic <= endTime;
+      tic = getNextTic(tic, tinyTic)
+    ) {
+      tics +=
+        '<span class="cesium-timeline-ticTiny" style="left: ' +
+        Math.round(timeBarWidth * getAlpha(tic)).toString() +
+        'px;"></span>';
+    }
+  }
+  if (timeBarWidth * (subTic / timeline._timeBarSecondsSpan) >= 3.0) {
+    for (
+      tic = getStartTic(subTic);
+      tic <= endTime;
+      tic = getNextTic(tic, subTic)
+    ) {
+      tics +=
+        '<span class="cesium-timeline-ticSub" style="left: ' +
+        Math.round(timeBarWidth * getAlpha(tic)).toString() +
+        'px;"></span>';
+    }
+  }
+  if (timeBarWidth * (mainTic / timeline._timeBarSecondsSpan) >= 2.0) {
+    timeline._mainTicSpan = mainTic;
+    endTime += mainTic;
+    tic = getStartTic(mainTic);
+    var leapSecond = JulianDate.computeTaiMinusUtc(epochJulian);
+    while (tic <= endTime) {
+      var ticTime = JulianDate.addSeconds(
+        startJulian,
+        tic - startTime,
+        new JulianDate()
+      );
+      if (mainTic > 2.1) {
+        var ticLeap = JulianDate.computeTaiMinusUtc(ticTime);
+        if (Math.abs(ticLeap - leapSecond) > 0.1) {
+          tic += ticLeap - leapSecond;
+          ticTime = JulianDate.addSeconds(
+            startJulian,
+            tic - startTime,
+            new JulianDate()
+          );
+        }
+      }
+      var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
+      var ticLabel = timeline.makeLabel(ticTime);
+      timeline._rulerEle.innerHTML = ticLabel;
+      textWidth = timeline._rulerEle.offsetWidth;
+      if (textWidth < 10) {
+        // IE iframe fullscreen sampleWidth workaround, continued.
+        textWidth = sampleWidth;
+      }
+      var labelLeft = ticLeft - (textWidth / 2 - 1);
+      if (labelLeft > lastTextLeft) {
+        lastTextLeft = labelLeft + textWidth + 5;
+        tics +=
+          '<span class="cesium-timeline-ticMain" style="left: ' +
+          ticLeft.toString() +
+          'px;"></span>' +
+          '<span class="cesium-timeline-ticLabel" style="left: ' +
+          labelLeft.toString() +
+          'px;">' +
+          ticLabel +
+          "</span>";
+      } else {
+        tics +=
+          '<span class="cesium-timeline-ticSub" style="left: ' +
+          ticLeft.toString() +
+          'px;"></span>';
+      }
+      tic = getNextTic(tic, mainTic);
+    }
+  } else {
+    timeline._mainTicSpan = -1;
+  }
+
+  tics +=
+    '<span class="cesium-timeline-icon16" style="left:' +
+    scrubX +
+    'px;bottom:0;background-position: 0 0;"></span>';
+  timeBar.innerHTML = tics;
+  timeline._scrubElement = timeBar.lastChild;
+
+  // Clear track canvas.
+  timeline._context.clearRect(
+    0,
+    0,
+    timeline._trackListEle.width,
+    timeline._trackListEle.height
+  );
+
+  renderState.y = 0;
+  timeline._trackList.forEach(function (track) {
+    track.render(widget._context, renderState);
+    renderState.y += track.height;
+  });
+}
 
 /**
  * The Timeline is a widget for displaying and controlling the current scene time.
@@ -232,7 +543,7 @@ Timeline.prototype.destroy = function () {
 };
 
 /**
- * Shows an highlighted area on the timeline
+ * Adds a new highlighted area on the timeline
  *
  * @param {Object} config
  * @param {String|Color} config.color The highlight background color. Can be a css string or a Cesium.Color
@@ -243,19 +554,7 @@ Timeline.prototype.destroy = function () {
  *
  * @returns {String} The new HighlightRange id
  */
-Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
-  // TODO::Deprecation part - remove on deprecation
-  if (typeof config === "string") {
-    var newDeprecatedHighlightRange = new TimelineHighlightRange(
-      config,
-      heightInPx,
-      base
-    );
-    this._highlightRanges.push(newDeprecatedHighlightRange);
-    this.resize();
-    return newDeprecatedHighlightRange;
-  }
-
+Timeline.prototype.addNewHighlightRange = function (config, heightInPx, base) {
   var newHighlightRange = new TimelineHighlightRange(
     config.color,
     config.height,
@@ -265,6 +564,25 @@ Timeline.prototype.addHighlightRange = function (config, heightInPx, base) {
   this._highlightRanges.push(newHighlightRange);
   this.render();
   return newHighlightRange.id;
+};
+
+/**
+ * @private
+ * @deprecated
+ */
+Timeline.prototype.addHighlightRange = function (color, heightInPx, base) {
+  deprecationWarning(
+    "addHighlightRange",
+    "addHighlightRange was deprecated in Cesium 1.70.  It will be removed in 1.73.  Use addNewHighlightRange instead."
+  );
+  var newDeprecatedHighlightRange = new TimelineHighlightRange(
+    color,
+    heightInPx,
+    base
+  );
+  this._highlightRanges.push(newDeprecatedHighlightRange);
+  this.resize();
+  return newDeprecatedHighlightRange;
 };
 
 /**
@@ -369,7 +687,7 @@ Timeline.prototype.zoomTo = function (startTime, stopTime) {
     }
   }
 
-  this._makeTics();
+  makeTics(this);
 
   var evt = document.createEvent("Event");
   evt.initEvent("setzoom", true, true);
@@ -446,13 +764,19 @@ Timeline.prototype.makeLabel = function (time) {
 
 /**
  * @private
+ * @deprecated
  */
 Timeline.prototype.smallestTicInPixels = 7.0;
 
 /**
  * @private
+ * @deprecated
  */
 Timeline.prototype._makeTics = function () {
+  deprecationWarning(
+    "_makeTics",
+    "_makeTics was deprecated in Cesium 1.70.  It will be removed in 1.71.  Use addNewHighlightRange instead."
+  );
   var timeBar = this._timeBarEle;
 
   var seconds = JulianDate.secondsDifference(
@@ -610,7 +934,7 @@ Timeline.prototype._makeTics = function () {
     }
     if (
       smallestIndex < 0 &&
-      timeBarWidth * (sc / this._timeBarSecondsSpan) >= this.smallestTicInPixels
+      timeBarWidth * (sc / this._timeBarSecondsSpan) >= smallestTicInPixels
     ) {
       smallestIndex = ticIndex;
     }
@@ -1062,7 +1386,7 @@ Timeline.prototype.render = function () {
   this._trackListEle.style.height = trackListHeight.toString() + "px";
   this._trackListEle.width = this._trackListEle.clientWidth;
   this._trackListEle.height = trackListHeight;
-  this._makeTics();
+  makeTics(this);
 
   this._lastXPos = undefined;
   this._lastWidth = width;

@@ -9,7 +9,8 @@ import {
 function getHighlightElements(root) {
   return root.getElementsByClassName("cesium-timeline-highlight");
 }
-describe("Widgets/Timeline/Timeline", function () {
+
+fdescribe("Widgets/Timeline/Timeline", function () {
   var container, timeline, timelineElement;
   beforeEach(function () {
     container = document.createElement("span");
@@ -22,7 +23,6 @@ describe("Widgets/Timeline/Timeline", function () {
     timelineElement = container.getElementsByClassName(
       "cesium-timeline-main"
     )[0];
-    // TODO::make _makeTics static and private
   });
 
   afterEach(function () {
@@ -43,7 +43,9 @@ describe("Widgets/Timeline/Timeline", function () {
           true
         );
       });
+    });
 
+    describe("addNewHighlightRange", function () {
       it("should return an ID of a highlight range", function () {
         const highlightRangeConfig = {
           color: "red",
@@ -53,7 +55,7 @@ describe("Widgets/Timeline/Timeline", function () {
           endTime: timeline._endJulian,
         };
 
-        const timelineHighlightRangeId = timeline.addHighlightRange(
+        const timelineHighlightRangeId = timeline.addNewHighlightRange(
           highlightRangeConfig
         );
 
@@ -87,8 +89,8 @@ describe("Widgets/Timeline/Timeline", function () {
           endTime: tEndGreen,
         };
 
-        timeline.addHighlightRange(redHighlightRangeConfig);
-        timeline.addHighlightRange(greenHighlightRangeConfig);
+        timeline.addNewHighlightRange(redHighlightRangeConfig);
+        timeline.addNewHighlightRange(greenHighlightRangeConfig);
 
         const highlightElements = getHighlightElements(timelineElement);
 
@@ -105,7 +107,7 @@ describe("Widgets/Timeline/Timeline", function () {
           endTime: timeline._endJulian,
         };
 
-        timeline.addHighlightRange(highlightRangeConfig);
+        timeline.addNewHighlightRange(highlightRangeConfig);
 
         const highlightElement = getHighlightElements(timelineElement)[0];
 
@@ -123,7 +125,7 @@ describe("Widgets/Timeline/Timeline", function () {
           endTime: timeline._endJulian,
         };
 
-        timeline.addHighlightRange(highlightRangeConfig);
+        timeline.addNewHighlightRange(highlightRangeConfig);
 
         const highlightElement = getHighlightElements(timelineElement)[0];
 
@@ -143,7 +145,7 @@ describe("Widgets/Timeline/Timeline", function () {
           endTime: timeline._endJulian,
         };
 
-        const highlightId = timeline.addHighlightRange(highlightRangeConfig);
+        const highlightId = timeline.addNewHighlightRange(highlightRangeConfig);
 
         const numberOfElementsBeforeRemoval = getHighlightElements(
           timelineElement

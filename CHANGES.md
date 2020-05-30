@@ -5,10 +5,17 @@
 ##### Additions :tada:
 
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
+- Added `addNewHighlightRange` and `removeHighlightRange` methods to the timeline. They now allow to send Cesium.Color as the highlight's color. [#8845](https://github.com/CesiumGS/cesium/pull/8845)
 
 ##### Fixes :wrench:
 
 - This fixes a bug where a removed billboard can prevent changing of the terrainProvider [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- The `Timeline.addHighlightRange` function has been deprecated and will be removed in Cesium 1.73. Use the `Timeline.addNewHighlightRange` method instead. [#8845](https://github.com/CesiumGS/cesium/pull/8845)
+- The `Timeline.makeTics` function has been deprecated and will be removed in Cesium 1.71. Use the `Timeline.addNewHighlightRange` method instead. [#8845](https://github.com/CesiumGS/cesium/pull/8845)
+- The `Timeline.smallestTicInPixels` variable has been deprecated and will be removed in Cesium 1.71. [#8845](https://github.com/CesiumGS/cesium/pull/8845)
 
 ### 1.69.0 - 2020-05-01
 
