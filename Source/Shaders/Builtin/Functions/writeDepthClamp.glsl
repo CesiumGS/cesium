@@ -8,18 +8,18 @@ varying float v_WindowZ;
  * The shader must enable the GL_EXT_frag_depth extension.
  * </p>
  *
- * @name czm_writeDepthClampedToFarPlane
+ * @name czm_writeDepthClamp
  * @glslFunction
  *
  * @example
  * gl_FragColor = color;
- * czm_writeDepthClampedToFarPlane();
+ * czm_writeDepthClamp();
  *
- * @see czm_depthClampFarPlane
+ * @see czm_depthClamp
  */
-void czm_writeDepthClampedToFarPlane()
+void czm_writeDepthClamp()
 {
 #if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)
-    gl_FragDepthEXT = min(v_WindowZ * gl_FragCoord.w, 1.0);
+    gl_FragDepthEXT = clamp(v_WindowZ * gl_FragCoord.w, 0.0, 1.0);
 #endif
 }
