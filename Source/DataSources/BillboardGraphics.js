@@ -103,7 +103,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the billboard.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -111,7 +111,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the Image, URI, or Canvas to use for the billboard.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   image: createPropertyDescriptor("image"),
 
@@ -125,7 +125,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   scale: createPropertyDescriptor("scale"),
@@ -145,7 +145,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian2.ZERO
    */
   pixelOffset: createPropertyDescriptor("pixelOffset"),
@@ -170,7 +170,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   eyeOffset: createPropertyDescriptor("eyeOffset"),
@@ -178,7 +178,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HorizontalOrigin}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HorizontalOrigin.CENTER
    */
   horizontalOrigin: createPropertyDescriptor("horizontalOrigin"),
@@ -186,7 +186,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link VerticalOrigin}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default VerticalOrigin.CENTER
    */
   verticalOrigin: createPropertyDescriptor("verticalOrigin"),
@@ -194,7 +194,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -214,7 +214,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
@@ -223,7 +223,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the rotation of the image
    * counter clockwise from the <code>alignedAxis</code>.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0
    */
   rotation: createPropertyDescriptor("rotation"),
@@ -232,7 +232,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
    * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   alignedAxis: createPropertyDescriptor("alignedAxis"),
@@ -240,7 +240,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying if this billboard's size will be measured in meters.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   sizeInMeters: createPropertyDescriptor("sizeInMeters"),
@@ -249,7 +249,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the width of the billboard in pixels.
    * When undefined, the native width is used.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   width: createPropertyDescriptor("width"),
 
@@ -257,7 +257,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the height of the billboard in pixels.
    * When undefined, the native height is used.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   height: createPropertyDescriptor("height"),
 
@@ -268,7 +268,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's scale remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   scaleByDistance: createPropertyDescriptor("scaleByDistance"),
 
@@ -279,7 +279,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   translucencyByDistance: createPropertyDescriptor("translucencyByDistance"),
 
@@ -290,7 +290,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's pixel offset remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
     "pixelOffsetScaleByDistance"
@@ -301,14 +301,14 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
    * measured in pixels from the bottom-left.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   imageSubRegion: createPropertyDescriptor("imageSubRegion"),
 
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -318,7 +318,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
     "disableDepthTestDistance"

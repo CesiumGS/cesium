@@ -92,7 +92,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -100,14 +100,14 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   radii: createPropertyDescriptor("radii"),
 
   /**
    * Gets or sets the {@link Cartesian3} {@link Property} specifying the inner radii of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default radii
    */
   innerRadii: createPropertyDescriptor("innerRadii"),
@@ -115,7 +115,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the minimum clock angle of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   minimumClock: createPropertyDescriptor("minimumClock"),
@@ -123,7 +123,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the maximum clock angle of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 2*PI
    */
   maximumClock: createPropertyDescriptor("maximumClock"),
@@ -131,7 +131,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the minimum cone angle of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   minimumCone: createPropertyDescriptor("minimumCone"),
@@ -139,7 +139,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the maximum cone angle of the ellipsoid.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default PI
    */
   maximumCone: createPropertyDescriptor("maximumCone"),
@@ -147,7 +147,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -155,7 +155,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the ellipsoid is filled with the provided material.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -171,7 +171,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying whether the ellipsoid is outlined.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -179,7 +179,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -187,7 +187,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -195,7 +195,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of stacks.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 64
    */
   stackPartitions: createPropertyDescriptor("stackPartitions"),
@@ -203,7 +203,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of radial slices per 360 degrees.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 64
    */
   slicePartitions: createPropertyDescriptor("slicePartitions"),
@@ -211,7 +211,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of samples per outline ring, determining the granularity of the curvature.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 128
    */
   subdivisions: createPropertyDescriptor("subdivisions"),
@@ -220,7 +220,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
    * Get or sets the enum Property specifying whether the ellipsoid
    * casts or receives shadows from light sources.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -228,7 +228,7 @@ Object.defineProperties(EllipsoidGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipsoid will be displayed.
    * @memberof EllipsoidGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"

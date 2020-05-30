@@ -67,7 +67,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the box.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -82,7 +82,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -90,7 +90,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the box is filled with the provided material.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -98,7 +98,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the material used to fill the box.
    * @memberof BoxGraphics.prototype
-   * @type {MaterialProperty}
+   * @type {MaterialProperty|undefined}
    * @default Color.WHITE
    */
   material: createMaterialPropertyDescriptor("material"),
@@ -106,7 +106,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the Property specifying whether the box is outlined.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -114,7 +114,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -122,7 +122,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -131,7 +131,7 @@ Object.defineProperties(BoxGraphics.prototype, {
    * Get or sets the enum Property specifying whether the box
    * casts or receives shadows from light sources.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -139,7 +139,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this box will be displayed.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"

@@ -76,7 +76,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the wall.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -84,7 +84,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the array of {@link Cartesian3} positions which define the top of the wall.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   positions: createPropertyDescriptor("positions"),
 
@@ -92,7 +92,7 @@ Object.defineProperties(WallGraphics.prototype, {
    * Gets or sets the Property specifying an array of heights to be used for the bottom of the wall instead of the surface of the globe.
    * If defined, the array must be the same length as {@link Wall#positions}.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   minimumHeights: createPropertyDescriptor("minimumHeights"),
 
@@ -100,14 +100,14 @@ Object.defineProperties(WallGraphics.prototype, {
    * Gets or sets the Property specifying an array of heights to be used for the top of the wall instead of the height of each position.
    * If defined, the array must be the same length as {@link Wall#positions}.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   maximumHeights: createPropertyDescriptor("maximumHeights"),
 
   /**
    * Gets or sets the numeric Property specifying the angular distance between points on the wall.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default {CesiumMath.RADIANS_PER_DEGREE}
    */
   granularity: createPropertyDescriptor("granularity"),
@@ -115,7 +115,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the wall is filled with the provided material.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -131,7 +131,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the Property specifying whether the wall is outlined.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -139,7 +139,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -147,7 +147,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -156,7 +156,7 @@ Object.defineProperties(WallGraphics.prototype, {
    * Get or sets the enum Property specifying whether the wall
    * casts or receives shadows from light sources.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -164,7 +164,7 @@ Object.defineProperties(WallGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this wall will be displayed.
    * @memberof WallGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"

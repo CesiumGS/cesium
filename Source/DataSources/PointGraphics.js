@@ -65,7 +65,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the point.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -73,7 +73,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the size in pixels.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1
    */
   pixelSize: createPropertyDescriptor("pixelSize"),
@@ -81,7 +81,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -89,7 +89,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the point.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
@@ -97,7 +97,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -105,7 +105,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the the outline width in pixels.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -114,7 +114,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * Gets or sets the {@link NearFarScalar} Property used to scale the point based on distance.
    * If undefined, a constant size is used.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   scaleByDistance: createPropertyDescriptor("scaleByDistance"),
 
@@ -125,14 +125,14 @@ Object.defineProperties(PointGraphics.prototype, {
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the points's translucency remains clamped to the nearest bound.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   translucencyByDistance: createPropertyDescriptor("translucencyByDistance"),
 
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this point will be displayed.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -142,7 +142,7 @@ Object.defineProperties(PointGraphics.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof PointGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
     "disableDepthTestDistance"

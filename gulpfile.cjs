@@ -1559,6 +1559,9 @@ function createTypeScriptDefinitions() {
     .replace(/^declare /gm, "export ")
     .replace(/CesiumMath/gm, "Math")
     .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
+    .replace(/String\[]/gm, "string[]")
+    .replace(/Boolean\[]/gm, "boolean[]")
+    .replace(/Object\[]/gm, "object[]")
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       (match, p1) => `= WebGLConstants.${p1}`
