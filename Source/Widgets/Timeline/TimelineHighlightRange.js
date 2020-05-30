@@ -5,7 +5,7 @@ import createGuid from "../../Core/createGuid.js";
  * @private
  */
 function TimelineHighlightRange(color, heightInPx, base) {
-  this._color = color.toCssColorString ? color.toCssColorString() : color;
+  this._color = typeof color.toCssColorString === 'function' ? color.toCssColorString() : color;
   this._height = heightInPx;
   this._base = defaultValue(base, 0);
   this.id = createGuid();
