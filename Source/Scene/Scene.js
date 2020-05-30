@@ -211,6 +211,9 @@ function Scene(options) {
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
 
+  this._globeHeight = undefined;
+  this._cameraUnderground = false;
+
   this._logDepthBuffer = context.fragmentDepth;
   this._logDepthBufferDirty = true;
 
@@ -1647,6 +1650,15 @@ Object.defineProperties(Scene.prototype, {
   opaqueFrustumNearOffset: {
     get: function () {
       return 0.9999;
+    },
+  },
+
+  /**
+   * @private
+   */
+  globeHeight: {
+    get: function () {
+      return this._globeHeight;
     },
   },
 });
@@ -3309,7 +3321,10 @@ Scene.prototype.updateEnvironment = function () {
           environmentState.isReadyForAtmosphere ||
           globe._surface._tilesToRender.length > 0;
       }
-      environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
+      environmentState.skyAtmosphereCommand = skyAtmosphere.update(
+        frameState,
+        globe
+      );
       if (defined(environmentState.skyAtmosphereCommand)) {
         this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
       }
@@ -3693,12 +3708,26 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+function getGlobeHeight(scene) {
+  var globe = scene._globe;
+  var camera = scene.camera;
+  var cartographic = camera.positionCartographic;
+  if (defined(globe) && globe.show && defined(cartographic)) {
+    return globe.getHeight(cartographic);
+  }
+  return undefined;
+}
+
 function isCameraUnderground(scene) {
   var camera = scene.camera;
   var mode = scene._mode;
   var globe = scene.globe;
   var cameraController = scene._screenSpaceCameraController;
   var cartographic = camera.positionCartographic;
+
+  if (!defined(cartographic)) {
+    return false;
+  }
 
   if (!cameraController.onMap() && cartographic.height < 0.0) {
     // The camera can go off the map while in Columbus View.
@@ -3715,17 +3744,8 @@ function isCameraUnderground(scene) {
     return false;
   }
 
-  if (cameraController.adjustedHeightForTerrain()) {
-    // The camera controller already adjusted the camera, no need to call globe.getHeight again
-    return false;
-  }
-
-  var globeHeight = globe.getHeight(cartographic);
-  if (defined(globeHeight) && cartographic.height < globeHeight) {
-    return true;
-  }
-
-  return false;
+  var globeHeight = scene._globeHeight;
+  return defined(globeHeight) && cartographic.height < globeHeight;
 }
 
 /**
@@ -3741,6 +3761,10 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
+  this._globeHeight = getGlobeHeight(this);
+  this._cameraUnderground = isCameraUnderground(this);
+  this._globeTranslucencyState.update(this);
+
   this._screenSpaceCameraController.update();
   if (defined(this._deviceOrientationCameraController)) {
     this._deviceOrientationCameraController.update();
@@ -3748,10 +3772,6 @@ Scene.prototype.initializeFrame = function () {
 
   this.camera.update(this._mode);
   this.camera._updateCameraChanged();
-
-  this._cameraUnderground = isCameraUnderground(this);
-
-  this._globeTranslucencyState.update(this);
 };
 
 function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {

@@ -25,6 +25,7 @@
 - Fixed sky atmosphere artifacts below the horizon. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 - Fixed ground primitives in orthographic mode. [#5110](https://github.com/CesiumGS/cesium/issues/5110)
 - Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
+- Fixed camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
 
 ### 1.69.0 - 2020-05-01
 

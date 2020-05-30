@@ -1145,6 +1145,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
     rayIntersection = globe.pickWorldCoordinates(
       ray,
       scene,
+      true,
       scratchRayIntersection
     );
 
