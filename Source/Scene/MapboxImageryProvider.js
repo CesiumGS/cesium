@@ -12,24 +12,30 @@ var defaultCredit = new Credit(
 );
 
 /**
+ * @typedef {Object} MapboxImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the MapboxImageryProvider constructor
+ *
+ * @property {String} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
+ * @property {String} mapId The Mapbox Map ID.
+ * @property {String} [accessToken] The public access token for the imagery.
+ * @property {String} [format='png'] The format of the image request.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * Provides tiled imagery hosted by Mapbox.
  *
  * @alias MapboxImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {String} [options.url='https://api.mapbox.com/v4/'] The Mapbox server url.
- * @param {String} options.mapId The Mapbox Map ID.
- * @param {String} [options.accessToken] The public access token for the imagery.
- * @param {String} [options.format='png'] The format of the image request.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
- *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
- *                 to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
+ * @param {MapboxImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * // Mapbox tile provider

@@ -256,3 +256,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [SungHo Lim](https://github.com/SambaLim)
 - [Michael Fink](https://github.com/vividos)
 - [Jakub Vrana](https://github.com/vrana)
+- [James Bromwell](https://github.com/thw0rted)

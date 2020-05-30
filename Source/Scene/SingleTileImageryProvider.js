@@ -12,17 +12,24 @@ import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
+ * @typedef {Object} SingleTileImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the SingleTileImageryProvider constructor
+ *
+ * @property {Resource|String} url The url for the tile.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ */
+
+/**
  * Provides a single, top-level imagery tile.  The single image is assumed to use a
  * {@link GeographicTilingScheme}.
  *
  * @alias SingleTileImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url for the tile.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @param {SingleTileImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider

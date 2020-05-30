@@ -411,7 +411,6 @@ CesiumMath.ONE_OVER_TWO_PI = 1.0 / (2.0 * Math.PI);
  *
  * @type {Number}
  * @constant
- * @default Math.PI / 180.0
  */
 CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
 
@@ -420,7 +419,6 @@ CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
  *
  * @type {Number}
  * @constant
- * @default 180.0 / Math.PI
  */
 CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
 
@@ -429,7 +427,6 @@ CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
  *
  * @type {Number}
  * @constant
- * @default {@link CesiumMath.RADIANS_PER_DEGREE} / 3600.0
  */
 CesiumMath.RADIANS_PER_ARCSECOND = CesiumMath.RADIANS_PER_DEGREE / 3600.0;
 

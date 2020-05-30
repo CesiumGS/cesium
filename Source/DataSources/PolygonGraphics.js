@@ -16,6 +16,34 @@ function createPolygonHierarchyProperty(value) {
 }
 
 /**
+ * @typedef {Object} PolygonGraphics.ConstructorOptions
+ *
+ * Initialization options for the PolygonGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polygon.
+ * @property {Property | PolygonHierarchy} [hierarchy] A Property specifying the {@link PolygonHierarchy}.
+ * @property {Property | number} [height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | number} [extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
+ * @property {Property | HeightReference} [extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
+ * @property {Property | number} [stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
+ * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the polygon.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the polygon is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | boolean} [perPositionHeight=false] A boolean specifying whether or not the height of each position is used.
+ * @property {Boolean | boolean} [closeTop=true] When false, leaves off the top of an extruded polygon open.
+ * @property {Boolean | boolean} [closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+ * @property {Property | ArcType} [arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
+ * @property {Property | ClassificationType} [classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
+ * @property {ConstantProperty | number} [zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
+ */
+
+/**
  * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
  * The polygon conforms to the curvature of the globe and can be placed on the surface or
  * at altitude and can optionally be extruded into a volume.
@@ -23,28 +51,7 @@ function createPolygonHierarchyProperty(value) {
  * @alias PolygonGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
- * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
- * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
- * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
- * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
- * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the polygon.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the polygon is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the height of each position is used.
- * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
- * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
- * @param {Property} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
- * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
- * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
+ * @param {PolygonGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}

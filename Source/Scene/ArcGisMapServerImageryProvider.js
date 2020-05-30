@@ -21,16 +21,13 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
- * used, if available.
+ * @typedef {Object} ArcGisMapServerImageryProvider.ConstructorOptions
  *
- * @alias ArcGisMapServerImageryProvider
- * @constructor
+ * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The URL of the ArcGIS MapServer service.
- * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+ * @property {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @property {String} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
  *        {@link NeverTileDiscardPolicy} is used for non-tiled map servers.  In the former case,
@@ -41,27 +38,37 @@ import ImageryProvider from "./ImageryProvider.js";
  *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
  *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
  *        parameter.
- * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+ * @property {Boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
  *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
  *        'export' service is used.
- * @param {String} [options.layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
- * @param {Boolean} [options.enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+ * @property {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
  *        the Identify service on the MapServer and return the features included in the response.  If false,
  *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you don't want this provider's features to
  *        be pickable. Can be overridden by setting the {@link ArcGisMapServerImageryProvider#enablePickFeatures} property on the object.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
  *                    a tiled layer.
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  *                       This parameter is ignored when accessing a tiled server.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+ * @property {Credit|String} credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
+ */
+
+/**
+ * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
+ * used, if available.
+ *
+ * @alias ArcGisMapServerImageryProvider
+ * @constructor
+ *
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider

@@ -6,6 +6,20 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import when from "../ThirdParty/when.js";
 
 /**
+ * @typedef {Object} TileCoordinatesImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the TileCoordinatesImageryProvider constructor
+ *
+ * @param {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @param {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+ *                    parameter is specified, the WGS84 ellipsoid is used.
+ * @param {Color} [color=Color.YELLOW] The color to draw the tile box and label.
+ * @param {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @param {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ */
+
+/**
  * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
  * a label inside it indicating the X, Y, Level coordinates of the tile.  This is mostly useful for
  * debugging terrain and imagery rendering problems.
@@ -13,14 +27,7 @@ import when from "../ThirdParty/when.js";
  * @alias TileCoordinatesImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
- *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
- * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @param {TileCoordinatesImageryProvider.ConstructorOptions} options Object describing initialization options
  */
 function TileCoordinatesImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
