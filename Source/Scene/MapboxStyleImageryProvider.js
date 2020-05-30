@@ -12,26 +12,32 @@ var defaultCredit = new Credit(
 );
 
 /**
+ * @typedef {Object} MapboxStyleImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the MapboxStyleImageryProvider constructor
+ *
+ * @property {Resource|String} [url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
+ * @property {String} [username='mapbox'] The username of the map account.
+ * @property {String} styleId The Mapbox Style ID.
+ * @property {String} [accessToken] The public access token for the imagery.
+ * @property {Number} [tilesize=512] The size of the image tiles.
+ * @property {Boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * Provides tiled imagery hosted by Mapbox.
  *
  * @alias MapboxStyleImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Resource|String} [options.url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
- * @param {String} [options.username='mapbox'] The username of the map account.
- * @param {String} options.styleId The Mapbox Style ID.
- * @param {String} [options.accessToken] The public access token for the imagery.
- * @param {Number} [options.tilesize=512] The size of the image tiles.
- * @param {Boolean} [options.scaleFactor] Determines if tiles are rendered at a @2x scale factor.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
- *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
- *                 to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
+ * @param {MapboxStyleImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * // Mapbox style provider

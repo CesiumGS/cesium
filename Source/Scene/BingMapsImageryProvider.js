@@ -18,27 +18,34 @@ import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
+ * @typedef {Object} BingMapsImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the BingMapsImageryProvider constructor
+ *
+ * @property {Resource|String} url The url of the Bing Maps server hosting the imagery.
+ * @property {String} [key] The Bing Maps key for your application, which can be
+ *        created at {@link https://www.bingmapsportal.com/}.
+ *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
+ * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
+ *        By default, tiles are loaded using the same protocol as the page.
+ * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+ * @property {String} [culture=''] The culture to use when requesting Bing Maps imagery. Not
+ *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+ *        for information on the supported cultures.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
+ *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
+ *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
+ *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
+ */
+
+/**
  * Provides tiled imagery using the Bing Maps Imagery REST API.
  *
  * @alias BingMapsImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
- * @param {String} [options.key] The Bing Maps key for your application, which can be
- *        created at {@link https://www.bingmapsportal.com/}.
- *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
- * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
- *        By default, tiles are loaded using the same protocol as the page.
- * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
- * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
- *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
- *        for information on the supported cultures.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
- *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
- *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
- *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
+ * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
