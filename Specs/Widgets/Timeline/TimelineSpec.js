@@ -10,7 +10,7 @@ function getHighlightElements(root) {
   return root.getElementsByClassName("cesium-timeline-highlight");
 }
 
-fdescribe("Widgets/Timeline/Timeline", function () {
+describe("Widgets/Timeline/Timeline", function () {
   var container, timeline, timelineElement;
   beforeEach(function () {
     container = document.createElement("span");
