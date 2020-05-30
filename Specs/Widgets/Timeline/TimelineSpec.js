@@ -19,7 +19,7 @@ fdescribe("Widgets/Timeline/Timeline", function () {
     container.style.height = "1px";
     document.body.appendChild(container);
     timeline = new Timeline(container, new Clock());
-    timeline.render(); // TODO::resize will now use render under the hood "resize"
+    timeline.render();
     timelineElement = container.getElementsByClassName(
       "cesium-timeline-main"
     )[0];
