@@ -1557,6 +1557,7 @@ function createTypeScriptDefinitions() {
   // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
   source = source
     .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
     .replace(/CesiumMath/gm, "Math")
     .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
     .replace(/String\[]/gm, "string[]")
