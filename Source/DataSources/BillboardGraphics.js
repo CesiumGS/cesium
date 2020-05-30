@@ -264,7 +264,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the scale of the billboard based on the distance from the camera.
    * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's scale remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
@@ -275,7 +275,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the translucency of the billboard based on the distance from the camera.
    * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
@@ -286,7 +286,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the pixel offset of the billboard based on the distance from the camera.
    * A billboard's pixel offset will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's pixel offset remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
