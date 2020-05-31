@@ -3172,8 +3172,8 @@ var newOptions = {
 };
 
 /**
- * Cancels the current camera flight if one is in progress.
- * The camera is left at it's current location.
+ * Cancels the current camera flight and leaves the camera at its current location.
+ * If no flight is in progress, this this function does nothing.
  */
 Camera.prototype.cancelFlight = function () {
   if (defined(this._currentFlight)) {
@@ -3183,8 +3183,8 @@ Camera.prototype.cancelFlight = function () {
 };
 
 /**
- * Complete the current camera flight if one is in progress
- * The camera immediately move to destination
+ * Completes the current camera flight and moves the camera immediately to its final destination.
+ * If no flight is in progress, this this function does nothing.
  */
 Camera.prototype.completeFlight = function () {
   if (defined(this._currentFlight)) {
