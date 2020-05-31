@@ -5,7 +5,6 @@ import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
 import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -389,44 +388,12 @@ function generateTechnique(
   // Add attributes with semantics
   var vertexShaderMain = "";
   if (hasSkinning) {
-    var i, j;
-    var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
-    var matrix = false;
-    if (skinningInfo.type.indexOf("MAT") === 0) {
-      matrix = true;
-      numberOfComponents = Math.sqrt(numberOfComponents);
-    }
-    if (!matrix) {
-      for (i = 0; i < numberOfComponents; i++) {
-        if (i === 0) {
-          vertexShaderMain += "  mat4 skinMat = ";
-        } else {
-          vertexShaderMain += "  skinMat += ";
-        }
-        vertexShaderMain +=
-          "a_weight[" + i + "] * u_jointMatrix[int(a_joint[" + i + "])];\n";
-      }
-    } else {
-      for (i = 0; i < numberOfComponents; i++) {
-        for (j = 0; j < numberOfComponents; j++) {
-          if (i === 0 && j === 0) {
-            vertexShaderMain += "  mat4 skinMat = ";
-          } else {
-            vertexShaderMain += "  skinMat += ";
-          }
-          vertexShaderMain +=
-            "a_weight[" +
-            i +
-            "][" +
-            j +
-            "] * u_jointMatrix[int(a_joint[" +
-            i +
-            "][" +
-            j +
-            "])];\n";
-        }
-      }
-    }
+    vertexShaderMain +=
+      "    mat4 skinMatrix =\n" +
+      "        a_weight.x * u_jointMatrix[int(a_joint.x)] +\n" +
+      "        a_weight.y * u_jointMatrix[int(a_joint.y)] +\n" +
+      "        a_weight.z * u_jointMatrix[int(a_joint.z)] +\n" +
+      "        a_weight.w * u_jointMatrix[int(a_joint.w)];\n";
   }
 
   // Add position always
@@ -439,7 +406,7 @@ function generateTechnique(
   vertexShader += "varying vec3 v_positionEC;\n";
   if (hasSkinning) {
     vertexShaderMain +=
-      "  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n";
+      "  vec4 pos = u_modelViewMatrix * skinMatrix * vec4(a_position,1.0);\n";
   } else {
     vertexShaderMain +=
       "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n";
@@ -457,7 +424,7 @@ function generateTechnique(
     vertexShader += "varying vec3 v_normal;\n";
     if (hasSkinning) {
       vertexShaderMain +=
-        "  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n";
+        "  v_normal = u_normalMatrix * mat3(skinMatrix) * a_normal;\n";
     } else {
       vertexShaderMain += "  v_normal = u_normalMatrix * a_normal;\n";
     }
@@ -481,16 +448,15 @@ function generateTechnique(
   }
 
   if (hasSkinning) {
-    var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
     techniqueAttributes.a_joint = {
-      semantic: "JOINT",
+      semantic: "JOINTS_0",
     };
     techniqueAttributes.a_weight = {
-      semantic: "WEIGHT",
+      semantic: "WEIGHTS_0",
     };
 
-    vertexShader += "attribute " + attributeType + " a_joint;\n";
-    vertexShader += "attribute " + attributeType + " a_weight;\n";
+    vertexShader += "attribute vec4 a_joint;\n";
+    vertexShader += "attribute vec4 a_weight;\n";
   }
 
   if (hasVertexColors) {
@@ -676,8 +642,7 @@ function generateTechnique(
   if (hasNormals) {
     fragmentShader += "  vec3 normal = normalize(v_normal);\n";
     if (khrMaterialsCommon.doubleSided) {
-      // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
-      fragmentShader += "  if (gl_FrontFacing == false)\n";
+      fragmentShader += "  if (czm_backFacing())\n";
       fragmentShader += "  {\n";
       fragmentShader += "    normal = -normal;\n";
       fragmentShader += "  }\n";

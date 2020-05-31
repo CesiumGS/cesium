@@ -505,7 +505,7 @@ function createBoundingVolume(groundPrimitive, frameState, geometry) {
 }
 
 function boundingVolumeIndex(commandIndex, length) {
-  return Math.floor((commandIndex % length) / 3);
+  return Math.floor((commandIndex % length) / 2);
 }
 
 function updateAndQueueRenderCommand(
@@ -626,7 +626,7 @@ function updateAndQueueCommands(
       var ignoreShowCommands = classificationPrimitive._commandsIgnoreShow;
       var ignoreShowCommandsLength = ignoreShowCommands.length;
       for (i = 0; i < ignoreShowCommandsLength; ++i) {
-        boundingVolume = boundingVolumes[Math.floor(i / 2)];
+        boundingVolume = boundingVolumes[i];
         command = ignoreShowCommands[i];
         updateAndQueueRenderCommand(
           groundPrimitive,
@@ -805,14 +805,12 @@ GroundPrimitive.prototype.update = function (frameState) {
         var textureCoordinateRotationPoints =
           geometry.textureCoordinateRotationPoints;
 
-        var useFloatBatchTable = frameState.context.floatTextureSixPlaces;
         if (usePlanarExtents) {
           attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(
             boundingRectangle,
             textureCoordinateRotationPoints,
             ellipsoid,
             frameState.mapProjection,
-            useFloatBatchTable,
             this._maxHeight
           );
         } else {
@@ -820,8 +818,7 @@ GroundPrimitive.prototype.update = function (frameState) {
             boundingRectangle,
             textureCoordinateRotationPoints,
             ellipsoid,
-            frameState.mapProjection,
-            useFloatBatchTable
+            frameState.mapProjection
           );
         }
 

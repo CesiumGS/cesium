@@ -121,7 +121,7 @@ Object.defineProperties(PointGraphics.prototype, {
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the translucency of the point based on the distance from the camera.
    * A point's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the points's translucency remains clamped to the nearest bound.
    * @memberof PointGraphics.prototype

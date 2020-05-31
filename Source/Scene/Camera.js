@@ -46,7 +46,8 @@ import SceneMode from "./SceneMode.js";
  * @param {Scene} scene The scene.
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html|Cesium Sandcastle Camera Tutorial Example}
+ * @demo {@link https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
  *
  * @example
  * // Create a camera looking down the negative z-axis, positioned at the origin,

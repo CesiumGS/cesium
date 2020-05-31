@@ -95,20 +95,23 @@ describe("Scene/ConditionsExpression", function () {
 
   it("gets shader function", function () {
     var expression = new ConditionsExpression(jsonExp);
+    var properyNameMap = {
+      Height: "a_height",
+    };
     var shaderFunction = expression.getShaderFunction(
       "getColor",
-      "",
+      properyNameMap,
       {},
       "vec4"
     );
     var expected =
       "vec4 getColor() \n" +
       "{ \n" +
-      "    if ((Height > 100.0)) \n" +
+      "    if ((a_height > 100.0)) \n" +
       "    { \n" +
       "        return vec4(vec3(0.0, 0.0, 1.0), 1.0); \n" +
       "    } \n" +
-      "    else if ((Height > 50.0)) \n" +
+      "    else if ((a_height > 50.0)) \n" +
       "    { \n" +
       "        return vec4(vec3(1.0, 0.0, 0.0), 1.0); \n" +
       "    } \n" +
@@ -125,7 +128,7 @@ describe("Scene/ConditionsExpression", function () {
     var expression = new ConditionsExpression([]);
     var shaderFunction = expression.getShaderFunction(
       "getColor",
-      "",
+      {},
       {},
       "vec4"
     );
