@@ -264,7 +264,7 @@ EntityCollection.prototype.computeAvailability = function () {
 /**
  * Add an entity to the collection.
  *
- * @param {Entity} entity The entity to be added.
+ * @param {Entity | Entity.ConstructorOptions} entity The entity to be added.
  * @returns {Entity} The entity that was added.
  * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
  */

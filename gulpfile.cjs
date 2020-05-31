@@ -1557,22 +1557,27 @@ function createTypeScriptDefinitions() {
   // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
   source = source
     .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
     .replace(/CesiumMath/gm, "Math")
     .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
     .replace(/String\[]/gm, "string[]")
     .replace(/Boolean\[]/gm, "boolean[]")
     .replace(/Object\[]/gm, "object[]")
+    .replace(/<Number>/gm, "<number>")
+    .replace(/<String>/gm, "<string>")
+    .replace(/<Boolean>/gm, "<boolean>")
+    .replace(/<Object>/gm, "<object>")
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       (match, p1) => `= WebGLConstants.${p1}`
     );
 
   // Wrap the source to actually be inside of a declared cesium module
-  // and any any workaround and private utility types.
+  // and add any workaround and private utility types.
   source = `declare module "terriajs-cesium" {
 
 /**
- * Private interface to support PropertyBag being a dictionary-like object.
+ * Private interfaces to support PropertyBag being a dictionary-like object.
  */
 interface DictionaryLike {
     [index: string]: any;

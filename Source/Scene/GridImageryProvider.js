@@ -10,25 +10,32 @@ var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
 var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
 
 /**
+ * @typedef {Object} GridImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the GridImageryProvider constructor
+ *
+ * @param {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @param {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+ *                    parameter is specified, the WGS84 ellipsoid is used.
+ * @param {Number} [cells=8] The number of grids cells.
+ * @param {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
+ * @param {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
+ * @param {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @param {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
+ * @param {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @param {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @param {Number} [canvasSize=256] The size of the canvas used for rendering.
+ */
+
+/**
  * An {@link ImageryProvider} that draws a wireframe grid on every tile with controllable background and glow.
  * May be useful for custom rendering effects or debugging terrain.
  *
  * @alias GridImageryProvider
  * @constructor
+ * @param {GridImageryProvider.ConstructorOptions} options Object describing initialization options
  *
- * @param {Object} [options] Object with the following properties:
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
- *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.cells=8] The number of grids cells.
- * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
- * @param {Color} [options.glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @param {Number} [options.glowWidth=6] The width of lines used for rendering the line glow effect.
- * @param {Color} [options.backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
  */
 function GridImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

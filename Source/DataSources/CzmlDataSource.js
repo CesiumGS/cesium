@@ -4649,6 +4649,15 @@ function DocumentPacket() {
 }
 
 /**
+ * @typedef {Object} CzmlDataSource.LoadOptions
+ *
+ * Initialization options for the `load` method.
+ *
+ * @property {Resource|string} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {Credit|string} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/CZML-Guide|CZML}.
  * @alias CzmlDataSource
  * @constructor
@@ -4676,9 +4685,8 @@ function CzmlDataSource(name) {
  * Creates a Promise to a new instance loaded with the provided CZML data.
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
- * @param {Object} [options] An object with the following properties:
- * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
+ *
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
  */
 CzmlDataSource.load = function (czml, options) {
@@ -4849,9 +4857,8 @@ CzmlDataSource.prototype.process = function (czml, options) {
  * Loads the provided url or CZML object, replacing any existing data.
  *
  * @param {Resource|String|Object} czml A url or CZML object to be processed.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {CzmlDataSource.LoadOptions} [options] An object specifying configuration options
+
  * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
  */
 CzmlDataSource.prototype.load = function (czml, options) {

@@ -6,22 +6,29 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} PlaneGraphics.ConstructorOptions
+ *
+ * Initialization options for the PlaneGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the plane.
+ * @property {Property | Plane} [plane] A {@link Plane} Property specifying the normal and distance for the plane.
+ * @property {Property | Cartesian2} [dimensions] A {@link Cartesian2} Property specifying the width and height of the plane.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the plane is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the plane.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the plane is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the plane casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this plane will be displayed.
+ */
+
+/**
  * Describes a plane. The center position and orientation are determined by the containing {@link Entity}.
  *
  * @alias PlaneGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the plane.
- * @param {Property} [options.plane] A {@link Plane} Property specifying the normal and distance for the plane.
- * @param {Property} [options.dimensions] A {@link Cartesian2} Property specifying the width and height of the plane.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the plane is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the plane.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the plane is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the plane casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this plane will be displayed.
+ * @param {PlaneGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
  */

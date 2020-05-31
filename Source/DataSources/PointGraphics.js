@@ -5,22 +5,29 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} PointGraphics.ConstructorOptions
+ *
+ * Initialization options for the PointGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the point.
+ * @property {Property | number} [pixelSize=1] A numeric Property specifying the size in pixels.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [color=Color.WHITE] A Property specifying the {@link Color} of the point.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=0] A numeric Property specifying the the outline width in pixels.
+ * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
+ * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
+ * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ */
+
+/**
  * Describes a graphical point located at the position of the containing {@link Entity}.
  *
  * @alias PointGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
- * @param {Property} [options.pixelSize=1] A numeric Property specifying the size in pixels.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the point.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=0] A numeric Property specifying the the outline width in pixels.
- * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
- * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
- * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @param {PointGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function PointGraphics(options) {
   this._definitionChanged = new Event();
