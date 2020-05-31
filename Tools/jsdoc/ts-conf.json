@@ -14,7 +14,8 @@
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "plugins": [
-        "./Tools/jsdoc/cesiumTags"
+        "./Tools/jsdoc/cesiumTags",
+        "./node_modules/tsd-jsdoc/dist/plugin"
     ],
     "templates": {
         "cleverLinks": true,
