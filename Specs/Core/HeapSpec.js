@@ -3,6 +3,15 @@ import { Heap } from "../../Source/Cesium.js";
 describe("Core/Heap", function () {
   var length = 100;
 
+  function expectTrailingReferenceToBeRemoved(heap) {
+    var array = heap._array;
+    var length = heap._length;
+    var reservedLength = array.length;
+    for (var i = length; i < reservedLength; ++i) {
+      expect(array[i]).toBeUndefined();
+    }
+  }
+
   function checkHeap(heap, comparator) {
     var array = heap.internalArray;
     var pass = true;
@@ -88,6 +97,34 @@ describe("Core/Heap", function () {
       curr = next;
     }
     expect(pass).toBe(true);
+  });
+
+  it("pop removes trailing references", function () {
+    var heap = new Heap({
+      comparator: comparator,
+    });
+
+    for (var i = 0; i < 10; ++i) {
+      heap.insert(Math.random());
+    }
+
+    heap.pop();
+    heap.pop();
+
+    expectTrailingReferenceToBeRemoved(heap);
+  });
+
+  it("setting maximum length less than current length removes trailing references", function () {
+    var heap = new Heap({
+      comparator: comparator,
+    });
+
+    for (var i = 0; i < 10; ++i) {
+      heap.insert(Math.random());
+    }
+
+    heap.maximumLength = 5;
+    expectTrailingReferenceToBeRemoved(heap);
   });
 
   it("insert returns the removed element when maximumLength is set", function () {

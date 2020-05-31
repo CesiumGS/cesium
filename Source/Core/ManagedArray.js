@@ -16,6 +16,16 @@ function ManagedArray(length) {
   this._length = length;
 }
 
+function removeTrailingReferences(managedArray, newLength) {
+  var array = managedArray._array;
+  var originalLength = managedArray._length;
+  if (newLength < originalLength) {
+    for (var i = newLength; i < originalLength; ++i) {
+      array[i] = undefined;
+    }
+  }
+}
+
 Object.defineProperties(ManagedArray.prototype, {
   /**
    * Gets or sets the length of the array.
@@ -29,6 +39,7 @@ Object.defineProperties(ManagedArray.prototype, {
       return this._length;
     },
     set: function (length) {
+      removeTrailingReferences(this, length);
       this._length = length;
       if (length > this._array.length) {
         this._array.length = length;
@@ -74,7 +85,7 @@ ManagedArray.prototype.set = function (index, element) {
   Check.typeOf.number("index", index);
   //>>includeEnd('debug');
 
-  if (index >= this.length) {
+  if (index >= this._length) {
     this.length = index + 1;
   }
   this._array[index] = element;
@@ -105,7 +116,12 @@ ManagedArray.prototype.push = function (element) {
  * @returns {*} The last element in the array.
  */
 ManagedArray.prototype.pop = function () {
-  return this._array[--this.length];
+  if (this._length === 0) {
+    return undefined;
+  }
+  var element = this._array[this._length - 1];
+  --this.length;
+  return element;
 };
 
 /**
@@ -142,7 +158,7 @@ ManagedArray.prototype.resize = function (length) {
  * @param {Number} [length] The length.
  */
 ManagedArray.prototype.trim = function (length) {
-  length = defaultValue(length, this.length);
+  length = defaultValue(length, this._length);
   this._array.length = length;
 };
 export default ManagedArray;
