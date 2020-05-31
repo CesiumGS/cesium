@@ -347,19 +347,19 @@ Color.fromRandom = function (options, result) {
   return result;
 };
 
-//#rgb
-var rgbMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
-//#rrggbb
-var rrggbbMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i;
+//#rgba
+var rgbaMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])([0-9a-f])?$/i;
+//#rrggbbaa
+var rrggbbaaMatcher = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})?$/i;
 //rgb(), rgba(), or rgb%()
 var rgbParenthesesMatcher = /^rgba?\(\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)\s*,\s*([0-9.]+%?)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
-//hsl(), hsla(), or hsl%()
+//hsl() or hsla()
 var hslParenthesesMatcher = /^hsla?\(\s*([0-9.]+)\s*,\s*([0-9.]+%)\s*,\s*([0-9.]+%)(?:\s*,\s*([0-9.]+))?\s*\)$/i;
 
 /**
  * Creates a Color instance from a CSS color value.
  *
- * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
+ * @param {String} color The CSS color value in #rgb, #rgba, #rrggbb, #rrggbbaa, rgb(), rgba(), hsl(), or hsla() format.
  * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
  * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
  *
@@ -385,21 +385,21 @@ Color.fromCssColorString = function (color, result) {
     return result;
   }
 
-  var matches = rgbMatcher.exec(color);
+  var matches = rgbaMatcher.exec(color);
   if (matches !== null) {
     result.red = parseInt(matches[1], 16) / 15;
     result.green = parseInt(matches[2], 16) / 15.0;
     result.blue = parseInt(matches[3], 16) / 15.0;
-    result.alpha = 1.0;
+    result.alpha = parseInt(defaultValue(matches[4], "f"), 16) / 15.0;
     return result;
   }
 
-  matches = rrggbbMatcher.exec(color);
+  matches = rrggbbaaMatcher.exec(color);
   if (matches !== null) {
     result.red = parseInt(matches[1], 16) / 255.0;
     result.green = parseInt(matches[2], 16) / 255.0;
     result.blue = parseInt(matches[3], 16) / 255.0;
-    result.alpha = 1.0;
+    result.alpha = parseInt(defaultValue(matches[4], "ff"), 16) / 255.0;
     return result;
   }
 

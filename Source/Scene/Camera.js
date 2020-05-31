@@ -1145,6 +1145,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
     rayIntersection = globe.pickWorldCoordinates(
       ray,
       scene,
+      true,
       scratchRayIntersection
     );
 
@@ -3173,12 +3174,44 @@ var newOptions = {
 };
 
 /**
- * Cancels the current camera flight if one is in progress.
- * The camera is left at it's current location.
+ * Cancels the current camera flight and leaves the camera at its current location.
+ * If no flight is in progress, this this function does nothing.
  */
 Camera.prototype.cancelFlight = function () {
   if (defined(this._currentFlight)) {
     this._currentFlight.cancelTween();
+    this._currentFlight = undefined;
+  }
+};
+
+/**
+ * Completes the current camera flight and moves the camera immediately to its final destination.
+ * If no flight is in progress, this this function does nothing.
+ */
+Camera.prototype.completeFlight = function () {
+  if (defined(this._currentFlight)) {
+    this._currentFlight.cancelTween();
+
+    var options = {
+      destination: undefined,
+      orientation: {
+        heading: undefined,
+        pitch: undefined,
+        roll: undefined,
+      },
+    };
+
+    options.destination = newOptions.destination;
+    options.orientation.heading = newOptions.heading;
+    options.orientation.pitch = newOptions.pitch;
+    options.orientation.roll = newOptions.roll;
+
+    this.setView(options);
+
+    if (defined(this._currentFlight.complete)) {
+      this._currentFlight.complete();
+    }
+
     this._currentFlight = undefined;
   }
 };

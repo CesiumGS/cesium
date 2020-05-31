@@ -2064,22 +2064,6 @@ describe(
         });
     });
 
-    it("detects that camera is above ground if screen space camera controller adjusted height for terrain", function () {
-      var scene = createScene();
-      var globe = new Globe();
-      scene.globe = globe;
-
-      spyOn(
-        ScreenSpaceCameraController.prototype,
-        "adjustedHeightForTerrain"
-      ).and.returnValue(true);
-
-      return updateGlobeUntilDone(scene).then(function () {
-        expect(scene.cameraUnderground).toBe(false);
-        scene.destroyForSpecs();
-      });
-    });
-
     it("detects that camera is above ground if globe is undefined", function () {
       var scene = createScene();
       scene.renderForSpecs();
