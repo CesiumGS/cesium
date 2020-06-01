@@ -50,13 +50,13 @@ var defaultParameters = Object.freeze({
  * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
- * @param {Boolean} [enablePickFeatures=true] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
- *        the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
- *        {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
- *        without communicating with the server.  Set this property to false if you know your WMTS server does not support
- *        GetFeatureInfo or if you don't want this provider's features to be pickable.
- * @param {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
- *        in which to try WMTS GetFeatureInfo requests.
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link WebMapTileServiceImageryProvider#pickFeatures} will invoke
+ *           the GetFeatureInfo operation on the WMTS server and return the features included in the response.  If false,
+ *           {@link WebMapTileServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+ *           without communicating with the server.  Set this property to false if you know your WMTS server does not support
+ *           GetFeatureInfo or if you don't want this provider's features to be pickable.
+ * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+ *           in which to try WMTS GetFeatureInfo requests.
  */
 
 /**

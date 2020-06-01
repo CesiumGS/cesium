@@ -61,10 +61,10 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                   a tiled server.
- * @param {Object} [mapServerData] This MapServer's metadata.  This can be supplied to prevent the imagery provider from making an extraneous
- *                                 request when the application already has the metadata.
- * @param {Object} [parameters=ArcGisMapServerImageryProvider.DefaultParameters] Additional parameters
- *                 to pass to the ArcGIS server in tile requests and feature picking.
+ * @property {Object} [mapServerData] This MapServer's metadata.  This can be supplied to prevent the imagery provider from making an extraneous
+ *                                    request when the application already has the metadata.
+ * @property {Object} [parameters=ArcGisMapServerImageryProvider.DefaultParameters] Additional parameters
+ *                    to pass to the ArcGIS server in tile requests and feature picking.
  */
 
 /**

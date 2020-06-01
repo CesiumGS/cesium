@@ -15,7 +15,7 @@
     },
     "plugins": [
         "./Tools/jsdoc/cesiumTags",
-        "./node_modules/tsd-jsdoc/dist/plugin"
+        "tsd-jsdoc/dist/plugin"
     ],
     "templates": {
         "cleverLinks": true,
