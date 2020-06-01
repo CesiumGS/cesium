@@ -119,7 +119,7 @@ Object.defineProperties(EllipsoidTangentPlane.prototype, {
 
   /**
    * Gets the local Z-axis (up) of the tangent plane.
-   * @member EllipsoidTangentPlane.prototype
+   * @memberof EllipsoidTangentPlane.prototype
    * @readonly
    * @type {Cartesian3}
    */
