@@ -4,6 +4,9 @@
 
 ##### Major Announcements :loudspeaker:
 
+- All Cesium ion users now have access to Cesium OSM Builidngs - a 3D buildings layer covering the entire world built with OpenStreetMap building data, available as 3D Tiles. Read more about it [on our blog](https://cesium.com/blog/2020/06/01/cesium-osm-buildings/).
+  - Add it to your CesiumJS app: `viewer.scene.primitives.add(Cesium.createOsmBuildings())`.
+  - Contains per-feature data like building name, address, and much more. [Read more about the available properties](https://cesium.com/content/cesium-osm-buildings/).
 - CesiumJS now ships with official TypeScript type definitions! [#8878](https://github.com/CesiumGS/cesium/pull/8878)
   - If you import CesiumJS as a module, the new definitions will automatically be used by TypeScript and related tooling.
   - If you import individual CesiumJS source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
