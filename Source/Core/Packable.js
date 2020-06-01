@@ -5,7 +5,7 @@ import DeveloperError from "./DeveloperError.js";
  * elements in an array.  These methods and properties are expected to be
  * defined on a constructor function.
  *
- * @exports Packable
+ * @interface Packable
  *
  * @see PackableForInterpolation
  */

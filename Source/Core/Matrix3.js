@@ -10,6 +10,7 @@ import CesiumMath from "./Math.js";
  * Constructor parameters are in row-major order for code readability.
  * @alias Matrix3
  * @constructor
+ * @implements {ArrayLike<number>}
  *
  * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
  * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
@@ -1394,13 +1395,11 @@ Matrix3.equals = function (left, right) {
  *
  * @param {Matrix3} [left] The first matrix.
  * @param {Matrix3} [right] The second matrix.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.equalsEpsilon = function (left, right, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -1568,7 +1567,7 @@ Matrix3.equalsArray = function (matrix, array, offset) {
  * <code>false</code> otherwise.
  *
  * @param {Matrix3} [right] The right hand side matrix.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 Matrix3.prototype.equalsEpsilon = function (right, epsilon) {

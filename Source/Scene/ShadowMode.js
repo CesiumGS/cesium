@@ -2,7 +2,7 @@
  * Specifies whether the object casts or receives shadows from light sources when
  * shadows are enabled.
  *
- * @exports ShadowMode
+ * @enum {Number}
  */
 var ShadowMode = {
   /**
@@ -36,12 +36,12 @@ var ShadowMode = {
    * @constant
    */
   RECEIVE_ONLY: 3,
-
-  /**
-   * @private
-   */
-  NUMBER_OF_SHADOW_MODES: 4,
 };
+
+/**
+ * @private
+ */
+ShadowMode.NUMBER_OF_SHADOW_MODES = 4;
 
 /**
  * @private
@@ -74,4 +74,5 @@ ShadowMode.fromCastReceive = function (castShadows, receiveShadows) {
   }
   return ShadowMode.DISABLED;
 };
+
 export default Object.freeze(ShadowMode);

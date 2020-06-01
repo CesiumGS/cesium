@@ -24,7 +24,7 @@ import Material from "./Material.js";
  * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
  * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+ * @param {Object} [options.renderState] Optional render state to override the default render state.
  *
  * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
  *

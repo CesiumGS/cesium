@@ -644,6 +644,7 @@ function morphFromColumbusViewTo2D(transitioner, duration) {
       var pickPos = globe.pickWorldCoordinates(
         ray,
         scene,
+        true,
         scratchCVTo2DPickPos
       );
       if (defined(pickPos)) {
@@ -773,6 +774,7 @@ function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
       var pickedPos = globe.pickWorldCoordinates(
         ray,
         scene,
+        true,
         scratch3DTo2DPickPosition
       );
       if (defined(pickedPos)) {

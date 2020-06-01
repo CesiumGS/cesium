@@ -166,7 +166,7 @@ var scratchModelMatrix = new Matrix4();
 /**
  * @private
  */
-SkyAtmosphere.prototype.update = function (frameState) {
+SkyAtmosphere.prototype.update = function (frameState, globe) {
   if (!this.show) {
     return undefined;
   }
@@ -204,7 +204,8 @@ SkyAtmosphere.prototype.update = function (frameState) {
 
   var colorCorrect = hasColorCorrection(this);
   var translucent = frameState.globeTranslucencyState.translucent;
-  var perFragmentAtmosphere = this.perFragmentAtmosphere || translucent;
+  var perFragmentAtmosphere =
+    this.perFragmentAtmosphere || translucent || !defined(globe) || !globe.show;
 
   var command = this._command;
 

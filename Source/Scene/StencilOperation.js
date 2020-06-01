@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines the action taken based on the result of the stencil test.
  *
- * @exports StencilOperation
+ * @enum {Number}
  */
 var StencilOperation = {
   /**

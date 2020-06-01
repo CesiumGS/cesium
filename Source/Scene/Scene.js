@@ -126,7 +126,7 @@ var requestRenderAfterFrame = function (scene) {
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
+ * @param {HTMLCanvasElement} options.canvas The HTML canvas element to create the scene for.
  * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
  * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
  * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
@@ -210,6 +210,9 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection();
   this._groundPrimitives = new PrimitiveCollection();
+
+  this._globeHeight = undefined;
+  this._cameraUnderground = false;
 
   this._logDepthBuffer = context.fragmentDepth;
   this._logDepthBufferDirty = true;
@@ -787,7 +790,7 @@ Object.defineProperties(Scene.prototype, {
    * Gets the canvas element to which this scene is bound.
    * @memberof Scene.prototype
    *
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
    * @readonly
    */
   canvas: {
@@ -1647,6 +1650,15 @@ Object.defineProperties(Scene.prototype, {
   opaqueFrustumNearOffset: {
     get: function () {
       return 0.9999;
+    },
+  },
+
+  /**
+   * @private
+   */
+  globeHeight: {
+    get: function () {
+      return this._globeHeight;
     },
   },
 });
@@ -3309,7 +3321,10 @@ Scene.prototype.updateEnvironment = function () {
           environmentState.isReadyForAtmosphere ||
           globe._surface._tilesToRender.length > 0;
       }
-      environmentState.skyAtmosphereCommand = skyAtmosphere.update(frameState);
+      environmentState.skyAtmosphereCommand = skyAtmosphere.update(
+        frameState,
+        globe
+      );
       if (defined(environmentState.skyAtmosphereCommand)) {
         this.updateDerivedCommands(environmentState.skyAtmosphereCommand);
       }
@@ -3693,12 +3708,26 @@ function callAfterRenderFunctions(scene) {
   functions.length = 0;
 }
 
+function getGlobeHeight(scene) {
+  var globe = scene._globe;
+  var camera = scene.camera;
+  var cartographic = camera.positionCartographic;
+  if (defined(globe) && globe.show && defined(cartographic)) {
+    return globe.getHeight(cartographic);
+  }
+  return undefined;
+}
+
 function isCameraUnderground(scene) {
   var camera = scene.camera;
   var mode = scene._mode;
   var globe = scene.globe;
   var cameraController = scene._screenSpaceCameraController;
   var cartographic = camera.positionCartographic;
+
+  if (!defined(cartographic)) {
+    return false;
+  }
 
   if (!cameraController.onMap() && cartographic.height < 0.0) {
     // The camera can go off the map while in Columbus View.
@@ -3715,17 +3744,8 @@ function isCameraUnderground(scene) {
     return false;
   }
 
-  if (cameraController.adjustedHeightForTerrain()) {
-    // The camera controller already adjusted the camera, no need to call globe.getHeight again
-    return false;
-  }
-
-  var globeHeight = globe.getHeight(cartographic);
-  if (defined(globeHeight) && cartographic.height < globeHeight) {
-    return true;
-  }
-
-  return false;
+  var globeHeight = scene._globeHeight;
+  return defined(globeHeight) && cartographic.height < globeHeight;
 }
 
 /**
@@ -3741,6 +3761,10 @@ Scene.prototype.initializeFrame = function () {
 
   this._tweens.update();
 
+  this._globeHeight = getGlobeHeight(this);
+  this._cameraUnderground = isCameraUnderground(this);
+  this._globeTranslucencyState.update(this);
+
   this._screenSpaceCameraController.update();
   if (defined(this._deviceOrientationCameraController)) {
     this._deviceOrientationCameraController.update();
@@ -3748,10 +3772,6 @@ Scene.prototype.initializeFrame = function () {
 
   this.camera.update(this._mode);
   this.camera._updateCameraChanged();
-
-  this._cameraUnderground = isCameraUnderground(this);
-
-  this._globeTranslucencyState.update(this);
 };
 
 function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
@@ -3897,10 +3917,9 @@ function updateMostDetailedRayPicks(scene) {
 }
 
 /**
- * Update and render the scene.
+ * Update and render the scene. It is usually not necessary to call this function
+ * directly because {@link CesiumWidget} or {@link Viewer} do it automatically.
  * @param {JulianDate} [time] The simulation time at which to render.
- *
- * @private
  */
 Scene.prototype.render = function (time) {
   /**
@@ -4112,7 +4131,7 @@ Scene.prototype.pickPosition = function (windowPosition, result) {
  * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
  * @param {Number} [width=3] Width of the pick rectangle.
  * @param {Number} [height=3] Height of the pick rectangle.
- * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+ * @returns {Array.<*>} Array of objects, each containing 1 picked primitives.
  *
  * @exception {DeveloperError} windowPosition is undefined.
  *

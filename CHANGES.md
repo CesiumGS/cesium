@@ -2,8 +2,17 @@
 
 ### 1.70.0 - 2020-06-01
 
+##### Major Announcements :loudspeaker:
+
+- Cesium now ships with official TypeScript type definitions! [#8878](https://github.com/CesiumGS/cesium/pull/8878)
+  - If you import Cesium as a module, the new definitions will automatically be used by TypeScript and related tooling.
+  - If you import individual Cesium source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+  - If you’re using your own custom definitions and you’re not yet ready to switch, you can delete `Source/Cesium.d.ts` after install.
+  - See our [blog post](https://cesium.com/blog/2020/06/01/cesiumjs-tsd/) for more information and a technical overview of how it all works.
+
 ##### Additions :tada:
 
+- Our API reference documentation has received dozens of fixes and improvements, largely due to the TypeScript effort.
 - Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
   - Added `globe.translucency.enabled` to enable globe translucency.
   - Added `globe.translucency.frontFaceAlpha` and `globe.translucency.frontFaceAlphaByDistance` for controlling the alpha of front faces.
@@ -15,6 +24,8 @@
 - Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
 - Added `nightAlpha` and `dayAlpha` properties to `ImageryLayer` to control alpha separately for the night and day sides of the globe. [#8868](https://github.com/CesiumGS/cesium/pull/8868)
 - Added a new sandcastle example to show how to add fog using a `PostProcessStage` [#8798](https://github.com/CesiumGS/cesium/pull/8798)
+- Supported `#rgba` and `#rrggbbaa` formats in `Color.fromCssColorString`. [8873](https://github.com/CesiumGS/cesium/pull/8873)
+- Added `Camera.completeFlight`, which causes the current camera flight to immediately jump to the final destination and call its complete callback. [#8788](https://github.com/CesiumGS/cesium/pull/8788)
 
 ##### Fixes :wrench:
 
@@ -25,6 +36,7 @@
 - Fixed sky atmosphere artifacts below the horizon. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 - Fixed ground primitives in orthographic mode. [#5110](https://github.com/CesiumGS/cesium/issues/5110)
 - Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
+- Fixed camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
 
 ### 1.69.0 - 2020-05-01
 

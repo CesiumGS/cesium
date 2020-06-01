@@ -1,7 +1,7 @@
 /**
  * Whether a classification affects terrain, 3D Tiles or both.
  *
- * @exports ClassificationType
+ * @enum {Number}
  */
 var ClassificationType = {
   /**
@@ -25,9 +25,11 @@ var ClassificationType = {
    * @constant
    */
   BOTH: 2,
-  /**
-   * @private
-   */
-  NUMBER_OF_CLASSIFICATION_TYPES: 3,
 };
+
+/**
+ * @private
+ */
+ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES = 3;
+
 export default Object.freeze(ClassificationType);

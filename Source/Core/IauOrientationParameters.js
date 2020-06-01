@@ -6,7 +6,7 @@
  * except that they are expressed in radians.
  * </p>
  *
- * @exports IauOrientationParameters
+ * @namespace IauOrientationParameters
  *
  * @private
  */

@@ -867,7 +867,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * A scalar that represents the geometric tolerance per meter
-   * @memberof UniformStat.prototype
+   * @memberof UniformState.prototype
    * @type {Number}
    */
   geometricToleranceOverMeter: {

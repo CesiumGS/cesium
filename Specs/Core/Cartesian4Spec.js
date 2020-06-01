@@ -1011,12 +1011,6 @@ describe("Core/Cartesian4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with no epsilon", function () {
-    expect(function () {
-      Cartesian4.equalsEpsilon(new Cartesian4(), new Cartesian4(), undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("minimumByComponent throws with no result", function () {
     expect(function () {
       Cartesian4.minimumByComponent(new Cartesian4(), new Cartesian4());

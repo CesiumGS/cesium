@@ -5,7 +5,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.
- * @exports getAbsoluteUri
+ * @function
  *
  * @param {String} relative The relative Uri.
  * @param {String} [base] The base Uri.

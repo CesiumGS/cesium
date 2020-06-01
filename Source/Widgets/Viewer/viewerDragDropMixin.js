@@ -12,15 +12,15 @@ import getElement from "../getElement.js";
  * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
- * @exports viewerDragDropMixin
- * @namespace
+ * @function viewerDragDropMixin
+
  * @param {Viewer} viewer The viewer instance.
  * @param {Object} [options] Object with the following properties:
  * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
  * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
  * @param {Boolean} [options.flyToOnDrop=true] When true, dropping files will fly to the data source once it is loaded.
  * @param {Boolean} [options.clampToGround=true] When true, datasources are clamped to the ground.
- * @param {DefaultProxy} [options.proxy] The proxy to be used for KML network links.
+ * @param {Proxy} [options.proxy] The proxy to be used for KML network links.
  *
  * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
  * @exception {DeveloperError} dropTarget is already defined by another mixin.
@@ -164,7 +164,7 @@ function viewerDragDropMixin(viewer, options) {
     /**
      * Gets or sets the proxy to be used for KML.
      * @memberof viewerDragDropMixin.prototype
-     * @type {DefaultProxy}
+     * @type {Proxy}
      */
     proxy: {
       get: function () {
