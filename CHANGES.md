@@ -4,12 +4,15 @@
 
 ##### Major Announcements :loudspeaker:
 
-- Cesium now ships with official TypeScript type definitions!
+- Cesium now ships with official TypeScript type definitions! [#8878](https://github.com/CesiumGS/cesium/pull/8878)
   - If you import Cesium as a module, the new definitions will automatically be used by TypeScript and related tooling.
   - If you import individual Cesium source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+  - If you’re using your own custom definitions and you’re not yet ready to switch, you can delete `Source/Cesium.d.ts` after install.
+  - See our [blog post](https://cesium.com/blog/2020/06/01/cesiumjs-tsd/) for more information and a technical overview of how it all works.
 
 ##### Additions :tada:
 
+- Our API reference documentation has received dozens of fixes and improvements, largely due to the TypeScript effort.
 - Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
   - Added `globe.translucency.enabled` to enable globe translucency.
   - Added `globe.translucency.frontFaceAlpha` and `globe.translucency.frontFaceAlphaByDistance` for controlling the alpha of front faces.
