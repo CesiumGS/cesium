@@ -39,6 +39,40 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           imageryProvider: new Cesium.IonImageryProvider({ assetId: 3812 }),
         });
+
+        // The rest of the code is for dynamic lighting
+        var dynamicLighting = false;
+
+        viewer.clock.multiplier = 4000;
+
+        var imageryLayers = viewer.imageryLayers;
+        var nightLayer = imageryLayers.get(0);
+        var dayLayer = imageryLayers.addImageryProvider(
+          new Cesium.IonImageryProvider({
+            assetId: 3845,
+          })
+        );
+        imageryLayers.lowerToBottom(dayLayer);
+
+        function updateLighting(dynamicLighting) {
+          dayLayer.show = dynamicLighting;
+          viewer.scene.globe.enableLighting = dynamicLighting;
+          viewer.clock.shouldAnimate = dynamicLighting;
+
+          // If dynamic lighting is enabled, make the night imagery invisible
+          // on the lit side of the globe.
+          nightLayer.dayAlpha = dynamicLighting ? 0.0 : 1.0;
+        }
+
+        updateLighting(dynamicLighting);
+
+        Sandcastle.addToggleButton(
+          "Dynamic lighting",
+          dynamicLighting,
+          function (checked) {
+            updateLighting(checked);
+          }
+        );
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }
