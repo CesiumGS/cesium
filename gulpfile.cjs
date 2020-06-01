@@ -275,13 +275,11 @@ gulp.task("clean", function (done) {
 
 function cloc() {
   var cmdLine;
-  var clocPath = path.join("node_modules", "cloc", "lib", "cloc");
 
   //Run cloc on primary Source files only
   var source = new Promise(function (resolve, reject) {
     cmdLine =
-      "perl " +
-      clocPath +
+      "npx cloc" +
       " --quiet --progress-rate=0" +
       " Source/ --exclude-dir=Assets,ThirdParty,Workers --not-match-f=copyrightHeader.js";
 
@@ -300,8 +298,7 @@ function cloc() {
   return source.then(function () {
     return new Promise(function (resolve, reject) {
       cmdLine =
-        "perl " +
-        clocPath +
+        "npx cloc" +
         " --quiet --progress-rate=0" +
         " Specs/ --exclude-dir=Data";
       child_process.exec(cmdLine, function (error, stdout, stderr) {
@@ -353,30 +350,16 @@ gulp.task("combineRelease", gulp.series("build", combineRelease));
 
 //Builds the documentation
 function generateDocumentation() {
-  var envPathSeperator = os.platform() === "win32" ? ";" : ":";
-
-  return new Promise(function (resolve, reject) {
-    child_process.exec(
-      "jsdoc --configure Tools/jsdoc/conf.json",
-      {
-        env: {
-          PATH: process.env.PATH + envPathSeperator + "node_modules/.bin",
-          CESIUM_VERSION: version,
-        },
-      },
-      function (error, stdout, stderr) {
-        if (error) {
-          console.log(stderr);
-          return reject(error);
-        }
-        console.log(stdout);
-        var stream = gulp
-          .src("Documentation/Images/**")
-          .pipe(gulp.dest("Build/Documentation/Images"));
-        return streamToPromise(stream).then(resolve);
-      }
-    );
+  child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
+    stdio: "inherit",
+    env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
   });
+
+  var stream = gulp
+    .src("Documentation/Images/**")
+    .pipe(gulp.dest("Build/Documentation/Images"));
+
+  return streamToPromise(stream);
 }
 gulp.task("generateDocumentation", generateDocumentation);
 
@@ -1370,10 +1353,9 @@ function createCesiumJs() {
 
 function createTypeScriptDefinitions() {
   // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  child_process.execSync(
-    "node_modules/.bin/jsdoc --configure Tools/jsdoc/ts-conf.json",
-    { stdio: "inherit" }
-  );
+  child_process.execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
+    stdio: "inherit",
+  });
 
   var source = fs.readFileSync("Source/Cesium.d.ts").toString();
 
@@ -1494,7 +1476,7 @@ function createTypeScriptDefinitions() {
   fs.writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  child_process.execSync("node_modules/.bin/tsc -p Tools/jsdoc/tsconfig.json", {
+  child_process.execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
     stdio: "inherit",
   });
 

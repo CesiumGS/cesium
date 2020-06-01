@@ -4,24 +4,31 @@
 
 ##### Major Announcements :loudspeaker:
 
-- Cesium now ships with official TypeScript type definitions!
-  - If you import Cesium as a module, the new definitions will automatically be used by TypeScript and related tooling.
-  - If you import individual Cesium source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+- All Cesium ion users now have access to Cesium OSM Buildings - a 3D buildings layer covering the entire world built with OpenStreetMap building data, available as 3D Tiles. Read more about it [on our blog](https://cesium.com/blog/2020/06/01/cesium-osm-buildings/).
+  - [Explore it on Sandcastle](https://sandcastle.cesium.com/index.html?src=Cesium%20OSM%20Buildings.html).
+  - Add it to your CesiumJS app: `viewer.scene.primitives.add(Cesium.createOsmBuildings())`.
+  - Contains per-feature data like building name, address, and much more. [Read more about the available properties](https://cesium.com/content/cesium-osm-buildings/).
+- CesiumJS now ships with official TypeScript type definitions! [#8878](https://github.com/CesiumGS/cesium/pull/8878)
+  - If you import CesiumJS as a module, the new definitions will automatically be used by TypeScript and related tooling.
+  - If you import individual CesiumJS source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+  - If you’re using your own custom definitions and you’re not yet ready to switch, you can delete `Source/Cesium.d.ts` after install.
+  - See our [blog post](https://cesium.com/blog/2020/06/01/cesiumjs-tsd/) for more information and a technical overview of how it all works.
+- CesiumJS now supports underground rendering with globe translucency! [#8726](https://github.com/CesiumGS/cesium/pull/8726)
+  - Added options for controlling globe translucency through the new [`GlobeTranslucency`](https://cesium.com/docs/cesiumjs-ref-doc/GlobeTranslucency.html) object including front face alpha, back face alpha, and a translucency rectangle.
+  - Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
+  - Improved camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
+  - Sandcastle examples: [Globe Translucency](https://sandcastle.cesium.com/?src=Globe%20Translucency.html), [Globe Interior](https://sandcastle.cesium.com/?src=Globe%20Interior.html), and [Underground Color](https://sandcastle.cesium.com/?src=Underground%20Color.html&label=All)
 
 ##### Additions :tada:
 
-- Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
-  - Added `globe.translucency.enabled` to enable globe translucency.
-  - Added `globe.translucency.frontFaceAlpha` and `globe.translucency.frontFaceAlphaByDistance` for controlling the alpha of front faces.
-  - Added `globe.translucency.backFaceAlpha` and `globe.translucency.backFaceAlphaByDistance` for controlling the alpha of back faces.
-  - Added `globe.translucency.rectangle` for applying translucency only within a rectangular area.
+- Our API reference documentation has received dozens of fixes and improvements, largely due to the TypeScript effort.
 - Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
-- Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
-- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
-- Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
-- Added a new sandcastle example to show how to add fog using a `PostProcessStage` [#8798](https://github.com/CesiumGS/cesium/pull/8798)
-- Supported `#rgba` and `#rrggbbaa` formats in `Color.fromCssColorString`. [8873](https://github.com/CesiumGS/cesium/pull/8873)
 - Added `Camera.completeFlight`, which causes the current camera flight to immediately jump to the final destination and call its complete callback. [#8788](https://github.com/CesiumGS/cesium/pull/8788)
+- Added `nightAlpha` and `dayAlpha` properties to `ImageryLayer` to control alpha separately for the night and day sides of the globe. [#8868](https://github.com/CesiumGS/cesium/pull/8868)
+- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Added a new sandcastle example to show how to add fog using a `PostProcessStage` [#8798](https://github.com/CesiumGS/cesium/pull/8798)
+- Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
+- Supported `#rgba` and `#rrggbbaa` formats in `Color.fromCssColorString`. [8873](https://github.com/CesiumGS/cesium/pull/8873)
 
 ##### Fixes :wrench:
 
@@ -32,7 +39,6 @@
 - Fixed sky atmosphere artifacts below the horizon. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
 - Fixed ground primitives in orthographic mode. [#5110](https://github.com/CesiumGS/cesium/issues/5110)
 - Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
-- Fixed camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
 
 ### 1.69.0 - 2020-05-01
 
