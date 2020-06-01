@@ -218,9 +218,10 @@ Object.defineProperties(GlobeTranslucency.prototype, {
    * A property specifying a {@link Rectangle} used to limit translucency to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *
-   * @member GlobeTranslucency.prototype
+   * @memberof GlobeTranslucency.prototype
+   *
    * @type {Rectangle}
-   * @default Rectangle.MAX_VALUE
+   * @default {@link Rectangle.MAX_VALUE}
    */
   rectangle: {
     get: function () {
