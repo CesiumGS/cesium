@@ -10,13 +10,13 @@ import when from "../ThirdParty/when.js";
  *
  * Initialization options for the TileCoordinatesImageryProvider constructor
  *
- * @param {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Color} [color=Color.YELLOW] The color to draw the tile box and label.
- * @param {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {Color} [color=Color.YELLOW] The color to draw the tile box and label.
+ * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
  */
 
 /**

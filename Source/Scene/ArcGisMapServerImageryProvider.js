@@ -54,7 +54,7 @@ import ImageryProvider from "./ImageryProvider.js";
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @property {Credit|String} credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
  * @property {Number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
  * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
