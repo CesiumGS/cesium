@@ -1327,7 +1327,7 @@ function combineJavaScript(options) {
 }
 
 function glslToJavaScript(minify, minifyStateFilePath) {
-  fs.writeFileSync(minifyStateFilePath, minify);
+  fs.writeFileSync(minifyStateFilePath, minify.toString());
   var minifyStateFileLastModified = fs.existsSync(minifyStateFilePath)
     ? fs.statSync(minifyStateFilePath).mtime.getTime()
     : 0;
