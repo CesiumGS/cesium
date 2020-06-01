@@ -158,12 +158,12 @@
           // These base layers aren't really special.  It's possible to have multiple of them
           // enabled at once, just like the other layers, but it doesn't make much sense because
           // all of these layers cover the entire globe and are opaque.
+
           addBaseLayerOption("Bing Maps Aerial", undefined); // the current base layer
           addBaseLayerOption(
             "Bing Maps Road",
-            new Cesium.BingMapsImageryProvider({
-              url: "https://dev.virtualearth.net",
-              mapStyle: Cesium.BingMapsStyle.ROAD,
+            Cesium.createWorldImagery({
+              style: Cesium.IonWorldImageryStyle.ROAD,
             })
           );
           addBaseLayerOption(
