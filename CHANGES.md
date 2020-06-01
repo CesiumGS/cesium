@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.71.0 - 2020-07-01
+
+##### Fixes :wrench:
+
+- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
+
 ### 1.70.0 - 2020-06-01
 
 ##### Major Announcements :loudspeaker:
