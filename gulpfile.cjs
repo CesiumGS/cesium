@@ -1545,11 +1545,12 @@ function createTypeScriptDefinitions() {
   //eslint-disable-next-line no-cond-assign
   while ((matches = regex.exec(source))) {
     const moduleName = matches[2].match(/([^\s|\(]+)/);
-    if (moduleName[1] === "CesiumMath") {
-      moduleName[1] = "Math";
-    }
     publicModules.add(moduleName[1]);
   }
+
+  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
+  // It fails the above regex so just add it directly here.
+  publicModules.add("Math");
 
   // Fix up the output to match what we need
   // declare => export since we are wrapping everything in a namespace
