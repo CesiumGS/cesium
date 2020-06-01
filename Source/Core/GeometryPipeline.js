@@ -27,7 +27,7 @@ import Tipsify from "./Tipsify.js";
 /**
  * Content pipeline functions for geometries.
  *
- * @exports GeometryPipeline
+ * @namespace GeometryPipeline
  *
  * @see Geometry
  */

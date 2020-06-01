@@ -5,6 +5,33 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} BillboardGraphics.ConstructorOptions
+ *
+ * Initialization options for the BillboardGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the billboard.
+ * @property {Property | string | HTMLCanvasElement} [image] A Property specifying the Image, URI, or Canvas to use for the billboard.
+ * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the image size.
+ * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+ * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
+ * @property {Property | HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
+ * @property {Property | VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
+ * @property {Property | number} [rotation=0] A numeric Property specifying the rotation about the alignedAxis.
+ * @property {Property | Cartesian3} [alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
+ * @property {Property | boolean} [sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
+ * @property {Property | number} [width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
+ * @property {Property | number} [height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
+ * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
+ * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+ * @property {Property | BoundingRectangle} [imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
+ * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ */
+
+/**
  * Describes a two dimensional icon located at the position of the containing {@link Entity}.
  * <p>
  * <div align='center'>
@@ -16,27 +43,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias BillboardGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the billboard.
- * @param {Property} [options.image] A Property specifying the Image, URI, or Canvas to use for the billboard.
- * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the image size.
- * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
- * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
- * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
- * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
- * @param {Property} [options.rotation=0] A numeric Property specifying the rotation about the alignedAxis.
- * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
- * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
- * @param {Property} [options.width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
- * @param {Property} [options.height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
- * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
- * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
- * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
- * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @param {BillboardGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
  */
@@ -103,7 +110,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the billboard.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -111,7 +118,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the Image, URI, or Canvas to use for the billboard.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   image: createPropertyDescriptor("image"),
 
@@ -125,7 +132,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   scale: createPropertyDescriptor("scale"),
@@ -145,7 +152,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian2.ZERO
    */
   pixelOffset: createPropertyDescriptor("pixelOffset"),
@@ -170,7 +177,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   eyeOffset: createPropertyDescriptor("eyeOffset"),
@@ -178,7 +185,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HorizontalOrigin}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HorizontalOrigin.CENTER
    */
   horizontalOrigin: createPropertyDescriptor("horizontalOrigin"),
@@ -186,7 +193,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link VerticalOrigin}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default VerticalOrigin.CENTER
    */
   verticalOrigin: createPropertyDescriptor("verticalOrigin"),
@@ -194,7 +201,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -214,7 +221,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * </div>
    * </p>
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
@@ -223,7 +230,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the rotation of the image
    * counter clockwise from the <code>alignedAxis</code>.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0
    */
   rotation: createPropertyDescriptor("rotation"),
@@ -232,7 +239,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
    * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   alignedAxis: createPropertyDescriptor("alignedAxis"),
@@ -240,7 +247,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying if this billboard's size will be measured in meters.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   sizeInMeters: createPropertyDescriptor("sizeInMeters"),
@@ -249,7 +256,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the width of the billboard in pixels.
    * When undefined, the native width is used.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   width: createPropertyDescriptor("width"),
 
@@ -257,40 +264,40 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the numeric Property specifying the height of the billboard in pixels.
    * When undefined, the native height is used.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   height: createPropertyDescriptor("height"),
 
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the scale of the billboard based on the distance from the camera.
    * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's scale remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   scaleByDistance: createPropertyDescriptor("scaleByDistance"),
 
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the translucency of the billboard based on the distance from the camera.
    * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   translucencyByDistance: createPropertyDescriptor("translucencyByDistance"),
 
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the pixel offset of the billboard based on the distance from the camera.
    * A billboard's pixel offset will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's pixel offset remains clamped to the nearest bound.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
     "pixelOffsetScaleByDistance"
@@ -301,14 +308,14 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
    * measured in pixels from the bottom-left.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   imageSubRegion: createPropertyDescriptor("imageSubRegion"),
 
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -318,7 +325,7 @@ Object.defineProperties(BillboardGraphics.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof BillboardGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
     "disableDepthTestDistance"

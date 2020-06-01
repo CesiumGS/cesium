@@ -55,9 +55,9 @@ function sort(array, compare, userDefinedObject, start, end) {
 /**
  * A stable merge sort.
  *
- * @exports mergeSort
+ * @function mergeSort
  * @param {Array} array The array to sort.
- * @param {mergeSort~Comparator} comparator The function to use to compare elements in the array.
+ * @param {mergeSortComparator} comparator The function to use to compare elements in the array.
  * @param {*} [userDefinedObject] Any item to pass as the third parameter to <code>comparator</code>.
  *
  * @example
@@ -94,7 +94,7 @@ function mergeSort(array, comparator, userDefinedObject) {
 
 /**
  * A function used to compare two items while performing a merge sort.
- * @callback mergeSort~Comparator
+ * @callback mergeSortComparator
  *
  * @param {*} a An item in the array.
  * @param {*} b An item in the array.

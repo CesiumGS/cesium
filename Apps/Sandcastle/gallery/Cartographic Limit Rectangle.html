@@ -39,6 +39,9 @@
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
+        var scene = viewer.scene;
+        var globe = scene.globe;
+
         // Tropics of Cancer and Capricorn
         var coffeeBeltRectangle = Cesium.Rectangle.fromDegrees(
           -180.0,
@@ -47,9 +50,11 @@
           23.43687
         );
 
-        viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
-        viewer.scene.globe.showSkirts = false;
-        viewer.scene.skyAtmosphere.show = false;
+        globe.cartographicLimitRectangle = coffeeBeltRectangle;
+        globe.showSkirts = false;
+        globe.backFaceCulling = false;
+        globe.undergroundColor = undefined;
+        scene.skyAtmosphere.show = false;
 
         // Add rectangles to show bounds
         var rectangles = [];

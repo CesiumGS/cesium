@@ -96,12 +96,13 @@ Object.defineProperties(DataSource.prototype, {
  * is not required to be implemented.  It is provided for data sources which
  * retrieve data based on the current animation time or scene state.
  * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
- * @function
  *
  * @param {JulianDate} time The simulation time.
  * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
  */
-DataSource.prototype.update = DeveloperError.throwInstantiationError;
+DataSource.prototype.update = function (time) {
+  DeveloperError.throwInstantiationError();
+};
 
 /**
  * @private

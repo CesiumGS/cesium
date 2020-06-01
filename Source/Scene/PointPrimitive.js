@@ -194,7 +194,7 @@ Object.defineProperties(PointPrimitive.prototype, {
   /**
    * Gets or sets near and far scaling properties of a point based on the point's distance from the camera.
    * A point's scale will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the point's scale remains clamped to the nearest bound.  This scale
    * multiplies the pixelSize and outlineWidth to affect the total size of the point.  If undefined,
@@ -238,7 +238,7 @@ Object.defineProperties(PointPrimitive.prototype, {
   /**
    * Gets or sets near and far translucency properties of a point based on the point's distance from the camera.
    * A point's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the point's translucency remains clamped to the nearest bound.  If undefined,
    * translucencyByDistance will be disabled.

@@ -79,11 +79,12 @@ Object.defineProperties(SampledPositionProperty.prototype, {
     },
   },
   /**
-   * Gets the degree of interpolation to perform when retrieving a value.
+   * Gets the degree of interpolation to perform when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
    *
    * @type {Number}
    * @default 1
+   * @readonly
    */
   interpolationDegree: {
     get: function () {
@@ -91,11 +92,12 @@ Object.defineProperties(SampledPositionProperty.prototype, {
     },
   },
   /**
-   * Gets the interpolation algorithm to use when retrieving a value.
+   * Gets the interpolation algorithm to use when retrieving a value. Call <code>setInterpolationOptions</code> to set this.
    * @memberof SampledPositionProperty.prototype
    *
    * @type {InterpolationAlgorithm}
    * @default LinearApproximation
+   * @readonly
    */
   interpolationAlgorithm: {
     get: function () {
@@ -106,8 +108,8 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Boolean}
-   * @default false
+   * @type {Number}
+   * @default 0
    */
   numberOfDerivatives: {
     get: function () {

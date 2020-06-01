@@ -136,6 +136,14 @@ function FrameState(context, creditDisplay, jobScheduler) {
   this.cameraUnderground = false;
 
   /**
+   * The {@link GlobeTranslucencyState} object used by the scene.
+   *
+   * @type {GlobeTranslucencyState}
+   * @default undefined
+   */
+  this.globeTranslucencyState = undefined;
+
+  /**
    * The culling volume.
    *
    * @type {CullingVolume}
@@ -169,40 +177,37 @@ function FrameState(context, creditDisplay, jobScheduler) {
    */
   this.pixelRatio = 1.0;
 
+  /**
+   * @typedef FrameState.Passes
+   * @type {Object}
+   * @property {Boolean} render <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
+   * @property {Boolean} pick <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+   * @property {Boolean} depth <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+   * @property {Boolean} postProcess <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
+   * @property {Boolean} offscreen <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
+   */
+
+  /**
+   * @type {FrameState.Passes}
+   */
   this.passes = {
     /**
-     * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
-     *
-     * @type {Boolean}
      * @default false
      */
     render: false,
-
     /**
-     * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
-     *
-     * @type {Boolean}
      * @default false
      */
     pick: false,
-
     /**
-     * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
-     * @type {Boolean}
      * @default false
      */
     depth: false,
-
     /**
-     * <code>true</code> if the primitive should update for a per-feature post-process pass, <code>false</code> otherwise.
-     * @type {Boolean}
      * @default false
      */
     postProcess: false,
-
     /**
-     * <code>true</code> if the primitive should update for an offscreen pass, <code>false</code> otherwise.
-     * @type {Boolean}
      * @default false
      */
     offscreen: false,
@@ -225,7 +230,7 @@ function FrameState(context, creditDisplay, jobScheduler) {
    * directly in <code>update</code> functions.
    * </p>
    *
-   * @type {FrameState~AfterRenderCallback[]}
+   * @type {FrameState.AfterRenderCallback[]}
    *
    * @example
    * frameState.afterRender.push(function() {
@@ -242,33 +247,26 @@ function FrameState(context, creditDisplay, jobScheduler) {
    */
   this.scene3DOnly = false;
 
+  /**
+   * @typedef FrameState.Fog
+   * @type {Object}
+   * @property {Boolean} enabled <code>true</code> if fog is enabled, <code>false</code> otherwise.
+   * @property {Number} density A positive number used to mix the color and fog color based on camera distance.
+   * @property {Number} sse A scalar used to modify the screen space error of geometry partially in fog.
+   * @property {Number} minimumBrightness The minimum brightness of terrain with fog applied.
+   */
+
+  /**
+   * @type {FrameState.Fog}
+   */
+
   this.fog = {
     /**
-     * <code>true</code> if fog is enabled, <code>false</code> otherwise.
-     * @type {Boolean}
      * @default false
      */
     enabled: false,
-    /**
-     * A positive number used to mix the color and fog color based on camera distance.
-     *
-     * @type {Number}
-     * @default undefined
-     */
     density: undefined,
-    /**
-     * A scalar used to modify the screen space error of geometry partially in fog.
-     *
-     * @type {Number}
-     * @default undefined
-     */
     sse: undefined,
-    /**
-     * The minimum brightness of terrain with fog applied.
-     *
-     * @type {Number}
-     * @default undefined
-     */
     minimumBrightness: undefined,
   };
 
@@ -279,57 +277,49 @@ function FrameState(context, creditDisplay, jobScheduler) {
    */
   this.terrainExaggeration = 1.0;
 
+  /**
+   * @typedef FrameState.ShadowState
+   * @type {Object}
+   * @property {Boolean} shadowsEnabled Whether there are any active shadow maps this frame.
+   * @property {Boolean} lightShadowsEnabled Whether there are any active shadow maps that originate from light sources. Does not include shadow maps that are used for analytical purposes.
+   * @property {ShadowMap[]} shadowMaps All shadow maps that are enabled this frame.
+   * @property {ShadowMap[]} lightShadowMaps Shadow maps that originate from light sources. Does not include shadow maps that are used for analytical purposes. Only these shadow maps will be used to generate receive shadows shaders.
+   * @property {Number} nearPlane The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+   * @property {Number} farPlane The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+   * @property {Number} closestObjectSize The size of the bounding volume that is closest to the camera. This is used to place more shadow detail near the object.
+   * @property {Number} lastDirtyTime The time when a shadow map was last dirty
+   * @property {Boolean} outOfView Whether the shadows maps are out of view this frame
+   */
+
+  /**
+   * @type {FrameState.ShadowState}
+   */
+
   this.shadowState = {
     /**
-     * Whether there are any active shadow maps this frame.
-     * @type {Boolean}
+     * @default true
      */
     shadowsEnabled: true,
-
-    /**
-     * Whether there are any active shadow maps that originate from light sources. Does not
-     * include shadow maps that are used for analytical purposes.
-     */
-    lightShadowsEnabled: true,
-
-    /**
-     * All shadow maps that are enabled this frame.
-     */
     shadowMaps: [],
-
-    /**
-     * Shadow maps that originate from light sources. Does not include shadow maps that are used for
-     * analytical purposes. Only these shadow maps will be used to generate receive shadows shaders.
-     */
     lightShadowMaps: [],
-
     /**
-     * The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-     * @type {Number}
+     * @default 1.0
      */
     nearPlane: 1.0,
-
     /**
-     * The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-     * @type {Number}
+     * @default 5000.0
      */
     farPlane: 5000.0,
-
     /**
-     * The size of the bounding volume that is closest to the camera. This is used to place more shadow detail near the object.
-     * @type {Number}
+     * @default 1000.0
      */
     closestObjectSize: 1000.0,
-
     /**
-     * The time when a shadow map was last dirty
-     * @type {Number}
+     * @default 0
      */
     lastDirtyTime: 0,
-
     /**
-     * Whether the shadows maps are out of view this frame
-     * @type {Boolean}
+     * @default true
      */
     outOfView: true,
   };
@@ -412,6 +402,6 @@ function FrameState(context, creditDisplay, jobScheduler) {
 /**
  * A function that will be called at the end of the frame.
  *
- * @callback FrameState~AfterRenderCallback
+ * @callback FrameState.AfterRenderCallback
  */
 export default FrameState;

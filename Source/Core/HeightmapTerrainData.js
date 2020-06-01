@@ -23,7 +23,7 @@ import TerrainProvider from "./TerrainProvider.js";
  * @constructor
  *
  * @param {Object} options Object with the following properties:
- * @param {TypedArray} options.buffer The buffer containing height data.
+ * @param {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} options.buffer The buffer containing height data.
  * @param {Number} options.width The width (longitude direction) of the heightmap, in samples.
  * @param {Number} options.height The height (latitude direction) of the heightmap, in samples.
  * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
@@ -167,7 +167,7 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
    * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
    * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
    * @memberof HeightmapTerrainData.prototype
-   * @type {Uint8Array|Image|Canvas}
+   * @type {Uint8Array|HTMLImageElement|HTMLCanvasElement}
    */
   waterMask: {
     get: function () {

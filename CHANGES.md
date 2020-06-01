@@ -1,5 +1,39 @@
 # Change Log
 
+### 1.70.0 - 2020-06-01
+
+##### Major Announcements :loudspeaker:
+
+- Cesium now ships with official TypeScript type definitions!
+  - If you import Cesium as a module, the new definitions will automatically be used by TypeScript and related tooling.
+  - If you import individual Cesium source files directly, you'll need to add `"types": ["cesium"]` in your tsconfig.json in order for the definitions to be used.
+
+##### Additions :tada:
+
+- Added support for rendering the globe with translucency. [#8726](https://github.com/CesiumGS/cesium/pull/8726)
+  - Added `globe.translucency.enabled` to enable globe translucency.
+  - Added `globe.translucency.frontFaceAlpha` and `globe.translucency.frontFaceAlphaByDistance` for controlling the alpha of front faces.
+  - Added `globe.translucency.backFaceAlpha` and `globe.translucency.backFaceAlphaByDistance` for controlling the alpha of back faces.
+  - Added `globe.translucency.rectangle` for applying translucency only within a rectangular area.
+- Added `Cesium3DTileset.extensions` to get the extensions property from the tileset JSON. [#8829](https://github.com/CesiumGS/cesium/pull/8829)
+- Added `frustumSplits` option to `DebugCameraPrimitive`. [8849](https://github.com/CesiumGS/cesium/pull/8849)
+- Added `SkyAtmosphere.perFragmentAtmosphere` to switch between per-vertex and per-fragment atmosphere shading. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Added `Globe.undergroundColor` and `Globe.undergroundColorAlphaByDistance` for controlling how the back side of the globe is rendered when the camera is underground or the globe is translucent. [#8867](https://github.com/CesiumGS/cesium/pull/8867)
+- Added a new sandcastle example to show how to add fog using a `PostProcessStage` [#8798](https://github.com/CesiumGS/cesium/pull/8798)
+- Supported `#rgba` and `#rrggbbaa` formats in `Color.fromCssColorString`. [8873](https://github.com/CesiumGS/cesium/pull/8873)
+- Added `Camera.completeFlight`, which causes the current camera flight to immediately jump to the final destination and call its complete callback. [#8788](https://github.com/CesiumGS/cesium/pull/8788)
+
+##### Fixes :wrench:
+
+- Fixed a bug that could cause rendering of a glTF model to become corrupt when switching from a Uint16 to a Uint32 index buffer to accomodate new vertices added for edge outlining. [#8820](https://github.com/CesiumGS/cesium/pull/8820)
+- Fixed a bug where a removed billboard could prevent changing of the `TerrainProvider`. [#8766](https://github.com/CesiumGS/cesium/pull/8766)
+- Fixed an issue with 3D Tiles point cloud styling where `${feature.propertyName}` and `${feature["propertyName"]}` syntax would cause a crash. Also fixed an issue where property names with non-alphanumeric characters would crash. [#8785](https://github.com/CesiumGS/cesium/pull/8785)
+- Fixed a bug where `DebugCameraPrimitive` was ignoring the near and far planes of the `Camera`. [#8848](https://github.com/CesiumGS/cesium/issues/8848)
+- Fixed sky atmosphere artifacts below the horizon. [#8866](https://github.com/CesiumGS/cesium/pull/8866)
+- Fixed ground primitives in orthographic mode. [#5110](https://github.com/CesiumGS/cesium/issues/5110)
+- Fixed the depth plane in orthographic mode. This improves the quality of polylines and other primitives that are rendered near the horizon. [8858](https://github.com/CesiumGS/cesium/pull/8858)
+- Fixed camera controls when the camera is underground. [#8811](https://github.com/CesiumGS/cesium/pull/8811)
+
 ### 1.69.0 - 2020-05-01
 
 ##### Breaking Changes :mega:

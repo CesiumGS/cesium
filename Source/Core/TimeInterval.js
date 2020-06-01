@@ -217,7 +217,7 @@ TimeInterval.clone = function (timeInterval, result) {
  *
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {Boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
  */
 TimeInterval.equals = function (left, right, dataComparer) {
@@ -243,14 +243,12 @@ TimeInterval.equals = function (left, right, dataComparer) {
  *
  * @param {TimeInterval} [left] The first instance.
  * @param {TimeInterval} [right] The second instance.
- * @param {Number} epsilon The maximum number of seconds that should separate the two instances.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {Number} [epsilon=0] The maximum number of seconds that should separate the two instances.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {Boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -271,14 +269,13 @@ TimeInterval.equalsEpsilon = function (left, right, epsilon, dataComparer) {
  *
  * @param {TimeInterval} left The first interval.
  * @param {TimeInterval} [right] The second interval.
- * @param {TimeInterval} result An existing instance to use for the result.
- * @param {TimeInterval~MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
+ * @param {TimeInterval} [result] An existing instance to use for the result.
+ * @param {TimeInterval.MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
  * @returns {TimeInterval} The modified result parameter.
  */
 TimeInterval.intersect = function (left, right, result, mergeCallback) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("left", left);
-  Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
   if (!defined(right)) {
@@ -308,6 +305,10 @@ TimeInterval.intersect = function (left, right, result, mergeCallback) {
   var rightIsStartIncluded = right.isStartIncluded;
   var rightIsStopIncluded = right.isStopIncluded;
   var leftLessThanRight = JulianDate.lessThan(leftStop, rightStop);
+
+  if (!defined(result)) {
+    result = new TimeInterval();
+  }
 
   result.start = intersectsStartRight ? rightStart : leftStart;
   result.isStartIncluded =
@@ -371,7 +372,7 @@ TimeInterval.prototype.clone = function (result) {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {TimeInterval} [right] The right hand side interval.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 TimeInterval.prototype.equals = function (right, dataComparer) {
@@ -384,8 +385,8 @@ TimeInterval.prototype.equals = function (right, dataComparer) {
  * <code>false</code> otherwise.
  *
  * @param {TimeInterval} [right] The right hand side interval.
- * @param {Number} epsilon The epsilon to use for equality testing.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */
 TimeInterval.prototype.equalsEpsilon = function (right, epsilon, dataComparer) {
@@ -418,7 +419,7 @@ TimeInterval.EMPTY = Object.freeze(
 
 /**
  * Function interface for merging interval data.
- * @callback TimeInterval~MergeCallback
+ * @callback TimeInterval.MergeCallback
  *
  * @param {*} leftData The first data instance.
  * @param {*} rightData The second data instance.
@@ -427,7 +428,7 @@ TimeInterval.EMPTY = Object.freeze(
 
 /**
  * Function interface for comparing interval data.
- * @callback TimeInterval~DataComparer
+ * @callback TimeInterval.DataComparer
  * @param {*} leftData The first data instance.
  * @param {*} rightData The second data instance.
  * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.

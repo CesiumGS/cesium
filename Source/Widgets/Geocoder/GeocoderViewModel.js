@@ -29,7 +29,7 @@ var DEFAULT_HEIGHT = 1000;
  *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
  *        and if no suggestion is selected the result from the first geocoder service wil be used.
  * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
- * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
+ * @param {Geocoder.DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
  */
 function GeocoderViewModel(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -157,7 +157,7 @@ function GeocoderViewModel(options) {
 
   /**
    * Gets and sets the command called when a geocode destination is found
-   * @type {Geocoder~DestinationFoundFunction}
+   * @type {Geocoder.DestinationFoundFunction}
    */
   this.destinationFound = defaultValue(
     options.destinationFound,
@@ -547,7 +547,7 @@ function updateSearchSuggestions(viewModel) {
 
 /**
  * A function to fly to the destination found by a successful geocode.
- * @type {Geocoder~DestinationFoundFunction}
+ * @type {Geocoder.DestinationFoundFunction}
  */
 GeocoderViewModel.flyToDestination = flyToDestination;
 

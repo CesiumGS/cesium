@@ -1,7 +1,7 @@
 /**
  * An enum describing the attribute type for glTF and 3D Tiles.
  *
- * @exports AttributeType
+ * @enum {String}
  *
  * @private
  */
