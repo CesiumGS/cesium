@@ -221,33 +221,6 @@ IdManager.prototype.get = function (id) {
 
   return id.toString() + "-" + ++ids[id];
 };
-/**
- * @variation 2 KML return
- * @param {Object} options An object with the following properties:
- * @param {EntityCollection} options.entities The EntityCollection to export as KML.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
- * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
- * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
- * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
- * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
- * @param {false} [options.kmz=false] If false or unset, returns the KML file and referenced resources individually
- *
- * @returns {Promise<exportKmlResultKml>} A promise that resolved to an object containing the KML string and a dictionary of external file Blobs
- *
- * @example
- * Cesium.exportKml({
- *   entities: entityCollection
- * })
- * .then(function(result) {
- *   // The XML string is in result.kml
- *
- *   var externalFiles = result.externalFiles
- *   for(var file in externalFiles) {
- *     // file is the name of the file used in the KML document as the href
- *     // externalFiles[file] is a Blob with the contents of the file
- *   }
- * });
- */
 
 /**
  * @typedef exportKmlResultKml
@@ -285,7 +258,7 @@ IdManager.prototype.get = function (id) {
  * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
  * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
- * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
+ * @param {number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
  * @param {true} options.kmz If true, KML and external files will be compressed into a single KMZ file.
  *
  * @returns {Promise<exportKmlResultKmz>} A promise that resolves to a KMZ file as a Blob.
@@ -299,7 +272,34 @@ IdManager.prototype.get = function (id) {
  * .then(function(result) {
  *   downloadFile(result.kmz);
  * });
- */ function exportKml(options) {
+ *//**
+ * @variation 2 KML return
+ * @param {Object} options An object with the following properties:
+ * @param {EntityCollection} options.entities The EntityCollection to export as KML.
+ * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
+ * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
+ * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
+ * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
+ * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
+ * @param {false} [options.kmz=false] If false or unset, returns the KML file and referenced resources individually
+ *
+ * @returns {Promise<exportKmlResultKml>} A promise that resolved to an object containing the KML string and a dictionary of external file Blobs
+ *
+ * @example
+ * Cesium.exportKml({
+ *   entities: entityCollection
+ * })
+ * .then(function(result) {
+ *   // The XML string is in result.kml
+ *
+ *   var externalFiles = result.externalFiles
+ *   for(var file in externalFiles) {
+ *     // file is the name of the file used in the KML document as the href
+ *     // externalFiles[file] is a Blob with the contents of the file
+ *   }
+ * });
+ */
+ function exportKml(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var entities = options.entities;
   var kmz = defaultValue(options.kmz, false);
