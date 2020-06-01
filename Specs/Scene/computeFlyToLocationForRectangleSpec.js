@@ -1,10 +1,10 @@
-import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { computeFlyToLocationForRectangle } from "../../Source/Cesium.js";
 import { Globe } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import { when } from "../../Source/Cesium.js";
+import MockTerrainProvider from "../MockTerrainProvider.js";
 
 describe("Scene/computeFlyToLocationForRectangle", function () {
   var scene;
@@ -19,7 +19,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
 
   function sampleTest(sceneMode) {
     //Pretend we have terrain with availability.
-    var terrainProvider = new EllipsoidTerrainProvider();
+    var terrainProvider = new MockTerrainProvider();
     terrainProvider.availability = {};
 
     scene.globe = new Globe();
@@ -86,7 +86,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
   });
 
   it("returns height above ellipsoid when in 2D", function () {
-    var terrainProvider = new EllipsoidTerrainProvider();
+    var terrainProvider = new MockTerrainProvider();
     terrainProvider.availability = {};
 
     scene.globe = new Globe();
@@ -111,7 +111,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
 
   it("returns height above ellipsoid when terrain not available", function () {
     scene.globe = new Globe();
-    scene.terrainProvider = new EllipsoidTerrainProvider();
+    scene.terrainProvider = new MockTerrainProvider();
 
     var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
     spyOn(computeFlyToLocationForRectangle, "_sampleTerrainMostDetailed");
@@ -130,7 +130,7 @@ describe("Scene/computeFlyToLocationForRectangle", function () {
   });
 
   it("waits for terrain to become ready", function () {
-    var terrainProvider = new EllipsoidTerrainProvider();
+    var terrainProvider = new MockTerrainProvider();
     spyOn(terrainProvider.readyPromise, "then").and.callThrough();
 
     scene.globe = new Globe();

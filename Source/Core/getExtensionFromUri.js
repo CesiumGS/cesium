@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a URI, returns the extension of the URI.
- * @exports getExtensionFromUri
+ * @function getExtensionFromUri
  *
  * @param {String} uri The Uri.
  * @returns {String} The extension of the Uri.

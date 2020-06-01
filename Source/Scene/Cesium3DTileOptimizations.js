@@ -7,7 +7,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 /**
  * Utility functions for computing optimization hints for a {@link Cesium3DTileset}.
  *
- * @exports Cesium3DTileOptimizations
+ * @namespace Cesium3DTileOptimizations
  *
  * @private
  */

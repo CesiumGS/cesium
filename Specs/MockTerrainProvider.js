@@ -16,6 +16,7 @@ function MockTerrainProvider() {
     this.tilingScheme.getNumberOfXTilesAtLevel(0)
   );
   this.ready = true;
+  this.readyPromise = when.resolve();
   this.hasWaterMask = true;
 
   this._tileDataAvailable = {};

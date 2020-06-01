@@ -14,7 +14,8 @@
         "excludePattern": "(^|\\/|\\\\)_"
     },
     "plugins": [
-        "./Tools/jsdoc/cesiumTags"
+        "./Tools/jsdoc/cesiumTags",
+        "tsd-jsdoc/dist/plugin"
     ],
     "templates": {
         "cleverLinks": true,
@@ -24,8 +25,9 @@
         "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
     },
     "opts": {
-        "destination": "Build/Documentation",
-        "template": "./Tools/jsdoc/cesium_template",
+        "destination": "Source",
+        "template": "tsd-jsdoc/dist",
+        "outFile": "Cesium.d.ts",
         "recurse": true
     }
 }

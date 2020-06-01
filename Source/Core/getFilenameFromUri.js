@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 
 /**
  * Given a URI, returns the last segment of the URI, removing any path or query information.
- * @exports getFilenameFromUri
+ * @function getFilenameFromUri
  *
  * @param {String} uri The Uri.
  * @returns {String} The last segment of the Uri.

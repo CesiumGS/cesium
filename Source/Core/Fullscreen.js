@@ -13,8 +13,7 @@ var _names = {
 /**
  * Browser-independent functions for working with the standard fullscreen API.
  *
- * @exports Fullscreen
- * @namespace
+ * @namespace Fullscreen
  *
  * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
  */
@@ -216,7 +215,7 @@ Fullscreen.supportsFullscreen = function () {
  * If fullscreen mode is not supported by the browser, does nothing.
  *
  * @param {Object} element The HTML element which will be placed into fullscreen mode.
- * @param {HMDVRDevice} [vrDevice] The VR device.
+ * @param {Object} [vrDevice] The HMDVRDevice device.
  *
  * @example
  * // Put the entire page into fullscreen.

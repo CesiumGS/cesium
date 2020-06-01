@@ -11,7 +11,7 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
  * {@link https://cesium.com/content/cesium-osm-buildings/|Cesium OSM Buildings}
  * tileset.
  *
- * @exports createOsmBuildings
+ * @function
  *
  * @param {Object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
  *        may be specified here. In addition to those, the following properties are supported:
