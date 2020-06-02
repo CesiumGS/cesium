@@ -2,6 +2,10 @@
 
 ### 1.71.0 - 2020-07-01
 
+##### Additions :tada:
+
+- Add a `toString` method to the `Resource` class in case an instance gets logged as a string. [#8722](https://github.com/CesiumGS/cesium/issues/8722)
+
 ##### Fixes :wrench:
 
 - Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
