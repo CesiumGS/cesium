@@ -1014,14 +1014,6 @@ describe("Core/Rectangle", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with no epsilon", function () {
-    var rectangle = new Rectangle(west, south, east, north);
-    var other = new Rectangle();
-    expect(function () {
-      rectangle.equalsEpsilon(other, undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("intersection throws with no rectangle", function () {
     expect(function () {
       Rectangle.intersection(undefined);

@@ -8,19 +8,19 @@ import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 
 /**
  * Creates a {@link Cesium3DTileset} instance for the
- * {@link https://cesium.com/content/#cesium-osm-buildings|Cesium OSM Buildings}
+ * {@link https://cesium.com/content/cesium-osm-buildings/|Cesium OSM Buildings}
  * tileset.
  *
- * @exports createOsmBuildings
+ * @function
  *
  * @param {Object} [options] Construction options. Any options allowed by the {@link Cesium3DTileset} constructor
  *        may be specified here. In addition to those, the following properties are supported:
  * @param {Color} [options.defaultColor=Color.WHITE] The default color to use for buildings
- *        that do not have a color. This parameter is ignored if `options.style` is specified.
+ *        that do not have a color. This parameter is ignored if <code>options.style</code> is specified.
  * @param {Cesium3DTileStyle} [options.style] The style to use with the tileset. If not
  *        specified, a default style is used which gives each building or building part a
- *        color inferred from its OpenStreetMap `tags`. If no color can be inferred,
- *        `options.defaultColor` is used.
+ *        color inferred from its OpenStreetMap <code>tags</code>. If no color can be inferred,
+ *        <code>options.defaultColor</code> is used.
  * @returns {Cesium3DTileset}
  *
  * @see Ion

@@ -17,7 +17,7 @@ import Material from "./Material.js";
  * @internalConstructor
  * @class
  *
- * @param {Object} [options] Object with the following properties:
+ * @param {Object} options Object with the following properties:
  * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
  * @param {Number} [options.width=1.0] The width of the polyline in pixels.
  * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.

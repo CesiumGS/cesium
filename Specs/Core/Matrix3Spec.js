@@ -1373,12 +1373,6 @@ describe("Core/Matrix3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with non-number parameter", function () {
-    expect(function () {
-      Matrix3.equalsEpsilon(new Matrix3(), new Matrix3(), {});
-    }).toThrowDeveloperError();
-  });
-
   it("getColumn throws without result parameter", function () {
     expect(function () {
       Matrix3.getColumn(new Matrix3(), 2);

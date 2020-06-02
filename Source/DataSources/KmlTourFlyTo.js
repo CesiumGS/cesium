@@ -24,7 +24,7 @@ function KmlTourFlyTo(duration, flyToMode, view) {
 /**
  * Play this playlist entry
  *
- * @param {KmlTourFlyTo~DoneCallback} done function which will be called when playback ends
+ * @param {KmlTourFlyTo.DoneCallback} done function which will be called when playback ends
  * @param {Camera} camera Cesium camera
  * @param {Object} [cameraOptions] which will be merged with camera flyTo options. See {@link Camera#flyTo}
  */
@@ -95,7 +95,7 @@ KmlTourFlyTo.prototype.getCameraOptions = function (cameraOptions) {
 
 /**
  * A function that will be executed when the flight completes.
- * @callback KmlTourFlyTo~DoneCallback
+ * @callback KmlTourFlyTo.DoneCallback
  *
  * @param {Boolean} terminated true if {@link KmlTourFlyTo#stop} was
  * called before entry done playback.

@@ -142,6 +142,7 @@ function UniformState() {
   this._cameraRight = new Cartesian3();
   this._cameraUp = new Cartesian3();
   this._frustum2DWidth = 0.0;
+  this._eyeHeight = 0.0;
   this._eyeHeight2D = new Cartesian2();
   this._pixelRatio = 1.0;
   this._orthographicIn3D = false;
@@ -672,9 +673,20 @@ Object.defineProperties(UniformState.prototype, {
   },
 
   /**
-   * The the height (<code>x</code>) and the height squared (<code>y</code>)
-   * in meters of the camera above the 2D world plane. This uniform is only valid
-   * when the {@link SceneMode} equal to <code>SCENE2D</code>.
+   * The height in meters of the eye (camera) above or below the ellipsoid.
+   * @memberof UniformState.prototype
+   * @type {Number}
+   */
+  eyeHeight: {
+    get: function () {
+      return this._eyeHeight;
+    },
+  },
+
+  /**
+   * The height (<code>x</code>) and the height squared (<code>y</code>)
+   * in meters of the eye (camera) above the 2D world plane. This uniform is only valid
+   * when the {@link SceneMode} is <code>SCENE2D</code>.
    * @memberof UniformState.prototype
    * @type {Cartesian2}
    */
@@ -855,7 +867,7 @@ Object.defineProperties(UniformState.prototype, {
 
   /**
    * A scalar that represents the geometric tolerance per meter
-   * @memberof UniformStat.prototype
+   * @memberof UniformState.prototype
    * @type {Number}
    */
   geometricToleranceOverMeter: {
@@ -1060,6 +1072,14 @@ function setCamera(uniformState, camera) {
   Cartesian3.clone(camera.directionWC, uniformState._cameraDirection);
   Cartesian3.clone(camera.rightWC, uniformState._cameraRight);
   Cartesian3.clone(camera.upWC, uniformState._cameraUp);
+
+  var positionCartographic = camera.positionCartographic;
+  if (!defined(positionCartographic)) {
+    uniformState._eyeHeight = -uniformState._ellipsoid.maximumRadius;
+  } else {
+    uniformState._eyeHeight = positionCartographic.height;
+  }
+
   uniformState._encodedCameraPositionMCDirty = true;
 }
 
@@ -1286,10 +1306,14 @@ UniformState.prototype.update = function (frameState) {
   var fov = camera.frustum.fov;
   var viewport = this._viewport;
   var pixelSizePerMeter;
-  if (viewport.height > viewport.width) {
-    pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.height;
+  if (defined(fov)) {
+    if (viewport.height > viewport.width) {
+      pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.height;
+    } else {
+      pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.width;
+    }
   } else {
-    pixelSizePerMeter = (Math.tan(0.5 * fov) * 2.0) / viewport.width;
+    pixelSizePerMeter = 1.0 / Math.max(viewport.width, viewport.height);
   }
 
   this._geometricToleranceOverMeter =

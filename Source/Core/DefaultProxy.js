@@ -4,6 +4,7 @@
  *
  * @alias DefaultProxy
  * @constructor
+ * @extends {Proxy}
  *
  * @param {String} proxy The proxy URL that will be used to requests all resources.
  */
@@ -21,4 +22,5 @@ DefaultProxy.prototype.getURL = function (resource) {
   var prefix = this.proxy.indexOf("?") === -1 ? "?" : "";
   return this.proxy + prefix + encodeURIComponent(resource);
 };
+
 export default DefaultProxy;

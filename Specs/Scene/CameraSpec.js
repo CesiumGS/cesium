@@ -3494,6 +3494,7 @@ describe("Scene/Camera", function () {
       startObject: {},
       stopObject: {},
       duration: 0.001,
+      complete: jasmine.createSpy("complete"),
       cancelTween: jasmine.createSpy("cancelTween"),
     });
 
@@ -3509,7 +3510,41 @@ describe("Scene/Camera", function () {
     camera.cancelFlight();
 
     expect(createdTween.cancelTween).toHaveBeenCalled();
+    expect(createdTween.complete).not.toHaveBeenCalled();
     expect(camera._currentFlight).toBeUndefined();
+  });
+
+  it("can complete a flight", function () {
+    spyOn(CameraFlightPath, "createTween").and.returnValue({
+      startObject: {},
+      stopObject: {},
+      duration: 0.001,
+      complete: jasmine.createSpy("complete"),
+      cancelTween: jasmine.createSpy("cancelTween"),
+    });
+
+    spyOn(camera, "setView");
+
+    var options = {
+      destination: Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
+      orientation: {
+        heading: 1,
+        pitch: 2,
+        roll: 3,
+      },
+    };
+    camera.flyTo(options);
+
+    expect(camera._currentFlight).toBeDefined();
+
+    var createdTween = camera._currentFlight;
+    spyOn(createdTween, "cancelTween");
+    camera.completeFlight();
+
+    expect(createdTween.cancelTween).toHaveBeenCalled();
+    expect(createdTween.complete).toHaveBeenCalled();
+    expect(camera._currentFlight).toBeUndefined();
+    expect(camera.setView).toHaveBeenCalledWith(options);
   });
 
   it("flyTo with heading, pitch and roll", function () {

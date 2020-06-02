@@ -1,7 +1,7 @@
 /**
  * Defined the orientation of stripes in {@link StripeMaterialProperty}.
  *
- * @exports StripeOrientation
+ * @enum {Number}
  */
 var StripeOrientation = {
   /**

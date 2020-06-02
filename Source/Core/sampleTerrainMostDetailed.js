@@ -9,7 +9,7 @@ var scratchCartesian2 = new Cartesian2();
 /**
  * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.
  *
- * @exports sampleTerrainMostDetailed
+ * @function sampleTerrainMostDetailed
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Cartographic[]} positions The positions to update with terrain heights.

@@ -4,7 +4,7 @@
  * measured from.  This function uses performance.now() if it is available, or Date.now()
  * otherwise.
  *
- * @exports getTimestamp
+ * @function getTimestamp
  *
  * @returns {Number} The timestamp in milliseconds since some unspecified reference time.
  */

@@ -642,8 +642,7 @@ function generateTechnique(
   if (hasNormals) {
     fragmentShader += "  vec3 normal = normalize(v_normal);\n";
     if (khrMaterialsCommon.doubleSided) {
-      // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
-      fragmentShader += "  if (gl_FrontFacing == false)\n";
+      fragmentShader += "  if (czm_backFacing())\n";
       fragmentShader += "  {\n";
       fragmentShader += "    normal = -normal;\n";
       fragmentShader += "  }\n";

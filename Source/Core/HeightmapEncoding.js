@@ -1,7 +1,7 @@
 /**
  * The encoding that is used for a heightmap
  *
- * @exports HeightmapEncoding
+ * @enum {Number}
  */
 var HeightmapEncoding = {
   /**

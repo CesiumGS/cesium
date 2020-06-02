@@ -633,10 +633,10 @@ Object.defineProperties(Texture.prototype, {
 });
 
 /**
- * Copy new image data into this texture, from a source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
+ * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
  *
- * @param {Object} source The source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video},
+ * @param {Object} source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
  *                        or an object with width, height, and arrayBufferView properties.
  * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
  * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.

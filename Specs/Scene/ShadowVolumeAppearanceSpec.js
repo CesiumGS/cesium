@@ -21,7 +21,7 @@ describe("Scene/ShadowVolumeAppearance", function () {
     "attribute float batchId;\n" +
     "void main() {\n" +
     "    vec4 position = czm_computePosition();\n" +
-    "    gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);\n" +
+    "    gl_Position = czm_depthClamp(czm_modelViewProjectionRelativeToEye * position);\n" +
     "}\n";
 
   var unitSphereEllipsoid = Ellipsoid.UNIT_SPHERE;
