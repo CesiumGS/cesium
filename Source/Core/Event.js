@@ -7,7 +7,7 @@ import defined from "./defined.js";
  * exposed as a property for others to subscribe to.
  *
  * @alias Event
- * @template Listener the function call signature for this event's listeners
+ * @template Listener extends Function = Function
  * @constructor
  * @example
  * MyObject.prototype.myListener = function(arg1, arg2) {
