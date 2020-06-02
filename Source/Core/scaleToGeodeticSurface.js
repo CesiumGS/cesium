@@ -18,7 +18,7 @@ var scaleToGeodeticSurfaceGradient = new Cartesian3();
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
  *
- * @exports scaleToGeodeticSurface
+ * @function scaleToGeodeticSurface
  *
  * @private
  */

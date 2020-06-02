@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Subdivides an array into a number of smaller, equal sized arrays.
  *
- * @exports subdivideArray
+ * @function subdivideArray
  *
  * @param {Array} array The array to divide.
  * @param {Number} numberOfArrays The number of arrays to divide the provided array into.

@@ -8,6 +8,8 @@ import WebGLConstants from "./WebGLConstants.js";
  * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
  * <br/>WebGL中的索引数据类型。与{@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}中的<code>type</code>参数对应
  * @exports IndexDatatype
+ *
+ * @enum {Number}
  */
 var IndexDatatype = {
   /**

@@ -184,7 +184,19 @@ describe("Core/Color", function () {
     expect(Color.fromCssColorString("#00F")).toEqual(Color.BLUE);
   });
 
-  it("fromCssColorString supports the #rrggbb", function () {
+  it("fromCssColorString supports the #rgba format", function () {
+    expect(Color.fromCssColorString("#369c")).toEqual(
+      new Color(0.2, 0.4, 0.6, 0.8)
+    );
+  });
+
+  it("fromCssColorString supports the #rgba format with uppercase", function () {
+    expect(Color.fromCssColorString("#369C")).toEqual(
+      new Color(0.2, 0.4, 0.6, 0.8)
+    );
+  });
+
+  it("fromCssColorString supports the #rrggbb format", function () {
     expect(Color.fromCssColorString("#336699")).toEqual(
       new Color(0.2, 0.4, 0.6, 1.0)
     );
@@ -200,6 +212,18 @@ describe("Core/Color", function () {
     expect(Color.fromCssColorString("#FF0000")).toEqual(Color.RED);
     expect(Color.fromCssColorString("#00FF00")).toEqual(Color.LIME);
     expect(Color.fromCssColorString("#0000FF")).toEqual(Color.BLUE);
+  });
+
+  it("fromCssColorString supports the #rrggbbaa format", function () {
+    expect(Color.fromCssColorString("#336699cc")).toEqual(
+      new Color(0.2, 0.4, 0.6, 0.8)
+    );
+  });
+
+  it("fromCssColorString supports the #rrggbbaa format with uppercase", function () {
+    expect(Color.fromCssColorString("#336699CC")).toEqual(
+      new Color(0.2, 0.4, 0.6, 0.8)
+    );
   });
 
   it("fromCssColorString supports the rgb() format with absolute values", function () {

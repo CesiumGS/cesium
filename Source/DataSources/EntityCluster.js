@@ -547,7 +547,7 @@ Object.defineProperties(EntityCluster.prototype, {
     },
   },
   /**
-   * Gets the event that will be raised when a new cluster will be displayed. The signature of the event listener is {@link EntityCluster~newClusterCallback}.
+   * Gets the event that will be raised when a new cluster will be displayed. The signature of the event listener is {@link EntityCluster.newClusterCallback}.
    * @memberof EntityCluster.prototype
    * @type {Event}
    */
@@ -960,7 +960,7 @@ EntityCluster.prototype.destroy = function () {
 
 /**
  * A event listener function used to style clusters.
- * @callback EntityCluster~newClusterCallback
+ * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
  * @param {Object} cluster An object containing billboard, label, and point properties. The values are the same as

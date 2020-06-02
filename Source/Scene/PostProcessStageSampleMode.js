@@ -7,7 +7,7 @@
  *  参考：{@link https://learnopengl-cn.readthedocs.io/zh/latest/01%20Getting%20started/06%20Textures/ 纹理}
  * </p>
  *
- * @exports PostProcessStageSampleMode
+ * @enum {Number}
  */
 var PostProcessStageSampleMode = {
   /**

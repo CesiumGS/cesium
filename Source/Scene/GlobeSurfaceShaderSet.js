@@ -80,6 +80,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   var applySaturation = options.applySaturation;
   var applyGamma = options.applyGamma;
   var applyAlpha = options.applyAlpha;
+  var applyDayNightAlpha = options.applyDayNightAlpha;
   var applySplit = options.applySplit;
   var showReflectiveOcean = options.showReflectiveOcean;
   var showOceanWaves = options.showOceanWaves;
@@ -100,6 +101,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
   var highlightFillTile = options.highlightFillTile;
   var colorToAlpha = options.colorToAlpha;
   var showUndergroundColor = options.showUndergroundColor;
+  var translucent = options.translucent;
 
   var quantization = 0;
   var quantizationDefine = "";
@@ -153,7 +155,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (colorCorrect << 23) |
     (highlightFillTile << 24) |
     (colorToAlpha << 25) |
-    (showUndergroundColor << 26);
+    (showUndergroundColor << 26) |
+    (translucent << 27) |
+    (applyDayNightAlpha << 28);
 
   var currentClippingShaderState = 0;
   if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -219,6 +223,9 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (applyAlpha) {
       fs.defines.push("APPLY_ALPHA");
     }
+    if (applyDayNightAlpha) {
+      fs.defines.push("APPLY_DAY_NIGHT_ALPHA");
+    }
     if (showReflectiveOcean) {
       fs.defines.push("SHOW_REFLECTIVE_OCEAN");
       vs.defines.push("SHOW_REFLECTIVE_OCEAN");
@@ -232,6 +239,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     if (showUndergroundColor) {
       vs.defines.push("UNDERGROUND_COLOR");
       fs.defines.push("UNDERGROUND_COLOR");
+    }
+    if (translucent) {
+      vs.defines.push("TRANSLUCENT");
+      fs.defines.push("TRANSLUCENT");
     }
     if (enableLighting) {
       if (hasVertexNormals) {
@@ -284,7 +295,7 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
 
     var computeDayColor =
       "\
-    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend)\n\
     {\n\
         vec4 color = initialColor;\n";
 
@@ -327,6 +338,10 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         (applyAlpha ? "u_dayTextureAlpha[" + i + "]" : "1.0") +
         ",\n\
             " +
+        (applyDayNightAlpha ? "u_dayTextureNightAlpha[" + i + "]" : "1.0") +
+        ",\n" +
+        (applyDayNightAlpha ? "u_dayTextureDayAlpha[" + i + "]" : "1.0") +
+        ",\n" +
         (applyBrightness ? "u_dayTextureBrightness[" + i + "]" : "0.0") +
         ",\n\
             " +
@@ -346,7 +361,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
         ",\n\
             " +
         (colorToAlpha ? "u_colorsToAlpha[" + i + "]" : "vec4(0.0)") +
-        "\n\
+        ",\n\
+        nightBlend\
         );\n";
       if (hasImageryLayerCutout) {
         computeDayColor +=

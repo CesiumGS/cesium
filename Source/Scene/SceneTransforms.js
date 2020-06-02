@@ -15,7 +15,7 @@ import SceneMode from "./SceneMode.js";
 /**
  * Functions that do scene-dependent transforms between rendering-related coordinate systems.
  *
- * @exports SceneTransforms
+ * @namespace SceneTransforms
  */
 var SceneTransforms = {};
 

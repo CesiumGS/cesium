@@ -30,7 +30,7 @@ import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
 /**
  * Contains functions for creating common post-process stages.
  *
- * @exports PostProcessStageLibrary
+ * @namespace PostProcessStageLibrary
  */
 var PostProcessStageLibrary = {};
 

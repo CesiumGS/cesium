@@ -54,7 +54,7 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
   /**
    * The Resource used to access the OpenCage endpoint.
    * @type {Resource}
-   * @memberof {OpenCageGeocoderService.prototype}
+   * @memberof OpenCageGeocoderService.prototype
    * @readonly
    */
   url: {
@@ -65,7 +65,7 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
   /**
    * Optional params passed to OpenCage in order to customize geocoding
    * @type {Object}
-   * @memberof {OpenCageGeocoderService.prototype}
+   * @memberof OpenCageGeocoderService.prototype
    * @readonly
    */
   params: {
@@ -79,7 +79,7 @@ Object.defineProperties(OpenCageGeocoderService.prototype, {
  * @function
  *
  * @param {String} query The query to be sent to the geocoder service
- * @returns {Promise<GeocoderService~Result[]>}
+ * @returns {Promise<GeocoderService.Result[]>}
  */
 OpenCageGeocoderService.prototype.geocode = function (query) {
   //>>includeStart('debug', pragmas.debug);

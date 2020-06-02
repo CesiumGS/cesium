@@ -3,7 +3,6 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import Fullscreen from "./Fullscreen.js";
-/*global CanvasPixelArray*/
 
 var theNavigator;
 if (typeof navigator !== "undefined") {
@@ -276,8 +275,8 @@ if (typeof ArrayBuffer !== "undefined") {
     typedArrayTypes.push(Uint8ClampedArray);
   }
 
-  if (typeof CanvasPixelArray !== "undefined") {
-    typedArrayTypes.push(CanvasPixelArray);
+  if (typeof Uint8ClampedArray !== "undefined") {
+    typedArrayTypes.push(Uint8ClampedArray);
   }
 }
 
@@ -285,7 +284,7 @@ if (typeof ArrayBuffer !== "undefined") {
  * A set of functions to detect whether the current browser supports
  * various features.
  *
- * @exports FeatureDetection
+ * @namespace FeatureDetection
  */
 var FeatureDetection = {
   isChrome: isChrome,

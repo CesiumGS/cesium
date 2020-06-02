@@ -685,7 +685,7 @@ function updateAndQueueCommands(
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPrimitive synchronously.
  *
- * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
+ * @returns {Promise<void>} A promise that will resolve once the terrain heights have been loaded.
  *
  */
 GroundPrimitive.initializeTerrainHeights = function () {

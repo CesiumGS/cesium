@@ -6,6 +6,25 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} PolylineGraphics.ConstructorOptions
+ *
+ * Initialization options for the PolylineGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the polyline.
+ * @property {Property | Array<Cartesian3>} [positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
+ * @property {Property | number} [width=1.0] A numeric Property specifying the width in pixels.
+ * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if arcType is not ArcType.NONE.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to draw the polyline.
+ * @property {MaterialProperty | Color} [depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
+ * @property {Property | ArcType} [arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
+ * @property {Property | boolean} [clampToGround=false] A boolean Property specifying whether the Polyline should be clamped to the ground.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
+ * @property {Property | ClassificationType} [classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
+ * @property {Property | number} [zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
+ */
+
+/**
  * Describes a polyline. The first two positions define a line segment,
  * and each additional position defines a line segment from the previous position. The segments
  * can be linear connected points, great arcs, or clamped to terrain.
@@ -13,19 +32,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias PolylineGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
- * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
- * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
- * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if arcType is not ArcType.NONE.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
- * @param {MaterialProperty} [options.depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
- * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
- * @param {Property} [options.clampToGround=false] A boolean Property specifying whether the Polyline should be clamped to the ground.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
- * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
- * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
+ * @param {PolylineGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see Entity
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
@@ -77,7 +84,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the polyline.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -86,14 +93,14 @@ Object.defineProperties(PolylineGraphics.prototype, {
    * Gets or sets the Property specifying the array of {@link Cartesian3}
    * positions that define the line strip.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   positions: createPropertyDescriptor("positions"),
 
   /**
    * Gets or sets the numeric Property specifying the width in pixels.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   width: createPropertyDescriptor("width"),
@@ -101,7 +108,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the angular distance between each latitude and longitude if arcType is not ArcType.NONE and clampToGround is false.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cesium.Math.RADIANS_PER_DEGREE
    */
   granularity: createPropertyDescriptor("granularity"),
@@ -129,7 +136,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the {@link ArcType} Property specifying whether the line segments should be great arcs, rhumb lines or linearly connected.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ArcType.GEODESIC
    */
   arcType: createPropertyDescriptor("arcType"),
@@ -138,7 +145,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
    * Gets or sets the boolean Property specifying whether the polyline
    * should be clamped to the ground.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   clampToGround: createPropertyDescriptor("clampToGround"),
@@ -147,7 +154,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
    * Get or sets the enum Property specifying whether the polyline
    * casts or receives shadows from light sources.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -155,7 +162,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this polyline will be displayed.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -164,7 +171,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the {@link ClassificationType} Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.
    * @memberof PolylineGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ClassificationType.BOTH
    */
   classificationType: createPropertyDescriptor("classificationType"),
@@ -172,7 +179,7 @@ Object.defineProperties(PolylineGraphics.prototype, {
   /**
    * Gets or sets the zIndex Property specifying the ordering of the polyline. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
    * @memberof PolylineGraphics.prototype
-   * @type {ConstantProperty}
+   * @type {ConstantProperty|undefined}
    * @default 0
    */
   zIndex: createPropertyDescriptor("zIndex"),

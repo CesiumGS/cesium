@@ -622,6 +622,8 @@ describe(
       );
 
       layer.alpha = 0.123;
+      layer.nightAlpha = 0.658;
+      layer.dayAlpha = 0.356;
       layer.brightness = 0.456;
       layer.contrast = 0.654;
       layer.gamma = 0.321;
@@ -651,6 +653,8 @@ describe(
           ++tileCommandCount;
 
           expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+          expect(uniforms.u_dayTextureNightAlpha()).toEqual([0.658]);
+          expect(uniforms.u_dayTextureDayAlpha()).toEqual([0.356]);
           expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
           expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
           expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0 / 0.321]);
