@@ -59,7 +59,7 @@ describe("Core/Resource", function () {
     expect(resource.url).toEqual(
       proxy.getURL("http://test.com/tileset?key1=value1&key2=value2")
     );
-    expect(resource + "").toEqual(
+    expect(String(resource)).toEqual(
       proxy.getURL("http://test.com/tileset?key1=value1&key2=value2")
     );
     expect(resource.queryParameters).toEqual({
@@ -84,7 +84,7 @@ describe("Core/Resource", function () {
     var url = "http://invalid.domain.com/tileset";
     var resource = new Resource(url);
     expect(resource.url).toEqual(url);
-    expect(resource + "").toEqual(url);
+    expect(String(resource)).toEqual(url);
     expect(resource.queryParameters).toEqual({});
     expect(resource.templateValues).toEqual({});
     expect(resource.headers).toEqual({});
