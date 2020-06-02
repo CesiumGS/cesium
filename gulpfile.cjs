@@ -354,7 +354,7 @@ function generateDocumentation() {
         console.log(stdout);
         var stream = gulp
           .src("Documentation/Images/**")
-          .pipe(gulp.dest("Build/Documentation/Images"));
+          .pipe(gulp.dest("docs/Images"));
         return streamToPromise(stream).then(resolve);
       }
     );

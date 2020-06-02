@@ -17,7 +17,7 @@
         "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
     },
     "opts": {
-        "destination": "Build/Documentation",
+        "destination": "./docs",
         "template": "./Tools/jsdoc/cesium_template",
         "recurse": true
     }
