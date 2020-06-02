@@ -8,6 +8,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 import BufferUsage from "./BufferUsage.js";
 
 /**
+ * @class
  * @private
  */
 function Buffer(options) {
@@ -72,24 +73,35 @@ function Buffer(options) {
 
 /**
  * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
+ * <br/>创建一个顶点缓存
  * <br /><br />
  * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
  * etc., by interpreting the raw data in one or more vertex buffers.
+ * <br/>一个顶点数组定义了组成一个顶点所需的信息，比如：位置，法线，纹理坐标；
  *
  * @param {Object} options An object containing the following properties:
+ * <br/>对象包含如下属性：
  * @param {Context} options.context The context in which to create the buffer
+ * <br/>用于创建缓存的上下文
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
+ * <br/>用于传入到缓存中的类型化数组
+ * <br/>参考：{@link https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView ArrayBufferView}
  * @param {Number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
+ * <br/>缓冲的子节大小。当options.typedArray没有赋值时，这里就必须给个初始值。
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
+ * <br/>指定缓冲区预期如何使用。在一些GL的实现中，这能对性能造成较大的影响。参见：{@link BufferUsage}
  * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
  *
- * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
+ * @exception {DeveloperError} Must specify either options.typedArray or options.sizeInBytess, but not both.
+ * <br/>须为options.typedArray 或 options.sizeInBytes的其中一个赋值，不能两个同时赋值。
  * @exception {DeveloperError} The buffer size must be greater than zero.
+ * <br/>缓存的大小须大于0
  * @exception {DeveloperError} Invalid <code>usage</code>.
- *
+ * <br/>给<code>usage</code>指定了无效的值
  *
  * @example
  * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
+ * // 例1：创建一个16子节大小的动态顶点缓存
  * var buffer = Buffer.createVertexBuffer({
  *     context : context,
  *     sizeInBytes : 16,
@@ -98,6 +110,7 @@ function Buffer(options) {
  *
  * @example
  * // Example 2. Create a dynamic vertex buffer from three floating-point values.
+ * // 例2：创建一个有3个浮点数值的顶点缓存
  * // The data copied to the vertex buffer is considered raw bytes until it is
  * // interpreted as vertices using a vertex array.
  * var positionBuffer = buffer.createVertexBuffer({
@@ -109,6 +122,7 @@ function Buffer(options) {
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
+ *
  */
 Buffer.createVertexBuffer = function (options) {
   //>>includeStart('debug', pragmas.debug);
@@ -126,24 +140,38 @@ Buffer.createVertexBuffer = function (options) {
 
 /**
  * Creates an index buffer, which contains typed indices in GPU-controlled memory.
+ * <br/>创建索引缓存
  * <br /><br />
  * An index buffer can be attached to a vertex array to select vertices for rendering.
  * <code>Context.draw</code> can render using the entire index buffer or a subset
  * of the index buffer defined by an offset and count.
  *
  * @param {Object} options An object containing the following properties:
+ * <br/>对象包含如下属性：
  * @param {Context} options.context The context in which to create the buffer
+ * <br/>用于创建缓存的上下文
  * @param {ArrayBufferView} [options.typedArray] A typed array containing the data to copy to the buffer.
+ * <br/>用于传入到缓存中的类型化数组
+ * <br/>参考：{@link https://developer.mozilla.org/en-US/docs/Web/API/ArrayBufferView ArrayBufferView}
  * @param {Number} [options.sizeInBytes] A <code>Number</code> defining the size of the buffer in bytes. Required if options.typedArray is not given.
+ * <br/>缓冲的子节大小。当options.typedArray没有赋值时，这里就必须给个初始值。
  * @param {BufferUsage} options.usage Specifies the expected usage pattern of the buffer. On some GL implementations, this can significantly affect performance. See {@link BufferUsage}.
+ * <br/>指定缓冲区预期如何使用。在一些GL的实现中，这能对性能造成较大的影响。参见：{@link BufferUsage}
  * @param {IndexDatatype} options.indexDatatype The datatype of indices in the buffer.
+ * <br/>指定索引的数据类型
  * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
+ * <br/>返回索引缓存
  *
- * @exception {DeveloperError} Must specify either <options.typedArray> or <options.sizeInBytes>, but not both.
+ * @exception {DeveloperError} Must specify either options.typedArray or options.sizeInBytes, but not both.
+ * <br/>须为options.typedArray 或 options.sizeInBytes的其中一个赋值，不能两个同时赋值。
  * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system. Check context.elementIndexUint.
+ * <br/>索引数据类型为UNSIGNED_INT时，需要支持OES_element_index_uint
  * @exception {DeveloperError} The size in bytes must be greater than zero.
+ * <br/>缓存的大小须大于0
  * @exception {DeveloperError} Invalid <code>usage</code>.
+ * <br/>给<code>usage</code>指定了无效的值
  * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
+ * <br/>指定了无效的索引数据类型
  *
  *
  * @example
@@ -168,6 +196,7 @@ Buffer.createVertexBuffer = function (options) {
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
  * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
+ *
  */
 Buffer.createIndexBuffer = function (options) {
   //>>includeStart('debug', pragmas.debug);
@@ -240,6 +269,13 @@ Buffer.prototype._getBuffer = function () {
   return this._buffer;
 };
 
+/**
+ * 替换缓冲区中的部分数据
+ * @param {ArrayBufferView} arrayView 新的数据
+ * @param {Number} offsetInBytes 子节偏移量，即从指定的子节位置开始替换
+ * @name Buffer#copyFromArrayView
+ * @function
+ */
 Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
   offsetInBytes = defaultValue(offsetInBytes, 0);
 
@@ -258,7 +294,16 @@ Buffer.prototype.copyFromArrayView = function (arrayView, offsetInBytes) {
   gl.bufferSubData(target, offsetInBytes, arrayView);
   gl.bindBuffer(target, null);
 };
-
+/**
+ * 从Buffer实例中拷贝数据。
+ * <br/>注意：只有实现了WebGL2.0的浏览器才可用。
+ * @param {Buffer} readBuffer 待复制的Buffer实例
+ * @param {Number} readOffset 读取的偏移量
+ * @param {Number} writeOffset 写入的偏移量
+ * @param {Number} sizeInBytes 指定复制多少子节
+ * @name Buffer#copyFromBuffer
+ * @function
+ */
 Buffer.prototype.copyFromBuffer = function (
   readBuffer,
   readOffset,
@@ -333,6 +378,11 @@ Buffer.prototype.copyFromBuffer = function (
   gl.bindBuffer(readTarget, null);
 };
 
+/**
+ *
+ * @name Buffer#getBufferData
+ * @function
+ */
 Buffer.prototype.getBufferData = function (
   arrayView,
   sourceOffset,
@@ -411,6 +461,11 @@ Buffer.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * 销毁
+ * @name Buffer#destroy
+ * @function
+ */
 Buffer.prototype.destroy = function () {
   this._gl.deleteBuffer(this._buffer);
   return destroyObject(this);
