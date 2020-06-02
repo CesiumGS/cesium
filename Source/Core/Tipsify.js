@@ -8,7 +8,7 @@ import DeveloperError from "./DeveloperError.js";
  * 'Fast Triangle Reordering for Vertex Locality and Reduced Overdraw.'
  * The runtime is linear but several passes are made.
  *
- * @exports Tipsify
+ * @namespace Tipsify
  *
  * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
  * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>

@@ -13,8 +13,7 @@ import Ray from "./Ray.js";
 /**
  * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
  *
- * @exports IntersectionTests
- * @namespace
+ * @namespace IntersectionTests
  */
 var IntersectionTests = {};
 

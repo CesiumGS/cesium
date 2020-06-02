@@ -4,6 +4,9 @@ import DeveloperError from "../Core/DeveloperError.js";
  * Defines a bounding volume for a tile. This type describes an interface
  * and is not intended to be instantiated directly.
  *
+ * @alias TileBoundingVolume
+ * @constructor
+ *
  * @see TileBoundingRegion
  * @see TileBoundingSphere
  * @see TileOrientedBoundingBox
@@ -15,8 +18,6 @@ function TileBoundingVolume() {}
 /**
  * The underlying bounding volume.
  *
- * @memberof TileBoundingVolume.prototype
- *
  * @type {Object}
  * @readonly
  */
@@ -24,8 +25,6 @@ TileBoundingVolume.prototype.boundingVolume = undefined;
 
 /**
  * The underlying bounding sphere.
- *
- * @memberof TileBoundingVolume.prototype
  *
  * @type {BoundingSphere}
  * @readonly

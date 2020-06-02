@@ -1,7 +1,7 @@
 /**
  * Determines how input texture to a {@link PostProcessStage} is sampled.
  *
- * @exports PostProcessStageSampleMode
+ * @enum {Number}
  */
 var PostProcessStageSampleMode = {
   /**

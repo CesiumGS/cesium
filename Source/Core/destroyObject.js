@@ -16,7 +16,7 @@ function returnTrue() {
  * which then releases the native resource and calls <code>destroyObject</code> to put itself
  * in a destroyed state.
  *
- * @exports destroyObject
+ * @function
  *
  * @param {Object} object The object to destroy.
  * @param {String} [message] The message to include in the exception that is thrown if

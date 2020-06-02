@@ -4,7 +4,7 @@ import CesiumMath from "./Math.js";
 /**
  * Defines functions for 2nd order polynomial functions of one variable with only real coefficients.
  *
- * @exports QuadraticRealPolynomial
+ * @namespace QuadraticRealPolynomial
  */
 var QuadraticRealPolynomial = {};
 

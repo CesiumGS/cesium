@@ -14,6 +14,7 @@ Thumbs.db
 /Apps/Sandcastle/templates/bucket.css
 
 /Source/Cesium.js
+/Source/Cesium.d.ts
 
 /Specs/SpecList.js
 /Source/Shaders/**/*.js

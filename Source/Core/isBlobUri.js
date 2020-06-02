@@ -5,7 +5,7 @@ var blobUriRegex = /^blob:/i;
 /**
  * Determines if the specified uri is a blob uri.
  *
- * @exports isBlobUri
+ * @function isBlobUri
  *
  * @param {String} uri The uri to test.
  * @returns {Boolean} true when the uri is a blob uri; otherwise, false.

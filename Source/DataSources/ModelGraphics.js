@@ -19,6 +19,34 @@ function createArticulationStagePropertyBag(value) {
 }
 
 /**
+ * @typedef {Object} ModelGraphics.ConstructorOptions
+ *
+ * Initialization options for the ModelGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the model.
+ * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the glTF asset.
+ * @property {Property | number} [scale=1.0] A numeric Property specifying a uniform linear scale.
+ * @property {Property | number} [minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
+ * @property {Property | number} [maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
+ * @property {Property | boolean} [incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+ * @property {Property | boolean} [runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
+ * @property {Property | boolean} [clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from light sources.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
+ * @property {Property | number} [silhouetteSize=0.0] A numeric Property specifying the size of the silhouette in pixels.
+ * @property {Property | Color} [color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
+ * @property {Property | ColorBlendMode} [colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
+ * @property {Property | number} [colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+ * @property {Property | Cartesian2} [imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
+ * @property {Property | Color} [lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
+ * @property {PropertyBag | Object.<string, TranslationRotationScale>} [nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
+ * @property {PropertyBag | Object.<string, number>} [articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
+ * @property {Property | ClippingPlaneCollection} [clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ */
+
+/**
  * A 3D model based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
  * The position and orientation of the model is determined by the containing {@link Entity}.
  * <p>
@@ -29,28 +57,7 @@ function createArticulationStagePropertyBag(value) {
  * @alias ModelGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
- * @param {Property} [options.uri] A string or Resource Property specifying the URI of the glTF asset.
- * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
- * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
- * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
- * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
- * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
- * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
- * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from light sources.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
- * @param {Property} [options.silhouetteSize=0.0] A numeric Property specifying the size of the silhouette in pixels.
- * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
- * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
- * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
- * @param {Property} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
- * @param {Property} [options.lightColor] A property specifying the light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
- * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
- * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
- * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @param {ModelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
  * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -119,7 +126,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the model.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -127,7 +134,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the string Property specifying the URI of the glTF asset.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   uri: createPropertyDescriptor("uri"),
 
@@ -136,7 +143,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * for this model. Values greater than 1.0 increase the size of the model while
    * values less than 1.0 decrease it.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   scale: createPropertyDescriptor("scale"),
@@ -147,7 +154,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * a model is visible even when the viewer zooms out.  When <code>0.0</code>,
    * no minimum size is enforced.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   minimumPixelSize: createPropertyDescriptor("minimumPixelSize"),
@@ -157,7 +164,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * size of a model. This property is used as an upper limit for
    * {@link ModelGraphics#minimumPixelSize}.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   maximumScale: createPropertyDescriptor("maximumScale"),
 
@@ -165,7 +172,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * Get or sets the boolean Property specifying whether textures
    * may continue to stream in after the model is loaded.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   incrementallyLoadTextures: createPropertyDescriptor(
     "incrementallyLoadTextures"
@@ -174,7 +181,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying if glTF animations should be run.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   runAnimations: createPropertyDescriptor("runAnimations"),
@@ -182,7 +189,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   clampAnimations: createPropertyDescriptor("clampAnimations"),
@@ -191,7 +198,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * Get or sets the enum Property specifying whether the model
    * casts or receives shadows from light sources.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.ENABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -199,7 +206,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -207,7 +214,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the silhouette.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.RED
    */
   silhouetteColor: createPropertyDescriptor("silhouetteColor"),
@@ -215,7 +222,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the size of the silhouette in pixels.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   silhouetteSize: createPropertyDescriptor("silhouetteSize"),
@@ -223,7 +230,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} that blends with the model's rendered color.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
@@ -231,7 +238,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * Gets or sets the enum Property specifying how the color blends with the model.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ColorBlendMode.HIGHLIGHT
    */
   colorBlendMode: createPropertyDescriptor("colorBlendMode"),
@@ -241,7 +248,7 @@ Object.defineProperties(ModelGraphics.prototype, {
    * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
    * any value in-between resulting in a mix of the two.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.5
    */
   colorBlendAmount: createPropertyDescriptor("colorBlendAmount"),
@@ -249,7 +256,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * A property specifying the {@link Cartesian2} used to scale the diffuse and specular image-based lighting contribution to the final color.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   imageBasedLightingFactor: createPropertyDescriptor(
     "imageBasedLightingFactor"
@@ -258,14 +265,14 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * A property specifying the {@link Cartesian3} light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
    * @memberOf ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   lightColor: createPropertyDescriptor("lightColor"),
 
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -299,7 +306,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   clippingPlanes: createPropertyDescriptor("clippingPlanes"),
 });

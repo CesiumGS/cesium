@@ -5,7 +5,7 @@ import DeveloperError from "./DeveloperError.js";
  * different representation than their packed value.  These methods and
  * properties are expected to be defined on a constructor function.
  *
- * @exports PackableForInterpolation
+ * @namespace PackableForInterpolation
  *
  * @see Packable
  */
@@ -23,7 +23,7 @@ var PackableForInterpolation = {
    * @param {Number[]} packedArray The packed array.
    * @param {Number} [startingIndex=0] The index of the first element to be converted.
    * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-   * @param {Number[]} result The object into which to store the result.
+   * @param {Number[]} [result] The object into which to store the result.
    */
   convertPackedArrayForInterpolation: DeveloperError.throwInstantiationError,
 
