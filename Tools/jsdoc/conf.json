@@ -26,6 +26,7 @@
     "opts": {
         "destination": "./docs",
         "template": "./Tools/jsdoc/cesium_template",
-        "recurse": true
+        "recurse": true,
+        "private":true
     }
 }
