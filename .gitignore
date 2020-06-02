@@ -28,6 +28,8 @@ npm-debug.log.*
 package-lock.json
 yarn.lock
 
+/out
+
 # WebStorm user-specific
 .idea/workspace.xml
 .idea/tasks.xml
