@@ -2,7 +2,7 @@ import Credit from "./Credit.js";
 import defined from "./defined.js";
 
 /**
- * @exports MapboxApi
+ * @namespace MapboxApi
  */
 var MapboxApi = {};
 

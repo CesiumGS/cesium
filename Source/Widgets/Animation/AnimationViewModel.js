@@ -380,7 +380,7 @@ function AnimationViewModel(clockViewModel) {
  * Gets or sets the default date formatter used by new instances.
  *
  * @member
- * @type {AnimationViewModel~DateFormatter}
+ * @type {AnimationViewModel.DateFormatter}
  */
 AnimationViewModel.defaultDateFormatter = function (date, viewModel) {
   var gregorianDate = JulianDate.toGregorianDate(date);
@@ -435,7 +435,7 @@ AnimationViewModel.defaultTicks = [
  * Gets or sets the default time formatter used by new instances.
  *
  * @member
- * @type {AnimationViewModel~TimeFormatter}
+ * @type {AnimationViewModel.TimeFormatter}
  */
 AnimationViewModel.defaultTimeFormatter = function (date, viewModel) {
   var gregorianDate = JulianDate.toGregorianDate(date);
@@ -598,7 +598,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
    * Gets or sets the function which formats a date for display.
    * @memberof AnimationViewModel.prototype
    *
-   * @type {AnimationViewModel~DateFormatter}
+   * @type {AnimationViewModel.DateFormatter}
    * @default AnimationViewModel.defaultDateFormatter
    */
   dateFormatter: {
@@ -621,7 +621,7 @@ Object.defineProperties(AnimationViewModel.prototype, {
    * Gets or sets the function which formats a time for display.
    * @memberof AnimationViewModel.prototype
    *
-   * @type {AnimationViewModel~TimeFormatter}
+   * @type {AnimationViewModel.TimeFormatter}
    * @default AnimationViewModel.defaultTimeFormatter
    */
   timeFormatter: {
@@ -647,7 +647,7 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
 
 /**
  * A function that formats a date for display.
- * @callback AnimationViewModel~DateFormatter
+ * @callback AnimationViewModel.DateFormatter
  *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
@@ -656,7 +656,7 @@ AnimationViewModel._realtimeShuttleRingAngle = realtimeShuttleRingAngle;
 
 /**
  * A function that formats a time for display.
- * @callback AnimationViewModel~TimeFormatter
+ * @callback AnimationViewModel.TimeFormatter
  *
  * @param {JulianDate} date The date to be formatted
  * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.

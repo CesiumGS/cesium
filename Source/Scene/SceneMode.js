@@ -1,8 +1,7 @@
 /**
  * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
  *
- * @exports SceneMode
- *
+ * @enum {Number}
  * @see Scene#mode
  */
 var SceneMode = {

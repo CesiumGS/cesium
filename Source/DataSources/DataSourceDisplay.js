@@ -28,7 +28,7 @@ import PolylineVisualizer from "./PolylineVisualizer.js";
  * @param {Object} options Object with the following properties:
  * @param {Scene} options.scene The scene in which to display the data.
  * @param {DataSourceCollection} options.dataSourceCollection The data sources to display.
- * @param {DataSourceDisplay~VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
+ * @param {DataSourceDisplay.VisualizersCallback} [options.visualizersCallback=DataSourceDisplay.defaultVisualizersCallback]
  *        A function which creates an array of visualizers used for visualization.
  *        If undefined, all standard visualizers are used.
  */
@@ -124,7 +124,7 @@ function DataSourceDisplay(options) {
  * Gets or sets the default function which creates an array of visualizers used for visualization.
  * By default, this function uses all standard visualizers.
  *
- * @type {DataSourceDisplay~VisualizersCallback}
+ * @type {DataSourceDisplay.VisualizersCallback}
  */
 DataSourceDisplay.defaultVisualizersCallback = function (
   scene,
@@ -496,7 +496,7 @@ DataSourceDisplay.prototype._onDataSourceMoved = function (
 
 /**
  * A function which creates an array of visualizers used for visualization.
- * @callback DataSourceDisplay~VisualizersCallback
+ * @callback DataSourceDisplay.VisualizersCallback
  *
  * @param {Scene} scene The scene to create visualizers for.
  * @param {DataSource} dataSource The data source to create visualizers for.

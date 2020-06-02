@@ -23,7 +23,7 @@ var defaultImageSize = new Cartesian2(1.0, 1.0);
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.show=true] Whether to display the particle system.
- * @param {ParticleSystem~updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
+ * @param {ParticleSystem.updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
  * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
  * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
@@ -67,7 +67,7 @@ function ParticleSystem(options) {
 
   /**
    * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
-   * @type {ParticleSystem~updateCallback}
+   * @type {ParticleSystem.updateCallback}
    * @default undefined
    */
   this.updateCallback = options.updateCallback;
@@ -894,7 +894,7 @@ ParticleSystem.prototype.destroy = function () {
  * A function used to modify attributes of the particle at each time step. This can include force modifications,
  * color, sizing, etc.
  *
- * @callback ParticleSystem~updateCallback
+ * @callback ParticleSystem.updateCallback
  *
  * @param {Particle} particle The particle being updated.
  * @param {Number} dt The time in seconds since the last update.

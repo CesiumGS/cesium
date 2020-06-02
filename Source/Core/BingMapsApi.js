@@ -7,7 +7,7 @@ import defined from "./defined.js";
  * or {@link BingMapsGeocoderService}. You can create your own key at
  * {@link https://www.bingmapsportal.com/}.
  *
- * @exports BingMapsApi
+ * @namespace BingMapsApi
  */
 var BingMapsApi = {};
 
@@ -19,6 +19,12 @@ var BingMapsApi = {};
  */
 BingMapsApi.defaultKey = undefined;
 
+/**
+ * Gets the key to use to access the Bing Maps API. If the provided
+ * key is defined, it is returned. Otherwise, returns {@link BingMapsApi.defaultKey}.
+ * @param {string|null|undefined} providedKey The provided key to use if defined.
+ * @returns {string|undefined} The Bing Maps API key to use.
+ */
 BingMapsApi.getKey = function (providedKey) {
   if (defined(providedKey)) {
     return providedKey;

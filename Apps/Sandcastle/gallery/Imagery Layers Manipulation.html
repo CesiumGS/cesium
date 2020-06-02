@@ -161,9 +161,8 @@
           addBaseLayerOption("Bing Maps Aerial", undefined); // the current base layer
           addBaseLayerOption(
             "Bing Maps Road",
-            new Cesium.BingMapsImageryProvider({
-              url: "https://dev.virtualearth.net",
-              mapStyle: Cesium.BingMapsStyle.ROAD,
+            Cesium.createWorldImagery({
+              style: Cesium.IonWorldImageryStyle.ROAD,
             })
           );
           addBaseLayerOption(

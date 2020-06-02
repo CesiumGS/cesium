@@ -1,7 +1,7 @@
 /**
  * Describes how to draw a label.
  *
- * @exports LabelStyle
+ * @enum {Number}
  *
  * @see Label#style
  */

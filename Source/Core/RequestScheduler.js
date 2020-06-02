@@ -44,7 +44,7 @@ var requestCompletedEvent = new Event();
  * a lot of new requests may be generated and a lot of in-flight requests may become redundant. The request scheduler manually constrains the
  * number of requests so that newer requests wait in a shorter queue and don't have to compete for bandwidth with requests that have expired.
  *
- * @exports RequestScheduler
+ * @namespace RequestScheduler
  *
  */
 function RequestScheduler() {}
@@ -66,6 +66,7 @@ RequestScheduler.maximumRequestsPerServer = 6;
 
 /**
  * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
+ * @type {Object}
  *
  * @example
  * RequestScheduler.requestsByServer = {

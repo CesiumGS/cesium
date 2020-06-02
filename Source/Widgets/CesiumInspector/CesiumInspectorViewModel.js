@@ -58,7 +58,7 @@ var scratchPickCartesian = new Cartesian3();
  * @constructor
  *
  * @param {Scene} scene The scene instance to use.
- * @param {PerformanceContainer} performanceContainer The instance to use for performance container.
+ * @param {Element} performanceContainer The instance to use for performance container.
  */
 function CesiumInspectorViewModel(scene, performanceContainer) {
   //>>includeStart('debug', pragmas.debug);

@@ -9,7 +9,7 @@ import BlendFunction from "./BlendFunction.js";
  * This is a helper when using custom render states with {@link Appearance#renderState}.
  * </p>
  *
- * @exports BlendingState
+ * @namespace
  */
 var BlendingState = {
   /**

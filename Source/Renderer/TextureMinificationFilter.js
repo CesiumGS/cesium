@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Enumerates all possible filters used when minifying WebGL textures.
  *
- * @exports TextureMinificationFilter
+ * @enum {Number}
  *
  * @see TextureMagnificationFilter
  */
@@ -67,28 +67,28 @@ var TextureMinificationFilter = {
    * @constant
    */
   LINEAR_MIPMAP_LINEAR: WebGLConstants.LINEAR_MIPMAP_LINEAR,
-
-  /**
-   * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
-   *
-   * @private
-   *
-   * @param textureMinificationFilter
-   * @returns {Boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
-   */
-  validate: function (textureMinificationFilter) {
-    return (
-      textureMinificationFilter === TextureMinificationFilter.NEAREST ||
-      textureMinificationFilter === TextureMinificationFilter.LINEAR ||
-      textureMinificationFilter ===
-        TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
-      textureMinificationFilter ===
-        TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
-      textureMinificationFilter ===
-        TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
-      textureMinificationFilter ===
-        TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
-    );
-  },
 };
+
+/**
+ * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
+ *
+ * @private
+ *
+ * @param textureMinificationFilter
+ * @returns {Boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
+ */
+TextureMinificationFilter.validate = function (textureMinificationFilter) {
+  return (
+    textureMinificationFilter === TextureMinificationFilter.NEAREST ||
+    textureMinificationFilter === TextureMinificationFilter.LINEAR ||
+    textureMinificationFilter ===
+      TextureMinificationFilter.NEAREST_MIPMAP_NEAREST ||
+    textureMinificationFilter ===
+      TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
+    textureMinificationFilter ===
+      TextureMinificationFilter.NEAREST_MIPMAP_LINEAR ||
+    textureMinificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR
+  );
+};
+
 export default Object.freeze(TextureMinificationFilter);

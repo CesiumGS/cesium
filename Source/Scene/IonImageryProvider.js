@@ -37,15 +37,22 @@ var ImageryProviderMapping = {
 };
 
 /**
+ * @typedef {Object} IonImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the TileMapServiceImageryProvider constructor
+ *
+ * @property {Number} assetId An ion imagery asset ID
+ * @property {String} [accessToken=Ion.defaultAccessToken] The access token to use.
+ * @property {String|Resource} [server=Ion.defaultServer] The resource to the Cesium ion API server.
+ */
+
+/**
  * Provides tiled imagery using the Cesium ion REST API.
  *
  * @alias IonImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Number} options.assetId An ion imagery asset ID;
- * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
+ * @param {IonImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * viewer.imageryLayers.addImageryProvider(new Cesium.IonImageryProvider({ assetId : 23489024 }));
@@ -420,6 +427,19 @@ Object.defineProperties(IonImageryProvider.prototype, {
       //>>includeEnd('debug');
       return this._imageryProvider.hasAlphaChannel;
     },
+
+    /**
+     * Gets the proxy used by this provider.
+     * @memberof IonImageryProvider.prototype
+     * @type {Proxy}
+     * @readonly
+     * @default undefined
+     */
+    proxy: {
+      get: function () {
+        return undefined;
+      },
+    },
   },
 });
 
@@ -460,7 +480,7 @@ IonImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.
