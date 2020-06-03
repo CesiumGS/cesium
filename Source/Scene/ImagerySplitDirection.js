@@ -1,7 +1,7 @@
 /**
  * The direction to display an ImageryLayer relative to the {@link Scene#imagerySplitPosition}.
  *
- * @exports ImagerySplitDirection
+ * @enum {Number}
  *
  * @see ImageryLayer#splitDirection
  */

@@ -1,7 +1,7 @@
 /**
  * Constants for time conversions like those done by {@link JulianDate}.
  *
- * @exports TimeConstants
+ * @namespace TimeConstants
  *
  * @see JulianDate
  *

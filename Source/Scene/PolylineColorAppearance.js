@@ -28,7 +28,7 @@ if (!FeatureDetection.isInternetExplorer()) {
  * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
  * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+ * @param {Object} [options.renderState] Optional render state to override the default render state.
  *
  * @example
  * // A solid white line segment

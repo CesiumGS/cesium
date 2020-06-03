@@ -5,7 +5,7 @@ import DeveloperError from "./DeveloperError.js";
  * Parses a query string into an object, where the keys and values of the object are the
  * name/value pairs from the query string, decoded. If a name appears multiple times,
  * the value in the object will be an array of values.
- * @exports queryToObject
+ * @function queryToObject
  *
  * @param {String} queryString The query string.
  * @returns {Object} An object containing the parameters parsed from the query string.

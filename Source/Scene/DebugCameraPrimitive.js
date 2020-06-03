@@ -25,6 +25,7 @@ import Primitive from "./Primitive.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Camera} options.camera The camera.
+ * @param {Number[]} [options.frustumSplits] Distances to the near and far planes of the camera frustums. This overrides the camera's frustum near and far values.
  * @param {Color} [options.color=Color.CYAN] The color of the debug outline.
  * @param {Boolean} [options.updateOnChange=true] Whether the primitive updates when the underlying camera changes.
  * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
@@ -46,6 +47,7 @@ function DebugCameraPrimitive(options) {
   //>>includeEnd('debug');
 
   this._camera = options.camera;
+  this._frustumSplits = options.frustumSplits;
   this._color = defaultValue(options.color, Color.CYAN);
   this._updateOnChange = defaultValue(options.updateOnChange, true);
 
@@ -124,13 +126,16 @@ DebugCameraPrimitive.prototype.update = function (frameState) {
     }
     frustum = cameraFrustum.clone(frustum);
 
-    var frustumSplits = frameState.frustumSplits;
-    var numFrustums = frustumSplits.length - 1;
-    if (numFrustums <= 0) {
-      frustumSplits = scratchSplits; // Use near and far planes if no splits created
+    var numFrustums;
+    var frustumSplits = this._frustumSplits;
+    if (!defined(frustumSplits) || frustumSplits.length <= 1) {
+      // Use near and far planes if no splits created
+      frustumSplits = scratchSplits;
       frustumSplits[0] = this._camera.frustum.near;
       frustumSplits[1] = this._camera.frustum.far;
       numFrustums = 1;
+    } else {
+      numFrustums = frustumSplits.length - 1;
     }
 
     var position = camera.positionWC;

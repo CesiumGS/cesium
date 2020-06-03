@@ -5,7 +5,7 @@ import IonResource from "./IonResource.js";
 /**
  * Creates a {@link CesiumTerrainProvider} instance for the {@link https://cesium.com/content/#cesium-world-terrain|Cesium World Terrain}.
  *
- * @exports createWorldTerrain
+ * @function
  *
  * @param {Object} [options] Object with the following properties:
  * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server if available.

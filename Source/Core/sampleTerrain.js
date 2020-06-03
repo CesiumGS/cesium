@@ -15,7 +15,7 @@ import Check from "./Check.js";
  * terrain level of detail as input, if you need to get the altitude of the terrain as precisely
  * as possible (i.e. with maximum level of detail) use {@link sampleTerrainMostDetailed}.
  *
- * @exports sampleTerrain
+ * @function sampleTerrain
  *
  * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
  * @param {Number} level The terrain level-of-detail from which to query terrain heights.

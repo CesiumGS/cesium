@@ -129,7 +129,7 @@ Object.defineProperties(TimeIntervalCollection.prototype, {
  * <code>true</code> if they are equal, <code>false</code> otherwise.
  *
  * @param {TimeIntervalCollection} [right] The right hand side collection.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
  */
 TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
@@ -157,7 +157,7 @@ TimeIntervalCollection.prototype.equals = function (right, dataComparer) {
  * Gets the interval at the specified index.
  *
  * @param {Number} index The index of the interval to retrieve.
- * @returns {TimeInterval} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
+ * @returns {TimeInterval|undefined} The interval at the specified index, or <code>undefined</code> if no interval exists as that index.
  */
 TimeIntervalCollection.prototype.get = function (index) {
   //>>includeStart('debug', pragmas.debug);
@@ -274,7 +274,7 @@ TimeIntervalCollection.prototype.indexOf = function (date) {
  * @param {JulianDate} [options.stop] The stop time of the interval.
  * @param {Boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
  * @param {Boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
- * @returns {TimeInterval} The first interval in the collection that matches the specified parameters.
+ * @returns {TimeInterval|undefined} The first interval in the collection that matches the specified parameters.
  */
 TimeIntervalCollection.prototype.findInterval = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -305,7 +305,7 @@ TimeIntervalCollection.prototype.findInterval = function (options) {
  * The data in the new interval takes precedence over any existing intervals in the collection.
  *
  * @param {TimeInterval} interval The interval to add.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
  */
 TimeIntervalCollection.prototype.addInterval = function (
   interval,
@@ -664,8 +664,8 @@ TimeIntervalCollection.prototype.removeInterval = function (interval) {
  * Creates a new instance that is the intersection of this collection and the provided collection.
  *
  * @param {TimeIntervalCollection} other The collection to intersect with.
- * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
- * @param {TimeInterval~MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
+ * @param {TimeInterval.DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+ * @param {TimeInterval.MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
  * @returns {TimeIntervalCollection} A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
  */
 TimeIntervalCollection.prototype.intersect = function (

@@ -16,7 +16,7 @@ function KmlTourWait(duration) {
 /**
  * Play this playlist entry
  *
- * @param {KmlTourWait~DoneCallback} done function which will be called when playback ends
+ * @param {KmlTourWait.DoneCallback} done function which will be called when playback ends
  */
 KmlTourWait.prototype.play = function (done) {
   var self = this;
@@ -40,7 +40,7 @@ KmlTourWait.prototype.stop = function () {
 /**
  * A function which will be called when playback ends.
  *
- * @callback KmlTourWait~DoneCallback
+ * @callback KmlTourWait.DoneCallback
  * @param {Boolean} terminated true if {@link KmlTourWait#stop} was
  * called before entry done playback.
  */

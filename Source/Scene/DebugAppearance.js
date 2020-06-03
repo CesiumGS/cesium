@@ -20,7 +20,7 @@ import Appearance from "./Appearance.js";
  * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
  * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
  * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
- * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+ * @param {Object} [options.renderState] Optional render state to override the default render state.
  *
  * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
  *

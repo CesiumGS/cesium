@@ -1,7 +1,7 @@
 /**
  * A tonemapping algorithm when rendering with high dynamic range.
  *
- * @exports Tonemapper
+ * @enum {Number}
  * @private
  */
 var Tonemapper = {
