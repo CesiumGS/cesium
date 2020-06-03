@@ -13,7 +13,7 @@ import Property from "./Property.js";
  * @alias VelocityVectorProperty
  * @constructor
  *
- * @param {Property} [position] The position property used to compute the velocity.
+ * @param {PositionProperty} [position] The position property used to compute the velocity.
  * @param {Boolean} [normalize=true] Whether to normalize the computed velocity vector.
  *
  * @example
