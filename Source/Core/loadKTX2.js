@@ -379,6 +379,7 @@ function parseCompressed(
   var TranscodeTarget = transcoderModule.TranscodeTarget;
   if (supportedFormats.etc1 && !hasAlphaSlices) {
     internalFormat = PixelFormat.RGB_ETC1;
+    transcoderFormat = TranscodeTarget.ETC1_RGB;
   } else if (supportedFormats.s3tc) {
     internalFormat = hasAlphaSlices
       ? PixelFormat.RGBA_DXT1
