@@ -3,8 +3,9 @@ import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * The format of a pixel, i.e., the number of components it has and what they represent.
- * <br/>像素的格式，也就是说每个像素中颜色由哪些组成以及如何展示。
- * @exports PixelFormat
+ * <br/>像素的格式，也就是说每个像素中，由哪些颜色通道组成以及如何展示。
+ * <br/>参考：{@link http://fourier.eng.hmc.edu/e180/lectures/color1/node28.html Three Components of Color}
+ * @namespace PixelFormat
  *
  * @enum {Number}
  */
@@ -150,6 +151,9 @@ var PixelFormat = {
 };
 
 /**
+ * 获取每种像素格式的长度
+ * @param {PixelFormat} pixelFormat 像素格式
+ * @returns {Number} 返回长度值
  * @private
  */
 PixelFormat.componentsLength = function (pixelFormat) {
@@ -169,6 +173,9 @@ PixelFormat.componentsLength = function (pixelFormat) {
 };
 
 /**
+ * 验证像素格式是否为PixelFormat提供的类型
+ * @param {PixelFormat} pixelFormat 具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.validate = function (pixelFormat) {
@@ -193,6 +200,9 @@ PixelFormat.validate = function (pixelFormat) {
 };
 
 /**
+ * 是否为颜色格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isColorFormat = function (pixelFormat) {
@@ -206,6 +216,9 @@ PixelFormat.isColorFormat = function (pixelFormat) {
 };
 
 /**
+ * 是否为深度格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isDepthFormat = function (pixelFormat) {
@@ -216,6 +229,9 @@ PixelFormat.isDepthFormat = function (pixelFormat) {
 };
 
 /**
+ * 是否为压缩格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isCompressedFormat = function (pixelFormat) {
@@ -233,6 +249,9 @@ PixelFormat.isCompressedFormat = function (pixelFormat) {
 };
 
 /**
+ * 是否为DXT压缩格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isDXTFormat = function (pixelFormat) {
@@ -245,6 +264,9 @@ PixelFormat.isDXTFormat = function (pixelFormat) {
 };
 
 /**
+ * 是否为PVRTC压缩格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isPVRTCFormat = function (pixelFormat) {
@@ -257,6 +279,9 @@ PixelFormat.isPVRTCFormat = function (pixelFormat) {
 };
 
 /**
+ * 是否为ETC1压缩格式
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @returns 如果是返回true,否则返回false
  * @private
  */
 PixelFormat.isETC1Format = function (pixelFormat) {
@@ -264,6 +289,11 @@ PixelFormat.isETC1Format = function (pixelFormat) {
 };
 
 /**
+ * 获取压缩纹理的子节大小
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @param {Number} width 纹理长度
+ * @param {Number} height 纹理高（宽）度
+ * @returns {Number} 返回子节大小
  * @private
  */
 PixelFormat.compressedTextureSizeInBytes = function (
@@ -297,6 +327,12 @@ PixelFormat.compressedTextureSizeInBytes = function (
 };
 
 /**
+ * 获取纹理的子节大小
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @param {PixelDatatype} pixelDatatype 像素的数据格式
+ * @param {Number} width 纹理长度
+ * @param {Number} height 纹理宽度
+ * @returns {Number} 返回具体的子节大小
  * @private
  */
 PixelFormat.textureSizeInBytes = function (
@@ -315,6 +351,12 @@ PixelFormat.textureSizeInBytes = function (
 };
 
 /**
+ * 获取纹理子节对齐的对齐值
+ * <br/>参考：{@link https://blog.csdn.net/wdfscsdn2015/article/details/72935264 字节对齐的意义}、{@link https://www.cnblogs.com/dongguolei/p/11982230.html glPixelStorei 详解 包括像素传输}
+ * @param {PixelFormat} pixelFormat  具体的像素格式
+ * @param {PixelDatatype} pixelDatatype 像素数据类型
+ * @param {Number} width 纹理长度
+ * @returns {Number} 返回对齐值
  * @private
  */
 PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
@@ -324,6 +366,14 @@ PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
 };
 
 /**
+ * 创建一个类型化数组
+ * <br/>参考：{@link https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/TypedArray TypedArray}
+ * 、{@link https://javascript.ruanyifeng.com/stdlib/arraybuffer.html 二进制数组}
+ * @param {PixelFormat} pixelFormat 具体的像素格式
+ * @param {PixelDatatype} pixelDatatype 像素数据类型
+ * @param {Number} width 长度
+ * @param {Number} height 高（宽）度
+ * @returns {TypedArray} 返回一个类型化数组
  * @private
  */
 PixelFormat.createTypedArray = function (
@@ -352,6 +402,14 @@ PixelFormat.createTypedArray = function (
 };
 
 /**
+ * 翻转Y轴
+ * <br/>参考：{@link https://juejin.im/post/5d4423c4f265da038f47ef87 WebGL-Y轴翻转踩坑实录}
+ * @param {TypedArray} bufferView 类型化数组的View
+ * @param {PixelFormat} pixelFormat 像素格式
+ * @param {PixelDatatype} pixelDatatype 像素数据类型
+ * @param {Number} width 长度
+ * @param {Number} height 高（宽度）度
+ * @returns {TypedArray} 返回翻转后的类型化数组
  * @private
  */
 PixelFormat.flipY = function (
