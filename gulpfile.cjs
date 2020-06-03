@@ -41,7 +41,7 @@ if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
 
-var karmaConfigFile = path.join(__dirname, "Specs/karma.conf.js");
+var karmaConfigFile = path.join(__dirname, "Specs/karma.conf.cjs");
 var travisDeployUrl =
   "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 
