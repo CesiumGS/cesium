@@ -9,6 +9,8 @@
 ##### Fixes :wrench:
 
 - Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
+- Fixed JSDoc and TypeScript type definitions for all `ImageryProvider` types, which were missing `defaultNightAlpha` and `defaultDayAlpha` properties.
+- Fixed JSDoc and TypeScript type definitions for `Viewer` options parameter, which was incorrectly listed as required.
 
 ### 1.70.0 - 2020-06-01
 
