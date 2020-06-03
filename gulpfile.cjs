@@ -1557,6 +1557,12 @@ function createTypeScriptDefinitions() {
     .replace(/<String>/gm, "<string>")
     .replace(/<Boolean>/gm, "<boolean>")
     .replace(/<Object>/gm, "<object>")
+    // The class has to be called PropertyBag for JSDoc purposes, but we can rename
+    // it and reuse the `PropertyBag` name for a union type, see below
+    .replace(
+      /export (class|interface) PropertyBag/gm,
+      "export $1 PropertyBagBase"
+    )
     .replace(
       /= "WebGLConstants\.(.+)"/gm,
       // eslint-disable-next-line no-unused-vars
@@ -1570,19 +1576,14 @@ function createTypeScriptDefinitions() {
 /**
  * Private interfaces to support PropertyBag being a dictionary-like object.
  */
+interface DictionaryLike {
+  [index: string]: any;
+}
 interface PropertyDictionary {
   [key: string]: Property | undefined;
 }
-class PropertyBagBase {
-  readonly propertyNames: string[];
-  constructor(value?: object, createPropertyCallback?: Function);
-  addProperty(propertyName: string, value?: any, createPropertyCallback?: Function): void;
-  hasProperty(propertyName: string): boolean;
-  merge(source: Object, createPropertyCallback?: Function): void;
-  removeProperty(propertyName: string): void;
-}
 /** This has to be in the workaround section because JSDoc doesn't support Intersection Types */
-type PropertyBagType = PropertyDictionary & Property & PropertyBagBase;
+type PropertyBag = PropertyDictionary & Property & PropertyBagBase;
 
 ${source}
 }

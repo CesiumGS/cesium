@@ -976,9 +976,8 @@ EntityCluster.prototype.destroy = function () {
  * @callback EntityCluster.newClusterCallback
  *
  * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
- * @param {Object} cluster An object
- * containing billboard, label, and point properties. The values are the same as
- * billboard, label and point entities, but must be the values of the ConstantProperty.
+ * @param {Object} cluster An object containing the Billboard, Label, and Point
+ * primitives that represent this cluster of entities.
  * @param {Billboard} cluster.billboard
  * @param {Label} cluster.label
  * @param {PointPrimitive} cluster.point
