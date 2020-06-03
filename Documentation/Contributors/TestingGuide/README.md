@@ -16,6 +16,7 @@ All new code should have 100% code coverage and should pass all tests. Always ru
   - [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
   - [Run All Tests with Coverage](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
   - [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
+  - [Test Driven Development (TDD) mode](#test-driven-development-tdd-mode)
 - [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
 - [`testfailure` Label for Issues](#testfailure-label-for-issues)
 - [Writing Tests](#writing-tests)
@@ -196,6 +197,23 @@ It is also possible for Karma to run all tests against each browser installed on
 #### Run a Single Test or Suite
 
 Sometimes it is useful to run a single test or suite for easier debugging purposes. To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak. Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
+
+### Test Driven Development (TDD) mode
+
+TDD is a development method that helps write leaner code.
+
+The idea is to write a failing test and then implement the code that makes it pass.
+
+The command `npm run test:tdd` will run Cesium's test while automatically rerunning the tests on code change. This speeds up the process of writing and debugging tests.
+
+With Cesium you can use TDD as follows:
+
+1. Use `fdescribe` for your test suite - Cesium has a lot of tests, so running all of them during development is not practical.
+2. Run `npm run test:tdd` - this should run karma and open its browser window
+3. If there are tests in the suite, see that they pass
+4. Write your failing test and see that it fails
+5. Implement the code until your test passes
+6. You can debug the test/code in the opened karma browser window
 
 ## Testing Previous Versions of CesiumJS
 
