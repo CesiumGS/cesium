@@ -182,6 +182,8 @@ function getRequestReceivedFunction(request) {
     requestCompletedEvent.raiseEvent();
     request.state = RequestState.RECEIVED;
     request.deferred.resolve(results);
+    // explicitly set to undefined to ensure GC of request response data. See #8843
+    request.deferred = undefined;
   };
 }
 
@@ -218,7 +220,12 @@ function cancelRequest(request) {
   var active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
-  request.deferred.reject();
+  // check that deferred has not been cleared since cancelRequest can be called
+  // on a finished request, e.g. by clearForSpecs during tests
+  if (defined(request.deferred)) {
+    request.deferred.reject();
+    request.deferred = undefined;
+  }
 
   if (active) {
     --statistics.numberOfActiveRequests;
