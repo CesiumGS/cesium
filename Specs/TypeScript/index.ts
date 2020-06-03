@@ -30,6 +30,7 @@ import {
   Camera,
   Scene,
   Property,
+  PropertyBag,
   ConstantProperty,
   SampledProperty,
   PositionProperty,
@@ -51,6 +52,14 @@ import {
   PolylineGlowMaterialProperty,
   PolylineOutlineMaterialProperty,
   StripeMaterialProperty,
+  CheckerboardMaterialProperty,
+  PolylineDashMaterialProperty,
+  VelocityVectorProperty,
+  VelocityOrientationProperty,
+  PropertyArray,
+  PositionPropertyArray,
+  PolylineArrowMaterialProperty,
+  NodeTransformationProperty,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -112,8 +121,14 @@ property = new ConstantProperty(1);
 property = new TimeIntervalCollectionProperty();
 property = new CompositeProperty();
 property = new SampledProperty(Cartesian3);
+property = new PropertyBag();
+property = new PropertyArray();
 property = new PositionProperty();
 property = new MaterialProperty();
+property = new VelocityVectorProperty();
+property = new VelocityOrientationProperty();
+property = new PositionPropertyArray();
+property = new NodeTransformationProperty();
 property = new ReferenceProperty(new EntityCollection(), "object1", [
   "billboard",
   "scale",
@@ -140,3 +155,6 @@ property = materialProperty = new ImageMaterialProperty();
 property = materialProperty = new PolylineGlowMaterialProperty();
 property = materialProperty = new PolylineOutlineMaterialProperty();
 property = materialProperty = new StripeMaterialProperty();
+property = materialProperty = new CheckerboardMaterialProperty();
+property = materialProperty = new PolylineDashMaterialProperty();
+property = materialProperty = new PolylineArrowMaterialProperty();
