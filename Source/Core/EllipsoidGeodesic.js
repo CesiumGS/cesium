@@ -401,7 +401,7 @@ EllipsoidGeodesic.prototype.setEndPoints = function (start, end) {
  * Provides the location of a point at the indicated portion along the geodesic.
  *
  * @param {Number} fraction The portion of the distance between the initial and final points.
- * @param {Cartographic} result The object in which to store the result.
+ * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
  */
 EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
