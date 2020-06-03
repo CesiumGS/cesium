@@ -418,7 +418,7 @@ EllipsoidGeodesic.prototype.interpolateUsingFraction = function (
  * Provides the location of a point at the indicated distance along the geodesic.
  *
  * @param {Number} distance The distance from the inital point to the point of interest along the geodesic
- * @param {Cartographic} result The object in which to store the result.
+ * @param {Cartographic} [result] The object in which to store the result.
  * @returns {Cartographic} The location of the point along the geodesic.
  *
  * @exception {DeveloperError} start and end must be set before calling function interpolateUsingSurfaceDistance

@@ -16,10 +16,10 @@ var defaultColor = Color.WHITE;
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
- * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
- * @param {Property} [options.color=Color.WHITE] The color applied to the image
- * @param {Property} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
+ * @param {Property|String|HTMLImageElement|HTMLCanvasElement|HTMLVideoElement} [options.image] A Property specifying the Image, URL, Canvas, or Video.
+ * @param {Property|Cartesian2} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
+ * @param {Property|Color} [options.color=Color.WHITE] The color applied to the image
+ * @param {Property|Boolean} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
  */
 function ImageMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

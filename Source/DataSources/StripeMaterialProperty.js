@@ -18,11 +18,11 @@ var defaultRepeat = 1;
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
- * @param {Property} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
- * @param {Property} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
- * @param {Property} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
- * @param {Property} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
+ * @param {Property|StripeOrientation} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
+ * @param {Property|Color} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
+ * @param {Property|Color} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
+ * @param {Property|Number} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
+ * @param {Property|Number} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
  */
 function StripeMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

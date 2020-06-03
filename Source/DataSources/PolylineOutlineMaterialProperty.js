@@ -15,9 +15,9 @@ var defaultOutlineWidth = 1.0;
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
+ * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+ * @param {Property|Color} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @param {Property|Number} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
  */
 function PolylineOutlineMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);

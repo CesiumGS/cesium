@@ -17,11 +17,11 @@ var defaultLineThickness = new Cartesian2(1, 1);
  * @alias GridMaterialProperty
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.color=Color.WHITE] A Property specifying the grid {@link Color}.
- * @param {Property} [options.cellAlpha=0.1] A numeric Property specifying cell alpha values.
- * @param {Property} [options.lineCount=new Cartesian2(8, 8)] A {@link Cartesian2} Property specifying the number of grid lines along each axis.
- * @param {Property} [options.lineThickness=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
- * @param {Property} [options.lineOffset=new Cartesian2(0.0, 0.0)] A {@link Cartesian2} Property specifying starting offset of grid lines along each axis.
+ * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the grid {@link Color}.
+ * @param {Property|Number} [options.cellAlpha=0.1] A numeric Property specifying cell alpha values.
+ * @param {Property|Cartesian2} [options.lineCount=new Cartesian2(8, 8)] A {@link Cartesian2} Property specifying the number of grid lines along each axis.
+ * @param {Property|Cartesian2} [options.lineThickness=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the thickness of grid lines along each axis.
+ * @param {Property|Cartesian2} [options.lineOffset=new Cartesian2(0.0, 0.0)] A {@link Cartesian2} Property specifying starting offset of grid lines along each axis.
  *
  * @constructor
  */
