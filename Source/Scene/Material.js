@@ -9,6 +9,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import loadCRN from "../Core/loadCRN.js";
 import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -772,6 +773,7 @@ var matrixMap = {
 };
 
 var ktxRegex = /\.ktx$/i;
+var ktx2Regex = /\.ktx2$/i;
 var crnRegex = /\.crn$/i;
 
 function createTexture2DUpdateFunction(uniformId) {
@@ -874,6 +876,13 @@ function createTexture2DUpdateFunction(uniformId) {
         var promise;
         if (ktxRegex.test(resource.url)) {
           promise = loadKTX(resource);
+        } else if (ktx2Regex.test(resource.url)) {
+          var supportedFormats = {
+            etc1: context.etc1,
+            s3tc: context.s3tc,
+            pvrtc: context.pvrtc,
+          };
+          promise = loadKTX2(resource, supportedFormats);
         } else if (crnRegex.test(resource.url)) {
           promise = loadCRN(resource);
         } else {
