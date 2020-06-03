@@ -8,9 +8,10 @@
 
 ##### Fixes :wrench:
 
-- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
 - Improved `MaterialProperty` JSDoc and TypeScript type definitions, which were missing the ability to take primitive types in addition to Property instances in their constructor.
 - Fixed `EllipsoidGeodesic` JSDoc and TypeScript type definitions which incorrectly listed `result` as required.
+- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
+- Fixed a memory leak where some 3D Tiles requests were being unintentionally retained after the requests were cancelled. [#8843](https://github.com/CesiumGS/cesium/pull/8843)
 
 ### 1.70.0 - 2020-06-01
 

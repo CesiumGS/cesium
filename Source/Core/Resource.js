@@ -1367,9 +1367,12 @@ Resource.prototype._makeRequest = function (options) {
 
   return promise
     .then(function (data) {
+      // explicitly set to undefined to ensure GC of request response data. See #8843
+      request.cancelFunction = undefined;
       return data;
     })
     .otherwise(function (e) {
+      request.cancelFunction = undefined;
       if (request.state !== RequestState.FAILED) {
         return when.reject(e);
       }

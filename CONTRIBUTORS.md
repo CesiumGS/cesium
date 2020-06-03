@@ -259,3 +259,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jakub Vrana](https://github.com/vrana)
 - [Edvinas Pranka](https://github.com/epranka)
 - [James Bromwell](https://github.com/thw0rted)
+- [Brandon Nguyen](https://github.com/bn-dignitas)
