@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
 var Check = {};
 
 /**
- * Contains type checking functions, all using the typeof operator
+ * Contains type checking functions, all using the type of operator
  */
 Check.typeOf = {};
 
@@ -42,11 +42,11 @@ Check.defined = function (name, test) {
 };
 
 /**
- * Throws if test is not typeof 'function'
+ * Throws if test is not type of 'function'
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
- * @exception {DeveloperError} test must be typeof 'function'
+ * @exception {DeveloperError} test must be type of 'function'
  */
 Check.typeOf.func = function (name, test) {
   if (typeof test !== "function") {
@@ -57,11 +57,11 @@ Check.typeOf.func = function (name, test) {
 };
 
 /**
- * Throws if test is not typeof 'string'
+ * Throws if test is not type of 'string'
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
- * @exception {DeveloperError} test must be typeof 'string'
+ * @exception {DeveloperError} test must be type of 'string'
  */
 Check.typeOf.string = function (name, test) {
   if (typeof test !== "string") {
@@ -72,11 +72,11 @@ Check.typeOf.string = function (name, test) {
 };
 
 /**
- * Throws if test is not typeof 'number'
+ * Throws if test is not type of 'number'
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
- * @exception {DeveloperError} test must be typeof 'number'
+ * @exception {DeveloperError} test must be type of 'number'
  */
 Check.typeOf.number = function (name, test) {
   if (typeof test !== "number") {
@@ -87,12 +87,12 @@ Check.typeOf.number = function (name, test) {
 };
 
 /**
- * Throws if test is not typeof 'number' and less than limit
+ * Throws if test is not type of 'number' and less than limit
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
  * @param {Number} limit The limit value to compare against
- * @exception {DeveloperError} test must be typeof 'number' and less than limit
+ * @exception {DeveloperError} test must be type of 'number' and less than limit
  */
 Check.typeOf.number.lessThan = function (name, test, limit) {
   Check.typeOf.number(name, test);
@@ -109,12 +109,12 @@ Check.typeOf.number.lessThan = function (name, test, limit) {
 };
 
 /**
- * Throws if test is not typeof 'number' and less than or equal to limit
+ * Throws if test is not type of 'number' and less than or equal to limit
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
  * @param {Number} limit The limit value to compare against
- * @exception {DeveloperError} test must be typeof 'number' and less than or equal to limit
+ * @exception {DeveloperError} test must be type of 'number' and less than or equal to limit
  */
 Check.typeOf.number.lessThanOrEquals = function (name, test, limit) {
   Check.typeOf.number(name, test);
@@ -131,12 +131,12 @@ Check.typeOf.number.lessThanOrEquals = function (name, test, limit) {
 };
 
 /**
- * Throws if test is not typeof 'number' and greater than limit
+ * Throws if test is not type of 'number' and greater than limit
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
  * @param {Number} limit The limit value to compare against
- * @exception {DeveloperError} test must be typeof 'number' and greater than limit
+ * @exception {DeveloperError} test must be type of 'number' and greater than limit
  */
 Check.typeOf.number.greaterThan = function (name, test, limit) {
   Check.typeOf.number(name, test);
@@ -153,12 +153,12 @@ Check.typeOf.number.greaterThan = function (name, test, limit) {
 };
 
 /**
- * Throws if test is not typeof 'number' and greater than or equal to limit
+ * Throws if test is not type of 'number' and greater than or equal to limit
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
  * @param {Number} limit The limit value to compare against
- * @exception {DeveloperError} test must be typeof 'number' and greater than or equal to limit
+ * @exception {DeveloperError} test must be type of 'number' and greater than or equal to limit
  */
 Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
   Check.typeOf.number(name, test);
@@ -175,11 +175,11 @@ Check.typeOf.number.greaterThanOrEquals = function (name, test, limit) {
 };
 
 /**
- * Throws if test is not typeof 'object'
+ * Throws if test is not type of 'object'
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
- * @exception {DeveloperError} test must be typeof 'object'
+ * @exception {DeveloperError} test must be type of 'object'
  */
 Check.typeOf.object = function (name, test) {
   if (typeof test !== "object") {
@@ -190,11 +190,11 @@ Check.typeOf.object = function (name, test) {
 };
 
 /**
- * Throws if test is not typeof 'boolean'
+ * Throws if test is not type of 'boolean'
  *
  * @param {String} name The name of the variable being tested
  * @param {*} test The value to test
- * @exception {DeveloperError} test must be typeof 'boolean'
+ * @exception {DeveloperError} test must be type of 'boolean'
  */
 Check.typeOf.bool = function (name, test) {
   if (typeof test !== "boolean") {
@@ -205,7 +205,7 @@ Check.typeOf.bool = function (name, test) {
 };
 
 /**
- * Throws if test1 and test2 is not typeof 'number' and not equal in value
+ * Throws if test1 and test2 is not type of 'number' and not equal in value
  *
  * @param {String} name1 The name of the first variable being tested
  * @param {String} name2 The name of the second variable being tested against
