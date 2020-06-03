@@ -53,7 +53,7 @@ Object.defineProperties(ColorMaterialProperty.prototype, {
   /**
    * Gets or sets the {@link Color} {@link Property}.
    * @memberof ColorMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),

@@ -84,7 +84,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the {@link StripeOrientation}/
    * @memberof StripeMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default StripeOrientation.HORIZONTAL
    */
   orientation: createPropertyDescriptor("orientation"),
@@ -92,7 +92,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the first {@link Color}.
    * @memberof StripeMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   evenColor: createPropertyDescriptor("evenColor"),
@@ -100,7 +100,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the second {@link Color}.
    * @memberof StripeMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   oddColor: createPropertyDescriptor("oddColor"),
@@ -111,7 +111,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
    * of the odd color, 2.0 being the even color again, and any multiple or fractional values
    * being in between.
    * @memberof StripeMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   offset: createPropertyDescriptor("offset"),
@@ -119,7 +119,7 @@ Object.defineProperties(StripeMaterialProperty.prototype, {
   /**
    * Gets or sets the numeric Property specifying how many times the stripes repeat.
    * @memberof StripeMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   repeat: createPropertyDescriptor("repeat"),

@@ -66,21 +66,21 @@ Object.defineProperties(PolylineGlowMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the line.
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   color: createPropertyDescriptor("color"),
 
   /**
    * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   glowPower: createPropertyDescriptor("glowPower"),
 
   /**
    * Gets or sets the numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   taperPower: createPropertyDescriptor("taperPower"),
 });

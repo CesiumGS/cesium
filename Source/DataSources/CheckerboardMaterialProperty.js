@@ -73,7 +73,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the first {@link Color}.
    * @memberof CheckerboardMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   evenColor: createPropertyDescriptor("evenColor"),
@@ -81,7 +81,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the second {@link Color}.
    * @memberof CheckerboardMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   oddColor: createPropertyDescriptor("oddColor"),
@@ -89,7 +89,7 @@ Object.defineProperties(CheckerboardMaterialProperty.prototype, {
   /**
    * Gets or sets the {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
    * @memberof CheckerboardMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default new Cartesian2(2.0, 2.0)
    */
   repeat: createPropertyDescriptor("repeat"),
