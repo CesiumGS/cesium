@@ -885,6 +885,8 @@ gulp.task("coverage", function (done) {
         captureConsole: verbose,
         args: [undefined, undefined, undefined, webglStub, undefined],
       },
+      autoWatch: false,
+      singleRun: true,
     },
     function (e) {
       var html = "<!doctype html><html><body><ul>";
@@ -921,7 +923,7 @@ gulp.task("test", function (done) {
   var release = argv.release ? argv.release : false;
   var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
   var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
-  global.tdd = argv.tdd ? argv.tdd : false;
+  var tdd = argv.tdd ? true : false;
 
   var browsers = ["Chrome"];
   if (argv.browsers) {
@@ -956,6 +958,8 @@ gulp.task("test", function (done) {
 
   var karma = new Karma.Server(
     {
+      autoWatch: tdd,
+      singleRun: !tdd,
       configFile: karmaConfigFile,
       browsers: browsers,
       specReporter: {
