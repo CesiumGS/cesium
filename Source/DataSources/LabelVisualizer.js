@@ -24,6 +24,7 @@ var defaultOutlineWidth = 1.0;
 var defaultShowBackground = false;
 var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
 var defaultBackgroundPadding = new Cartesian2(7, 5);
+var defaultOutlineBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
 var defaultPixelOffset = Cartesian2.ZERO;
 var defaultEyeOffset = Cartesian3.ZERO;
 var defaultHeightReference = HeightReference.NONE;
@@ -34,6 +35,7 @@ var positionScratch = new Cartesian3();
 var fillColorScratch = new Color();
 var outlineColorScratch = new Color();
 var backgroundColorScratch = new Color();
+var backgroundOutlineColorScratch = new Color();
 var backgroundPaddingScratch = new Cartesian2();
 var eyeOffsetScratch = new Cartesian3();
 var pixelOffsetScratch = new Cartesian2();
@@ -193,6 +195,12 @@ LabelVisualizer.prototype.update = function (time) {
       time,
       defaultBackgroundColor,
       backgroundColorScratch
+    );
+    label.backgroundOutlineColor = Property.getValueOrDefault(
+      labelGraphics._backgroundOutlineColor,
+      time,
+      defaultOutlineBackgroundColor,
+      backgroundOutlineColorScratch
     );
     label.backgroundPadding = Property.getValueOrDefault(
       labelGraphics._backgroundPadding,
