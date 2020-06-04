@@ -3067,6 +3067,15 @@ function processLabel(entity, packet, entityCollection, sourceUri) {
     entityCollection
   );
   processPacketData(
+    Color,
+    label,
+    "backgroundOutlineColor",
+    labelData.backgroundOutlineColor,
+    interval,
+    sourceUri,
+    entityCollection
+  );
+  processPacketData(
     Cartesian2,
     label,
     "backgroundPadding",

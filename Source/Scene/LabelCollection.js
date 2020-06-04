@@ -166,6 +166,8 @@ function rebindAllGlyphs(labelCollection, label) {
     }
 
     backgroundBillboard.color = label._backgroundColor;
+    backgroundBillboard.outlineColor = label._backgroundOutlineColor;
+    backgroundBillboard.outlineWidth = 1.0; // TODO: support backgroundOutlineWidth
     backgroundBillboard.show = label._show;
     backgroundBillboard.position = label._position;
     backgroundBillboard.eyeOffset = label._eyeOffset;
