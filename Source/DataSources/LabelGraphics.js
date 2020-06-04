@@ -16,6 +16,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the text.
  * @property {Property | boolean} [showBackground=false] A boolean Property specifying the visibility of the background behind the label.
  * @property {Property | Color} [backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
+ * @property {Property | Color} [backgroundOutlineColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background outline {@link Color}.
  * @property {Property | Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
  * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
  * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
@@ -64,6 +65,8 @@ function LabelGraphics(options) {
   this._showBackgroundSubscription = undefined;
   this._backgroundColor = undefined;
   this._backgroundColorSubscription = undefined;
+  this._backgroundOutlineColor = undefined;
+  this._backgroundOutlineColorSubscription = undefined;
   this._backgroundPadding = undefined;
   this._backgroundPaddingSubscription = undefined;
   this._pixelOffset = undefined;
@@ -171,6 +174,14 @@ Object.defineProperties(LabelGraphics.prototype, {
    * @default new Color(0.165, 0.165, 0.165, 0.8)
    */
   backgroundColor: createPropertyDescriptor("backgroundColor"),
+
+  /**
+   * Gets or sets the Property specifying the background {@link Color}.
+   * @memberof LabelGraphics.prototype
+   * @type {Property|undefined}
+   * @default new Color(0.165, 0.165, 0.165, 0.8)
+   */
+  backgroundOutlineColor: createPropertyDescriptor("backgroundOutlineColor"),
 
   /**
    * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
@@ -342,6 +353,7 @@ LabelGraphics.prototype.clone = function (result) {
   result.scale = this.scale;
   result.showBackground = this.showBackground;
   result.backgroundColor = this.backgroundColor;
+  result.backgroundOutlineColor = this.backgroundOutlineColor;
   result.backgroundPadding = this.backgroundPadding;
   result.pixelOffset = this.pixelOffset;
   result.eyeOffset = this.eyeOffset;
@@ -384,6 +396,10 @@ LabelGraphics.prototype.merge = function (source) {
   this.backgroundColor = defaultValue(
     this.backgroundColor,
     source.backgroundColor
+  );
+  this.backgroundOutlineColor = defaultValue(
+    this.backgroundOutlineColor,
+    source.backgroundOutlineColor
   );
   this.backgroundPadding = defaultValue(
     this.backgroundPadding,

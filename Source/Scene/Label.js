@@ -169,6 +169,10 @@ function Label(options, labelCollection) {
     options.backgroundColor,
     new Color(0.165, 0.165, 0.165, 0.8)
   );
+  this._backgroundOutlineColor = defaultValue(
+    options.backgroundOutlineColor,
+    new Color(0.165, 0.165, 0.165, 0.8)
+  );
   this._backgroundPadding = defaultValue(
     options.backgroundPadding,
     new Cartesian2(7, 5)
@@ -516,6 +520,35 @@ Object.defineProperties(Label.prototype, {
         var backgroundBillboard = this._backgroundBillboard;
         if (defined(backgroundBillboard)) {
           backgroundBillboard.color = backgroundColor;
+        }
+      }
+    },
+  },
+
+  /**
+   * Gets or sets the background outline color of this label.
+   * @memberof Label.prototype
+   * @type {Color}
+   * @default new Color(0.165, 0.165, 0.165, 0.8)
+   */
+  backgroundOutlineColor: {
+    get: function () {
+      return this._backgroundOutlineColor;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(value)) {
+        throw new DeveloperError("value is required.");
+      }
+      //>>includeEnd('debug');
+
+      var backgroundOutlineColor = this._backgroundOutlineColor;
+      if (!Color.equals(backgroundOutlineColor, value)) {
+        Color.clone(value, backgroundOutlineColor);
+
+        var backgroundBillboard = this._backgroundBillboard;
+        if (defined(backgroundBillboard)) {
+          backgroundBillboard.color = backgroundOutlineColor;
         }
       }
     },
@@ -1326,6 +1359,10 @@ Label.prototype.equals = function (other) {
       Color.equals(this._fillColor, other._fillColor) &&
       Color.equals(this._outlineColor, other._outlineColor) &&
       Color.equals(this._backgroundColor, other._backgroundColor) &&
+      Color.equals(
+        this._backgroundOutlineColor,
+        other._backgroundOutlineColor
+      ) &&
       Cartesian2.equals(this._backgroundPadding, other._backgroundPadding) &&
       Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
       Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
