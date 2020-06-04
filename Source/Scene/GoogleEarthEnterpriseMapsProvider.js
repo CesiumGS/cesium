@@ -114,7 +114,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultNightAlpha = undefined;
@@ -123,7 +123,7 @@ function GoogleEarthEnterpriseMapsProvider(options) {
    * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultDayAlpha = undefined;
