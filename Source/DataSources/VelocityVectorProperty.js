@@ -66,7 +66,7 @@ Object.defineProperties(VelocityVectorProperty.prototype, {
    * Gets or sets the position property used to compute the velocity vector.
    * @memberof VelocityVectorProperty.prototype
    *
-   * @type {Property}
+   * @type {Property|undefined}
    */
   position: {
     get: function () {

@@ -8,6 +8,8 @@
 
 ##### Fixes :wrench:
 
+- Improved `MaterialProperty` JSDoc and TypeScript type definitions, which were missing the ability to take primitive types in addition to Property instances in their constructor.
+- Fixed `EllipsoidGeodesic` JSDoc and TypeScript type definitions which incorrectly listed `result` as required.
 - Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
 - Fixed JSDoc and TypeScript type definitions for all `ImageryProvider` types, which were missing `defaultNightAlpha` and `defaultDayAlpha` properties.
 - Fixed JSDoc and TypeScript type definitions for `Viewer` options parameter, which was incorrectly listed as required.

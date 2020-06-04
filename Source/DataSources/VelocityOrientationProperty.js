@@ -71,7 +71,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
    * Gets or sets the position property used to compute orientation.
    * @memberof VelocityOrientationProperty.prototype
    *
-   * @type {Property}
+   * @type {Property|undefined}
    */
   position: {
     get: function () {
@@ -85,7 +85,7 @@ Object.defineProperties(VelocityOrientationProperty.prototype, {
    * Gets or sets the ellipsoid used to determine which way is up.
    * @memberof VelocityOrientationProperty.prototype
    *
-   * @type {Property}
+   * @type {Property|undefined}
    */
   ellipsoid: {
     get: function () {
