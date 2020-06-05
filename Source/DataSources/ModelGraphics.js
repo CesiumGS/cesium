@@ -314,7 +314,7 @@ Object.defineProperties(ModelGraphics.prototype, {
   /**
    * A property specifying the {@link ClippingPolygon} used to selectively disable rendering the model.
    * @memberof ModelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   clippingPolygon: createPropertyDescriptor("clippingPolygon"),
 });
