@@ -39,9 +39,6 @@ describe("Scene/PolygonClippingAcceleration", function () {
       positions: positions,
       indices: indices,
       splits: 1,
-      numDimensions: 3,
-      xIndex: 0,
-      yIndex: 2,
     });
 
     const grid = accelerator.grid;
