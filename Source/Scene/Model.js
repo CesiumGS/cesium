@@ -5615,10 +5615,8 @@ Model.prototype.update = function (frameState) {
       currentClippingPlanesState = clippingPlanes.clippingPlanesState;
     }
 
-    // TODO: inelegant
     var clippingPolygon = this._clippingPolygon;
-    if (defined(clippingPolygon)) {
-      // TODO: This should be behind a dirty flag.
+    if (defined(clippingPolygon) && clippingPolygon._dirty) {
       shouldRegenerateShaders = true;
     }
 
