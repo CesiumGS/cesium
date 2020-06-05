@@ -114,12 +114,12 @@ function ClippingPolygon(options) {
 }
 
 /**
- * Constructs a clipping mesh used to selectively enable / disable rendering
+ * Constructs a clipping polygon used to selectively enable / disable rendering
  * inside of the region defined by the clipping mesh.
  *
  * @param {Object} options Object with the following properties:
- * @param {Array.<PolygonHierarchy>} options.polygonHierarchies An ARRAY of Polygon
- * Hierarchies to amalgamate into a single clipping mesh. Holes are supported.
+ * @param {Array.<PolygonHierarchy>} options.polygonHierarchies An array of @{link PolygonHierarchy}
+ * to amalgamate into a single mesh for clipping. Holes / nested holes are supported.
  * @param {Number} [options.simplify-0] Tolerance threshold that should be used
  * for mesh simplification. Note that over simplification can result in a degenerate
  * mesh which will trigger an exception
@@ -130,7 +130,7 @@ function ClippingPolygon(options) {
 
 ClippingPolygon.fromPolygonHierarchies = function (options) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("polygonHierarchies", options.polygonHierarchies);
+  Check.typeOf.array("polygonHierarchies", options.polygonHierarchies);
   //>>includeEnd('debug');
 
   var enabled = defaultValue(options.enabled, true);

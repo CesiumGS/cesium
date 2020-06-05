@@ -190,6 +190,20 @@ Check.typeOf.object = function (name, test) {
 };
 
 /**
+ * Throws if test is not typeof 'array'
+ * @param {String} name The name of the variable being tested
+ * @param {*} test The value to test
+ * @exception {DeveloperError} test must be typeof 'array'
+ */
+Check.typeOf.array = function (name, test) {
+  if (Object.prototype.toString.call(test) !== "[object Array]") {
+    throw new DeveloperError(
+      getFailedTypeErrorMessage(typeof test, "array", name)
+    );
+  }
+};
+
+/**
  * Throws if test is not typeof 'boolean'
  *
  * @param {String} name The name of the variable being tested
