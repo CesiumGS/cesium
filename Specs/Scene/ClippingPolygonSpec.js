@@ -5,6 +5,9 @@ import Matrix4 from "../../Source/Core/Matrix4.js";
 import BoundingSphere from "../../Source/Core/BoundingSphere.js";
 import Cartographic from "../../Source/Core/Cartographic.js";
 import Cartesian2 from "../../Source/Core/Cartesian2.js";
+import createScene from "../createScene.js";
+import PixelFormat from "../../Source/Core/PixelFormat.js";
+import PixelDatatype from "../../Source/Renderer/PixelDatatype.js";
 
 describe("Scene/ClippingPolygon", function () {
   // prettier-ignore
@@ -59,6 +62,22 @@ describe("Scene/ClippingPolygon", function () {
     expect(result.z).toBeCloseTo(0);
   });
 
+  it("setters update as expeected", function () {
+    var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
+      polygonHierarchies: [colorado],
+    });
+
+    clippingPolygon.enabled = false;
+    expect(clippingPolygon.enabled).toEqual(false);
+    clippingPolygon.enabled = true;
+    expect(clippingPolygon.enabled).toEqual(true);
+
+    clippingPolygon.union = false;
+    expect(clippingPolygon.union).toEqual(false);
+    clippingPolygon.union = true;
+    expect(clippingPolygon.union).toEqual(false);
+  });
+
   it("getters are defined and valid", function () {
     var splits = 1;
     var enabled = false;
@@ -93,5 +112,43 @@ describe("Scene/ClippingPolygon", function () {
     for (var i = 0; i < 4; ++i) {
       expect(clippingPolygon.boundingBox[i]).toBeInstanceOf(Cartesian2);
     }
+
+    var topLeft = clippingPolygon.boundingBox[0];
+    var topRight = clippingPolygon.boundingBox[1];
+    var btmRight = clippingPolygon.boundingBox[2];
+
+    var boundingBoxHeight = topRight.y - btmRight.y;
+    var boundingBoxWidth = topRight.x - topLeft.x;
+
+    var cellWidth = clippingPolygon.cellDimensions.x;
+    var cellHeight = clippingPolygon.cellDimensions.y;
+
+    expect(cellWidth).toBeCloseTo(boundingBoxWidth / (splits + 1));
+    expect(cellHeight).toBeCloseTo(boundingBoxHeight / (splits + 1));
+
+    var scene = createScene();
+    clippingPolygon.update(scene);
+
+    var gridTexture = clippingPolygon.gridTexture;
+    expect(gridTexture).toBeDefined();
+    expect(gridTexture.pixelFormat).toEqual(PixelFormat.RGB);
+    expect(gridTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
+
+    var meshTexture = clippingPolygon.meshPositionsTexture;
+    expect(meshTexture).toBeDefined();
+    expect(meshTexture.pixelFormat).toEqual(PixelFormat.RGB);
+    expect(meshTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
+
+    var overlappingTriangleIndicesTexture =
+      clippingPolygon.overlappingTriangleIndicesTexture;
+    expect(overlappingTriangleIndicesTexture).toBeDefined();
+    expect(overlappingTriangleIndicesTexture.pixelFormat).toEqual(
+      PixelFormat.RGB
+    );
+    expect(overlappingTriangleIndicesTexture.pixelDatatype).toEqual(
+      PixelDatatype.FLOAT
+    );
+
+    scene.destroyForSpecs();
   });
 });
