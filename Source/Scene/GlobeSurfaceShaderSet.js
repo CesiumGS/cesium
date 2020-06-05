@@ -159,8 +159,8 @@ GlobeSurfaceShaderSet.prototype.getShaderProgram = function (options) {
     (highlightFillTile << 24) |
     (colorToAlpha << 25) |
     (showUndergroundColor << 26) |
-    (enableClippingPolygon << 27);
-  (showUndergroundColor << 28) |
+    (enableClippingPolygon << 27) |
+    (showUndergroundColor << 28) |
     (translucent << 29) |
     (applyDayNightAlpha << 30);
 
