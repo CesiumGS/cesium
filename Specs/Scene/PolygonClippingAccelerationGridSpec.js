@@ -3,6 +3,7 @@ import PolygonClippingAccelerationGrid from "../../Source/Scene/PolygonClippingA
 describe("Scene/PolygonClippingAcceleration", function () {
   it("developer error if invalid number of positions or indicies provided", function () {
     expect(function () {
+      // eslint-disable-next-line no-unused-vars
       var empty_arrays = new PolygonClippingAccelerationGrid({
         positions: [],
         indices: [],
@@ -11,6 +12,7 @@ describe("Scene/PolygonClippingAcceleration", function () {
     }).toThrowError();
 
     expect(function () {
+      // eslint-disable-next-line no-unused-vars
       var missing_indices = new PolygonClippingAccelerationGrid({
         positions: [1, 2, 3],
         splits: 0,
@@ -18,6 +20,7 @@ describe("Scene/PolygonClippingAcceleration", function () {
     }).toThrowError();
 
     expect(function () {
+      // eslint-disable-next-line no-unused-vars
       var missing_positions = new PolygonClippingAccelerationGrid({
         indices: [1, 2, 3],
         splits: 0,
