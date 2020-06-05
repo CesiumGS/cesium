@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.71.1
+
+- Add `ClippingPolygon` support.
+
 ### 1.71.0 - 2020-07-01
 
 ##### Additions :tada:

@@ -4,6 +4,7 @@ import Cartesian3 from "../../Source/Core/Cartesian3.js";
 import Matrix4 from "../../Source/Core/Matrix4.js";
 import BoundingSphere from "../../Source/Core/BoundingSphere.js";
 import Cartographic from "../../Source/Core/Cartographic.js";
+import Cartesian2 from "../../Source/Core/Cartesian2.js";
 
 describe("Scene/ClippingPolygon", function () {
   // prettier-ignore
@@ -56,5 +57,41 @@ describe("Scene/ClippingPolygon", function () {
     expect(result.x).toBeCloseTo(0);
     expect(result.y).toBeCloseTo(0);
     expect(result.z).toBeCloseTo(0);
+  });
+
+  it("getters are defined and valid", function () {
+    var splits = 1;
+    var enabled = false;
+    var union = true;
+
+    var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
+      polygonHierarchies: [colorado],
+      union: union,
+      simplify: 3,
+      enabled: enabled,
+      splits: splits,
+    });
+
+    var expectedGridNumPixels = (splits + 1) * (splits + 1);
+    var expectedGridSize = expectedGridNumPixels * 3.0;
+
+    // before ClippingPolygon.update() is called
+    expect(clippingPolygon.grid.length).toEqual(expectedGridSize);
+    expect(clippingPolygon.gridNumPixels).toEqual(expectedGridNumPixels);
+    expect(clippingPolygon.gridTexture).toBeUndefined();
+    expect(clippingPolygon.minimumZ).toBeLessThan(0);
+    expect(clippingPolygon.meshPositions.length).toBeGreaterThan(0);
+    expect(clippingPolygon.enabled).toEqual(enabled);
+    expect(clippingPolygon.union).toEqual(union);
+    expect(clippingPolygon.meshPositionsTexture).toBeUndefined();
+    expect(
+      clippingPolygon.overlappingTrianglePixelIndicesDimensions
+    ).toBeInstanceOf(Cartesian2);
+
+    expect(clippingPolygon.boundingBox.length).toEqual(4);
+
+    for (var i = 0; i < 4; ++i) {
+      expect(clippingPolygon.boundingBox[i]).toBeInstanceOf(Cartesian2);
+    }
   });
 });
