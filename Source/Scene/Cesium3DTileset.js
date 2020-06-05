@@ -1936,7 +1936,8 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
   );
 
   this._skipLevelOfDetail =
-    this.skipLevelOfDetail & !defined(this._classificationType) &&
+    this.skipLevelOfDetail &&
+    !defined(this._classificationType) &&
     !this._disableSkipLevelOfDetail &&
     !this._allTilesAdditive;
 
