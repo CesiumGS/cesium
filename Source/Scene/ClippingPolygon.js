@@ -23,11 +23,28 @@ import simplify3d from "../ThirdParty/simplify3d.js";
 import Check from "../Core/Check.js";
 
 /**
+ * ClippingPolygon constructor. Should not be instantiated directly;
+ * Use one of the named constructors.
  *
- * @param options
- *
+ * @constructor
+ * @param {Object} options Object with the following properties:
+ * @param {Array.<PolygonHierarchy>} options.polygonHierarchies An array of @{link PolygonHierarchy}
+ * to amalgamate into a single mesh for clipping. Holes / nested holes are supported.
+ * @param {Number} [options.simplify-0] Tolerance between points in the inputted mesh, the units are in
+ * geodesic meters. If oversimplification occurs an exception will be triggered (e.g
+ * an extremely high simplification value for your input that would result in < 3 vertices)
+ * @param {Boolean} [options.union-false] If union is enabled then only geometry inside
+ * the ClippingPolygon will be rendered, otherwise only geometry outside the ClippingPolygon
+ * will be rendered.
+ * @param {Number} [options.splits-33] The number of times to partition the clipping polygon,
+ * higher will result in better runtime performance at the cost of initial generation time.
+ * @param {Boolean} [options.enabled-true] If the ClippingPolygon should be enabled or not.
+ * @param {Array.<Number>} options.positions Array of flattened XYZ positions of
+ * the clipping polygon in ENU space.
+ * @param {Array.<Number>} options.indices Indices corresponding to the flattened XYZ positions.
  * @private
  */
+
 function ClippingPolygon(options) {
   this._worldToENU = options.worldToENU;
   this._union = options.union;
@@ -73,24 +90,10 @@ function ClippingPolygon(options) {
     this._accelerator.numCols
   );
 
-  // data texture limits:
-  // - 16,777,216 cells are supported (if you make 4096 splits; overkill as 20-32 splits for most cases)
-  // - 805,306,368 million overlapping triangle indices (32 bit float precision)
-  // - 805,306,3368 million overlapping triangle vertex positions (32 bit float precision)
-
-  // the 2D grid acceleration texture stores the cell status in the R channel
-  // the startIndex into the overlappingTriangleIndicesTexture in the G channel
-  // and the endIndex into the overlappingTriangleIndicesTexture in the B channel
-  // The number of triangles that a cell recorded as partially overlapping
-  // can be computed as (endIndex - startIndex) / 3.0
   var gridPixels = this._grid.length / this._accelerator.cellNumElements;
   var gridWidthPixels = gridPixels / this._accelerator.numCols;
   var gridHeightPixels = gridPixels / this._accelerator.numRows;
   this._gridPixelDimensions = new Cartesian2(gridWidthPixels, gridHeightPixels);
-
-  // dimensions for 2D overlappingTriangleIndicesTexture, note that the indices from
-  // the gridTexture are 1D and need to be converted into 2D rows and columns,
-  // and then 2D pixel coordinates before doing a look up in this texture.
 
   var totalOverlappingTriangles = this._overlappingTriangleIndices.length / 3.0;
   var maxDimensionPixelSize = ContextLimits.maximumTextureSize;
@@ -120,12 +123,15 @@ function ClippingPolygon(options) {
  * @param {Object} options Object with the following properties:
  * @param {Array.<PolygonHierarchy>} options.polygonHierarchies An array of @{link PolygonHierarchy}
  * to amalgamate into a single mesh for clipping. Holes / nested holes are supported.
- * @param {Number} [options.simplify-0] Tolerance threshold that should be used
- * for mesh simplification. Note that over simplification can result in a degenerate
- * mesh which will trigger an exception
- * @param {Boolean} [options.union-false] If union is TRUE only geometry inside
- * the ClippingPolygon will be rendered. Otherwise only geometry outside the
- * ClippingPolygon will be rendered.
+ * @param {Number} [options.simplify-0] Tolerance between points in the inputted mesh, the units are in
+ * geodesic meters. If oversimplification occurs an exception will be triggered (e.g
+ * an extremely high simplification value for your input that would result in < 3 vertices)
+ * @param {Boolean} [options.union-false] If union is enabled then only geometry inside
+ * the ClippingPolygon will be rendered, otherwise only geometry outside the ClippingPolygon
+ * will be rendered.
+ * @param {Number} [options.splits-33] The number of times to partition the clipping polygon,
+ * higher will result in better runtime performance at the cost of initial generation time.
+ * @param {Boolean} [options.enabled-true] If the ClippingPolygon should be enabled or not.
  */
 
 ClippingPolygon.fromPolygonHierarchies = function (options) {
@@ -135,13 +141,9 @@ ClippingPolygon.fromPolygonHierarchies = function (options) {
 
   var enabled = defaultValue(options.enabled, true);
   var polygonHierarchies = options.polygonHierarchies;
-  var worldToENU = options.worldToENU;
-
-  if (!defined(worldToENU)) {
-    worldToENU = generateWorldToENUMatrixFromPolygonHierarchies(
-      polygonHierarchies
-    );
-  }
+  var worldToENU = generateWorldToENUMatrixFromPolygonHierarchies(
+    polygonHierarchies
+  );
 
   var simplify = defaultValue(options.simplify, 0);
   var union = defaultValue(options.union, false);
@@ -347,10 +349,13 @@ ClippingPolygon.prototype.update = function (frameState) {
 };
 
 /**
- * @param {Array.<PolygonHierarchy>} hierarchies
- * @param {Matrix4} worldToENU matrix
- * @param {Number} simplify Simplification amount
- * @return {Object} An object containing the vertex positions plus indices
+ * @param {Array.<PolygonHierarchy>} hierarchies Polygon hierarchies to collapse into
+ * a single mesh.
+ * @param {Matrix4} worldToENU matrix Matrix used to convert ECEF points in the
+ * original mesh into ENU space points.
+ * @param {Number} simplify Simplification amount for each line.
+ * @return {Object} An object containing the transformed vertex positions plus indices
+ * @private
  */
 
 function combinePolygonHierarchiesIntoSingleMesh(
@@ -497,7 +502,6 @@ function convertPolygonHierarchyIntoMesh(
   }
 
   var triangulatedMeshes = [];
-
   for (i = 0; i < positionsAndIndicesForEarcut.length; ++i) {
     positions = positionsAndIndicesForEarcut[i].positions;
     holeIndices = positionsAndIndicesForEarcut[i].holeIndices;
@@ -513,8 +517,12 @@ function convertPolygonHierarchyIntoMesh(
 }
 
 /**
- * @param polygonHierarchies Array<PolygonHierarchy> An array of ECEF positions
- * @returns Matrix4 a worldToENU matrix
+ * Generates an East North Up matrix by calculating a bounding
+ * sphere around the outermost points in the PolygonHierarchy.
+ *
+ * @param polygonHierarchies Array<PolygonHierarchy> Polygon hierarchies
+ * to use to generate the worldToENU matrix.
+ * @returns Matrix4 A worldToENU matrix centered around the clipping polygon
  *
  * @private
  */

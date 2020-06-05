@@ -232,7 +232,8 @@ function doesTriangleIntersectRect(rect, ax, ay, bx, by, cx, cy) {
     ) !== null
   )
     return true;
-  if (
+
+  return (
     lineIntersection(
       rect.topRight.x,
       rect.topRight.y,
@@ -243,10 +244,7 @@ function doesTriangleIntersectRect(rect, ax, ay, bx, by, cx, cy) {
       cx,
       cy
     ) !== null
-  )
-    return true;
-
-  return false;
+  );
 }
 
 function doesTriangleOverlapRect(rect, ax, ay, bx, by, cx, cy) {
@@ -268,13 +266,13 @@ function doesTriangleOverlapRect(rect, ax, ay, bx, by, cx, cy) {
 }
 
 /**
- * Create a 2D bounding box from position / index data.
+ * Construct a 2D bounding box from a provided triangulated
+ * mesh.
  *
  * @param {Object} options Object with the following properties:
  * @param {Array.<Number>} options.positions An array of position data
- * representing the clipping mesh. The bounding box is always 2D in nature,
- * so use `3`, `0` and `1` to choose which dimensions
- * should be looked at to varruct the bounding box.
+ * representing the clipping mesh. The bounding box is constructed around the
+ * XY axis, Z is ignored.
  * @param {Array.<Number>} options.indices Triangle index data corresponding
  * to the positions data.
  *
@@ -338,10 +336,9 @@ PolygonClippingAccelerationGrid.CellOcclusion = {
 };
 
 /**
- * Creates two acceleration RGB Float32Array data textures that speed up
- * point in polygon queries against a given 2D mesh. The first data texture,
- * 'grid', is a 2D array with (splits + 1)^2 partitions, where each cell
- * records the occlusion status of that cell with respect to all of the
+ * Creates multiple data textures for accelerating point in polygon queries
+ * against an inputted mesh. The first data texture, 'grid', is a 2D array with (splits + 1)^2 partitions
+ * where each cell records the occlusion status of that cell with respect to all of the
  * triangles in the inputted mesh. If a cell is completely occluded by at least
  * one triangle in the mesh (CellOcclusion.Total) or a cell is not occluded
  * by any triangles in the mesh (CellOcclusion.None) then the respective
