@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "strict": true
+  },
+  "include": [
+    "../.."
+  ],
+}

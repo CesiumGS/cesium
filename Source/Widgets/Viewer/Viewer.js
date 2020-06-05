@@ -269,7 +269,7 @@ function enableVRUI(viewer, enabled) {
  * @constructor
  *
  * @param {Element|String} container The DOM element or ID that will contain the widget.
- * @param {Viewer.ConstructorOptions} options Object describing initialization options
+ * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.

@@ -62,16 +62,34 @@ function MapboxStyleImageryProvider(options) {
    * The default alpha blending value of this provider, with 0.0 representing fully transparent and
    * 1.0 representing fully opaque.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultAlpha = undefined;
 
   /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
    * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
    * makes the imagery darker while greater than 1.0 makes it brighter.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultBrightness = undefined;
@@ -80,7 +98,7 @@ function MapboxStyleImageryProvider(options) {
    * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
    * the contrast while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultContrast = undefined;
@@ -88,7 +106,7 @@ function MapboxStyleImageryProvider(options) {
   /**
    * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultHue = undefined;
@@ -97,7 +115,7 @@ function MapboxStyleImageryProvider(options) {
    * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
    * saturation while greater than 1.0 increases it.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultSaturation = undefined;
@@ -105,7 +123,7 @@ function MapboxStyleImageryProvider(options) {
   /**
    * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
    *
-   * @type {Number}
+   * @type {Number|undefined}
    * @default undefined
    */
   this.defaultGamma = undefined;
@@ -265,7 +283,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
    * @memberof MapboxStyleImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {

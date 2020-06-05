@@ -1594,6 +1594,11 @@ ${source}
     stdio: "inherit",
   });
 
+  // Also compile our smokescreen to make sure interfaces work as expected.
+  child_process.execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
+    stdio: "inherit",
+  });
+
   // Below is a sanity check to make sure we didn't leave anything out that
   // we don't already know about
 
