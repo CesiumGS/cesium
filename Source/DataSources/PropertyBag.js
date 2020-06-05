@@ -11,7 +11,6 @@ import Property from "./Property.js";
  *
  * @alias PropertyBag
  * @constructor
- * @implements {DictionaryLike}
  *
  * @param {Object} [value] An object, containing key-value mapping of property names to properties.
  * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.

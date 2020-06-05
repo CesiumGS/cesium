@@ -1576,14 +1576,8 @@ function createTypeScriptDefinitions() {
 /**
  * Private interfaces to support PropertyBag being a dictionary-like object.
  */
-interface DictionaryLike {
-  [index: string]: any;
-}
-interface PropertyDictionary {
-  [key: string]: Property | undefined;
-}
 /** This has to be in the workaround section because JSDoc doesn't support Intersection Types */
-type PropertyBag = PropertyDictionary & Property & PropertyBagBase;
+type PropertyBag = { [key: string]: Property | undefined; } & Property & PropertyBagBase;
 
 ${source}
 }
