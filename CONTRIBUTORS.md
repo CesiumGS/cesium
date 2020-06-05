@@ -260,3 +260,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Edvinas Pranka](https://github.com/epranka)
 - [James Bromwell](https://github.com/thw0rted)
 - [Brandon Nguyen](https://github.com/bn-dignitas)
+- [Wang Bao](https://github.com/xiaobaogeit)

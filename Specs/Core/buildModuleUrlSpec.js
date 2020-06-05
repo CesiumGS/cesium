@@ -17,9 +17,14 @@ describe("Core/buildModuleUrl", function () {
     var r = buildModuleUrl._cesiumScriptRegex;
 
     expect(r.exec("Cesium.js")[1]).toEqual("");
+    expect(r.exec("Cesium.js?v=1.7")[1]).toEqual("");
     expect(r.exec("assets/foo/Cesium.js")[1]).toEqual("assets/foo/");
+    expect(r.exec("assets/foo/Cesium.js?v=1.7")[1]).toEqual("assets/foo/");
     expect(
       r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js")[1]
+    ).toEqual("http://example.invalid/Cesium/assets/foo/");
+    expect(
+      r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js?v=1.7")[1]
     ).toEqual("http://example.invalid/Cesium/assets/foo/");
 
     expect(r.exec("assets/foo/bar.cesium.js")).toBeNull();
