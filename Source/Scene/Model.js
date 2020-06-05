@@ -3915,52 +3915,75 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
     var clippingPolygon = model._clippingPolygon;
     if (defined(clippingPolygon)) {
       uniformMap = combine(uniformMap, {
-        u_clippingPolygonBoundingBox: function () {
-          return clippingPolygon.boundingBox;
-        },
+        u_clippingPolygonBoundingBox: (function (model) {
+          return function () {
+            return model.clippingPolygon.boundingBox;
+          };
+        })(model),
 
-        u_clippingPolygonCellDimensions: function () {
-          return clippingPolygon.cellDimensions;
-        },
+        u_clippingPolygonCellDimensions: (function (model) {
+          return function () {
+            return model.clippingPolygon.cellDimensions;
+          };
+        })(model),
 
-        u_clippingPolygonAccelerationGrid: function () {
-          return clippingPolygon.gridTexture;
-        },
+        u_clippingPolygonAccelerationGrid: (function (model) {
+          return function () {
+            return model.clippingPolygon.gridTexture;
+          };
+        })(model),
 
-        u_clippingPolygonMeshPositions: function () {
-          return clippingPolygon.meshPositionsTexture;
-        },
+        u_clippingPolygonMeshPositions: (function (model) {
+          return function () {
+            return model.clippingPolygon.meshPositionsTexture;
+          };
+        })(model),
 
-        u_clippingPolygonOverlappingTriangleIndices: function () {
-          return clippingPolygon.overlappingTriangleIndicesTexture;
-        },
+        u_clippingPolygonOverlappingTriangleIndices: (function (model) {
+          return function () {
+            return model.clippingPolygon.overlappingTriangleIndicesTexture;
+          };
+        })(model),
 
-        u_clippingPolygonAccelerationGridPixelDimensions: function () {
-          return clippingPolygon.gridPixelDimensions;
-        },
+        u_clippingPolygonAccelerationGridPixelDimensions: (function (model) {
+          return function () {
+            return model.clippingPolygon.gridPixelDimensions;
+          };
+        })(model),
 
-        u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: function () {
-          return clippingPolygon.overlappingTrianglePixelIndicesDimensions;
-        },
+        u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: (function (
+          model
+        ) {
+          return function () {
+            return model.clippingPolygon
+              .overlappingTrianglePixelIndicesDimensions;
+          };
+        })(model),
 
-        u_clippingPolygonMeshPositionPixelDimensions: function () {
-          return clippingPolygon.meshPositionPixelDimensions;
-        },
+        u_clippingPolygonMeshPositionPixelDimensions: (function (model) {
+          return function () {
+            return model.clippingPolygon.meshPositionPixelDimensions;
+          };
+        })(model),
 
-        u_clippingPolygonEyeToWorldToENU: function () {
-          var eyeToWorld = context.uniformState.inverseView3D;
-          var eyeToWorldToENU = Matrix4.multiply(
-            clippingPolygon.worldToENU,
-            eyeToWorld,
-            scratchClippingPolygonEyeToWorldMatrix
-          );
+        u_clippingPolygonEyeToWorldToENU: (function (model, context) {
+          return function () {
+            var eyeToWorld = context.uniformState.inverseView3D;
+            var eyeToWorldToENU = Matrix4.multiply(
+              model.clippingPolygon.worldToENU,
+              eyeToWorld,
+              scratchClippingPolygonEyeToWorldMatrix
+            );
 
-          return eyeToWorldToENU;
-        },
+            return eyeToWorldToENU;
+          };
+        })(model, context),
 
-        u_clippingPolygonMinimumZ: function () {
-          return clippingPolygon.minimumZ;
-        },
+        u_clippingPolygonMinimumZ: (function (model) {
+          return function () {
+            return model.clippingPolygon.minimumZ;
+          };
+        })(model),
       });
     }
 
@@ -5615,12 +5638,12 @@ Model.prototype.update = function (frameState) {
       currentClippingPlanesState = clippingPlanes.clippingPlanesState;
     }
 
+    var shouldRegenerateShaders = this._shouldRegenerateShaders;
     var clippingPolygon = this._clippingPolygon;
     if (defined(clippingPolygon) && clippingPolygon._dirty) {
       shouldRegenerateShaders = true;
     }
 
-    var shouldRegenerateShaders = this._shouldRegenerateShaders;
     shouldRegenerateShaders =
       shouldRegenerateShaders ||
       this._clippingPlanesState !== currentClippingPlanesState;
