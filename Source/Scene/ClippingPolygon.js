@@ -20,6 +20,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartographic from "../Core/Cartographic.js";
 import Transforms from "../Core/Transforms.js";
 import simplify3d from "../ThirdParty/simplify3d.js";
+import Check from "../Core/Check.js";
 
 /**
  *
@@ -128,6 +129,10 @@ function ClippingPolygon(options) {
  */
 
 ClippingPolygon.fromPolygonHierarchies = function (options) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("polygonHierarchies", options.polygonHierarchies);
+  //>>includeEnd('debug');
+
   var enabled = defaultValue(options.enabled, true);
   var polygonHierarchies = options.polygonHierarchies;
   var worldToENU = options.worldToENU;
@@ -524,7 +529,6 @@ function generateWorldToENUMatrixFromPolygonHierarchies(polygonHierarchies) {
 
   var boundingSphere = BoundingSphere.fromPoints(allPoints);
   var cartographic = Cartographic.fromCartesian(boundingSphere.center);
-  cartographic.height = 0;
   var origin = Cartographic.toCartesian(cartographic);
   var enu = Transforms.eastNorthUpToFixedFrame(origin);
 
