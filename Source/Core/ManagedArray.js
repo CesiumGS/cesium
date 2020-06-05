@@ -16,16 +16,6 @@ function ManagedArray(length) {
   this._length = length;
 }
 
-function removeTrailingReferences(managedArray, newLength) {
-  var array = managedArray._array;
-  var originalLength = managedArray._length;
-  if (newLength < originalLength) {
-    for (var i = newLength; i < originalLength; ++i) {
-      array[i] = undefined;
-    }
-  }
-}
-
 Object.defineProperties(ManagedArray.prototype, {
   /**
    * Gets or sets the length of the array.
@@ -39,11 +29,17 @@ Object.defineProperties(ManagedArray.prototype, {
       return this._length;
     },
     set: function (length) {
-      removeTrailingReferences(this, length);
-      this._length = length;
-      if (length > this._array.length) {
-        this._array.length = length;
+      var array = this._array;
+      var originalLength = this._length;
+      if (length < originalLength) {
+        // Remove trailing references
+        for (var i = length; i < originalLength; ++i) {
+          array[i] = undefined;
+        }
+      } else if (length > array.length) {
+        array.length = length;
       }
+      this._length = length;
     },
   },
 

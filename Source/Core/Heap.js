@@ -24,16 +24,6 @@ function Heap(options) {
   this._maximumLength = undefined;
 }
 
-function removeTrailingReferences(heap, newLength) {
-  var originalLength = heap._length;
-  if (newLength < originalLength) {
-    var array = heap._array;
-    for (var i = newLength; i < originalLength; ++i) {
-      array[i] = undefined;
-    }
-  }
-}
-
 Object.defineProperties(Heap.prototype, {
   /**
    * Gets the length of the heap.
@@ -75,12 +65,17 @@ Object.defineProperties(Heap.prototype, {
       return this._maximumLength;
     },
     set: function (value) {
-      removeTrailingReferences(this, value);
-      this._maximumLength = value;
-      if (this._length > value && value > 0) {
+      var originalLength = this._length;
+      if (value < originalLength) {
+        var array = this._array;
+        // Remove trailing references
+        for (var i = value; i < originalLength; ++i) {
+          array[i] = undefined;
+        }
         this._length = value;
-        this._array.length = value;
+        array.length = value;
       }
+      this._maximumLength = value;
     },
   },
 
