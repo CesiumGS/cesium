@@ -7,7 +7,7 @@ import defined from "./defined.js";
  * exposed as a property for others to subscribe to.
  *
  * @alias Event
- * @template Listener extends Function = Function
+ * @template Listener extends (...args: any[]) => void = (...args: any[]) => void
  * @constructor
  * @example
  * MyObject.prototype.myListener = function(arg1, arg2) {
@@ -120,7 +120,7 @@ function compareNumber(a, b) {
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
  *
- * @param {...Object} arguments This method takes any number of parameters and passes them through to the listener functions.
+ * @param {...Parameters<Listener>} arguments This method takes any number of parameters and passes them through to the listener functions.
  *
  * @see Event#addEventListener
  * @see Event#removeEventListener
@@ -160,4 +160,5 @@ Event.prototype.raiseEvent = function () {
  * A function that removes a listener.
  * @callback Event.RemoveCallback
  */
+
 export default Event;
