@@ -27,7 +27,14 @@ describe("Core/buildModuleUrl", function () {
       r.exec("http://example.invalid/Cesium/assets/foo/Cesium.js?v=1.7")[1]
     ).toEqual("http://example.invalid/Cesium/assets/foo/");
 
+    expect(r.exec("cesium.js")).toBeNull();
+    expect(r.exec("Cesium.min.js")).toBeNull();
+    expect(r.exec("CesiumSomething.js")).toBeNull();
+    expect(r.exec("CesiumSomething.js?v=1.7")).toBeNull();
     expect(r.exec("assets/foo/bar.cesium.js")).toBeNull();
+    expect(r.exec("assets/foo/bar.cesium.js?v=1.7")).toBeNull();
+    expect(r.exec("assets/foo/CesiumSomething.js")).toBeNull();
+    expect(r.exec("assets/foo/CesiumSomething.js?v=1.7")).toBeNull();
   });
 
   it("CESIUM_BASE_URL works with trailing slash", function () {
