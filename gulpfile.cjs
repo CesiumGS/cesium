@@ -1557,7 +1557,7 @@ function createTypeScriptDefinitions() {
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "cesium" {
+  source = `declare namespace Cesium {
 
 /**
  * Private interfaces to support PropertyBag being a dictionary-like object.
@@ -1568,7 +1568,9 @@ interface DictionaryLike {
 
 ${source}
 }
-
+declare module "cesium" {
+  export = Cesium
+}
 `;
 
   // Map individual modules back to their source file so that TS still works
