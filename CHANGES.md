@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - Add a `toString` method to the `Resource` class in case an instance gets logged as a string. [#8722](https://github.com/CesiumGS/cesium/issues/8722)
+- Exposed `Transforms.rotationMatrixFromPositionVelocity` method from Cesium's private API. [#8927](https://github.com/CesiumGS/cesium/issues/8927)
 
 ##### Fixes :wrench:
 

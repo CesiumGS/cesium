@@ -949,7 +949,13 @@ var rightScratch = new Cartesian3();
 var upScratch = new Cartesian3();
 
 /**
- * @private
+ * Transform a position and velocity to a rotation matrix.
+ *
+ * @param {Cartesian3} position The position to transform.
+ * @param {Cartesian3} velocity The velocity vector to transform.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Matrix3} [result] The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
  */
 Transforms.rotationMatrixFromPositionVelocity = function (
   position,
