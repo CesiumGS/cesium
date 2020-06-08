@@ -1,7 +1,7 @@
 import PolygonClippingAccelerationGrid from "../../Source/Scene/PolygonClippingAccelerationGrid.js";
 
 describe("Scene/PolygonClippingAcceleration", function () {
-  it("developer error if invalid number of positions or indicies provided", function () {
+  it("developer error if invalid number of positions or indices provided", function () {
     expect(function () {
       return new PolygonClippingAccelerationGrid({
         positions: [],
