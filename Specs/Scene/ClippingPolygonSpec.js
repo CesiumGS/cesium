@@ -123,8 +123,11 @@ describe("Scene/ClippingPolygon", function () {
     var cellWidth = clippingPolygon.cellDimensions.x;
     var cellHeight = clippingPolygon.cellDimensions.y;
 
-    expect(cellWidth).toBeCloseTo(boundingBoxWidth / (splits + 1));
-    expect(cellHeight).toBeCloseTo(boundingBoxHeight / (splits + 1));
+    var numRows = clippingPolygon.numRowsAndCols.x;
+    var numCols = clippingPolygon.numRowsAndCols.y;
+
+    expect(cellWidth).toBeCloseTo(boundingBoxWidth / numCols);
+    expect(cellHeight).toBeCloseTo(boundingBoxHeight / numRows);
 
     var scene = createScene();
     if (!scene.context.floatingPointTexture) {
@@ -138,11 +141,15 @@ describe("Scene/ClippingPolygon", function () {
     expect(gridTexture).toBeDefined();
     expect(gridTexture.pixelFormat).toEqual(PixelFormat.RGB);
     expect(gridTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
+    expect(gridTexture.width).toEqual(numCols);
+    expect(gridTexture.height).toEqual(numRows);
 
     var meshTexture = clippingPolygon.meshPositionsTexture;
     expect(meshTexture).toBeDefined();
     expect(meshTexture.pixelFormat).toEqual(PixelFormat.RGB);
     expect(meshTexture.pixelDatatype).toEqual(PixelDatatype.FLOAT);
+    expect(meshTexture.width).toBeGreaterThan(0);
+    expect(meshTexture.height).toEqual(1);
 
     var overlappingTriangleIndicesTexture =
       clippingPolygon.overlappingTriangleIndicesTexture;
@@ -153,6 +160,8 @@ describe("Scene/ClippingPolygon", function () {
     expect(overlappingTriangleIndicesTexture.pixelDatatype).toEqual(
       PixelDatatype.FLOAT
     );
+    expect(overlappingTriangleIndicesTexture.width).toBeGreaterThan(0);
+    expect(overlappingTriangleIndicesTexture.height).toEqual(1);
 
     scene.destroyForSpecs();
   });
