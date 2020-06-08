@@ -124,15 +124,17 @@ function ClippingPolygon(options) {
  * @param {Object} options Object with the following properties:
  * @param {Array.<PolygonHierarchy>} options.polygonHierarchies An array of @{link PolygonHierarchy}
  * to amalgamate into a single mesh for clipping. Holes / nested holes are supported.
- * @param {Number} [options.simplify=0] Tolerance between points in the inputted mesh, the units are in
+ * @param {number} [options.simplify=0] Tolerance between points in the inputted mesh, the units are in
  * geodesic meters. If oversimplification occurs an exception will be triggered (e.g
  * an extremely high simplification value for your input that would result in < 3 vertices)
- * @param {Boolean} [options.union=false] If union is enabled then only geometry inside
+ * @param {boolean} [options.union=false] If union is enabled then only geometry inside
  * the ClippingPolygon will be rendered, otherwise only geometry outside the ClippingPolygon
  * will be rendered.
- * @param {Number} [options.splits=33] The number of times to partition the clipping polygon,
+ * @param {number} [options.splits=33] The number of times to partition the clipping polygon,
  * higher will result in better runtime performance at the cost of initial generation time.
- * @param {Boolean} [options.enabled=true] If the ClippingPolygon should be enabled or not.
+ * @param {boolean} [options.enabled=true] If the ClippingPolygon should be enabled or not.
+ *
+ * @returns {ClippingPolygon} The constructed clipping polygon.
  */
 
 ClippingPolygon.fromPolygonHierarchies = function (options) {

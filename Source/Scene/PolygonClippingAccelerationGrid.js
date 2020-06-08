@@ -426,7 +426,7 @@ function PolygonClippingAccelerationGrid(options) {
       var cellIsCompletelyOccluded = false;
       var partiallyOverlappingTriangleIndices = [];
 
-      for (let i = 0; i < indices.length; i += 3) {
+      for (var i = 0; i < indices.length; i += 3) {
         var ax = positions[indices[i] * 3];
         var ay = positions[indices[i] * 3 + 1];
         var bx = positions[indices[i + 1] * 3];
