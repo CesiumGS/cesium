@@ -57,6 +57,7 @@ Object.defineProperties(Rectangle.prototype, {
    * Gets the width of the rectangle in radians.
    * @memberof Rectangle.prototype
    * @type {Number}
+   * @readonly
    */
   width: {
     get: function () {
@@ -68,6 +69,7 @@ Object.defineProperties(Rectangle.prototype, {
    * Gets the height of the rectangle in radians.
    * @memberof Rectangle.prototype
    * @type {Number}
+   * @readonly
    */
   height: {
     get: function () {
