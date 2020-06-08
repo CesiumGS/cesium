@@ -7,18 +7,6 @@ function sign(ax, ay, bx, by, cx, cy) {
   return (ax - cx) * (by - cy) - (bx - cx) * (ay - cy);
 }
 
-/**
- * Detect if a point is inside of a triangle.
- * @param {Number} px x location of point to test
- * @param {Number} py y location of point to test
- * @param {Number} ax x position of first triangle vertex
- * @param {Number} ay y position of first triangle vertex
- * @param {Number} bx x position of second triangle vertex
- * @param {Number} by y position of second triangle vertex
- * @param {Number} cx x position of third triangle vertex
- * @param {Number} cy y position of third triangle vertex
- */
-
 function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
   var d1 = sign(px, py, ax, ay, bx, by);
   var d2 = sign(px, py, bx, by, cx, cy);
@@ -361,7 +349,7 @@ PolygonClippingAccelerationGrid.CellOcclusion = {
  * thrown away.
  * @param {Array.<Number>} options.indices Triangle index data corresponding
  * to the positions data.
- * @param {Number} [options.splits-32] The number of cells to place in the
+ * @param {Number} [options.splits=32] The number of cells to place in the
  * polygon clipping acceleration grid. Will generate (splits + 1)^2 cells.
  * @private
  */
