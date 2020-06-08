@@ -1722,30 +1722,21 @@ describe("Core/Transforms", function () {
       Cartesian3.UNIT_Y
     );
     var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     matrix = Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
       Cartesian3.UNIT_Z
     );
-    expected = new Matrix3(0, 0, 1, 0, 1, 0, 1, 0, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     matrix = Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_Y,
       Cartesian3.UNIT_Z
     );
     expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
   });
 
   it("rotationMatrixFromPositionVelocity works with a result parameter", function () {
@@ -1757,10 +1748,7 @@ describe("Core/Transforms", function () {
       result
     );
     var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_X,
@@ -1768,11 +1756,8 @@ describe("Core/Transforms", function () {
       Ellipsoid.WGS84,
       result
     );
-    expected = new Matrix3(0, 0, 1, 0, 1, 0, 1, 0, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
     Transforms.rotationMatrixFromPositionVelocity(
       Cartesian3.UNIT_Y,
@@ -1781,10 +1766,7 @@ describe("Core/Transforms", function () {
       result
     );
     expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
-    // using Matrix3.abs to fix the 0/-0 comparisons
-    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(
-      Matrix3.toArray(expected)
-    );
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
   });
 
   it("basisTo2D projects translation", function () {
