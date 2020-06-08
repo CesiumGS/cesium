@@ -5,9 +5,14 @@ import Matrix4 from "../../Source/Core/Matrix4.js";
 import BoundingSphere from "../../Source/Core/BoundingSphere.js";
 import Cartographic from "../../Source/Core/Cartographic.js";
 import Cartesian2 from "../../Source/Core/Cartesian2.js";
-import createScene from "../createScene.js";
 import PixelFormat from "../../Source/Core/PixelFormat.js";
 import PixelDatatype from "../../Source/Renderer/PixelDatatype.js";
+import Globe from "../../Source/Scene/Globe.js";
+import Rectangle from "../../Source/Core/Rectangle.js";
+import createScene from "../createScene.js";
+import Camera from "../../Source/Scene/Camera.js";
+import SceneMode from "../../Source/Scene/SceneMode.js";
+import pollToPromise from "../pollToPromise.js";
 
 describe("Scene/ClippingPolygon", function () {
   // prettier-ignore
@@ -164,5 +169,127 @@ describe("Scene/ClippingPolygon", function () {
     expect(overlappingTriangleIndicesTexture.height).toEqual(1);
 
     scene.destroyForSpecs();
+  });
+
+  function clipColoradoAndRenderSceneIfFloatTextureAvailable(useUnion, flyTo) {
+    var scene = createScene();
+    scene.mode = SceneMode.SCENE3D;
+    scene.camera = new Camera(scene);
+
+    if (!scene.context.floatingPointTexture) {
+      scene.destroyForSpecs();
+      return null;
+    }
+
+    var coloradoClipped = ClippingPolygon.fromPolygonHierarchies({
+      polygonHierarchies: [colorado],
+      union: useUnion,
+    });
+
+    coloradoClipped.update(scene.frameState);
+
+    scene.globe = new Globe();
+    scene.globe.clippingPolygon = coloradoClipped;
+
+    flyTo(scene.camera);
+    return scene;
+  }
+
+  function updateUntilDone(scene) {
+    // update until the load queue is empty.
+    return pollToPromise(function () {
+      scene.globe._surface._debug.enableDebugOutput = true;
+      scene.render();
+      scene.renderForSpecs();
+      return scene.globe.tilesLoaded;
+    });
+  }
+
+  function flyToColorado(camera) {
+    var coloradoBoundingBox = Rectangle.fromRadians(
+      -1.8371244981609118,
+      0.6898857879957958,
+      -1.8261032274715112,
+      0.6985105088007955
+    );
+
+    camera.setView({
+      destination: coloradoBoundingBox,
+    });
+  }
+
+  function flyToSanDiego(camera) {
+    camera.flyTo({
+      destination: Cartesian3.fromDegrees(-117.16, 32.71, 15000.0),
+      duration: 0,
+    });
+  }
+
+  it("colorado is NOT rendered if camera is looking at colorado and union is false", function () {
+    var scene = clipColoradoAndRenderSceneIfFloatTextureAvailable(
+      false,
+      flyToColorado
+    );
+
+    if (scene === null) {
+      return;
+    }
+
+    return updateUntilDone(scene).then(function () {
+      var pixels = scene.context.readPixels();
+      scene.destroyForSpecs();
+      expect(pixels).toEqual([0, 0, 0, 255]);
+    });
+  });
+
+  it("colorado IS rendered if camera is looking at colorado and union is true", function () {
+    var scene = clipColoradoAndRenderSceneIfFloatTextureAvailable(
+      true,
+      flyToColorado
+    );
+
+    if (scene === null) {
+      return;
+    }
+
+    return updateUntilDone(scene).then(function () {
+      var pixels = scene.context.readPixels();
+      scene.destroyForSpecs();
+      expect(pixels).not.toEqual([0, 0, 0, 255]);
+    });
+  });
+
+  it("san diego IS NOT rendered if camera is looking at san diego and union is true", function () {
+    var scene = clipColoradoAndRenderSceneIfFloatTextureAvailable(
+      true,
+      flyToSanDiego
+    );
+
+    if (scene === null) {
+      return;
+    }
+
+    return updateUntilDone(scene).then(function () {
+      var pixels = scene.context.readPixels();
+      scene.destroyForSpecs();
+      expect(pixels).toEqual([0, 0, 0, 255]);
+    });
+  });
+
+  it("san diego IS rendered if camera is looking at san diego and union is true", function () {
+    var scene = clipColoradoAndRenderSceneIfFloatTextureAvailable(
+      false,
+      flyToSanDiego
+    );
+
+    if (scene === null) {
+      return;
+    }
+
+    return updateUntilDone(scene).then(function () {
+      var pixels = scene.context.readPixels();
+      scene.destroyForSpecs();
+      expect(pixels).not.toEqual([0, 0, 0, 255]);
+    });
   });
 });
