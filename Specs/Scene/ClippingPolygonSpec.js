@@ -127,6 +127,11 @@ describe("Scene/ClippingPolygon", function () {
     expect(cellHeight).toBeCloseTo(boundingBoxHeight / (splits + 1));
 
     var scene = createScene();
+    if (!scene.context.floatingPointTexture) {
+      scene.destroyForSpecs();
+      return;
+    }
+
     clippingPolygon.update(scene);
 
     var gridTexture = clippingPolygon.gridTexture;
