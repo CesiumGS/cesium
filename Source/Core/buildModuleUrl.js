@@ -5,7 +5,7 @@ import Resource from "./Resource.js";
 
 /*global CESIUM_BASE_URL*/
 
-var cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js(?:\W|$)/;
+var cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js(?:\?|\#|$)/;
 function getBaseUrlFromCesiumScript() {
   var scripts = document.getElementsByTagName("script");
   for (var i = 0, len = scripts.length; i < len; ++i) {

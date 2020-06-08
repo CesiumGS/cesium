@@ -28,6 +28,7 @@ describe("Core/buildModuleUrl", function () {
     ).toEqual("http://example.invalid/Cesium/assets/foo/");
 
     expect(r.exec("cesium.js")).toBeNull();
+    expect(r.exec("Cesium.js%20")).toBeNull();
     expect(r.exec("Cesium.min.js")).toBeNull();
     expect(r.exec("CesiumSomething.js")).toBeNull();
     expect(r.exec("CesiumSomething.js?v=1.7")).toBeNull();
