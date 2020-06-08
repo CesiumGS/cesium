@@ -1716,6 +1716,65 @@ describe("Core/Transforms", function () {
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
 
+  it("rotationMatrixFromPositionVelocity works without a result parameter", function () {
+    var matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Y
+    );
+    var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+
+    matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Z
+    );
+    expected = new Matrix3(0, 0, 1, 0, 1, 0, 1, 0, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+
+    matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_Y,
+      Cartesian3.UNIT_Z
+    );
+    expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(matrix, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+  });
+
+  it("rotationMatrixFromPositionVelocity works with a result parameter", function () {
+    var result = new Matrix3();
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Y,
+      Ellipsoid.WGS84,
+      result
+    );
+    var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Z,
+      Ellipsoid.WGS84,
+      result
+    );
+    expected = new Matrix3(0, 0, 1, 0, 1, 0, 1, 0, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_Y,
+      Cartesian3.UNIT_Z,
+      Ellipsoid.WGS84,
+      result
+    );
+    expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+    // using Matrix3.abs to fix the 0/-0 comparisons
+    expect(Matrix3.toArray(Matrix3.abs(result, new Matrix3()))).toEqual(Matrix3.toArray(expected));
+  });
+
   it("basisTo2D projects translation", function () {
     var ellipsoid = Ellipsoid.WGS84;
     var projection = new GeographicProjection(ellipsoid);
