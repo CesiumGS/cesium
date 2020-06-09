@@ -5,6 +5,6 @@
     "strict": true
   },
   "include": [
-    "../.."
+    "../../Source"
   ],
 }
