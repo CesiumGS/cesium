@@ -36,13 +36,6 @@
         "use strict";
         //Sandcastle_Begin
 
-        var usaCenter = new Cesium.Cartesian3(
-          -984946.2463947034,
-          -4995052.768398607,
-          3818834.1934458236
-        );
-        var usaOffset = new Cesium.Cartesian3(0.0, -4790000.0, 4930000.0);
-
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
@@ -116,15 +109,13 @@
         });
 
         Cesium.when(entity.readyPromise).then(function () {
-          var clippingPolygon = new Cesium.ClippingPolygon.fromPolygonHierarchies(
+          entity.model.clippingPolygon = new Cesium.ClippingPolygon.fromPolygonHierarchies(
             {
               polygonHierarchies: [clipLeftWing, clipRightWing],
               splits: 30,
               union: false,
             }
           );
-
-          entity.model.clippingPolygon = clippingPolygon;
         });
 
         var buildingA = new Cesium.PolygonHierarchy(
@@ -225,8 +216,6 @@
         );
 
         agiHQ.readyPromise.then(function () {
-          zoomToAGI();
-
           agiHQ.clippingPolygon = Cesium.ClippingPolygon.fromPolygonHierarchies(
             {
               polygonHierarchies: [buildingA],
@@ -236,10 +225,10 @@
           );
         });
 
-        Sandcastle.addToolbarButton("Clip Tileset / 3D Model", zoomToAGI);
+        Sandcastle.addToolbarButton("Clip Tileset / 3D Model", showAGI);
         Sandcastle.addToolbarButton("Clip USA", showUSA);
 
-        var usa = Cesium.GeoJsonDataSource.load(
+        Cesium.GeoJsonDataSource.load(
           "../../SampleData/ne_10m_us_states.topojson"
         ).then(function (dataSource) {
           // create list of polygonHierarchies
@@ -249,10 +238,9 @@
 
           for (i = 0; i < values.length; ++i) {
             var polygon = values[i].polygon;
-            if (!Cesium.defined(polygon)) {
-              continue;
+            if (Cesium.defined(polygon)) {
+              polygonHierarchies.push(polygon.hierarchy.getValue());
             }
-            polygonHierarchies.push(polygon.hierarchy.getValue());
           }
 
           globe.clippingPolygon = new Cesium.ClippingPolygon.fromPolygonHierarchies(
@@ -260,20 +248,44 @@
               polygonHierarchies: polygonHierarchies,
               simplify: 80,
               splits: 30,
-              union: false,
-              enabled: false,
+              union: true,
+              enabled: true,
             }
           );
+
+          showUSA();
         });
 
-        function zoomToAGI() {
-          viewer.zoomTo(agiHQ);
-          globe.clippingPolygon.enabled = false;
+        function showAGI() {
+          agiHQ.clippingPolygon.enabled = true;
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromRadians(
+              -1.319398,
+              0.69881,
+              230.0
+            ),
+            orientation: new Cesium.HeadingPitchRoll(
+              -(Math.PI / 2.5),
+              -(Math.PI / 4.0)
+            ),
+            complete: function () {
+              globe.clippingPolygon.enabled = false;
+            },
+          });
         }
 
         function showUSA() {
-          viewer.scene.camera.lookAt(usaCenter, usaOffset);
           globe.clippingPolygon.enabled = true;
+          viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+              -98.5795,
+              39.8283,
+              10000000.0
+            ),
+            complete: function () {
+              agiHQ.clippingPolygon.enabled = false;
+            },
+          });
         }
 
         //Sandcastle_End
