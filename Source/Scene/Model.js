@@ -55,6 +55,7 @@ import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygon from "./ClippingPolygon.js";
 import ColorBlendMode from "./ColorBlendMode.js";
 import DepthFunction from "./DepthFunction.js";
 import DracoLoader from "./DracoLoader.js";
@@ -1097,9 +1098,7 @@ Object.defineProperties(Model.prototype, {
       if (value === this._clippingPolygon) {
         return;
       }
-      this._clippingPolygon = value;
-      // Handle destroying, checking of unknown, checking for existing ownership
-      //ClippingPlaneCollection.setOwner(value, this, "_clippingPlanes");
+      ClippingPolygon.setOwner(value, this, "_clippingPolygon");
     },
   },
 
@@ -5900,6 +5899,16 @@ Model.prototype.destroy = function () {
 
   releaseCachedGltf(this);
   this._quantizedVertexShaders = undefined;
+
+  // Only destroy the ClippingPolygon collection if this is the owner.
+  var clippingPolygon = this._clippingPolygon;
+  if (
+    defined(clippingPolygon) &&
+    !clippingPolygon.isDestroyed() &&
+    clippingPolygon.owner === this
+  ) {
+    clippingPolygon.destroy();
+  }
 
   // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
   // _clippingPlanes references a ClippingPlaneCollection that this model does not own.

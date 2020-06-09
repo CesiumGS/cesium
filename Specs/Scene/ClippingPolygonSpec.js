@@ -17,33 +17,33 @@ import pollToPromise from "../pollToPromise.js";
 describe("Scene/ClippingPolygon", function () {
   // prettier-ignore
   var coloradoBoundaryECEF =
-  [
-    new Cartesian3(-1483132.6118617766, -4586466.1397278225, 4162750.5664251903),
-    new Cartesian3(-1306830.1054550062, -4640193.5668967, 4162291.5282076155),
-    new Cartesian3(-1170464.5181384478, -4676041.788416427, 4162750.5664251903),
-    new Cartesian3(-1006635.362080386, -4714025.799998029, 4162750.5664251903),
-    new Cartesian3(-1021730.8265712946, -4784717.146391854, 4078123.8740084106),
-    new Cartesian3(-1064162.144338376, -4988089.875097037, 3816931.0243110945),
-    new Cartesian3(-1147369.5949660358, -4969234.714178492, 3817416.470178762),
-    new Cartesian3(-1263040.64619151, -4941478.523433706, 3816931.0243110945),
-    new Cartesian3(-1479968.0924533417, -4880899.1094683, 3816931.024311095),
-    new Cartesian3(-1526912.2714726557, -4866034.273129951, 3817416.4701787615),
-    new Cartesian3(-1663966.3042978912, -4820888.587201569, 3817416.4701787615),
-    new Cartesian3(-1638200.935371567, -4746240.457199701, 3920021.4124960876),
-    new Cartesian3(-1637105.4814648873, -4738660.06955747, 3929573.7306454126),
-    new Cartesian3(-1617417.1160520257, -4683121.79641693, 4003119.2230556826),
-    new Cartesian3(-1573284.5993211386, -4556750.687971856, 4162291.5282076155),
-    new Cartesian3(-1483132.6118617766, -4586466.1397278225, 4162750.5664251903)
-  ];
+    [
+      new Cartesian3(-1483132.6118617766, -4586466.1397278225, 4162750.5664251903),
+      new Cartesian3(-1306830.1054550062, -4640193.5668967, 4162291.5282076155),
+      new Cartesian3(-1170464.5181384478, -4676041.788416427, 4162750.5664251903),
+      new Cartesian3(-1006635.362080386, -4714025.799998029, 4162750.5664251903),
+      new Cartesian3(-1021730.8265712946, -4784717.146391854, 4078123.8740084106),
+      new Cartesian3(-1064162.144338376, -4988089.875097037, 3816931.0243110945),
+      new Cartesian3(-1147369.5949660358, -4969234.714178492, 3817416.470178762),
+      new Cartesian3(-1263040.64619151, -4941478.523433706, 3816931.0243110945),
+      new Cartesian3(-1479968.0924533417, -4880899.1094683, 3816931.024311095),
+      new Cartesian3(-1526912.2714726557, -4866034.273129951, 3817416.4701787615),
+      new Cartesian3(-1663966.3042978912, -4820888.587201569, 3817416.4701787615),
+      new Cartesian3(-1638200.935371567, -4746240.457199701, 3920021.4124960876),
+      new Cartesian3(-1637105.4814648873, -4738660.06955747, 3929573.7306454126),
+      new Cartesian3(-1617417.1160520257, -4683121.79641693, 4003119.2230556826),
+      new Cartesian3(-1573284.5993211386, -4556750.687971856, 4162291.5282076155),
+      new Cartesian3(-1483132.6118617766, -4586466.1397278225, 4162750.5664251903)
+    ];
 
-  var colorado = new PolygonHierarchy(coloradoBoundaryECEF);
+  var coloradoPolygonHierarchy = new PolygonHierarchy(coloradoBoundaryECEF);
   var boundingSphere = BoundingSphere.fromPoints(coloradoBoundaryECEF);
   var cartographic = Cartographic.fromCartesian(boundingSphere.center);
   var coloradoCenter = Cartographic.toCartesian(cartographic);
 
   it("constructs with expected default values", function () {
     var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
-      polygonHierarchies: [colorado],
+      polygonHierarchies: [coloradoPolygonHierarchy],
     });
 
     expect(clippingPolygon.union).toEqual(false);
@@ -52,7 +52,7 @@ describe("Scene/ClippingPolygon", function () {
 
   it("worldToENU matrix translates from world space to east north up space", function () {
     var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
-      polygonHierarchies: [colorado],
+      polygonHierarchies: [coloradoPolygonHierarchy],
     });
 
     var worldToENU = clippingPolygon.worldToENU;
@@ -67,9 +67,9 @@ describe("Scene/ClippingPolygon", function () {
     expect(result.z).toBeCloseTo(0);
   });
 
-  it("setters update as expeected", function () {
+  it("setters update as expected", function () {
     var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
-      polygonHierarchies: [colorado],
+      polygonHierarchies: [coloradoPolygonHierarchy],
     });
 
     clippingPolygon.enabled = false;
@@ -89,7 +89,7 @@ describe("Scene/ClippingPolygon", function () {
     var union = true;
 
     var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
-      polygonHierarchies: [colorado],
+      polygonHierarchies: [coloradoPolygonHierarchy],
       union: union,
       simplify: 3,
       enabled: enabled,
@@ -171,6 +171,51 @@ describe("Scene/ClippingPolygon", function () {
     scene.destroyForSpecs();
   });
 
+  it("object is destroyed as expected", function () {
+    var clippingPolygon = ClippingPolygon.fromPolygonHierarchies({
+      polygonHierarchies: [coloradoPolygonHierarchy],
+      union: false,
+      simplify: 3,
+      enabled: true,
+      splits: 0,
+    });
+
+    var texturesGenerated = false;
+    var scene = createScene();
+    scene.mode = SceneMode.SCENE3D;
+    scene.camera = new Camera(scene);
+
+    if (!scene.context.floatingPointTexture) {
+      scene.destroyForSpecs();
+    } else {
+      texturesGenerated = true;
+    }
+
+    expect(clippingPolygon.gridTexture).toBeUndefined();
+    expect(clippingPolygon.overlappingTriangleIndicesTexture).toBeUndefined();
+    expect(clippingPolygon.meshPositionsTexture).toBeUndefined();
+
+    if (!texturesGenerated) {
+      return;
+    }
+
+    clippingPolygon.update(scene.frameState);
+    expect(clippingPolygon.gridTexture).toBeDefined();
+    expect(clippingPolygon.overlappingTriangleIndicesTexture).toBeDefined();
+    expect(clippingPolygon.meshPositionsTexture).toBeDefined();
+    clippingPolygon.destroy();
+
+    expect(clippingPolygon.isDestroyed()).toBe(true);
+
+    expect(function () {
+      clippingPolygon.update(scene.frameState);
+    }).toThrowDeveloperError();
+
+    expect(function () {
+      clippingPolygon.update(scene.frameState);
+    }).toThrowDeveloperError();
+  });
+
   function clipColoradoAndRenderSceneIfFloatTextureAvailable(useUnion, flyTo) {
     var scene = createScene();
     scene.mode = SceneMode.SCENE3D;
@@ -182,7 +227,7 @@ describe("Scene/ClippingPolygon", function () {
     }
 
     var coloradoClipped = ClippingPolygon.fromPolygonHierarchies({
-      polygonHierarchies: [colorado],
+      polygonHierarchies: [coloradoPolygonHierarchy],
       union: useUnion,
     });
 
@@ -190,6 +235,11 @@ describe("Scene/ClippingPolygon", function () {
 
     scene.globe = new Globe();
     scene.globe.clippingPolygon = coloradoClipped;
+    var sameClippingPolygon = scene.globe.clippingPolygon === coloradoClipped;
+    var correctOwner =
+      coloradoClipped.owner === scene.globe._surface.tileProvider;
+    expect(sameClippingPolygon).toBe(true);
+    expect(correctOwner).toBe(true);
 
     flyTo(scene.camera);
     return scene;
@@ -225,7 +275,7 @@ describe("Scene/ClippingPolygon", function () {
     });
   }
 
-  it("colorado is NOT rendered if camera is looking at colorado and union is false", function () {
+  it("colorado IS NOT rendered if camera is looking at colorado and union is false", function () {
     var scene = clipColoradoAndRenderSceneIfFloatTextureAvailable(
       false,
       flyToColorado

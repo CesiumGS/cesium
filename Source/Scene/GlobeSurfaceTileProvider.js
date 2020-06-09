@@ -37,6 +37,7 @@ import RenderState from "../Renderer/RenderState.js";
 import VertexArray from "../Renderer/VertexArray.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygon from "./ClippingPolygon.js";
 import DepthFunction from "./DepthFunction.js";
 import GlobeSurfaceTile from "./GlobeSurfaceTile.js";
 import ImageryLayer from "./ImageryLayer.js";
@@ -337,8 +338,7 @@ Object.defineProperties(GlobeSurfaceTileProvider.prototype, {
       return this._clippingPolygon;
     },
     set: function (value) {
-      this._clippingPolygon = value;
-      //ClippingPolygon.setOwner(value, this, "_clippingPolygon");
+      ClippingPolygon.setOwner(value, this, "_clippingPolygon");
     },
   },
 });

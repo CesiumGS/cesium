@@ -21,6 +21,7 @@ import Cartographic from "../Core/Cartographic.js";
 import Transforms from "../Core/Transforms.js";
 import simplify3d from "../ThirdParty/simplify3d.js";
 import Check from "../Core/Check.js";
+import destroyObject from "../Core/destroyObject.js";
 
 /**
  * ClippingPolygon constructor. Should not be instantiated directly;
@@ -50,6 +51,9 @@ function ClippingPolygon(options) {
   this._worldToENU = options.worldToENU;
   this._union = options.union;
   this._enabled = options.enabled;
+
+  // If owned, only its owner should update or destroy it.
+  this._owner = undefined;
 
   var positions = options.positions;
   var indices = options.indices;
@@ -167,7 +171,37 @@ ClippingPolygon.fromPolygonHierarchies = function (options) {
   return new ClippingPolygon(options);
 };
 
+/**
+ * Sets the owner for the provided ClippingPolygon if it doesn't
+ * already have an owner. Destroys the owner's previous ClippingPolygon
+ * if setting is unsuccessful
+ */
+ClippingPolygon.setOwner = function (clippingPolygon, owner, key) {
+  // Avoid destroying ClippingPolygon if already owned by newOwner
+  if (clippingPolygon === owner[key]) {
+    return;
+  }
+
+  owner[key] = owner[key] && owner[key].destroy();
+  if (defined(clippingPolygon)) {
+    if (defined(clippingPolygon._owner)) {
+      throw new DeveloperError(
+        "ClippingPolygon should only be assigned to one object."
+      );
+    }
+  }
+
+  clippingPolygon._owner = owner;
+  owner[key] = clippingPolygon;
+};
+
 Object.defineProperties(ClippingPolygon.prototype, {
+  owner: {
+    get: function () {
+      return this._owner;
+    },
+  },
+
   grid: {
     get: function () {
       return this._grid;
@@ -349,6 +383,36 @@ ClippingPolygon.prototype.update = function (frameState) {
     height: this.overlappingTrianglePixelIndicesDimensions.y,
     arrayBufferView: this.overlappingTriangleIndices,
   });
+};
+
+/**
+ * Returns true if this object was destroyed; otherwise, false.
+ * <br /><br />
+ * If this object was destroyed, it should not be used; calling any function other than
+ * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+ *
+ * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+ *
+ * @see ClippingPolygon#destroy
+ */
+ClippingPolygon.prototype.isDestroyed = function () {
+  return false;
+};
+
+ClippingPolygon.prototype.destroy = function () {
+  if (defined(this.meshPositionsTexture)) {
+    this.meshPositionsTexture.destroy();
+  }
+
+  if (defined(this.overlappingTriangleIndicesTexture)) {
+    this.overlappingTriangleIndicesTexture.destroy();
+  }
+
+  if (defined(this.gridTexture)) {
+    this.gridTexture.destroy();
+  }
+
+  return destroyObject(this);
 };
 
 /**
