@@ -16,6 +16,7 @@
 - Fixed JSDoc and TypeScript type definitions for `EllipsoidTangentPlane.fromPoints`, which takes an array of `Cartesian3`, not a single instance. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
 - Fixed JSDoc and TypeScript type definitions for `EntityCollection.getById` and `CompositeEntityCollection.getById`, which can both return undefined. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
 - Fixed JSDoc and TypeScript type definitions for `Viewer` options parameter, which was incorrectly listed as required.
+- Fixed TypeScript type definitions to allow the creation of `GeometryInstance` instances using `XXXGeometry` classes. [#8941](https://github.com/CesiumGS/cesium/pull/8941).
 - Fixed a memory leak where some 3D Tiles requests were being unintentionally retained after the requests were cancelled. [#8843](https://github.com/CesiumGS/cesium/pull/8843)
 
 ### 1.70.0 - 2020-06-01
