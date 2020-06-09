@@ -12,6 +12,7 @@
 - Improved `MaterialProperty` JSDoc and TypeScript type definitions, which were missing the ability to take primitive types in addition to Property instances in their constructor. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
 - Fixed `EllipsoidGeodesic` JSDoc and TypeScript type definitions which incorrectly listed `result` as required. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
 - Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
+- Fixed JSDoc and TypeScript for `buildModuleUrl`, which was accidentally excluded from the official CesiumJS API.
 - Fixed JSDoc and TypeScript type definitions for all `ImageryProvider` types, which were missing `defaultNightAlpha` and `defaultDayAlpha` properties. [#8908](https://github.com/CesiumGS/cesium/pull/8908)
 - Fixed JSDoc and TypeScript type definitions for `EllipsoidTangentPlane.fromPoints`, which takes an array of `Cartesian3`, not a single instance. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
 - Fixed JSDoc and TypeScript type definitions for `EntityCollection.getById` and `CompositeEntityCollection.getById`, which can both return undefined. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
