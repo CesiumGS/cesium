@@ -26,7 +26,7 @@ Object.defineProperties(TerrainProvider.prototype, {
    * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
    * are passed an instance of {@link TileProviderError}.
    * @memberof TerrainProvider.prototype
-   * @type {Event}
+   * @type {Event<TerrainProvider.ErrorEvent>}
    * @readonly
    */
   errorEvent: {
@@ -451,3 +451,11 @@ TerrainProvider.prototype.getTileDataAvailable =
 TerrainProvider.prototype.loadTileDataAvailability =
   DeveloperError.throwInstantiationError;
 export default TerrainProvider;
+
+/**
+ * A function that is called when an error occurs.
+ * @callback TerrainProvider.ErrorEvent
+ *
+ * @this TerrainProvider
+ * @param {TileProviderError} err An object holding details about the error that occurred.
+ */
