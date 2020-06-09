@@ -329,7 +329,6 @@
           Sandcastle.declare(flyOverLongitudeWithPitch);
           losAngelesToTokyo(true);
         }
-
         Sandcastle.addToolbarMenu([
           {
             text: "Camera Options",
@@ -426,6 +425,14 @@
             },
           },
         ]);
+
+        Sandcastle.addToolbarButton("Complete Flight", function () {
+          scene.camera.completeFlight();
+        });
+
+        Sandcastle.addToolbarButton("Cancel Flight", function () {
+          scene.camera.cancelFlight();
+        });
 
         Sandcastle.reset = function () {
           scene.completeMorph();
