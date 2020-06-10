@@ -199,6 +199,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The minimum aliased point size, in pixels, supported by this WebGL implementation.  It will be at most one.
+   * <br/>获取WebGL中点半径的最小值，单位：像素；常常是：1px
    * @memberof ContextLimits
    * @type {Number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
@@ -211,6 +212,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum aliased point size, in pixels, supported by this WebGL implementation.  It will be at least one.
+   * <br/>获取WebGL中点半径的最大值，单位：像素；常常是：1px
    * @memberof ContextLimits
    * @type {Number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>ALIASED_POINT_SIZE_RANGE</code>.
@@ -223,6 +225,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum supported width of the viewport.  It will be at least as large as the visible width of the associated canvas.
+   * <br/>视口支持的最大宽度。
    * @memberof ContextLimits
    * @type {Number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
@@ -235,6 +238,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum supported height of the viewport.  It will be at least as large as the visible height of the associated canvas.
+   * <br/>视口支持的最大高度。
    * @memberof ContextLimits
    * @type {Number}
    * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGet.xml|glGet} with <code>MAX_VIEWPORT_DIMS</code>.
@@ -247,6 +251,8 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum degree of anisotropy for texture filtering
+   * <br/>各向异性纹理过滤的最大值
+   * <br/>参考：{@link https://www.cnblogs.com/kylegui/p/3855710.html anisotropy texture filtering}
    * @memberof ContextLimits
    * @type {Number}
    */
@@ -258,6 +264,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum number of simultaneous outputs that may be written in a fragment shader.
+   * <br/>从片元着色器中同步输出的最大值
    * @memberof ContextLimits
    * @type {Number}
    */
@@ -269,6 +276,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * The maximum number of color attachments supported.
+   * <br/>能够支持的最大颜色附件
    * @memberof ContextLimits
    * @type {Number}
    */
@@ -280,6 +288,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * High precision float supported (<code>highp</code>) in fragment shaders.
+   * <br/>片元着色器中是否支持高精度(<code>highp</code>)的<code>float</code>
    * @memberof ContextLimits
    * @type {Boolean}
    */
@@ -291,6 +300,7 @@ Object.defineProperties(ContextLimits, {
 
   /**
    * High precision int supported (<code>highp</code>) in fragment shaders.
+   * <br/>片元着色器中是否支持高精度(<code>highp</code>)的<code>int</code>
    * @memberof ContextLimits
    * @type {Boolean}
    */
