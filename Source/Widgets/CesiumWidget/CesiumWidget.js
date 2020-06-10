@@ -393,6 +393,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   container: {
     get: function () {
@@ -405,6 +406,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {HTMLCanvasElement}
+   * @readonly
    */
   canvas: {
     get: function () {
@@ -417,6 +419,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditContainer: {
     get: function () {
@@ -429,6 +432,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditViewport: {
     get: function () {
@@ -441,6 +445,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Scene}
+   * @readonly
    */
   scene: {
     get: function () {
@@ -494,6 +499,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Clock}
+   * @readonly
    */
   clock: {
     get: function () {
@@ -506,6 +512,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {ScreenSpaceEventHandler}
+   * @readonly
    */
   screenSpaceEventHandler: {
     get: function () {

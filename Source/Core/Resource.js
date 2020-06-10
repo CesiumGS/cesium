@@ -522,10 +522,20 @@ Object.defineProperties(Resource.prototype, {
 });
 
 /**
+ * Override Object#toString so that implicit string conversion gives the
+ * complete URL represented by this Resource.
+ *
+ * @returns {String} The URL represented by this Resource
+ */
+Resource.prototype.toString = function () {
+  return this.getUrlComponent(true, true);
+};
+
+/**
  * Returns the url, optional with the query string and processed by a proxy.
  *
  * @param {Boolean} [query=false] If true, the query string is included.
- * @param {Boolean} [proxy=false] If true, the url is processed the proxy object if defined.
+ * @param {Boolean} [proxy=false] If true, the url is processed by the proxy object, if defined.
  *
  * @returns {String} The url with all the requested components.
  */
@@ -1357,9 +1367,12 @@ Resource.prototype._makeRequest = function (options) {
 
   return promise
     .then(function (data) {
+      // explicitly set to undefined to ensure GC of request response data. See #8843
+      request.cancelFunction = undefined;
       return data;
     })
     .otherwise(function (e) {
+      request.cancelFunction = undefined;
       if (request.state !== RequestState.FAILED) {
         return when.reject(e);
       }

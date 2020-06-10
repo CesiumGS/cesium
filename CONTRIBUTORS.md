@@ -143,10 +143,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Samuel Vargas](https://github.com/Samulus)
   - [Sam Suhag](https://github.com/sanjeetsuhag)
   - [Youssef Victor](https://github.com/YoussefV)
+  - [Eli Bogomolny](https://github.com/ebogo1)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
   - [Daniel Santillan](https://github.com/santilland)
+- [Navagis, Inc.](https://navagis.com/)
+  - [Jonathan Nogueira](https://github.com/LuminousPath)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -258,3 +261,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jakub Vrana](https://github.com/vrana)
 - [Edvinas Pranka](https://github.com/epranka)
 - [James Bromwell](https://github.com/thw0rted)
+- [Brandon Nguyen](https://github.com/bn-dignitas)
+- [Wang Bao](https://github.com/xiaobaogeit)
+- [John Remsberg](https://github.com/easternmotors)
