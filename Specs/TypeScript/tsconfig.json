@@ -5,6 +5,7 @@
     "strict": true
   },
   "include": [
-    "../../Source"
-  ],
+    "index.ts",
+    "../../Source/Cesium.d.ts"
+  ]
 }

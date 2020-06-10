@@ -110,7 +110,7 @@ SphereGeometry.unpack = function (array, startingIndex, result) {
  * Computes the geometric representation of a sphere, including its vertices, indices, and a bounding sphere.
  *
  * @param {SphereGeometry} sphereGeometry A description of the sphere.
- * @returns {Geometry} The computed vertices and indices.
+ * @returns {Geometry|undefined} The computed vertices and indices.
  */
 SphereGeometry.createGeometry = function (sphereGeometry) {
   return EllipsoidGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
