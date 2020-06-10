@@ -4,19 +4,23 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
+ * <br/>用于根据提供的参数检测参数是否符合要求或条件。
  * @private
  */
 var Check = {};
 
 /**
  * Contains type checking functions, all using the typeof operator
+ * 包含类型检测函数，均使用<code>typeof</code>操作符
  */
 Check.typeOf = {};
 
+//未定义时的错误信息
 function getUndefinedErrorMessage(name) {
   return name + " is required, actual value was undefined";
 }
 
+//typeof检测不符合预期时的错误信息
 function getFailedTypeErrorMessage(actual, expected, name) {
   return (
     "Expected " +
@@ -30,9 +34,11 @@ function getFailedTypeErrorMessage(actual, expected, name) {
 
 /**
  * Throws if test is not defined
- *
+ * 判断是否为<code>undefiend</code>或<code>null</code>
  * @param {String} name The name of the variable being tested
+ * <br/>待检测的变量名称
  * @param {*} test The value that is to be checked
+ * <br/>待检测的值
  * @exception {DeveloperError} test must be defined
  */
 Check.defined = function (name, test) {
@@ -43,9 +49,11 @@ Check.defined = function (name, test) {
 
 /**
  * Throws if test is not typeof 'function'
- *
+ * <br/>检测是否为'function'类型
  * @param {String} name The name of the variable being tested
+ * <br/>待检测的变量名称
  * @param {*} test The value to test
+ * <br/>待检测的值
  * @exception {DeveloperError} test must be typeof 'function'
  */
 Check.typeOf.func = function (name, test) {
