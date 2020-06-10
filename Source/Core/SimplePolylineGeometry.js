@@ -251,7 +251,7 @@ var generateArcOptionsScratch = {
  * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
  *
  * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
- * @returns {Geometry} The computed vertices and indices.
+ * @returns {Geometry|undefined} The computed vertices and indices.
  */
 SimplePolylineGeometry.createGeometry = function (simplePolylineGeometry) {
   var positions = simplePolylineGeometry._positions;

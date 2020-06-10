@@ -7,7 +7,7 @@ import Property from "./Property.js";
 /**
  * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
  *
- * @param {Property} [color=Color.WHITE] The {@link Color} Property to be used.
+ * @param {Property|Color} [color=Color.WHITE] The {@link Color} Property to be used.
  *
  * @alias ColorMaterialProperty
  * @constructor
@@ -53,7 +53,7 @@ Object.defineProperties(ColorMaterialProperty.prototype, {
   /**
    * Gets or sets the {@link Color} {@link Property}.
    * @memberof ColorMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),
