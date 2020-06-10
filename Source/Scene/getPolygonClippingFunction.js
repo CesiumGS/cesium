@@ -67,6 +67,10 @@ function getClippingPolygonFunction(union) {
     "  {\n" +
     "      float overlappingTriangleIndex = startIndex;\n" +
     "      int numTrianglesToCheck = int((endIndex - startIndex) / 3.0);\n" +
+    "      float overlapPixelWidth = u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.x;\n" +
+    "      float overlapPixelHeight = u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.y;\n" +
+    "      float meshPositionsPixelWidth = u_clippingPolygonMeshPositionPixelDimensions.x;\n" +
+    "      float meshPositionsPixelHeight = u_clippingPolygonMeshPositionPixelDimensions.y;\n" +
     "\n" +
     "      for (int k = 0; k < CLIPPING_MAX_ITERATION; k++)\n" +
     "      {\n" +
@@ -75,41 +79,38 @@ function getClippingPolygonFunction(union) {
     "              break;\n" +
     "          }\n" +
     "\n" +
-    "          float oneDPixelIndex = overlappingTriangleIndex / 3.0;\n" +
-    "\n" +
-    "          // convert 1D pixel coordinates into 2D pixel coordinates\n" +
-    "          float overlapPixelX =\n" +
-    "          (modI(oneDPixelIndex, u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.x) + 0.5) /\n" +
-    "              u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.x;\n" +
-    "\n" +
-    "          float overlapPixelY =\n" +
-    "          (1.0 - (floor(oneDPixelIndex / u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.y) + 0.5)) /\n" +
-    "              u_clippingPolygonOverlappingTrianglePixelIndicesDimensions.y;\n" +
-    "\n" +
-    "          // grab the relevant vertices for the given triangle in question.\n" +
-    "          vec4 overlapIndices = texture2D(u_clippingPolygonOverlappingTriangleIndices, vec2(overlapPixelX, overlapPixelY));\n" +
-    "\n" +
-    "          // convert each mesh index from a 1D index into a 2D pixel coordinate into u_clippingPolygonMeshPositions\n" +
-    "          vec2 v0PixelIndex = vec2(\n" +
-    "              (modI(overlapIndices.x, u_clippingPolygonMeshPositionPixelDimensions.x) + 0.5) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.x,\n" +
-    "              (1.0 - (floor(overlapIndices.x / u_clippingPolygonMeshPositionPixelDimensions.y) + 0.5)) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.y\n" +
+    "          // look up the relevant indices for the current triangle\n" +
+    "          float overlapPixelIndex1D = overlappingTriangleIndex / 3.0;\n" +
+    "          float overlapPixelIndexColumn = modI(overlapPixelIndex1D, overlapPixelWidth);\n" +
+    "          float overlapPixelIndexRow = floor(overlapPixelIndex1D / overlapPixelWidth);\n" +
+    "          float overlapPixelIndexColumnPixel = (overlapPixelIndexColumn + 0.5) / overlapPixelWidth;\n" +
+    "          float overlapPixelIndexRowPixel = (((overlapPixelHeight - 1.0) - overlapPixelIndexRow) + 0.5) / overlapPixelHeight;\n" +
+    "          vec4 overlapIndices = texture2D(\n" +
+    "            u_clippingPolygonOverlappingTriangleIndices, vec2(overlapPixelIndexColumnPixel, overlapPixelIndexRowPixel)\n" +
     "          );\n" +
     "\n" +
-    "          vec2 v1PixelIndex = vec2(\n" +
-    "              (modI(overlapIndices.y, u_clippingPolygonMeshPositionPixelDimensions.x) + 0.5) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.x,\n" +
-    "              (1.0 - (floor(overlapIndices.y / u_clippingPolygonMeshPositionPixelDimensions.y) + 0.5)) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.y\n" +
-    "          );\n" +
+    "          // use the relevant 1D indices to look up the actual triangle mesh data in the 2D mesh positions texture\n" +
+    "          float v0PixelIndex1D = overlapIndices.x;\n" +
+    "          float v1PixelIndex1D = overlapIndices.y;\n" +
+    "          float v2PixelIndex1D = overlapIndices.z;\n" +
     "\n" +
-    "          vec2 v2PixelIndex = vec2(\n" +
-    "              (modI(overlapIndices.z, u_clippingPolygonMeshPositionPixelDimensions.x) + 0.5) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.x,\n" +
-    "              (1.0 - (floor(overlapIndices.z / u_clippingPolygonMeshPositionPixelDimensions.y) + 0.5)) /\n" +
-    "              u_clippingPolygonMeshPositionPixelDimensions.y\n" +
-    "          );\n" +
+    "          float v0PixelIndexColumn = modI(v0PixelIndex1D, meshPositionsPixelWidth);\n" +
+    "          float v0PixelIndexRow = floor(v0PixelIndex1D / meshPositionsPixelWidth);\n" +
+    "          float v0PixelIndexColumnPixel = (v0PixelIndexColumn + 0.5) / meshPositionsPixelWidth;\n" +
+    "          float v0PixelIndexRowPixel = (((meshPositionsPixelHeight - 1.0) - v0PixelIndexRow) + 0.5) / meshPositionsPixelHeight;\n" +
+    "          vec2 v0PixelIndex = vec2(v0PixelIndexColumnPixel, v0PixelIndexRowPixel);\n" +
+    "\n" +
+    "          float v1PixelIndexColumn = modI(v1PixelIndex1D, meshPositionsPixelWidth);\n" +
+    "          float v1PixelIndexRow = floor(v1PixelIndex1D / meshPositionsPixelWidth);\n" +
+    "          float v1PixelIndexColumnPixel = (v1PixelIndexColumn + 0.5) / meshPositionsPixelWidth;\n" +
+    "          float v1PixelIndexRowPixel = (((meshPositionsPixelHeight - 1.0) - v1PixelIndexRow) + 0.5) / meshPositionsPixelHeight;\n" +
+    "          vec2 v1PixelIndex = vec2(v1PixelIndexColumnPixel, v1PixelIndexRowPixel);\n" +
+    "\n" +
+    "          float v2PixelIndexColumn = modI(v2PixelIndex1D, meshPositionsPixelWidth);\n" +
+    "          float v2PixelIndexRow = floor(v2PixelIndex1D / meshPositionsPixelWidth);\n" +
+    "          float v2PixelIndexColumnPixel = (v2PixelIndexColumn + 0.5) / meshPositionsPixelWidth;\n" +
+    "          float v2PixelIndexRowPixel = (((meshPositionsPixelHeight - 1.0) - v2PixelIndexRow) + 0.5) / meshPositionsPixelHeight;\n" +
+    "          vec2 v2PixelIndex = vec2(v2PixelIndexColumnPixel, v2PixelIndexRowPixel);\n" +
     "\n" +
     "          vec2 v0 = texture2D(u_clippingPolygonMeshPositions, v0PixelIndex).xy;\n" +
     "          vec2 v1 = texture2D(u_clippingPolygonMeshPositions, v1PixelIndex).xy;\n" +
