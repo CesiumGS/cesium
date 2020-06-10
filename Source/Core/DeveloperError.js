@@ -9,12 +9,15 @@ import defined from "./defined.js";
  * On the other hand, a {@link RuntimeError} indicates an exception that may
  * be thrown at runtime, e.g., out of memory, that the calling code should be prepared
  * to catch.
+ * <br/><br/>用于捕捉开发时的bug。
+ *
  *
  * @alias DeveloperError
  * @constructor
  * @extends Error
  *
  * @param {String} [message] The error message for this exception.
+ * <br/>错误信息
  *
  * @see RuntimeError
  */
@@ -66,6 +69,7 @@ DeveloperError.prototype.toString = function () {
 
 /**
  * @private
+ * 显示错误信息：该函数定义为一个接口，不可直接调用
  */
 DeveloperError.throwInstantiationError = function () {
   throw new DeveloperError(
