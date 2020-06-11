@@ -1520,6 +1520,8 @@ require({
     searchContainer = registry.byId("searchContainer");
 
     hideSearchContainer();
-    registry.byId("innerPanel").selectChild(subtabs[currentTab]);
+    if (defined(subtabs[currentTab])) {
+      registry.byId("innerPanel").selectChild(subtabs[currentTab]);
+    }
   });
 });
