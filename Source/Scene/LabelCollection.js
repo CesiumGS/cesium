@@ -407,7 +407,7 @@ function repositionAllGlyphs(label) {
     horizontalOrigin,
     backgroundPadding
   );
-  var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
+  var lineSpacing = label._lineHeight / label._relativeSize || defaultLineSpacingPercent * maxLineHeight;
   var otherLinesHeight = lineSpacing * (numberOfLines - 1);
   var totalLineWidth = maxLineWidth;
   var totalLineHeight = maxLineHeight + otherLinesHeight;
