@@ -1,10 +1,7 @@
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
-import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import CesiumMath from "./Math.js";
-import PolygonPipeline from "./PolygonPipeline.js";
 import PolylinePipeline from "./PolylinePipeline.js";
-import WindingOrder from "./WindingOrder.js";
 
 /**
  * @private
