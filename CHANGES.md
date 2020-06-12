@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.71 - 2020-07-01
+
+##### Fixes :wrench:
+
+- Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+
 ### 1.70.1 - 2020-06-10
 
 ##### Additions :tada:

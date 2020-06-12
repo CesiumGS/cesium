@@ -253,15 +253,6 @@ describe("Core/WallGeometry", function () {
     var positions = w.attributes.position.values;
     expect(positions.length).toEqual(numPositions * 3);
     expect(w.indices.length).toEqual(numTriangles * 3);
-
-    var cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 0)
-    );
-    expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
-
-    cartographic = ellipsoid.cartesianToCartographic(
-      Cartesian3.fromArray(positions, 3)
-    );
   });
 
   it("does not clean positions that add up past EPSILON10", function () {
