@@ -227,9 +227,10 @@ ModelUtility.computeBoundingSphere = function (model) {
           var positionAccessor = primitives[m].attributes.POSITION;
           if (defined(positionAccessor)) {
             var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-            if (defined(min) && defined(max)) {
+            if (defined(minMax.min) && defined(minMax.max)) {
+              var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+              var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+
               Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
               Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
               Cartesian3.minimumByComponent(min, aMin, min);
