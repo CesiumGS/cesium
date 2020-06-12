@@ -857,6 +857,13 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
+    // var x0 = performance.now();
+    // var sum1;
+    // var sum2;
+    // var xt;
+    // var yt;
+    // var y0 = performance.now();
+
     // When using the entity layer, the Resource objects get recreated on getValue because
     //  they are clonable. That's why we check the url property for Resources
     //  because the instances aren't the same and we keep trying to load the same
@@ -882,12 +889,144 @@ function createTexture2DUpdateFunction(uniformId) {
             s3tc: context.s3tc,
             pvrtc: context.pvrtc,
           };
-          promise = loadKTX2(resource, supportedFormats);
+
+          // Normal production code
+          // promise = loadKTX2(resource, supportedFormats);
+
+          // TESTING CODE
+          promise = loadKTX2(resource, supportedFormats)
+            .then((_i) => {
+              console.log(_i);
+              return loadKTX2(resource, supportedFormats);
+            })
+            .then((_i) => {
+              console.log(_i);
+              return loadKTX2(resource, supportedFormats);
+            })
+            .then((_i) => {
+              console.log(_i);
+              return loadKTX2(resource, supportedFormats);
+            });
+          // .then(x => loadKTX2(resource, supportedFormats));
+
+          // var x = "../images/t27_1.ktx2";
+          // var y = "../images/t15_1.ktx2";
+          // promise =  loadKTX2(y, supportedFormats).then(i=>{
+          //   x0=performance.now();
+          //   loadKTX2(y, supportedFormats);})
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => {
+          // var x1 = performance.now();
+          // sum2 = (x1 - x0);
+          // x0 = performance.now();})
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(y, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => loadKTX2(x, supportedFormats))
+          // .then(i => {
+          //   var x1 = performance.now(); sum1 = (x1 - x0);
+          //   xt = ((sum1/24.0)-(sum2/48.0));
+          //   yt = (sum1-32.0*xt)/16.0;
+          //   console.log(sum1 + ", " + sum2);
+          //   console.log(x + ", " + y);
+          //   console.log(xt.toPrecision(5) + " " + yt.toPrecision(5));
+          // return loadKTX2(x, supportedFormats)});
         } else if (crnRegex.test(resource.url)) {
           promise = loadCRN(resource);
         } else {
           promise = resource.fetchImage();
         }
+
         when(promise, function (image) {
           material._loadedImages.push({
             id: uniformId,

@@ -60,13 +60,13 @@ import MSC_TRANSCODER from "../ThirdParty/msc_basis_transcoder.js";
  */
 
 var transcoderModule;
+var transcoderPromise;
 function loadKTX2(resourceOrUrlOrBuffer, supportedFormats) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
   //>>includeEnd('debug');
 
-  var transcoderPromise;
-  if (!defined(transcoderModule)) {
+  if (!defined(transcoderModule) && !defined(transcoderPromise)) {
     var deferred = when.defer();
     transcoderPromise = deferred.promise;
     // MSC_TRANSCODER is defined in the transcoder js file, es-lint is wrong here
@@ -91,26 +91,25 @@ function loadKTX2(resourceOrUrlOrBuffer, supportedFormats) {
   if (!defined(loadPromise)) {
     return undefined;
   }
-  if (!defined(transcoderPromise)) {
-    // module already loaded
-    return loadPromise.then(function (data) {
-      if (defined(data)) {
-        return parseKTX2(data);
-      }
-    });
-  }
+
   // load module then return
   return transcoderPromise.then(function () {
-    return loadPromise.then(function (data) {
-      if (defined(data)) {
-        try {
-          return parseKTX2(data, supportedFormats);
-        } catch (e) {
-          console.log("KTX2 error:");
-          console.log(e);
+    return loadPromise
+      .then(function (data) {
+        console.log("data resource loaded");
+        if (defined(data)) {
+          try {
+            return parseKTX2(data, supportedFormats);
+          } catch (e) {
+            console.log("KTX2 Parsing Error:");
+            console.log(e);
+          }
         }
-      }
-    });
+      })
+      .otherwise(function (error) {
+        console.log("KTX2 Resource Fetching Error:");
+        console.log(error);
+      });
   });
 }
 
@@ -176,13 +175,6 @@ function parseKTX2(data, supportedFormats) {
       break;
     }
   }
-  console.log("parsing KTX2 (from LoadKTX2.js)");
-  console.log("Supports ETC1?");
-  console.log(supportedFormats.etc1);
-  console.log("Supports S3TC?");
-  console.log(supportedFormats.s3tc);
-  console.log("Supports PVRTC?");
-  console.log(supportedFormats.pvrtc);
 
   if (!isKTX2) {
     throw new RuntimeError("Invalid KTX2 file.");
