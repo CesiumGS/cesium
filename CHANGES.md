@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.71 - 2020-07-01
+
+##### Breaking Changes :mega:
+
+- Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions.
+
 ### 1.70.1 - 2020-06-10
 
 ##### Additions :tada:
