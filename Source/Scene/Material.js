@@ -857,7 +857,7 @@ function createTexture2DUpdateFunction(uniformId) {
       return;
     }
 
-    // var x0 = performance.now();
+    var x0 = performance.now();
     // var sum1;
     // var sum2;
     // var xt;
@@ -890,137 +890,97 @@ function createTexture2DUpdateFunction(uniformId) {
             pvrtc: context.pvrtc,
           };
 
+          var ktxtures = [
+            Resource.createIfNeeded("../images/t27_1.ktx2"),
+            Resource.createIfNeeded("../images/t27_255.ktx2"),
+            Resource.createIfNeeded("../images/t26_1.ktx2"),
+            Resource.createIfNeeded("../images/t26_255.ktx2"),
+            Resource.createIfNeeded("../images/t25_1.ktx2"),
+            Resource.createIfNeeded("../images/t25_255.ktx2"),
+            Resource.createIfNeeded("../images/t24_1.ktx2"),
+            Resource.createIfNeeded("../images/t24_255.ktx2"),
+            Resource.createIfNeeded("../images/t23_1.ktx2"),
+            Resource.createIfNeeded("../images/t23_255.ktx2"),
+            Resource.createIfNeeded("../images/t22_1.ktx2"),
+            Resource.createIfNeeded("../images/t22_255.ktx2"),
+            Resource.createIfNeeded("../images/t21_1.ktx2"),
+            Resource.createIfNeeded("../images/t21_255.ktx2"),
+            Resource.createIfNeeded("../images/t20_1.ktx2"),
+            Resource.createIfNeeded("../images/t20_255.ktx2"),
+            Resource.createIfNeeded("../images/t19_1.ktx2"),
+            Resource.createIfNeeded("../images/t19_255.ktx2"),
+            Resource.createIfNeeded("../images/t18_1.ktx2"),
+            Resource.createIfNeeded("../images/t18_255.ktx2"),
+            Resource.createIfNeeded("../images/t17_1.ktx2"),
+            Resource.createIfNeeded("../images/t17_255.ktx2"),
+            Resource.createIfNeeded("../images/t16_1.ktx2"),
+            Resource.createIfNeeded("../images/t16_255.ktx2"),
+            Resource.createIfNeeded("../images/t15_1.ktx2"),
+            Resource.createIfNeeded("../images/t15_255.ktx2"),
+            Resource.createIfNeeded("../images/t14_1.ktx2"),
+            Resource.createIfNeeded("../images/t14_255.ktx2"),
+            Resource.createIfNeeded("../images/t13_1.ktx2"),
+            Resource.createIfNeeded("../images/t13_255.ktx2"),
+            Resource.createIfNeeded("../images/t12_1.ktx2"),
+            Resource.createIfNeeded("../images/t12_255.ktx2"),
+            Resource.createIfNeeded("../images/t11_1.ktx2"),
+            Resource.createIfNeeded("../images/t11_255.ktx2"),
+            Resource.createIfNeeded("../images/t10_1.ktx2"),
+            Resource.createIfNeeded("../images/t10_255.ktx2"),
+            Resource.createIfNeeded("../images/t9_1.ktx2"),
+            Resource.createIfNeeded("../images/t9_255.ktx2"),
+            Resource.createIfNeeded("../images/t8_1.ktx2"),
+            Resource.createIfNeeded("../images/t8_255.ktx2"),
+            Resource.createIfNeeded("../images/t7_1.ktx2"),
+            Resource.createIfNeeded("../images/t7_255.ktx2"),
+            Resource.createIfNeeded("../images/t6_1.ktx2"),
+            Resource.createIfNeeded("../images/t6_255.ktx2"),
+            Resource.createIfNeeded("../images/t5_1.ktx2"),
+            Resource.createIfNeeded("../images/t5_255.ktx2"),
+            Resource.createIfNeeded("../images/t4_1.ktx2"),
+            Resource.createIfNeeded("../images/t4_255.ktx2"),
+            Resource.createIfNeeded("../images/t3_1.ktx2"),
+            Resource.createIfNeeded("../images/t3_255.ktx2"),
+            Resource.createIfNeeded("../images/t2_1.ktx2"),
+            Resource.createIfNeeded("../images/t2_255.ktx2"),
+            Resource.createIfNeeded("../images/t1_1.ktx2"),
+            Resource.createIfNeeded("../images/t1_255.ktx2"),
+            Resource.createIfNeeded("../images/t0_1.ktx2"),
+            Resource.createIfNeeded("../images/t0_255.ktx2"),
+          ];
+
           // Normal production code
           // promise = loadKTX2(resource, supportedFormats);
+          var num_runs = 50.0;
+          var texture_text = "";
+          var loadXtimes = function (url, formats, i) {
+            return loadKTX2(url, supportedFormats).then((im) => {
+              if (i % 50 === 0) {
+                texture_text +=
+                  ((performance.now() - x0) / num_runs).toPrecision(6) + ", ";
+                x0 = performance.now();
+              }
+              if (i % 100 === 0) {
+                console.log(url + " " + texture_text);
+                texture_text = "";
+              }
+              return i === 0
+                ? im
+                : loadXtimes(
+                    ktxtures[Math.floor(i / num_runs)].url,
+                    supportedFormats,
+                    i - 1
+                  );
+            });
+          };
 
           // TESTING CODE
-          promise = loadKTX2(resource, supportedFormats)
-            .then((_i) => {
-              console.log(_i);
-              return loadKTX2(resource, supportedFormats);
-            })
-            .then((_i) => {
-              console.log(_i);
-              return loadKTX2(resource, supportedFormats);
-            })
-            .then((_i) => {
-              console.log(_i);
-              return loadKTX2(resource, supportedFormats);
-            });
-          // .then(x => loadKTX2(resource, supportedFormats));
-
-          // var x = "../images/t27_1.ktx2";
-          // var y = "../images/t15_1.ktx2";
-          // promise =  loadKTX2(y, supportedFormats).then(i=>{
-          //   x0=performance.now();
-          //   loadKTX2(y, supportedFormats);})
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => {
-          // var x1 = performance.now();
-          // sum2 = (x1 - x0);
-          // x0 = performance.now();})
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(y, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => loadKTX2(x, supportedFormats))
-          // .then(i => {
-          //   var x1 = performance.now(); sum1 = (x1 - x0);
-          //   xt = ((sum1/24.0)-(sum2/48.0));
-          //   yt = (sum1-32.0*xt)/16.0;
-          //   console.log(sum1 + ", " + sum2);
-          //   console.log(x + ", " + y);
-          //   console.log(xt.toPrecision(5) + " " + yt.toPrecision(5));
-          // return loadKTX2(x, supportedFormats)});
+          var idx = Math.floor(2799.0 / num_runs);
+          promise = loadXtimes(
+            ktxtures[idx].url,
+            supportedFormats,
+            ktxtures.length * num_runs - 1
+          );
         } else if (crnRegex.test(resource.url)) {
           promise = loadCRN(resource);
         } else {

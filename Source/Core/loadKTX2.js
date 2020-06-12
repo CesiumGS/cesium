@@ -96,7 +96,6 @@ function loadKTX2(resourceOrUrlOrBuffer, supportedFormats) {
   return transcoderPromise.then(function () {
     return loadPromise
       .then(function (data) {
-        console.log("data resource loaded");
         if (defined(data)) {
           try {
             return parseKTX2(data, supportedFormats);
