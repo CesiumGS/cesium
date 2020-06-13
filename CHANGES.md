@@ -6,6 +6,10 @@
 
 - Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions.
 
+##### Fixes :wrench:
+
+- Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+
 ### 1.70.1 - 2020-06-10
 
 ##### Additions :tada:
