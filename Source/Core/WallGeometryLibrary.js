@@ -1,3 +1,5 @@
+import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
+import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
 import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
@@ -13,14 +15,16 @@ var WallGeometryLibrary = {};
 
 function latLonEquals(c0, c1) {
   return (
-    CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON14) &&
-    CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON14)
+    CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON10) &&
+    CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON10)
   );
 }
 
 var scratchCartographic1 = new Cartographic();
 var scratchCartographic2 = new Cartographic();
 function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
+  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
+
   var length = positions.length;
   if (length < 2) {
     return;
