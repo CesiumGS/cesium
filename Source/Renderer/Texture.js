@@ -276,6 +276,32 @@ function Texture(options) {
           pixelDatatype,
           arrayBufferView
         );
+
+        if (defined(source.mipLevels)) {
+          var mipWidth = width;
+          var mipHeight = height;
+          for (var i = 0; i < source.mipLevels.length; ++i) {
+            mipWidth = Math.floor(mipWidth / 2) | 0;
+            if (mipWidth < 1) {
+              mipWidth = 1;
+            }
+            mipHeight = Math.floor(mipHeight / 2) | 0;
+            if (mipHeight < 1) {
+              mipHeight = 1;
+            }
+            gl.texImage2D(
+              textureTarget,
+              i + 1,
+              internalFormat,
+              mipWidth,
+              mipHeight,
+              0,
+              pixelFormat,
+              pixelDatatype,
+              source.mipLevels[i]
+            );
+          }
+        }
       }
     } else if (defined(source.framebuffer)) {
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
@@ -607,10 +633,10 @@ Object.defineProperties(Texture.prototype, {
 });
 
 /**
- * Copy new image data into this texture, from a source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
+ * Copy new image data into this texture, from a source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement}.
  * or an object with width, height, and arrayBufferView properties.
  *
- * @param {Object} source The source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video},
+ * @param {Object} source The source {@link ImageData}, {@link HTMLImageElement}, {@link HTMLCanvasElement}, or {@link HTMLVideoElement},
  *                        or an object with width, height, and arrayBufferView properties.
  * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
  * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.

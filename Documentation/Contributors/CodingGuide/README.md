@@ -887,26 +887,6 @@ It is usually obvious what directory a file belongs in. When it isn't, the decis
 
 Modules (files) should only reference modules in the same level or a lower level of the stack. For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
-- Modules in `define` statements should be in alphabetical order. This can be done automatically with `npm run sortRequires`, see the [Build Guide](../BuildGuide/README.md). For example, the modules required by `Scene/ModelAnimation.js` are:
-
-```javascript
-define([
-  "../Core/defaultValue",
-  "../Core/Event",
-  "../Core/JulianDate",
-  "./ModelAnimationLoop",
-  "./ModelAnimationState",
-], function (
-  defaultValue,
-  Event,
-  JulianDate,
-  ModelAnimationLoop,
-  ModelAnimationState
-) {
-  /* ... */
-});
-```
-
 - WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 
 ```javascript

@@ -5,6 +5,34 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} LabelGraphics.ConstructorOptions
+ *
+ * Initialization options for the LabelGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the label.
+ * @property {Property | string} [text] A Property specifying the text. Explicit newlines '\n' are supported.
+ * @property {Property | string} [font='30px sans-serif'] A Property specifying the CSS font.
+ * @property {Property | LabelStyle} [style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
+ * @property {Property | number} [scale=1.0] A numeric Property specifying the scale to apply to the text.
+ * @property {Property | boolean} [showBackground=false] A boolean Property specifying the visibility of the background behind the label.
+ * @property {Property | Color} [backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
+ * @property {Property | Cartesian2} [backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
+ * @property {Property | Cartesian2} [pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+ * @property {Property | Cartesian3} [eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
+ * @property {Property | HorizontalOrigin} [horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
+ * @property {Property | VerticalOrigin} [verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | Color} [fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the outline width.
+ * @property {Property | NearFarScalar} [translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
+ * @property {Property | NearFarScalar} [pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+ * @property {Property | NearFarScalar} [scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
+ * @property {Property | number} [disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ */
+
+/**
  * Describes a two dimensional label located at the position of the containing {@link Entity}.
  * <p>
  * <div align='center'>
@@ -16,28 +44,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias LabelGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
- * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
- * @param {Property} [options.font='30px sans-serif'] A Property specifying the CSS font.
- * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
- * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
- * @param {Property} [options.showBackground=false] A boolean Property specifying the visibility of the background behind the label.
- * @param {Property} [options.backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
- * @param {Property} [options.backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
- * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
- * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
- * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
- * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the outline width.
- * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
- * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
- * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
- * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
+ * @param {LabelGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
  */
@@ -106,7 +113,7 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the label.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   show: createPropertyDescriptor("show"),
 
@@ -114,14 +121,14 @@ Object.defineProperties(LabelGraphics.prototype, {
    * Gets or sets the string Property specifying the text of the label.
    * Explicit newlines '\n' are supported.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   text: createPropertyDescriptor("text"),
 
   /**
    * Gets or sets the string Property specifying the font in CSS syntax.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/CSS/font|CSS font on MDN}
    */
   font: createPropertyDescriptor("font"),
@@ -129,7 +136,7 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link LabelStyle}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   style: createPropertyDescriptor("style"),
 
@@ -144,7 +151,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * </div>
    * </p>
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   scale: createPropertyDescriptor("scale"),
@@ -152,7 +159,7 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the background behind the label.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   showBackground: createPropertyDescriptor("showBackground"),
@@ -160,7 +167,7 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the background {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default new Color(0.165, 0.165, 0.165, 0.8)
    */
   backgroundColor: createPropertyDescriptor("backgroundColor"),
@@ -169,7 +176,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
    * background padding in pixels.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default new Cartesian2(7, 5)
    */
   backgroundPadding: createPropertyDescriptor("backgroundPadding"),
@@ -189,7 +196,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * </div>
    * </p>
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian2.ZERO
    */
   pixelOffset: createPropertyDescriptor("pixelOffset"),
@@ -214,7 +221,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * </div>
    * </p>
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   eyeOffset: createPropertyDescriptor("eyeOffset"),
@@ -222,21 +229,21 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HorizontalOrigin}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   horizontalOrigin: createPropertyDescriptor("horizontalOrigin"),
 
   /**
    * Gets or sets the Property specifying the {@link VerticalOrigin}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   verticalOrigin: createPropertyDescriptor("verticalOrigin"),
 
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -244,43 +251,43 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the fill {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   fillColor: createPropertyDescriptor("fillColor"),
 
   /**
    * Gets or sets the Property specifying the outline {@link Color}.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
 
   /**
    * Gets or sets the numeric Property specifying the outline width.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
 
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the translucency of the label based on the distance from the camera.
    * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the label's translucency remains clamped to the nearest bound.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   translucencyByDistance: createPropertyDescriptor("translucencyByDistance"),
 
   /**
    * Gets or sets {@link NearFarScalar} Property specifying the pixel offset of the label based on the distance from the camera.
    * A label's pixel offset will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the label's pixel offset remains clamped to the nearest bound.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   pixelOffsetScaleByDistance: createPropertyDescriptor(
     "pixelOffsetScaleByDistance"
@@ -289,19 +296,19 @@ Object.defineProperties(LabelGraphics.prototype, {
   /**
    * Gets or sets near and far scaling properties of a Label based on the label's distance from the camera.
    * A label's scale will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the label's scale remains clamped to the nearest bound.  If undefined,
    * scaleByDistance will be disabled.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   scaleByDistance: createPropertyDescriptor("scaleByDistance"),
 
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this label will be displayed.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -311,7 +318,7 @@ Object.defineProperties(LabelGraphics.prototype, {
    * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
    * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
    * @memberof LabelGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   disableDepthTestDistance: createPropertyDescriptor(
     "disableDepthTestDistance"

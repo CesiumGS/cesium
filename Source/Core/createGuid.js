@@ -1,7 +1,7 @@
 /**
  * Creates a Globally unique identifier (GUID) string.  A GUID is 128 bits long, and can guarantee uniqueness across space and time.
  *
- * @exports createGuid
+ * @function
  *
  * @returns {String}
  *

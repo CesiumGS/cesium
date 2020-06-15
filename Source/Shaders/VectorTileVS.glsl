@@ -5,5 +5,5 @@ uniform mat4 u_modifiedModelViewProjection;
 
 void main()
 {
-    gl_Position = czm_depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
+    gl_Position = czm_depthClamp(u_modifiedModelViewProjection * vec4(position, 1.0));
 }

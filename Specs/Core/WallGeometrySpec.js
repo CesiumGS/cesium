@@ -219,8 +219,44 @@ describe("Core/WallGeometry", function () {
     expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
   });
 
-  it("does not clean positions that add up past EPSILON14", function () {
-    var eightyPercentOfEpsilon14 = 0.8 * CesiumMath.EPSILON14;
+  it("removes duplicates with very small difference", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        positions: [
+          new Cartesian3(
+            4347090.215457887,
+            1061403.4237998386,
+            4538066.036525028
+          ),
+          new Cartesian3(
+            4348147.589624987,
+            1043897.8776143644,
+            4541092.234751661
+          ),
+          new Cartesian3(
+            4348147.589882754,
+            1043897.8776762491,
+            4541092.234492364
+          ),
+          new Cartesian3(
+            4335659.882947743,
+            1047571.602084736,
+            4552098.654605664
+          ),
+        ],
+      })
+    );
+
+    var numPositions = 8;
+    var numTriangles = 4;
+    var positions = w.attributes.position.values;
+    expect(positions.length).toEqual(numPositions * 3);
+    expect(w.indices.length).toEqual(numTriangles * 3);
+  });
+
+  it("does not clean positions that add up past EPSILON10", function () {
+    var eightyPercentOfEpsilon14 = 0.8 * CesiumMath.EPSILON10;
     var inputPositions = Cartesian3.fromRadiansArrayHeights([
       1.0,
       1.0,

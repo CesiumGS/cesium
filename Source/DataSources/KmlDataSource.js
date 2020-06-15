@@ -3339,6 +3339,19 @@ function load(dataSource, entityCollection, data, options) {
 }
 
 /**
+ * @typedef {Object} KmlDataSource.LoadOptions
+ *
+ * Initialization options for the `load` method.
+ *
+ * @property {Camera} camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+ * @property {HTMLCanvasElement} canvas The canvas that is used for sending viewer properties to network links.
+ * @property {String} [sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+ * @property {Boolean} [clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
+ * @property {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
  * <p>
  * KML support in Cesium is incomplete, but a large amount of the standard,
@@ -3358,7 +3371,7 @@ function load(dataSource, entityCollection, data, options) {
  *
  * @param {Object} options An object with the following properties:
  * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
- * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
+ * @param {HTMLCanvasElement} options.canvas The canvas that is used for sending viewer properties to network links.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
  *
@@ -3434,13 +3447,7 @@ function KmlDataSource(options) {
  * Creates a Promise to a new instance loaded with the provided KML data.
  *
  * @param {Resource|String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
- * @param {Object} options An object with the following properties:
- * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
- * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
- * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {KmlDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
  */
@@ -3865,8 +3872,7 @@ function getNetworkLinkUpdateCallback(
 var entitiesToIgnore = new AssociativeArray();
 
 /**
- * Updates any NetworkLink that require updating
- * @function
+ * Updates any NetworkLink that require updating.
  *
  * @param {JulianDate} time The simulation time.
  * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
@@ -4007,111 +4013,67 @@ KmlDataSource.prototype.update = function (time) {
  */
 function KmlFeatureData() {
   /**
+   * @typedef KmlFeatureData.Author
+   * @type {Object}
+   * @property {String} name Gets the name.
+   * @property {String} uri Gets the URI.
+   * @property {Number} age Gets the email.
+   */
+
+  /**
    * Gets the atom syndication format author field.
-   * @type Object
+   * @type {KmlFeatureData.Author}
    */
   this.author = {
-    /**
-     * Gets the name.
-     * @type String
-     * @alias author.name
-     * @memberof! KmlFeatureData#
-     * @property author.name
-     */
     name: undefined,
-    /**
-     * Gets the URI.
-     * @type String
-     * @alias author.uri
-     * @memberof! KmlFeatureData#
-     * @property author.uri
-     */
     uri: undefined,
-    /**
-     * Gets the email.
-     * @type String
-     * @alias author.email
-     * @memberof! KmlFeatureData#
-     * @property author.email
-     */
     email: undefined,
   };
 
   /**
+   * @typedef KmlFeatureData.Link
+   * @type {Object}
+   * @property {String} href Gets the href.
+   * @property {String} hreflang Gets the language of the linked resource.
+   * @property {String} rel Gets the link relation.
+   * @property {String} type Gets the link type.
+   * @property {String} title Gets the link title.
+   * @property {String} length Gets the link length.
+   */
+
+  /**
    * Gets the link.
-   * @type Object
+   * @type {KmlFeatureData.Link}
    */
   this.link = {
-    /**
-     * Gets the href.
-     * @type String
-     * @alias link.href
-     * @memberof! KmlFeatureData#
-     * @property link.href
-     */
     href: undefined,
-    /**
-     * Gets the language of the linked resource.
-     * @type String
-     * @alias link.hreflang
-     * @memberof! KmlFeatureData#
-     * @property link.hreflang
-     */
     hreflang: undefined,
-    /**
-     * Gets the link relation.
-     * @type String
-     * @alias link.rel
-     * @memberof! KmlFeatureData#
-     * @property link.rel
-     */
     rel: undefined,
-    /**
-     * Gets the link type.
-     * @type String
-     * @alias link.type
-     * @memberof! KmlFeatureData#
-     * @property link.type
-     */
     type: undefined,
-    /**
-     * Gets the link title.
-     * @type String
-     * @alias link.title
-     * @memberof! KmlFeatureData#
-     * @property link.title
-     */
     title: undefined,
-    /**
-     * Gets the link length.
-     * @type String
-     * @alias link.length
-     * @memberof! KmlFeatureData#
-     * @property link.length
-     */
     length: undefined,
   };
 
   /**
    * Gets the unstructured address field.
-   * @type String
+   * @type {String}
    */
   this.address = undefined;
   /**
    * Gets the phone number.
-   * @type String
+   * @type {String}
    */
   this.phoneNumber = undefined;
   /**
    * Gets the snippet.
-   * @type String
+   * @type {String}
    */
   this.snippet = undefined;
   /**
    * Gets the extended data, parsed into a JSON object.
    * Currently only the <code>Data</code> property is supported.
    * <code>SchemaData</code> and custom data are ignored.
-   * @type String
+   * @type {String}
    */
   this.extendedData = undefined;
 }

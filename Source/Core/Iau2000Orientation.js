@@ -9,7 +9,7 @@ import TimeConstants from "./TimeConstants.js";
  * The data comes from the Report of the IAU/IAG Working Group on Cartographic
  * Coordinates and Rotational Elements: 2000.
  *
- * @exports Iau2000Orientation
+ * @namespace Iau2000Orientation
  *
  * @private
  */
@@ -39,6 +39,7 @@ var dateTT = new JulianDate();
  * @param {JulianDate} [date=JulianDate.now()] The date to evaluate the parameters.
  * @param {IauOrientationParameters} [result] The object onto which to store the result.
  * @returns {IauOrientationParameters} The modified result parameter or a new instance representing the orientation of the Earth's Moon.
+ * @private
  */
 Iau2000Orientation.ComputeMoon = function (date, result) {
   if (!defined(date)) {

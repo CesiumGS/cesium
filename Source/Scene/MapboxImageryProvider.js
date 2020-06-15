@@ -12,24 +12,30 @@ var defaultCredit = new Credit(
 );
 
 /**
+ * @typedef {Object} MapboxImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the MapboxImageryProvider constructor
+ *
+ * @property {String} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
+ * @property {String} mapId The Mapbox Map ID.
+ * @property {String} [accessToken] The public access token for the imagery.
+ * @property {String} [format='png'] The format of the image request.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * Provides tiled imagery hosted by Mapbox.
  *
  * @alias MapboxImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {String} [options.url='https://api.mapbox.com/v4/'] The Mapbox server url.
- * @param {String} options.mapId The Mapbox Map ID.
- * @param {String} [options.accessToken] The public access token for the imagery.
- * @param {String} [options.format='png'] The format of the image request.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
- *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
- *                 to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
+ * @param {MapboxImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * // Mapbox tile provider
@@ -49,6 +55,92 @@ function MapboxImageryProvider(options) {
     throw new DeveloperError("options.mapId is required.");
   }
   //>>includeEnd('debug');
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   var resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
@@ -179,7 +271,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link MapboxImageryProvider#ready} returns true.
    * @memberof MapboxImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -314,7 +406,7 @@ MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

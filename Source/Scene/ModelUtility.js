@@ -70,18 +70,21 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
 
       var jointAccessorId = primitive.attributes.JOINTS_0;
       var componentType;
-      var type;
+      var accessorType;
       if (defined(jointAccessorId)) {
         var jointAccessor = accessors[jointAccessorId];
         componentType = jointAccessor.componentType;
-        type = jointAccessor.type;
+        accessorType = jointAccessor.type;
       }
-      var isSkinned = defined(jointAccessorId);
+      var isSkinned = defined(jointAccessorId) && accessorType === "VEC4";
       var hasVertexColors = defined(primitive.attributes.COLOR_0);
       var hasMorphTargets = defined(primitive.targets);
       var hasNormals = defined(primitive.attributes.NORMAL);
       var hasTangents = defined(primitive.attributes.TANGENT);
       var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+      var hasOutline =
+        defined(primitive.extensions) &&
+        defined(primitive.extensions.CESIUM_primitive_outline);
 
       var primitiveInfo = primitiveInfoByMaterial[materialIndex];
       if (!defined(primitiveInfo)) {
@@ -89,27 +92,28 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasOutline: hasOutline,
         };
       } else if (
         primitiveInfo.skinning.skinned !== isSkinned ||
-        primitiveInfo.skinning.type !== type ||
         primitiveInfo.hasVertexColors !== hasVertexColors ||
         primitiveInfo.hasMorphTargets !== hasMorphTargets ||
         primitiveInfo.hasNormals !== hasNormals ||
         primitiveInfo.hasTangents !== hasTangents ||
-        primitiveInfo.hasTexCoords !== hasTexCoords
+        primitiveInfo.hasTexCoords !== hasTexCoords ||
+        primitiveInfo.hasOutline !== hasOutline
       ) {
         // This primitive uses the same material as another one that either:
         // * Isn't skinned
         // * Uses a different type to store joints and weights
         // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
+        // * Doesn't have a CESIUM_primitive_outline extension.
         var clonedMaterial = clone(material, true);
         // Split this off as a separate material
         materialIndex = addToArray(materials, clonedMaterial);
@@ -118,13 +122,13 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           skinning: {
             skinned: isSkinned,
             componentType: componentType,
-            type: type,
           },
           hasVertexColors: hasVertexColors,
           hasMorphTargets: hasMorphTargets,
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasOutline: hasOutline,
         };
       }
     });
@@ -223,9 +227,10 @@ ModelUtility.computeBoundingSphere = function (model) {
           var positionAccessor = primitives[m].attributes.POSITION;
           if (defined(positionAccessor)) {
             var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-            if (defined(min) && defined(max)) {
+            if (defined(minMax.min) && defined(minMax.max)) {
+              var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+              var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+
               Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
               Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
               Cartesian3.minimumByComponent(min, aMin, min);

@@ -110,7 +110,7 @@ SphereOutlineGeometry.unpack = function (array, startingIndex, result) {
  * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
  *
  * @param {SphereOutlineGeometry} sphereGeometry A description of the sphere outline.
- * @returns {Geometry} The computed vertices and indices.
+ * @returns {Geometry|undefined} The computed vertices and indices.
  */
 SphereOutlineGeometry.createGeometry = function (sphereGeometry) {
   return EllipsoidOutlineGeometry.createGeometry(

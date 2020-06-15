@@ -126,15 +126,15 @@ function configureCameraFrustum(widget) {
  * @param {Element|String} container The DOM element or ID that will contain the widget.
  * @param {Object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
- * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
+ * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
- * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
- * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
  * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
  * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -366,7 +366,7 @@ function CesiumWidget(container, options) {
     this.targetFrameRate = options.targetFrameRate;
 
     var that = this;
-    scene.renderError.addEventListener(function (scene, error) {
+    this._onRenderError = function (scene, error) {
       that._useDefaultRenderLoop = false;
       that._renderLoopRunning = false;
       if (that._showRenderLoopErrors) {
@@ -374,7 +374,8 @@ function CesiumWidget(container, options) {
           "An error occurred while rendering.  Rendering has stopped.";
         that.showErrorPanel(title, undefined, error);
       }
-    });
+    };
+    scene.renderError.addEventListener(this._onRenderError);
   } catch (error) {
     if (showRenderLoopErrors) {
       var title = "Error constructing CesiumWidget.";
@@ -392,6 +393,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   container: {
     get: function () {
@@ -403,7 +405,8 @@ Object.defineProperties(CesiumWidget.prototype, {
    * Gets the canvas.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
+   * @readonly
    */
   canvas: {
     get: function () {
@@ -416,6 +419,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditContainer: {
     get: function () {
@@ -428,6 +432,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditViewport: {
     get: function () {
@@ -440,6 +445,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Scene}
+   * @readonly
    */
   scene: {
     get: function () {
@@ -493,6 +499,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Clock}
+   * @readonly
    */
   clock: {
     get: function () {
@@ -505,6 +512,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {ScreenSpaceEventHandler}
+   * @readonly
    */
   screenSpaceEventHandler: {
     get: function () {
@@ -604,7 +612,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Boolean}
-   * @default false
+   * @default true
    */
   useBrowserRecommendedResolution: {
     get: function () {
@@ -709,7 +717,10 @@ CesiumWidget.prototype.isDestroyed = function () {
  * removing the widget from layout.
  */
 CesiumWidget.prototype.destroy = function () {
-  this._scene = this._scene && this._scene.destroy();
+  if (defined(this._scene)) {
+    this._scene.renderError.removeEventListener(this._onRenderError);
+    this._scene = this._scene.destroy();
+  }
   this._container.removeChild(this._element);
   this._creditContainer.removeChild(this._innerCreditContainer);
   destroyObject(this);
