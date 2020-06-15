@@ -8,7 +8,6 @@
 
 ##### Additions :tada:
 
-- Add a `toString` method to the `Resource` class in case an instance gets logged as a string. [#8722](https://github.com/CesiumGS/cesium/issues/8722)
 - Added support for PolylineVolume in CZML [#8841](https://github.com/CesiumGS/cesium/pull/8841)
 
 ##### Fixes :wrench:
