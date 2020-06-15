@@ -266,3 +266,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Brandon Nguyen](https://github.com/bn-dignitas)
 - [Wang Bao](https://github.com/xiaobaogeit)
 - [John Remsberg](https://github.com/easternmotors)
+- [Bao Thien Tran](https://github.com/baothientran)
