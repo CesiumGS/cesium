@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+- Fixed artifact for skin model when log depth is enabled [#6447](https://github.com/CesiumGS/cesium/issues/6447).
 
 ### 1.70.1 - 2020-06-10
 
