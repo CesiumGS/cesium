@@ -2784,7 +2784,7 @@ describe(
 
     it("loads a glTF with KHR_materials_common that has skinning", function () {
       return loadModel(CesiumManUrl).then(function (m) {
-        // Face CesiumMan towards the camera
+        // Face CesiumMan towards the camera. See https://github.com/CesiumGS/cesium/pull/8958#issuecomment-644352798
         m.modelMatrix = Matrix4.multiply(
           m.modelMatrix,
           Axis.Y_UP_TO_X_UP,
