@@ -40,35 +40,6 @@
             version: "1.0",
           },
           {
-            id: "redTube",
-            name: "Red tube with rounded corners",
-            polylineVolume: {
-              positions: {
-                cartographicDegrees: [
-                  -85.0,
-                  32,
-                  0,
-                  -85,
-                  36.0,
-                  0,
-                  -89.0,
-                  36.0,
-                  0,
-                ],
-              },
-              shape: {
-                cartesian: computeCircle(60000.0),
-              },
-              material: {
-                solidColor: {
-                  color: {
-                    rgba: [255, 0, 0, 255],
-                  },
-                },
-              },
-            },
-          },
-          {
             id: "greenBox",
             name: "Green box with beveled corners and outline",
             polylineVolume: {
@@ -129,7 +100,36 @@
                 ],
               },
               shape: {
-                cartesian: computeStar(7, 70000, 50000),
+                cartesian: [
+                  70000,
+                  0,
+                  45048.44339512096,
+                  21694.186955877907,
+                  43644.28613011135,
+                  54728.203772762085,
+                  11126.046697815722,
+                  48746.39560909118,
+                  -15576.465376942004,
+                  68244.95385272766,
+                  -31174.490092936674,
+                  39091.57412340149,
+                  -63067.82075316933,
+                  30371.861738229076,
+                  -50000,
+                  6.123233995736766e-12,
+                  -63067.82075316934,
+                  -30371.86173822906,
+                  -31174.490092936685,
+                  -39091.574123401486,
+                  -15576.465376942022,
+                  -68244.95385272766,
+                  11126.046697815711,
+                  -48746.39560909118,
+                  43644.28613011134,
+                  -54728.20377276209,
+                  45048.44339512095,
+                  -21694.186955877918,
+                ],
               },
               cornerType: "MITERED",
               material: {
@@ -143,27 +143,6 @@
           },
         ];
 
-        function computeCircle(radius) {
-          var positions = [];
-          for (var i = 0; i < 360; i++) {
-            var radians = Cesium.Math.toRadians(i);
-            positions.push(radius * Math.cos(radians));
-            positions.push(radius * Math.sin(radians));
-          }
-          return positions;
-        }
-
-        function computeStar(arms, rOuter, rInner) {
-          var angle = Math.PI / arms;
-          var length = 2 * arms;
-          var positions = [];
-          for (var i = 0; i < length; i++) {
-            var r = i % 2 === 0 ? rOuter : rInner;
-            positions.push(Math.cos(i * angle) * r);
-            positions.push(Math.sin(i * angle) * r);
-          }
-          return positions;
-        }
         var viewer = new Cesium.Viewer("cesiumContainer");
         var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
         viewer.dataSources.add(dataSourcePromise);

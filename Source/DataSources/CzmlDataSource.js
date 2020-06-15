@@ -1167,33 +1167,33 @@ function processPositionPacketData(
   }
 }
 
-function processShapesPacketData(
+function processShapePacketData(
   object,
   propertyName,
-  shapesData,
+  packetData,
   entityCollection
 ) {
-  if (defined(shapesData.references)) {
+  if (defined(packetData.references)) {
     processReferencesArrayPacketData(
       object,
       propertyName,
-      shapesData.references,
-      shapesData.interval,
+      packetData.references,
+      packetData.interval,
       entityCollection,
       PropertyArray,
       CompositeProperty
     );
   } else {
-    if (defined(shapesData.cartesian)) {
-      shapesData.array = Cartesian2.unpackArray(shapesData.cartesian);
+    if (defined(packetData.cartesian)) {
+      packetData.array = Cartesian2.unpackArray(packetData.cartesian);
     }
 
-    if (defined(shapesData.array)) {
+    if (defined(packetData.array)) {
       processPacketData(
         Array,
         object,
         propertyName,
-        shapesData,
+        packetData,
         undefined,
         undefined,
         entityCollection
@@ -1960,22 +1960,22 @@ function processPositionArrayOfArrays(
   }
 }
 
-function processShapes(object, propertyName, shapesData, entityCollection) {
-  if (!defined(shapesData)) {
+function processShape(object, propertyName, packetData, entityCollection) {
+  if (!defined(packetData)) {
     return;
   }
 
-  if (Array.isArray(shapesData)) {
-    for (var i = 0, length = shapesData.length; i < length; i++) {
-      processShapesPacketData(
+  if (Array.isArray(packetData)) {
+    for (var i = 0, length = packetData.length; i < length; i++) {
+      processShapePacketData(
         object,
         propertyName,
-        shapesData[i],
+        packetData[i],
         entityCollection
       );
     }
   } else {
-    processShapesPacketData(object, propertyName, shapesData, entityCollection);
+    processShapePacketData(object, propertyName, packetData, entityCollection);
   }
 }
 
@@ -4192,7 +4192,7 @@ function processPolylineVolume(entity, packet, entityCollection, sourceUri) {
     polylineVolumeData.positions,
     entityCollection
   );
-  processShapes(
+  processShape(
     polylineVolume,
     "shape",
     polylineVolumeData.shape,
