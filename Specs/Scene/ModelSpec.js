@@ -2784,6 +2784,12 @@ describe(
 
     it("loads a glTF with KHR_materials_common that has skinning", function () {
       return loadModel(CesiumManUrl).then(function (m) {
+        // Face CesiumMan towards the camera
+        m.modelMatrix = Matrix4.multiply(
+          m.modelMatrix,
+          Axis.Y_UP_TO_X_UP,
+          new Matrix4()
+        );
         verifyRender(m);
         primitives.remove(m);
       });
