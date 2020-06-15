@@ -307,6 +307,8 @@ function parseRGB8(data, header, levelIndex, result) {
         levelBuffer = new Uint8Array(data, levelOffset, levelLength);
       }
 
+      console.log(levelBuffer.byteLength);
+
       level[faceOrder[j]] = new CompressedTextureBuffer(
         internalFormat,
         width,
@@ -335,9 +337,9 @@ function parseCompressed(
   var hasAlphaSlices = globalFlags & hasAlphaSlicesMask;
   var isVideo = header.layerCount !== 0; // Should be false until video support is added
 
-  if (!isETC1s) {
-    throw new RuntimeError("UASTC Basis Encoding not yet supported");
-  }
+  // if (!isETC1s) {
+  //   throw new RuntimeError("UASTC Basis Encoding not yet supported");
+  // }
 
   // Read rest of SGD data
   var endpointCount = view.getUint16(byteOffset, true);
@@ -470,6 +472,8 @@ function parseCompressed(
         .get_typed_memory_view()
         .slice();
       transcoded.transcodedImage.delete();
+
+      // console.log(levelBuffer.byteLength);
 
       level[faceOrder[j]] = new CompressedTextureBuffer(
         internalFormat,

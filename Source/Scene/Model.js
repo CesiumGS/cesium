@@ -22,6 +22,7 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -1918,6 +1919,7 @@ function imageLoad(model, textureId) {
 }
 
 var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
 function parseTextures(model, context, supportsWebP) {
@@ -1998,6 +2000,13 @@ function parseTextures(model, context, supportsWebP) {
       var promise;
       if (ktxRegex.test(uri)) {
         promise = loadKTX(imageResource);
+      } else if (ktx2Regex.test(uri)) {
+        var supportedFormats = {
+          etc1: context.etc1,
+          s3tc: context.s3tc,
+          pvrtc: context.pvrtc,
+        };
+        promise = loadKTX2(imageResource, supportedFormats);
       } else if (crnRegex.test(uri)) {
         promise = loadCRN(imageResource);
       } else {
@@ -2733,7 +2742,7 @@ function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
   };
 }
 
-function loadTexturesFromBufferViews(model) {
+function loadTexturesFromBufferViews(model, supportedFormats) {
   var loadResources = model._loadResources;
 
   if (loadResources.pendingBufferLoads !== 0) {
@@ -2755,6 +2764,11 @@ function loadTexturesFromBufferViews(model) {
 
     if (gltfTexture.mimeType === "image/ktx") {
       loadKTX(loadResources.getBuffer(bufferView))
+        .then(imageLoad(model, gltfTexture.id, imageId))
+        .otherwise(onerror);
+      ++model._loadResources.pendingTextureLoads;
+    } else if (gltfTexture.mimeType === "image/ktx2") {
+      loadKTX2(loadResources.getBuffer(bufferView), supportedFormats)
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;
@@ -4153,7 +4167,12 @@ function createResources(model, frameState) {
     createBuffers(model, frameState); // using glTF bufferViews
     createPrograms(model, frameState);
     createSamplers(model, context);
-    loadTexturesFromBufferViews(model);
+    var supportedFormats = {
+      etc1: context.etc1,
+      s3tc: context.s3tc,
+      pvrtc: context.pvrtc,
+    };
+    loadTexturesFromBufferViews(model, supportedFormats);
     createTextures(model, frameState);
   }
 
