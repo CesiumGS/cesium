@@ -15,6 +15,7 @@
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
+- Improved the style of the error panel so that it looks like a proper error message [#8739](https://github.com/CesiumGS/cesium/issues/8739)
 
 ### 1.70.1 - 2020-06-10
 

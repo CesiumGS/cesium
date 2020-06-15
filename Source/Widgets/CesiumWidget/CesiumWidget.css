@@ -50,25 +50,37 @@
   vertical-align: middle;
   border: 1px solid #526f82;
   border-radius: 7px;
-  background-color: black;
+  background-color: #d69d93;
   color: white;
   font-size: 10pt;
   padding: 1em;
 }
 
 .cesium-widget-errorPanel-header {
-  font-size: 120%;
-  color: #fe4;
+  font-size: 160%;
+  font-family: "Open Sans", Verdana, Geneva, sans-serif;
+  color: #510c00;
+  border-bottom: 2px solid #510c00;
+  padding-bottom: 10px;
+  border-radius: 3px;
 }
 
 .cesium-widget-errorPanel-scroll {
   overflow: auto;
-  font-family: monospace;
+  font-family: "Open Sans", Verdana, Geneva, sans-serif;
   white-space: pre-wrap;
   padding: 0;
   margin: 10px 0;
+  color: #510c00;
+  margin-bottom: 20px;
 }
 
 .cesium-widget-errorPanel-buttonPanel {
-  text-align: center;
+  text-align: right;
+}
+
+.cesium-widget-errorPanel-buttonPanel button,
+.cesium-widget-errorPanel-buttonPanel button:hover {
+  background: #d69d93;
+  color: #510c00;
 }
