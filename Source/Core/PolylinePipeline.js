@@ -140,16 +140,15 @@ function generateCartesianRhumbArc(
   array,
   offset
 ) {
-  var first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
-  var last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
-  var start = ellipsoid.cartesianToCartographic(first, carto1);
-  var end = ellipsoid.cartesianToCartographic(last, carto2);
-
+  var start = ellipsoid.cartesianToCartographic(p0, carto1);
+  var end = ellipsoid.cartesianToCartographic(p1, carto2);
   var numPoints = PolylinePipeline.numberOfPointsRhumbLine(
     start,
     end,
     granularity
   );
+  start.height = 0.0;
+  end.height = 0.0;
   var heights = subdivideHeights(numPoints, h0, h1);
 
   if (!ellipsoidRhumb.ellipsoid.equals(ellipsoid)) {
