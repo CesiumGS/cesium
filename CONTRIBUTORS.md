@@ -148,6 +148,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
   - [Daniel Santillan](https://github.com/santilland)
+- [Navagis, Inc.](https://navagis.com/)
+  - [Jonathan Nogueira](https://github.com/LuminousPath)
 - [Palantir Technologies, Inc.](https://palantir.com)
   - [Joey Rafidi](https://github.com/jrafidi)
 
@@ -261,3 +263,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Jakub Vrana](https://github.com/vrana)
 - [Edvinas Pranka](https://github.com/epranka)
 - [James Bromwell](https://github.com/thw0rted)
+- [Brandon Nguyen](https://github.com/bn-dignitas)
+- [Wang Bao](https://github.com/xiaobaogeit)
+- [John Remsberg](https://github.com/easternmotors)
