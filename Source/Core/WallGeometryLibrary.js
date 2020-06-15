@@ -2,11 +2,8 @@ import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
-import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import CesiumMath from "./Math.js";
-import PolygonPipeline from "./PolygonPipeline.js";
 import PolylinePipeline from "./PolylinePipeline.js";
-import WindingOrder from "./WindingOrder.js";
 
 /**
  * @private
@@ -131,24 +128,6 @@ WallGeometryLibrary.computePositions = function (
   wallPositions = o.positions;
   maximumHeights = o.topHeights;
   minimumHeights = o.bottomHeights;
-
-  if (wallPositions.length >= 3) {
-    // Order positions counter-clockwise
-    var tangentPlane = EllipsoidTangentPlane.fromPoints(
-      wallPositions,
-      ellipsoid
-    );
-    var positions2D = tangentPlane.projectPointsOntoPlane(wallPositions);
-
-    if (
-      PolygonPipeline.computeWindingOrder2D(positions2D) ===
-      WindingOrder.CLOCKWISE
-    ) {
-      wallPositions.reverse();
-      maximumHeights.reverse();
-      minimumHeights.reverse();
-    }
-  }
 
   var length = wallPositions.length;
   var numCorners = length - 2;
