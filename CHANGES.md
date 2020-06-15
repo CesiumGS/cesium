@@ -9,6 +9,7 @@
 ##### Fixes :wrench:
 
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+- Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
 
 ### 1.70.1 - 2020-06-10
 
