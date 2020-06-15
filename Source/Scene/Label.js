@@ -168,16 +168,10 @@ function Label(options, labelCollection) {
   this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
   this._showBackground = defaultValue(options.showBackground, false);
   this._backgroundColor = Color.clone(
-    defaultValue(
-      options.backgroundColor,
-      defaultBackgroundColor
-    )
+    defaultValue(options.backgroundColor, defaultBackgroundColor)
   );
   this._backgroundPadding = Cartesian2.clone(
-    defaultValue(
-      options.backgroundPadding,
-      defaultBackgroundPadding
-    )
+    defaultValue(options.backgroundPadding, defaultBackgroundPadding)
   );
   this._style = defaultValue(options.style, LabelStyle.FILL);
   this._verticalOrigin = defaultValue(
