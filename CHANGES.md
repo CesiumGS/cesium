@@ -17,6 +17,7 @@
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
 - Fixed the issue that extension checking preprocessors (#ifdef GL_Extension) are not removed from glsl when upgrading to WebGL 2.0
+- Fixed the issue that PixelDatatype.HALF_FLOAT is not properly converted to WebGLConstant.HALF_FLOAT for WebGL 2.0
 
 ### 1.70.1 - 2020-06-10
 
