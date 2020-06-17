@@ -6,10 +6,16 @@
 
 - Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions.
 
+##### Additions :tada:
+
+- Added support for PolylineVolume in CZML [#8841](https://github.com/CesiumGS/cesium/pull/8841)
+
 ##### Fixes :wrench:
 
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+- Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
+- Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
 
 ### 1.70.1 - 2020-06-10
 

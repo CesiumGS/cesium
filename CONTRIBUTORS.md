@@ -150,6 +150,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Daniel Santillan](https://github.com/santilland)
 - [Navagis, Inc.](https://navagis.com/)
   - [Jonathan Nogueira](https://github.com/LuminousPath)
+- [Palantir Technologies, Inc.](https://palantir.com)
+  - [Joey Rafidi](https://github.com/jrafidi)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -264,3 +266,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Brandon Nguyen](https://github.com/bn-dignitas)
 - [Wang Bao](https://github.com/xiaobaogeit)
 - [John Remsberg](https://github.com/easternmotors)
+- [Bao Thien Tran](https://github.com/baothientran)

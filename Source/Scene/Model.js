@@ -2423,7 +2423,6 @@ function createProgram(programToCreate, model, context) {
   var fs = shaders[program.fragmentShader];
 
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
   if (
     model.extensionsUsed.WEB3D_quantized_attributes ||
@@ -2439,17 +2438,6 @@ function createProgram(programToCreate, model, context) {
 
   var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
   var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
-
-  // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
-  // https://github.com/CesiumGS/cesium/issues/6575.
-  // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
-  if (!FeatureDetection.isInternetExplorer()) {
-    drawVS = ModelUtility.modifyVertexShaderForLogDepth(
-      drawVS,
-      toClipCoordinatesGLSL
-    );
-    drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-  }
 
   if (!defined(model._uniformMapLoaded)) {
     drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
@@ -2540,7 +2528,6 @@ function recreateProgram(programToCreate, model, context) {
   var shaders = model._rendererResources.sourceShaders;
 
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
   var clippingPlaneCollection = model.clippingPlanes;
   var addClippingPlaneCode = isClippingEnabled(model);
@@ -2569,14 +2556,6 @@ function recreateProgram(programToCreate, model, context) {
 
   var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
   var drawFS = modifyShader(finalFS, programId, model._fragmentShaderLoaded);
-
-  if (!FeatureDetection.isInternetExplorer()) {
-    drawVS = ModelUtility.modifyVertexShaderForLogDepth(
-      drawVS,
-      toClipCoordinatesGLSL
-    );
-    drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-  }
 
   if (!defined(model._uniformMapLoaded)) {
     drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
@@ -4084,7 +4063,6 @@ function createResources(model, frameState) {
   var context = frameState.context;
   var scene3DOnly = frameState.scene3DOnly;
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinates = (model._toClipCoordinatesGLSL = {});
   var techniques = model._sourceTechniques;
   var programs = model._sourcePrograms;
 
@@ -4120,10 +4098,6 @@ function createResources(model, frameState) {
       }
 
       shader = modifyShader(shader, programId, model._vertexShaderLoaded);
-      toClipCoordinates[programId] = ModelUtility.toClipCoordinatesGLSL(
-        model.gltf,
-        shader
-      );
     }
   }
 
