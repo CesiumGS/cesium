@@ -6,7 +6,7 @@ describe("Renderer/modernizeShader", function () {
       "#define OUTPUT_DECLARATION \n" + "void main() \n" + "{ \n" + "} \n";
     var output = modernizeShader(simple, true);
     var expected = "#version 300 es\n#define WEBGL_2";
-    expect(output.startsWith(expected)).toBeTrue;
+    expect(output.startsWith(expected)).toBe(true);
   });
 
   it("replace existing version string", function () {
@@ -18,7 +18,7 @@ describe("Renderer/modernizeShader", function () {
       "} \n";
     var output = modernizeShader(simple, true);
     var expected = "#version 300 es\n#define WEBGL_2";
-    expect(output.startsWith(expected)).toBeTrue;
+    expect(output.startsWith(expected)).toBe(true);
   });
 
   it("removes extensions", function () {
