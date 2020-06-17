@@ -1,0 +1,388 @@
+diff --git a/Source/Renderer/Context.js b/Source/Renderer/Context.js
+index fff292a24b..cc8d5c326e 100644
+--- a/Source/Renderer/Context.js
++++ b/Source/Renderer/Context.js
+@@ -1270,7 +1270,15 @@ Context.prototype.readPixels = function (readState) {
+ 
+   bindFramebuffer(this, framebuffer);
+ 
+-  gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
++  gl.readPixels(
++    x,
++    y,
++    width,
++    height,
++    PixelFormat.RGBA,
++    PixelDatatype.toWebGLConstant(pixelDatatype, this),
++    pixels
++  );
+ 
+   return pixels;
+ };
+diff --git a/Source/Renderer/CubeMap.js b/Source/Renderer/CubeMap.js
+index dba6d24544..2e8bb140ff 100644
+--- a/Source/Renderer/CubeMap.js
++++ b/Source/Renderer/CubeMap.js
+@@ -189,7 +189,7 @@ function CubeMap(options) {
+         size,
+         0,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         arrayBufferView
+       );
+     } else {
+@@ -203,7 +203,7 @@ function CubeMap(options) {
+         0,
+         pixelFormat,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         sourceFace
+       );
+     }
+@@ -255,7 +255,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     gl.texImage2D(
+@@ -266,7 +266,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     gl.texImage2D(
+@@ -277,7 +277,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     gl.texImage2D(
+@@ -288,7 +288,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     gl.texImage2D(
+@@ -299,7 +299,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     gl.texImage2D(
+@@ -310,7 +310,7 @@ function CubeMap(options) {
+       size,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+   }
+@@ -331,7 +331,7 @@ function CubeMap(options) {
+ 
+   var initialized = defined(source);
+   this._positiveX = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+@@ -343,7 +343,7 @@ function CubeMap(options) {
+     initialized
+   );
+   this._negativeX = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+@@ -355,7 +355,7 @@ function CubeMap(options) {
+     initialized
+   );
+   this._positiveY = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+@@ -367,7 +367,7 @@ function CubeMap(options) {
+     initialized
+   );
+   this._negativeY = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+@@ -379,7 +379,7 @@ function CubeMap(options) {
+     initialized
+   );
+   this._positiveZ = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+@@ -391,7 +391,7 @@ function CubeMap(options) {
+     initialized
+   );
+   this._negativeZ = new CubeMapFace(
+-    gl,
++    context,
+     texture,
+     textureTarget,
+     gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+diff --git a/Source/Renderer/CubeMapFace.js b/Source/Renderer/CubeMapFace.js
+index cc06bb3494..4db1a2d437 100644
+--- a/Source/Renderer/CubeMapFace.js
++++ b/Source/Renderer/CubeMapFace.js
+@@ -9,7 +9,7 @@ import PixelDatatype from "./PixelDatatype.js";
+  * @private
+  */
+ function CubeMapFace(
+-  gl,
++  context,
+   texture,
+   textureTarget,
+   targetFace,
+@@ -20,7 +20,7 @@ function CubeMapFace(
+   flipY,
+   initialized
+ ) {
+-  this._gl = gl;
++  this._context = context;
+   this._texture = texture;
+   this._textureTarget = textureTarget;
+   this._targetFace = targetFace;
+@@ -96,7 +96,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+   }
+   //>>includeEnd('debug');
+ 
+-  var gl = this._gl;
++  var gl = this._context._gl;
+   var target = this._textureTarget;
+   var targetFace = this._targetFace;
+ 
+@@ -150,7 +150,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+           size,
+           0,
+           pixelFormat,
+-          pixelDatatype,
++          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+           arrayBufferView
+         );
+       } else {
+@@ -163,7 +163,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+           0,
+           pixelFormat,
+           pixelFormat,
+-          pixelDatatype,
++          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+           source
+         );
+       }
+@@ -187,7 +187,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+         size,
+         0,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+         bufferView
+       );
+     }
+@@ -216,7 +216,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+         width,
+         height,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+         arrayBufferView
+       );
+     } else {
+@@ -231,7 +231,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
+         xOffset,
+         yOffset,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
+         source
+       );
+     }
+@@ -315,7 +315,7 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
+   }
+   //>>includeEnd('debug');
+ 
+-  var gl = this._gl;
++  var gl = this._context._gl;
+   var target = this._textureTarget;
+ 
+   gl.activeTexture(gl.TEXTURE0);
+diff --git a/Source/Renderer/PixelDatatype.js b/Source/Renderer/PixelDatatype.js
+index e9238e94f5..02db1e874f 100644
+--- a/Source/Renderer/PixelDatatype.js
++++ b/Source/Renderer/PixelDatatype.js
+@@ -7,15 +7,43 @@ import WebGLConstants from "../Core/WebGLConstants.js";
+  * @see PostProcessStage
+  */
+ var PixelDatatype = {
+-  UNSIGNED_BYTE: WebGLConstants.UNSIGNED_BYTE,
+-  UNSIGNED_SHORT: WebGLConstants.UNSIGNED_SHORT,
+-  UNSIGNED_INT: WebGLConstants.UNSIGNED_INT,
+-  FLOAT: WebGLConstants.FLOAT,
+-  HALF_FLOAT: WebGLConstants.HALF_FLOAT_OES,
+-  UNSIGNED_INT_24_8: WebGLConstants.UNSIGNED_INT_24_8,
+-  UNSIGNED_SHORT_4_4_4_4: WebGLConstants.UNSIGNED_SHORT_4_4_4_4,
+-  UNSIGNED_SHORT_5_5_5_1: WebGLConstants.UNSIGNED_SHORT_5_5_5_1,
+-  UNSIGNED_SHORT_5_6_5: WebGLConstants.UNSIGNED_SHORT_5_6_5,
++  UNSIGNED_BYTE: 0,
++  UNSIGNED_SHORT: 1,
++  UNSIGNED_INT: 2,
++  FLOAT: 3,
++  HALF_FLOAT: 4,
++  UNSIGNED_INT_24_8: 5,
++  UNSIGNED_SHORT_4_4_4_4: 6,
++  UNSIGNED_SHORT_5_5_5_1: 7,
++  UNSIGNED_SHORT_5_6_5: 8,
++};
++
++/**
++  @private
++*/
++PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
++  switch (pixelDatatype) {
++    case PixelDatatype.UNSIGNED_BYTE:
++      return WebGLConstants.UNSIGNED_BYTE;
++    case PixelDatatype.UNSIGNED_SHORT:
++      return WebGLConstants.UNSIGNED_SHORT;
++    case PixelDatatype.UNSIGNED_INT:
++      return WebGLConstants.UNSIGNED_INT;
++    case PixelDatatype.FLOAT:
++      return WebGLConstants.FLOAT;
++    case PixelDatatype.HALF_FLOAT:
++      return context.webgl2
++        ? WebGLConstants.HALF_FLOAT
++        : WebGLConstants.HALF_FLOAT_OES;
++    case PixelDatatype.UNSIGNED_INT_24_8:
++      return WebGLConstants.UNSIGNED_INT_24_8;
++    case PixelDatatype.UNSIGNED_SHORT_4_4_4_4:
++      return WebGLConstants.UNSIGNED_SHORT_4_4_4_4;
++    case PixelDatatype.UNSIGNED_SHORT_5_5_5_1:
++      return WebGLConstants.UNSIGNED_SHORT_5_5_5_1;
++    case PixelDatatype.UNSIGNED_SHORT_5_6_5:
++      return PixelDatatype.UNSIGNED_SHORT_5_6_5;
++  }
+ };
+ 
+ /**
+diff --git a/Source/Renderer/Texture.js b/Source/Renderer/Texture.js
+index 3ccdad327c..c5e02bfd35 100644
+--- a/Source/Renderer/Texture.js
++++ b/Source/Renderer/Texture.js
+@@ -273,7 +273,7 @@ function Texture(options) {
+           height,
+           0,
+           pixelFormat,
+-          pixelDatatype,
++          PixelDatatype.toWebGLConstant(pixelDatatype, context),
+           arrayBufferView
+         );
+ 
+@@ -297,7 +297,7 @@ function Texture(options) {
+               mipHeight,
+               0,
+               pixelFormat,
+-              pixelDatatype,
++              PixelDatatype.toWebGLConstant(pixelDatatype, context),
+               source.mipLevels[i]
+             );
+           }
+@@ -337,7 +337,7 @@ function Texture(options) {
+         0,
+         internalFormat,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         source
+       );
+     }
+@@ -350,7 +350,7 @@ function Texture(options) {
+       height,
+       0,
+       pixelFormat,
+-      pixelDatatype,
++      PixelDatatype.toWebGLConstant(pixelDatatype, context),
+       null
+     );
+     initialized = false;
+@@ -686,7 +686,8 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+   );
+   //>>includeEnd('debug');
+ 
+-  var gl = this._context._gl;
++  var context = this._context;
++  var gl = context._gl;
+   var target = this._textureTarget;
+ 
+   gl.activeTexture(gl.TEXTURE0);
+@@ -745,7 +746,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+           textureHeight,
+           0,
+           pixelFormat,
+-          pixelDatatype,
++          PixelDatatype.toWebGLConstant(pixelDatatype, context),
+           arrayBufferView
+         );
+       } else {
+@@ -758,7 +759,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+           0,
+           pixelFormat,
+           pixelFormat,
+-          pixelDatatype,
++          PixelDatatype.toWebGLConstant(pixelDatatype, context),
+           source
+         );
+       }
+@@ -782,7 +783,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+         textureHeight,
+         0,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         bufferView
+       );
+     }
+@@ -811,7 +812,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+         width,
+         height,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         arrayBufferView
+       );
+     } else {
+@@ -825,7 +826,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
+         xOffset,
+         yOffset,
+         pixelFormat,
+-        pixelDatatype,
++        PixelDatatype.toWebGLConstant(pixelDatatype, context),
+         source
+       );
+     }
