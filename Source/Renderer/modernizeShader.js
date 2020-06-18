@@ -105,14 +105,17 @@ function modernizeShader(source, isFragmentShader) {
   var foundVersion = false;
   for (i = 0; i < splitSource.length; i++) {
     if (/#version/.test(splitSource[i])) {
-      splitSource[i] = versionThree + "\n" + webgl2DefineMacro;
+      splitSource[i] = versionThree;
       foundVersion = true;
+      break;
     }
   }
 
   if (!foundVersion) {
-    splitSource.splice(0, 0, versionThree, webgl2DefineMacro);
+    splitSource.splice(0, 0, versionThree);
   }
+
+  splitSource.splice(1, 0, webgl2DefineMacro);
 
   removeExtension("EXT_draw_buffers", webgl2UniqueID, splitSource);
   removeExtension("EXT_frag_depth", webgl2UniqueID, splitSource);
