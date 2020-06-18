@@ -378,6 +378,7 @@ function Texture(options) {
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = textureTarget;
   this._texture = texture;
+  this._internalFormat = internalFormat;
   this._pixelFormat = pixelFormat;
   this._pixelDatatype = pixelDatatype;
   this._width = width;
@@ -698,6 +699,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var textureWidth = this._width;
   var textureHeight = this._height;
+  var internalFormat = this._internalFormat;
   var pixelFormat = this._pixelFormat;
   var pixelDatatype = this._pixelDatatype;
 
@@ -740,7 +742,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           target,
           0,
-          pixelFormat,
+          internalFormat,
           textureWidth,
           textureHeight,
           0,
@@ -756,7 +758,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           target,
           0,
-          pixelFormat,
+          internalFormat,
           pixelFormat,
           pixelDatatype,
           source
@@ -777,7 +779,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
       gl.texImage2D(
         target,
         0,
-        pixelFormat,
+        internalFormat,
         textureWidth,
         textureHeight,
         0,
