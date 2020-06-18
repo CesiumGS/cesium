@@ -476,6 +476,8 @@ function Context(canvas, options) {
 
   this._pickObjects = {};
   this._nextPickColor = new Uint32Array(1);
+  var groupCount = defaultValue(options.pickGroups, 1);
+  this._groupBitLength = Math.ceil(Math.log2(Math.max(1, groupCount)));
 
   /**
    * @example
@@ -1406,14 +1408,25 @@ Context.prototype.createPickId = function (object) {
   Check.defined("object", object);
   //>>includeEnd('debug');
 
+  // try to get pickGroup from the object, from the parent Primitive and Entity
+  var group = 0;
+  if (object.pickGroup) {
+    group = object.pickGroup;
+  } else if (object.primitive && object.primitive.pickGroup) {
+    group = object.primitive.pickGroup;
+  } else if (object.id && object.id.pickGroup) {
+    group = object.id.pickGroup;
+  }
+  var pickIdMask = 0xffffffff >>> this._groupBitLength;
   // the increment and assignment have to be separate statements to
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
-  var key = this._nextPickColor[0];
+  var key = pickIdMask & this._nextPickColor[0];
   if (key === 0) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }
+  key = (key | (group << (32 - this._groupBitLength))) >>> 0;
 
   this._pickObjects[key] = object;
   return new PickId(this._pickObjects, key, Color.fromRgba(key));
