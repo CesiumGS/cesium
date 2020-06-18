@@ -378,6 +378,7 @@ function Texture(options) {
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = textureTarget;
   this._texture = texture;
+  this._internalFormat = pixelFormat;
   this._pixelFormat = pixelFormat;
   this._pixelDatatype = pixelDatatype;
   this._width = width;
@@ -546,6 +547,7 @@ Object.defineProperties(Texture.prototype, {
         minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
 
       var context = this._context;
+      var internalFormat = this._internalFormat;
       var pixelDatatype = this._pixelDatatype;
 
       // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
@@ -559,6 +561,24 @@ Object.defineProperties(Texture.prototype, {
           ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
           : TextureMinificationFilter.NEAREST;
         magnificationFilter = TextureMagnificationFilter.NEAREST;
+      }
+
+      // WebGL 2 depth texture only support nearest filtering. See section 3.8.13 OpenGL ES 3 spec
+      if (context.webgl2) {
+        if (
+          internalFormat === WebGLConstants.DEPTH_COMPONENT ||
+          internalFormat === WebGLConstants.DEPTH_STENCIL ||
+          internalFormat === WebGLConstants.DEPTH_COMPONENT16 ||
+          internalFormat === WebGLConstants.DEPTH_COMPONENT24 ||
+          internalFormat === WebGLConstants.DEPTH_COMPONENT32F ||
+          internalFormat === WebGLConstants.DEPTH24_STENCIL8 ||
+          internalFormat === WebGLConstants.DEPTH32F_STENCIL8
+        ) {
+          minificationFilter = mipmap
+            ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
+            : TextureMinificationFilter.NEAREST;
+          magnificationFilter = TextureMagnificationFilter.NEAREST;
+        }
       }
 
       var gl = context._gl;
