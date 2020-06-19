@@ -13,6 +13,7 @@ function CubeMapFace(
   texture,
   textureTarget,
   targetFace,
+  internalFormat,
   pixelFormat,
   pixelDatatype,
   size,
@@ -24,8 +25,9 @@ function CubeMapFace(
   this._texture = texture;
   this._textureTarget = textureTarget;
   this._targetFace = targetFace;
-  this._pixelFormat = pixelFormat;
   this._pixelDatatype = pixelDatatype;
+  this._internalFormat = internalFormat;
+  this._pixelFormat = pixelFormat;
   this._size = size;
   this._preMultiplyAlpha = preMultiplyAlpha;
   this._flipY = flipY;
@@ -109,6 +111,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var size = this._size;
   var pixelFormat = this._pixelFormat;
+  var internalFormat = this._internalFormat;
   var pixelDatatype = this._pixelDatatype;
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
@@ -145,7 +148,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           targetFace,
           0,
-          pixelFormat,
+          internalFormat,
           size,
           size,
           0,
@@ -161,7 +164,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           targetFace,
           0,
-          pixelFormat,
+          internalFormat,
           pixelFormat,
           PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
           source
@@ -182,7 +185,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
       gl.texImage2D(
         targetFace,
         0,
-        pixelFormat,
+        internalFormat,
         size,
         size,
         0,
