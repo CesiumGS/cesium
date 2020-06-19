@@ -7,7 +7,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
 import PixelDatatype from "./PixelDatatype.js";
