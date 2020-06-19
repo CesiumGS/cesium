@@ -21,6 +21,34 @@ var PixelDatatype = {
 /**
   @private
 */
+PixelDatatype.toWebGLConstant = function (pixelDatatype, context) {
+  switch (pixelDatatype) {
+    case PixelDatatype.UNSIGNED_BYTE:
+      return WebGLConstants.UNSIGNED_BYTE;
+    case PixelDatatype.UNSIGNED_SHORT:
+      return WebGLConstants.UNSIGNED_SHORT;
+    case PixelDatatype.UNSIGNED_INT:
+      return WebGLConstants.UNSIGNED_INT;
+    case PixelDatatype.FLOAT:
+      return WebGLConstants.FLOAT;
+    case PixelDatatype.HALF_FLOAT:
+      return context.webgl2
+        ? WebGLConstants.HALF_FLOAT
+        : WebGLConstants.HALF_FLOAT_OES;
+    case PixelDatatype.UNSIGNED_INT_24_8:
+      return WebGLConstants.UNSIGNED_INT_24_8;
+    case PixelDatatype.UNSIGNED_SHORT_4_4_4_4:
+      return WebGLConstants.UNSIGNED_SHORT_4_4_4_4;
+    case PixelDatatype.UNSIGNED_SHORT_5_5_5_1:
+      return WebGLConstants.UNSIGNED_SHORT_5_5_5_1;
+    case PixelDatatype.UNSIGNED_SHORT_5_6_5:
+      return PixelDatatype.UNSIGNED_SHORT_5_6_5;
+  }
+};
+
+/**
+  @private
+*/
 PixelDatatype.isPacked = function (pixelDatatype) {
   return (
     pixelDatatype === PixelDatatype.UNSIGNED_INT_24_8 ||

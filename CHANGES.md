@@ -19,6 +19,8 @@
 - Fixed log depth artifacts when running CesiumJS in a WebGL2 context. [#8969](https://github.com/CesiumGS/cesium/pull/8969)
 - Fixed a bug where the camera goes through the geometry instead of stopping in front of it in WebGL 2. [#747](https://github.com/CesiumGS/cesium/issues/797#issuecomment-645660881)
 - Fixed a bug where silhouette postprocess doesn't work in WebGL 2. [#7952](https://github.com/CesiumGS/cesium/issues/7952)
+- Fixed an error of applying clip planes to globe when enabling WebGL 2.0 [#7712](https://github.com/CesiumGS/cesium/issues/7712)
+- Fixed a bug where half-float texture doesn't have correct WebGL 2.0 parameter [#8975](https://github.com/CesiumGS/cesium/pull/8975)
 
 ### 1.70.1 - 2020-06-10
 
