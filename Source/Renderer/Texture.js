@@ -232,7 +232,7 @@ function Texture(options) {
           height,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
 
@@ -256,7 +256,7 @@ function Texture(options) {
               mipHeight,
               0,
               pixelFormat,
-              pixelDatatype,
+              PixelDatatype.toWebGLConstant(pixelDatatype, context),
               source.mipLevels[i]
             );
           }
@@ -296,7 +296,7 @@ function Texture(options) {
         0,
         internalFormat,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
     }
@@ -309,7 +309,7 @@ function Texture(options) {
       height,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     initialized = false;
@@ -646,7 +646,8 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   );
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
+  var context = this._context;
+  var gl = context._gl;
   var target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
@@ -706,7 +707,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
           textureHeight,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
       } else {
@@ -719,7 +720,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
           0,
           internalFormat,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           source
         );
       }
@@ -743,7 +744,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         textureHeight,
         0,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         bufferView
       );
     }
@@ -772,7 +773,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         width,
         height,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         arrayBufferView
       );
     } else {
@@ -786,7 +787,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         xOffset,
         yOffset,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
     }

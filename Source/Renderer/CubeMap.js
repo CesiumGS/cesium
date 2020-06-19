@@ -194,7 +194,7 @@ function CubeMap(options) {
         size,
         0,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         arrayBufferView
       );
     } else {
@@ -208,7 +208,7 @@ function CubeMap(options) {
         0,
         internalFormat,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         sourceFace
       );
     }
@@ -260,7 +260,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     gl.texImage2D(
@@ -271,7 +271,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     gl.texImage2D(
@@ -282,7 +282,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     gl.texImage2D(
@@ -293,7 +293,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     gl.texImage2D(
@@ -304,7 +304,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     gl.texImage2D(
@@ -315,7 +315,7 @@ function CubeMap(options) {
       size,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
   }
@@ -336,7 +336,7 @@ function CubeMap(options) {
 
   var initialized = defined(source);
   this._positiveX = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -349,7 +349,7 @@ function CubeMap(options) {
     initialized
   );
   this._negativeX = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -362,7 +362,7 @@ function CubeMap(options) {
     initialized
   );
   this._positiveY = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
@@ -375,7 +375,7 @@ function CubeMap(options) {
     initialized
   );
   this._negativeY = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
@@ -388,7 +388,7 @@ function CubeMap(options) {
     initialized
   );
   this._positiveZ = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
@@ -401,7 +401,7 @@ function CubeMap(options) {
     initialized
   );
   this._negativeZ = new CubeMapFace(
-    gl,
+    context,
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,

@@ -9,7 +9,7 @@ import PixelDatatype from "./PixelDatatype.js";
  * @private
  */
 function CubeMapFace(
-  gl,
+  context,
   texture,
   textureTarget,
   targetFace,
@@ -21,7 +21,7 @@ function CubeMapFace(
   flipY,
   initialized
 ) {
-  this._gl = gl;
+  this._context = context;
   this._texture = texture;
   this._textureTarget = textureTarget;
   this._targetFace = targetFace;
@@ -98,7 +98,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
   }
   //>>includeEnd('debug');
 
-  var gl = this._gl;
+  var gl = this._context._gl;
   var target = this._textureTarget;
   var targetFace = this._targetFace;
 
@@ -153,7 +153,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
           size,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
           arrayBufferView
         );
       } else {
@@ -166,7 +166,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
           0,
           internalFormat,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
           source
         );
       }
@@ -190,7 +190,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         size,
         0,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         bufferView
       );
     }
@@ -219,7 +219,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         width,
         height,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         arrayBufferView
       );
     } else {
@@ -234,7 +234,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         xOffset,
         yOffset,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         source
       );
     }
@@ -318,7 +318,7 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   }
   //>>includeEnd('debug');
 
-  var gl = this._gl;
+  var gl = this._context._gl;
   var target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
