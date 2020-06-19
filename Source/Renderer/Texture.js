@@ -1,7 +1,6 @@
 import Cartesian2 from "../Core/Cartesian2.js";
 import Check from "../Core/Check.js";
 import createGuid from "../Core/createGuid.js";
-import WebGLConstants from "../Core/WebGLConstants";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -496,6 +495,9 @@ Object.defineProperties(Texture.prototype, {
     set: function (sampler) {
       var minificationFilter = sampler.minificationFilter;
       var magnificationFilter = sampler.magnificationFilter;
+      var context = this._context;
+      var pixelFormat = this._pixelFormat;
+      var pixelDatatype = this._pixelDatatype;
 
       var mipmap =
         minificationFilter ===
@@ -505,10 +507,6 @@ Object.defineProperties(Texture.prototype, {
         minificationFilter ===
           TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
         minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-
-      var context = this._context;
-      var internalFormat = this._internalFormat;
-      var pixelDatatype = this._pixelDatatype;
 
       // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
       if (
@@ -525,18 +523,8 @@ Object.defineProperties(Texture.prototype, {
 
       // WebGL 2 depth texture only support nearest filtering. See section 3.8.13 OpenGL ES 3 spec
       if (context.webgl2) {
-        if (
-          internalFormat === WebGLConstants.DEPTH_COMPONENT ||
-          internalFormat === WebGLConstants.DEPTH_STENCIL ||
-          internalFormat === WebGLConstants.DEPTH_COMPONENT16 ||
-          internalFormat === WebGLConstants.DEPTH_COMPONENT24 ||
-          internalFormat === WebGLConstants.DEPTH_COMPONENT32F ||
-          internalFormat === WebGLConstants.DEPTH24_STENCIL8 ||
-          internalFormat === WebGLConstants.DEPTH32F_STENCIL8
-        ) {
-          minificationFilter = mipmap
-            ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
-            : TextureMinificationFilter.NEAREST;
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+          minificationFilter = TextureMinificationFilter.NEAREST;
           magnificationFilter = TextureMagnificationFilter.NEAREST;
         }
       }
