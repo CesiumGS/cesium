@@ -18,6 +18,7 @@
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
 - Fixed an error of applying clip planes to globe when enabling WebGL 2.0 [#7712](https://github.com/CesiumGS/cesium/issues/7712)
 - Fixed a bug where half-float texture doesn't have correct WebGL 2.0 parameter [#8975](https://github.com/CesiumGS/cesium/pull/8975)
+- Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 
 ### 1.70.1 - 2020-06-10
 
@@ -38,7 +39,6 @@
 - Fixed JSDoc and TypeScript type definitions for `Viewer` options parameters.
 - Fixed a memory leak where some 3D Tiles requests were being unintentionally retained after the requests were cancelled. [#8843](https://github.com/CesiumGS/cesium/pull/8843)
 - Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
-- Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 
 ### 1.70.0 - 2020-06-01
 
