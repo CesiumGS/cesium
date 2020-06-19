@@ -63,7 +63,7 @@ function View(scene, camera, viewport) {
   this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
 
-  // Array of all commands that get rendered into frustums along with their their near / far values.
+  // Array of all commands that get rendered into frustums along with their near / far values.
   this._commandExtents = [];
 }
 
