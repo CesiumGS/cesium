@@ -44,53 +44,13 @@ function Texture(options) {
     options.pixelDatatype,
     PixelDatatype.UNSIGNED_BYTE
   );
-  var internalFormat = pixelFormat;
+  var internalFormat = PixelFormat.toInternalFormat(
+    pixelFormat,
+    pixelDatatype,
+    context
+  );
 
   var isCompressed = PixelFormat.isCompressedFormat(internalFormat);
-
-  if (context.webgl2) {
-    if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
-      internalFormat = WebGLConstants.DEPTH24_STENCIL8;
-    } else if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
-      if (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) {
-        internalFormat = WebGLConstants.DEPTH_COMPONENT16;
-      } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
-        internalFormat = WebGLConstants.DEPTH_COMPONENT24;
-      }
-    }
-
-    if (pixelDatatype === PixelDatatype.FLOAT) {
-      switch (pixelFormat) {
-        case PixelFormat.RGBA:
-          internalFormat = WebGLConstants.RGBA32F;
-          break;
-        case PixelFormat.RGB:
-          internalFormat = WebGLConstants.RGB32F;
-          break;
-        case PixelFormat.RG:
-          internalFormat = WebGLConstants.RG32F;
-          break;
-        case PixelFormat.R:
-          internalFormat = WebGLConstants.R32F;
-          break;
-      }
-    } else if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
-      switch (pixelFormat) {
-        case PixelFormat.RGBA:
-          internalFormat = WebGLConstants.RGBA16F;
-          break;
-        case PixelFormat.RGB:
-          internalFormat = WebGLConstants.RGB16F;
-          break;
-        case PixelFormat.RG:
-          internalFormat = WebGLConstants.RG16F;
-          break;
-        case PixelFormat.R:
-          internalFormat = WebGLConstants.R16F;
-          break;
-      }
-    }
-  }
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {

@@ -74,10 +74,15 @@ function CubeMap(options) {
   }
 
   var size = width;
-  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
   var pixelDatatype = defaultValue(
     options.pixelDatatype,
     PixelDatatype.UNSIGNED_BYTE
+  );
+  var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+  var internalFormat = PixelFormat.toInternalFormat(
+    pixelFormat,
+    pixelDatatype,
+    context
   );
 
   //>>includeStart('debug', pragmas.debug);
@@ -184,7 +189,7 @@ function CubeMap(options) {
       gl.texImage2D(
         target,
         0,
-        pixelFormat,
+        internalFormat,
         size,
         size,
         0,
@@ -201,7 +206,7 @@ function CubeMap(options) {
       gl.texImage2D(
         target,
         0,
-        pixelFormat,
+        internalFormat,
         pixelFormat,
         pixelDatatype,
         sourceFace
@@ -250,7 +255,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_X,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -261,7 +266,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -272,7 +277,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -283,7 +288,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -294,7 +299,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -305,7 +310,7 @@ function CubeMap(options) {
     gl.texImage2D(
       gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
       0,
-      pixelFormat,
+      internalFormat,
       size,
       size,
       0,
@@ -335,6 +340,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
@@ -347,6 +353,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
@@ -359,6 +366,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
@@ -371,6 +379,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
@@ -383,6 +392,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
@@ -395,6 +405,7 @@ function CubeMap(options) {
     texture,
     textureTarget,
     gl.TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    internalFormat,
     pixelFormat,
     pixelDatatype,
     size,
