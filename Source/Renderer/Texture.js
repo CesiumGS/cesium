@@ -495,6 +495,9 @@ Object.defineProperties(Texture.prototype, {
     set: function (sampler) {
       var minificationFilter = sampler.minificationFilter;
       var magnificationFilter = sampler.magnificationFilter;
+      var context = this._context;
+      var pixelFormat = this._pixelFormat;
+      var pixelDatatype = this._pixelDatatype;
 
       var mipmap =
         minificationFilter ===
@@ -504,9 +507,6 @@ Object.defineProperties(Texture.prototype, {
         minificationFilter ===
           TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
         minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-
-      var context = this._context;
-      var pixelDatatype = this._pixelDatatype;
 
       // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
       if (
@@ -519,6 +519,14 @@ Object.defineProperties(Texture.prototype, {
           ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
           : TextureMinificationFilter.NEAREST;
         magnificationFilter = TextureMagnificationFilter.NEAREST;
+      }
+
+      // WebGL 2 depth texture only support nearest filtering. See section 3.8.13 OpenGL ES 3 spec
+      if (context.webgl2) {
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+          minificationFilter = TextureMinificationFilter.NEAREST;
+          magnificationFilter = TextureMagnificationFilter.NEAREST;
+        }
       }
 
       var gl = context._gl;
