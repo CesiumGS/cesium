@@ -51,6 +51,13 @@ describe("Core/ManagedArray", function () {
     }).toThrowDeveloperError();
   });
 
+  it("length setter throws if length is less than 0", function () {
+    var array = new ManagedArray();
+    expect(function () {
+      array.length = -1;
+    }).toThrowDeveloperError();
+  });
+
   it("set resizes array", function () {
     var array = new ManagedArray();
     array.set(0, "a");

@@ -29,6 +29,9 @@ Object.defineProperties(ManagedArray.prototype, {
       return this._length;
     },
     set: function (length) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("length", length, 0);
+      //>>includeEnd('debug');
       var array = this._array;
       var originalLength = this._length;
       if (length < originalLength) {

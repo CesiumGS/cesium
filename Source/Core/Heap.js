@@ -65,6 +65,9 @@ Object.defineProperties(Heap.prototype, {
       return this._maximumLength;
     },
     set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
+      //>>includeEnd('debug');
       var originalLength = this._length;
       if (value < originalLength) {
         var array = this._array;

@@ -207,4 +207,13 @@ describe("Core/Heap", function () {
       currentId = element.id;
     }
   });
+
+  it("maximumLength setter throws if length is less than 0", function () {
+    var heap = new Heap({
+      comparator: comparator,
+    });
+    expect(function () {
+      heap.maximumLength = -1;
+    }).toThrowDeveloperError();
+  });
 });
