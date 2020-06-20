@@ -119,6 +119,7 @@ function modernizeShader(source, isFragmentShader) {
 
   removeExtension("EXT_draw_buffers", webgl2UniqueID, splitSource);
   removeExtension("EXT_frag_depth", webgl2UniqueID, splitSource);
+  removeExtension("OES_standard_derivatives", webgl2UniqueID, splitSource);
 
   replaceInSourceString("texture2D", "texture", splitSource);
   replaceInSourceString("texture3D", "texture", splitSource);
