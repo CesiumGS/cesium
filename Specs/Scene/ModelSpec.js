@@ -148,6 +148,9 @@ describe(
     var boxGltf2WithTechniquesUrl =
       "./Data/Models/Box-Gltf-2-Techniques/Box.gltf";
 
+    var boxBackFaceCullingUrl =
+      "./Data/Models/Box-Back-Face-Culling/Box-Back-Face-Culling.gltf";
+
     var texturedBoxModel;
     var cesiumAirModel;
     var animBoxesModel;
@@ -3854,6 +3857,34 @@ describe(
           expect(model.cachedGeometryByteLength).toBe(expectedGeometryMemory);
           expect(model.cachedTexturesByteLength).toBe(expectedTextureMemory);
         });
+      });
+    });
+
+    it("renders box when back face culling is disabled", function () {
+      return loadModel(boxBackFaceCullingUrl).then(function (model) {
+        expect(model.ready).toBe(true);
+        model.show = true;
+
+        // Look at the model
+        model.zoomTo();
+
+        expect({
+          scene: scene,
+          time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+        }).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+
+        model.backFaceCulling = false;
+
+        expect({
+          scene: scene,
+          time: JulianDate.fromDate(new Date("January 1, 2014 12:00:00 UTC")),
+        }).toRenderAndCall(function (rgba) {
+          expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
+        primitives.remove(model);
       });
     });
 
