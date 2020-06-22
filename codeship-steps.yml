@@ -1,0 +1,8 @@
+- name: Test
+  service: builder
+  command: yarn test
+
+- name: Build and Deploy
+  tag: master
+  service: builder
+  command: ./deployment/publish.sh

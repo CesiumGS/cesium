@@ -1,0 +1,5 @@
+builder:
+  encrypted_env_file: deployment/encrypted/build_args.sec
+  build:
+    dockerfile: deployment/Dockerfile
+    encrypted_args_file: deployment/encrypted/build_args.sec
