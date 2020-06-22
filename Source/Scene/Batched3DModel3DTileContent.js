@@ -18,6 +18,7 @@ import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ClassificationModel from "./ClassificationModel.js";
 import Model from "./Model.js";
 import ModelUtility from "./ModelUtility.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
@@ -431,6 +432,11 @@ function initialize(content, arrayBuffer, byteOffset) {
       luminanceAtZenith: tileset.luminanceAtZenith,
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+    });
+    content._model.readyPromise.then(function (model) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
     });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
