@@ -5597,7 +5597,7 @@ Model.prototype.update = function (frameState) {
             (boundingVolume.center.y + boundingVolume.radius > idl2D ||
               boundingVolume.center.y - boundingVolume.radius < idl2D)
           ) {
-            var command2D = nc.command;
+            var command2D = nc.command2D;
             if (silhouette) {
               command2D = nc.silhouetteModelCommand2D;
             } else if (translucent) {
