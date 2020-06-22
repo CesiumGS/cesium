@@ -647,9 +647,6 @@ function createProgram(model) {
   var drawVS = modifyShader(vs, model._vertexShaderLoaded);
   var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
-  drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClip);
-  drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-
   model._shaderProgram = {
     vertexShaderSource: drawVS,
     fragmentShaderSource: drawFS,

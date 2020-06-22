@@ -1,6 +1,24 @@
 # Change Log
 
-### 1.71.0 - 2020-07-01
+### 1.71 - 2020-07-01
+
+##### Breaking Changes :mega:
+
+- Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions.
+
+##### Additions :tada:
+
+- Added support for PolylineVolume in CZML [#8841](https://github.com/CesiumGS/cesium/pull/8841)
+
+##### Fixes :wrench:
+
+- Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+- Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)
+- Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
+- Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
+- Fixed several bugs when rendering CesiumJS in a WebG 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
+
+### 1.70.1 - 2020-06-10
 
 ##### Additions :tada:
 
@@ -9,16 +27,16 @@
 
 ##### Fixes :wrench:
 
-- Improved `MaterialProperty` JSDoc and TypeScript type definitions, which were missing the ability to take primitive types in addition to Property instances in their constructor. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
-- Fixed `EllipsoidGeodesic` JSDoc and TypeScript type definitions which incorrectly listed `result` as required. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
-- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
-- Fixed JSDoc and TypeScript for `buildModuleUrl`, which was accidentally excluded from the official CesiumJS API.
 - Fixed JSDoc and TypeScript type definitions for all `ImageryProvider` types, which were missing `defaultNightAlpha` and `defaultDayAlpha` properties. [#8908](https://github.com/CesiumGS/cesium/pull/8908)
+- Fixed JSDoc and TypeScript for `MaterialProperty`, which were missing the ability to take primitive types in their constructor. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
+- Fixed JSDoc and TypeScript type definitions to allow the creation of `GeometryInstance` instances using `XXXGeometry` classes. [#8941](https://github.com/CesiumGS/cesium/pull/8941).
+- Fixed JSDoc and TypeScript for `buildModuleUrl`, which was accidentally excluded from the official CesiumJS API. [#8923](https://github.com/CesiumGS/cesium/pull/8923)
+- Fixed JSDoc and TypeScript type definitions for `EllipsoidGeodesic` which incorrectly listed `result` as required. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
 - Fixed JSDoc and TypeScript type definitions for `EllipsoidTangentPlane.fromPoints`, which takes an array of `Cartesian3`, not a single instance. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
 - Fixed JSDoc and TypeScript type definitions for `EntityCollection.getById` and `CompositeEntityCollection.getById`, which can both return undefined. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
-- Fixed JSDoc and TypeScript type definitions for `Viewer` options parameter, which was incorrectly listed as required.
-- Fixed TypeScript type definitions to allow the creation of `GeometryInstance` instances using `XXXGeometry` classes. [#8941](https://github.com/CesiumGS/cesium/pull/8941).
+- Fixed JSDoc and TypeScript type definitions for `Viewer` options parameters.
 - Fixed a memory leak where some 3D Tiles requests were being unintentionally retained after the requests were cancelled. [#8843](https://github.com/CesiumGS/cesium/pull/8843)
+- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
 
 ### 1.70.0 - 2020-06-01
 
