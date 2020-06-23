@@ -758,24 +758,17 @@ function gaussLegendreQuadrature(a, b, func) {
  * Computes an approximation of the surface area of a given section of the surface of an ellipsoid using
  * Gauss-Legendre 10th order quadrature.
  *
- * @param {Number} minLongitude The west most longitude which bounds the region.
- * @param {Number} minLatitude The south most latitude which bounds the region.
- * @param {Number} maxLongitude The east most longitude which bounds the region.
- * @param {Number} maxLatitude The north most latitude which bounds the region.
+ * @param {Rectangle} rectangle The rectangle to find the surface area of.
  * @returns {Number} The approximate area of the section on the surface of this ellipsoid.
  */
-Ellipsoid.prototype.surfaceArea = function (
-  minLongitude,
-  minLatitude,
-  maxLongitude,
-  maxLatitude
-) {
+Ellipsoid.prototype.surfaceArea = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("minLongitude", minLongitude);
-  Check.typeOf.number("minLatitude", minLatitude);
-  Check.typeOf.number("maxLongitude", maxLongitude);
-  Check.typeOf.number("maxLatitude", maxLatitude);
+  Check.typeOf.object("rectangle", rectangle);
   //>>includeEnd('debug');
+  var minLongitude = rectangle.west;
+  var maxLongitude = rectangle.east;
+  var minLatitude = rectangle.south;
+  var maxLatitude = rectangle.north;
 
   while (maxLongitude < minLongitude) {
     maxLongitude += CesiumMath.TWO_PI;

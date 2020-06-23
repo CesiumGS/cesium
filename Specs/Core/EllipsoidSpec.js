@@ -3,6 +3,7 @@ import { Cartographic } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
+import { Rectangle } from "../../Source/Cesium.js";
 
 describe("Core/Ellipsoid", function () {
   var radii = new Cartesian3(1.0, 2.0, 3.0);
@@ -714,47 +715,9 @@ describe("Core/Ellipsoid", function () {
     expect(ellipsoid._squaredXOverSquaredZ).toEqual(squaredXOverSquaredZ);
   });
 
-  it("surfaceArea throws without minLongitude", function () {
+  it("surfaceArea throws without rectangle", function () {
     expect(function () {
-      return Ellipsoid.WGS84.surfaceArea(
-        undefined,
-        -CesiumMath.PI_OVER_TWO,
-        CesiumMath.PI,
-        CesiumMath.PI_OVER_TWO
-      );
-    }).toThrowDeveloperError();
-  });
-
-  it("surfaceArea throws without minLatitude", function () {
-    expect(function () {
-      return Ellipsoid.WGS84.surfaceArea(
-        -CesiumMath.PI,
-        undefined,
-        CesiumMath.PI,
-        CesiumMath.PI_OVER_TWO
-      );
-    }).toThrowDeveloperError();
-  });
-
-  it("surfaceArea throws without maxLongitude", function () {
-    expect(function () {
-      return Ellipsoid.WGS84.surfaceArea(
-        -CesiumMath.PI,
-        -CesiumMath.PI_OVER_TWO,
-        undefined,
-        CesiumMath.PI_OVER_TWO
-      );
-    }).toThrowDeveloperError();
-  });
-
-  it("surfaceArea throws without maxLatitude", function () {
-    expect(function () {
-      return Ellipsoid.WGS84.surfaceArea(
-        -CesiumMath.PI,
-        -CesiumMath.PI_OVER_TWO,
-        CesiumMath.PI,
-        undefined
-      );
+      return Ellipsoid.WGS84.surfaceArea(undefined);
     }).toThrowDeveloperError();
   });
 
@@ -769,10 +732,12 @@ describe("Core/Ellipsoid", function () {
       CesiumMath.PI * (c2 / e) * Math.log((1.0 + e) / (1.0 - e));
     expect(
       ellipsoid.surfaceArea(
-        -CesiumMath.PI,
-        -CesiumMath.PI_OVER_TWO,
-        CesiumMath.PI,
-        CesiumMath.PI_OVER_TWO
+        new Rectangle(
+          -CesiumMath.PI,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI,
+          CesiumMath.PI_OVER_TWO
+        )
       )
     ).toEqualEpsilon(area, CesiumMath.EPSILON3);
 
@@ -787,10 +752,12 @@ describe("Core/Ellipsoid", function () {
       CesiumMath.TWO_PI * a2 + CesiumMath.TWO_PI * ((a * c) / e) * Math.asin(e);
     expect(
       ellipsoid.surfaceArea(
-        -CesiumMath.PI,
-        -CesiumMath.PI_OVER_TWO,
-        CesiumMath.PI,
-        CesiumMath.PI_OVER_TWO
+        new Rectangle(
+          -CesiumMath.PI,
+          -CesiumMath.PI_OVER_TWO,
+          CesiumMath.PI,
+          CesiumMath.PI_OVER_TWO
+        )
       )
     ).toEqualEpsilon(area, CesiumMath.EPSILON3);
   });
