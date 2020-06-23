@@ -4,6 +4,7 @@
 
 ##### Breaking Changes :mega:
 
+- Added `Color.toCssHexString` for getting the CSS hex string equivalent for a color.
 - Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions.
 
 ##### Additions :tada:
