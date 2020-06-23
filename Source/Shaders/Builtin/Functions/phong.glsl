@@ -22,11 +22,12 @@ float czm_private_getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm
  * @example
  * vec3 positionToEyeEC = // ...
  * czm_material material = // ...
- * gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+ * vec3 lightDirectionEC = // ...
+ * gl_FragColor = czm_phong(normalize(positionToEyeEC), material, lightDirectionEC);
  *
  * @see czm_getMaterial
  */
-vec4 czm_phong(vec3 toEye, czm_material material)
+vec4 czm_phong(vec3 toEye, czm_material material, vec3 lightDirectionEC)
 {
     // Diffuse from directional light sources at eye (for top-down)
     float diffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material);
@@ -35,34 +36,28 @@ vec4 czm_phong(vec3 toEye, czm_material material)
         diffuse += czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
     }
 
-    // Specular from sun and pseudo-moon
-    float specular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + czm_private_getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
+    float specular = czm_private_getSpecularOfMaterial(lightDirectionEC, toEye, material);
 
     // Temporary workaround for adding ambient.
     vec3 materialDiffuse = material.diffuse * 0.5;
 
     vec3 ambient = materialDiffuse;
     vec3 color = ambient + material.emission;
-    color += materialDiffuse * diffuse;
-    color += material.specular * specular;
-
-#ifdef HDR
-    float sunDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
-    color += materialDiffuse * sunDiffuse * czm_sunColor;
-#endif
+    color += materialDiffuse * diffuse * czm_lightColor;
+    color += material.specular * specular * czm_lightColor;
 
     return vec4(color, material.alpha);
 }
 
-vec4 czm_private_phong(vec3 toEye, czm_material material)
+vec4 czm_private_phong(vec3 toEye, czm_material material, vec3 lightDirectionEC)
 {
-    float diffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
-    float specular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material);
+    float diffuse = czm_private_getLambertDiffuseOfMaterial(lightDirectionEC, material);
+    float specular = czm_private_getSpecularOfMaterial(lightDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
-    color += material.diffuse * diffuse;
-    color += material.specular * specular;
+    color += material.diffuse * diffuse * czm_lightColor;
+    color += material.specular * specular * czm_lightColor;
 
     return vec4(color, material.alpha);
 }
