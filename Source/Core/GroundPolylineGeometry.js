@@ -41,6 +41,8 @@ var MITER_BREAK_LARGE = Math.cos(CesiumMath.toRadians(150.0));
 // The initial max height is arbitrary.
 // Both heights are corrected using ApproximateTerrainHeights for computing the actual volume geometry.
 var WALL_INITIAL_MIN_HEIGHT = 0.0;
+// PROPELLER HACK: Allow rendering of ground primitives with negative WGS84 elevation
+var WALL_INITIAL_MIN_HEIGHT = -250;
 var WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
 /**

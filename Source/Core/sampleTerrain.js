@@ -88,9 +88,15 @@ function doSampling(terrainProvider, level, positions) {
       tileRequest.y,
       tileRequest.level
     );
-    var tilePromise = requestPromise
-      .then(createInterpolateFunction(tileRequest))
-      .otherwise(createMarkFailedFunction(tileRequest));
+    var tilePromise = requestPromise; // PROPELLER HACK: Allow fail on requestTileGeometry fail
+
+    if (failResultOnTileFail) {
+      tilePromise = requestPromise.then(createInterpolateFunction(tileRequest));
+    } else {
+      tilePromise = requestPromise
+        .then(createInterpolateFunction(tileRequest))
+        .otherwise(createMarkFailedFunction(tileRequest));
+    }
     tilePromises.push(tilePromise);
   }
 
