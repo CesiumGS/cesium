@@ -137,6 +137,12 @@ describe("Core/Ellipsoid", function () {
     );
   });
 
+  it("geodeticSurfaceNormal returns undefined when given the origin", function () {
+    var ellipsoid = Ellipsoid.WGS84;
+    var returnedResult = ellipsoid.geodeticSurfaceNormal(Cartesian3.ZERO);
+    expect(returnedResult).toBeUndefined();
+  });
+
   it("geodeticSurfaceNormal works with a result parameter", function () {
     var ellipsoid = Ellipsoid.WGS84;
     var result = new Cartesian3();
@@ -706,6 +712,87 @@ describe("Core/Ellipsoid", function () {
     var squaredXOverSquaredZ =
       ellipsoid.radiiSquared.x / ellipsoid.radiiSquared.z;
     expect(ellipsoid._squaredXOverSquaredZ).toEqual(squaredXOverSquaredZ);
+  });
+
+  it("surfaceArea throws without minLongitude", function () {
+    expect(function () {
+      return Ellipsoid.WGS84.surfaceArea(
+        undefined,
+        -CesiumMath.PI_OVER_TWO,
+        CesiumMath.PI,
+        CesiumMath.PI_OVER_TWO
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("surfaceArea throws without minLatitude", function () {
+    expect(function () {
+      return Ellipsoid.WGS84.surfaceArea(
+        -CesiumMath.PI,
+        undefined,
+        CesiumMath.PI,
+        CesiumMath.PI_OVER_TWO
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("surfaceArea throws without maxLongitude", function () {
+    expect(function () {
+      return Ellipsoid.WGS84.surfaceArea(
+        -CesiumMath.PI,
+        -CesiumMath.PI_OVER_TWO,
+        undefined,
+        CesiumMath.PI_OVER_TWO
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("surfaceArea throws without maxLatitude", function () {
+    expect(function () {
+      return Ellipsoid.WGS84.surfaceArea(
+        -CesiumMath.PI,
+        -CesiumMath.PI_OVER_TWO,
+        CesiumMath.PI,
+        undefined
+      );
+    }).toThrowDeveloperError();
+  });
+
+  it("computes surfaceArea", function () {
+    // area of an oblate spheroid
+    var ellipsoid = new Ellipsoid(4, 4, 3);
+    var a2 = ellipsoid.radiiSquared.x;
+    var c2 = ellipsoid.radiiSquared.z;
+    var e = Math.sqrt(1.0 - c2 / a2);
+    var area =
+      CesiumMath.TWO_PI * a2 +
+      CesiumMath.PI * (c2 / e) * Math.log((1.0 + e) / (1.0 - e));
+    expect(
+      ellipsoid.surfaceArea(
+        -CesiumMath.PI,
+        -CesiumMath.PI_OVER_TWO,
+        CesiumMath.PI,
+        CesiumMath.PI_OVER_TWO
+      )
+    ).toEqualEpsilon(area, CesiumMath.EPSILON3);
+
+    // area of a prolate spheroid
+    ellipsoid = new Ellipsoid(3, 3, 4);
+    a2 = ellipsoid.radiiSquared.x;
+    c2 = ellipsoid.radiiSquared.z;
+    e = Math.sqrt(1.0 - a2 / c2);
+    var a = ellipsoid.radii.x;
+    var c = ellipsoid.radii.z;
+    area =
+      CesiumMath.TWO_PI * a2 + CesiumMath.TWO_PI * ((a * c) / e) * Math.asin(e);
+    expect(
+      ellipsoid.surfaceArea(
+        -CesiumMath.PI,
+        -CesiumMath.PI_OVER_TWO,
+        CesiumMath.PI,
+        CesiumMath.PI_OVER_TWO
+      )
+    ).toEqualEpsilon(area, CesiumMath.EPSILON3);
   });
 
   createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [
