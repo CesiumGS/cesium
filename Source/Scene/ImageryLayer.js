@@ -1235,6 +1235,11 @@ ImageryLayer.prototype._reprojectTexture = function (
         imagery.state = ImageryState.READY;
         imagery.releaseReference();
       },
+      // PROPELLER HACK
+      canceled: function () {
+        imagery.state = ImageryState.TEXTURE_LOADED;
+        imagery.releaseReference();
+      },
     });
     this._reprojectComputeCommands.push(computeCommand);
   } else {
@@ -1268,6 +1273,12 @@ ImageryLayer.prototype.queueReprojectionCommands = function (frameState) {
  * @private
  */
 ImageryLayer.prototype.cancelReprojections = function () {
+  // PROPELLER HACK
+  this._reprojectComputeCommands.forEach(function (command) {
+    if (command.canceled) {
+      command.canceled();
+    }
+  });
   this._reprojectComputeCommands.length = 0;
 };
 
