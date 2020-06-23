@@ -650,6 +650,13 @@ Color.prototype.toCssHexString = function () {
   if (b.length < 2) {
     b = "0" + b;
   }
+  if (this.alpha < 1) {
+    var hexAlpha = Color.floatToByte(this.alpha).toString(16);
+    if (hexAlpha.length < 2) {
+      hexAlpha = "0" + hexAlpha;
+    }
+    return "#" + r + g + b + hexAlpha;
+  }
   return "#" + r + g + b;
 };
 

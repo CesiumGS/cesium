@@ -166,7 +166,7 @@ describe("Core/Color", function () {
     expect(Color.BLUE.toCssHexString()).toEqual("#0000ff");
     expect(Color.LIME.toCssHexString()).toEqual("#00ff00");
     expect(new Color(0.0, 0.0, 0.0, 1.0).toCssHexString()).toEqual("#000000");
-    expect(new Color(0.1, 0.2, 0.3, 0.4).toCssHexString()).toEqual("#19334c");
+    expect(new Color(0.1, 0.2, 0.3, 0.4).toCssHexString()).toEqual("#19334c66");
   });
 
   it("fromCssColorString supports transparent", function () {
