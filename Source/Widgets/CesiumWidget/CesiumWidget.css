@@ -75,12 +75,32 @@
   margin-bottom: 20px;
 }
 
-.cesium-widget-errorPanel-buttonPanel {
-  text-align: right;
+.cesium-widget-errorPanel-buttonPanel button {
+  border-color: #bbbbbb;
+  background: #ffffff;
+  color: #202020;
 }
-
-.cesium-widget-errorPanel-buttonPanel button,
+.cesium-widget-errorPanel-buttonPanel button:focus {
+  border-color: #510c00;
+  background: #f0d9d5;
+  color: #510c00;
+}
 .cesium-widget-errorPanel-buttonPanel button:hover {
+  border-color: #510c00;
+  background: #f0d9d5;
+  color: #510c00;
+}
+.cesium-widget-errorPanel-buttonPanel button:active {
+  border-color: #510c00;
   background: #d69d93;
   color: #510c00;
+}
+
+.cesium-widget-errorPanel-more-details {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cesium-widget-errorPanel-more-details:hover {
+  color: #2b0700;
 }
