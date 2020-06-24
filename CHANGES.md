@@ -10,6 +10,7 @@
 
 - Added `Ellipsoid.surfaceArea` for computing the approximate surface area of a rectangle on the surface of an ellipsoid. [#8986](https://github.com/CesiumGS/cesium/pull/8986)
 - Added support for PolylineVolume in CZML. [#8841](https://github.com/CesiumGS/cesium/pull/8841)
+- Added `Color.toCssHexString` for getting the CSS hex string equivalent for a color. [#8987](https://github.com/CesiumGS/cesium/pull/8987)
 
 ##### Fixes :wrench:
 
