@@ -76,6 +76,7 @@
 .cesium-widget-errorPanel-buttonPanel {
   padding: 0 15px;
   margin: 10px 0 20px 0;
+  text-align: right;
 }
 
 .cesium-widget-errorPanel-buttonPanel button {
