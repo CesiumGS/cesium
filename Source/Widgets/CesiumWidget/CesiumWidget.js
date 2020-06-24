@@ -635,7 +635,7 @@ Object.defineProperties(CesiumWidget.prototype, {
  *
  * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
  * @param {String} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
- * @param {Error} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
+ * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
  */
 CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   var element = this._element;
@@ -663,8 +663,8 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
     window.addEventListener("resize", resizeCallback, false);
   }
 
-  const hasMessage = defined(message);
-  const hasError = defined(error);
+  var hasMessage = defined(message);
+  var hasError = defined(error);
 
   if (hasMessage || hasError) {
     var errorMessage = document.createElement("div");
