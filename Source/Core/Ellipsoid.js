@@ -755,11 +755,11 @@ function gaussLegendreQuadrature(a, b, func) {
  */
 
 /**
- * Computes an approximation of the surface area of a given section of the surface of an ellipsoid using
+ * Computes an approximation of the surface area of a rectangle on the surface of an ellipsoid using
  * Gauss-Legendre 10th order quadrature.
  *
- * @param {Rectangle} rectangle The rectangle to find the surface area of.
- * @returns {Number} The approximate area of the section on the surface of this ellipsoid.
+ * @param {Rectangle} rectangle The rectangle used for computing the surface area.
+ * @returns {Number} The approximate area of the rectangle on the surface of this ellipsoid.
  */
 Ellipsoid.prototype.surfaceArea = function (rectangle) {
   //>>includeStart('debug', pragmas.debug);
