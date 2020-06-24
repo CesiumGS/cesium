@@ -648,15 +648,14 @@ describe(
           };
 
           expect(renderOptions).toRenderAndCall(function (rgba) {
-            var command = scene.frameState.commandList[0];
-            var modelMatrix1 = Matrix4.clone(command.modelMatrix);
+            var commandList = scene.frameState.commandList;
+            var modelMatrix1 = Matrix4.clone(commandList[0].modelMatrix);
             // Check that the scene changes after .5 sec (it animates)
-            setTimeout(function () {
-              expect(renderOptions).toRenderAndCall(function (rgba) {
-                var modelMatrix2 = Matrix4.clone(command.modelMatrix);
-                expect(modelMatrix1).not.toEqual(modelMatrix2);
-              });
-            }, 500);
+            renderOptions.time += 0.5;
+            expect(renderOptions).toRenderAndCall(function (rgba) {
+              var modelMatrix2 = Matrix4.clone(commandList[0].modelMatrix);
+              expect(modelMatrix1).not.toEqual(modelMatrix2);
+            });
           });
         }
       );
