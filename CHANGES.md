@@ -8,12 +8,12 @@
 
 ##### Additions :tada:
 
-- Added `Ellipsoid.surfaceArea` for computing the surface area under given rectangle.
+- Added `Ellipsoid.surfaceArea` for computing the approximate surface area of a rectangle on the surface of an ellipsoid.
 - Added support for PolylineVolume in CZML [#8841](https://github.com/CesiumGS/cesium/pull/8841)
 
 ##### Fixes :wrench:
 
-- Fixed `Ellipsoid.geodeticSurfaceNormal` dividing by zero when given origin as input.
+- Fixed a divide-by-zero bug in `Ellipsoid.geodeticSurfaceNormal` when given the origin as input. `undefined` is returned instead. [#8986](https://github.com/CesiumGS/cesium/pull/8986)
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
 - Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
