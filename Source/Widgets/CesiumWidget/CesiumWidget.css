@@ -45,6 +45,7 @@
 
 .cesium-widget-errorPanel-content {
   width: 75%;
+  max-width: 500px;
   display: inline-block;
   text-align: left;
   vertical-align: middle;
