@@ -630,6 +630,7 @@ PostProcessStageCollection.prototype.update = function (
     var random = new Uint8Array(length);
     for (i = 0; i < length; i += 3) {
       random[i] = Math.floor(Math.random() * 255.0);
+      random[i + 1] = Math.floor(Math.random() * 255.0);
     }
 
     this._randomTexture = new Texture({

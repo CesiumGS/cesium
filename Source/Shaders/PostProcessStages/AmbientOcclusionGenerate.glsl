@@ -1,15 +1,18 @@
 #define NUM_DIRECTIONS 16
-#define NUM_STEPS 16
+#define NUM_STEPS 6
 
 uniform sampler2D randomTexture;
 uniform sampler2D depthTexture;
 uniform float intensity;
 uniform float bias;
 uniform float lengthCap;
-uniform float stepSize;
 uniform float frustumLength;
 
 varying vec2 v_textureCoordinates;
+
+vec2 snapUV(vec2 uv) {
+    return floor(uv * czm_viewport.zw + vec2(0.5)) / czm_viewport.zw;
+}
 
 vec3 clipToEye(vec2 uv, float depth)
 {
@@ -30,19 +33,24 @@ vec3 getMinDepthDiff(vec3 posInCamera, vec2 uvLower, vec2 uvUpper) {
     return length(vecLower) < length(vecUpper) ? normalize(vecLower) : normalize(vecUpper);
 }
 
-float computeDirectionalAO(vec3 posInCamera, vec3 dPdu, vec3 dPdv, vec2 sampleDirection, vec2 pixelSize) {
+float computeDirectionalAO(vec3 posInCamera, vec3 dPdu, vec3 dPdv, vec2 sampleDirection, vec2 stepSize, float randomStep) {
     float ao = 0.0;
     
+    // snap the increment step
+    vec2 incrementStep = sampleDirection * stepSize;
+    vec2 randIncrementStep = snapUV(randomStep * incrementStep);
+    vec2 sampleCoord = v_textureCoordinates + randIncrementStep;
+    incrementStep = snapUV(incrementStep);
+
     // find tangent angle
-    vec3 T = dPdu * sampleDirection.x + dPdv * sampleDirection.y;
+    vec3 T = dPdu * incrementStep.x + dPdv * incrementStep.y;
     float tanT = T.z / length(T.xy) + tan(bias);
     float sinT = tanT / sqrt(1.0 + tanT * tanT);
 
     // sample AO
     float prevSinH = sinT;
-    vec2 sampleCoord = v_textureCoordinates;
     for (int i = 0; i < NUM_STEPS; ++i) {
-        sampleCoord += sampleDirection * stepSize * pixelSize;
+        sampleCoord += incrementStep;
 
         //Exception Handling
         if(sampleCoord.x > 1.0 || sampleCoord.y > 1.0 || sampleCoord.x < 0.0 || sampleCoord.y < 0.0) 
@@ -85,8 +93,16 @@ void main(void)
         return;
     }
 
-    // calculate dPdu, dPdv basis
     vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
+
+    // calculate step size
+    float cotFov = 1.0 / tan(0.5 * 1.0472);
+    float aspect = czm_viewport.w / czm_viewport.z; // height/width
+    vec2 focalLength = vec2(cotFov * aspect, cotFov);
+    vec2 uvLengthCap =  focalLength * lengthCap / -posInCamera.z; 
+    vec2 stepSize = 0.5 * uvLengthCap / (float(NUM_STEPS) + 1.0);
+
+    // calculate dPdu, dPdv basis
     vec2 uvTop = v_textureCoordinates + vec2(0.0, pixelSize.y);
     vec2 uvBot = v_textureCoordinates - vec2(0.0, pixelSize.y);
     vec2 uvLeft = v_textureCoordinates - vec2(pixelSize.x, 0.0);
@@ -101,22 +117,24 @@ void main(void)
     float gapAngle = 2.0 * czm_pi /float(NUM_DIRECTIONS);
 
     // RandomNoise
-    float randomVal = texture2D(randomTexture, v_textureCoordinates).x;
+    vec4 randomVal = texture2D(randomTexture, v_textureCoordinates);
+    float randomDirection = randomVal.x;
+    float randomStep = randomVal.y;
 
     //Loop for each direction
     for (int i = 0; i < NUM_DIRECTIONS; i++)
     {
-        float newGapAngle = gapAngle * (float(i) + randomVal);
+        float newGapAngle = gapAngle * (float(i) + randomDirection);
         float cosVal = cos(newGapAngle);
         float sinVal = sin(newGapAngle);
 
         //Rotate Sampling Direction
         vec2 rotatedSampleDirection = vec2(cosVal * sampleDirection.x - sinVal * sampleDirection.y, sinVal * sampleDirection.x + cosVal * sampleDirection.y);
-        ao += computeDirectionalAO(posInCamera, dPdu, dPdv, rotatedSampleDirection, pixelSize);
+        ao += computeDirectionalAO(posInCamera, dPdu, dPdv, rotatedSampleDirection, stepSize, randomStep);
     }
 
     ao /= float(NUM_DIRECTIONS * NUM_STEPS);
-    ao = 1.0 - clamp(ao, 0.0, 1.0);
+    ao = 1.0 - 1.0 / (2.0 * czm_pi) * clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     gl_FragColor = vec4(vec3(ao), 1.0);
 }
