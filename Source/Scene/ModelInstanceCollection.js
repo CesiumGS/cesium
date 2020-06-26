@@ -26,7 +26,6 @@ import ModelInstance from "./ModelInstance.js";
 import ModelUtility from "./ModelUtility.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 var LoadState = {
   NEEDS_LOAD: 0,
@@ -997,17 +996,6 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     this._state = LoadState.LOADING;
     this._instancingSupported = context.instancedArrays;
     createModel(this, context);
-    var that = this;
-    this._model.readyPromise.then(function (model) {
-      model.activeAnimations
-        .addAll({
-          loop: ModelAnimationLoop.REPEAT,
-        })
-        .otherwise(function (error) {
-          that._state = LoadState.FAILED;
-          that._readyPromise.reject(error);
-        });
-    });
   }
 
   var instancingSupported = this._instancingSupported;
