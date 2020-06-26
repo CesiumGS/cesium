@@ -619,7 +619,7 @@ function Cesium3DTileset(options) {
    * </p>
    *
    * @type {Boolean}
-   * @default true
+   * @default false
    */
   this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
   this._skipLevelOfDetail = this.skipLevelOfDetail;
