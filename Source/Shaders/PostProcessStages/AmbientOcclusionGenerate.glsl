@@ -55,13 +55,13 @@ void main(void)
 
     float ao = 0.0;
     vec2 sampleDirection = vec2(1.0, 0.0);
-    float gapAngle = 90.0 * czm_radiansPerDegree;
+    float gapAngle = 22.5 * czm_radiansPerDegree;
 
     // RandomNoise
     float randomVal = texture2D(randomTexture, v_textureCoordinates).x;
 
     //Loop for each direction
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 16; i++)
     {
         float newGapAngle = gapAngle * (float(i) + randomVal);
         float cosVal = cos(newGapAngle);
@@ -73,7 +73,7 @@ void main(void)
         float localStepSize = stepSize;
 
         //Loop for each step
-        for (int j = 0; j < 6; j++)
+        for (int j = 0; j < 16; j++)
         {
             vec2 newCoords = v_textureCoordinates + rotatedSampleDirection * localStepSize * pixelSize;
 
@@ -108,7 +108,7 @@ void main(void)
         ao += localAO;
     }
 
-    ao /= 4.0;
+    ao /= 16.0;
     ao = 1.0 - clamp(ao, 0.0, 1.0);
     ao = pow(ao, intensity);
     gl_FragColor = vec4(vec3(ao), 1.0);
