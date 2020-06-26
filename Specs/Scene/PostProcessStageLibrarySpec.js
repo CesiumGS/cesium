@@ -427,7 +427,6 @@ describe(
       expect(ao.uniforms.intensity).toEqual(3.0);
       expect(ao.uniforms.bias).toEqual(0.1);
       expect(ao.uniforms.lengthCap).toEqual(0.26);
-      expect(ao.uniforms.stepSize).toEqual(1.95);
       expect(ao.uniforms.frustumLength).toEqual(1000.0);
       expect(ao.uniforms.randomTexture).not.toBeDefined();
       expect(ao.uniforms.delta).toEqual(1.0);
@@ -438,7 +437,6 @@ describe(
       ao.uniforms.intensity = 4.0;
       ao.uniforms.bias = 0.2;
       ao.uniforms.lengthCap = 0.3;
-      ao.uniforms.stepSize = 2.0;
       ao.uniforms.frustumLength = 1001.0;
       ao.uniforms.delta = 2.0;
       ao.uniforms.sigma = 3.0;
@@ -448,7 +446,6 @@ describe(
       expect(ao.uniforms.intensity).toEqual(4.0);
       expect(ao.uniforms.bias).toEqual(0.2);
       expect(ao.uniforms.lengthCap).toEqual(0.3);
-      expect(ao.uniforms.stepSize).toEqual(2.0);
       expect(ao.uniforms.frustumLength).toEqual(1001.0);
       expect(ao.uniforms.delta).toEqual(2.0);
       expect(ao.uniforms.sigma).toEqual(3.0);
