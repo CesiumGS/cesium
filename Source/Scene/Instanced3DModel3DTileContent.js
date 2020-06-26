@@ -549,16 +549,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   content._modelInstanceCollection = new ModelInstanceCollection(
     collectionOptions
   );
-  content._modelInstanceCollection.readyPromise
-    .then(function (model) {
-      model.activeAnimations.addAll({
-        loop: ModelAnimationLoop.REPEAT,
-      });
-    })
-    .otherwise(function (error) {
-      //content._state = 3;
-      content._readyPromise.reject(error);
+  content._modelInstanceCollection.readyPromise.then(function (collection) {
+    collection.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
     });
+  });
 }
 
 function createFeatures(content) {

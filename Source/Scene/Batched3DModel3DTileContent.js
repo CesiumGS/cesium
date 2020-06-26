@@ -433,16 +433,11 @@ function initialize(content, arrayBuffer, byteOffset) {
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     });
-    content._model.readyPromise
-      .then(function (model) {
-        model.activeAnimations.addAll({
-          loop: ModelAnimationLoop.REPEAT,
-        });
-      })
-      .otherwise(function (error) {
-        //content._state = 3;
-        content._readyPromise.reject(error);
+    content._model.readyPromise.then(function (model) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
       });
+    });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
     // For a list of limitations on the input glTF, see the documentation for classificationType of Cesium3DTileset.

@@ -996,6 +996,11 @@ ModelInstanceCollection.prototype.update = function (frameState) {
     this._state = LoadState.LOADING;
     this._instancingSupported = context.instancedArrays;
     createModel(this, context);
+    var that = this;
+    this._model.readyPromise.otherwise(function (error) {
+      that._state = LoadState.FAILED;
+      that._readyPromise.reject(error);
+    });
   }
 
   var instancingSupported = this._instancingSupported;
