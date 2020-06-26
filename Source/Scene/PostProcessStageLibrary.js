@@ -520,6 +520,7 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
     uniforms: {
       intensity: 3.0,
       bias: 0.1,
+      camFovy: Math.PI / 3.0,
       lengthCap: 0.26,
       frustumLength: 1000.0,
       randomTexture: undefined,
@@ -565,6 +566,14 @@ PostProcessStageLibrary.createAmbientOcclusionStage = function () {
       },
       set: function (value) {
         generate.uniforms.lengthCap = value;
+      },
+    },
+    camFovy: {
+      get: function () {
+        return generate.uniforms.camFovy;
+      },
+      set: function (value) {
+        generate.uniforms.camFovy = value;
       },
     },
     frustumLength: {

@@ -3,6 +3,7 @@
 
 uniform sampler2D randomTexture;
 uniform sampler2D depthTexture;
+uniform float camFovy;
 uniform float intensity;
 uniform float bias;
 uniform float lengthCap;
@@ -47,7 +48,7 @@ float computeDirectionalAO(vec3 posInCamera, vec3 dPdu, vec3 dPdv, vec2 sampleDi
     float tanT = T.z / length(T.xy) + tan(bias);
     float sinT = tanT / sqrt(1.0 + tanT * tanT);
 
-    // sample AO
+    // sample AO along the sample direction
     float prevSinH = sinT;
     for (int i = 0; i < NUM_STEPS; ++i) {
         sampleCoord += incrementStep;
@@ -96,13 +97,13 @@ void main(void)
     vec2 pixelSize = czm_pixelRatio / czm_viewport.zw;
 
     // calculate step size
-    float cotFov = 1.0 / tan(0.5 * 1.0472);
-    float aspect = czm_viewport.w / czm_viewport.z; // height/width
-    vec2 focalLength = vec2(cotFov * aspect, cotFov);
+    float aspect = czm_viewport.w / czm_viewport.z;
+    float cotFovy = 1.0 / tan(camFovy * 0.5);
+    vec2 focalLength = vec2(cotFovy * aspect, cotFovy);
     vec2 uvLengthCap =  focalLength * lengthCap / -posInCamera.z; 
     vec2 stepSize = 0.5 * uvLengthCap / (float(NUM_STEPS) + 1.0);
 
-    // calculate dPdu, dPdv basis
+    // calculate dPdu, dPdv basis to calculate tangent vector later on
     vec2 uvTop = v_textureCoordinates + vec2(0.0, pixelSize.y);
     vec2 uvBot = v_textureCoordinates - vec2(0.0, pixelSize.y);
     vec2 uvLeft = v_textureCoordinates - vec2(pixelSize.x, 0.0);
@@ -134,7 +135,6 @@ void main(void)
     }
 
     ao /= float(NUM_DIRECTIONS * NUM_STEPS);
-    ao = 1.0 - 1.0 / (2.0 * czm_pi) * clamp(ao, 0.0, 1.0);
-    ao = pow(ao, intensity);
+    ao = 1.0 - 1.0 / (2.0 * czm_pi) * clamp(ao, 0.0, 1.0) * intensity;
     gl_FragColor = vec4(vec3(ao), 1.0);
 }
