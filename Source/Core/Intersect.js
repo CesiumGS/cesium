@@ -1,7 +1,7 @@
 /**
  * This enumerated type is used in determining where, relative to the frustum, an
  * object is located. The object can either be fully contained within the frustum (INSIDE),
- * partially inside the frustum and partially outside (INTERSECTING), or somwhere entirely
+ * partially inside the frustum and partially outside (INTERSECTING), or somewhere entirely
  * outside of the frustum's 6 planes (OUTSIDE).
  *
  * @enum {Number}

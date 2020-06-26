@@ -362,6 +362,11 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
  * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
  */
 Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
+  if (
+    Cartesian3.equalsEpsilon(cartesian, Cartesian3.ZERO, CesiumMath.EPSILON14)
+  ) {
+    return undefined;
+  }
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -688,4 +693,112 @@ Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function (
 
   return result;
 };
+
+var abscissas = [
+  0.14887433898163,
+  0.43339539412925,
+  0.67940956829902,
+  0.86506336668898,
+  0.97390652851717,
+  0.0,
+];
+var weights = [
+  0.29552422471475,
+  0.26926671930999,
+  0.21908636251598,
+  0.14945134915058,
+  0.066671344308684,
+  0.0,
+];
+
+/**
+ * Compute the 10th order Gauss-Legendre Quadrature of the given definite integral.
+ *
+ * @param {Number} a The lower bound for the integration.
+ * @param {Number} b The upper bound for the integration.
+ * @param {Ellipsoid~RealValuedScalarFunction} func The function to integrate.
+ * @returns {Number} The value of the integral of the given function over the given domain.
+ *
+ * @private
+ */
+function gaussLegendreQuadrature(a, b, func) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("a", a);
+  Check.typeOf.number("b", b);
+  Check.typeOf.func("func", func);
+  //>>includeEnd('debug');
+
+  // The range is half of the normal range since the five weights add to one (ten weights add to two).
+  // The values of the abscissas are multiplied by two to account for this.
+  var xMean = 0.5 * (b + a);
+  var xRange = 0.5 * (b - a);
+
+  var sum = 0.0;
+  for (var i = 0; i < 5; i++) {
+    var dx = xRange * abscissas[i];
+    sum += weights[i] * (func(xMean + dx) + func(xMean - dx));
+  }
+
+  // Scale the sum to the range of x.
+  sum *= xRange;
+  return sum;
+}
+
+/**
+ * A real valued scalar function.
+ * @callback Ellipsoid~RealValuedScalarFunction
+ *
+ * @param {Number} x The value used to evaluate the function.
+ * @returns {Number} The value of the function at x.
+ *
+ * @private
+ */
+
+/**
+ * Computes an approximation of the surface area of a rectangle on the surface of an ellipsoid using
+ * Gauss-Legendre 10th order quadrature.
+ *
+ * @param {Rectangle} rectangle The rectangle used for computing the surface area.
+ * @returns {Number} The approximate area of the rectangle on the surface of this ellipsoid.
+ */
+Ellipsoid.prototype.surfaceArea = function (rectangle) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rectangle", rectangle);
+  //>>includeEnd('debug');
+  var minLongitude = rectangle.west;
+  var maxLongitude = rectangle.east;
+  var minLatitude = rectangle.south;
+  var maxLatitude = rectangle.north;
+
+  while (maxLongitude < minLongitude) {
+    maxLongitude += CesiumMath.TWO_PI;
+  }
+
+  var radiiSquared = this._radiiSquared;
+  var a2 = radiiSquared.x;
+  var b2 = radiiSquared.y;
+  var c2 = radiiSquared.z;
+  var a2b2 = a2 * b2;
+  return gaussLegendreQuadrature(minLatitude, maxLatitude, function (lat) {
+    // phi represents the angle measured from the north pole
+    // sin(phi) = sin(pi / 2 - lat) = cos(lat), cos(phi) is similar
+    var sinPhi = Math.cos(lat);
+    var cosPhi = Math.sin(lat);
+    return (
+      Math.cos(lat) *
+      gaussLegendreQuadrature(minLongitude, maxLongitude, function (lon) {
+        var cosTheta = Math.cos(lon);
+        var sinTheta = Math.sin(lon);
+        return Math.sqrt(
+          a2b2 * cosPhi * cosPhi +
+            c2 *
+              (b2 * cosTheta * cosTheta + a2 * sinTheta * sinTheta) *
+              sinPhi *
+              sinPhi
+        );
+      })
+    );
+  });
+};
+
 export default Ellipsoid;
