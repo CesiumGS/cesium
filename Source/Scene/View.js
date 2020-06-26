@@ -64,6 +64,7 @@ function View(scene, camera, viewport) {
   this.debugFrustumStatistics = undefined;
 
   // Array of all commands that get rendered into frustums along with their near / far values.
+  // Acts similar to a ManagedArray.
   this._commandExtents = [];
 }
 
@@ -255,6 +256,7 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   overlayList.length = 0;
 
   var commandExtents = this._commandExtents;
+  var commandExtentCapacity = commandExtents.length;
   var commandExtentCount = 0;
 
   var near = +Number.MAX_VALUE;
@@ -365,9 +367,26 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
 
   updateFrustums(this, scene, near, far);
 
-  for (var c = 0; c < commandExtentCount; c++) {
-    var ce = commandExtents[c];
+  var c;
+  var ce;
+
+  for (c = 0; c < commandExtentCount; c++) {
+    ce = commandExtents[c];
     insertIntoBin(this, scene, ce.command, ce.near, ce.far);
+  }
+
+  // Dereference old commands
+  if (commandExtentCount < commandExtentCapacity) {
+    for (c = commandExtentCount; c < commandExtentCapacity; c++) {
+      ce = commandExtents[c];
+      if (!defined(ce.command)) {
+        // If the command is undefined, it's assumed that all
+        // subsequent commmands were set to undefined as well,
+        // so no need to loop over them all
+        break;
+      }
+      ce.command = undefined;
+    }
   }
 
   var numFrustums = frustumCommandsList.length;
