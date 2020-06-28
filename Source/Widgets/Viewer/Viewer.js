@@ -213,51 +213,94 @@ function enableVRUI(viewer, enabled) {
  * @typedef {Object} Viewer.ConstructorOptions
  *
  * Initialization options for the Viewer constructor
+ * <br/>Viewer构造函数的初始化选项
  *
  * @property {Boolean} [animation=true] If set to false, the Animation widget will not be created.
+ * <br/>如果设为false，则不会创建Animation（动画）部件。
  * @property {Boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+ * <br/>如果设为false，则不会创建BaseLayerPicker（底图选择）部件。
  * @property {Boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+ * <br/>如果设为false，则不会创建FullscreenButton（全屏按钮）部件。
  * @property {Boolean} [vrButton=false] If set to true, the VRButton widget will be created.
+ * <br/>如果设为true，则会创建VRButton部件。
  * @property {Boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * <br/>如果设为false，则不会创建Geocoder（地理编码）部件。
  * @property {Boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
+ * <br/>如果设为false，则不会创建HomeButton（首页按钮）部件。
  * @property {Boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
+ * <br/>如果设为false，则不会创建InfoBox（信息弹框）部件。
  * @property {Boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
+ * <br/>如果设为false，则不会创建SceneModePicker（场景方式）部件（3D、2.5D、2D）。
  * @property {Boolean} [selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
+ * <br/>如果设为false，则不会创建SelectionIndicator（选中）部件。
  * @property {Boolean} [timeline=true] If set to false, the Timeline widget will not be created.
+ * <br/>如果设为false，则不会创建Timeline（时间线）部件。
  * @property {Boolean} [navigationHelpButton=true] If set to false, the navigation help button will not be created.
+ * <br/>如果设为false，则不会创建navigationHelpButton（帮助按钮）部件。
  * @property {Boolean} [navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+ * <br/>如果设为ture，则会在初始化成功后展示帮助信息；如果为false，则只有在点击了navigationHelpButton部件时才会展示帮助信息。
  * @property {Boolean} [scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+ * <br/>如果为true，则只有3D场景；每个几何实例只渲染3D场景，有利于节省显存。
  * @property {Boolean} [shouldAnimate=false] <code>true</code> if the clock should attempt to advance simulation time by default, <code>false</code> otherwise.  This option takes precedence over setting {@link Viewer#clockViewModel}.
+ * <br/>是否启用clock来模拟时间。优先级高于设置{@link Viewer#clockViewModel}
  * @property {ClockViewModel} [clockViewModel=new ClockViewModel(clock)] The clock view model to use to control current time.
+ * <br/>时钟视图，用于控制当前时间。
  * @property {ProviderViewModel} [selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
+ * <br/>当前选择的底图图层视图，如果没有提供，则默认使用第一个可用的底图。只有当`baseLayerPicker`为true时才有效。
  * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
+ * <br/>可供选择的底图视图。只有当`baseLayerPicker`为true时才有效。
  * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
+ * <br/>当前选择的地形图层视图，如果没有提供，则默认使用第一个可用的地形图层。只有当`baseLayerPicker`为true时才有效。
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
+ * <br/>可供选择的地形图层。只有当`baseLayerPicker`为true时才有效。
  * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
+ * <br/>图片图层提供者。只有当`baseLayerPicker`为false时才有效。
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+ * <br/>地形图层提供者。
  * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * <br/>用于渲染恒星的天空盒。当为<code>undefined</code>时，使用默认；当为<code>false</code>时，没有天空盒、太阳、月亮。
  * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * <br/>天空大气层，设置为<code>false</code>则会关闭。
  * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
+ * <br/>设置放置全屏的HTML元素，或元素的ID值。
  * @property {Boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+ * <br/>是否由本部件来控制渲染循环。
  * @property {Number} [targetFrameRate] The target frame rate when using the default render loop.
+ * <br/>使用默认渲染循环时的目标帧率。
  * @property {Boolean} [showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+ * <br/>是否自动弹出显示渲染循环出错时的错误信息。
  * @property {Boolean} [useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
+ * <br/>如果为true，则使用浏览器推荐的分辨率，忽略<code>window.devicePixelRatio</code>
  * @property {Boolean} [automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
+ * <br/>如果为true，则当添加新的数据集时将自动追踪时钟设置，并在时钟更改时更新数据集。如果想要手动设置则设为false。
  * @property {Object} [contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+ * <br/>
  * @property {SceneMode} [sceneMode=SceneMode.SCENE3D] The initial scene mode.
+ * <br/>初始的场景模式。
  * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+ * <br/>在2D和哥伦比亚视图模式下的地图投影方式。
  * @property {Globe} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * <br/>场景中的球体。如果设为false,则不会添加任何球体
  * @property {Boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * <br/>
  * @property {Element|String} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+ * <br/>包含{@link CreditDisplay}的DOM元素或其ID值，如果不指定，则默认放在本部件的下方
  * @property {Element|String} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
- * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
- *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+ * <br/>指定{@link CreditDisplay}创建的弹框的父元素的或其ID值；如果不指定，则覆盖在本部件的上方。
+ * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+ * <br/>
  * @property {Number} [terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+ * <br/>地形扩大标量，不影响其它依赖地球相对定位的图元。
  * @property {Boolean} [shadows=false] Determines if shadows are cast by light sources.
+ * <br/>是否允许阴影
  * @property {ShadowMode} [terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
+ * <br/>确定地形是投射阴影还是接收阴影。
  * @property {MapMode2D} [mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+ * <br/>确定在2D地图下，是可旋转还是可无限横向拖动。
  * @property {Boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+ * <br/>如果为true，则将创建ProjectionPicker（透视投影、正射投影）部件
  * @property {Boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * <br/>如果设置为true，则只有场景中有更改时，才渲染一帧；这有助于提高性能，但有时需要调用 {@link Scene#requestRender} 手动渲染
  * @property {Number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
  */
 
