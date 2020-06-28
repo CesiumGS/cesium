@@ -357,7 +357,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
    * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's scale remains clamped to the nearest bound.  If undefined,
    * scaleByDistance will be disabled.
@@ -400,7 +400,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
    * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.  If undefined,
    * translucencyByDistance will be disabled.
@@ -446,7 +446,7 @@ Object.defineProperties(Billboard.prototype, {
   /**
    * Gets or sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
    * A billboard's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
-   * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
    * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
    * Outside of these ranges the billboard's pixel offset scale remains clamped to the nearest bound.  If undefined,
    * pixelOffsetScaleByDistance will be disabled.
@@ -1192,7 +1192,7 @@ Billboard.prototype._loadImage = function () {
  * </p>
  *
  * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
- * @param {Image|Canvas|String|Resource|Billboard~CreateImageCallback} image The image to load.  This parameter
+ * @param {HTMLImageElement|HTMLCanvasElement|String|Resource|Billboard.CreateImageCallback} image The image to load.  This parameter
  *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
  *        or a function which will be called to create the image if it hasn't been loaded already.
  * @example
@@ -1528,8 +1528,8 @@ Billboard.prototype._destroy = function () {
 
 /**
  * A function that creates an image.
- * @callback Billboard~CreateImageCallback
+ * @callback Billboard.CreateImageCallback
  * @param {String} id The identifier of the image to load.
- * @returns {Image|Canvas|Promise<Image|Canvas>} The image, or a promise that will resolve to an image.
+ * @returns {HTMLImageElement|HTMLCanvasElement|Promise<HTMLImageElement|HTMLCanvasElement>} The image, or a promise that will resolve to an image.
  */
 export default Billboard;

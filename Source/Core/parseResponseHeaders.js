@@ -2,7 +2,7 @@
  * Parses the result of XMLHttpRequest's getAllResponseHeaders() method into
  * a dictionary.
  *
- * @exports parseResponseHeaders
+ * @function parseResponseHeaders
  *
  * @param {String} headerString The header string returned by getAllResponseHeaders().  The format is
  *                 described here: http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders()-method

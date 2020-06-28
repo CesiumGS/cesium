@@ -4,6 +4,15 @@
  * @alias GregorianDate
  * @constructor
  *
+ * @param {Number} [year] The year as a whole number.
+ * @param {Number} [month] The month as a whole number with range [1, 12].
+ * @param {Number} [day] The day of the month as a whole number starting at 1.
+ * @param {Number} [hour] The hour as a whole number with range [0, 23].
+ * @param {Number} [minute] The minute of the hour as a whole number with range [0, 59].
+ * @param {Number} [second] The second of the minute as a whole number with range [0, 60], with 60 representing a leap second.
+ * @param {Number} [millisecond] The millisecond of the second as a floating point number with range [0.0, 1000.0).
+ * @param {Boolean} [isLeapSecond] Whether this time is during a leap second.
+ *
  * @see JulianDate#toGregorianDate
  */
 function GregorianDate(

@@ -1152,12 +1152,6 @@ describe("Core/Quaternion", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with no epsilon", function () {
-    expect(function () {
-      Quaternion.equalsEpsilon(new Quaternion(), new Quaternion(), undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("conjugate throws with no result", function () {
     expect(function () {
       Quaternion.conjugate(new Quaternion());

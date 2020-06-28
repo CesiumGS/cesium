@@ -108,8 +108,8 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Boolean}
-   * @default false
+   * @type {Number}
+   * @default 0
    */
   numberOfDerivatives: {
     get: function () {

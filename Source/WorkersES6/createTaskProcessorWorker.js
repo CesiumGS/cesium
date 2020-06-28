@@ -21,11 +21,11 @@ function callAndWrap(workerFunction, parameters, transferableObjects) {
  * Creates an adapter function to allow a calculation function to operate as a Web Worker,
  * paired with TaskProcessor, to receive tasks and return results.
  *
- * @exports createTaskProcessorWorker
+ * @function createTaskProcessorWorker
  *
- * @param {createTaskProcessorWorker~WorkerFunction} workerFunction The calculation function,
+ * @param {createTaskProcessorWorker.WorkerFunction} workerFunction The calculation function,
  *        which takes parameters and returns a result.
- * @returns {createTaskProcessorWorker~TaskProcessorWorkerFunction} A function that adapts the
+ * @returns {createTaskProcessorWorker.TaskProcessorWorkerFunction} A function that adapts the
  *          calculation function to work as a Web Worker onmessage listener with TaskProcessor.
  *
  *
@@ -101,7 +101,7 @@ function createTaskProcessorWorker(workerFunction) {
 
 /**
  * A function that performs a calculation in a Web Worker.
- * @callback createTaskProcessorWorker~WorkerFunction
+ * @callback createTaskProcessorWorker.WorkerFunction
  *
  * @param {Object} parameters Parameters to the calculation.
  * @param {Array} transferableObjects An array that should be filled with references to objects inside
@@ -125,7 +125,7 @@ function createTaskProcessorWorker(workerFunction) {
 /**
  * A Web Worker message event handler function that handles the interaction with TaskProcessor,
  * specifically, task ID management and posting a response message containing the result.
- * @callback createTaskProcessorWorker~TaskProcessorWorkerFunction
+ * @callback createTaskProcessorWorker.TaskProcessorWorkerFunction
  *
  * @param {Object} event The onmessage event object.
  */

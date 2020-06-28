@@ -340,7 +340,6 @@ describe(
         url: riggedFigureUrl,
         instances: createInstances(4),
       }).then(function (collection) {
-        console.log(collection);
         expectRender(collection);
       });
     });

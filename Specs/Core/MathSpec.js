@@ -339,12 +339,6 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws for undefined relativeEpsilon", function () {
-    expect(function () {
-      CesiumMath.equalsEpsilon(1.0, 5.0, undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("equalsEpsilon throws for undefined", function () {
     expect(function () {
       CesiumMath.equalsEpsilon();
