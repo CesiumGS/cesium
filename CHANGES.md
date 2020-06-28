@@ -21,6 +21,7 @@
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
 - Fixed several bugs when rendering CesiumJS in a WebG 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
 - Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
+- Fixed `scene.pickFromRay` intersection inaccuracies. [#8439](https://github.com/CesiumGS/cesium/issues/8439)
 
 ### 1.70.1 - 2020-06-10
 
