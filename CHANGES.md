@@ -21,6 +21,7 @@
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
 - Fixed several bugs when rendering CesiumJS in a WebG 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)
 
 ### 1.70.1 - 2020-06-10
 
