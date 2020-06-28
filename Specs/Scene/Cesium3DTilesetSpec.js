@@ -1411,7 +1411,7 @@ describe(
     });
 
     it("replacement refinement - refines if descendant is empty leaf tile", function () {
-      // Check that the root is refinable once its child is loaded
+      // Check that the root is refinable once its children with content are loaded
       //
       //          C
       //     C  C  C  E
