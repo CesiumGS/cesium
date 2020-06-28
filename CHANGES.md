@@ -14,6 +14,7 @@
 
 ##### Fixes :wrench:
 
+- Fixed issue where tileset was not playing glTF animations [#8962](https://github.com/CesiumGS/cesium/issues/8962)
 - Fixed a divide-by-zero bug in `Ellipsoid.geodeticSurfaceNormal` when given the origin as input. `undefined` is returned instead. [#8986](https://github.com/CesiumGS/cesium/pull/8986)
 - Fixed error with `WallGeoemtry` when there were adjacent positions with very close values [#8952](https://github.com/CesiumGS/cesium/pull/8952)
 - Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)

@@ -22,6 +22,7 @@ import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ModelInstanceCollection from "./ModelInstanceCollection.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
@@ -548,6 +549,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   content._modelInstanceCollection = new ModelInstanceCollection(
     collectionOptions
   );
+  content._modelInstanceCollection.readyPromise.then(function (collection) {
+    collection.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+  });
 }
 
 function createFeatures(content) {
