@@ -432,6 +432,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       luminanceAtZenith: tileset.luminanceAtZenith,
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      backFaceCulling: tileset.backFaceCulling,
     });
     content._model.readyPromise.then(function (model) {
       model.activeAnimations.addAll({
@@ -539,6 +540,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
   this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._model.backFaceCulling = this._tileset.backFaceCulling;
   this._model.debugWireframe = this._tileset.debugWireframe;
 
   // Update clipping planes
