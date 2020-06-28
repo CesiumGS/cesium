@@ -101,6 +101,8 @@ describe(
       "Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
     var instancedRedMaterialUrl =
       "Data/Cesium3DTiles/Instanced/InstancedRedMaterial/tileset.json";
+    var instancedAnimationUrl =
+      "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
 
     // 1 tile where each feature is a different source color
     var colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -143,6 +145,8 @@ describe(
       "Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm";
     var batchedVertexColorsUrl =
       "Data/Cesium3DTiles/Batched/BatchedWithVertexColors/tileset.json";
+    var batchedAnimationUrl =
+      "Data/Cesium3DTiles/Batched/BatchedAnimated/tileset.json";
 
     var styleUrl = "Data/Cesium3DTiles/Style/style.json";
 
@@ -636,6 +640,35 @@ describe(
         expect(statistics.visited).toEqual(5);
         expect(statistics.numberOfCommands).toEqual(5);
       });
+    });
+
+    function checkAnimation(url) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        var renderOptions = {
+          scene: scene,
+          time: new JulianDate(271.828),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          var commandList = scene.frameState.commandList;
+          var modelMatrix1 = Matrix4.clone(commandList[0].modelMatrix);
+          // Check that the scene changes after .5 seconds. (it animates)
+          renderOptions.time.secondsOfDay += 0.5;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            var modelMatrix2 = Matrix4.clone(commandList[0].modelMatrix);
+            expect(modelMatrix1).not.toEqual(modelMatrix2);
+          });
+        });
+      });
+    }
+    it("animates instanced tileset", function () {
+      return checkAnimation(instancedAnimationUrl);
+    });
+
+    it("animates batched tileset", function () {
+      return checkAnimation(batchedAnimationUrl);
     });
 
     it("renders tileset in CV", function () {
