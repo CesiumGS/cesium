@@ -2078,11 +2078,33 @@ function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
   });
 }
 
-function executeDebugCommand(command, scene, passState) {
-  var debugCommand = DrawCommand.shallowClone(command);
-  debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
-  debugCommand.execute(scene.context, passState);
-  debugCommand.shaderProgram.destroy();
+function createDerivedDebugCommand(command, scene, result) {
+  if (!defined(result)) {
+    result = {};
+  }
+
+  var shader;
+  if (defined(result.command)) {
+    shader = result.command.shaderProgram;
+  }
+
+  result.command = DrawCommand.shallowClone(command, result.command);
+
+  if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+    if (defined(shader)) {
+      shader.destroy();
+    }
+
+    result.command.shaderProgram = createDebugFragmentShaderProgram(
+      command,
+      scene
+    );
+    result.shaderProgramId = command.shaderProgram.id;
+  } else {
+    result.command.shaderProgram = shader;
+  }
+
+  return result;
 }
 
 var transformFrom2D = new Matrix4(
@@ -2261,8 +2283,12 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   }
 
   if (scene.debugShowCommands || scene.debugShowFrustums) {
-    executeDebugCommand(command, scene, passState);
+    command.debug = createDerivedDebugCommand(command, scene, command.debug);
+    command.debug.command.execute(scene.context, passState);
     return;
+  } else if (defined(command.debug)) {
+    command.debug.command.shaderProgram.destroy();
+    delete command.debug;
   }
 
   if (
