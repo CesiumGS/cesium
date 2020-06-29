@@ -25,6 +25,7 @@
 - Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 - Fixed a bug where switching to orthographic camera on the first frame caused the zoom level to be incorrect. [#8853](https://github.com/CesiumGS/cesium/pull/8853)
 - Fixed `scene.pickFromRay` intersection inaccuracies. [#8439](https://github.com/CesiumGS/cesium/issues/8439)
+- Fixed a bug where a null or undefined name property passed to the `Entity` constructor would throw an exception.[#8832](https://github.com/CesiumGS/cesium/pull/8832)
 
 ### 1.70.1 - 2020-06-10
 
