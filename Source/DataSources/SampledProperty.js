@@ -817,7 +817,10 @@ SampledProperty.prototype.equals = function (other) {
 
   var values = this._values;
   var otherValues = other._values;
-  for (i = 0; i < values.length; i++) {
+  length = values.length;
+
+  //Since time lengths are equal, values length and other length are guaranteed to be equal.
+  for (i = 0; i < length; i++) {
     if (values[i] !== otherValues[i]) {
       return false;
     }
