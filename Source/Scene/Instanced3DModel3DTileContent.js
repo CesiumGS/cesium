@@ -305,7 +305,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
     backFaceCulling: tileset.backFaceCulling,
-    shadows: tileset.shadows
+    shadows: tileset.shadows,
   };
 
   if (gltfFormat === 0) {
