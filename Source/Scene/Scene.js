@@ -1996,71 +1996,40 @@ function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
   });
   var length = targets.length;
 
-  var newMain = "void main() \n" + "{ \n" + "    czm_Debug_main(); \n";
+  var newMain = "";
+  if (scene.debugShowCommands) {
+    newMain += "uniform vec3 debugShowCommandsColor;\n";
+  }
+  if (scene.debugShowFrustums) {
+    newMain += "uniform vec3 debugShowFrustumsColor;\n";
+  }
+
+  newMain += "void main() \n" + "{ \n" + "    czm_Debug_main(); \n";
 
   var i;
   if (scene.debugShowCommands) {
-    if (!defined(command._debugColor)) {
-      command._debugColor = Color.fromRandom();
-    }
-    var c = command._debugColor;
     if (length > 0) {
       for (i = 0; i < length; ++i) {
         newMain +=
           "    gl_FragData[" +
           targets[i] +
-          "].rgb *= vec3(" +
-          c.red +
-          ", " +
-          c.green +
-          ", " +
-          c.blue +
-          "); \n";
+          "].rgb *= debugShowCommandsColor;\n";
       }
     } else {
-      newMain +=
-        "    " +
-        "gl_FragColor" +
-        ".rgb *= vec3(" +
-        c.red +
-        ", " +
-        c.green +
-        ", " +
-        c.blue +
-        "); \n";
+      newMain += "    gl_FragColor.rgb *= debugShowCommandsColor;\n";
     }
   }
 
   if (scene.debugShowFrustums) {
-    // Support up to three frustums.  If a command overlaps all
-    // three, it's code is not changed.
-    var r = command.debugOverlappingFrustums & (1 << 0) ? "1.0" : "0.0";
-    var g = command.debugOverlappingFrustums & (1 << 1) ? "1.0" : "0.0";
-    var b = command.debugOverlappingFrustums & (1 << 2) ? "1.0" : "0.0";
     if (length > 0) {
       for (i = 0; i < length; ++i) {
         newMain +=
           "    gl_FragData[" +
           targets[i] +
-          "].rgb *= vec3(" +
-          r +
-          ", " +
-          g +
-          ", " +
-          b +
-          "); \n";
+          "].rgb *= debugShowFrustumsColor;\n";
       }
     } else {
-      newMain +=
-        "    " +
-        "gl_FragColor" +
-        ".rgb *= vec3(" +
-        r +
-        ", " +
-        g +
-        ", " +
-        b +
-        "); \n";
+      newMain += "    gl_FragColor.rgb *= debugShowFrustumsColor;\n";
     }
   }
 
@@ -2090,6 +2059,7 @@ function createDerivedDebugCommand(command, scene, result) {
 
   result.command = DrawCommand.shallowClone(command, result.command);
 
+  // setup debug shader if necessary
   if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
     if (defined(shader)) {
       shader.destroy();
@@ -2102,6 +2072,31 @@ function createDerivedDebugCommand(command, scene, result) {
     result.shaderProgramId = command.shaderProgram.id;
   } else {
     result.command.shaderProgram = shader;
+  }
+
+  // setup uniform for the debug shader
+  var that = this;
+  var uniformMap = result.command.uniformMap;
+  if (scene.debugShowCommands) {
+    if (!defined(result.debugColor)) {
+      result.debugColor = Color.fromRandom();
+    }
+
+    uniformMap.debugShowCommandsColor = function () {
+      return that.result.debugColor;
+    };
+  }
+
+  if (scene.debugShowFrustums) {
+    // Support up to three frustums.  If a command overlaps all
+    // three, it's code is not changed.
+    var r = command.debugOverlappingFrustums & (1 << 0);
+    var g = command.debugOverlappingFrustums & (1 << 1);
+    var b = command.debugOverlappingFrustums & (1 << 2);
+
+    uniformMap.debugShowFrustumsColor = function () {
+      return new Color(r, g, b);
+    };
   }
 
   return result;
