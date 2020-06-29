@@ -9,7 +9,7 @@ import CesiumMath from "../Core/Math.js";
  * but is instead passed to the constructor of {@link SampledProperty}
  * in order to represent a two-dimensional angle of rotation.
  *
- * @exports Rotation
+ * @interface Rotation
  *
  *
  * @example
@@ -87,7 +87,7 @@ var Rotation = {
    * @param {Number[]} packedArray The packed array.
    * @param {Number} [startingIndex=0] The index of the first element to be converted.
    * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-   * @param {Number[]} result The object into which to store the result.
+   * @param {Number[]} [result] The object into which to store the result.
    */
   convertPackedArrayForInterpolation: function (
     packedArray,
@@ -100,6 +100,10 @@ var Rotation = {
       throw new DeveloperError("packedArray is required");
     }
     //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      result = [];
+    }
 
     startingIndex = defaultValue(startingIndex, 0);
     lastIndex = defaultValue(lastIndex, packedArray.length);

@@ -75,6 +75,7 @@ Object.defineProperties(CylinderGeometryUpdater.prototype, {
    * @type {TerrainOffsetProperty}
    * @memberof CylinderGeometryUpdater.prototype
    * @readonly
+   * @private
    */
   terrainOffsetProperty: {
     get: function () {

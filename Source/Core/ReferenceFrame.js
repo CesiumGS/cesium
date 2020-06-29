@@ -1,7 +1,7 @@
 /**
  * Constants for identifying well-known reference frames.
  *
- * @exports ReferenceFrame
+ * @enum {Number}
  */
 var ReferenceFrame = {
   /**

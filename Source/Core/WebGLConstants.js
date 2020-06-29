@@ -7,7 +7,7 @@
  * and [WebGL 2.0]{@link https://www.khronos.org/registry/webgl/specs/latest/2.0/}
  * specifications.
  *
- * @exports WebGLConstants
+ * @enum {Number}
  */
 var WebGLConstants = {
   DEPTH_BUFFER_BIT: 0x00000100,

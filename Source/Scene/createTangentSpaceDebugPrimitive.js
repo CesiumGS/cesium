@@ -14,7 +14,7 @@ import Primitive from "./Primitive.js";
  * is red; tangent is green; and bitangent is blue.  If an attribute is not
  * present, it is not drawn.
  *
- * @exports createTangentSpaceDebugPrimitive
+ * @function
  *
  * @param {Object} options Object with the following properties:
  * @param {Geometry} options.geometry The <code>Geometry</code> instance with the attribute.

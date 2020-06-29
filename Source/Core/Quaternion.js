@@ -286,7 +286,7 @@ Quaternion.packedInterpolationLength = 3;
  * @param {Number[]} packedArray The packed array.
  * @param {Number} [startingIndex=0] The index of the first element to be converted.
  * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
- * @param {Number[]} result The object into which to store the result.
+ * @param {Number[]} [result] The object into which to store the result.
  */
 Quaternion.convertPackedArrayForInterpolation = function (
   packedArray,
@@ -330,6 +330,9 @@ Quaternion.convertPackedArrayForInterpolation = function (
       sampledQuaternionAxis
     );
     var angle = Quaternion.computeAngle(sampledQuaternionTempQuaternion);
+    if (!defined(result)) {
+      result = [];
+    }
     result[offset] = sampledQuaternionAxis.x * angle;
     result[offset + 1] = sampledQuaternionAxis.y * angle;
     result[offset + 2] = sampledQuaternionAxis.z * angle;
@@ -1056,13 +1059,11 @@ Quaternion.equals = function (left, right) {
  *
  * @param {Quaternion} [left] The first quaternion.
  * @param {Quaternion} [right] The second quaternion.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Quaternion.equalsEpsilon = function (left, right, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -1118,7 +1119,7 @@ Quaternion.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Quaternion} [right] The right hand side quaternion.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Quaternion.prototype.equalsEpsilon = function (right, epsilon) {

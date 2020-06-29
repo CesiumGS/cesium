@@ -238,7 +238,7 @@ TerrainOffsetProperty.prototype.destroy = function () {
 
 /**
  * A function which creates one or more providers.
- * @callback TerrainOffsetProperty~PositionFunction
+ * @callback TerrainOffsetProperty.PositionFunction
  * @param {JulianDate} time The clock time at which to retrieve the position
  * @param {Cartesian3} result The result position
  * @returns {Cartesian3} The position at which to do the terrain height check

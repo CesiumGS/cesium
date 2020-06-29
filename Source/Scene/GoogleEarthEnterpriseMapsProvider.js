@@ -15,26 +15,12 @@ import when from "../ThirdParty/when.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * Provides tiled imagery using the Google Earth Imagery API.
+ * @typedef {Object} GoogleEarthEnterpriseMapsProvider.ConstructorOptions
  *
- * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
- *        Google Earth Enterprise Server.
+ * Initialization options for the GoogleEarthEnterpriseMapsProvider constructor
  *
- *        By default the Google Earth Enterprise server does not set the
- *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
- *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
- *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
- *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
- *
- *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
- *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
- *
- * @alias GoogleEarthEnterpriseMapsProvider
- * @constructor
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Google Earth server hosting the imagery.
- * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
+ * @property {Resource|String} url The url of the Google Earth server hosting the imagery.
+ * @property {Number} channel The channel (id) to be used when requesting data from the server.
  *        The channel number can be found by looking at the json file located at:
  *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
  *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
@@ -52,13 +38,34 @@ import ImageryProvider from "./ImageryProvider.js";
  *            }
  *          ]
  *        }
- * @param {String} [options.path="/default_map"] The path of the Google Earth server hosting the imagery.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the Google Earth
+ * @property {String} [path="/default_map"] The path of the Google Earth server hosting the imagery.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the Google Earth
  *        Enterprise server, or undefined if there is no limit.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
  *        a {@link NeverTileDiscardPolicy} for this parameter.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ */
+
+/**
+ * Provides tiled imagery using the Google Earth Imagery API.
+ *
+ * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
+ *        Google Earth Enterprise Server.
+ *
+ *        By default the Google Earth Enterprise server does not set the
+ *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
+ *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
+ *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
+ *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
+ *
+ *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
+ *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
+ *
+ * @alias GoogleEarthEnterpriseMapsProvider
+ * @constructor
+ *
+ * @param {GoogleEarthEnterpriseMapsProvider.ConstructorOptions} options Object describing initialization options
  *
  * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
  * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
@@ -94,6 +101,92 @@ function GoogleEarthEnterpriseMapsProvider(options) {
   }
   //>>includeEnd('debug');
 
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default 1.9
+   */
+  this.defaultGamma = 1.9;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
+
   var url = options.url;
   var path = defaultValue(options.path, "/default_map");
 
@@ -115,16 +208,6 @@ function GoogleEarthEnterpriseMapsProvider(options) {
       GoogleEarthEnterpriseMapsProvider.logoUrl +
       '" title="Google Imagery"/></a>'
   );
-
-  /**
-   * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-   * By default, this is set to 1.9.  Changing this value after creating an {@link ImageryLayer} for this provider will have
-   * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
-   *
-   * @type {Number}
-   * @default 1.9
-   */
-  this.defaultGamma = 1.9;
 
   this._tilingScheme = undefined;
 
@@ -360,7 +443,7 @@ Object.defineProperties(GoogleEarthEnterpriseMapsProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link GoogleEarthEnterpriseMapsProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseMapsProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -598,7 +681,7 @@ GoogleEarthEnterpriseMapsProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

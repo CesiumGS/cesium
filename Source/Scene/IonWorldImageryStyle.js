@@ -3,7 +3,7 @@
 /**
  * The types of imagery provided by {@link createWorldImagery}.
  *
- * @exports IonWorldImageryStyle
+ * @enum {Number}
  */
 var IonWorldImageryStyle = {
   /**

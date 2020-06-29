@@ -57,6 +57,7 @@ Object.defineProperties(Rectangle.prototype, {
    * Gets the width of the rectangle in radians.
    * @memberof Rectangle.prototype
    * @type {Number}
+   * @readonly
    */
   width: {
     get: function () {
@@ -68,6 +69,7 @@ Object.defineProperties(Rectangle.prototype, {
    * Gets the height of the rectangle in radians.
    * @memberof Rectangle.prototype
    * @type {Number}
+   * @readonly
    */
   height: {
     get: function () {
@@ -370,13 +372,11 @@ Rectangle.clone = function (rectangle, result) {
  *
  * @param {Rectangle} [left] The first Rectangle.
  * @param {Rectangle} [right] The second Rectangle.
- * @param {Number} absoluteEpsilon The absolute epsilon tolerance to use for equality testing.
+ * @param {Number} [absoluteEpsilon=0] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
 Rectangle.equalsEpsilon = function (left, right, absoluteEpsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("absoluteEpsilon", absoluteEpsilon);
-  //>>includeEnd('debug');
+  absoluteEpsilon = defaultValue(absoluteEpsilon, 0);
 
   return (
     left === right ||
@@ -436,14 +436,10 @@ Rectangle.equals = function (left, right) {
  * <code>false</code> otherwise.
  *
  * @param {Rectangle} [other] The Rectangle to compare.
- * @param {Number} epsilon The epsilon to use for equality testing.
+ * @param {Number} [epsilon=0] The epsilon to use for equality testing.
  * @returns {Boolean} <code>true</code> if the Rectangles are within the provided epsilon, <code>false</code> otherwise.
  */
 Rectangle.prototype.equalsEpsilon = function (other, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("epsilon", epsilon);
-  //>>includeEnd('debug');
-
   return Rectangle.equalsEpsilon(this, other, epsilon);
 };
 

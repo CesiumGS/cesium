@@ -519,6 +519,7 @@ GeometryUpdater.prototype._onEntityPropertyChanged = function (
  * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
  *
  * @exception {DeveloperError} This instance does not represent dynamic geometry.
+ * @private
  */
 GeometryUpdater.prototype.createDynamicUpdater = function (
   primitives,

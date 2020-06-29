@@ -17,6 +17,7 @@ function HeadingPitchRange(heading, pitch, range) {
   /**
    * Heading is the rotation from the local north direction where a positive angle is increasing eastward.
    * @type {Number}
+   * @default 0.0
    */
   this.heading = defaultValue(heading, 0.0);
 
@@ -24,12 +25,14 @@ function HeadingPitchRange(heading, pitch, range) {
    * Pitch is the rotation from the local xy-plane. Positive pitch angles
    * are above the plane. Negative pitch angles are below the plane.
    * @type {Number}
+   * @default 0.0
    */
   this.pitch = defaultValue(pitch, 0.0);
 
   /**
    * Range is the distance from the center of the local frame.
    * @type {Number}
+   * @default 0.0
    */
   this.range = defaultValue(range, 0.0);
 }

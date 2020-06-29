@@ -1310,7 +1310,7 @@ function generateGeometryAttributes(
      * - encoded texture coordinate offsets
      ****************************************/
 
-    /** 3D **/
+    /* 3D */
     var segmentLength3D = Cartesian3.distance(startTop, endTop);
 
     var encodedStart = EncodedCartesian3.fromCartesian(
@@ -1348,7 +1348,7 @@ function generateGeometryAttributes(
     var texcoordNormalization3DX = segmentLength3D / length3D;
     var texcoordNormalization3DY = lengthSoFar3D / length3D;
 
-    /** 2D **/
+    /* 2D */
     var segmentLength2D = 0.0;
     var encodedStart2D;
     var forwardOffset2D;
