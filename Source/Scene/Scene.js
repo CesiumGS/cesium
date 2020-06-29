@@ -1555,7 +1555,6 @@ Object.defineProperties(Scene.prototype, {
       if (this._logDepthBuffer !== value) {
         this._logDepthBuffer = value;
         this._logDepthBufferDirty = true;
-        this._defaultView.updateFrustums = true;
       }
     },
   },

@@ -65,11 +65,20 @@ Object.defineProperties(Heap.prototype, {
       return this._maximumLength;
     },
     set: function (value) {
-      this._maximumLength = value;
-      if (this._length > value && value > 0) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
+      //>>includeEnd('debug');
+      var originalLength = this._length;
+      if (value < originalLength) {
+        var array = this._array;
+        // Remove trailing references
+        for (var i = value; i < originalLength; ++i) {
+          array[i] = undefined;
+        }
         this._length = value;
-        this._array.length = value;
+        array.length = value;
       }
+      this._maximumLength = value;
     },
   },
 
@@ -211,6 +220,7 @@ Heap.prototype.pop = function (index) {
   var root = array[index];
   swap(array, index, --this._length);
   this.heapify(index);
+  array[this._length] = undefined; // Remove trailing reference
   return root;
 };
 
