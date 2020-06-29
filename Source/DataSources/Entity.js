@@ -117,7 +117,6 @@ function Entity(options) {
   this._id = id;
   this._definitionChanged = new Event();
   this._name = options.name;
-
   this._show = defaultValue(options.show, true);
   this._parent = undefined;
   this._propertyNames = [

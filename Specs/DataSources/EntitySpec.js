@@ -179,19 +179,6 @@ describe("DataSources/Entity", function () {
     }
   });
 
-  it("merge does not overwrite availability", function () {
-    var entity = new Entity();
-
-    var entity2 = new Entity();
-    var interval2 = TimeInterval.fromIso8601({
-      iso8601: "2000-01-01/2001-01-01",
-    });
-    entity2.availability = interval2;
-
-    entity.merge(entity2);
-    expect(entity.availability).toBe(interval2);
-  });
-
   it("merge ignores reserved property names when called with a plain object.", function () {
     var entity = new Entity();
 
