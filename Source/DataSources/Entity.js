@@ -116,6 +116,7 @@ function Entity(options) {
   this._availability = undefined;
   this._id = id;
   this._definitionChanged = new Event();
+  this._name = options.name;
 
   this._show = defaultValue(options.show, true);
   this._parent = undefined;
@@ -594,8 +595,10 @@ Entity.prototype.merge = function (source) {
   for (var i = 0; i < propertyNamesLength; i++) {
     var name = sourcePropertyNames[i];
 
-    //Ignore parent when merging, this only happens at construction time.
-    if (name === "parent") {
+    //While source is required by the API to be an Entity, we internally call this method from the
+    //constructor with an options object to configure initial custom properties.
+    //So we need to ignore reserved-non-property.
+    if (name === "parent" || name === "name" || name === "availability") {
       continue;
     }
 
@@ -604,7 +607,7 @@ Entity.prototype.merge = function (source) {
 
     //Custom properties that are registered on the source entity must also
     //get registered on this entity.
-    if (!(name in this) && propertyNames.indexOf(name) === -1) {
+    if (!defined(targetProperty) && propertyNames.indexOf(name) === -1) {
       this.addProperty(name);
     }
 
