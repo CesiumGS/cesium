@@ -26,7 +26,7 @@ TileDiscardPolicy.prototype.isReady = DeveloperError.throwInstantiationError;
  * Given a tile image, decide whether to discard that image.
  * @function
  *
- * @param {Image} image An image to test.
+ * @param {HTMLImageElement} image An image to test.
  * @returns {Boolean} True if the image should be discarded; otherwise, false.
  */
 TileDiscardPolicy.prototype.shouldDiscardImage =

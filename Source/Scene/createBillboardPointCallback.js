@@ -1,12 +1,12 @@
 /**
- * Creates a {@link createBillboardPointCallback~CanvasFunction} that will create a canvas with a point.
+ * Creates a {@link createBillboardPointCallback.CanvasFunction} that will create a canvas with a point.
  *
  * @param {Number} centerAlpha The alpha of the center of the point. The value must be in the range [0.0, 1.0].
  * @param {String} cssColor The CSS color string.
  * @param {String} cssOutlineColor The CSS color of the point outline.
  * @param {Number} cssOutlineWidth The width of the outline in pixels.
  * @param {Number} pixelSize The size of the point in pixels.
- * @return {createBillboardPointCallback~CanvasFunction} The function that will return a canvas with the point drawn on it.
+ * @return {createBillboardPointCallback.CanvasFunction} The function that will return a canvas with the point drawn on it.
  *
  * @private
  */
@@ -64,7 +64,7 @@ function createBillboardPointCallback(
 
 /**
  * A function that returns a canvas containing an image of a point.
- * @callback createBillboardPointCallback~CanvasFunction
+ * @callback createBillboardPointCallback.CanvasFunction
  * @returns {HTMLCanvasElement} The result of the calculation.
  */
 export default createBillboardPointCallback;

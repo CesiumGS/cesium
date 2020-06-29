@@ -6,6 +6,20 @@ import GeographicTilingScheme from "../Core/GeographicTilingScheme.js";
 import when from "../ThirdParty/when.js";
 
 /**
+ * @typedef {Object} TileCoordinatesImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the TileCoordinatesImageryProvider constructor
+ *
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+ *                    parameter is specified, the WGS84 ellipsoid is used.
+ * @property {Color} [color=Color.YELLOW] The color to draw the tile box and label.
+ * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ */
+
+/**
  * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
  * a label inside it indicating the X, Y, Level coordinates of the tile.  This is mostly useful for
  * debugging terrain and imagery rendering problems.
@@ -13,14 +27,7 @@ import when from "../ThirdParty/when.js";
  * @alias TileCoordinatesImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
- *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
- *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
- * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @param {TileCoordinatesImageryProvider.ConstructorOptions} [options] Object describing initialization options
  */
 function TileCoordinatesImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -33,6 +40,92 @@ function TileCoordinatesImageryProvider(options) {
   this._tileWidth = defaultValue(options.tileWidth, 256);
   this._tileHeight = defaultValue(options.tileHeight, 256);
   this._readyPromise = when.resolve(true);
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 }
 
 Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
@@ -78,7 +171,7 @@ Object.defineProperties(TileCoordinatesImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
    * @memberof TileCoordinatesImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -235,7 +328,7 @@ TileCoordinatesImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

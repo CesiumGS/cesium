@@ -217,6 +217,7 @@ function buildNav(members) {
 
   var items = members.modules
     .concat(members.classes)
+    .concat(members.globals)
     .concat(members.namespaces)
     .sort(function (a, b) {
       return a.longname.toLowerCase().localeCompare(b.longname.toLowerCase());
@@ -436,6 +437,7 @@ exports.publish = function (taffyData, opts, tutorials) {
   var classes = taffy(members.classes);
   var modules = taffy(members.modules);
   var namespaces = taffy(members.namespaces);
+  var globals = taffy(members.globals);
 
   var typesJson = {};
 
@@ -448,6 +450,10 @@ exports.publish = function (taffyData, opts, tutorials) {
 
     if (!items.length) {
       items = helper.find(namespaces, { longname: longname });
+    }
+
+    if (!items.length) {
+      items = helper.find(globals, { longname: longname });
     }
 
     if (items.length) {

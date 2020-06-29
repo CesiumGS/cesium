@@ -34,6 +34,7 @@ var rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 var rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
 var rollupPluginUglify = require("rollup-plugin-uglify");
 var cleanCSS = require("gulp-clean-css");
+var typescript = require("typescript");
 
 var packageJson = require("./package.json");
 var version = packageJson.version;
@@ -194,6 +195,11 @@ gulp.task("build-watch", function () {
   return gulp.watch(watchedFiles, gulp.series("build"));
 });
 
+gulp.task("build-ts", function () {
+  createTypeScriptDefinitions();
+  return Promise.resolve();
+});
+
 gulp.task("buildApps", function () {
   return Promise.join(buildCesiumViewer(), buildSandcastle());
 });
@@ -266,13 +272,11 @@ gulp.task("clean", function (done) {
 
 function cloc() {
   var cmdLine;
-  var clocPath = path.join("node_modules", "cloc", "lib", "cloc");
 
   //Run cloc on primary Source files only
   var source = new Promise(function (resolve, reject) {
     cmdLine =
-      "perl " +
-      clocPath +
+      "npx cloc" +
       " --quiet --progress-rate=0" +
       " Source/ --exclude-dir=Assets,ThirdParty,Workers --not-match-f=copyrightHeader.js";
 
@@ -291,8 +295,7 @@ function cloc() {
   return source.then(function () {
     return new Promise(function (resolve, reject) {
       cmdLine =
-        "perl " +
-        clocPath +
+        "npx cloc" +
         " --quiet --progress-rate=0" +
         " Specs/ --exclude-dir=Data";
       child_process.exec(cmdLine, function (error, stdout, stderr) {
@@ -335,30 +338,16 @@ gulp.task("combineRelease", gulp.series("build", combineRelease));
 
 //Builds the documentation
 function generateDocumentation() {
-  var envPathSeperator = os.platform() === "win32" ? ";" : ":";
-
-  return new Promise(function (resolve, reject) {
-    child_process.exec(
-      "jsdoc --configure Tools/jsdoc/conf.json",
-      {
-        env: {
-          PATH: process.env.PATH + envPathSeperator + "node_modules/.bin",
-          CESIUM_VERSION: version,
-        },
-      },
-      function (error, stdout, stderr) {
-        if (error) {
-          console.log(stderr);
-          return reject(error);
-        }
-        console.log(stdout);
-        var stream = gulp
-          .src("Documentation/Images/**")
-          .pipe(gulp.dest("Build/Documentation/Images"));
-        return streamToPromise(stream).then(resolve);
-      }
-    );
+  child_process.execSync("npx jsdoc --configure Tools/jsdoc/conf.json", {
+    stdio: "inherit",
+    env: Object.assign({}, process.env, { CESIUM_VERSION: version }),
   });
+
+  var stream = gulp
+    .src("Documentation/Images/**")
+    .pipe(gulp.dest("Build/Documentation/Images"));
+
+  return streamToPromise(stream);
 }
 gulp.task("generateDocumentation", generateDocumentation);
 
@@ -371,7 +360,13 @@ gulp.task("generateDocumentation-watch", function () {
 
 gulp.task(
   "release",
-  gulp.series("build", combine, minifyRelease, generateDocumentation)
+  gulp.series(
+    "build",
+    "build-ts",
+    combine,
+    minifyRelease,
+    generateDocumentation
+  )
 );
 
 gulp.task(
@@ -1315,7 +1310,7 @@ function combineJavaScript(options) {
 }
 
 function glslToJavaScript(minify, minifyStateFilePath) {
-  fs.writeFileSync(minifyStateFilePath, minify);
+  fs.writeFileSync(minifyStateFilePath, minify.toString());
   var minifyStateFileLastModified = fs.existsSync(minifyStateFilePath)
     ? fs.statSync(minifyStateFilePath).mtime.getTime()
     : 0;
@@ -1465,6 +1460,158 @@ function createCesiumJs() {
   });
 
   fs.writeFileSync("Source/Cesium.js", contents);
+}
+
+function createTypeScriptDefinitions() {
+  // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
+  child_process.execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
+    stdio: "inherit",
+  });
+
+  var source = fs.readFileSync("Source/Cesium.d.ts").toString();
+
+  // All of our enum assignments that alias to WebGLConstants, such as PixelDatatype.js
+  // end up as enum strings instead of actually mapping values to WebGLConstants.
+  // We fix this with a simple regex replace later on, but it means the
+  // WebGLConstants constants enum needs to be defined in the file before it can
+  // be used.  This block of code reads in the TS file, finds the WebGLConstants
+  // declaration, and then writes the file back out (in memory to source) with
+  // WebGLConstants being the first module.
+  const node = typescript.createSourceFile(
+    "Source/Cesium.d.ts",
+    source,
+    typescript.ScriptTarget.Latest
+  );
+  let firstNode;
+  node.forEachChild((child) => {
+    if (
+      typescript.SyntaxKind[child.kind] === "EnumDeclaration" &&
+      child.name.escapedText === "WebGLConstants"
+    ) {
+      firstNode = child;
+    }
+  });
+
+  const printer = typescript.createPrinter({
+    removeComments: false,
+    newLine: typescript.NewLineKind.LineFeed,
+  });
+
+  let newSource = "";
+  newSource += printer.printNode(
+    typescript.EmitHint.Unspecified,
+    firstNode,
+    node
+  );
+  node.forEachChild((child) => {
+    if (
+      typescript.SyntaxKind[child.kind] !== "EnumDeclaration" ||
+      child.name.escapedText !== "WebGLConstants"
+    ) {
+      newSource += printer.printNode(
+        typescript.EmitHint.Unspecified,
+        child,
+        node
+      );
+      newSource += "\n\n";
+    }
+  });
+  source = newSource;
+
+  // The next step is to find the list of Cesium modules exported by the Cesium API
+  // So that we can map these modules with a link back to their original source file.
+
+  var regex = /^declare (function|class|namespace|enum) (.+)/gm;
+  var matches;
+  var publicModules = new Set();
+  //eslint-disable-next-line no-cond-assign
+  while ((matches = regex.exec(source))) {
+    const moduleName = matches[2].match(/([^\s|\(]+)/);
+    publicModules.add(moduleName[1]);
+  }
+
+  // Math shows up as "Math" because of it's aliasing from CesiumMath and namespace collision with actual Math
+  // It fails the above regex so just add it directly here.
+  publicModules.add("Math");
+
+  // Fix up the output to match what we need
+  // declare => export since we are wrapping everything in a namespace
+  // CesiumMath => Math (because no CesiumJS build step would be complete without special logic for the Math class)
+  // Fix up the WebGLConstants aliasing we mentioned above by simply unquoting the strings.
+  source = source
+    .replace(/^declare /gm, "export ")
+    .replace(/module "Math"/gm, "namespace Math")
+    .replace(/CesiumMath/gm, "Math")
+    .replace(/Number\[]/gm, "number[]") // Workaround https://github.com/englercj/tsd-jsdoc/issues/117
+    .replace(/String\[]/gm, "string[]")
+    .replace(/Boolean\[]/gm, "boolean[]")
+    .replace(/Object\[]/gm, "object[]")
+    .replace(/<Number>/gm, "<number>")
+    .replace(/<String>/gm, "<string>")
+    .replace(/<Boolean>/gm, "<boolean>")
+    .replace(/<Object>/gm, "<object>")
+    .replace(
+      /= "WebGLConstants\.(.+)"/gm,
+      (match, p1) => `= WebGLConstants.${p1}`
+    );
+
+  // Wrap the source to actually be inside of a declared cesium module
+  // and add any workaround and private utility types.
+  source = `declare module "cesium" {
+
+/**
+ * Private interfaces to support PropertyBag being a dictionary-like object.
+ */
+interface DictionaryLike {
+    [index: string]: any;
+}
+
+${source}
+}
+
+`;
+
+  // Map individual modules back to their source file so that TS still works
+  // when importing individual files instead of the entire cesium module.
+  globby.sync(sourceFiles).forEach(function (file) {
+    file = path.relative("Source", file);
+
+    var moduleId = file;
+    moduleId = filePathToModuleId(moduleId);
+
+    var assignmentName = path.basename(file, path.extname(file));
+    if (publicModules.has(assignmentName)) {
+      publicModules.delete(assignmentName);
+      source += `declare module "cesium/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
+    }
+  });
+
+  // Write the final source file back out
+  fs.writeFileSync("Source/Cesium.d.ts", source);
+
+  // Use tsc to compile it and make sure it is valid
+  child_process.execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+    stdio: "inherit",
+  });
+
+  // Also compile our smokescreen to make sure interfaces work as expected.
+  child_process.execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
+    stdio: "inherit",
+  });
+
+  // Below is a sanity check to make sure we didn't leave anything out that
+  // we don't already know about
+
+  // Intentionally ignored nested items
+  publicModules.delete("KmlFeatureData");
+  publicModules.delete("MaterialAppearance");
+
+  if (publicModules.size !== 0) {
+    throw new Error(
+      "Unexpected unexposed modules: " +
+        Array.from(publicModules.values()).join(", ")
+    );
+  }
 }
 
 function createSpecList() {

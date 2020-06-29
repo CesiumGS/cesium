@@ -387,9 +387,9 @@ Object.defineProperties(Globe.prototype, {
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *
-   * @member Globe.prototype
+   * @memberof Globe.prototype
    * @type {Rectangle}
-   * @default Rectangle.MAX_VALUE
+   * @default {@link Rectangle.MAX_VALUE}
    */
   cartographicLimitRectangle: {
     get: function () {
@@ -612,12 +612,18 @@ var scratchSphereIntersectionResult = {
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
+ * @param {Boolean} [cullBackFaces=true] Set to true to not pick back faces.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
  *
  * @private
  */
-Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
+Globe.prototype.pickWorldCoordinates = function (
+  ray,
+  scene,
+  cullBackFaces,
+  result
+) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
     throw new DeveloperError("ray is required");
@@ -626,6 +632,8 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
     throw new DeveloperError("scene is required");
   }
   //>>includeEnd('debug');
+
+  cullBackFaces = defaultValue(cullBackFaces, true);
 
   var mode = scene.mode;
   var projection = scene.mapProjection;
@@ -691,7 +699,7 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
       ray,
       scene.mode,
       scene.mapProjection,
-      true,
+      cullBackFaces,
       result
     );
     if (defined(intersection)) {
@@ -717,7 +725,7 @@ var cartoScratch = new Cartographic();
  * var intersection = globe.pick(ray, scene);
  */
 Globe.prototype.pick = function (ray, scene, result) {
-  result = this.pickWorldCoordinates(ray, scene, result);
+  result = this.pickWorldCoordinates(ray, scene, true, result);
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     var carto = scene.mapProjection.unproject(result, cartoScratch);

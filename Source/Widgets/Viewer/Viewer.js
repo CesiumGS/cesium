@@ -210,6 +210,58 @@ function enableVRUI(viewer, enabled) {
 }
 
 /**
+ * @typedef {Object} Viewer.ConstructorOptions
+ *
+ * Initialization options for the Viewer constructor
+ *
+ * @property {Boolean} [animation=true] If set to false, the Animation widget will not be created.
+ * @property {Boolean} [baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+ * @property {Boolean} [fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+ * @property {Boolean} [vrButton=false] If set to true, the VRButton widget will be created.
+ * @property {Boolean|GeocoderService[]} [geocoder=true] If set to false, the Geocoder widget will not be created.
+ * @property {Boolean} [homeButton=true] If set to false, the HomeButton widget will not be created.
+ * @property {Boolean} [infoBox=true] If set to false, the InfoBox widget will not be created.
+ * @property {Boolean} [sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
+ * @property {Boolean} [selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
+ * @property {Boolean} [timeline=true] If set to false, the Timeline widget will not be created.
+ * @property {Boolean} [navigationHelpButton=true] If set to false, the navigation help button will not be created.
+ * @property {Boolean} [navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+ * @property {Boolean} [scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+ * @property {Boolean} [shouldAnimate=false] <code>true</code> if the clock should attempt to advance simulation time by default, <code>false</code> otherwise.  This option takes precedence over setting {@link Viewer#clockViewModel}.
+ * @property {ClockViewModel} [clockViewModel=new ClockViewModel(clock)] The clock view model to use to control current time.
+ * @property {ProviderViewModel} [selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
+ * @property {ProviderViewModel[]} [imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
+ * @property {ProviderViewModel} [selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if `baseLayerPicker` is set to true.
+ * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
+ * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
+ * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+ * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
+ * @property {Boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+ * @property {Number} [targetFrameRate] The target frame rate when using the default render loop.
+ * @property {Boolean} [showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+ * @property {Boolean} [useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
+ * @property {Boolean} [automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
+ * @property {Object} [contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+ * @property {SceneMode} [sceneMode=SceneMode.SCENE3D] The initial scene mode.
+ * @property {MapProjection} [mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
+ * @property {Globe} [globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * @property {Boolean} [orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
+ * @property {Element|String} [creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+ * @property {Element|String} [creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
+ * @property {DataSourceCollection} [dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
+ *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+ * @property {Number} [terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+ * @property {Boolean} [shadows=false] Determines if shadows are cast by light sources.
+ * @property {ShadowMode} [terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
+ * @property {MapMode2D} [mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+ * @property {Boolean} [projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+ * @property {Boolean} [requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @property {Number} [maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ */
+
+/**
  * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
  * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
  *
@@ -217,52 +269,7 @@ function enableVRUI(viewer, enabled) {
  * @constructor
  *
  * @param {Element|String} container The DOM element or ID that will contain the widget.
- * @param {Object} [options] Object with the following properties:
- * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
- * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
- * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
- * @param {Boolean} [options.vrButton=false] If set to true, the VRButton widget will be created.
- * @param {Boolean|GeocoderService[]} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
- * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
- * @param {Boolean} [options.infoBox=true] If set to false, the InfoBox widget will not be created.
- * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
- * @param {Boolean} [options.selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
- * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
- * @param {Boolean} [options.navigationHelpButton=true] If set to false, the navigation help button will not be created.
- * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
- * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
- * @param {Boolean} [options.shouldAnimate=false] <code>true</code> if the clock should attempt to advance simulation time by default, <code>false</code> otherwise.  This option takes precedence over setting {@link Viewer#clockViewModel}.
- * @param {ClockViewModel} [options.clockViewModel=new ClockViewModel(options.clock)] The clock view model to use to control current time.
- * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
- * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
- * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
- * @param {ProviderViewModel[]} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
- * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
- * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
- * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
- * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
- * @param {Element|String} [options.fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
- * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
- * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
- * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
- * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
- * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
- * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
- * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
- * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
- * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
- * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
- * @param {Element|String} [options.creditViewport] The DOM element or ID that will contain the credit pop up created by the {@link CreditDisplay}.  If not specified, it will appear over the widget itself.
- * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
- *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
- * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
- * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
- * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
- * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
- * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
- * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
- * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+ * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
@@ -1065,7 +1072,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets the canvas.
    * @memberof Viewer.prototype
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
    * @readonly
    */
   canvas: {
@@ -1321,7 +1328,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets or sets the Entity instance currently being tracked by the camera.
    * @memberof Viewer.prototype
-   * @type {Entity}
+   * @type {Entity | undefined}
    */
   trackedEntity: {
     get: function () {
@@ -1370,7 +1377,7 @@ Object.defineProperties(Viewer.prototype, {
   /**
    * Gets or sets the object instance for which to display a selection indicator.
    * @memberof Viewer.prototype
-   * @type {Entity}
+   * @type {Entity | undefined}
    */
   selectedEntity: {
     get: function () {
@@ -1439,7 +1446,7 @@ Object.defineProperties(Viewer.prototype, {
  * A mixin may add additional properties, functions, or other behavior
  * to the provided viewer instance.
  *
- * @param {Viewer~ViewerMixin} mixin The Viewer mixin to add to this instance.
+ * @param {Viewer.ViewerMixin} mixin The Viewer mixin to add to this instance.
  * @param {Object} [options] The options object to be passed to the mixin function.
  *
  * @see viewerDragDropMixin
@@ -2311,7 +2318,7 @@ function updateTrackedEntity(viewer) {
 
 /**
  * A function that augments a Viewer instance with additional functionality.
- * @callback Viewer~ViewerMixin
+ * @callback Viewer.ViewerMixin
  * @param {Viewer} viewer The viewer instance.
  * @param {Object} options Options object to be passed to the mixin function.
  *

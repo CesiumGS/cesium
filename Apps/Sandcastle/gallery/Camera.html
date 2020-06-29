@@ -337,6 +337,7 @@
           {
             text: "Fly in a city",
             onselect: function () {
+              reset();
               flyInACity();
               Sandcastle.highlight(flyInACity);
             },
@@ -344,6 +345,7 @@
           {
             text: "Fly to San Diego",
             onselect: function () {
+              reset();
               flyToSanDiego();
               Sandcastle.highlight(flyToSanDiego);
             },
@@ -351,6 +353,7 @@
           {
             text: "Fly to Location with heading, pitch and roll",
             onselect: function () {
+              reset();
               flyToHeadingPitchRoll();
               Sandcastle.highlight(flyToHeadingPitchRoll);
             },
@@ -358,6 +361,7 @@
           {
             text: "Fly to My Location",
             onselect: function () {
+              reset();
               flyToLocation();
               Sandcastle.highlight(flyToLocation);
             },
@@ -365,6 +369,7 @@
           {
             text: "Fly to Rectangle",
             onselect: function () {
+              reset();
               flyToRectangle();
               Sandcastle.highlight(flyToRectangle);
             },
@@ -372,6 +377,7 @@
           {
             text: "View a Rectangle",
             onselect: function () {
+              reset();
               viewRectangle();
               Sandcastle.highlight(viewRectangle);
             },
@@ -379,6 +385,7 @@
           {
             text: "Set camera reference frame",
             onselect: function () {
+              reset();
               setReferenceFrame();
               Sandcastle.highlight(setReferenceFrame);
             },
@@ -386,6 +393,7 @@
           {
             text: "Set camera with heading, pitch, and roll",
             onselect: function () {
+              reset();
               setHeadingPitchRoll();
               Sandcastle.highlight(setHeadingPitchRoll);
             },
@@ -393,6 +401,7 @@
           {
             text: "View in ICRF",
             onselect: function () {
+              reset();
               viewInICRF();
               Sandcastle.highlight(viewInICRF);
             },
@@ -400,6 +409,7 @@
           {
             text: "Move events",
             onselect: function () {
+              reset();
               cameraEvents();
               Sandcastle.highlight(cameraEvents);
             },
@@ -407,6 +417,7 @@
           {
             text: "Camera changed event",
             onselect: function () {
+              reset();
               cameraChanges();
               Sandcastle.highlight(cameraChanges);
             },
@@ -414,6 +425,7 @@
           {
             text: "Fly from Los Angeles to Tokyo via Europe",
             onselect: function () {
+              reset();
               flyOverLongitude();
               Sandcastle.highlight(flyOverLongitude);
             },
@@ -421,13 +433,22 @@
           {
             text: "Look down during exaggerated flight",
             onselect: function () {
+              reset();
               flyOverLongitudeWithPitch();
               Sandcastle.highlight(flyOverLongitudeWithPitch);
             },
           },
         ]);
 
-        Sandcastle.reset = function () {
+        Sandcastle.addToolbarButton("Complete Flight", function () {
+          scene.camera.completeFlight();
+        });
+
+        Sandcastle.addToolbarButton("Cancel Flight", function () {
+          scene.camera.cancelFlight();
+        });
+
+        function reset() {
           scene.completeMorph();
           viewer.entities.removeAll();
           scene.primitives.remove(referenceFramePrimitive);
@@ -455,10 +476,10 @@
           clock.multiplier = 1.0;
           scene.postUpdate.removeEventListener(icrf);
           scene.globe.enableLighting = false;
-        };
+        }
 
         scene.morphComplete.addEventListener(function () {
-          Sandcastle.reset();
+          reset();
         });
         //Sandcastle_End
         Sandcastle.finishedLoading();

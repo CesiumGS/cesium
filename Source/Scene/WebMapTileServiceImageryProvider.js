@@ -18,33 +18,40 @@ var defaultParameters = Object.freeze({
 });
 
 /**
+ * @typedef {Object} WebMapTileServiceImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the WebMapTileServiceImageryProvider constructor
+ *
+ * @property {Resource|String} url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
+ * @property {String} [format='image/jpeg'] The MIME type for images to retrieve from the server.
+ * @property {String} layer The layer name for WMTS requests.
+ * @property {String} style The style name for WMTS requests.
+ * @property {String} tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
+ * @property {Array} [tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
+ * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
+ * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
+ * @property {Object} [dimensions] A object containing static dimensions and their values.
+ * @property {Number} [tileWidth=256] The tile width in pixels.
+ * @property {Number} [tileHeight=256] The tile height in pixels.
+ * @property {TilingScheme} [tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+ *                          an array, each element in the array is a subdomain.
+ */
+
+/**
  * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
  * This provider supports HTTP KVP-encoded and RESTful GetTile requests, but does not yet support the SOAP encoding.
  *
  * @alias WebMapTileServiceImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
- * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
- * @param {String} options.layer The layer name for WMTS requests.
- * @param {String} options.style The style name for WMTS requests.
- * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
- * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
- * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
- * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
- * @param {Object} [options.dimensions] A object containing static dimensions and their values.
- * @param {Number} [options.tileWidth=256] The tile width in pixels.
- * @param {Number} [options.tileHeight=256] The tile height in pixels.
- * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
- *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
- *                          an array, each element in the array is a subdomain.
+ * @param {WebMapTileServiceImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
  *
@@ -129,6 +136,92 @@ function WebMapTileServiceImageryProvider(options) {
     );
   }
   //>>includeEnd('debug');
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   var resource = Resource.createIfNeeded(options.url);
 
@@ -339,7 +432,7 @@ Object.defineProperties(WebMapTileServiceImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
    * @memberof WebMapTileServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -552,7 +645,7 @@ WebMapTileServiceImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

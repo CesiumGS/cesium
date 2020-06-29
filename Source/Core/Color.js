@@ -633,6 +633,34 @@ Color.prototype.toCssColorString = function () {
 };
 
 /**
+ * Creates a string containing CSS hex string color value for this color.
+ *
+ * @returns {String} The CSS hex string equivalent of this color.
+ */
+Color.prototype.toCssHexString = function () {
+  var r = Color.floatToByte(this.red).toString(16);
+  if (r.length < 2) {
+    r = "0" + r;
+  }
+  var g = Color.floatToByte(this.green).toString(16);
+  if (g.length < 2) {
+    g = "0" + g;
+  }
+  var b = Color.floatToByte(this.blue).toString(16);
+  if (b.length < 2) {
+    b = "0" + b;
+  }
+  if (this.alpha < 1) {
+    var hexAlpha = Color.floatToByte(this.alpha).toString(16);
+    if (hexAlpha.length < 2) {
+      hexAlpha = "0" + hexAlpha;
+    }
+    return "#" + r + g + b + hexAlpha;
+  }
+  return "#" + r + g + b;
+};
+
+/**
  * Converts this color to an array of red, green, blue, and alpha values
  * that are in the range of 0 to 255.
  *
