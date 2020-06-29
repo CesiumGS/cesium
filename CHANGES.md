@@ -4,7 +4,7 @@
 
 ##### Breaking Changes :mega:
 
-- Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only effect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions. [#8955](https://github.com/CesiumGS/cesium/pull/8955/)
+- Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only affect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions. [#8955](https://github.com/CesiumGS/cesium/pull/8955/)
 
 ##### Additions :tada:
 
