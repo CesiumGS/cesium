@@ -26,7 +26,7 @@
 - Fixed a bug where switching to orthographic camera on the first frame caused the zoom level to be incorrect. [#8853](https://github.com/CesiumGS/cesium/pull/8853)
 - Fixed `scene.pickFromRay` intersection inaccuracies. [#8439](https://github.com/CesiumGS/cesium/issues/8439)
 - Fixed a bug where a null or undefined name property passed to the `Entity` constructor would throw an exception.[#8832](https://github.com/CesiumGS/cesium/pull/8832)
-- Fixed JSDoc and TypeScript type definitions for `ScreenSpaceEventHandler.getInputAction` which listen incorrect return type.[#9002](https://github.com/CesiumGS/cesium/pull/9002)
+- Fixed JSDoc and TypeScript type definitions for `ScreenSpaceEventHandler.getInputAction` which listed incorrect return type. [#9002](https://github.com/CesiumGS/cesium/pull/9002)
 
 ### 1.70.1 - 2020-06-10
 
