@@ -5,6 +5,13 @@ import ShaderSource from "../Renderer/ShaderSource.js";
 import ShaderProgram from "../Renderer/ShaderProgram.js";
 import defined from "../Core/defined.js";
 
+/**
+ * @private
+ */
+function DebugInspector() {
+  this._cachedShowFrustumsShaders = {};
+}
+
 function getAttributeLocations(shaderProgram) {
   var attributeLocations = {};
   var attributes = shaderProgram.vertexAttributes;
@@ -17,7 +24,7 @@ function getAttributeLocations(shaderProgram) {
   return attributeLocations;
 }
 
-function createDebugFragmentShaderProgram(scene, shaderProgram) {
+function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
   var context = scene.context;
   var sp = shaderProgram;
   var fs = sp.fragmentShaderSource.clone();
@@ -69,23 +76,22 @@ function createDebugFragmentShaderProgram(scene, shaderProgram) {
   });
 }
 
-function DebugInspector() {
-  this._cachedDebugShaders = {};
-}
-
 DebugInspector.prototype.createShowFrustumsCommand = function (scene, command) {
   // create debug command
   var debugCommand = DrawCommand.shallowClone(command);
   var shaderProgramId = command.shaderProgram.id;
-  if (!defined(this._cachedDebugShaders[shaderProgramId])) {
-    debugCommand.shaderProgram = createDebugFragmentShaderProgram(
+  if (!defined(this._cachedShowFrustumsShaders[shaderProgramId])) {
+    debugCommand.shaderProgram = createDebugShowFrustumsShaderProgram(
       scene,
       command.shaderProgram
     );
 
-    this._cachedDebugShaders[shaderProgramId] = debugCommand.shaderProgram;
+    this._cachedShowFrustumsShaders[shaderProgramId] =
+      debugCommand.shaderProgram;
   } else {
-    debugCommand.shaderProgram = this._cachedDebugShaders[shaderProgramId];
+    debugCommand.shaderProgram = this._cachedShowFrustumsShaders[
+      shaderProgramId
+    ];
   }
 
   // setup uniform for the shader
