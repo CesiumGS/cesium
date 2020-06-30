@@ -28,6 +28,7 @@
 - Fixed a bug where a null or undefined name property passed to the `Entity` constructor would throw an exception.[#8832](https://github.com/CesiumGS/cesium/pull/8832)
 - Fixed JSDoc and TypeScript type definitions for `ScreenSpaceEventHandler.getInputAction` which listed incorrect return type. [#9002](https://github.com/CesiumGS/cesium/pull/9002)
 - Improved the style of the error panel. [#8739](https://github.com/CesiumGS/cesium/issues/8739)
+- Fixed animation widget SVG icons not appearing in iOS 13.5.1. [#8993](https://github.com/CesiumGS/cesium/pull/8993)
 
 ### 1.70.1 - 2020-06-10
 
