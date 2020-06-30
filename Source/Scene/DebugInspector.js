@@ -1,0 +1,135 @@
+import clone from "../Core/clone.js";
+import Color from "../Core/Color.js";
+import DrawCommand from "../Renderer/DrawCommand.js";
+import ShaderSource from "../Renderer/ShaderSource.js";
+import ShaderProgram from "../Renderer/ShaderProgram.js";
+import defined from "../Core/defined.js";
+
+function getAttributeLocations(shaderProgram) {
+  var attributeLocations = {};
+  var attributes = shaderProgram.vertexAttributes;
+  for (var a in attributes) {
+    if (attributes.hasOwnProperty(a)) {
+      attributeLocations[a] = attributes[a].index;
+    }
+  }
+
+  return attributeLocations;
+}
+
+function createDebugFragmentShaderProgram(scene, shaderProgram) {
+  var context = scene.context;
+  var sp = shaderProgram;
+  var fs = sp.fragmentShaderSource.clone();
+
+  var targets = [];
+  fs.sources = fs.sources.map(function (source) {
+    source = ShaderSource.replaceMain(source, "czm_Debug_main");
+    var re = /gl_FragData\[(\d+)\]/g;
+    var match;
+    while ((match = re.exec(source)) !== null) {
+      if (targets.indexOf(match[1]) === -1) {
+        targets.push(match[1]);
+      }
+    }
+    return source;
+  });
+  var length = targets.length;
+
+  var newMain = "";
+  if (scene.debugShowCommands) {
+    newMain += "uniform vec3 debugShowCommandsColor;\n";
+  }
+  if (scene.debugShowFrustums) {
+    newMain += "uniform vec3 debugShowFrustumsColor;\n";
+  }
+
+  newMain += "void main() \n" + "{ \n" + "    czm_Debug_main(); \n";
+
+  var i;
+  if (scene.debugShowCommands) {
+    if (length > 0) {
+      for (i = 0; i < length; ++i) {
+        newMain +=
+          "    gl_FragData[" +
+          targets[i] +
+          "].rgb *= debugShowCommandsColor;\n";
+      }
+    } else {
+      newMain += "    gl_FragColor.rgb *= debugShowCommandsColor;\n";
+    }
+  }
+
+  if (scene.debugShowFrustums) {
+    if (length > 0) {
+      for (i = 0; i < length; ++i) {
+        newMain +=
+          "    gl_FragData[" +
+          targets[i] +
+          "].rgb *= debugShowFrustumsColor;\n";
+      }
+    } else {
+      newMain += "    gl_FragColor.rgb *= debugShowFrustumsColor;\n";
+    }
+  }
+
+  newMain += "}";
+
+  fs.sources.push(newMain);
+
+  var attributeLocations = getAttributeLocations(sp);
+
+  return ShaderProgram.fromCache({
+    context: context,
+    vertexShaderSource: sp.vertexShaderSource,
+    fragmentShaderSource: fs,
+    attributeLocations: attributeLocations,
+  });
+}
+
+function DebugInspector() {
+  this._cachedDebugShaders = {};
+}
+
+DebugInspector.prototype.createShowFrustumsCommand = function (scene, command) {
+  // create debug command
+  var debugCommand = DrawCommand.shallowClone(command);
+  var shaderProgramId = command.shaderProgram.id;
+  if (!defined(this._cachedDebugShaders[shaderProgramId])) {
+    debugCommand.shaderProgram = createDebugFragmentShaderProgram(
+      scene,
+      command.shaderProgram
+    );
+
+    this._cachedDebugShaders[shaderProgramId] = debugCommand.shaderProgram;
+  } else {
+    debugCommand.shaderProgram = this._cachedDebugShaders[shaderProgramId];
+  }
+
+  // setup uniform for the shader
+  debugCommand.uniformMap = clone(command.uniformMap);
+  if (scene.debugShowCommands) {
+    if (!defined(command._debugColor)) {
+      command._debugColor = Color.fromRandom();
+    }
+
+    debugCommand.uniformMap.debugShowCommandsColor = function () {
+      return command._debugColor;
+    };
+  }
+
+  if (scene.debugShowFrustums) {
+    // Support up to three frustums.  If a command overlaps all
+    // three, it's code is not changed.
+    var r = command.debugOverlappingFrustums & (1 << 0);
+    var g = command.debugOverlappingFrustums & (1 << 1);
+    var b = command.debugOverlappingFrustums & (1 << 2);
+
+    debugCommand.uniformMap.debugShowFrustumsColor = function () {
+      return new Color(r, g, b);
+    };
+  }
+
+  return debugCommand;
+};
+export default DebugInspector;
