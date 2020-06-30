@@ -21,14 +21,13 @@
 - Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)
 - Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
 - Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/8949)
-- Fixed several bugs when rendering CesiumJS in a WebG 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
 - Fixed several bugs when rendering CesiumJS in a WebGL 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
 - Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
 - Fixed a bug where switching to orthographic camera on the first frame caused the zoom level to be incorrect. [#8853](https://github.com/CesiumGS/cesium/pull/8853)
 - Fixed `scene.pickFromRay` intersection inaccuracies. [#8439](https://github.com/CesiumGS/cesium/issues/8439)
 - Fixed a bug where a null or undefined name property passed to the `Entity` constructor would throw an exception.[#8832](https://github.com/CesiumGS/cesium/pull/8832)
 - Fixed JSDoc and TypeScript type definitions for `ScreenSpaceEventHandler.getInputAction` which listed incorrect return type. [#9002](https://github.com/CesiumGS/cesium/pull/9002)
-- Improved the style of the error panel so that it looks like a proper error message [#8739](https://github.com/CesiumGS/cesium/issues/8739)
+- Improved the style of the error panel. [#8739](https://github.com/CesiumGS/cesium/issues/8739)
 
 ### 1.70.1 - 2020-06-10
 
