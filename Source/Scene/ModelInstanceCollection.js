@@ -1057,6 +1057,7 @@ ModelInstanceCollection.prototype.update = function (frameState) {
   model.luminanceAtZenith = this.luminanceAtZenith;
   model.sphericalHarmonicCoefficients = this.sphericalHarmonicCoefficients;
   model.specularEnvironmentMaps = this.specularEnvironmentMaps;
+  model.shadows = this.shadows;
 
   model.update(frameState);
 
