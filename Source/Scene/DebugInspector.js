@@ -95,7 +95,12 @@ DebugInspector.prototype.createShowFrustumsCommand = function (scene, command) {
   }
 
   // setup uniform for the shader
-  debugCommand.uniformMap = clone(command.uniformMap);
+  if (!defined(command.uniformMap) || typeof command.uniformMap !== "object") {
+    debugCommand.uniformMap = {};
+  } else {
+    debugCommand.uniformMap = clone(command.uniformMap);
+  }
+
   if (scene.debugShowCommands) {
     if (!defined(command._debugColor)) {
       command._debugColor = Color.fromRandom();
