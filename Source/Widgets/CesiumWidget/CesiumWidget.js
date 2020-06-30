@@ -704,6 +704,7 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
         errorMessageDetails.appendChild(document.createTextNode(errorDetails));
         errorMessageDetails.className =
           "cesium-widget-errorPanel-message-details";
+        content.className = "cesium-widget-errorPanel-content expanded";
         errorMessageDetails.onclick = undefined;
       };
 

@@ -56,6 +56,10 @@
   color: #510c00;
 }
 
+.cesium-widget-errorPanel-content.expanded {
+  max-width: 75%;
+}
+
 .cesium-widget-errorPanel-header {
   font-size: 18px;
   font-family: "Open Sans", Verdana, Geneva, sans-serif;
