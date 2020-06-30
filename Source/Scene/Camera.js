@@ -1112,10 +1112,57 @@ Camera.prototype._setTransform = function (transform) {
   updateMembers(this);
 };
 
-var scratchAdjustOrtghographicFrustumMousePosition = new Cartesian2();
-var pickGlobeScratchRay = new Ray();
+var scratchAdjustOrthographicFrustumMousePosition = new Cartesian2();
+var scratchPickRay = new Ray();
 var scratchRayIntersection = new Cartesian3();
 var scratchDepthIntersection = new Cartesian3();
+
+function calculateOrthographicFrustumWidth(camera) {
+  // Camera is fixed to an object, so keep frustum width constant.
+  if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
+    return Cartesian3.magnitude(camera.position);
+  }
+
+  var scene = camera._scene;
+  var globe = scene.globe;
+
+  var mousePosition = scratchAdjustOrthographicFrustumMousePosition;
+  mousePosition.x = scene.drawingBufferWidth / 2.0;
+  mousePosition.y = scene.drawingBufferHeight / 2.0;
+
+  var rayIntersection;
+  if (defined(globe)) {
+    var ray = camera.getPickRay(mousePosition, scratchPickRay);
+    rayIntersection = globe.pickWorldCoordinates(
+      ray,
+      scene,
+      true,
+      scratchRayIntersection
+    );
+  }
+
+  var depthIntersection;
+  if (scene.pickPositionSupported) {
+    depthIntersection = scene.pickPositionWorldCoordinates(
+      mousePosition,
+      scratchDepthIntersection
+    );
+  }
+
+  var distance;
+  if (defined(rayIntersection) || defined(depthIntersection)) {
+    var depthDistance = defined(depthIntersection)
+      ? Cartesian3.distance(depthIntersection, camera.positionWC)
+      : Number.POSITIVE_INFINITY;
+    var rayDistance = defined(rayIntersection)
+      ? Cartesian3.distance(rayIntersection, camera.positionWC)
+      : Number.POSITIVE_INFINITY;
+    distance = Math.min(depthDistance, rayDistance);
+  } else {
+    distance = Math.max(camera.positionCartographic.height, 0.0);
+  }
+  return distance;
+}
 
 Camera.prototype._adjustOrthographicFrustum = function (zooming) {
   if (!(this.frustum instanceof OrthographicFrustum)) {
@@ -1126,64 +1173,7 @@ Camera.prototype._adjustOrthographicFrustum = function (zooming) {
     return;
   }
 
-  if (!Matrix4.equals(Matrix4.IDENTITY, this.transform)) {
-    this.frustum.width = Cartesian3.magnitude(this.position);
-    return;
-  }
-
-  var scene = this._scene;
-  var globe = scene.globe;
-  var rayIntersection;
-  var depthIntersection;
-
-  if (defined(globe)) {
-    var mousePosition = scratchAdjustOrtghographicFrustumMousePosition;
-    mousePosition.x = scene.drawingBufferWidth / 2.0;
-    mousePosition.y = scene.drawingBufferHeight / 2.0;
-
-    var ray = this.getPickRay(mousePosition, pickGlobeScratchRay);
-    rayIntersection = globe.pickWorldCoordinates(
-      ray,
-      scene,
-      true,
-      scratchRayIntersection
-    );
-
-    if (scene.pickPositionSupported) {
-      depthIntersection = scene.pickPositionWorldCoordinates(
-        mousePosition,
-        scratchDepthIntersection
-      );
-    }
-
-    if (defined(rayIntersection) && defined(depthIntersection)) {
-      var depthDistance = defined(depthIntersection)
-        ? Cartesian3.distance(depthIntersection, this.positionWC)
-        : Number.POSITIVE_INFINITY;
-      var rayDistance = defined(rayIntersection)
-        ? Cartesian3.distance(rayIntersection, this.positionWC)
-        : Number.POSITIVE_INFINITY;
-      this.frustum.width = Math.min(depthDistance, rayDistance);
-    } else if (defined(depthIntersection)) {
-      this.frustum.width = Cartesian3.distance(
-        depthIntersection,
-        this.positionWC
-      );
-    } else if (defined(rayIntersection)) {
-      this.frustum.width = Cartesian3.distance(
-        rayIntersection,
-        this.positionWC
-      );
-    }
-  }
-
-  if (
-    !defined(globe) ||
-    (!defined(rayIntersection) && !defined(depthIntersection))
-  ) {
-    var distance = Math.max(this.positionCartographic.height, 0.0);
-    this.frustum.width = distance;
-  }
+  this.frustum.width = calculateOrthographicFrustumWidth(this);
 };
 
 var scratchSetViewCartesian = new Cartesian3();
@@ -3850,19 +3840,15 @@ Camera.prototype.switchToOrthographicFrustum = function () {
     return;
   }
 
+  // This must be called before changing the frustum because it uses the previous
+  // frustum to reconstruct the world space position from the depth buffer.
+  var frustumWidth = calculateOrthographicFrustumWidth(this);
+
   var scene = this._scene;
   this.frustum = new OrthographicFrustum();
   this.frustum.aspectRatio =
     scene.drawingBufferWidth / scene.drawingBufferHeight;
-
-  // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
-  this.frustum.width = Cartesian3.magnitude(this.position);
-
-  // Check the projection matrix. It will always be defined, but we need to force an off-center update.
-  var projectionMatrix = this.frustum.projectionMatrix;
-  if (defined(projectionMatrix)) {
-    this._adjustOrthographicFrustum(true);
-  }
+  this.frustum.width = frustumWidth;
 };
 
 /**

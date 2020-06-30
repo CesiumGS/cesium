@@ -117,6 +117,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Orbit Logic](http://www.orbitlogic.com)
   - [Roderick Green](https://github.com/roderickgreen/)
   - [Sam Parrish](https://github.com/sgparrish/)
+  - [Sang Han](https://github.com/seoular/)
 - [Hexastack](https://www.hexastack.com)
   - [Mohamed Marrouchi](https://github.com/marrouchi/)
 - [PropellerAero](https://www.propelleraero.com/)
@@ -268,3 +269,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Wang Bao](https://github.com/xiaobaogeit)
 - [John Remsberg](https://github.com/easternmotors)
 - [Bao Thien Tran](https://github.com/baothientran)
+- [Yonatan Kra](https://github.com/yonatankra)

@@ -594,8 +594,10 @@ Entity.prototype.merge = function (source) {
   for (var i = 0; i < propertyNamesLength; i++) {
     var name = sourcePropertyNames[i];
 
-    //Ignore parent when merging, this only happens at construction time.
-    if (name === "parent") {
+    //While source is required by the API to be an Entity, we internally call this method from the
+    //constructor with an options object to configure initial custom properties.
+    //So we need to ignore reserved-non-property.
+    if (name === "parent" || name === "name" || name === "availability") {
       continue;
     }
 
