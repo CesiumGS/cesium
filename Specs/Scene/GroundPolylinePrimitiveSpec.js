@@ -783,7 +783,7 @@ describe(
       });
     });
 
-    it("picking in Columbus View", function () {
+    xit("picking in Columbus View", function () {
       if (!GroundPolylinePrimitive.isSupported(scene)) {
         return;
       }
