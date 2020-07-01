@@ -5,6 +5,7 @@ import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Matrix4 } from "../../Source/Cesium.js";
+import { Axis } from "../../Source/Cesium.js";
 import { PrimitiveType } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { Transforms } from "../../Source/Cesium.js";
@@ -340,6 +341,15 @@ describe(
         url: riggedFigureUrl,
         instances: createInstances(4),
       }).then(function (collection) {
+        var instances = collection._instances;
+        for (var i = 0; i < instances.length; ++i) {
+          instances[i].modelMatrix = Matrix4.multiply(
+            instances[i].modelMatrix,
+            Axis.Y_UP_TO_X_UP,
+            new Matrix4()
+          );
+        }
+
         expectRender(collection);
       });
     });
