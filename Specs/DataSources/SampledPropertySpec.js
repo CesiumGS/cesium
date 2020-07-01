@@ -720,6 +720,17 @@ describe("DataSources/SampledProperty", function () {
     expect(left.equals(right)).toEqual(true);
   });
 
+  it("equals works when samples differ with quaternion", function () {
+    var left = new SampledProperty(Quaternion);
+    var right = new SampledProperty(Quaternion);
+    expect(left.equals(right)).toEqual(true);
+
+    var time = JulianDate.now();
+    left.addSample(time, new Quaternion(1, 2, 3, 4));
+    right.addSample(time, new Quaternion(1, 2, 3, 5));
+    expect(left.equals(right)).toEqual(false);
+  });
+
   it("equals works when derivatives differ", function () {
     var left = new SampledProperty(Number, [Number]);
     var right = new SampledProperty(Number);
