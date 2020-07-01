@@ -342,6 +342,7 @@ describe(
         instances: createInstances(4),
       }).then(function (collection) {
         var instances = collection._instances;
+        // Rotate instances to account for empty space between legs of rigged model.
         for (var i = 0; i < instances.length; ++i) {
           instances[i].modelMatrix = Matrix4.multiply(
             instances[i].modelMatrix,
