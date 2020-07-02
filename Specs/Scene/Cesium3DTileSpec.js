@@ -523,14 +523,14 @@ describe(
       it('is not visible when time is outside availability', function() {
         var frameState = clone(scene.frameState);
         frameState.time = JulianDate.fromIso8601('2019-12-15T00:00:00Z');
-        var visible = tile.insideAvailability(frameState);
+        var visible = tile.withinAvailability(frameState);
         expect(visible).toEqual(false);
       });
 
       it('is visible when time is inside availability', function() {
         var frameState = clone(scene.frameState);
         frameState.time = JulianDate.fromIso8601('2019-12-25T00:00:00Z');
-        var visible = tile.insideAvailability(frameState);
+        var visible = tile.withinAvailability(frameState);
         expect(visible).toEqual(true);
       });
     });
