@@ -1,679 +1,3 @@
-<<<<<<< HEAD
-import BoundingSphere from '../Core/BoundingSphere.js';
-import Cartesian3 from '../Core/Cartesian3.js';
-import Color from '../Core/Color.js';
-import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
-import CullingVolume from '../Core/CullingVolume.js';
-import defaultValue from '../Core/defaultValue.js';
-import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
-import deprecationWarning from '../Core/deprecationWarning.js';
-import destroyObject from '../Core/destroyObject.js';
-import Ellipsoid from '../Core/Ellipsoid.js';
-import getMagic from '../Core/getMagic.js';
-import Intersect from '../Core/Intersect.js';
-import JulianDate from '../Core/JulianDate.js';
-import TimeInterval from '../Core/TimeInterval.js';
-import CesiumMath from '../Core/Math.js';
-import Matrix3 from '../Core/Matrix3.js';
-import Matrix4 from '../Core/Matrix4.js';
-import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
-import OrthographicFrustum from '../Core/OrthographicFrustum.js';
-import Rectangle from '../Core/Rectangle.js';
-import Request from '../Core/Request.js';
-import RequestScheduler from '../Core/RequestScheduler.js';
-import RequestState from '../Core/RequestState.js';
-import RequestType from '../Core/RequestType.js';
-import Resource from '../Core/Resource.js';
-import RuntimeError from '../Core/RuntimeError.js';
-import when from '../ThirdParty/when.js';
-import Cesium3DTileContentFactory from './Cesium3DTileContentFactory.js';
-import Cesium3DTileContentState from './Cesium3DTileContentState.js';
-import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
-import Cesium3DTilePass from './Cesium3DTilePass.js';
-import Cesium3DTileRefine from './Cesium3DTileRefine.js';
-import Empty3DTileContent from './Empty3DTileContent.js';
-import SceneMode from './SceneMode.js';
-import TileBoundingRegion from './TileBoundingRegion.js';
-import TileBoundingSphere from './TileBoundingSphere.js';
-import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
-
-    /**
-     * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
-     * the content is loaded on-demand when needed based on the view.
-     * <p>
-     * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
-     * </p>
-     *
-     * @alias Cesium3DTile
-     * @constructor
-     */
-    function Cesium3DTile(tileset, baseResource, header, parent) {
-        this._tileset = tileset;
-        this._header = header;
-        var contentHeader = header.content;
-
-        /**
-         * The local transform of this tile.
-         * @type {Matrix4}
-         */
-        this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
-
-        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
-        var computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
-
-        var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
-        this._initialTransform = Matrix4.multiply(parentInitialTransform, this.transform, new Matrix4());
-
-        /**
-         * The final computed transform of this tile.
-         * @type {Matrix4}
-         * @readonly
-         */
-        this.computedTransform = computedTransform;
-
-        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
-        this._boundingVolume2D = undefined;
-
-        var contentBoundingVolume;
-
-        if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
-            // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
-            // around only the features in the tile.  This box is useful for culling for rendering,
-            // but not for culling for traversing the tree since it does not guarantee spatial coherence, i.e.,
-            // since it only bounds features in the tile, not the entire tile, children may be
-            // outside of this box.
-            contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
-        }
-        this._contentBoundingVolume = contentBoundingVolume;
-        this._contentBoundingVolume2D = undefined;
-
-        var availability;
-        if (defined(header.availability)) {
-          availability = TimeInterval.fromIso8601({iso8601: header.availability});
-        }
-        this._availability = availability;
-
-        var viewerRequestVolume;
-        if (defined(header.viewerRequestVolume)) {
-            viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform);
-        }
-        this._viewerRequestVolume = viewerRequestVolume;
-
-        /**
-         * The error, in meters, introduced if this tile is rendered and its children are not.
-         * This is used to compute screen space error, i.e., the error measured in pixels.
-         *
-         * @type {Number}
-         * @readonly
-         */
-        this.geometricError = header.geometricError;
-        this._geometricError = header.geometricError;
-
-        if (!defined(this._geometricError)) {
-            this._geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
-            Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
-        }
-
-        this.updateGeometricErrorScale();
-
-        var refine;
-        if (defined(header.refine)) {
-            if (header.refine === 'replace' || header.refine === 'add') {
-                Cesium3DTile._deprecationWarning('lowercase-refine', 'This tile uses a lowercase refine "' + header.refine + '". Instead use "' + header.refine.toUpperCase() + '".');
-            }
-            refine = (header.refine.toUpperCase() === 'REPLACE') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
-        } else if (defined(parent)) {
-            // Inherit from parent tile if omitted.
-            refine = parent.refine;
-        } else {
-            refine = Cesium3DTileRefine.REPLACE;
-        }
-
-        /**
-         * Specifies the type of refinement that is used when traversing this tile for rendering.
-         *
-         * @type {Cesium3DTileRefine}
-         * @readonly
-         * @private
-         */
-        this.refine = refine;
-
-        /**
-         * Gets the tile's children.
-         *
-         * @type {Cesium3DTile[]}
-         * @readonly
-         */
-        this.children = [];
-
-        /**
-         * This tile's parent or <code>undefined</code> if this tile is the root.
-         * <p>
-         * When a tile's content points to an external tileset JSON file, the external tileset's
-         * root tile's parent is not <code>undefined</code>; instead, the parent references
-         * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
-         * </p>
-         *
-         * @type {Cesium3DTile}
-         * @readonly
-         */
-        this.parent = parent;
-
-        var content;
-        var hasEmptyContent;
-        var contentState;
-        var contentResource;
-        var serverKey;
-
-        baseResource = Resource.createIfNeeded(baseResource);
-
-        if (defined(contentHeader)) {
-            var contentHeaderUri = contentHeader.uri;
-            if (defined(contentHeader.url)) {
-                Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
-                contentHeaderUri = contentHeader.url;
-            }
-            hasEmptyContent = false;
-            contentState = Cesium3DTileContentState.UNLOADED;
-            contentResource = baseResource.getDerivedResource({
-                url : contentHeaderUri
-            });
-            serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
-        } else {
-            content = new Empty3DTileContent(tileset, this);
-            hasEmptyContent = true;
-            contentState = Cesium3DTileContentState.READY;
-        }
-
-        this._content = content;
-        this._contentResource = contentResource;
-        this._contentState = contentState;
-        this._contentReadyToProcessPromise = undefined;
-        this._contentReadyPromise = undefined;
-        this._expiredContent = undefined;
-
-        this._serverKey = serverKey;
-
-        /**
-         * When <code>true</code>, the tile has no content.
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        this.hasEmptyContent = hasEmptyContent;
-
-        /**
-         * When <code>true</code>, the tile's content points to an external tileset.
-         * <p>
-         * This is <code>false</code> until the tile's content is loaded.
-         * </p>
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        this.hasTilesetContent = false;
-
-        /**
-         * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
-         *
-         * See {@link Cesium3DTilesetCache}
-         *
-         * @type {DoublyLinkedListNode}
-         * @readonly
-         *
-         * @private
-         */
-        this.cacheNode = undefined;
-
-        var expire = header.expire;
-        var expireDuration;
-        var expireDate;
-        if (defined(expire)) {
-            expireDuration = expire.duration;
-            if (defined(expire.date)) {
-                expireDate = JulianDate.fromIso8601(expire.date);
-            }
-        }
-
-        /**
-         * The time in seconds after the tile's content is ready when the content expires and new content is requested.
-         *
-         * @type {Number}
-         */
-        this.expireDuration = expireDuration;
-
-        /**
-         * The date when the content expires and new content is requested.
-         *
-         * @type {JulianDate}
-         */
-        this.expireDate = expireDate;
-
-        /**
-         * The time when a style was last applied to this tile.
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.lastStyleTime = 0.0;
-
-        /**
-         * Marks whether the tile's children bounds are fully contained within the tile's bounds
-         *
-         * @type {Cesium3DTileOptimizationHint}
-         *
-         * @private
-         */
-        this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
-
-        /**
-         * Tracks if the tile's relationship with a ClippingPlaneCollection has changed with regards
-         * to the ClippingPlaneCollection's state.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.clippingPlanesDirty = false;
-
-        /**
-         * Tracks if the tile's request should be deferred until all non-deferred
-         * tiles load.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.priorityDeferred = false;
-
-        // Members that are updated every frame for tree traversal and rendering optimizations:
-        this._distanceToCamera = 0.0;
-        this._centerZDepth = 0.0;
-        this._screenSpaceError = 0.0;
-        this._screenSpaceErrorProgressiveResolution = 0.0; // The screen space error at a given screen height of tileset.progressiveResolutionHeightFraction * screenHeight
-        this._visibilityPlaneMask = 0;
-        this._visible = false;
-        this._inRequestVolume = false;
-
-        this._finalResolution = true;
-        this._depth = 0;
-        this._stackLength = 0;
-        this._selectionDepth = 0;
-
-        this._updatedVisibilityFrame = 0;
-        this._touchedFrame = 0;
-        this._visitedFrame = 0;
-        this._selectedFrame = 0;
-        this._requestedFrame = 0;
-        this._ancestorWithContent = undefined;
-        this._ancestorWithContentAvailable = undefined;
-        this._refines = false;
-        this._shouldSelect = false;
-        this._isClipped = true;
-        this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
-        this._debugBoundingVolume = undefined;
-        this._debugContentBoundingVolume = undefined;
-        this._debugViewerRequestVolume = undefined;
-        this._debugColor = Color.fromRandom({ alpha : 1.0 });
-        this._debugColorizeTiles = false;
-
-        this._priority = 0.0; // The priority used for request sorting
-        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
-        this._priorityProgressiveResolution = false;
-        this._priorityProgressiveResolutionScreenSpaceErrorLeaf = false;
-        this._priorityReverseScreenSpaceError = 0.0;
-        this._foveatedFactor = 0.0;
-        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
-
-        this._loadTimestamp = new JulianDate();
-
-        this._commandsLength = 0;
-
-        this._color = undefined;
-        this._colorDirty = false;
-
-        this._request = undefined;
-    }
-
-    // This can be overridden for testing purposes
-    Cesium3DTile._deprecationWarning = deprecationWarning;
-
-    defineProperties(Cesium3DTile.prototype, {
-        /**
-         * The tileset containing this tile.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Cesium3DTileset}
-         * @readonly
-         */
-        tileset : {
-            get : function() {
-                return this._tileset;
-            }
-        },
-
-        /**
-         * The tile's content.  This represents the actual tile's payload,
-         * not the content's metadata in the tileset JSON file.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Cesium3DTileContent}
-         * @readonly
-         */
-        content : {
-            get : function() {
-                return this._content;
-            }
-        },
-
-        /**
-         * Get the tile's bounding volume.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {TileBoundingVolume}
-         * @readonly
-         * @private
-         */
-        boundingVolume : {
-            get : function() {
-                return this._boundingVolume;
-            }
-        },
-
-        /**
-         * Get the bounding volume of the tile's contents.  This defaults to the
-         * tile's bounding volume when the content's bounding volume is
-         * <code>undefined</code>.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {TileBoundingVolume}
-         * @readonly
-         * @private
-         */
-        contentBoundingVolume : {
-            get : function() {
-                return defaultValue(this._contentBoundingVolume, this._boundingVolume);
-            }
-        },
-
-        /**
-         * Get the bounding sphere derived from the tile's bounding volume.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {BoundingSphere}
-         * @readonly
-         */
-        boundingSphere : {
-            get : function() {
-                return this._boundingVolume.boundingSphere;
-            }
-        },
-
-        /**
-         * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
-         * Returns <code>undefined</code> if <code>extras</code> does not exist.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {*}
-         * @readonly
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification#specifying-extensions-and-application-specific-extras|Extras in the 3D Tiles specification.}
-         */
-        extras : {
-            get : function() {
-                return this._header.extras;
-            }
-        },
-
-        /**
-         * Returns the <code>availability</code> of the tile.
-         * Returns <code>undefined</code> if <code>availability</code> does not exist
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {TimeInterval}
-         * @readonly
-         */
-        availability : {
-            get : function() {
-                return this._availability;
-            }
-        },
-
-        /**
-         * Gets or sets the tile's highlight color.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Color}
-         *
-         * @default {@link Color.WHITE}
-         *
-         * @private
-         */
-        color : {
-            get : function() {
-                if (!defined(this._color)) {
-                    this._color = new Color();
-                }
-                return Color.clone(this._color);
-            },
-            set : function(value) {
-                this._color = Color.clone(value, this._color);
-                this._colorDirty = true;
-            }
-        },
-
-        /**
-         * Determines if the tile has available content to render.  <code>true</code> if the tile's
-         * content is ready or if it has expired content that renders while new content loads; otherwise,
-         * <code>false</code>.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        contentAvailable : {
-            get : function() {
-                return (this.contentReady && !this.hasEmptyContent && !this.hasTilesetContent) || (defined(this._expiredContent) && !this.contentFailed);
-            }
-        },
-
-        /**
-         * Determines if the tile's content is ready. This is automatically <code>true</code> for
-         * tile's with empty content.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        contentReady : {
-            get : function() {
-                return this._contentState === Cesium3DTileContentState.READY;
-            }
-        },
-
-        /**
-         * Determines if the tile's content has not be requested. <code>true</code> if tile's
-         * content has not be requested; otherwise, <code>false</code>.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        contentUnloaded : {
-            get : function() {
-                return this._contentState === Cesium3DTileContentState.UNLOADED;
-            }
-        },
-
-        /**
-         * Determines if the tile's content is expired. <code>true</code> if tile's
-         * content is expired; otherwise, <code>false</code>.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        contentExpired : {
-            get : function() {
-                return this._contentState === Cesium3DTileContentState.EXPIRED;
-            }
-        },
-
-        /**
-         * Determines if the tile's content failed to load.  <code>true</code> if the tile's
-         * content failed to load; otherwise, <code>false</code>.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @private
-         */
-        contentFailed : {
-            get : function() {
-                return this._contentState === Cesium3DTileContentState.FAILED;
-            }
-        },
-
-        /**
-         * Gets the promise that will be resolved when the tile's content is ready to process.
-         * This happens after the content is downloaded but before the content is ready
-         * to render.
-         * <p>
-         * The promise remains <code>undefined</code> until the tile's content is requested.
-         * </p>
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        contentReadyToProcessPromise : {
-            get : function() {
-                if (defined(this._contentReadyToProcessPromise)) {
-                    return this._contentReadyToProcessPromise.promise;
-                }
-            }
-        },
-
-        /**
-         * Gets the promise that will be resolved when the tile's content is ready to render.
-         * <p>
-         * The promise remains <code>undefined</code> until the tile's content is requested.
-         * </p>
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        contentReadyPromise : {
-            get : function() {
-                if (defined(this._contentReadyPromise)) {
-                    return this._contentReadyPromise.promise;
-                }
-            }
-        },
-
-        /**
-         * Returns the number of draw commands used by this tile.
-         *
-         * @readonly
-         *
-         * @private
-         */
-        commandsLength : {
-            get : function() {
-                return this._commandsLength;
-            }
-        }
-    });
-
-    var scratchCartesian = new Cartesian3();
-    function isPriorityDeferred(tile, frameState) {
-        var tileset = tile._tileset;
-
-        // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-        var camera = frameState.camera;
-        var boundingSphere = tile.boundingSphere;
-        var radius = boundingSphere.radius;
-        var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
-        var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
-        // The distance from the camera's view direction to the tile.
-        var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
-        var distanceToCenterLine = Cartesian3.magnitude(toLine);
-        var notTouchingSphere = distanceToCenterLine > radius;
-
-        // If camera's direction vector is inside the bounding sphere then consider
-        // this tile right along the line of sight and set _foveatedFactor to 0.
-        // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
-        // and the vector between the camera and the point on the bounding sphere closest to the view line.
-        if (notTouchingSphere) {
-            var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
-            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
-            var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
-            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
-            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
-            tile._foveatedFactor = 1.0 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
-        } else {
-            tile._foveatedFactor = 0.0;
-        }
-
-        // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster)
-        // Or if the tile is a preload of any kind
-        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var skipLevelOfDetail = tileset._skipLevelOfDetail;
-        if ((replace && !skipLevelOfDetail) ||
-            !tileset.foveatedScreenSpaceError ||
-            tileset.foveatedConeSize === 1.0 ||
-            (tile._priorityProgressiveResolution && replace && skipLevelOfDetail) ||
-            tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ||
-            tileset._pass === Cesium3DTilePass.PRELOAD) {
-            return false;
-        }
-
-        var maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
-        var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
-
-        // If it's inside the user-defined view cone, then it should not be deferred.
-        if (tile._foveatedFactor <= foveatedConeFactor) {
-            return false;
-        }
-
-        // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
-        var range = maximumFovatedFactor - foveatedConeFactor;
-        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0.0, 1.0);
-        var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
-        var sse = tile._screenSpaceError === 0.0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
-
-        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
-=======
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Color from "../Core/Color.js";
@@ -699,6 +23,7 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
+import TimeInterval from '../Core/TimeInterval.js';
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -710,6 +35,7 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -823,7 +149,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
           header.refine.toUpperCase() +
           '".'
       );
->>>>>>> b61adf8523ce6f0896299ecbb69b0f51a369f863
     }
     refine =
       header.refine.toUpperCase() === "REPLACE"
@@ -844,6 +169,22 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.refine = refine;
+
+  var availability;
+  if (defined(header.availability)) {
+    availability = TimeInterval.fromIso8601({iso8601: header.availability});
+  } else if (defined(parent)) {
+    availability = TimeInterval.clone(parent.availability);
+  }
+
+  /**
+   * Time availability of the tile used for temporal culling.
+   *
+   * @type {TimeInterval}
+   * @readonly
+   */
+  this._availability = availability;
+
 
   /**
    * Gets the tile's children.
@@ -949,60 +290,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     if (defined(expire.date)) {
       expireDate = JulianDate.fromIso8601(expire.date);
     }
-<<<<<<< HEAD
-
-    /**
-     * Update the tile's visibility.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.updateVisibility = function(frameState) {
-        var parent = this.parent;
-        var tileset = this._tileset;
-        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
-        var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
-        this.updateTransform(parentTransform);
-        this._distanceToCamera = this.distanceToTile(frameState);
-        this._centerZDepth = this.distanceToTileCenter(frameState);
-        this._screenSpaceError = this.getScreenSpaceError(frameState, false);
-        this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
-        this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
-        this._visible = this.insideAvailability(frameState) && this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-        this._inRequestVolume = this.insideViewerRequestVolume(frameState);
-        this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
-        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
-        this.priorityDeferred = isPriorityDeferred(this, frameState);
-    };
-
-    /**
-     * Update whether the tile has expired.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.updateExpiration = function() {
-        if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
-            var now = JulianDate.now(scratchJulianDate);
-            if (JulianDate.lessThan(this.expireDate, now)) {
-                this._contentState = Cesium3DTileContentState.EXPIRED;
-                this._expiredContent = this._content;
-            }
-        }
-    };
-
-    function updateExpireDate(tile) {
-        if (defined(tile.expireDuration)) {
-            var expireDurationDate = JulianDate.now(scratchJulianDate);
-            JulianDate.addSeconds(expireDurationDate, tile.expireDuration, expireDurationDate);
-
-            if (defined(tile.expireDate)) {
-                if (JulianDate.lessThan(tile.expireDate, expireDurationDate)) {
-                    JulianDate.clone(expireDurationDate, tile.expireDate);
-                }
-            } else {
-                tile.expireDate = JulianDate.clone(expireDurationDate);
-            }
-        }
-=======
   }
 
   /**
@@ -1223,6 +510,21 @@ Object.defineProperties(Cesium3DTile.prototype, {
       this._color = Color.clone(value, this._color);
       this._colorDirty = true;
     },
+  },
+
+  /**
+   * Returns the <code>availability</code> of the tile.
+   * Returns <code>undefined</code> if <code>availability</code> does not exist
+   *
+   * @memberof Cesium3DTile.prototype
+   *
+   * @type {TimeInterval}
+   * @readonly
+   */
+  availability : {
+      get : function() {
+          return this._availability;
+      }
   },
 
   /**
@@ -1510,7 +812,6 @@ Cesium3DTile.prototype.getScreenSpaceError = function (
   ) {
     if (defined(frustum._offCenterFrustum)) {
       frustum = frustum._offCenterFrustum;
->>>>>>> b61adf8523ce6f0896299ecbb69b0f51a369f863
     }
     var pixelSize =
       Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) /
@@ -1601,7 +902,7 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
     frameState,
     parentVisibilityPlaneMask
   ); // Use parent's plane mask to speed up visibility test
-  this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+  this._visible = this.withinAvailability(frameState) && this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
   this._inRequestVolume = this.insideViewerRequestVolume(frameState);
   this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(
     tileset,
@@ -1789,89 +1090,6 @@ Cesium3DTile.prototype.requestContent = function () {
       contentFailedFunction(error);
     });
 
-<<<<<<< HEAD
-        return cullingVolume.computeVisibility(boundingVolume);
-    };
-
-    /**
-     * Computes the (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.distanceToTile = function(frameState) {
-        var boundingVolume = getBoundingVolume(this, frameState);
-        return boundingVolume.distanceToCamera(frameState);
-    };
-
-    var scratchToTileCenter = new Cartesian3();
-
-    /**
-     * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @returns {Number} The distance, in meters.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
-        var tileBoundingVolume = getBoundingVolume(this, frameState);
-        var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
-        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
-        return Cartesian3.dot(frameState.camera.directionWC, toCenter);
-    };
-
-    /**
-     * Checks if the camera is inside the viewer request volume.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @returns {Boolean} Whether the camera is inside the volume.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
-        var viewerRequestVolume = this._viewerRequestVolume;
-        return !defined(viewerRequestVolume) || (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
-    };
-
-    /**
-     * Checks if the frameState time is within tile availability
-     *
-     * @param {FrameState} frameState The frame state.
-     * @returns {Boolean} Whether the frame state time is with the tile availability.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.insideAvailability = function(frameState) {
-        var availability = this._availability;
-        return !defined(availability) || TimeInterval.contains(this._availability, frameState.time);
-    };
-
-    var scratchMatrix = new Matrix3();
-    var scratchScale = new Cartesian3();
-    var scratchHalfAxes = new Matrix3();
-    var scratchCenter = new Cartesian3();
-    var scratchRectangle = new Rectangle();
-    var scratchOrientedBoundingBox = new OrientedBoundingBox();
-    var scratchTransform = new Matrix4();
-
-    function createBox(box, transform, result) {
-        var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
-        var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
-
-        // Find the transformed center and halfAxes
-        center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
-        halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
-
-        if (defined(result)) {
-            result.update(center, halfAxes);
-            return result;
-        }
-        return new TileOrientedBoundingBox(center, halfAxes);
-=======
   return true;
 };
 
@@ -1976,7 +1194,6 @@ Cesium3DTile.prototype.visibility = function (
     this._isClipped = intersection !== Intersect.INSIDE;
     if (intersection === Intersect.OUTSIDE) {
       return CullingVolume.MASK_OUTSIDE;
->>>>>>> b61adf8523ce6f0896299ecbb69b0f51a369f863
     }
   }
 
@@ -2077,6 +1294,19 @@ Cesium3DTile.prototype.insideViewerRequestVolume = function (frameState) {
     !defined(viewerRequestVolume) ||
     viewerRequestVolume.distanceToCamera(frameState) === 0.0
   );
+};
+
+/**
+ * Checks if the frameState time is within tile availability
+ *
+ * @param {FrameState} frameState The frame state.
+ * @returns {Boolean} Whether the frame state time is with the tile availability.
+ *
+ * @private
+ */
+Cesium3DTile.prototype.withinAvailability = function(frameState) {
+    var availability = this._availability;
+    return !defined(availability) || TimeInterval.contains(availability, frameState.time);
 };
 
 var scratchMatrix = new Matrix3();
