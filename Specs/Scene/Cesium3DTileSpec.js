@@ -104,13 +104,13 @@ describe(
     };
 
     var tileWithAvailability = {
-      geometricError : 1,
-      availability : '2019-12-20T01:01:01Z/2019-12-30T23:59:59Z',
-      refine : 'REPLACE',
-      children : [],
+      geometricError: 1,
+      availability: "2019-12-20T01:01:01Z/2019-12-30T23:59:59Z",
+      refine: "REPLACE",
+      children: [],
       boundingVolume: {
-          region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
-      }
+        region: [-1.2, -1.2, 0.0, 0.0, -30, -34],
+      },
     };
 
     var mockTileset = {
@@ -509,27 +509,34 @@ describe(
       });
     });
 
-    describe('time based culling', function() {
-      var tile = new Cesium3DTile(mockTileset, 'some_url', tileWithAvailability, undefined);
-      it('can have an availability', function() {
-          var availability = TimeInterval.fromIso8601({iso8601: tileWithAvailability.availability});
-          expect(tile.availability).toBeDefined();
-          expect(tile.availability).toEqual(availability);
+    describe("time based culling", function () {
+      var tile = new Cesium3DTile(
+        mockTileset,
+        "some_url",
+        tileWithAvailability,
+        undefined
+      );
+      it("can have an availability", function () {
+        var availability = TimeInterval.fromIso8601({
+          iso8601: tileWithAvailability.availability,
+        });
+        expect(tile.availability).toBeDefined();
+        expect(tile.availability).toEqual(availability);
       });
 
       var scene = createScene();
       scene.frameState.passes.render = true;
 
-      it('is not visible when time is outside availability', function() {
+      it("is not visible when time is outside availability", function () {
         var frameState = clone(scene.frameState);
-        frameState.time = JulianDate.fromIso8601('2019-12-15T00:00:00Z');
+        frameState.time = JulianDate.fromIso8601("2019-12-15T00:00:00Z");
         var visible = tile.withinAvailability(frameState);
         expect(visible).toEqual(false);
       });
 
-      it('is visible when time is inside availability', function() {
+      it("is visible when time is inside availability", function () {
         var frameState = clone(scene.frameState);
-        frameState.time = JulianDate.fromIso8601('2019-12-25T00:00:00Z');
+        frameState.time = JulianDate.fromIso8601("2019-12-25T00:00:00Z");
         var visible = tile.withinAvailability(frameState);
         expect(visible).toEqual(true);
       });

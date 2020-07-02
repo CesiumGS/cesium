@@ -23,7 +23,7 @@ import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
-import TimeInterval from '../Core/TimeInterval.js';
+import TimeInterval from "../Core/TimeInterval.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
@@ -35,7 +35,6 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
-
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -172,7 +171,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   var availability;
   if (defined(header.availability)) {
-    availability = TimeInterval.fromIso8601({iso8601: header.availability});
+    availability = TimeInterval.fromIso8601({ iso8601: header.availability });
   } else if (defined(parent)) {
     availability = TimeInterval.clone(parent.availability);
   }
@@ -184,7 +183,6 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @readonly
    */
   this._availability = availability;
-
 
   /**
    * Gets the tile's children.
@@ -521,10 +519,10 @@ Object.defineProperties(Cesium3DTile.prototype, {
    * @type {TimeInterval}
    * @readonly
    */
-  availability : {
-      get : function() {
-          return this._availability;
-      }
+  availability: {
+    get: function () {
+      return this._availability;
+    },
   },
 
   /**
@@ -902,7 +900,9 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
     frameState,
     parentVisibilityPlaneMask
   ); // Use parent's plane mask to speed up visibility test
-  this._visible = this.withinAvailability(frameState) && this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+  this._visible =
+    this.withinAvailability(frameState) &&
+    this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
   this._inRequestVolume = this.insideViewerRequestVolume(frameState);
   this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(
     tileset,
@@ -1304,9 +1304,12 @@ Cesium3DTile.prototype.insideViewerRequestVolume = function (frameState) {
  *
  * @private
  */
-Cesium3DTile.prototype.withinAvailability = function(frameState) {
-    var availability = this._availability;
-    return !defined(availability) || TimeInterval.contains(availability, frameState.time);
+Cesium3DTile.prototype.withinAvailability = function (frameState) {
+  var availability = this._availability;
+  return (
+    !defined(availability) ||
+    TimeInterval.contains(availability, frameState.time)
+  );
 };
 
 var scratchMatrix = new Matrix3();
