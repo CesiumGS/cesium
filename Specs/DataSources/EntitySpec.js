@@ -179,6 +179,21 @@ describe("DataSources/Entity", function () {
     }
   });
 
+  it("merge ignores reserved property names when called with a plain object.", function () {
+    var entity = new Entity();
+
+    //Technically merge requires passing an Entity instance, but we call it internally
+    //with a plain object during construction to set up custom properties.
+    entity.merge({
+      name: undefined,
+      availability: undefined,
+      parent: undefined,
+    });
+    expect(entity.name).toBeUndefined();
+    expect(entity.availability).toBeUndefined();
+    expect(entity.parent).toBeUndefined();
+  });
+
   it("merge does not overwrite availability", function () {
     var entity = new Entity();
     var interval = TimeInterval.fromIso8601({
