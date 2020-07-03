@@ -295,7 +295,7 @@ SampledPositionProperty.prototype.addSamplesPackedArray = function (
  * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
 SampledPositionProperty.prototype.removeSample = function (time) {
-  this._property.removeSample(time);
+  return this._property.removeSample(time);
 };
 
 /**
