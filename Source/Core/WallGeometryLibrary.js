@@ -50,6 +50,8 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     cleanedBottomHeights[0] = 0.0;
   }
 
+  var wallHeight = Math.abs(cleanedTopHeights[0] - cleanedBottomHeights[0]);
+  var hasAllZeroHeights = wallHeight < CesiumMath.EPSILON10;
   var index = 1;
   for (var i = 1; i < length; ++i) {
     var v1 = positions[i];
@@ -68,14 +70,25 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
         cleanedBottomHeights[index] = 0.0;
       }
 
+      wallHeight = Math.abs(
+        cleanedTopHeights[index] - cleanedBottomHeights[index]
+      );
+      hasAllZeroHeights =
+        hasAllZeroHeights && wallHeight < CesiumMath.EPSILON10;
+
       Cartographic.clone(c1, c0);
       ++index;
     } else if (c0.height < c1.height) {
       cleanedTopHeights[index - 1] = c1.height;
+      wallHeight = Math.abs(
+        cleanedTopHeights[index - 1] - cleanedBottomHeights[index - 1]
+      );
+      hasAllZeroHeights =
+        hasAllZeroHeights && wallHeight < CesiumMath.EPSILON10;
     }
   }
 
-  if (index < 2) {
+  if (hasAllZeroHeights || index < 2) {
     return;
   }
 
