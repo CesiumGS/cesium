@@ -437,22 +437,19 @@ WallGeometry.createGeometry = function (wallGeometry) {
     }
 
     if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
-      var nextPosition;
+      var nextBottomPosition = Cartesian3.clone(
+        Cartesian3.ZERO,
+        scratchCartesian3Position3
+      );
       var nextTop = Cartesian3.clone(
         Cartesian3.ZERO,
         scratchCartesian3Position5
       );
-      var groundPosition = ellipsoid.scaleToGeodeticSurface(
-        Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position2),
-        scratchCartesian3Position2
-      );
+
       if (i + 1 < length) {
-        nextPosition = ellipsoid.scaleToGeodeticSurface(
-          Cartesian3.fromArray(
-            topPositions,
-            i3 + 3,
-            scratchCartesian3Position3
-          ),
+        nextBottomPosition = Cartesian3.fromArray(
+          bottomPositions,
+          i3 + 3,
           scratchCartesian3Position3
         );
         nextTop = Cartesian3.fromArray(
@@ -468,13 +465,13 @@ WallGeometry.createGeometry = function (wallGeometry) {
           topPosition,
           scratchCartesian3Position4
         );
-        var scaledGroundPosition = Cartesian3.subtract(
-          groundPosition,
+        var scaledBottomPosition = Cartesian3.subtract(
+          bottomPosition,
           topPosition,
           scratchCartesian3Position1
         );
         normal = Cartesian3.normalize(
-          Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal),
+          Cartesian3.cross(scaledBottomPosition, scalednextPosition, normal),
           normal
         );
         recomputeNormal = false;
@@ -482,8 +479,8 @@ WallGeometry.createGeometry = function (wallGeometry) {
 
       if (
         Cartesian3.equalsEpsilon(
-          nextPosition,
-          groundPosition,
+          bottomPosition,
+          nextBottomPosition,
           CesiumMath.EPSILON10
         )
       ) {
@@ -492,7 +489,7 @@ WallGeometry.createGeometry = function (wallGeometry) {
         s += ds;
         if (vertexFormat.tangent) {
           tangent = Cartesian3.normalize(
-            Cartesian3.subtract(nextPosition, groundPosition, tangent),
+            Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
             tangent
           );
         }
