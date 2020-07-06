@@ -172,6 +172,85 @@ describe("Core/WallGeometry", function () {
     expect(cartographic.height).toEqualEpsilon(4000.0, CesiumMath.EPSILON8);
   });
 
+  it("create positions with negative height", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        positions: Cartesian3.fromDegreesArrayHeights([
+          49.0,
+          18.0,
+          1000.0,
+          50.0,
+          18.0,
+          1000.0,
+        ]),
+        maximumHeights: [-300.0, -200.0],
+        minimumHeights: [-500.0, -600.0],
+      })
+    );
+
+    var positions = w.attributes.position.values;
+    var normals = w.attributes.normal.values;
+    var indices = w.indices;
+    var numPositions = 4;
+    var numTriangles = 2;
+    expect(positions.length).toEqual(numPositions * 3);
+    expect(normals.length).toEqual(numPositions * 3);
+    expect(indices.length).toEqual(numTriangles * 3);
+
+    var cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 0)
+    );
+    expect(cartographic.height).toEqualEpsilon(-500.0, CesiumMath.EPSILON8);
+
+    cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 3)
+    );
+    expect(cartographic.height).toEqualEpsilon(-300.0, CesiumMath.EPSILON8);
+
+    cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 6)
+    );
+    expect(cartographic.height).toEqualEpsilon(-600.0, CesiumMath.EPSILON8);
+
+    cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 9)
+    );
+    expect(cartographic.height).toEqualEpsilon(-200.0, CesiumMath.EPSILON8);
+
+    var bottomPosition = Cartesian3.fromArray(positions, 0);
+    var topPosition = Cartesian3.fromArray(positions, 3);
+    var nextTopPosition = Cartesian3.fromArray(positions, 9);
+    var topDiff = Cartesian3.subtract(
+      nextTopPosition,
+      topPosition,
+      new Cartesian3()
+    );
+    var bottomDiff = Cartesian3.subtract(
+      bottomPosition,
+      topPosition,
+      new Cartesian3()
+    );
+    var expectedNormal = Cartesian3.cross(
+      bottomDiff,
+      topDiff,
+      new Cartesian3()
+    );
+    Cartesian3.normalize(expectedNormal, expectedNormal);
+
+    for (var i = 0; i < normals.length; i += 3) {
+      console.log(normals);
+      expect(normals[i]).toEqualEpsilon(expectedNormal.x, CesiumMath.EPSILON7);
+      expect(normals[i + 1]).toEqualEpsilon(
+        expectedNormal.y,
+        CesiumMath.EPSILON7
+      );
+      expect(normals[i + 2]).toEqualEpsilon(
+        expectedNormal.z,
+        CesiumMath.EPSILON7
+      );
+    }
+  });
+
   it("cleans positions with duplicates", function () {
     var w = WallGeometry.createGeometry(
       new WallGeometry({
