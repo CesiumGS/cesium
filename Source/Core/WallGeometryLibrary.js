@@ -29,7 +29,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
 
   var hasBottomHeights = defined(bottomHeights);
   var hasTopHeights = defined(topHeights);
-  var hasAllZeroHeights = true;
 
   var cleanedPositions = new Array(length);
   var cleanedTopHeights = new Array(length);
@@ -42,8 +41,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
   if (hasTopHeights) {
     c0.height = topHeights[0];
   }
-
-  hasAllZeroHeights = hasAllZeroHeights && c0.height <= 0;
 
   cleanedTopHeights[0] = c0.height;
 
@@ -60,7 +57,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     if (hasTopHeights) {
       c1.height = topHeights[i];
     }
-    hasAllZeroHeights = hasAllZeroHeights && c1.height <= 0;
 
     if (!latLonEquals(c0, c1)) {
       cleanedPositions[index] = v1; // Shallow copy!
@@ -79,7 +75,7 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     }
   }
 
-  if (hasAllZeroHeights || index < 2) {
+  if (index < 2) {
     return;
   }
 
