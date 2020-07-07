@@ -368,13 +368,6 @@ function calculateNormal(p0, p1, p2, resultP10, resultP20, result) {
   return true;
 }
 
-function calculateBitangent(normal, tangent, result) {
-  result = Cartesian3.normalize(
-    Cartesian3.cross(normal, tangent, result),
-    result
-  );
-}
-
 function createWallGeometryAttributes(
   vertexFormat,
   positions,
@@ -532,24 +525,30 @@ WallGeometry.createGeometry = function (wallGeometry) {
   var tangent = new Cartesian3(1.0, 0.0, 0.0);
   var bitangent = new Cartesian3(0.0, 0.0, 1.0);
 
-  var recomputeNormal = true;
+  var isWallCorner = false;
+  var needNormal = true;
   var s = 0;
-  var ds = 1.0 / (length / 3.0 - wallPositions.length + 1.0);
+  var ds = 1.0 / (length / 3.0 - numCorners - 1.0);
   for (var i = 0; i < length; i += 3) {
     var curr = i;
     var next = i + 3;
     Cartesian3.fromArray(topPositions, curr, topPosition);
     Cartesian3.fromArray(bottomPositions, curr, bottomPosition);
 
-    if (next < length) {
+    if (
+      next < length &&
+      (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent)
+    ) {
       Cartesian3.fromArray(topPositions, next, nextTopPosition);
       Cartesian3.fromArray(bottomPositions, next, nextBottomPosition);
+      isWallCorner = Cartesian3.equalsEpsilon(
+        bottomPosition,
+        nextBottomPosition,
+        CesiumMath.EPSILON10
+      );
 
-      if (
-        recomputeNormal &&
-        (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent)
-      ) {
-        recomputeNormal = !calculateNormal(
+      if (needNormal || isWallCorner) {
+        needNormal = !calculateNormal(
           topPosition,
           bottomPosition,
           nextTopPosition,
@@ -559,19 +558,20 @@ WallGeometry.createGeometry = function (wallGeometry) {
         );
       }
 
-      if (
-        !recomputeNormal &&
-        (vertexFormat.tangent || vertexFormat.bitangent)
-      ) {
-        recomputeNormal = !calculateDirection(
-          bottomPosition,
-          nextBottomPosition,
-          tangent
-        );
-      }
+      if (!needNormal && !isWallCorner) {
+        if (vertexFormat.tangent || vertexFormat.bitangent) {
+          tangent = Cartesian3.normalize(
+            Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
+            tangent
+          );
+        }
 
-      if (!recomputeNormal && vertexFormat.bitangent) {
-        calculateBitangent(normal, tangent, bitangent);
+        if (vertexFormat.bitangent) {
+          bitangent = Cartesian3.normalize(
+            Cartesian3.cross(normal, tangent, bitangent),
+            bitangent
+          );
+        }
       }
     }
 
@@ -605,10 +605,10 @@ WallGeometry.createGeometry = function (wallGeometry) {
 
       textureCoordinates[stIndex++] = s;
       textureCoordinates[stIndex++] = 1.0;
-    }
 
-    if (!recomputeNormal && (vertexFormat.tangent || vertexFormat.bitangent)) {
-      s += ds;
+      if (!isWallCorner) {
+        s += ds;
+      }
     }
   }
 
