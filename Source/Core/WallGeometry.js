@@ -14,6 +14,16 @@ import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 import WallGeometryLibrary from "./WallGeometryLibrary.js";
 
+var scratchCartesian3Position0 = new Cartesian3();
+var scratchCartesian3Position1 = new Cartesian3();
+var scratchCartesian3Position2 = new Cartesian3();
+var scratchCartesian3Position3 = new Cartesian3();
+var scratchCartesian3Position4 = new Cartesian3();
+var scratchCartesian3Position5 = new Cartesian3();
+var scratchBitangent = new Cartesian3();
+var scratchTangent = new Cartesian3();
+var scratchNormal = new Cartesian3();
+
 /**
  * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
@@ -338,6 +348,12 @@ WallGeometry.fromConstantHeights = function (options) {
   return new WallGeometry(newOptions);
 };
 
+function initNormalTangentBitangent(normal, tangent, bitangent) {
+  Cartesian3.clone(Cartesian3.UNIT_X, tangent);
+  Cartesian3.clone(Cartesian3.UNIT_Y, normal);
+  Cartesian3.clone(Cartesian3.UNIT_Z, bitangent);
+}
+
 function calculateDirection(p0, p1, result) {
   if (Cartesian3.equalsEpsilon(p0, p1, CesiumMath.EPSILON10)) {
     return false;
@@ -514,19 +530,20 @@ WallGeometry.createGeometry = function (wallGeometry) {
 
   // add lower and upper points one after the other, lower
   // points being even and upper points being odd
-  var topPosition = new Cartesian3();
-  var bottomPosition = new Cartesian3();
-  var nextTopPosition = new Cartesian3();
-  var nextBottomPosition = new Cartesian3();
-  var topToBottom = new Cartesian3();
-  var topToNextTop = new Cartesian3();
+  var topPosition = scratchCartesian3Position0;
+  var bottomPosition = scratchCartesian3Position1;
+  var nextTopPosition = scratchCartesian3Position2;
+  var nextBottomPosition = scratchCartesian3Position3;
+  var topToBottom = scratchCartesian3Position4;
+  var topToNextTop = scratchCartesian3Position5;
 
-  var normal = new Cartesian3(0.0, 1.0, 0.0);
-  var tangent = new Cartesian3(1.0, 0.0, 0.0);
-  var bitangent = new Cartesian3(0.0, 0.0, 1.0);
+  var normal = scratchNormal;
+  var tangent = scratchTangent;
+  var bitangent = scratchBitangent;
+  initNormalTangentBitangent(normal, tangent, bitangent);
 
   var isWallCorner = false;
-  var needNormal = true;
+  var validNormal = false;
   var s = 0;
   var ds = 1.0 / (length / 3.0 - numCorners - 1.0);
   for (var i = 0; i < length; i += 3) {
@@ -547,8 +564,8 @@ WallGeometry.createGeometry = function (wallGeometry) {
         CesiumMath.EPSILON10
       );
 
-      if (needNormal || isWallCorner) {
-        needNormal = !calculateNormal(
+      if (!validNormal || isWallCorner) {
+        validNormal = calculateNormal(
           topPosition,
           bottomPosition,
           nextTopPosition,
@@ -558,7 +575,7 @@ WallGeometry.createGeometry = function (wallGeometry) {
         );
       }
 
-      if (!needNormal && !isWallCorner) {
+      if (validNormal && !isWallCorner) {
         if (vertexFormat.tangent || vertexFormat.bitangent) {
           tangent = Cartesian3.normalize(
             Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
