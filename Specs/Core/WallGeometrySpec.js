@@ -284,7 +284,8 @@ describe("Core/WallGeometry", function () {
     );
     Cartesian3.normalize(expectedNormal, expectedNormal);
 
-    for (var i = 0; i < normals.length; i += 3) {
+    var length = normals.length;
+    for (var i = 0; i < length; i += 3) {
       expect(normals[i]).toEqualEpsilon(expectedNormal.x, CesiumMath.EPSILON7);
       expect(normals[i + 1]).toEqualEpsilon(
         expectedNormal.y,
@@ -294,6 +295,71 @@ describe("Core/WallGeometry", function () {
         expectedNormal.z,
         CesiumMath.EPSILON7
       );
+    }
+  });
+
+  it("No zero unit normals, tangent, or bitangent created when only part of minimumHeights and maximumHeights array are equal", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.ALL,
+        positions: Cartesian3.fromDegreesArrayHeights([
+          49.0,
+          18.0,
+          1000.0,
+          50.0,
+          18.0,
+          1000.0,
+          51.0,
+          18.0,
+          1000.0,
+          52.0,
+          18.0,
+          1000.0,
+        ]),
+        maximumHeights: [0.0, -300.0, 0.0, 10.0],
+        minimumHeights: [0.0, -300.0, -10.0, -20.0],
+      })
+    );
+
+    var normals = w.attributes.normal.values;
+    var tangents = w.attributes.tangent.values;
+    var bitangents = w.attributes.bitangent.values;
+    var normal = Cartesian3.fromArray(normals, 0);
+    var tangent = Cartesian3.fromArray(tangents, 0);
+    var bitangent = Cartesian3.fromArray(bitangents, 0);
+    expect(Cartesian3.equalsEpsilon(normal, Cartesian3.UNIT_Y)).toEqual(true);
+    expect(Cartesian3.equalsEpsilon(tangent, Cartesian3.UNIT_X)).toEqual(true);
+    expect(Cartesian3.equalsEpsilon(bitangent, Cartesian3.UNIT_Z)).toEqual(
+      true
+    );
+
+    var length = normals.length;
+    for (var i = 3; i < length; i += 3) {
+      normal = Cartesian3.fromArray(normals, i, normal);
+      tangent = Cartesian3.fromArray(tangents, i, tangent);
+      bitangent = Cartesian3.fromArray(bitangents, i, bitangents);
+      var normalLength = Cartesian3.magnitude(normal);
+      var tangentLength = Cartesian3.magnitude(tangent);
+      var bitangentLength = Cartesian3.magnitude(bitangent);
+      var normalTangentAngle = Cartesian3.dot(normal, tangent);
+      var normalBitangentAngle = Cartesian3.dot(normal, bitangent);
+      var tangentBitangentAngle = Cartesian3.dot(tangent, bitangent);
+
+      expect(
+        CesiumMath.equalsEpsilon(normalLength, 0.0, CesiumMath.EPSILON7)
+      ).toEqual(false);
+
+      expect(
+        CesiumMath.equalsEpsilon(tangentLength, 0.0, CesiumMath.EPSILON7)
+      ).toEqual(false);
+
+      expect(
+        CesiumMath.equalsEpsilon(bitangentLength, 0.0, CesiumMath.EPSILON7)
+      ).toEqual(false);
+
+      expect(normalTangentAngle).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+      expect(normalBitangentAngle).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+      expect(tangentBitangentAngle).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
     }
   });
 
