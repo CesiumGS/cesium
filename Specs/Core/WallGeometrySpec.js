@@ -82,6 +82,53 @@ describe("Core/WallGeometry", function () {
     expect(geometry).toBeUndefined();
   });
 
+  it("does not create when minimumHeights and maximumHeights are the same", function () {
+    var geometry = WallGeometry.createGeometry(
+      new WallGeometry({
+        positions: Cartesian3.fromDegreesArrayHeights([
+          -115.0,
+          44.0,
+          100000.0,
+          -90.0,
+          44.0,
+          200000.0,
+          -30.0,
+          44.0,
+          200000.0,
+        ]),
+        maximumHeights: [60000.0, 60000.0, 50000.0],
+        minimumHeights: [60000.0, 60000.0, 50000.0],
+      })
+    );
+
+    expect(geometry).toBeUndefined();
+  });
+
+  it("does not create when removing duplicated position results in minimumHeights and maximumHeights are the same", function () {
+    var geometry = WallGeometry.createGeometry(
+      new WallGeometry({
+        positions: Cartesian3.fromDegreesArrayHeights([
+          -115.0,
+          44.0,
+          200000.0,
+          -115.0,
+          44.0,
+          100000.0,
+          -90.0,
+          44.0,
+          200000.0,
+          -30.0,
+          44.0,
+          200000.0,
+        ]),
+        maximumHeights: [40000.0, 60000.0, 60000.0, 50000.0],
+        minimumHeights: [60000.0, 60000.0, 60000.0, 50000.0],
+      })
+    );
+
+    expect(geometry).toBeUndefined();
+  });
+
   it("does not throw when positions are unique but close", function () {
     WallGeometry.createGeometry(
       new WallGeometry({
@@ -238,7 +285,6 @@ describe("Core/WallGeometry", function () {
     Cartesian3.normalize(expectedNormal, expectedNormal);
 
     for (var i = 0; i < normals.length; i += 3) {
-      console.log(normals);
       expect(normals[i]).toEqualEpsilon(expectedNormal.x, CesiumMath.EPSILON7);
       expect(normals[i + 1]).toEqualEpsilon(
         expectedNormal.y,

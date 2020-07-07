@@ -26,7 +26,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
   if (length < 2) {
     return;
   }
-
   var hasBottomHeights = defined(bottomHeights);
   var hasTopHeights = defined(topHeights);
 
@@ -35,13 +34,12 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
   var cleanedBottomHeights = new Array(length);
 
   var v0 = positions[0];
-  cleanedPositions[0] = v0;
-
   var c0 = ellipsoid.cartesianToCartographic(v0, scratchCartographic1);
   if (hasTopHeights) {
     c0.height = topHeights[0];
   }
 
+  cleanedPositions[0] = v0;
   cleanedTopHeights[0] = c0.height;
 
   if (hasBottomHeights) {
@@ -50,10 +48,9 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     cleanedBottomHeights[0] = 0.0;
   }
 
-  var wallHeight = Math.abs(cleanedTopHeights[0] - cleanedBottomHeights[0]);
-  var hasAllZeroHeights = wallHeight < CesiumMath.EPSILON10;
   var index = 1;
-  for (var i = 1; i < length; ++i) {
+  var i;
+  for (i = 1; i < length; ++i) {
     var v1 = positions[i];
     var c1 = ellipsoid.cartesianToCartographic(v1, scratchCartographic2);
     if (hasTopHeights) {
@@ -70,25 +67,25 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
         cleanedBottomHeights[index] = 0.0;
       }
 
-      wallHeight = Math.abs(
-        cleanedTopHeights[index] - cleanedBottomHeights[index]
-      );
-      hasAllZeroHeights =
-        hasAllZeroHeights && wallHeight < CesiumMath.EPSILON10;
-
       Cartographic.clone(c1, c0);
       ++index;
     } else if (c0.height < c1.height) {
       cleanedTopHeights[index - 1] = c1.height;
-      wallHeight = Math.abs(
-        cleanedTopHeights[index - 1] - cleanedBottomHeights[index - 1]
-      );
-      hasAllZeroHeights =
-        hasAllZeroHeights && wallHeight < CesiumMath.EPSILON10;
     }
   }
 
-  if (hasAllZeroHeights || index < 2) {
+  var zeroHeightCount = 0;
+  for (i = 0; i < index; ++i) {
+    var topHeight = cleanedTopHeights[i];
+    var bottomHeight = cleanedBottomHeights[i];
+    zeroHeightCount += CesiumMath.equalsEpsilon(
+      topHeight,
+      bottomHeight,
+      CesiumMath.EPSILON10
+    );
+  }
+
+  if (zeroHeightCount === index || index < 2) {
     return;
   }
 

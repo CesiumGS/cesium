@@ -14,15 +14,6 @@ import PrimitiveType from "./PrimitiveType.js";
 import VertexFormat from "./VertexFormat.js";
 import WallGeometryLibrary from "./WallGeometryLibrary.js";
 
-var scratchCartesian3Position1 = new Cartesian3();
-var scratchCartesian3Position2 = new Cartesian3();
-var scratchCartesian3Position3 = new Cartesian3();
-var scratchCartesian3Position4 = new Cartesian3();
-var scratchCartesian3Position5 = new Cartesian3();
-var scratchBitangent = new Cartesian3();
-var scratchTangent = new Cartesian3();
-var scratchNormal = new Cartesian3();
-
 /**
  * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
  * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
@@ -347,6 +338,140 @@ WallGeometry.fromConstantHeights = function (options) {
   return new WallGeometry(newOptions);
 };
 
+function calculateDirection(p0, p1, result) {
+  if (Cartesian3.equalsEpsilon(p0, p1, CesiumMath.EPSILON10)) {
+    return false;
+  }
+
+  result = Cartesian3.normalize(Cartesian3.subtract(p0, p1, result), result);
+  return true;
+}
+
+function calculateNormal(p0, p1, p2, resultP10, resultP20, result) {
+  if (!calculateDirection(p1, p0, resultP10)) {
+    return false;
+  }
+
+  if (!calculateDirection(p2, p0, resultP20)) {
+    return false;
+  }
+
+  var angle = Cartesian3.dot(resultP10, resultP20);
+  if (CesiumMath.equalsEpsilon(Math.abs(angle), 1.0, CesiumMath.EPSILON10)) {
+    return false;
+  }
+
+  result = Cartesian3.normalize(
+    Cartesian3.cross(resultP10, resultP20, result),
+    result
+  );
+  return true;
+}
+
+function calculateBitangent(normal, tangent, result) {
+  result = Cartesian3.normalize(
+    Cartesian3.cross(normal, tangent, result),
+    result
+  );
+}
+
+function createWallGeometryAttributes(
+  vertexFormat,
+  positions,
+  normals,
+  tangents,
+  bitangents,
+  textureCoordinates
+) {
+  var attributes = new GeometryAttributes();
+
+  if (vertexFormat.position) {
+    attributes.position = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.DOUBLE,
+      componentsPerAttribute: 3,
+      values: positions,
+    });
+  }
+
+  if (vertexFormat.normal) {
+    attributes.normal = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 3,
+      values: normals,
+    });
+  }
+
+  if (vertexFormat.tangent) {
+    attributes.tangent = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 3,
+      values: tangents,
+    });
+  }
+
+  if (vertexFormat.bitangent) {
+    attributes.bitangent = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 3,
+      values: bitangents,
+    });
+  }
+
+  if (vertexFormat.st) {
+    attributes.st = new GeometryAttribute({
+      componentDatatype: ComponentDatatype.FLOAT,
+      componentsPerAttribute: 2,
+      values: textureCoordinates,
+    });
+  }
+
+  return attributes;
+}
+
+function createWallGeometryIndices(positions, numCorners) {
+  // prepare the side walls, two triangles for each wall
+  //
+  //    A (i+1)  B (i+3) E
+  //    +--------+-------+
+  //    |      / |      /|    triangles:  A C B
+  //    |     /  |     / |                B C D
+  //    |    /   |    /  |
+  //    |   /    |   /   |
+  //    |  /     |  /    |
+  //    | /      | /     |
+  //    +--------+-------+
+  //    C (i)    D (i+2) F
+  //
+  var size = positions.length;
+  var numVertices = size / 3;
+  size -= 6 * (numCorners + 1);
+  var indices = IndexDatatype.createTypedArray(numVertices, size);
+
+  var scratchPosition1 = new Cartesian3();
+  var scratchPosition2 = new Cartesian3();
+  var edgeIndex = 0;
+  for (var i = 0; i < numVertices - 2; i += 2) {
+    var LL = i;
+    var LR = i + 2;
+    var pl = Cartesian3.fromArray(positions, LL * 3, scratchPosition1);
+    var pr = Cartesian3.fromArray(positions, LR * 3, scratchPosition2);
+    if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON10)) {
+      continue;
+    }
+    var UL = i + 1;
+    var UR = i + 3;
+
+    indices[edgeIndex++] = UL;
+    indices[edgeIndex++] = LL;
+    indices[edgeIndex++] = UR;
+    indices[edgeIndex++] = UR;
+    indices[edgeIndex++] = LL;
+    indices[edgeIndex++] = LR;
+  }
+
+  return indices;
+}
+
 /**
  * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
  *
@@ -396,36 +521,82 @@ WallGeometry.createGeometry = function (wallGeometry) {
 
   // add lower and upper points one after the other, lower
   // points being even and upper points being odd
-  var normal = scratchNormal;
-  var tangent = scratchTangent;
-  var bitangent = scratchBitangent;
-  var recomputeNormal = true;
-  length /= 3;
-  var i;
-  var s = 0;
-  var ds = 1 / (length - wallPositions.length + 1);
-  for (i = 0; i < length; ++i) {
-    var i3 = i * 3;
-    var topPosition = Cartesian3.fromArray(
-      topPositions,
-      i3,
-      scratchCartesian3Position1
-    );
-    var bottomPosition = Cartesian3.fromArray(
-      bottomPositions,
-      i3,
-      scratchCartesian3Position2
-    );
-    if (vertexFormat.position) {
-      // insert the lower point
-      positions[positionIndex++] = bottomPosition.x;
-      positions[positionIndex++] = bottomPosition.y;
-      positions[positionIndex++] = bottomPosition.z;
+  var topPosition = new Cartesian3();
+  var bottomPosition = new Cartesian3();
+  var nextTopPosition = new Cartesian3();
+  var nextBottomPosition = new Cartesian3();
+  var topToBottom = new Cartesian3();
+  var topToNextTop = new Cartesian3();
 
-      // insert the upper point
-      positions[positionIndex++] = topPosition.x;
-      positions[positionIndex++] = topPosition.y;
-      positions[positionIndex++] = topPosition.z;
+  var normal = new Cartesian3(0.0, 1.0, 0.0);
+  var tangent = new Cartesian3(1.0, 0.0, 0.0);
+  var bitangent = new Cartesian3(0.0, 0.0, 1.0);
+
+  var recomputeNormal = true;
+  var s = 0;
+  var ds = 1.0 / (length / 3.0 - wallPositions.length + 1.0);
+  for (var i = 0; i < length; i += 3) {
+    var curr = i;
+    var next = i + 3;
+    Cartesian3.fromArray(topPositions, curr, topPosition);
+    Cartesian3.fromArray(bottomPositions, curr, bottomPosition);
+
+    if (next < length) {
+      Cartesian3.fromArray(topPositions, next, nextTopPosition);
+      Cartesian3.fromArray(bottomPositions, next, nextBottomPosition);
+
+      if (
+        recomputeNormal &&
+        (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent)
+      ) {
+        recomputeNormal = !calculateNormal(
+          topPosition,
+          bottomPosition,
+          nextTopPosition,
+          topToBottom,
+          topToNextTop,
+          normal
+        );
+      }
+
+      if (
+        !recomputeNormal &&
+        (vertexFormat.tangent || vertexFormat.bitangent)
+      ) {
+        recomputeNormal = !calculateDirection(
+          bottomPosition,
+          nextBottomPosition,
+          tangent
+        );
+      }
+
+      if (!recomputeNormal && vertexFormat.bitangent) {
+        calculateBitangent(normal, tangent, bitangent);
+      }
+    }
+
+    if (vertexFormat.position) {
+      Cartesian3.pack(bottomPosition, positions, positionIndex);
+      Cartesian3.pack(topPosition, positions, positionIndex + 3);
+      positionIndex += 6;
+    }
+
+    if (vertexFormat.normal) {
+      Cartesian3.pack(normal, normals, normalIndex);
+      Cartesian3.pack(normal, normals, normalIndex + 3);
+      normalIndex += 6;
+    }
+
+    if (vertexFormat.tangent) {
+      Cartesian3.pack(tangent, tangents, tangentIndex);
+      Cartesian3.pack(tangent, tangents, tangentIndex + 3);
+      tangentIndex += 6;
+    }
+
+    if (vertexFormat.bitangent) {
+      Cartesian3.pack(bitangent, bitangents, bitangentIndex);
+      Cartesian3.pack(bitangent, bitangents, bitangentIndex + 3);
+      bitangentIndex += 6;
     }
 
     if (vertexFormat.st) {
@@ -436,190 +607,21 @@ WallGeometry.createGeometry = function (wallGeometry) {
       textureCoordinates[stIndex++] = 1.0;
     }
 
-    if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
-      var nextBottomPosition = Cartesian3.clone(
-        Cartesian3.ZERO,
-        scratchCartesian3Position3
-      );
-      var nextTop = Cartesian3.clone(
-        Cartesian3.ZERO,
-        scratchCartesian3Position5
-      );
-
-      if (i + 1 < length) {
-        nextBottomPosition = Cartesian3.fromArray(
-          bottomPositions,
-          i3 + 3,
-          scratchCartesian3Position3
-        );
-        nextTop = Cartesian3.fromArray(
-          topPositions,
-          i3 + 3,
-          scratchCartesian3Position5
-        );
-      }
-
-      if (recomputeNormal) {
-        var scalednextPosition = Cartesian3.subtract(
-          nextTop,
-          topPosition,
-          scratchCartesian3Position4
-        );
-        var scaledBottomPosition = Cartesian3.subtract(
-          bottomPosition,
-          topPosition,
-          scratchCartesian3Position1
-        );
-        normal = Cartesian3.normalize(
-          Cartesian3.cross(scaledBottomPosition, scalednextPosition, normal),
-          normal
-        );
-        recomputeNormal = false;
-      }
-
-      if (
-        Cartesian3.equalsEpsilon(
-          bottomPosition,
-          nextBottomPosition,
-          CesiumMath.EPSILON10
-        )
-      ) {
-        recomputeNormal = true;
-      } else {
-        s += ds;
-        if (vertexFormat.tangent) {
-          tangent = Cartesian3.normalize(
-            Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
-            tangent
-          );
-        }
-        if (vertexFormat.bitangent) {
-          bitangent = Cartesian3.normalize(
-            Cartesian3.cross(normal, tangent, bitangent),
-            bitangent
-          );
-        }
-      }
-
-      if (vertexFormat.normal) {
-        normals[normalIndex++] = normal.x;
-        normals[normalIndex++] = normal.y;
-        normals[normalIndex++] = normal.z;
-
-        normals[normalIndex++] = normal.x;
-        normals[normalIndex++] = normal.y;
-        normals[normalIndex++] = normal.z;
-      }
-
-      if (vertexFormat.tangent) {
-        tangents[tangentIndex++] = tangent.x;
-        tangents[tangentIndex++] = tangent.y;
-        tangents[tangentIndex++] = tangent.z;
-
-        tangents[tangentIndex++] = tangent.x;
-        tangents[tangentIndex++] = tangent.y;
-        tangents[tangentIndex++] = tangent.z;
-      }
-
-      if (vertexFormat.bitangent) {
-        bitangents[bitangentIndex++] = bitangent.x;
-        bitangents[bitangentIndex++] = bitangent.y;
-        bitangents[bitangentIndex++] = bitangent.z;
-
-        bitangents[bitangentIndex++] = bitangent.x;
-        bitangents[bitangentIndex++] = bitangent.y;
-        bitangents[bitangentIndex++] = bitangent.z;
-      }
+    if (!recomputeNormal && (vertexFormat.tangent || vertexFormat.bitangent)) {
+      s += ds;
     }
   }
 
-  var attributes = new GeometryAttributes();
+  var indices = createWallGeometryIndices(positions, numCorners);
 
-  if (vertexFormat.position) {
-    attributes.position = new GeometryAttribute({
-      componentDatatype: ComponentDatatype.DOUBLE,
-      componentsPerAttribute: 3,
-      values: positions,
-    });
-  }
-
-  if (vertexFormat.normal) {
-    attributes.normal = new GeometryAttribute({
-      componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
-      values: normals,
-    });
-  }
-
-  if (vertexFormat.tangent) {
-    attributes.tangent = new GeometryAttribute({
-      componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
-      values: tangents,
-    });
-  }
-
-  if (vertexFormat.bitangent) {
-    attributes.bitangent = new GeometryAttribute({
-      componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 3,
-      values: bitangents,
-    });
-  }
-
-  if (vertexFormat.st) {
-    attributes.st = new GeometryAttribute({
-      componentDatatype: ComponentDatatype.FLOAT,
-      componentsPerAttribute: 2,
-      values: textureCoordinates,
-    });
-  }
-
-  // prepare the side walls, two triangles for each wall
-  //
-  //    A (i+1)  B (i+3) E
-  //    +--------+-------+
-  //    |      / |      /|    triangles:  A C B
-  //    |     /  |     / |                B C D
-  //    |    /   |    /  |
-  //    |   /    |   /   |
-  //    |  /     |  /    |
-  //    | /      | /     |
-  //    +--------+-------+
-  //    C (i)    D (i+2) F
-  //
-
-  var numVertices = size / 3;
-  size -= 6 * (numCorners + 1);
-  var indices = IndexDatatype.createTypedArray(numVertices, size);
-
-  var edgeIndex = 0;
-  for (i = 0; i < numVertices - 2; i += 2) {
-    var LL = i;
-    var LR = i + 2;
-    var pl = Cartesian3.fromArray(
-      positions,
-      LL * 3,
-      scratchCartesian3Position1
-    );
-    var pr = Cartesian3.fromArray(
-      positions,
-      LR * 3,
-      scratchCartesian3Position2
-    );
-    if (Cartesian3.equalsEpsilon(pl, pr, CesiumMath.EPSILON10)) {
-      continue;
-    }
-    var UL = i + 1;
-    var UR = i + 3;
-
-    indices[edgeIndex++] = UL;
-    indices[edgeIndex++] = LL;
-    indices[edgeIndex++] = UR;
-    indices[edgeIndex++] = UR;
-    indices[edgeIndex++] = LL;
-    indices[edgeIndex++] = LR;
-  }
+  var attributes = createWallGeometryAttributes(
+    vertexFormat,
+    positions,
+    normals,
+    tangents,
+    bitangents,
+    textureCoordinates
+  );
 
   return new Geometry({
     attributes: attributes,
