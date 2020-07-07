@@ -1,6 +1,6 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.68.0",
+  "version": "1.69.0",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -48,6 +48,7 @@
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
     "eslint": "^6.4.0",
+    "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
     "globby": "^11.0.0",
@@ -60,6 +61,7 @@
     "gulp-tap": "^2.0.0",
     "gulp-uglify": "^3.0.0",
     "gulp-zip": "^5.0.0",
+    "husky": "^4.2.5",
     "jasmine-core": "^3.3.0",
     "jsdoc": "^3.4.3",
     "karma": "^4.0.0",
@@ -78,6 +80,8 @@
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
     "open": "^7.0.0",
+    "prettier": "^2.0.4",
+    "pretty-quick": "^2.0.1",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
     "rollup": "^1.21.4",
@@ -86,6 +90,11 @@
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^2.2.0",
     "yargs": "^14.0.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
   },
   "scripts": {
     "convertToModules": "gulp convertToModules",
@@ -120,11 +129,14 @@
     "postinstall": "bash -c \"if [ ! -d \"./wwwroot/build\" ]; then gulp -f gulpfile.cjs terria-prepare-cesium; fi\"",
     "deploy-s3": "gulp deploy-s3",
     "deploy-status": "gulp deploy-status",
-    "deploy-set-version": "gulp deploy-set-version"
-  },
-  "browserify": {
-    "transform": [
-      "deamdify"
-    ]
+    "deploy-set-version": "gulp deploy-set-version",
+    "prettier": "prettier --write \"**/*\"",
+    "prettier-check": "prettier --check \"**/*\"",
+    "pretty-quick": "pretty-quick",
+    "browserify": {
+      "transform": [
+        "deamdify"
+      ]
+    }
   }
 }

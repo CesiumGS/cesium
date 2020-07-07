@@ -68,7 +68,7 @@ mersenne-twister.js - https://gist.github.com/banksean/300494
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
 */
 
-var MersenneTwister = function(seed) {
+function MersenneTwister(seed) {
   if (seed == undefined) {
     seed = new Date().getTime();
   }

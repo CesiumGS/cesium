@@ -1,39 +1,38 @@
 Changes from upstream Cesium as of 2019-12-16:
 
-* Tweaks to `.gitignore` and `.npmignore`, not sure exactly why.
-* New maki icons for use in geojson markers: `dump`, `gavel`, `horse`, `mountain`, and `question`. These were added for the NSW Digital Twin because, at the time, it wasn't possible to use custom images as markers in GeoJSON. I believe we now have that feature. I also believe we aren't using these anymore.
-* Tweak to how `ApproximateTerrainHeights.js` loads its data, to work with our webpack configuration.
-* Added a `clone` method to `Clock`. We needed to copy clocks somewhere along the way, but it doesn't appear to be used anywhere anymore.
-* Fix for a bug in `JulianDate` that caused a date with a number of milliseconds very near zero to be formatted incorrectly as ISO8601. The number of milliseconds would contain exponential notation (e.g. 1.23e-7), creating an invalid IS8601 date/time string. _We should really pull-reqest this one into upstream Cesium!_
-* Added a try/catch to RequestScheduler around the call to `requestFunction`. Apparently there was a badly-behaved one at some point that was throwing rather than returning a rejected promise. I'm not sure anymore where/when that happened.
-* Lots of formatting changes to `Resource.js`, looks like someone accidentally ran prettier.
-* Bit of hackery in the `Resource` constructor to detect `{placeholders}` so that these can be preserved instead of turned into ` %7Bplaceholders%7D`.
-* Added `Resource.fetchXHR` and `Resource.prototype.fetchXHR`. As far as I can tell, these are identical to the existing `fetch` methods, and so I don't know why we need them. Perhaps `fetch` was added later?
-* A slightly earlier version of the changes in https://github.com/AnalyticalGraphicsInc/cesium/pull/8163, fixing double-counting of some image requests in by-server throttling.
-* Added a `timeout` option to a bunch of `fetch` functions. Why? I don't know, it doesn't appear to be used.
-* Tweaks to `TaskProcessor.js` to work in our webpack environment.
-* Made `TileProviderError` a `RuntimeError`, and gave it a name, and made it pass the retry object, if any, to the retryFunction. The latter is used in our imagery load retry logic.
-* Tweaks to `buildModuleUrl` to work in our webpack environment.
-* A seemingly pointless change in `CzmlDataSource`, moving an item in a switch/case.
-* Modifications to `DataSource` and `DataSourceDisplay` to allow a single `DataSource` to be used on multiple displays. For example, a single `GeoJsonDataSource` might be shown on both the main map and the preview map.
-* Extended `GeoJsonDataSource` to allow different colors for polyline versus polygon outlines (stroke). Also added support for `heightReference`, `heightProperty`, and `extrudedHeightProperty`.
-* Extended `ModelGraphics` and `ModelVisualizer` so that DataSources / Entities can set an `upAxis` or `forwardAxis`.
-* Implemented a hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121, so that the bounding sphere is semi-usable for models clamped to terrain.
-* Added support for `parameters` to `ArcGisMapServerImageryProvider`. Also added the ability to pass in the MapServer metadata as a performance optimization when the app already has it.
-* Fixed a bug in `Cesium3DTilesetTraversal.js` where, when a tile didn't have any content, Cesium would show the child tiles instead. This logic is correct-ish when the parent tile happens to not be loaded yet, but is very wrong and results in rendering way too much data when the parent doesn't have any content _by design_ (i.e. none of the features are necessary to show at this zoom level). So now we only display children if the parent is not supposed to be empty.
-* Changed `GetFeatureInfoFormat.js` to not require that the XML strictly use a particular namespace. Also added the CRS from the GeoJSON to the feature, if it doesn't already have one.
-* Added the ability to split terrain so it is only shown on one side of the screen. This involved changes to `Globe.js`, `GlobeSurfaceShaderSet.js`, `GlobeSurfaceTileProvider`, `SkyAtmosphere`, `GlobeFS.glsl`, `SkyAtmosphereFS.glsl`.
-* Added `Globe.prototype.pickTriangle` and `GlobeSurfaceTile.prototype.pickTriangle`. They're similar to `pick` except they provide details of the actual terrain triangle picked, which is useful for more accurately computing the picked position. This is used to improve the accuracy of the lon/lat/height display in the lower right of terria apps.
-* Added support for async retry to `ImageryLayer`. e.g. token expires, we need to asynchronously get a new one and then retry a tile request.
-* Added the missing `properties` property to `ImageryLayerFeatureInfo`. It's _used_ in upstream Cesium, but not declared in the constructor.
-* Added support for changing the shadow mode of Cesium 3D Tiles using the I3DM format.
-* Added support for pre-computed model outlines via the `TERRIA_solid_outlines` extension. Changes to `Model.js`, `processPbrMaterials.js`,
-* Added support for feature picking to `WebMapTileServiceImageryProvider`.
-* Tweaks to `inflate.js`, `deflate.js`, and `zip.js` to work with your webpack configuration.
-* Added a `forceResize` method to `CesiumWidget` and `Viewer`. Not sure why, doesn't seem to be used.
-* Added support for `fill-rule` to Cesium's knockout SVG handler (`SvgPathBindingHandler`). We needed this for some of our SVGs in the early days, but we don't use knockout anymore so it's not needed anymore.
-* Rewrite of `cesiumWorkerBootstrapper.js` to work with our webpack config.
-* Tweaks to `createGeometry.js` and `decodeDraco.js` to work with our webpack config.
-* Added `terria-copy-cesium-assets` gulp task to copy assets Cesium needs at runtime into the `wwwroot/build` directory. This _may_ not be needed anymore because our webpack config works a lot differently from our old browserify config, but I'm not sure.
-* Use `dompurify` from npm instead of the one copied into Cesium source, to avoid having two copies.
-
+- Tweaks to `.gitignore` and `.npmignore`, not sure exactly why.
+- New maki icons for use in geojson markers: `dump`, `gavel`, `horse`, `mountain`, and `question`. These were added for the NSW Digital Twin because, at the time, it wasn't possible to use custom images as markers in GeoJSON. I believe we now have that feature. I also believe we aren't using these anymore.
+- Tweak to how `ApproximateTerrainHeights.js` loads its data, to work with our webpack configuration.
+- Added a `clone` method to `Clock`. We needed to copy clocks somewhere along the way, but it doesn't appear to be used anywhere anymore.
+- Fix for a bug in `JulianDate` that caused a date with a number of milliseconds very near zero to be formatted incorrectly as ISO8601. The number of milliseconds would contain exponential notation (e.g. 1.23e-7), creating an invalid IS8601 date/time string. _We should really pull-reqest this one into upstream Cesium!_
+- Added a try/catch to RequestScheduler around the call to `requestFunction`. Apparently there was a badly-behaved one at some point that was throwing rather than returning a rejected promise. I'm not sure anymore where/when that happened.
+- Lots of formatting changes to `Resource.js`, looks like someone accidentally ran prettier.
+- Bit of hackery in the `Resource` constructor to detect `{placeholders}` so that these can be preserved instead of turned into `%7Bplaceholders%7D`.
+- Added `Resource.fetchXHR` and `Resource.prototype.fetchXHR`. As far as I can tell, these are identical to the existing `fetch` methods, and so I don't know why we need them. Perhaps `fetch` was added later?
+- A slightly earlier version of the changes in https://github.com/AnalyticalGraphicsInc/cesium/pull/8163, fixing double-counting of some image requests in by-server throttling.
+- Added a `timeout` option to a bunch of `fetch` functions. Why? I don't know, it doesn't appear to be used.
+- Tweaks to `TaskProcessor.js` to work in our webpack environment.
+- Made `TileProviderError` a `RuntimeError`, and gave it a name, and made it pass the retry object, if any, to the retryFunction. The latter is used in our imagery load retry logic.
+- Tweaks to `buildModuleUrl` to work in our webpack environment.
+- A seemingly pointless change in `CzmlDataSource`, moving an item in a switch/case.
+- Modifications to `DataSource` and `DataSourceDisplay` to allow a single `DataSource` to be used on multiple displays. For example, a single `GeoJsonDataSource` might be shown on both the main map and the preview map.
+- Extended `GeoJsonDataSource` to allow different colors for polyline versus polygon outlines (stroke). Also added support for `heightReference`, `heightProperty`, and `extrudedHeightProperty`.
+- Extended `ModelGraphics` and `ModelVisualizer` so that DataSources / Entities can set an `upAxis` or `forwardAxis`.
+- Implemented a hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121, so that the bounding sphere is semi-usable for models clamped to terrain.
+- Added support for `parameters` to `ArcGisMapServerImageryProvider`. Also added the ability to pass in the MapServer metadata as a performance optimization when the app already has it.
+- Fixed a bug in `Cesium3DTilesetTraversal.js` where, when a tile didn't have any content, Cesium would show the child tiles instead. This logic is correct-ish when the parent tile happens to not be loaded yet, but is very wrong and results in rendering way too much data when the parent doesn't have any content _by design_ (i.e. none of the features are necessary to show at this zoom level). So now we only display children if the parent is not supposed to be empty.
+- Changed `GetFeatureInfoFormat.js` to not require that the XML strictly use a particular namespace. Also added the CRS from the GeoJSON to the feature, if it doesn't already have one.
+- Added the ability to split terrain so it is only shown on one side of the screen. This involved changes to `Globe.js`, `GlobeSurfaceShaderSet.js`, `GlobeSurfaceTileProvider`, `SkyAtmosphere`, `GlobeFS.glsl`, `SkyAtmosphereFS.glsl`.
+- Added `Globe.prototype.pickTriangle` and `GlobeSurfaceTile.prototype.pickTriangle`. They're similar to `pick` except they provide details of the actual terrain triangle picked, which is useful for more accurately computing the picked position. This is used to improve the accuracy of the lon/lat/height display in the lower right of terria apps.
+- Added support for async retry to `ImageryLayer`. e.g. token expires, we need to asynchronously get a new one and then retry a tile request.
+- Added the missing `properties` property to `ImageryLayerFeatureInfo`. It's _used_ in upstream Cesium, but not declared in the constructor.
+- Added support for changing the shadow mode of Cesium 3D Tiles using the I3DM format.
+- Added support for pre-computed model outlines via the `TERRIA_solid_outlines` extension. Changes to `Model.js`, `processPbrMaterials.js`,
+- Added support for feature picking to `WebMapTileServiceImageryProvider`.
+- Tweaks to `inflate.js`, `deflate.js`, and `zip.js` to work with your webpack configuration.
+- Added a `forceResize` method to `CesiumWidget` and `Viewer`. Not sure why, doesn't seem to be used.
+- Added support for `fill-rule` to Cesium's knockout SVG handler (`SvgPathBindingHandler`). We needed this for some of our SVGs in the early days, but we don't use knockout anymore so it's not needed anymore.
+- Rewrite of `cesiumWorkerBootstrapper.js` to work with our webpack config.
+- Tweaks to `createGeometry.js` and `decodeDraco.js` to work with our webpack config.
+- Added `terria-copy-cesium-assets` gulp task to copy assets Cesium needs at runtime into the `wwwroot/build` directory. This _may_ not be needed anymore because our webpack config works a lot differently from our old browserify config, but I'm not sure.
+- Use `dompurify` from npm instead of the one copied into Cesium source, to avoid having two copies.

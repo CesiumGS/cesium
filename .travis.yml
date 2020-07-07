@@ -9,6 +9,7 @@ script:
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
+  - npm --silent run prettier-check
 
   - npm --silent run build
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
@@ -24,7 +25,7 @@ script:
   - npm --silent run build-specs
   - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
-# Various Node.js smoke-screen tests
+  # Various Node.js smoke-screen tests
   - node -e "const Cesium = require('./');"
   - NODE_ENV=development node index.cjs
   - NODE_ENV=production node index.cjs
