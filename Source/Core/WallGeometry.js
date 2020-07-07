@@ -348,12 +348,6 @@ WallGeometry.fromConstantHeights = function (options) {
   return new WallGeometry(newOptions);
 };
 
-function initNormalTangentBitangent(normal, tangent, bitangent) {
-  Cartesian3.clone(Cartesian3.UNIT_X, tangent);
-  Cartesian3.clone(Cartesian3.UNIT_Y, normal);
-  Cartesian3.clone(Cartesian3.UNIT_Z, bitangent);
-}
-
 function calculateDirection(p0, p1, result) {
   if (Cartesian3.equalsEpsilon(p0, p1, CesiumMath.EPSILON10)) {
     return false;
@@ -537,10 +531,9 @@ WallGeometry.createGeometry = function (wallGeometry) {
   var topToBottom = scratchCartesian3Position4;
   var topToNextTop = scratchCartesian3Position5;
 
-  var normal = scratchNormal;
-  var tangent = scratchTangent;
-  var bitangent = scratchBitangent;
-  initNormalTangentBitangent(normal, tangent, bitangent);
+  var normal = Cartesian3.clone(Cartesian3.UNIT_Y, scratchNormal);
+  var tangent = Cartesian3.clone(Cartesian3.UNIT_X, scratchTangent);
+  var bitangent = Cartesian3.clone(Cartesian3.UNIT_Z, scratchBitangent);
 
   var isWallCorner = false;
   var validNormal = false;
