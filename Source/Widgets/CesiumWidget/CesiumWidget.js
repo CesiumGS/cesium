@@ -634,7 +634,7 @@ Object.defineProperties(CesiumWidget.prototype, {
  * widget was constructed.
  *
  * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
- * @param {String} message A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+ * @param {String} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
  * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
  */
 CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
@@ -663,22 +663,56 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
     window.addEventListener("resize", resizeCallback, false);
   }
 
-  if (defined(message)) {
+  var hasMessage = defined(message);
+  var hasError = defined(error);
+
+  if (hasMessage || hasError) {
     var errorMessage = document.createElement("div");
     errorMessage.className = "cesium-widget-errorPanel-message";
-    errorMessage.innerHTML = "<p>" + message + "</p>";
     errorPanelScroller.appendChild(errorMessage);
-  }
 
-  var errorDetails = "(no error details available)";
-  if (defined(error)) {
-    errorDetails = formatError(error);
-  }
+    if (hasError) {
+      var errorDetails = formatError(error);
+      if (!hasMessage) {
+        if (typeof error === "string") {
+          error = new Error(error);
+        }
 
-  var errorMessageDetails = document.createElement("div");
-  errorMessageDetails.className = "cesium-widget-errorPanel-message";
-  errorMessageDetails.appendChild(document.createTextNode(errorDetails));
-  errorPanelScroller.appendChild(errorMessageDetails);
+        message = formatError({
+          name: error.name,
+          message: error.message,
+        });
+        errorDetails = error.stack;
+      }
+
+      //IE8 does not have a console object unless the dev tools are open.
+      if (typeof console !== "undefined") {
+        console.error(title + "\n" + message + "\n" + errorDetails);
+      }
+
+      var errorMessageDetails = document.createElement("div");
+      errorMessageDetails.className =
+        "cesium-widget-errorPanel-message-details collapsed";
+
+      var moreDetails = document.createElement("span");
+      moreDetails.className = "cesium-widget-errorPanel-more-details";
+      moreDetails.appendChild(document.createTextNode("See more..."));
+      errorMessageDetails.appendChild(moreDetails);
+
+      errorMessageDetails.onclick = function (e) {
+        errorMessageDetails.removeChild(moreDetails);
+        errorMessageDetails.appendChild(document.createTextNode(errorDetails));
+        errorMessageDetails.className =
+          "cesium-widget-errorPanel-message-details";
+        content.className = "cesium-widget-errorPanel-content expanded";
+        errorMessageDetails.onclick = undefined;
+      };
+
+      errorPanelScroller.appendChild(errorMessageDetails);
+    }
+
+    errorMessage.innerHTML = "<p>" + message + "</p>";
+  }
 
   var buttonPanel = document.createElement("div");
   buttonPanel.className = "cesium-widget-errorPanel-buttonPanel";
@@ -698,11 +732,6 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   buttonPanel.appendChild(okButton);
 
   element.appendChild(overlay);
-
-  //IE8 does not have a console object unless the dev tools are open.
-  if (typeof console !== "undefined") {
-    console.error(title + "\n" + message + "\n" + errorDetails);
-  }
 };
 
 /**
