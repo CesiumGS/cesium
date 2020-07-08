@@ -208,7 +208,7 @@ describe(
         scene.morphTo2D(0.0);
         camera.setView({ destination: largeRectangle });
         var rectangle = createLargeRectangle(0.0);
-        scene.initializeFrame();
+        scene.renderForSpecs();
         expect(scene).toPickPrimitive(rectangle);
       });
 
@@ -223,7 +223,7 @@ describe(
 
         camera.setView({ destination: largeRectangle });
         var rectangle = createLargeRectangle(0.0);
-        scene.initializeFrame();
+        scene.renderForSpecs();
         expect(scene).toPickPrimitive(rectangle);
       });
     });

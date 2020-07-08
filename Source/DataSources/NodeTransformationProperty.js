@@ -13,9 +13,9 @@ var defaultNodeTransformation = new TranslationRotationScale();
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.translation=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
- * @param {Property} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
- * @param {Property} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
+ * @param {Property|Cartesian3} [options.translation=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
+ * @param {Property|Quaternion} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
+ * @param {Property|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
  */
 function NodeTransformationProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -70,7 +70,7 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
   /**
    * Gets or sets the {@link Cartesian3} Property specifying the (x, y, z) translation to apply to the node.
    * @memberof NodeTransformationProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Cartesian3.ZERO
    */
   translation: createPropertyDescriptor("translation"),
@@ -78,7 +78,7 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
   /**
    * Gets or sets the {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
    * @memberof NodeTransformationProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Quaternion.IDENTITY
    */
   rotation: createPropertyDescriptor("rotation"),
@@ -86,7 +86,7 @@ Object.defineProperties(NodeTransformationProperty.prototype, {
   /**
    * Gets or sets the {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
    * @memberof NodeTransformationProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default new Cartesian3(1.0, 1.0, 1.0)
    */
   scale: createPropertyDescriptor("scale"),

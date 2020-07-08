@@ -83,7 +83,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets {@link Cartesian3} Property property specifying the length, width, and height of the box.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   dimensions: createPropertyDescriptor("dimensions"),
 

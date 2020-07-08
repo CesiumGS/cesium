@@ -159,6 +159,11 @@ var packedDepthScale = new Cartesian4(
 );
 
 PickDepth.prototype.getDepth = function (context, x, y) {
+  // If this function is called before the framebuffer is created, the depth is undefined.
+  if (!defined(this._framebuffer)) {
+    return undefined;
+  }
+
   var pixels = context.readPixels({
     x: x,
     y: y,
@@ -184,9 +189,11 @@ PickDepth.prototype.destroy = function () {
   destroyTextures(this);
   destroyFramebuffers(this);
 
-  this._copyDepthCommand.shaderProgram =
-    defined(this._copyDepthCommand.shaderProgram) &&
-    this._copyDepthCommand.shaderProgram.destroy();
+  if (defined(this._copyDepthCommand)) {
+    this._copyDepthCommand.shaderProgram =
+      defined(this._copyDepthCommand.shaderProgram) &&
+      this._copyDepthCommand.shaderProgram.destroy();
+  }
 
   return destroyObject(this);
 };

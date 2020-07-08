@@ -1562,6 +1562,12 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     u_dayTextureAlpha: function () {
       return this.properties.dayTextureAlpha;
     },
+    u_dayTextureNightAlpha: function () {
+      return this.properties.dayTextureNightAlpha;
+    },
+    u_dayTextureDayAlpha: function () {
+      return this.properties.dayTextureDayAlpha;
+    },
     u_dayTextureBrightness: function () {
       return this.properties.dayTextureBrightness;
     },
@@ -1679,6 +1685,8 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       dayTextureTexCoordsRectangle: [],
       dayTextureUseWebMercatorT: [],
       dayTextureAlpha: [],
+      dayTextureNightAlpha: [],
+      dayTextureDayAlpha: [],
       dayTextureBrightness: [],
       dayTextureContrast: [],
       dayTextureHue: [],
@@ -1885,6 +1893,7 @@ var surfaceShaderSetOptionsScratch = {
   applySaturation: undefined,
   applyGamma: undefined,
   applyAlpha: undefined,
+  applyDayNightAlpha: undefined,
   applySplit: undefined,
   showReflectiveOcean: undefined,
   showOceanWaves: undefined,
@@ -2331,6 +2340,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     var applySaturation = false;
     var applyGamma = false;
     var applyAlpha = false;
+    var applyDayNightAlpha = false;
     var applySplit = false;
     var applyCutout = false;
     var applyColorToAlpha = false;
@@ -2386,6 +2396,18 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       applyAlpha =
         applyAlpha ||
         uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;
+
+      uniformMapProperties.dayTextureNightAlpha[numberOfDayTextures] =
+        imageryLayer.nightAlpha;
+      applyDayNightAlpha =
+        applyDayNightAlpha ||
+        uniformMapProperties.dayTextureNightAlpha[numberOfDayTextures] !== 1.0;
+
+      uniformMapProperties.dayTextureDayAlpha[numberOfDayTextures] =
+        imageryLayer.dayAlpha;
+      applyDayNightAlpha =
+        applyDayNightAlpha ||
+        uniformMapProperties.dayTextureDayAlpha[numberOfDayTextures] !== 1.0;
 
       uniformMapProperties.dayTextureBrightness[numberOfDayTextures] =
         imageryLayer.brightness;
@@ -2534,6 +2556,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.applySaturation = applySaturation;
     surfaceShaderSetOptions.applyGamma = applyGamma;
     surfaceShaderSetOptions.applyAlpha = applyAlpha;
+    surfaceShaderSetOptions.applyDayNightAlpha = applyDayNightAlpha;
     surfaceShaderSetOptions.applySplit = applySplit;
     surfaceShaderSetOptions.enableFog = applyFog;
     surfaceShaderSetOptions.enableClippingPlanes = clippingPlanesEnabled;
