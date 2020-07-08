@@ -2139,11 +2139,11 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   }
 
   if (scene.debugShowCommands || scene.debugShowFrustums) {
-    var debugCommand = scene._debugInspector.createShowFrustumsCommand(
+    scene._debugInspector.executeDebugShowFrustumsCommand(
       scene,
-      command
+      command,
+      passState
     );
-    debugCommand.execute(scene.context, passState);
     return;
   }
 

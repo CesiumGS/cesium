@@ -76,61 +76,80 @@ function createDebugShowFrustumsShaderProgram(scene, shaderProgram) {
   });
 }
 
-DebugInspector.prototype.createShowFrustumsCommand = function (scene, command) {
-  // create debug command
-  var debugCommand = DrawCommand.shallowClone(command);
-  var shaderProgramId = command.shaderProgram.id;
-  if (!defined(this._cachedShowFrustumsShaders[shaderProgramId])) {
-    debugCommand.shaderProgram = createDebugShowFrustumsShaderProgram(
-      scene,
-      command.shaderProgram
-    );
-
-    this._cachedShowFrustumsShaders[shaderProgramId] =
-      debugCommand.shaderProgram;
-  } else {
-    debugCommand.shaderProgram = this._cachedShowFrustumsShaders[
-      shaderProgramId
-    ];
-  }
-
+var scratchFrustumColor = new Color();
+function createDebugShowFrustumsUniformMap(scene, command) {
   // setup uniform for the shader
-  if (!defined(command.uniformMap) || typeof command.uniformMap !== "object") {
-    debugCommand.uniformMap = {};
+  var debugUniformMap;
+  if (!defined(command.uniformMap)) {
+    debugUniformMap = {};
   } else {
-    debugCommand.uniformMap = clone(command.uniformMap);
+    debugUniformMap = clone(command.uniformMap);
+    // debugUniformMap = command.uniformMap;
   }
 
-  if (scene.debugShowCommands) {
+  if (
+    defined(debugUniformMap.debugShowFrustumsColor) ||
+    defined(debugUniformMap.debugShowFrustumsColor)
+  ) {
+    return debugUniformMap;
+  }
+
+  debugUniformMap.debugShowCommandsColor = function () {
+    if (!scene.debugShowCommands) {
+      return Color.WHITE;
+    }
+
     if (!defined(command._debugColor)) {
       command._debugColor = Color.fromRandom();
     }
 
-    debugCommand.uniformMap.debugShowCommandsColor = function () {
-      return command._debugColor;
-    };
-  } else {
-    debugCommand.uniformMap.debugShowCommandsColor = function () {
-      return new Color(1.0, 1.0, 1.0, 1.0);
-    };
-  }
+    return command._debugColor;
+  };
 
-  if (scene.debugShowFrustums) {
+  debugUniformMap.debugShowFrustumsColor = function () {
+    if (!scene.debugShowFrustums) {
+      return Color.WHITE;
+    }
+
     // Support up to three frustums.  If a command overlaps all
     // three, it's code is not changed.
-    var r = command.debugOverlappingFrustums & (1 << 0) ? 1.0 : 0.0;
-    var g = command.debugOverlappingFrustums & (1 << 1) ? 1.0 : 0.0;
-    var b = command.debugOverlappingFrustums & (1 << 2) ? 1.0 : 0.0;
+    scratchFrustumColor.red =
+      command.debugOverlappingFrustums & (1 << 0) ? 1.0 : 0.0;
+    scratchFrustumColor.green =
+      command.debugOverlappingFrustums & (1 << 1) ? 1.0 : 0.0;
+    scratchFrustumColor.blue =
+      command.debugOverlappingFrustums & (1 << 2) ? 1.0 : 0.0;
+    scratchFrustumColor.alpha = 1.0;
+    return scratchFrustumColor;
+  };
 
-    debugCommand.uniformMap.debugShowFrustumsColor = function () {
-      return new Color(r, g, b, 1.0);
-    };
-  } else {
-    debugCommand.uniformMap.debugShowFrustumsColor = function () {
-      return new Color(1.0, 1.0, 1.0, 1.0);
-    };
+  return debugUniformMap;
+}
+
+var scratchShowFrustumCommand = new DrawCommand();
+DebugInspector.prototype.executeDebugShowFrustumsCommand = function (
+  scene,
+  command,
+  passState
+) {
+  // create debug command
+  var shaderProgramId = command.shaderProgram.id;
+  var debugShaderProgram = this._cachedShowFrustumsShaders[shaderProgramId];
+  if (!defined(debugShaderProgram)) {
+    debugShaderProgram = createDebugShowFrustumsShaderProgram(
+      scene,
+      command.shaderProgram
+    );
+
+    this._cachedShowFrustumsShaders[shaderProgramId] = debugShaderProgram;
   }
 
-  return debugCommand;
+  var debugCommand = DrawCommand.shallowClone(
+    command,
+    scratchShowFrustumCommand
+  );
+  debugCommand.shaderProgram = debugShaderProgram;
+  debugCommand.uniformMap = createDebugShowFrustumsUniformMap(scene, command);
+  debugCommand.execute(scene.context, passState);
 };
 export default DebugInspector;
