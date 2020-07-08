@@ -1,7 +1,7 @@
 /**
  * ArcType defines the path that should be taken connecting vertices.
  *
- * @exports ArcType
+ * @enum {Number}
  */
 var ArcType = {
   /**

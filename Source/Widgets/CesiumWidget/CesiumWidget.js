@@ -126,15 +126,15 @@ function configureCameraFrustum(widget) {
  * @param {Element|String} container The DOM element or ID that will contain the widget.
  * @param {Object} [options] Object with the following properties:
  * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
- * @param {ImageryProvider} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
+ * @param {ImageryProvider | false} [options.imageryProvider=createWorldImagery()] The imagery provider to serve as the base layer. If set to <code>false</code>, no imagery provider will be added.
  * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
- * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
- * @param {SkyAtmosphere} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @param {SkyBox| false} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @param {SkyAtmosphere | false} [options.skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
  * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
  * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
  * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
- * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
+ * @param {Globe | false} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
  * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
  * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
@@ -393,6 +393,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   container: {
     get: function () {
@@ -404,7 +405,8 @@ Object.defineProperties(CesiumWidget.prototype, {
    * Gets the canvas.
    * @memberof CesiumWidget.prototype
    *
-   * @type {Canvas}
+   * @type {HTMLCanvasElement}
+   * @readonly
    */
   canvas: {
     get: function () {
@@ -417,6 +419,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditContainer: {
     get: function () {
@@ -429,6 +432,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Element}
+   * @readonly
    */
   creditViewport: {
     get: function () {
@@ -441,6 +445,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Scene}
+   * @readonly
    */
   scene: {
     get: function () {
@@ -494,6 +499,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {Clock}
+   * @readonly
    */
   clock: {
     get: function () {
@@ -506,6 +512,7 @@ Object.defineProperties(CesiumWidget.prototype, {
    * @memberof CesiumWidget.prototype
    *
    * @type {ScreenSpaceEventHandler}
+   * @readonly
    */
   screenSpaceEventHandler: {
     get: function () {
@@ -627,7 +634,7 @@ Object.defineProperties(CesiumWidget.prototype, {
  * widget was constructed.
  *
  * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
- * @param {String} message A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+ * @param {String} [message] A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
  * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
  */
 CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
@@ -656,22 +663,56 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
     window.addEventListener("resize", resizeCallback, false);
   }
 
-  if (defined(message)) {
+  var hasMessage = defined(message);
+  var hasError = defined(error);
+
+  if (hasMessage || hasError) {
     var errorMessage = document.createElement("div");
     errorMessage.className = "cesium-widget-errorPanel-message";
-    errorMessage.innerHTML = "<p>" + message + "</p>";
     errorPanelScroller.appendChild(errorMessage);
-  }
 
-  var errorDetails = "(no error details available)";
-  if (defined(error)) {
-    errorDetails = formatError(error);
-  }
+    if (hasError) {
+      var errorDetails = formatError(error);
+      if (!hasMessage) {
+        if (typeof error === "string") {
+          error = new Error(error);
+        }
 
-  var errorMessageDetails = document.createElement("div");
-  errorMessageDetails.className = "cesium-widget-errorPanel-message";
-  errorMessageDetails.appendChild(document.createTextNode(errorDetails));
-  errorPanelScroller.appendChild(errorMessageDetails);
+        message = formatError({
+          name: error.name,
+          message: error.message,
+        });
+        errorDetails = error.stack;
+      }
+
+      //IE8 does not have a console object unless the dev tools are open.
+      if (typeof console !== "undefined") {
+        console.error(title + "\n" + message + "\n" + errorDetails);
+      }
+
+      var errorMessageDetails = document.createElement("div");
+      errorMessageDetails.className =
+        "cesium-widget-errorPanel-message-details collapsed";
+
+      var moreDetails = document.createElement("span");
+      moreDetails.className = "cesium-widget-errorPanel-more-details";
+      moreDetails.appendChild(document.createTextNode("See more..."));
+      errorMessageDetails.appendChild(moreDetails);
+
+      errorMessageDetails.onclick = function (e) {
+        errorMessageDetails.removeChild(moreDetails);
+        errorMessageDetails.appendChild(document.createTextNode(errorDetails));
+        errorMessageDetails.className =
+          "cesium-widget-errorPanel-message-details";
+        content.className = "cesium-widget-errorPanel-content expanded";
+        errorMessageDetails.onclick = undefined;
+      };
+
+      errorPanelScroller.appendChild(errorMessageDetails);
+    }
+
+    errorMessage.innerHTML = "<p>" + message + "</p>";
+  }
 
   var buttonPanel = document.createElement("div");
   buttonPanel.className = "cesium-widget-errorPanel-buttonPanel";
@@ -691,11 +732,6 @@ CesiumWidget.prototype.showErrorPanel = function (title, message, error) {
   buttonPanel.appendChild(okButton);
 
   element.appendChild(overlay);
-
-  //IE8 does not have a console object unless the dev tools are open.
-  if (typeof console !== "undefined") {
-    console.error(title + "\n" + message + "\n" + errorDetails);
-  }
 };
 
 /**

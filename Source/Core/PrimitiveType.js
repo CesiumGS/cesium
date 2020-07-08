@@ -3,7 +3,7 @@ import WebGLConstants from "./WebGLConstants.js";
 /**
  * The type of a geometric primitive, i.e., points, lines, and triangles.
  *
- * @exports PrimitiveType
+ * @enum {Number}
  */
 var PrimitiveType = {
   /**
@@ -65,20 +65,21 @@ var PrimitiveType = {
    * @constant
    */
   TRIANGLE_FAN: WebGLConstants.TRIANGLE_FAN,
-
-  /**
-   * @private
-   */
-  validate: function (primitiveType) {
-    return (
-      primitiveType === PrimitiveType.POINTS ||
-      primitiveType === PrimitiveType.LINES ||
-      primitiveType === PrimitiveType.LINE_LOOP ||
-      primitiveType === PrimitiveType.LINE_STRIP ||
-      primitiveType === PrimitiveType.TRIANGLES ||
-      primitiveType === PrimitiveType.TRIANGLE_STRIP ||
-      primitiveType === PrimitiveType.TRIANGLE_FAN
-    );
-  },
 };
+
+/**
+ * @private
+ */
+PrimitiveType.validate = function (primitiveType) {
+  return (
+    primitiveType === PrimitiveType.POINTS ||
+    primitiveType === PrimitiveType.LINES ||
+    primitiveType === PrimitiveType.LINE_LOOP ||
+    primitiveType === PrimitiveType.LINE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLES ||
+    primitiveType === PrimitiveType.TRIANGLE_STRIP ||
+    primitiveType === PrimitiveType.TRIANGLE_FAN
+  );
+};
+
 export default Object.freeze(PrimitiveType);

@@ -897,7 +897,7 @@ function handlePointerMove(screenSpaceEventHandler, event) {
  *
  * @alias ScreenSpaceEventHandler
  *
- * @param {Canvas} [element=document] The element to add events to.
+ * @param {HTMLCanvasElement} [element=document] The element to add events to.
  *
  * @constructor
  */
@@ -968,6 +968,8 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
  * @param {Number} type The ScreenSpaceEventType of input event.
  * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
+ *
+ * @returns {Function} The function to be executed on an input event.
  *
  * @see ScreenSpaceEventHandler#setInputAction
  * @see ScreenSpaceEventHandler#removeInputAction

@@ -7,7 +7,7 @@ import CesiumMath from "../Core/Math.js";
  * REPLACE replaces the source color with the target color
  * MIX blends the source color and target color together
  *
- * @exports ColorBlendMode
+ * @enum {Number}
  *
  * @see Model.colorBlendMode
  */

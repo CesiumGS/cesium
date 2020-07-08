@@ -61,40 +61,47 @@ function createPropertyTypeDescriptor(name, Type) {
 }
 
 /**
+ * @typedef {Object} Entity.ConstructorOptions
+ *
+ * Initialization options for the Entity constructor
+ *
+ * @property {String} [id] A unique identifier for this object. If none is provided, a GUID is generated.
+ * @property {String} [name] A human readable name to display to users. It does not have to be unique.
+ * @property {TimeIntervalCollection} [availability] The availability, if any, associated with this object.
+ * @property {Boolean} [show] A boolean value indicating if the entity and its children are displayed.
+ * @property {Property | string} [description] A string Property specifying an HTML description for this entity.
+ * @property {PositionProperty | Cartesian3} [position] A Property specifying the entity position.
+ * @property {Property} [orientation] A Property specifying the entity orientation.
+ * @property {Property} [viewFrom] A suggested initial offset for viewing this object.
+ * @property {Entity} [parent] A parent entity to associate with this entity.
+ * @property {BillboardGraphics | BillboardGraphics.ConstructorOptions} [billboard] A billboard to associate with this entity.
+ * @property {BoxGraphics | BoxGraphics.ConstructorOptions} [box] A box to associate with this entity.
+ * @property {CorridorGraphics | CorridorGraphics.ConstructorOptions} [corridor] A corridor to associate with this entity.
+ * @property {CylinderGraphics | CylinderGraphics.ConstructorOptions} [cylinder] A cylinder to associate with this entity.
+ * @property {EllipseGraphics | EllipseGraphics.ConstructorOptions} [ellipse] A ellipse to associate with this entity.
+ * @property {EllipsoidGraphics | EllipsoidGraphics.ConstructorOptions} [ellipsoid] A ellipsoid to associate with this entity.
+ * @property {LabelGraphics | LabelGraphics.ConstructorOptions} [label] A options.label to associate with this entity.
+ * @property {ModelGraphics | ModelGraphics.ConstructorOptions} [model] A model to associate with this entity.
+ * @property {Cesium3DTilesetGraphics | Cesium3DTilesetGraphics.ConstructorOptions} [tileset] A 3D Tiles tileset to associate with this entity.
+ * @property {PathGraphics | PathGraphics.ConstructorOptions} [path] A path to associate with this entity.
+ * @property {PlaneGraphics | PlaneGraphics.ConstructorOptions} [plane] A plane to associate with this entity.
+ * @property {PointGraphics | PointGraphics.ConstructorOptions} [point] A point to associate with this entity.
+ * @property {PolygonGraphics | PolygonGraphics.ConstructorOptions} [polygon] A polygon to associate with this entity.
+ * @property {PolylineGraphics | PolylineGraphics.ConstructorOptions} [polyline] A polyline to associate with this entity.
+ * @property {PropertyBag | Object.<string,*>} [properties] Arbitrary properties to associate with this entity.
+ * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
+ * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
+ * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.
+ */
+
+/**
  * Entity instances aggregate multiple forms of visualization into a single high-level object.
  * They can be created manually and added to {@link Viewer#entities} or be produced by
  * data sources, such as {@link CzmlDataSource} and {@link GeoJsonDataSource}.
  * @alias Entity
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
- * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
- * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
- * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
- * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
- * @param {PositionProperty} [options.position] A Property specifying the entity position.
- * @param {Property} [options.orientation] A Property specifying the entity orientation.
- * @param {Property} [options.viewFrom] A suggested initial offset for viewing this object.
- * @param {Entity} [options.parent] A parent entity to associate with this entity.
- * @param {BillboardGraphics} [options.billboard] A billboard to associate with this entity.
- * @param {BoxGraphics} [options.box] A box to associate with this entity.
- * @param {CorridorGraphics} [options.corridor] A corridor to associate with this entity.
- * @param {CylinderGraphics} [options.cylinder] A cylinder to associate with this entity.
- * @param {EllipseGraphics} [options.ellipse] A ellipse to associate with this entity.
- * @param {EllipsoidGraphics} [options.ellipsoid] A ellipsoid to associate with this entity.
- * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
- * @param {ModelGraphics} [options.model] A model to associate with this entity.
- * @param {Cesium3DTilesetGraphics} [options.tileset] A 3D Tiles tileset to associate with this entity.
- * @param {PathGraphics} [options.path] A path to associate with this entity.
- * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
- * @param {PointGraphics} [options.point] A point to associate with this entity.
- * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
- * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
- * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
- * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
- * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
- * @param {WallGraphics} [options.wall] A wall to associate with this entity.
+ * @param {Entity.ConstructorOptions} [options] Object describing initialization options
  *
  * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
  */
@@ -220,7 +227,7 @@ Object.defineProperties(Entity.prototype, {
    * If availability exists, the objects other properties will only
    * provide valid data if queried within the given interval.
    * @memberof Entity.prototype
-   * @type {TimeIntervalCollection}
+   * @type {TimeIntervalCollection|undefined}
    */
   availability: createRawPropertyDescriptor("availability"),
   /**
@@ -249,7 +256,7 @@ Object.defineProperties(Entity.prototype, {
    * Gets or sets the name of the object.  The name is intended for end-user
    * consumption and does not need to be unique.
    * @memberof Entity.prototype
-   * @type {String}
+   * @type {String|undefined}
    */
   name: createRawPropertyDescriptor("name"),
   /**
@@ -302,7 +309,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the parent object.
    * @memberof Entity.prototype
-   * @type {Entity}
+   * @type {Entity|undefined}
    */
   parent: {
     get: function () {
@@ -338,7 +345,7 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets the names of all properties registered on this instance.
    * @memberof Entity.prototype
-   * @type {Array}
+   * @type {string[]}
    */
   propertyNames: {
     get: function () {
@@ -348,103 +355,103 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the billboard.
    * @memberof Entity.prototype
-   * @type {BillboardGraphics}
+   * @type {BillboardGraphics|undefined}
    */
   billboard: createPropertyTypeDescriptor("billboard", BillboardGraphics),
   /**
    * Gets or sets the box.
    * @memberof Entity.prototype
-   * @type {BoxGraphics}
+   * @type {BoxGraphics|undefined}
    */
   box: createPropertyTypeDescriptor("box", BoxGraphics),
   /**
    * Gets or sets the corridor.
    * @memberof Entity.prototype
-   * @type {CorridorGraphics}
+   * @type {CorridorGraphics|undefined}
    */
   corridor: createPropertyTypeDescriptor("corridor", CorridorGraphics),
   /**
    * Gets or sets the cylinder.
    * @memberof Entity.prototype
-   * @type {CylinderGraphics}
+   * @type {CylinderGraphics|undefined}
    */
   cylinder: createPropertyTypeDescriptor("cylinder", CylinderGraphics),
   /**
    * Gets or sets the description.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   description: createPropertyDescriptor("description"),
   /**
    * Gets or sets the ellipse.
    * @memberof Entity.prototype
-   * @type {EllipseGraphics}
+   * @type {EllipseGraphics|undefined}
    */
   ellipse: createPropertyTypeDescriptor("ellipse", EllipseGraphics),
   /**
    * Gets or sets the ellipsoid.
    * @memberof Entity.prototype
-   * @type {EllipsoidGraphics}
+   * @type {EllipsoidGraphics|undefined}
    */
   ellipsoid: createPropertyTypeDescriptor("ellipsoid", EllipsoidGraphics),
   /**
    * Gets or sets the label.
    * @memberof Entity.prototype
-   * @type {LabelGraphics}
+   * @type {LabelGraphics|undefined}
    */
   label: createPropertyTypeDescriptor("label", LabelGraphics),
   /**
    * Gets or sets the model.
    * @memberof Entity.prototype
-   * @type {ModelGraphics}
+   * @type {ModelGraphics|undefined}
    */
   model: createPropertyTypeDescriptor("model", ModelGraphics),
   /**
    * Gets or sets the tileset.
    * @memberof Entity.prototype
-   * @type {Cesium3DTilesetGraphics}
+   * @type {Cesium3DTilesetGraphics|undefined}
    */
   tileset: createPropertyTypeDescriptor("tileset", Cesium3DTilesetGraphics),
   /**
    * Gets or sets the orientation.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   orientation: createPropertyDescriptor("orientation"),
   /**
    * Gets or sets the path.
    * @memberof Entity.prototype
-   * @type {PathGraphics}
+   * @type {PathGraphics|undefined}
    */
   path: createPropertyTypeDescriptor("path", PathGraphics),
   /**
    * Gets or sets the plane.
    * @memberof Entity.prototype
-   * @type {PlaneGraphics}
+   * @type {PlaneGraphics|undefined}
    */
   plane: createPropertyTypeDescriptor("plane", PlaneGraphics),
   /**
    * Gets or sets the point graphic.
    * @memberof Entity.prototype
-   * @type {PointGraphics}
+   * @type {PointGraphics|undefined}
    */
   point: createPropertyTypeDescriptor("point", PointGraphics),
   /**
    * Gets or sets the polygon.
    * @memberof Entity.prototype
-   * @type {PolygonGraphics}
+   * @type {PolygonGraphics|undefined}
    */
   polygon: createPropertyTypeDescriptor("polygon", PolygonGraphics),
   /**
    * Gets or sets the polyline.
    * @memberof Entity.prototype
-   * @type {PolylineGraphics}
+   * @type {PolylineGraphics|undefined}
    */
   polyline: createPropertyTypeDescriptor("polyline", PolylineGraphics),
   /**
    * Gets or sets the polyline volume.
    * @memberof Entity.prototype
-   * @type {PolylineVolumeGraphics}
+   * @type {PolylineVolumeGraphics|undefined}
    */
   polylineVolume: createPropertyTypeDescriptor(
     "polylineVolume",
@@ -453,19 +460,19 @@ Object.defineProperties(Entity.prototype, {
   /**
    * Gets or sets the bag of arbitrary properties associated with this entity.
    * @memberof Entity.prototype
-   * @type {PropertyBag}
+   * @type {PropertyBag|undefined}
    */
   properties: createPropertyTypeDescriptor("properties", PropertyBag),
   /**
    * Gets or sets the position.
    * @memberof Entity.prototype
-   * @type {PositionProperty}
+   * @type {PositionProperty|undefined}
    */
   position: createPositionPropertyDescriptor("position"),
   /**
    * Gets or sets the rectangle.
    * @memberof Entity.prototype
-   * @type {RectangleGraphics}
+   * @type {RectangleGraphics|undefined}
    */
   rectangle: createPropertyTypeDescriptor("rectangle", RectangleGraphics),
   /**
@@ -473,13 +480,13 @@ Object.defineProperties(Entity.prototype, {
    * The offset is typically defined in the east-north-up reference frame,
    * but may be another frame depending on the object's velocity.
    * @memberof Entity.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   viewFrom: createPropertyDescriptor("viewFrom"),
   /**
    * Gets or sets the wall.
    * @memberof Entity.prototype
-   * @type {WallGraphics}
+   * @type {WallGraphics|undefined}
    */
   wall: createPropertyTypeDescriptor("wall", WallGraphics),
 });
@@ -587,8 +594,10 @@ Entity.prototype.merge = function (source) {
   for (var i = 0; i < propertyNamesLength; i++) {
     var name = sourcePropertyNames[i];
 
-    //Ignore parent when merging, this only happens at construction time.
-    if (name === "parent") {
+    //While source is required by the API to be an Entity, we internally call this method from the
+    //constructor with an options object to configure initial custom properties.
+    //So we need to ignore reserved-non-property.
+    if (name === "parent" || name === "name" || name === "availability") {
       continue;
     }
 

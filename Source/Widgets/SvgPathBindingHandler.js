@@ -16,7 +16,7 @@ var svgClassName = "cesium-svgPath-svg";
  * <li>css: Optional. A string containing additional CSS classes to apply to the SVG. 'cesium-svgPath-svg' is always applied.</li>
  * </ul>
  *
- * @exports SvgPathBindingHandler
+ * @namespace SvgPathBindingHandler
  *
  * @example
  * // Create an SVG as a child of a div
@@ -29,6 +29,9 @@ var svgClassName = "cesium-svgPath-svg";
  * <div data-bind="cesiumSvgPath: svgPathOptions"></div>
  */
 var SvgPathBindingHandler = {
+  /**
+   * @function
+   */
   register: function (knockout) {
     knockout.bindingHandlers.cesiumSvgPath = {
       init: function (element, valueAccessor) {

@@ -264,7 +264,7 @@ EntityCollection.prototype.computeAvailability = function () {
 /**
  * Add an entity to the collection.
  *
- * @param {Entity} entity The entity to be added.
+ * @param {Entity | Entity.ConstructorOptions} entity The entity to be added.
  * @returns {Entity} The entity that was added.
  * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
  */
@@ -397,7 +397,7 @@ EntityCollection.prototype.removeAll = function () {
  * Gets an entity with the specified id.
  *
  * @param {String} id The id of the entity to retrieve.
- * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
+ * @returns {Entity|undefined} The entity with the provided id or undefined if the id did not exist in the collection.
  */
 EntityCollection.prototype.getById = function (id) {
   //>>includeStart('debug', pragmas.debug);

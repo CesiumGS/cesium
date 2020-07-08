@@ -14,7 +14,6 @@ import Resource from "./Resource.js";
  * @param {Object} options Object with the following properties:
  * @param {Scene} options.scene The scene
  * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
- * @param {String} [options.accessToken=Ion.defaultAccessToken] The access token to use.
  * @param {String|Resource} [options.server=Ion.defaultServer] The resource to the Cesium ion API server.
  *
  * @see Ion
@@ -57,7 +56,7 @@ function IonGeocoderService(options) {
  *
  * @param {String} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
- * @returns {Promise<GeocoderService~Result[]>}
+ * @returns {Promise<GeocoderService.Result[]>}
  */
 IonGeocoderService.prototype.geocode = function (query, geocodeType) {
   return this._pelias.geocode(query, geocodeType);

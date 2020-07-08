@@ -23,8 +23,7 @@ import TimeConstants from "./TimeConstants.js";
 /**
  * Contains functions for transforming positions to various reference frames.
  *
- * @exports Transforms
- * @namespace
+ * @namespace Transforms
  */
 var Transforms = {};
 
@@ -96,7 +95,7 @@ var scratchThirdCartesian = new Cartesian3();
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
  * @param  {String} secondAxis  name of the second axis of the local reference frame. Must be
  *  'east', 'north', 'up', 'west', 'south' or 'down'.
- * @return {localFrameToFixedFrameGenerator~resultat} The function that will computes a
+ * @return {Transforms.LocalFrameToFixedFrame} The function that will computes a
  * 4x4 transformation matrix from a reference frame, with first axis and second axis compliant with the parameters,
  */
 Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
@@ -113,7 +112,7 @@ Transforms.localFrameToFixedFrameGenerator = function (firstAxis, secondAxis) {
   /**
    * Computes a 4x4 transformation matrix from a reference frame
    * centered at the provided origin to the provided ellipsoid's fixed reference frame.
-   * @callback Transforms~LocalFrameToFixedFrame
+   * @callback Transforms.LocalFrameToFixedFrame
    * @param {Cartesian3} origin The center point of the local reference frame.
    * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
    * @param {Matrix4} [result] The object onto which to store the result.
@@ -369,7 +368,7 @@ var scratchHPRMatrix4 = new Matrix4();
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Matrix4} [result] The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
@@ -424,7 +423,7 @@ var scratchHPRMatrix3 = new Matrix3();
  * @param {Cartesian3} origin The center point of the local reference frame.
  * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {Quaternion} [result] The object onto which to store the result.
  * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -473,7 +472,7 @@ var hprQuaternionScratch = new Quaternion();
  *
  * @param {Matrix4} transform The transform
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
- * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+ * @param {Transforms.LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
  *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
  * @param {HeadingPitchRoll} [result] The object onto which to store the result.
  * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if none was provided.
@@ -654,7 +653,7 @@ var j2000ttDays = 2451545.0;
  * indicates that the preload has completed.
  *
  * @param {TimeInterval} timeInterval The interval to preload.
- * @returns {Promise} A promise that, when resolved, indicates that the preload has completed
+ * @returns {Promise<void>} A promise that, when resolved, indicates that the preload has completed
  *          and evaluation of the transformation between the fixed and ICRF axes will
  *          no longer return undefined for a time inside the interval.
  *
@@ -950,7 +949,13 @@ var rightScratch = new Cartesian3();
 var upScratch = new Cartesian3();
 
 /**
- * @private
+ * Transform a position and velocity to a rotation matrix.
+ *
+ * @param {Cartesian3} position The position to transform.
+ * @param {Cartesian3} velocity The velocity vector to transform.
+ * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+ * @param {Matrix3} [result] The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
  */
 Transforms.rotationMatrixFromPositionVelocity = function (
   position,

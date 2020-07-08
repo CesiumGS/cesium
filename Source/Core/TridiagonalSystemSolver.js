@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * Uses the Tridiagonal Matrix Algorithm, also known as the Thomas Algorithm, to solve
  * a system of linear equations where the coefficient matrix is a tridiagonal matrix.
  *
- * @exports TridiagonalSystemSolver
+ * @namespace TridiagonalSystemSolver
  */
 var TridiagonalSystemSolver = {};
 

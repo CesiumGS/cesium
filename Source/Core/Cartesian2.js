@@ -665,7 +665,7 @@ Cartesian2.equalsArray = function (cartesian, array, offset) {
  *
  * @param {Cartesian2} [left] The first Cartesian.
  * @param {Cartesian2} [right] The second Cartesian.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
@@ -745,7 +745,7 @@ Cartesian2.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {Cartesian2} [right] The right hand side Cartesian.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */

@@ -6,12 +6,12 @@ var context2DsByWidthAndHeight = {};
  * Extract a pixel array from a loaded image.  Draws the image
  * into a canvas so it can read the pixels back.
  *
- * @exports getImagePixels
+ * @function getImagePixels
  *
- * @param {Image} image The image to extract pixels from.
+ * @param {HTMLImageElement} image The image to extract pixels from.
  * @param {Number} width The width of the image. If not defined, then image.width is assigned.
  * @param {Number} height The height of the image. If not defined, then image.height is assigned.
- * @returns {CanvasPixelArray} The pixels of the image.
+ * @returns {ImageData} The pixels of the image.
  */
 function getImagePixels(image, width, height) {
   if (!defined(width)) {

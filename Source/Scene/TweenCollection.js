@@ -45,7 +45,7 @@ function Tween(
    * The callback to call if the tween is canceled either because {@link Tween#cancelTween}
    * was called or because the tween was removed from the collection.
    *
-   * @type {TweenCollection~TweenCancelledCallback}
+   * @type {TweenCollection.TweenCancelledCallback}
    */
   this.cancel = cancel;
 
@@ -125,7 +125,7 @@ Object.defineProperties(Tween.prototype, {
    * The callback to call at each animation update (usually tied to the a rendered frame).
    * @memberof Tween.prototype
    *
-   * @type {TweenCollection~TweenUpdateCallback}
+   * @type {TweenCollection.TweenUpdateCallback}
    * @readonly
    */
   update: {
@@ -138,7 +138,7 @@ Object.defineProperties(Tween.prototype, {
    * The callback to call when the tween finishes animating.
    * @memberof Tween.prototype
    *
-   * @type {TweenCollection~TweenCompleteCallback}
+   * @type {TweenCollection.TweenCompleteCallback}
    * @readonly
    */
   complete: {
@@ -204,9 +204,9 @@ Object.defineProperties(TweenCollection.prototype, {
  * @param {Number} options.duration The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
  * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
  * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
- * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
- * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
- * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+ * @param {TweenCollection.TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+ * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+ * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
  *
  * @exception {DeveloperError} options.duration must be positive.
@@ -284,9 +284,9 @@ TweenCollection.prototype.add = function (options) {
  * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
  * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
  * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
- * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
- * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
- * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+ * @param {TweenCollection.TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+ * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+ * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
  *
  * @exception {DeveloperError} options.object must have the specified property.
@@ -350,9 +350,9 @@ TweenCollection.prototype.addProperty = function (options) {
  * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
  * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
  * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
- * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
- * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
- * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+ * @param {TweenCollection.TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+ * @param {TweenCollection.TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
+ * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
  *
  * @exception {DeveloperError} material has no properties with alpha components.
@@ -423,8 +423,8 @@ TweenCollection.prototype.addAlpha = function (options) {
  * @param {Number} [options.duration=3.0] The duration, in seconds, for the tween.  The tween is automatically removed from the collection when it stops.
  * @param {Number} [options.delay=0.0] The delay, in seconds, before the tween starts animating.
  * @param {EasingFunction} [options.easingFunction=EasingFunction.LINEAR_NONE] Determines the curve for animtion.
- * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
- * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
+ * @param {TweenCollection.TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
+ * @param {TweenCollection.TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
  * @returns {Tween} The tween.
  *
  * @exception {DeveloperError} material.uniforms must have an offset property.
@@ -573,16 +573,16 @@ TweenCollection.prototype.update = function (time) {
 
 /**
  * A function that will execute when a tween completes.
- * @callback TweenCollection~TweenCompleteCallback
+ * @callback TweenCollection.TweenCompleteCallback
  */
 
 /**
  * A function that will execute when a tween updates.
- * @callback TweenCollection~TweenUpdateCallback
+ * @callback TweenCollection.TweenUpdateCallback
  */
 
 /**
  * A function that will execute when a tween is cancelled.
- * @callback TweenCollection~TweenCancelledCallback
+ * @callback TweenCollection.TweenCancelledCallback
  */
 export default TweenCollection;
