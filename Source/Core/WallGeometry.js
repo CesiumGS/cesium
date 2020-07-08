@@ -557,7 +557,7 @@ WallGeometry.createGeometry = function (wallGeometry) {
         CesiumMath.EPSILON10
       );
 
-      if (!validNormal || isWallCorner) {
+      if (!validNormal) {
         validNormal = calculateNormal(
           topPosition,
           bottomPosition,
@@ -568,13 +568,15 @@ WallGeometry.createGeometry = function (wallGeometry) {
         );
       }
 
-      if (validNormal && !isWallCorner) {
-        if (vertexFormat.tangent || vertexFormat.bitangent) {
-          tangent = Cartesian3.normalize(
-            Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
-            tangent
-          );
-        }
+      if (isWallCorner) {
+        validNormal = false;
+      }
+
+      if (validNormal && (vertexFormat.tangent || vertexFormat.bitangent)) {
+        tangent = Cartesian3.normalize(
+          Cartesian3.subtract(nextBottomPosition, bottomPosition, tangent),
+          tangent
+        );
 
         if (vertexFormat.bitangent) {
           bitangent = Cartesian3.normalize(
