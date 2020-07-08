@@ -2267,6 +2267,7 @@ describe(
 
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual(opaqueColor);
+          scene.destroyForSpecs();
         });
       });
     });
@@ -2317,6 +2318,7 @@ describe(
       return updateGlobeUntilDone(scene).then(function () {
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba[0]).toBeGreaterThan(0);
+          scene.destroyForSpecs();
         });
       });
     });
@@ -2366,6 +2368,7 @@ describe(
 
       return updateGlobeUntilDone(scene).then(function () {
         expect(scene).toPickPrimitive(primitive);
+        scene.destroyForSpecs();
       });
     });
   },

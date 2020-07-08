@@ -15,8 +15,23 @@ import CesiumMath from "./Math.js";
  * @param {Number} [roll=0.0] The roll component in radians.
  */
 function HeadingPitchRoll(heading, pitch, roll) {
+  /**
+   * Gets or sets the heading.
+   * @type {Number}
+   * @default 0.0
+   */
   this.heading = defaultValue(heading, 0.0);
+  /**
+   * Gets or sets the pitch.
+   * @type {Number}
+   * @default 0.0
+   */
   this.pitch = defaultValue(pitch, 0.0);
+  /**
+   * Gets or sets the roll.
+   * @type {Number}
+   * @default 0.0
+   */
   this.roll = defaultValue(roll, 0.0);
 }
 

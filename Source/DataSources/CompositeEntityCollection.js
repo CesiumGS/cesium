@@ -463,7 +463,7 @@ CompositeEntityCollection.prototype.computeAvailability = function () {
  * Gets an entity with the specified id.
  *
  * @param {String} id The id of the entity to retrieve.
- * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
+ * @returns {Entity|undefined} The entity with the provided id or undefined if the id did not exist in the collection.
  */
 CompositeEntityCollection.prototype.getById = function (id) {
   return this._composite.getById(id);

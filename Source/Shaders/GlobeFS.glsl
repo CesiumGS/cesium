@@ -9,6 +9,11 @@ uniform bool u_dayTextureUseWebMercatorT[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_DAY_NIGHT_ALPHA
+uniform float u_dayTextureNightAlpha[TEXTURE_UNITS];
+uniform float u_dayTextureDayAlpha[TEXTURE_UNITS];
+#endif
+
 #ifdef APPLY_SPLIT
 uniform float u_dayTextureSplit[TEXTURE_UNITS];
 #endif
@@ -162,13 +167,16 @@ vec4 sampleAndBlend(
     vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
+    float textureNightAlpha,
+    float textureDayAlpha,
     float textureBrightness,
     float textureContrast,
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
     float split,
-    vec4 colorToAlpha)
+    vec4 colorToAlpha,
+    float nightBlend)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -182,6 +190,10 @@ vec4 sampleAndBlend(
 
     alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+    textureAlpha *= mix(textureDayAlpha, textureNightAlpha, nightBlend);
+#endif
 
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
@@ -273,7 +285,7 @@ vec3 colorCorrect(vec3 rgb) {
     return rgb;
 }
 
-vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
+vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates, float nightBlend);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue, float fade);
 
 #ifdef GROUND_ATMOSPHERE
@@ -305,11 +317,22 @@ void main()
     float clipDistance = clip(gl_FragCoord, u_clippingPlanes, u_clippingPlanesMatrix);
 #endif
 
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
+    vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
+    vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
+#endif
+
+#if defined(APPLY_DAY_NIGHT_ALPHA) && defined(ENABLE_DAYNIGHT_SHADING)
+    float nightBlend = 1.0 - clamp(czm_getLambertDiffuse(czm_lightDirectionEC, normalEC) * 5.0, 0.0, 1.0);
+#else
+    float nightBlend = 0.0;
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+    vec4 color = computeDayColor(u_initialColor, clamp(v_textureCoordinates, 0.0, 1.0), nightBlend);
 
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
@@ -317,11 +340,6 @@ void main()
     {
         color = vec4(1.0, 0.0, 0.0, 1.0);
     }
-#endif
-
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
-    vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
-    vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
 #endif
 
 #if defined(ENABLE_DAYNIGHT_SHADING) || defined(GROUND_ATMOSPHERE)

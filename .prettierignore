@@ -17,6 +17,7 @@
 !**/*.css
 !**/*.html
 !**/*.md
+!**/*.ts
 
 # Re-ignore a few things caught above
 **/*.min.js

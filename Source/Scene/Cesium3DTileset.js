@@ -89,6 +89,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -619,7 +620,7 @@ function Cesium3DTileset(options) {
    * </p>
    *
    * @type {Boolean}
-   * @default true
+   * @default false
    */
   this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, false);
   this._skipLevelOfDetail = this.skipLevelOfDetail;
@@ -749,6 +750,15 @@ function Cesium3DTileset(options) {
    * @see Cesium3DTileset#sphericalHarmonicCoefficients
    */
   this.specularEnvironmentMaps = options.specularEnvironmentMaps;
+
+  /**
+   * Whether to cull back-facing geometry. When true, back face culling is determined
+   * by the glTF material's doubleSided property; when false, back face culling is disabled.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
    * This property is for debugging only; it is not optimized for production use.

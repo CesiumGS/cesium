@@ -235,8 +235,8 @@ function enableVRUI(viewer, enabled) {
  * @property {ProviderViewModel[]} [terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if `baseLayerPicker` is set to true.
  * @property {ImageryProvider} [imageryProvider=createWorldImagery()] The imagery provider to use.  This value is only valid if `baseLayerPicker` is set to false.
  * @property {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
- * @property {SkyBox} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
- * @property {SkyAtmosphere} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
+ * @property {SkyBox|false} [skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used. If set to <code>false</code>, no skyBox, Sun, or Moon will be added.
+ * @property {SkyAtmosphere|false} [skyAtmosphere] Blue sky, and the glow around the Earth's limb.  Set to <code>false</code> to turn it off.
  * @property {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode when the full screen button is pressed.
  * @property {Boolean} [useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
  * @property {Number} [targetFrameRate] The target frame rate when using the default render loop.
@@ -269,7 +269,7 @@ function enableVRUI(viewer, enabled) {
  * @constructor
  *
  * @param {Element|String} container The DOM element or ID that will contain the widget.
- * @param {Viewer.ConstructorOptions} options Object describing initialization options
+ * @param {Viewer.ConstructorOptions} [options] Object describing initialization options
  *
  * @exception {DeveloperError} Element with id "container" does not exist in the document.
  * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
