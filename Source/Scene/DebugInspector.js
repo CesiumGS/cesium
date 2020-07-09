@@ -83,8 +83,7 @@ function createDebugShowFrustumsUniformMap(scene, command) {
   if (!defined(command.uniformMap)) {
     debugUniformMap = {};
   } else {
-    debugUniformMap = clone(command.uniformMap);
-    // debugUniformMap = command.uniformMap;
+    debugUniformMap = command.uniformMap;
   }
 
   if (
