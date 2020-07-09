@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.72 - 2020-08-03
+
+##### Fixes :wrench:
+
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)
+
 ### 1.71 - 2020-07-01
 
 ##### Breaking Changes :mega:

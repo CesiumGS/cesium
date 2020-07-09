@@ -1411,6 +1411,32 @@ describe(
       });
     });
 
+    it("replacement refinement - refines if descendant is empty leaf tile", function () {
+      // Check that the root is refinable once its children with content are loaded
+      //
+      //          C
+      //     C  C  C  E
+      //
+      viewAllTiles();
+      var originalLoadJson = Cesium3DTileset.loadJson;
+      spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+        return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+          tilesetJson.root.refine = "REPLACE";
+          tilesetJson.root.children[3].content = undefined;
+          return tilesetJson;
+        });
+      });
+
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.skipLevelOfDetail = false;
+        var statistics = tileset._statistics;
+        scene.renderForSpecs();
+        expect(statistics.numberOfCommands).toEqual(3);
+      });
+    });
+
     it("replacement and additive refinement", function () {
       //          A
       //      A       R (not rendered)
