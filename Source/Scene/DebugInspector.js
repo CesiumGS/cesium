@@ -86,7 +86,7 @@ function createDebugShowFrustumsUniformMap(scene, command) {
   }
 
   if (
-    defined(debugUniformMap.debugShowFrustumsColor) ||
+    defined(debugUniformMap.debugShowCommandsColor) ||
     defined(debugUniformMap.debugShowFrustumsColor)
   ) {
     return debugUniformMap;
