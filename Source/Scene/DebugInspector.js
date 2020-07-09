@@ -1,4 +1,3 @@
-import clone from "../Core/clone.js";
 import Color from "../Core/Color.js";
 import DrawCommand from "../Renderer/DrawCommand.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
