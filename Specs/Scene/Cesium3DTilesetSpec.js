@@ -7,6 +7,7 @@ import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getStringFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -2491,6 +2492,61 @@ describe(
           });
         }
       );
+    });
+
+    function testBackFaceCulling(url, setViewOptions) {
+      var renderOptions = {
+        scene: scene,
+        time: new JulianDate(2457522.154792),
+      };
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        scene.camera.setView(setViewOptions);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+          tileset.backFaceCulling = false;
+          expect(renderOptions).toRenderAndCall(function (rgba2) {
+            expect(rgba2).not.toEqual(rgba);
+          });
+        });
+      });
+    }
+
+    it("renders b3dm tileset when back face culling is disabled", function () {
+      var setViewOptions = {
+        destination: new Cartesian3(
+          1215012.6853779217,
+          -4736313.101374343,
+          4081603.4657718465
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179584,
+          -0.49999825387267993,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
+    });
+
+    it("renders i3dm tileset when back face culling is disabled", function () {
+      var setViewOptions = {
+        destination: new Cartesian3(
+          1215015.8599828142,
+          -4736324.65638894,
+          4081609.967056947
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179585,
+          -0.5000006393986758,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(instancedUrl, setViewOptions);
     });
 
     ///////////////////////////////////////////////////////////////////////////

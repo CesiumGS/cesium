@@ -425,6 +425,9 @@ Picking.prototype.pickPositionWorldCoordinates = function (
       drawingBufferPosition.x,
       drawingBufferPosition.y
     );
+    if (!defined(depth)) {
+      continue;
+    }
     if (depth > 0.0 && depth < 1.0) {
       var renderedFrustum = frustumCommandsList[i];
       var height2D;
@@ -772,6 +775,9 @@ function getRayIntersection(
     for (var i = 0; i < numFrustums; ++i) {
       var pickDepth = picking.getPickDepth(scene, i);
       var depth = pickDepth.getDepth(context, 0, 0);
+      if (!defined(depth)) {
+        continue;
+      }
       if (depth > 0.0 && depth < 1.0) {
         var renderedFrustum = view.frustumCommandsList[i];
         var near =

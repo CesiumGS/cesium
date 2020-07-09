@@ -1555,7 +1555,6 @@ Object.defineProperties(Scene.prototype, {
       if (this._logDepthBuffer !== value) {
         this._logDepthBuffer = value;
         this._logDepthBufferDirty = true;
-        this._defaultView.updateFrustums = true;
       }
     },
   },
@@ -4372,7 +4371,7 @@ Scene.prototype.clampToHeight = function (
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Number[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
  * var positions = [

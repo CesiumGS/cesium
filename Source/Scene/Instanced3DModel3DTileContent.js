@@ -304,6 +304,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     luminanceAtZenith: tileset.luminanceAtZenith,
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+    backFaceCulling: tileset.backFaceCulling,
   };
 
   if (gltfFormat === 0) {
@@ -615,6 +616,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
   this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
   var model = this._modelInstanceCollection._model;
