@@ -72,19 +72,39 @@ function createPitchFunction(
   };
 }
 
+var scratchStartDirection = new Cartesian3();
+var scratchEndDirection = new Cartesian3();
 function createHeightFunction(
+  ellipsoid,
   camera,
   destination,
   startHeight,
   endHeight,
-  optionAltitude
+  optionAltitude,
+  optionMaxGroundDistance
 ) {
+  var maxGroundDistance = optionMaxGroundDistance;
   var altitude = optionAltitude;
   var maxHeight = Math.max(startHeight, endHeight);
+  var start = camera.position;
+  var end = destination;
+  var startDirection = Cartesian3.normalize(start, scratchStartDirection);
+  var endDirection = Cartesian3.normalize(end, scratchEndDirection);
+  var startEndAngle = CesiumMath.acosClamped(
+    Cartesian3.dot(startDirection, endDirection)
+  );
+  var groundDistance = CesiumMath.chordLength(
+    startEndAngle,
+    ellipsoid.maximumRadius
+  );
+
+  if (!defined(maxGroundDistance)) {
+    maxGroundDistance =
+      CesiumMath.chordLength(CesiumMath.PI_OVER_SIX, ellipsoid.maximumRadius) *
+      0.001;
+  }
 
   if (!defined(altitude)) {
-    var start = camera.position;
-    var end = destination;
     var up = camera.up;
     var right = camera.right;
     var frustum = camera.frustum;
@@ -107,7 +127,7 @@ function createHeightFunction(
     );
   }
 
-  if (maxHeight < altitude) {
+  if (groundDistance > maxGroundDistance && maxHeight < altitude) {
     var power = 8.0;
     var factor = 1000000.0;
 
@@ -273,6 +293,7 @@ function createUpdate3D(
   }
 
   var heightFunction = createHeightFunction(
+    ellipsoid,
     camera,
     destination,
     startCart.height,
