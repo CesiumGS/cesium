@@ -3219,6 +3219,7 @@ Camera.prototype.completeFlight = function () {
  * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+ * @param {Number} [options.maxGroundDistance] The maximum ground distance to let the camera fly straight to the destination.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
@@ -3329,6 +3330,7 @@ Camera.prototype.flyTo = function (options) {
   newOptions.endTransform = options.endTransform;
   newOptions.convert = isRectangle ? false : options.convert;
   newOptions.maximumHeight = options.maximumHeight;
+  newOptions.maxGroundDistance = options.maxGroundDistance;
   newOptions.pitchAdjustHeight = options.pitchAdjustHeight;
   newOptions.flyOverLongitude = options.flyOverLongitude;
   newOptions.flyOverLongitudeWeight = options.flyOverLongitudeWeight;

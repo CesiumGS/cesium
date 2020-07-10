@@ -174,9 +174,12 @@ function createUpdateCV(
   heading,
   pitch,
   roll,
-  optionAltitude
+  optionAltitude,
+  optionMaxGroundDistance
 ) {
   var camera = scene.camera;
+  var projection = scene.mapProjection;
+  var ellipsoid = projection.ellipsoid;
 
   var start = Cartesian3.clone(camera.position, scratchStart);
   var startPitch = camera.pitch;
@@ -184,11 +187,13 @@ function createUpdateCV(
   var startRoll = adjustAngleForLERP(camera.roll, roll);
 
   var heightFunction = createHeightFunction(
+    ellipsoid,
     camera,
     destination,
     start.z,
     destination.z,
-    optionAltitude
+    optionAltitude,
+    optionMaxGroundDistance
   );
 
   function update(value) {
@@ -236,6 +241,7 @@ function createUpdate3D(
   pitch,
   roll,
   optionAltitude,
+  optionMaxGroundDistance,
   optionFlyOverLongitude,
   optionFlyOverLongitudeWeight,
   optionPitchAdjustHeight
@@ -298,7 +304,8 @@ function createUpdate3D(
     destination,
     startCart.height,
     destCart.height,
-    optionAltitude
+    optionAltitude,
+    optionMaxGroundDistance
   );
   var pitchFunction = createPitchFunction(
     startPitch,
@@ -347,20 +354,25 @@ function createUpdate2D(
   heading,
   pitch,
   roll,
-  optionAltitude
+  optionAltitude,
+  optionMaxGroundDistance
 ) {
   var camera = scene.camera;
+  var projection = scene.mapProjection;
+  var ellipsoid = projection.ellipsoid;
 
   var start = Cartesian3.clone(camera.position, scratchStart);
   var startHeading = adjustAngleForLERP(camera.heading, heading);
 
   var startHeight = camera.frustum.right - camera.frustum.left;
   var heightFunction = createHeightFunction(
+    ellipsoid,
     camera,
     destination,
     startHeight,
     destination.z,
-    optionAltitude
+    optionAltitude,
+    optionMaxGroundDistance
   );
 
   function update(value) {
@@ -434,6 +446,7 @@ CameraFlightPath.createTween = function (scene, options) {
   var projection = scene.mapProjection;
   var ellipsoid = projection.ellipsoid;
   var maximumHeight = options.maximumHeight;
+  var maxGroundDistance = options.maxGroundDistance;
   var flyOverLongitude = options.flyOverLongitude;
   var flyOverLongitudeWeight = options.flyOverLongitudeWeight;
   var pitchAdjustHeight = options.pitchAdjustHeight;
@@ -528,6 +541,7 @@ CameraFlightPath.createTween = function (scene, options) {
         pitch,
         roll,
         maximumHeight,
+        maxGroundDistance,
         flyOverLongitude,
         flyOverLongitudeWeight,
         pitchAdjustHeight
@@ -549,6 +563,7 @@ CameraFlightPath.createTween = function (scene, options) {
     pitch,
     roll,
     maximumHeight,
+    maxGroundDistance,
     flyOverLongitude,
     flyOverLongitudeWeight,
     pitchAdjustHeight
