@@ -19,6 +19,10 @@ import SceneMode from "./SceneMode.js";
  */
 var CameraFlightPath = {};
 
+/**
+ * More details about the math behind this function is in
+ * https://github.com/CesiumGS/cesium/issues/8610#issuecomment-656137112
+ */
 function getAltitude(frustum, dx, dy) {
   var near;
   var top;
