@@ -379,6 +379,9 @@ Color.fromCssColorString = function (color, result) {
     result = new Color();
   }
 
+  // Remove all whitespaces from the color string
+  color = color.replace(/\s/g, "");
+
   var namedColor = Color[color.toUpperCase()];
   if (defined(namedColor)) {
     Color.clone(namedColor, result);
