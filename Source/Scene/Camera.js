@@ -3219,7 +3219,7 @@ Camera.prototype.completeFlight = function () {
  * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
- * @param {Number} [options.maximumStraightFlyRadius] The maximum radius within which the camera flies straight to the destination.
+ * @param {Number} [options.maximumStraightFlightDistance=3000.0] The maximum distance within which the camera flies straight to the destination instead of following a parabolic arc.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
@@ -3330,7 +3330,8 @@ Camera.prototype.flyTo = function (options) {
   newOptions.endTransform = options.endTransform;
   newOptions.convert = isRectangle ? false : options.convert;
   newOptions.maximumHeight = options.maximumHeight;
-  newOptions.maximumStraightFlyRadius = options.maximumStraightFlyRadius;
+  newOptions.maximumStraightFlightDistance =
+    options.maximumStraightFlightDistance;
   newOptions.pitchAdjustHeight = options.pitchAdjustHeight;
   newOptions.flyOverLongitude = options.flyOverLongitude;
   newOptions.flyOverLongitudeWeight = options.flyOverLongitudeWeight;
@@ -3489,6 +3490,7 @@ var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
  * @param {Camera.FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
+ * @param {Number} [options.maximumStraightFlightDistance=3000.0] The maximum distance within which the camera flies straight to the destination instead of following a parabolic arc.
  * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
  * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
@@ -3583,6 +3585,7 @@ Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
     cancel: options.cancel,
     endTransform: options.endTransform,
     maximumHeight: options.maximumHeight,
+    maximumStraightFlightDistance: options.maximumStraightFlightDistance,
     easingFunction: options.easingFunction,
     flyOverLongitude: options.flyOverLongitude,
     flyOverLongitudeWeight: options.flyOverLongitudeWeight,

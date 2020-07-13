@@ -80,9 +80,12 @@ function createHeightFunction(
   startHeight,
   endHeight,
   optionAltitude,
-  optionMaxStraightFlyRadius
+  optionMaxStraightFlightDistance
 ) {
-  var maxStraightFlyRadius = defaultValue(optionMaxStraightFlyRadius, 3000.0);
+  var maxStraightFlightDistance = defaultValue(
+    optionMaxStraightFlightDistance,
+    3000.0
+  );
   var altitude = optionAltitude;
   var maxHeight = Math.max(startHeight, endHeight);
   var start = camera.position;
@@ -112,7 +115,7 @@ function createHeightFunction(
     );
   }
 
-  if (distance > maxStraightFlyRadius && maxHeight < altitude) {
+  if (distance > maxStraightFlightDistance && maxHeight < altitude) {
     var power = 8.0;
     var factor = 1000000.0;
 
@@ -160,7 +163,7 @@ function createUpdateCV(
   pitch,
   roll,
   optionAltitude,
-  optionMaxStraightFlyRadius
+  optionMaxStraightFlightDistance
 ) {
   var camera = scene.camera;
 
@@ -175,7 +178,7 @@ function createUpdateCV(
     start.z,
     destination.z,
     optionAltitude,
-    optionMaxStraightFlyRadius
+    optionMaxStraightFlightDistance
   );
 
   function update(value) {
@@ -223,7 +226,7 @@ function createUpdate3D(
   pitch,
   roll,
   optionAltitude,
-  optionMaxStraightFlyRadius,
+  optionMaxStraightFlightDistance,
   optionFlyOverLongitude,
   optionFlyOverLongitudeWeight,
   optionPitchAdjustHeight
@@ -286,7 +289,7 @@ function createUpdate3D(
     startCart.height,
     destCart.height,
     optionAltitude,
-    optionMaxStraightFlyRadius
+    optionMaxStraightFlightDistance
   );
   var pitchFunction = createPitchFunction(
     startPitch,
@@ -336,7 +339,7 @@ function createUpdate2D(
   pitch,
   roll,
   optionAltitude,
-  optionMaxStraightFlyRadius
+  optionMaxStraightFlightDistance
 ) {
   var camera = scene.camera;
 
@@ -350,7 +353,7 @@ function createUpdate2D(
     startHeight,
     destination.z,
     optionAltitude,
-    optionMaxStraightFlyRadius
+    optionMaxStraightFlightDistance
   );
 
   function update(value) {
@@ -424,7 +427,7 @@ CameraFlightPath.createTween = function (scene, options) {
   var projection = scene.mapProjection;
   var ellipsoid = projection.ellipsoid;
   var maximumHeight = options.maximumHeight;
-  var maxStraightFlyRadius = options.maximumStraightFlyRadius;
+  var maximumStraightFlightDistance = options.maximumStraightFlightDistance;
   var flyOverLongitude = options.flyOverLongitude;
   var flyOverLongitudeWeight = options.flyOverLongitudeWeight;
   var pitchAdjustHeight = options.pitchAdjustHeight;
@@ -519,7 +522,7 @@ CameraFlightPath.createTween = function (scene, options) {
         pitch,
         roll,
         maximumHeight,
-        maxStraightFlyRadius,
+        maximumStraightFlightDistance,
         flyOverLongitude,
         flyOverLongitudeWeight,
         pitchAdjustHeight
@@ -541,7 +544,7 @@ CameraFlightPath.createTween = function (scene, options) {
     pitch,
     roll,
     maximumHeight,
-    maxStraightFlyRadius,
+    maximumStraightFlightDistance,
     flyOverLongitude,
     flyOverLongitudeWeight,
     pitchAdjustHeight
