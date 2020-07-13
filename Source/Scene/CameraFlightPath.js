@@ -20,8 +20,10 @@ import SceneMode from "./SceneMode.js";
 var CameraFlightPath = {};
 
 function getAltitude(frustum, dx, dy) {
-  // More details about the math behind this function is in
-  // https://github.com/CesiumGS/cesium/issues/8610#issuecomment-656137112
+  // Calculate the necessary altitude for the camera from the start position,
+  // so that the destination will appear on the screen. The function assumes
+  // top-down view and the camera's height is positive. It is an approximation
+  // and minor inaccuracies are neglected
   var near;
   var top;
   var right;
