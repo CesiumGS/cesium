@@ -2434,7 +2434,7 @@ function rectangleCameraPosition3D(camera, rectangle, result, updateCamera) {
   // even look for this case in optimized builds, so we have to test for it here instead.
   //
   // Fortunately, this case can only happen (here) when north is very close to the north pole and south is very close to the south pole,
-  // so handle it just by using 0 latitude as the center.  It's certainliy possible to use a smaller tolerance
+  // so handle it just by using 0 latitude as the center.  It's certainly possible to use a smaller tolerance
   // than one degree here, but one degree is safe and putting the center at 0 latitude should be good enough for any
   // rectangle that spans 178+ of the 180 degrees of latitude.
   var longitude = (west + east) * 0.5;
@@ -3220,9 +3220,9 @@ Camera.prototype.completeFlight = function () {
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.maximumStraightFlightDistance=3000.0] The maximum distance within which the camera flies straight to the destination instead of following a parabolic arc.
- * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+ * @param {Number} [options.pitchAdjustHeight] If camera flies higher than that value, adjust pitch during the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
- * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
+ * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specified via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
  * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
  * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  *
@@ -3491,9 +3491,9 @@ var scratchFlyToBoundingSphereMatrix3 = new Matrix3();
  * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
  * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
  * @param {Number} [options.maximumStraightFlightDistance=3000.0] The maximum distance within which the camera flies straight to the destination instead of following a parabolic arc.
- * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
+ * @param {Number} [options.pitchAdjustHeight] If camera flies higher than that value, adjust pitch during the flight to look down, and keep Earth in viewport.
  * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
- * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
+ * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specified via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
  * @param {EasingFunction.Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
  */
 Camera.prototype.flyToBoundingSphere = function (boundingSphere, options) {
