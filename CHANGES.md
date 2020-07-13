@@ -2,13 +2,13 @@
 
 ### 1.72 - 2020-08-03
 
-##### Fixes :wrench:
-
-- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)
-
 ##### Additions :tada:
 
 - Added maximumStraightFlyRadius option to Camera.flyTo() function. The option specifies the radius of an imaginary sphere with the destination as a center. Within the sphere, the camera will fly straight to the destination. [#9025](https://github.com/CesiumGS/cesium/pull/9025)
+
+##### Fixes :wrench:
+
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)
 
 ### 1.71 - 2020-07-01
 
