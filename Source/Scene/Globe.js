@@ -733,7 +733,7 @@ Globe.prototype.pickWorldCoordinates = function (
  * var ray = scene.camera.getPickRay(windowCoordinates);
  * var intersection = globe.pick(ray, scene);
  */
-Globe.prototype.pickTriangle = function (ray, scene, result) {
+Globe.prototype.pickTriangle = function (ray, scene, cullBackFaces, result) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
     throw new DeveloperError("ray is required");
@@ -742,6 +742,8 @@ Globe.prototype.pickTriangle = function (ray, scene, result) {
     throw new DeveloperError("scene is required");
   }
   //>>includeEnd('debug');
+
+  cullBackFaces = defaultValue(cullBackFaces, true);
 
   var mode = scene.mode;
   var projection = scene.mapProjection;
