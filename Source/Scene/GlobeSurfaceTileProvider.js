@@ -580,7 +580,8 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
     // b) The bounding volume is accurate (updated as a side effect of computing visibility)
     // Then we'll load imagery, too.
     if (
-      this.computeTileVisibility(tile, frameState, this.quadtree.occluders) &&
+      this.computeTileVisibility(tile, frameState, this.quadtree.occluders) !==
+        Visibility.NONE &&
       surfaceTile.boundingVolumeSourceTile === tile
     ) {
       terrainOnly = false;
