@@ -9,19 +9,39 @@ import VulkanConstants from "./VulkanConstants.js";
 import MSC_TRANSCODER from "../ThirdParty/msc_basis_transcoder.js";
 
 /**
- * Asynchronously loads and parses the given URL to a KTX file or parses the raw binary data of a KTX file.
+ * Stores the supported formats that KTX2 can transcode to. Called during context creation.
+ *
+ * @param {Boolean} etc1 Whether or not ETC1 is supported
+ * @param {Boolean} s3tc Whether or not S3TC is supported
+ * @param {Boolean} pvrtc Whether or not PVRTC is supported
+ * @private
+ * */
+var supportedTranscoderFormats;
+var transcoderModule;
+var transcoderPromise;
+
+loadKTX2.setKTX2SupportedFormats = function (etc1, s3tc, pvrtc) {
+  supportedTranscoderFormats = {
+    etc1: etc1,
+    s3tc: s3tc,
+    pvrtc: pvrtc,
+  };
+};
+
+/**
+ * Asynchronously loads and parses the given URL to a KTX2 file or parses the raw binary data of a KTX2 file.
  * Returns a promise that will resolve to an object containing the image buffer, width, height and format once loaded,
  * or reject if the URL failed to load or failed to parse the data.  The data is loaded
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  * <p>
- * The following are part of the KTX format specification but are not supported:
+ * The following are part of the KTX2 format specification but are not supported:
  * <ul>
  *     <li>Metadata</li>
  *     <li>3D textures</li>
  *     <li>Texture Arrays</li>
- *     <li>Cubemaps</li>
- *     <li>Mipmaps</li>
+ *     <li>Video</li>
+ *     <li>Compressed Mipmaps</li>
  * </ul>
  * </p>
  *
@@ -30,7 +50,7 @@ import MSC_TRANSCODER from "../ThirdParty/msc_basis_transcoder.js";
  * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
  *
- * @exception {RuntimeError} Invalid KTX file.
+ * @exception {RuntimeError} Invalid KTX2 file.
  * @exception {RuntimeError} File is the wrong endianness.
  * @exception {RuntimeError} glInternalFormat is not a valid format.
  * @exception {RuntimeError} glType must be zero when the texture is compressed.
@@ -44,24 +64,21 @@ import MSC_TRANSCODER from "../ThirdParty/msc_basis_transcoder.js";
  *
  * @example
  * // load a single URL asynchronously
- * Cesium.loadKTX2('some/url').then(function(ktxData) {
- *     var width = ktxData.width;
- *     var height = ktxData.height;
- *     var format = ktxData.internalFormat;
- *     var arrayBufferView = ktxData.bufferView;
+ * Cesium.loadKTX2('some/url').then(function(ktx2Data) {
+ *     var width = ktx2Data.width;
+ *     var height = ktx2Data.height;
+ *     var format = ktx2Data.internalFormat;
+ *     var arrayBufferView = ktx2Data.bufferView;
  *     // use the data to create a texture
  * }).otherwise(function(error) {
  *     // an error occurred
  * });
  *
- * @see {@link https://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/|KTX file format}
+ * @see {@link hhttp://github.khronos.org/KTX-Specification/|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
  */
-
-var transcoderModule;
-var transcoderPromise;
-function loadKTX2(resourceOrUrlOrBuffer, supportedFormats) {
+function loadKTX2(resourceOrUrlOrBuffer) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("resourceOrUrlOrBuffer", resourceOrUrlOrBuffer);
   //>>includeEnd('debug');
@@ -94,21 +111,16 @@ function loadKTX2(resourceOrUrlOrBuffer, supportedFormats) {
 
   // load module then return
   return transcoderPromise.then(function () {
-    return loadPromise
-      .then(function (data) {
-        if (defined(data)) {
-          try {
-            return parseKTX2(data, supportedFormats);
-          } catch (e) {
-            console.log("KTX2 Parsing Error:");
-            console.log(e);
-          }
+    return loadPromise.then(function (data) {
+      if (defined(data)) {
+        try {
+          return parseKTX2(data, supportedTranscoderFormats);
+        } catch (e) {
+          console.log("KTX2 Loading Error:");
+          console.log(e);
         }
-      })
-      .otherwise(function (error) {
-        console.log("KTX2 Resource Fetching Error:");
-        console.log(error);
-      });
+      }
+    });
   });
 }
 
@@ -137,13 +149,14 @@ var faceOrder = [
 ];
 
 // For iteration
+var sizeOfUint8 = 1;
 var sizeOfUint16 = 2;
 var sizeOfUint32 = 4;
 var sizeOfUint64 = 8;
 
-// Flags
-var isETC1SMask = 0x01;
-var hasAlphaSlicesMask = 0x04;
+// // Flags
+var colorModelETC1S = 163;
+var colorModelUASTC = 166;
 
 // Needed to support Int64 parsing, taken from: https://stackoverflow.com/a/53107482/5420846
 function getUint64(view, byteOffset, littleEndian) {
@@ -163,8 +176,14 @@ function getUint64(view, byteOffset, littleEndian) {
   return combined;
 }
 
-function parseKTX2(data, supportedFormats) {
+function parseKTX2(data) {
   var byteBuffer = new Uint8Array(data);
+
+  if (!defined(supportedTranscoderFormats)) {
+    throw new RuntimeError(
+      "KTX2 Loader does not know which GPU formats are supported, please initialize a context."
+    );
+  }
 
   var isKTX2 = true;
   var i;
@@ -207,7 +226,7 @@ function parseKTX2(data, supportedFormats) {
   byteOffset += sizeOfUint32;
 
   // Index
-  // var dfdByteOffset = view.getUint32(byteOffset, true);
+  var dfdByteOffset = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
   // var dfdByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
@@ -224,7 +243,7 @@ function parseKTX2(data, supportedFormats) {
     byteLength: sgdByteLength,
   };
 
-  // Level Index
+  // 2 -- Level Index
   var levelIndex = [];
   for (var l = 0; l < header.levelCount; l++) {
     var levelByteOffset = getUint64(view, byteOffset, true);
@@ -241,12 +260,40 @@ function parseKTX2(data, supportedFormats) {
     });
   }
 
+  // 3 -- Data Format Descriptors (DFD)
+  // http://github.khronos.org/KTX-Specification/#_dfd_for_supercompressed_data
+  byteOffset = defined(data.buffer)
+    ? data.byteOffset + dfdByteOffset
+    : dfdByteOffset;
+  var dfd = {
+    totalSize: view.getUint32(byteOffset, true),
+    vendorId: view.getUint16((byteOffset += sizeOfUint32), true), // Should be reading 'UInt17', but it's zero anyway for KTX2
+    descriptorType: view.getUint16((byteOffset += sizeOfUint16 + 1), true),
+    versionNumber: view.getUint16((byteOffset += sizeOfUint16 - 1), true),
+    descriptorBlockSize: view.getUint16((byteOffset += sizeOfUint16), true),
+    colorModel: view.getUint8((byteOffset += sizeOfUint16), true),
+    colorPrimaries: view.getUint8((byteOffset += sizeOfUint8), true),
+    transferFunction: view.getUint8((byteOffset += sizeOfUint8), true),
+    flags: view.getUint8((byteOffset += sizeOfUint8), true),
+    texelBlockDimension: {
+      x: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
+      y: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
+      z: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
+      w: view.getUint8((byteOffset += sizeOfUint8), true) + 1,
+    },
+    bytesPlane0: view.getUint8((byteOffset += sizeOfUint8), true),
+    numSamples: 0,
+    samples: [],
+  };
+
   // Get Texture Based on Format
   var result = new Array(header.levelCount);
-  if (header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB) {
-    //RGB8
-    parseRGB8(data, header, levelIndex, result);
-  } else if (header.vkFormat === 0x0) {
+  if (
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB ||
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB
+  ) {
+    parseUncompressed(data, header, levelIndex, result);
+  } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) {
     // Compressed, initialize transcoder module
     var BasisTranscoder = transcoderModule.BasisTranscoder;
     BasisTranscoder.init();
@@ -258,9 +305,10 @@ function parseKTX2(data, supportedFormats) {
       levelIndex,
       sgdIndex,
       transcoder,
-      supportedFormats,
       result
     );
+  } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelUASTC) {
+    throw new RuntimeError("UASTC Basis Encoding not yet supported");
   } else {
     throw new RuntimeError("KTX2 pixel format is not yet supported.");
   }
@@ -278,17 +326,22 @@ function parseKTX2(data, supportedFormats) {
     for (i = 0; i < header.levelCount; ++i) {
       result[i] = result[i][faceOrder[0]];
     }
-  }
-  if (header.levelCount === 1) {
-    result = result[0];
+
+    if (header.levelCount === 1) {
+      result = result[0];
+    }
   }
 
   return result;
 }
 
-// Parser for RGB8 images (uncompressed)
-function parseRGB8(data, header, levelIndex, result) {
-  var internalFormat = PixelFormat.RGB;
+// Parser for uncompressed
+function parseUncompressed(data, header, levelIndex, result) {
+  var internalFormat =
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB
+      ? PixelFormat.RGBA
+      : PixelFormat.RGB;
+  var dataBuffer = defined(data.buffer) ? data.buffer : data;
 
   for (var i = 0; i < levelIndex.length; ++i) {
     var level = (result[i] = {});
@@ -297,17 +350,14 @@ function parseRGB8(data, header, levelIndex, result) {
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
       var height = header.pixelWidth >> i;
-      var levelLength = levelInfo.byteLength;
-      var levelOffset = levelInfo.byteOffset;
-
-      var levelBuffer;
-      if (defined(data.buffer)) {
-        levelBuffer = new Uint8Array(data.buffer, levelOffset, levelLength);
-      } else {
-        levelBuffer = new Uint8Array(data, levelOffset, levelLength);
-      }
-
-      console.log(levelBuffer.byteLength);
+      // var levelLength = levelInfo.byteLength;
+      var faceLength =
+        header.typeSize *
+        width *
+        height *
+        PixelFormat.componentsLength(internalFormat);
+      var levelOffset = levelInfo.byteOffset + faceLength * j;
+      var levelBuffer = new Uint8Array(dataBuffer, levelOffset, faceLength);
 
       level[faceOrder[j]] = new CompressedTextureBuffer(
         internalFormat,
@@ -326,20 +376,11 @@ function parseCompressed(
   levelIndex,
   sgdIndex,
   transcoder,
-  supportedFormats,
   result
 ) {
-  var byteOffset = sgdIndex.byteOffset;
-
-  var globalFlags = view.getUint32(byteOffset, true);
-  byteOffset += sizeOfUint32;
-  var isETC1s = globalFlags & isETC1SMask;
-  var hasAlphaSlices = globalFlags & hasAlphaSlicesMask;
+  var ktx2Offset = defined(data.buffer) ? data.byteOffset : 0;
+  var byteOffset = ktx2Offset + sgdIndex.byteOffset;
   var isVideo = header.layerCount !== 0; // Should be false until video support is added
-
-  // if (!isETC1s) {
-  //   throw new RuntimeError("UASTC Basis Encoding not yet supported");
-  // }
 
   // Read rest of SGD data
   var endpointCount = view.getUint16(byteOffset, true);
@@ -367,20 +408,22 @@ function parseCompressed(
   }
   byteOffset += sizeOfUint32;
 
+  var hasAlphaSlices = imageDescs[0].alphaSliceByteLength > 0;
+
   // Determine target format based on platform support
   var internalFormat, transcoderFormat;
   var TranscodeTarget = transcoderModule.TranscodeTarget;
-  if (supportedFormats.etc1 && !hasAlphaSlices) {
+  if (supportedTranscoderFormats.etc1 && !hasAlphaSlices) {
     internalFormat = PixelFormat.RGB_ETC1;
     transcoderFormat = TranscodeTarget.ETC1_RGB;
-  } else if (supportedFormats.s3tc) {
+  } else if (supportedTranscoderFormats.s3tc) {
     internalFormat = hasAlphaSlices
-      ? PixelFormat.RGBA_DXT1
+      ? PixelFormat.RGBA_DXT5
       : PixelFormat.RGB_DXT1;
     transcoderFormat = hasAlphaSlices
       ? TranscodeTarget.BC3_RGBA
       : TranscodeTarget.BC1_RGB;
-  } else if (supportedFormats.pvrtc) {
+  } else if (supportedTranscoderFormats.pvrtc) {
     internalFormat = hasAlphaSlices
       ? PixelFormat.RGBA_PVRTC_4BPPV1
       : PixelFormat.RGB_PVRTC_4BPPV1;
@@ -391,13 +434,15 @@ function parseCompressed(
     throw new RuntimeError("No transcoding format target available");
   }
 
-  var endpoints = new Uint8Array(data, byteOffset, endpointsByteLength);
+  var dataBuffer = defined(data.buffer) ? data.buffer : data;
+  var endpoints = new Uint8Array(dataBuffer, byteOffset, selectorsByteLength);
   byteOffset += endpointsByteLength;
-  var selectors = new Uint8Array(data, byteOffset, selectorsByteLength);
+  var selectors = new Uint8Array(dataBuffer, byteOffset, selectorsByteLength);
   byteOffset += selectorsByteLength;
+
   transcoder.decodePalettes(endpointCount, endpoints, selectorCount, selectors);
 
-  var tables = new Uint8Array(data, byteOffset, tablesByteLength);
+  var tables = new Uint8Array(dataBuffer, byteOffset, tablesByteLength);
   byteOffset += tablesByteLength;
   // var extendedByte = new Uint8Array(data, byteOffset, extendedByteLength);
   byteOffset += extendedByteLength;
@@ -419,34 +464,19 @@ function parseCompressed(
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
       var height = header.pixelWidth >> i;
-      var levelOffset = levelInfo.byteOffset;
+      var levelOffset = ktx2Offset + levelInfo.byteOffset;
 
       var transcoded;
-      var rgbData;
-      var alphaData;
-      if (defined(data.buffer)) {
-        rgbData = new Uint8Array(
-          data.buffer,
-          levelOffset + imageInfo.rgbSliceByteOffset,
-          imageInfo.rgbSliceByteLength
-        );
-        alphaData = new Uint8Array(
-          data.buffer,
-          levelOffset + imageInfo.alphaSliceByteOffset,
-          imageInfo.alphaSliceByteLength
-        );
-      } else {
-        rgbData = new Uint8Array(
-          data,
-          levelOffset + imageInfo.rgbSliceByteOffset,
-          imageInfo.rgbSliceByteLength
-        );
-        alphaData = new Uint8Array(
-          data,
-          levelOffset + imageInfo.alphaSliceByteOffset,
-          imageInfo.alphaSliceByteLength
-        );
-      }
+      var rgbData = new Uint8Array(
+        dataBuffer,
+        levelOffset + imageInfo.rgbSliceByteOffset,
+        imageInfo.rgbSliceByteLength
+      );
+      var alphaData = new Uint8Array(
+        dataBuffer,
+        levelOffset + imageInfo.alphaSliceByteOffset,
+        imageInfo.alphaSliceByteLength
+      );
 
       transcoded = transcoder.transcodeImage(
         imageInfo.imageFlags,

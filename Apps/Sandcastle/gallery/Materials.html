@@ -221,14 +221,7 @@
         function applyCompressedTextureMaterial(primitive, scene) {
           Sandcastle.declare(applyCompressedTextureMaterial); // For highlighting in Sandcastle.
 
-          var compressedImageUrl;
-          if (scene.getCompressedTextureFormatSupported("s3tc")) {
-            compressedImageUrl = "../images/LogoDXT1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("etc1")) {
-            compressedImageUrl = "../images/LogoETC1.ktx";
-          } else if (scene.getCompressedTextureFormatSupported("pvrtc")) {
-            compressedImageUrl = "../images/LogoPVR.ktx";
-          }
+          var compressedImageUrl = "../images/Logo.ktx2";
 
           primitive.appearance.material = new Cesium.Material({
             fabric: {

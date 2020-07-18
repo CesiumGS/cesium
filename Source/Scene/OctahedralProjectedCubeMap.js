@@ -3,7 +3,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadKTX from "../Core/loadKTX.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
@@ -290,7 +290,7 @@ OctahedralProjectedCubeMap.prototype.update = function (frameState) {
   var cubeMapBuffers = this._cubeMapBuffers;
   if (!defined(cubeMapBuffers) && !this._loading) {
     var that = this;
-    loadKTX(this._url)
+    loadKTX2(this._url)
       .then(function (buffers) {
         that._cubeMapBuffers = buffers;
         that._loading = false;

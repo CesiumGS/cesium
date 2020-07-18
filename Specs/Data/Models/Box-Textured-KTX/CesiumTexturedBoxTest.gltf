@@ -92,25 +92,12 @@
       "uri": "data:application/octet-stream;base64,AAAAvwAAAD8AAAA/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAPwAAAD8AAAA/AAAAPwAAAL8AAAC/AAAAPwAAAL8AAAA/AAAAvwAAAD8AAAC/AAAAPwAAAD8AAAC/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAC/AAAAPwAAAD8AAAA/AAAAvwAAAD8AAAA/AAAAPwAAAL8AAAA/AAAAvwAAAL8AAAA/AAAAvwAAAD8AAAA/AAAAvwAAAD8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAvwAAAL8AAAA/AAAAvwAAAL8AAAC/AAAAPwAAAL8AAAA/AAAAPwAAAL8AAAC/AAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAAAAAAAAgL8AAAAAAADAQAAAAAAAAKBAAAAAAAAAwED+/38/AACgQP7/fz8AAIBAAAAAAAAAoEAAAAAAAACAQAAAgD8AAKBAAACAPwAAAEAAAAAAAACAPwAAAAAAAABAAACAPwAAgD8AAIA/AABAQAAAAAAAAIBAAAAAAAAAQEAAAIA/AACAQAAAgD8AAEBAAAAAAAAAAEAAAAAAAABAQAAAgD8AAABAAACAPwAAAAAAAAAAAAAAAP7/fz8AAIA/AAAAAAAAgD/+/38/AAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUA"
     }
   },
-  "images": {
-    "Image0001": {
-      "name": "Image0001",
-      "uri": "Image0001.png",
-      "extras": {
-        "compressedImage3DTiles": {
-          "s3tc": {
-            "uri": "Image0001-s3tc.ktx"
-          },
-          "etc1": {
-            "uri": "Image0001-etc1.ktx"
-          },
-          "pvrtc1": {
-            "uri": "Image0001-pvrtc1.ktx"
-          }
-        }
-      }
+  "images": [
+    {
+      "mimeType": "image/ktx2",
+      "uri": "Image0001.ktx2"
     }
-  },
+    ],
   "materials": {
     "Effect-Texture": {
       "name": "Texture",
@@ -269,14 +256,14 @@
   },
   "textures": {
     "texture_Image0001": {
-      "format": 6408,
-      "internalFormat": 6408,
-      "sampler": "sampler_0",
-      "source": "Image0001",
-      "target": 3553,
-      "type": 5121
+      "extensions":{
+        "KHR_texture_basisu": {
+            "source": 0
+        }
+       }
     }
   },
   "cameras": {},
-  "extensionsUsed": []
+  "extensionsUsed": ["KHR_texture_basisu"],
+  "extensionsRequired": ["KHR_texture_basisu"]
 }

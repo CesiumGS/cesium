@@ -802,7 +802,7 @@ describe(
       return loadModel(boomBoxUrl).then(function (m) {
         m.scale = 20.0; // Source model is very small, so scale up a bit
         m.specularEnvironmentMaps =
-          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
+          "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
 
         return pollToPromise(function () {
           scene.highDynamicRange = true;
@@ -1365,7 +1365,7 @@ describe(
       });
     });
 
-    it("renders textured box with external KTX texture", function () {
+    it("renders textured box with external KTX2 texture", function () {
       return loadModel(texturedBoxKTXUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
@@ -1375,7 +1375,7 @@ describe(
       });
     });
 
-    it("renders textured box with embedded binary KTX texture", function () {
+    it("renders textured box with embedded binary KTX2 texture", function () {
       return loadModel(texturedBoxKTXBinaryUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
@@ -1385,7 +1385,7 @@ describe(
       });
     });
 
-    it("renders textured box with embedded base64 encoded KTX texture", function () {
+    it("renders textured box with embedded base64 encoded KTX2 texture", function () {
       return loadModel(texturedBoxKTXEmbeddedUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {

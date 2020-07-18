@@ -14,7 +14,7 @@ describe(
     var octahedralMap;
 
     var environmentMapUrl =
-      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx";
+      "./Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx2";
     var fsOctahedralMap =
       "uniform sampler2D projectedMap;" +
       "uniform vec2 textureSize;" +
@@ -113,7 +113,7 @@ describe(
         sampleOctahedralMap(octahedralMap, directionFlipY, lod, function (
           octahedralMapColor
         ) {
-          return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 5);
+          return expect(cubeMapColor).toEqualEpsilon(octahedralMapColor, 7);
         });
       });
     }
@@ -130,8 +130,8 @@ describe(
         octahedralMap.update(frameState);
         return octahedralMap.ready;
       }).then(function () {
-        expect(octahedralMap.texture.width).toEqual(770);
-        expect(octahedralMap.texture.height).toEqual(512);
+        expect(octahedralMap.texture.width).toEqual(1127);
+        expect(octahedralMap.texture.height).toEqual(750);
         expect(octahedralMap.maximumMipmapLevel).toEqual(5);
       });
     });

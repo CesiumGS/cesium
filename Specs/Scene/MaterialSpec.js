@@ -370,12 +370,8 @@ describe(
     it("creates a material with an ktx compressed image uniform", function () {
       var compressedUrl;
       var context = scene.context;
-      if (context.s3tc) {
-        compressedUrl = "./Data/Images/Green4x4DXT1.ktx";
-      } else if (context.etc1) {
-        compressedUrl = "./Data/Images/Green4x4ETC1.ktx";
-      } else if (context.pvrtc) {
-        compressedUrl = "./Data/Images/Green4x4PVR.ktx";
+      if (context.s3tc || context.etc1 || context.pvrtc) {
+        compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;
       }

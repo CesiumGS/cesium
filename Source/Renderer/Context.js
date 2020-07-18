@@ -18,6 +18,7 @@ import ViewportQuadVS from "../Shaders/ViewportQuadVS.js";
 import BufferUsage from "./BufferUsage.js";
 import ClearCommand from "./ClearCommand.js";
 import ContextLimits from "./ContextLimits.js";
+import loadKTX2 from "../Core/loadKTX2.js";
 import CubeMap from "./CubeMap.js";
 import DrawCommand from "./DrawCommand.js";
 import PassState from "./PassState.js";
@@ -315,6 +316,7 @@ function Context(canvas, options) {
     "WEBKIT_WEBGL_compressed_texture_pvrtc",
   ]);
   this._etc1 = !!getExtension(gl, ["WEBGL_compressed_texture_etc1"]);
+  loadKTX2.setKTX2SupportedFormats(this._etc1, this._s3tc, this._pvrtc);
 
   var textureFilterAnisotropic = options.allowTextureFilterAnisotropic
     ? getExtension(gl, [

@@ -21,7 +21,6 @@ import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
-import loadKTX from "../Core/loadKTX.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
@@ -1918,11 +1917,10 @@ function imageLoad(model, textureId) {
   };
 }
 
-var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
 var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
 var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-function parseTextures(model, context, supportsWebP) {
+function parseTextures(model, context, supportsWebP, supportsBasis) {
   var gltf = model.gltf;
   var images = gltf.images;
   var uri;
@@ -1935,6 +1933,11 @@ function parseTextures(model, context, supportsWebP) {
       supportsWebP
     ) {
       imageId = texture.extensions.EXT_texture_webp.source;
+    } else if (
+      defined(texture.extensions) &&
+      defined(texture.extensions.KHR_texture_basisu)
+    ) {
+      imageId = texture.extensions.KHR_texture_basisu.source;
     }
 
     var gltfImage = images[imageId];
@@ -1998,15 +2001,8 @@ function parseTextures(model, context, supportsWebP) {
       });
 
       var promise;
-      if (ktxRegex.test(uri)) {
-        promise = loadKTX(imageResource);
-      } else if (ktx2Regex.test(uri)) {
-        var supportedFormats = {
-          etc1: context.etc1,
-          s3tc: context.s3tc,
-          pvrtc: context.pvrtc,
-        };
-        promise = loadKTX2(imageResource, supportedFormats);
+      if (ktx2Regex.test(uri)) {
+        promise = loadKTX2(imageResource);
       } else if (crnRegex.test(uri)) {
         promise = loadCRN(imageResource);
       } else {
@@ -2742,7 +2738,7 @@ function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
   };
 }
 
-function loadTexturesFromBufferViews(model, supportedFormats) {
+function loadTexturesFromBufferViews(model) {
   var loadResources = model._loadResources;
 
   if (loadResources.pendingBufferLoads !== 0) {
@@ -2762,13 +2758,8 @@ function loadTexturesFromBufferViews(model, supportedFormats) {
       "id: " + gltfTexture.id + ", bufferView: " + gltfTexture.bufferView
     );
 
-    if (gltfTexture.mimeType === "image/ktx") {
-      loadKTX(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else if (gltfTexture.mimeType === "image/ktx2") {
-      loadKTX2(loadResources.getBuffer(bufferView), supportedFormats)
+    if (gltfTexture.mimeType === "image/ktx2") {
+      loadKTX2(loadResources.getBuffer(bufferView))
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;
@@ -4167,12 +4158,7 @@ function createResources(model, frameState) {
     createBuffers(model, frameState); // using glTF bufferViews
     createPrograms(model, frameState);
     createSamplers(model, context);
-    var supportedFormats = {
-      etc1: context.etc1,
-      s3tc: context.s3tc,
-      pvrtc: context.pvrtc,
-    };
-    loadTexturesFromBufferViews(model, supportedFormats);
+    loadTexturesFromBufferViews(model);
     createTextures(model, frameState);
   }
 
@@ -5110,10 +5096,12 @@ Model.prototype.update = function (frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
 
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
+
+  var supportsWebP = FeatureDetection.supportsWebP();
+  var supportsBasis = FeatureDetection.supportsBasis(context);
 
   if (this._state === ModelState.NEEDS_LOAD && defined(this.gltf)) {
     // Use renderer resources from cache instead of loading/creating them?
@@ -5245,7 +5233,7 @@ Model.prototype.update = function (frameState) {
           parseBufferViews(this);
           parseShaders(this);
           parsePrograms(this);
-          parseTextures(this, context, supportsWebP);
+          parseTextures(this, context, supportsWebP, supportsBasis);
         }
         parseMaterials(this);
         parseMeshes(this);
