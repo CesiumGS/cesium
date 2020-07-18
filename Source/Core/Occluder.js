@@ -290,7 +290,7 @@ var tempScratch = new Cartesian3();
  * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
  *
  * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
- * @returns {Number} Visibility.NONE if the occludee is not visible,
+ * @returns {Visibility} Visibility.NONE if the occludee is not visible,
  *                       Visibility.PARTIAL if the occludee is partially visible, or
  *                       Visibility.FULL if the occludee is fully visible.
  *
