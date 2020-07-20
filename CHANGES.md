@@ -8,6 +8,8 @@
 - Fixed a bug in the assessment of terrain tile visibility [#9033](https://github.com/CesiumGS/cesium/issues/9033)
 - Fixed vertical polylines with `arcType: ArcType.RHUMB`, including lines drawn via GeoJSON. [#9028](https://github.com/CesiumGS/cesium/pull/9028)
 - Fixed wall rendering when underground [#9041](https://github.com/CesiumGS/cesium/pull/9041)
+- Fixed issue where a side of the wall was missing if the first position and the last position were equal [#9044](https://github.com/CesiumGS/cesium/pull/9044)
+- Fixed `translucencyByDistance` for label outline color [#9003](https://github.com/CesiumGS/cesium/pull/9003)
 
 ### 1.71 - 2020-07-01
 
