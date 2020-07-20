@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)
+- Fixed vertical polylines with `arcType: ArcType.RHUMB`, including lines drawn via GeoJSON. [#9028](https://github.com/CesiumGS/cesium/pull/9028)
 
 ### 1.71 - 2020-07-01
 
