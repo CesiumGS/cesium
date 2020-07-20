@@ -2,6 +2,14 @@
 
 ### 1.72 - 2020-08-03
 
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. `accessToken` is now required when constructing `MapboxImageryProvider` or `MapboxStyleImageryProvider`. This only affects out-of-the-box behavior and applications using their own Mapbox access token are unaffected.
+
+##### Deprecated :hourglass_flowing_sand:
+
+- Deprecated `MapboxApi.defaultAccessToken`. Pass an `accessToken` parameter to individual Mapbox related constructors instead.
+
 ##### Fixes :wrench:
 
 - Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/8996)

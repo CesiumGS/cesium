@@ -11,11 +11,4 @@ describe("Core/MapboxApi", function () {
     expect(MapboxApi.getAccessToken(undefined)).toEqual("someaccesstoken");
     MapboxApi.defaultAccessToken = oldAccessToken;
   });
-
-  it("getAccessToken returns a access token even if the provided access token and the default access token are undefined", function () {
-    var oldAccessToken = MapboxApi.defaultAccessToken;
-    MapboxApi.defaultAccessToken = undefined;
-    expect(MapboxApi.getAccessToken(undefined).length).toBeGreaterThan(0);
-    MapboxApi.defaultAccessToken = oldAccessToken;
-  });
 });
