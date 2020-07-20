@@ -287,7 +287,9 @@ describe(
         result
       ) {
         result = originalShallowClone(command, result);
-        result.execute = function () {};
+        result.execute = function () {
+          result.uniformMap.debugShowCommandsColor();
+        };
         return result;
       });
 

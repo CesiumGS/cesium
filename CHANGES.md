@@ -1,5 +1,14 @@
 # Change Log
 
+### 1.72 - 2020-08-03
+
+##### Fixes :wrench:
+
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/pull/8996)
+- Fixed a bug in the assessment of terrain tile visibility [#9033](https://github.com/CesiumGS/cesium/issues/9033)
+- Fixed vertical polylines with `arcType: ArcType.RHUMB`, including lines drawn via GeoJSON. [#9028](https://github.com/CesiumGS/cesium/pull/9028)
+- Fixed `translucencyByDistance` for label outline color [#9003](https://github.com/CesiumGS/cesium/pull/9003)
+
 ### 1.71 - 2020-07-01
 
 ##### Breaking Changes :mega:

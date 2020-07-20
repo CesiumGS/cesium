@@ -154,6 +154,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jonathan Nogueira](https://github.com/LuminousPath)
 - [Palantir Technologies, Inc.](https://palantir.com)
   - [Joey Rafidi](https://github.com/jrafidi)
+- [Geoplex GIS GmbH](https://www.geoplex.de)
+  - [Leonard Holst](https://github.com/LHolst)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
