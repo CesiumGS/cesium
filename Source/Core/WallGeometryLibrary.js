@@ -20,7 +20,7 @@ function latLonEquals(c0, c1) {
 var scratchCartographic1 = new Cartographic();
 var scratchCartographic2 = new Cartographic();
 function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
-  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
+  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
   var length = positions.length;
   if (length < 2) {
