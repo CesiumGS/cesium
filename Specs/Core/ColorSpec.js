@@ -363,10 +363,12 @@ describe("Core/Color", function () {
     expect(Color.fromCssColorString("rgb( 108, 136, 255) ")).toBeDefined();
     expect(Color.fromCssColorString("  #FF0000")).toBeDefined();
     expect(Color.fromCssColorString("#FF0  ")).toBeDefined();
-    expect(
-      Color.fromCssColorString(" hsla(720,   100%, 50%, 1.0)  ")
-    ).toBeDefined();
-    expect(Color.fromCssColorString("hsl (720, 100%, 50%)")).toBeDefined();
+    expect(Color.fromCssColorString(" hsla(720,   100%, 50%, 1.0)  ")).toEqual(
+      new Color(1, 0, 0, 1)
+    );
+    expect(Color.fromCssColorString("hsl (720, 100%, 50%)")).toEqual(
+      new Color(1, 0, 0, 1)
+    );
   });
 
   it("fromHsl produces expected output", function () {
