@@ -55,12 +55,6 @@ describe(
       "./Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb";
     var texturedBoxKTXEmbeddedUrl =
       "./Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf";
-    var texturedBoxCRNUrl =
-      "./Data/Models/Box-Textured-CRN/CesiumTexturedBoxTest.gltf";
-    var texturedBoxCRNBinaryUrl =
-      "./Data/Models/Box-Textured-CRN-Binary/CesiumTexturedBoxTest.glb";
-    var texturedBoxCRNEmbeddedUrl =
-      "./Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf";
     var texturedBoxCustomUrl =
       "./Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf";
     var texturedBoxKhrBinaryUrl =
@@ -1387,45 +1381,6 @@ describe(
 
     it("renders textured box with embedded base64 encoded KTX2 texture", function () {
       return loadModel(texturedBoxKTXEmbeddedUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with external CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded CRN texture", function () {
-      if (!scene.context.s3tc) {
-        return;
-      }
-      return loadModel(texturedBoxCRNEmbeddedUrl, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
         verifyRender(m);

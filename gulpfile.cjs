@@ -731,7 +731,7 @@ function getMimeType(filename) {
     return { type: "text/plain", compress: true };
   } else if (/\.(czml|topojson)$/i.test(filename)) {
     return { type: "application/json", compress: true };
-  } else if (/\.(crn|tgz)$/i.test(filename)) {
+  } else if (/\.(tgz)$/i.test(filename)) {
     return { type: "application/octet-stream", compress: false };
   }
 

@@ -19,7 +19,6 @@ import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX2 from "../Core/loadKTX2.js";
 import CesiumMath from "../Core/Math.js";
@@ -1918,7 +1917,6 @@ function imageLoad(model, textureId) {
 }
 
 var ktx2Regex = /(^data:image\/ktx2)|(\.ktx2$)/i;
-var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
 function parseTextures(model, context, supportsWebP, supportsBasis) {
   var gltf = model.gltf;
@@ -2003,8 +2001,6 @@ function parseTextures(model, context, supportsWebP, supportsBasis) {
       var promise;
       if (ktx2Regex.test(uri)) {
         promise = loadKTX2(imageResource);
-      } else if (crnRegex.test(uri)) {
-        promise = loadCRN(imageResource);
       } else {
         promise = imageResource.fetchImage();
       }
@@ -2760,11 +2756,6 @@ function loadTexturesFromBufferViews(model) {
 
     if (gltfTexture.mimeType === "image/ktx2") {
       loadKTX2(loadResources.getBuffer(bufferView))
-        .then(imageLoad(model, gltfTexture.id, imageId))
-        .otherwise(onerror);
-      ++model._loadResources.pendingTextureLoads;
-    } else if (gltfTexture.mimeType === "image/crn") {
-      loadCRN(loadResources.getBuffer(bufferView))
         .then(imageLoad(model, gltfTexture.id, imageId))
         .otherwise(onerror);
       ++model._loadResources.pendingTextureLoads;
