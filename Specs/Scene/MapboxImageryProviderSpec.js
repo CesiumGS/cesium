@@ -1,4 +1,3 @@
-import { MapboxApi } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";

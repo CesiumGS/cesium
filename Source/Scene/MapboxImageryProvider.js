@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import MapboxApi from "../Core/MapboxApi.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
-import deprecationWarning from "../Core/deprecationWarning.js";
 
 var trailingSlashRegex = /\/$/;
 var defaultCredit = new Credit(
