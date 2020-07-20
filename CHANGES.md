@@ -4,7 +4,7 @@
 
 ##### Breaking Changes :mega:
 
-- CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. `accessToken` is now required when constructing `MapboxImageryProvider` or `MapboxStyleImageryProvider`. This only affects out-of-the-box behavior and applications using their own Mapbox access token are unaffected.
+- CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. If you are using `MapboxImageryProvider` or `MapboxStyleImageryProvider`, use `options.accessToken` when initializing the imagery provider.
 
 ##### Deprecated :hourglass_flowing_sand:
 
