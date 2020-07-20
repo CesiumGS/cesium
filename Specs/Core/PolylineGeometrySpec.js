@@ -186,7 +186,7 @@ describe("Core/PolylineGeometry", function () {
   });
 
   it("createGeometry returns positions if their endpoints'longtitude and latitude are the same for rhumb line", function () {
-    var positions = Cartesian3.fromRadiansArrayHeights([
+    var positions = Cartesian3.fromDegreesArrayHeights([
       30.0,
       30.0,
       10.0,
@@ -199,7 +199,7 @@ describe("Core/PolylineGeometry", function () {
         positions: positions,
         width: 10.0,
         vertexFormat: VertexFormat.POSITION_ONLY,
-        arcType: ArcType.GEODESIC,
+        arcType: ArcType.RHUMB,
       })
     );
 
