@@ -11,6 +11,7 @@
 - Fixed wall rendering when underground [#9041](https://github.com/CesiumGS/cesium/pull/9041)
 - Fixed issue where a side of the wall was missing if the first position and the last position were equal [#9044](https://github.com/CesiumGS/cesium/pull/9044)
 - Fixed `translucencyByDistance` for label outline color [#9003](https://github.com/CesiumGS/cesium/pull/9003)
+- Fixed return value for `SampledPositionProperty.removeSample` [#9017](https://github.com/CesiumGS/cesium/pull/9017)
 
 ### 1.71 - 2020-07-01
 
