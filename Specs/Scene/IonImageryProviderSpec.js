@@ -326,7 +326,7 @@ describe("Scene/IonImageryProvider", function () {
     );
     return testExternalImagery(
       "BING",
-      { url: "http://test.invalid" },
+      { url: "http://test.invalid", key: "" },
       BingMapsImageryProvider
     );
   });
