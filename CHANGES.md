@@ -8,7 +8,7 @@
 
 ##### Deprecated :hourglass_flowing_sand:
 
-- Deprecated `MapboxApi.defaultAccessToken`. Pass an `accessToken` parameter to individual Mapbox related constructors instead.
+- `MapboxApi.defaultAccessToken` was deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors.
 
 ##### Fixes :wrench:
 
