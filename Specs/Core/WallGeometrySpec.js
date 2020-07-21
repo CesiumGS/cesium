@@ -128,6 +128,47 @@ describe("Core/WallGeometry", function () {
     expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
   });
 
+  it("creates positions when first and last positions are equal", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        positions: Cartesian3.fromDegreesArrayHeights([
+          -107.0,
+          43.0,
+          1000.0,
+          -106.0,
+          43.0,
+          1000.0,
+          -106.0,
+          42.0,
+          1000.0,
+          -107.0,
+          42.0,
+          1000.0,
+          -107.0,
+          43.0,
+          1000.0,
+        ]),
+      })
+    );
+
+    var positions = w.attributes.position.values;
+    var numPositions = 16;
+    var numTriangles = 8;
+    expect(positions.length).toEqual(numPositions * 3);
+    expect(w.indices.length).toEqual(numTriangles * 3);
+
+    var cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 0)
+    );
+    expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
+
+    cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 3)
+    );
+    expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
+  });
+
   it("creates positions with minimum and maximum heights", function () {
     var w = WallGeometry.createGeometry(
       new WallGeometry({
