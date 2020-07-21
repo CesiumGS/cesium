@@ -101,9 +101,8 @@ import {
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
 imageryProvider = new WebMapServiceImageryProvider({ url: "", layers: "0" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
 imageryProvider = new ArcGisMapServerImageryProvider({ url: "" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
+imageryProvider = new BingMapsImageryProvider({ url: "", key: "" });
 imageryProvider = new OpenStreetMapImageryProvider({ url: "" });
 imageryProvider = new TileMapServiceImageryProvider({ url: "" });
 imageryProvider = new GridImageryProvider({ url: "" });
