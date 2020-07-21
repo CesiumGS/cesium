@@ -448,6 +448,48 @@ describe("Core/WallGeometry", function () {
     ]);
   });
 
+  it("creates correct texture coordinates when there are duplicate wall positions", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.ALL,
+        positions: Cartesian3.fromDegreesArrayHeights([
+          49.0,
+          18.0,
+          1000.0,
+          50.0,
+          18.0,
+          1000.0,
+          50.0,
+          18.0,
+          1000.0,
+          51.0,
+          18.0,
+          1000.0,
+        ]),
+      })
+    );
+
+    expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
+    expect(w.attributes.st.values).toEqual([
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      1.0,
+      1.0,
+      0.0,
+      1.0,
+      1.0,
+    ]);
+  });
+
   it("fromConstantHeights throws without positions", function () {
     expect(function () {
       return WallGeometry.fromConstantHeights();
