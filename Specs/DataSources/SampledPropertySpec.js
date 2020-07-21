@@ -125,10 +125,13 @@ describe("DataSources/SampledProperty", function () {
     var listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    property.removeSample(times[1]);
+    var result = property.removeSample(new JulianDate(4, 0));
+    expect(result).toEqual(false);
+
+    result = property.removeSample(times[1]);
 
     expect(listener).toHaveBeenCalledWith(property);
-
+    expect(result).toEqual(true);
     expect(property._times.length).toEqual(2);
     expect(property._values.length).toEqual(2);
 
