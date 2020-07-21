@@ -402,7 +402,7 @@ WallGeometry.createGeometry = function (wallGeometry) {
   length /= 3;
   var i;
   var s = 0;
-  var ds = 1 / (length - wallPositions.length + 1);
+  var ds = 1 / (length - numCorners - 1);
   for (i = 0; i < length; ++i) {
     var i3 = i * 3;
     var topPosition = Cartesian3.fromArray(
