@@ -27,7 +27,7 @@ Object.defineProperties(MapboxApi, {
       defaultAccessToken = value;
       deprecationWarning(
         "mapbox-token",
-        "MapboxApi.defaultToken is deprecated and will be removed in CesiumJS 1.73. Pass an accessToken directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors."
+        "MapboxApi.defaultAccessToken is deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors."
       );
     },
     get: function () {
