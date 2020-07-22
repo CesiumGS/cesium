@@ -49,12 +49,8 @@ describe(
       "./Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf";
     var texturedBoxBasePathUrl =
       "./Data/Models/Box-Textured-BasePath/CesiumTexturedBoxTest.gltf";
-    var texturedBoxKTXUrl =
-      "./Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf";
-    var texturedBoxKTXBinaryUrl =
-      "./Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb";
-    var texturedBoxKTXEmbeddedUrl =
-      "./Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf";
+    var texturedBoxKTX2Url =
+      "./Data/Models/Box-Textured-KTX2-Basis/CesiumTexturedBoxTest.gltf";
     var texturedBoxCustomUrl =
       "./Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf";
     var texturedBoxKhrBinaryUrl =
@@ -1359,28 +1355,8 @@ describe(
       });
     });
 
-    it("renders textured box with external KTX2 texture", function () {
-      return loadModel(texturedBoxKTXUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded binary KTX2 texture", function () {
-      return loadModel(texturedBoxKTXBinaryUrl, {
-        incrementallyLoadTextures: false,
-      }).then(function (m) {
-        verifyRender(m);
-        expect(Object.keys(m._rendererResources.textures).length).toBe(1);
-        primitives.remove(m);
-      });
-    });
-
-    it("renders textured box with embedded base64 encoded KTX2 texture", function () {
-      return loadModel(texturedBoxKTXEmbeddedUrl, {
+    it("renders textured box with embedded KTX2 texture", function () {
+      return loadModel(texturedBoxKTX2Url, {
         incrementallyLoadTextures: false,
       }).then(function (m) {
         verifyRender(m);

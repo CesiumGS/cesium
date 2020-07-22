@@ -1942,49 +1942,10 @@ function parseTextures(model, context, supportsWebP, supportsBasis) {
     }
 
     var gltfImage = images[imageId];
-    var extras = gltfImage.extras;
 
     var bufferViewId = gltfImage.bufferView;
     var mimeType = gltfImage.mimeType;
     uri = gltfImage.uri;
-
-    // First check for a compressed texture
-    if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-      var crunch = extras.compressedImage3DTiles.crunch;
-      var s3tc = extras.compressedImage3DTiles.s3tc;
-      var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-      var etc1 = extras.compressedImage3DTiles.etc1;
-
-      if (context.s3tc && defined(crunch)) {
-        mimeType = crunch.mimeType;
-        if (defined(crunch.bufferView)) {
-          bufferViewId = crunch.bufferView;
-        } else {
-          uri = crunch.uri;
-        }
-      } else if (context.s3tc && defined(s3tc)) {
-        mimeType = s3tc.mimeType;
-        if (defined(s3tc.bufferView)) {
-          bufferViewId = s3tc.bufferView;
-        } else {
-          uri = s3tc.uri;
-        }
-      } else if (context.pvrtc && defined(pvrtc)) {
-        mimeType = pvrtc.mimeType;
-        if (defined(pvrtc.bufferView)) {
-          bufferViewId = pvrtc.bufferView;
-        } else {
-          uri = pvrtc.uri;
-        }
-      } else if (context.etc1 && defined(etc1)) {
-        mimeType = etc1.mimeType;
-        if (defined(etc1.bufferView)) {
-          bufferViewId = etc1.bufferView;
-        } else {
-          uri = etc1.uri;
-        }
-      }
-    }
 
     // Image references either uri (external or base64-encoded) or bufferView
     if (defined(bufferViewId)) {
