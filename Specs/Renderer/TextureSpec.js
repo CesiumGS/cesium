@@ -12,6 +12,7 @@ import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
 import { TextureWrap } from "../../Source/Cesium.js";
 import createContext from "../createContext.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { when } from "../../Source/Cesium.js";
 
 describe(
@@ -26,8 +27,7 @@ describe(
     var red16x16Image;
 
     var greenKTX2Image;
-    var whiteBasisKTX2Image;
-    // var greenUASTCKTX2Image;
+    var greenBasisKTX2Image;
 
     var fs =
       "uniform sampler2D u_texture;" +
@@ -91,17 +91,11 @@ describe(
         })
       );
 
-      // promises.push(
-      //   loadKTX2("./Data/Images/Green4x4_UASTC.ktx2").then(function (image) {
-      //     greenUASTCKTX2Image = image;
-      //   })
-      // );
-
       promises.push(
-        loadKTX2("./Data/Images/White64x64_Basis255.ktx2").then(function (
+        loadKTX2("./Data/Images/Green64x64_Basis255.ktx2").then(function (
           image
         ) {
-          whiteBasisKTX2Image = image;
+          greenBasisKTX2Image = image;
         })
       );
 
@@ -436,30 +430,6 @@ describe(
       }
     });
 
-    // it("draws the expected DXT compressed texture color", function () {
-    //   if (!context.s3tc) {
-    //     return;
-    //   }
-
-    //   texture = new Texture({
-    //     context: context,
-    //     pixelFormat: greenDXTImage.internalFormat,
-    //     source: {
-    //       width: greenDXTImage.width,
-    //       height: greenDXTImage.height,
-    //       arrayBufferView: greenDXTImage.bufferView,
-    //     },
-    //   });
-
-    //   expect(texture.sizeInBytes).toBe(8);
-
-    //   expect({
-    //     context: context,
-    //     fragmentShader: fs,
-    //     uniformMap: uniformMap,
-    //   }).contextToRender([0, 255, 0, 255]);
-    // });
-
     it("draws the expected Basis compressed texture color", function () {
       if (!context.pvrtc) {
         return;
@@ -467,11 +437,11 @@ describe(
 
       texture = new Texture({
         context: context,
-        pixelFormat: whiteBasisKTX2Image.internalFormat,
+        pixelFormat: greenBasisKTX2Image.internalFormat,
         source: {
-          width: whiteBasisKTX2Image.width,
-          height: whiteBasisKTX2Image.height,
-          arrayBufferView: whiteBasisKTX2Image.bufferView,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          arrayBufferView: greenBasisKTX2Image.bufferView,
         },
       });
 
@@ -481,7 +451,7 @@ describe(
         context: context,
         fragmentShader: fs,
         uniformMap: uniformMap,
-      }).contextToRender([255, 255, 255, 255]);
+      }).contextToRender([0, 255, 0, 255]);
     });
 
     it("draws the expected KTX2 compressed texture color", function () {
@@ -1125,70 +1095,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    // it("throws when creating compressed texture when s3tc is unsupported", function () {
-    //   if (!context.s3tc) {
-    //     expect(function () {
-    //       texture = new Texture({
-    //         context: context,
-    //         width: greenDXTImage.width,
-    //         height: greenDXTImage.height,
-    //         pixelFormat: greenDXTImage.internalFormat,
-    //         source: {
-    //           arrayBufferView: greenDXTImage.bufferView,
-    //         },
-    //       });
-    //     }).toThrowDeveloperError();
-    //   }
-    // });
-
-    // it("throws when creating compressed texture when pvrtc is unsupported", function () {
-    //   if (!context.pvrtc) {
-    //     expect(function () {
-    //       texture = new Texture({
-    //         context: context,
-    //         width: greenPVRImage.width,
-    //         height: greenPVRImage.height,
-    //         pixelFormat: greenPVRImage.internalFormat,
-    //         source: {
-    //           arrayBufferView: greenPVRImage.bufferView,
-    //         },
-    //       });
-    //     }).toThrowDeveloperError();
-    //   }
-    // });
-
-    // it("throws when creating compressed texture when etc1 is unsupported", function () {
-    //   if (!context.etc1) {
-    //     expect(function () {
-    //       texture = new Texture({
-    //         context: context,
-    //         width: greenETC1Image.width,
-    //         height: greenETC1Image.height,
-    //         pixelFormat: greenETC1Image.internalFormat,
-    //         source: {
-    //           arrayBufferView: greenETC1Image.bufferView,
-    //         },
-    //       });
-    //     }).toThrowDeveloperError();
-    //   }
-    // });
-
-    // it("throws when creating compressed texture and the array buffer is not the right length", function () {
-    //   if (context.s3tc) {
-    //     expect(function () {
-    //       texture = new Texture({
-    //         context: context,
-    //         width: greenDXTImage.width + 1,
-    //         height: greenDXTImage.height,
-    //         pixelFormat: greenDXTImage.internalFormat,
-    //         source: {
-    //           arrayBufferView: greenDXTImage.bufferView,
-    //         },
-    //       });
-    //     }).toThrowDeveloperError();
-    //   }
-    // });
-
     it("throws when creating from the framebuffer with an invalid pixel format", function () {
       expect(function () {
         texture = Texture.fromFramebuffer({
@@ -1270,14 +1176,14 @@ describe(
     });
 
     it("throws when copying to a texture from the framebuffer with a compressed pixel format", function () {
-      if (context.s3tc || context.pvrtc || context.etc1) {
+      if (FeatureDetection.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: whiteBasisKTX2Image.width,
-          height: whiteBasisKTX2Image.height,
-          pixelFormat: whiteBasisKTX2Image.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: whiteBasisKTX2Image.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 
@@ -1465,14 +1371,14 @@ describe(
     });
 
     it("throws when copyFrom is given a source with a compressed pixel format", function () {
-      if (context.s3tc || context.pvrtc || context.etc1) {
+      if (FeatureDetection.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: whiteBasisKTX2Image.width,
-          height: whiteBasisKTX2Image.height,
-          pixelFormat: whiteBasisKTX2Image.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: whiteBasisKTX2Image.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 
@@ -1500,14 +1406,14 @@ describe(
     });
 
     it("throws when generating mipmaps with a compressed pixel format", function () {
-      if (context.s3tc || context.pvrtc || context.etc1) {
+      if (FeatureDetection.supportsBasis) {
         texture = new Texture({
           context: context,
-          width: whiteBasisKTX2Image.width,
-          height: whiteBasisKTX2Image.height,
-          pixelFormat: whiteBasisKTX2Image.internalFormat,
+          width: greenBasisKTX2Image.width,
+          height: greenBasisKTX2Image.height,
+          pixelFormat: greenBasisKTX2Image.internalFormat,
           source: {
-            arrayBufferView: whiteBasisKTX2Image.bufferView,
+            arrayBufferView: greenBasisKTX2Image.bufferView,
           },
         });
 

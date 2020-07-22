@@ -10,6 +10,7 @@ import { Resource } from "../../Source/Cesium.js";
 import { Material } from "../../Source/Cesium.js";
 import { MaterialAppearance } from "../../Source/Cesium.js";
 import { PolylineCollection } from "../../Source/Cesium.js";
+import { FeatureDetection } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
 import { TextureMagnificationFilter } from "../../Source/Cesium.js";
 import { TextureMinificationFilter } from "../../Source/Cesium.js";
@@ -369,8 +370,7 @@ describe(
 
     it("creates a material with an ktx compressed image uniform", function () {
       var compressedUrl;
-      var context = scene.context;
-      if (context.s3tc || context.etc1 || context.pvrtc) {
+      if (FeatureDetection.supportsBasis) {
         compressedUrl = "./Data/Images/Green4x4.ktx2";
       } else {
         return;

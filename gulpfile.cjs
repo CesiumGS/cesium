@@ -73,7 +73,6 @@ var sourceFiles = [
   "!Source/ThirdParty/Workers/**",
   "!Source/ThirdParty/google-earth-dbroot-parser.js",
   "!Source/ThirdParty/pako_inflate.js",
-  "!Source/ThirdParty/crunch.js",
 ];
 
 var watchedFiles = [
@@ -125,7 +124,7 @@ function rollupWarning(message) {
   // Ignore eval warnings in third-party code we don't have control over
   if (
     message.code === "EVAL" &&
-    /(protobuf-minimal|crunch)\.js$/.test(message.loc.file)
+    /(protobuf-minimal)\.js$/.test(message.loc.file)
   ) {
     return;
   }

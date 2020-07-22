@@ -172,6 +172,8 @@ var uriToGuid = {};
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
  * </li><li>
  * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
+ * </li><li>
+ * {@link https://github.com/KhronosGroup/glTF/pull/1751|KHR_texture_basisu}
  * </li>
  * </ul>
  * </p>
@@ -1933,7 +1935,8 @@ function parseTextures(model, context, supportsWebP, supportsBasis) {
       imageId = texture.extensions.EXT_texture_webp.source;
     } else if (
       defined(texture.extensions) &&
-      defined(texture.extensions.KHR_texture_basisu)
+      defined(texture.extensions.KHR_texture_basisu) &&
+      FeatureDetection.supportsBasis
     ) {
       imageId = texture.extensions.KHR_texture_basisu.source;
     }

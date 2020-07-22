@@ -1,11 +1,11 @@
 /**
  * Enum containing Vulkan Constant values by name.
- * for use when needing VK Formats
  *
  * These match the constants from the [Vulkan 1.2]{@link https://www.khronos.org/registry/vulkan/specs/1.2-extensions/html/vkspec.html#formats-definition}
  * specifications.
  *
- * @exports VulkanConstants
+ * @enum {Number}
+ * @private
  */
 var VulkanConstants = {
   VK_FORMAT_UNDEFINED: 0,
