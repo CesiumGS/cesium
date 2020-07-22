@@ -180,22 +180,6 @@ import defined from '../../Core/defined.js'
         return ForEach.topLevel(gltf, 'images', handler);
     };
 
-    ForEach.compressedImage = function(image, handler) {
-        if (defined(image.extras)) {
-            var compressedImages = image.extras.compressedImage3DTiles;
-            for (var type in compressedImages) {
-                if (Object.prototype.hasOwnProperty.call(compressedImages, type)) {
-                    var compressedImage = compressedImages[type];
-                    var value = handler(compressedImage, type);
-
-                    if (defined(value)) {
-                        return value;
-                    }
-                }
-            }
-        }
-    };
-
     ForEach.material = function(gltf, handler) {
         return ForEach.topLevel(gltf, 'materials', handler);
     };
