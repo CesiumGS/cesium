@@ -553,14 +553,23 @@ function createDrawCommand(stage, context) {
     return;
   }
 
-  function shiftBit(b) {
-    return b >= 0 ? 1 << b : 0;
+  function shiftedByte(shift) {
+    return shift < context._groupByteLength ? 255 << (8 * shift) : 0;
   }
 
   var fs = stage._fragmentShader;
   if (defined(stage._selectedIdTexture)) {
     var width = stage._selectedIdTexture.width;
-    var bits = context._groupBitLength;
+    var group_decoder =
+      "vec4(" +
+      shiftedByte(3) +
+      ".0, " +
+      shiftedByte(2) +
+      ".0, " +
+      shiftedByte(1) +
+      ".0, " +
+      shiftedByte(0) +
+      ".0)";
 
     fs = fs.replace(/varying\s+vec2\s+v_textureCoordinates;/g, "");
     fs =
@@ -590,21 +599,15 @@ function createDrawCommand(stage, context) {
       "    return czm_selected(vec2(0.0)); \n" +
       "} \n\n" +
       "int czm_pick_group(vec2 offset) { \n" +
-      "      vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
-      "      float result = dot(id, vec4(" +
-      shiftBit(bits - 24) +
-      ".0, " +
-      shiftBit(bits - 16) +
-      ".0, " +
-      shiftBit(bits - 8) +
-      ".0, " +
-      shiftBit(bits) +
-      ".0)); \n" +
-      "      return int(result); \n" +
-      "  } \n" +
-      "  int czm_pick_group() { \n" +
-      "      return czm_pick_group(vec2(0.0)); \n" +
-      "  } \n" +
+      "    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n" +
+      "    float result = dot(id, " +
+      group_decoder +
+      "); \n" +
+      "    return int(result); \n" +
+      "} \n" +
+      "int czm_pick_group() { \n" +
+      "    return czm_pick_group(vec2(0.0)); \n" +
+      "} \n" +
       fs;
   }
 

@@ -476,8 +476,7 @@ function Context(canvas, options) {
 
   this._pickObjects = {};
   this._nextPickColor = new Uint32Array(1);
-  var groupCount = defaultValue(options.pickGroups, 1);
-  this._groupBitLength = Math.ceil(Math.log2(Math.max(1, groupCount)));
+  this._groupByteLength = 0;
 
   /**
    * @example
@@ -1384,6 +1383,14 @@ PickId.prototype.destroy = function () {
   return undefined;
 };
 
+function reverseBytes(x) {
+  var y = x & 0x00ff00ff;
+  x = ((x >>> 8) & 0x00ff00ff) | (y << 8);
+  y = x & 0x0000ffff;
+  x = ((x >>> 16) & 0x0000ffff) | (y << 16);
+  return x >>> 0;
+}
+
 /**
  * Creates a unique ID associated with the input object for use with color-buffer picking.
  * The ID has an RGBA color value unique to this context.  You must call destroy()
@@ -1417,7 +1424,10 @@ Context.prototype.createPickId = function (object) {
   } else if (object.id && object.id.pickGroup) {
     group = object.id.pickGroup;
   }
-  var pickIdMask = 0xffffffff >>> this._groupBitLength;
+  while (group >= 1 << (8 * this._groupByteLength)) {
+    this._groupByteLength++;
+  }
+  var pickIdMask = 0xffffffff >>> (8 * this._groupByteLength);
   // the increment and assignment have to be separate statements to
   // actually detect overflow in the Uint32 value
   ++this._nextPickColor[0];
@@ -1426,7 +1436,7 @@ Context.prototype.createPickId = function (object) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
   }
-  key = (key | (group << (32 - this._groupBitLength))) >>> 0;
+  key = (key | reverseBytes(group)) >>> 0;
 
   this._pickObjects[key] = object;
   return new PickId(this._pickObjects, key, Color.fromRgba(key));
