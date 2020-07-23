@@ -92,6 +92,7 @@ function createPropertyTypeDescriptor(name, Type) {
  * @property {PolylineVolumeGraphics | PolylineVolumeGraphics.ConstructorOptions} [polylineVolume] A polylineVolume to associate with this entity.
  * @property {RectangleGraphics | RectangleGraphics.ConstructorOptions} [rectangle] A rectangle to associate with this entity.
  * @property {WallGraphics | WallGraphics.ConstructorOptions} [wall] A wall to associate with this entity.
+ * @property {Number} [pickGroup] User-defined value that can later be queried within Post Process shaders.
  */
 
 /**
@@ -489,6 +490,12 @@ Object.defineProperties(Entity.prototype, {
    * @type {WallGraphics|undefined}
    */
   wall: createPropertyTypeDescriptor("wall", WallGraphics),
+  /**
+   * User-defined value that can later be queried within Post Process shaders.
+   * @type {Number}
+   * @default 0
+   */
+  pickGroup: createPropertyTypeDescriptor("pickGroup", Number),
 });
 
 /**

@@ -79,6 +79,7 @@ import ShadowMode from "./ShadowMode.js";
  * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
  * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from light sources.
+ * @param {Number} [options.pickGroup=0] User-defined value that can later be queried within Post Process shaders.
  *
  * @example
  * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -301,6 +302,15 @@ function Primitive(options) {
    * @default ShadowMode.DISABLED
    */
   this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
+
+  /**
+   * User-defined value that can later be queried within Post Process shaders.
+   *
+   * @type {Number}
+   *
+   * @default 0
+   */
+  this.pickGroup = defaultValue(options.pickGroup, 0);
 
   this._translucent = undefined;
 
