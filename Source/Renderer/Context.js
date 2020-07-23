@@ -475,7 +475,7 @@ function Context(canvas, options) {
   }
 
   this._pickObjects = {};
-  this._nextPickColor = new Uint32Array(1);
+  this._nextPickColor = {};
   this._groupByteLength = 0;
 
   /**
@@ -1428,10 +1428,8 @@ Context.prototype.createPickId = function (object) {
     this._groupByteLength++;
   }
   var pickIdMask = 0xffffffff >>> (8 * this._groupByteLength);
-  // the increment and assignment have to be separate statements to
-  // actually detect overflow in the Uint32 value
-  ++this._nextPickColor[0];
-  var key = pickIdMask & this._nextPickColor[0];
+  var key = (pickIdMask & (this._nextPickColor[group] || 1)) >>> 0;
+  this._nextPickColor[group] = key + 1;
   if (key === 0) {
     // In case of overflow
     throw new RuntimeError("Out of unique Pick IDs.");
