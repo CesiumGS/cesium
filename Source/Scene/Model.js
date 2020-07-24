@@ -4797,7 +4797,7 @@ function modifyShaderForClippingPlanes(
   shader = ShaderSource.replaceMain(shader, "gltf_clip_main");
   shader += Model._getClippingFunction(clippingPlaneCollection, context) + "\n";
   shader +=
-    "uniform sampler2D gltf_clippingPlanes; \n" +
+    "uniform highp sampler2D gltf_clippingPlanes; \n" +
     "uniform mat4 gltf_clippingPlanesMatrix; \n" +
     "uniform vec4 gltf_clippingPlanesEdgeStyle; \n" +
     "void main() \n" +
