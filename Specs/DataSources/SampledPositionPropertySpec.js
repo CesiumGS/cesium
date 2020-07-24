@@ -193,11 +193,15 @@ describe("DataSources/SampledPositionProperty", function () {
     var listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    property.removeSample(times[1]);
+    var result = property.removeSample(new JulianDate(4, 0));
+    expect(result).toEqual(false);
+
+    result = property.removeSample(times[1]);
 
     expect(listener).toHaveBeenCalledWith(property);
 
     expect(property.getValue(times[0])).toEqual(values[0]);
+    expect(result).toEqual(true);
     // removing the sample at times[1] causes the property to interpolate
     expect(property.getValue(times[1])).toEqual(new Cartesian3(8, 9, 10));
     expect(property.getValue(times[2])).toEqual(values[2]);

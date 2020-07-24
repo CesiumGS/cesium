@@ -1270,7 +1270,15 @@ Context.prototype.readPixels = function (readState) {
 
   bindFramebuffer(this, framebuffer);
 
-  gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
+  gl.readPixels(
+    x,
+    y,
+    width,
+    height,
+    PixelFormat.RGBA,
+    PixelDatatype.toWebGLConstant(pixelDatatype, this),
+    pixels
+  );
 
   return pixels;
 };

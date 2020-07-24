@@ -99,12 +99,15 @@ function modernizeShader(source, isFragmentShader) {
     }
   }
 
+  var webgl2UniqueID = "WEBGL_2";
+  var webgl2DefineMacro = "#define " + webgl2UniqueID;
   var versionThree = "#version 300 es";
   var foundVersion = false;
   for (i = 0; i < splitSource.length; i++) {
     if (/#version/.test(splitSource[i])) {
       splitSource[i] = versionThree;
       foundVersion = true;
+      break;
     }
   }
 
@@ -112,8 +115,11 @@ function modernizeShader(source, isFragmentShader) {
     splitSource.splice(0, 0, versionThree);
   }
 
-  removeExtension("EXT_draw_buffers", splitSource);
-  removeExtension("EXT_frag_depth", splitSource);
+  splitSource.splice(1, 0, webgl2DefineMacro);
+
+  removeExtension("EXT_draw_buffers", webgl2UniqueID, splitSource);
+  removeExtension("EXT_frag_depth", webgl2UniqueID, splitSource);
+  removeExtension("OES_standard_derivatives", webgl2UniqueID, splitSource);
 
   replaceInSourceString("texture2D", "texture", splitSource);
   replaceInSourceString("texture3D", "texture", splitSource);
@@ -224,8 +230,11 @@ function getVariablePreprocessorBranch(layoutVariables, splitSource) {
   return variableMap;
 }
 
-function removeExtension(name, splitSource) {
+function removeExtension(name, webgl2UniqueID, splitSource) {
   var regex = "#extension\\s+GL_" + name + "\\s+:\\s+[a-zA-Z0-9]+\\s*$";
   replaceInSourceRegex(new RegExp(regex, "g"), "", splitSource);
+
+  // replace any possible directive #ifdef (GL_EXT_extension) with WEBGL_2 unique directive
+  replaceInSourceString("GL_" + name, webgl2UniqueID, splitSource);
 }
 export default modernizeShader;

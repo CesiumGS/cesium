@@ -160,6 +160,15 @@ describe("Core/Color", function () {
     );
   });
 
+  it("toCssHexString produces expected output", function () {
+    expect(Color.WHITE.toCssHexString()).toEqual("#ffffff");
+    expect(Color.RED.toCssHexString()).toEqual("#ff0000");
+    expect(Color.BLUE.toCssHexString()).toEqual("#0000ff");
+    expect(Color.LIME.toCssHexString()).toEqual("#00ff00");
+    expect(new Color(0.0, 0.0, 0.0, 1.0).toCssHexString()).toEqual("#000000");
+    expect(new Color(0.1, 0.2, 0.3, 0.4).toCssHexString()).toEqual("#19334c66");
+  });
+
   it("fromCssColorString supports transparent", function () {
     expect(Color.fromCssColorString("transparent")).toEqual(
       new Color(0.0, 0.0, 0.0, 0.0)
@@ -347,6 +356,19 @@ describe("Core/Color", function () {
     c2 = Color.fromCssColorString("hsl(120, 100%, 50%)", c);
     expect(c).toBe(c2);
     expect(c).toEqual(Color.LIME);
+  });
+
+  it("fromCssColorString understands the color string even with any number of unnecessary leading, trailing or middle spaces", function () {
+    expect(Color.fromCssColorString(" rgb( 0, 0, 255)")).toEqual(Color.BLUE);
+    expect(Color.fromCssColorString("rgb( 255, 255, 255) ")).toEqual(
+      Color.WHITE
+    );
+    expect(Color.fromCssColorString("  #FF0000")).toEqual(Color.RED);
+    expect(Color.fromCssColorString("#FF0  ")).toEqual(Color.YELLOW);
+    expect(Color.fromCssColorString(" hsla(720,   100%, 50%, 1.0)  ")).toEqual(
+      Color.RED
+    );
+    expect(Color.fromCssColorString("hsl (720, 100%, 50%)")).toEqual(Color.RED);
   });
 
   it("fromHsl produces expected output", function () {

@@ -34,11 +34,8 @@ import ClearCommand from "../Renderer/ClearCommand.js";
 import ComputeEngine from "../Renderer/ComputeEngine.js";
 import Context from "../Renderer/Context.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
-import DrawCommand from "../Renderer/DrawCommand.js";
 import Pass from "../Renderer/Pass.js";
 import RenderState from "../Renderer/RenderState.js";
-import ShaderProgram from "../Renderer/ShaderProgram.js";
-import ShaderSource from "../Renderer/ShaderSource.js";
 import BrdfLutGenerator from "./BrdfLutGenerator.js";
 import Camera from "./Camera.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
@@ -72,6 +69,7 @@ import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
 import View from "./View.js";
+import DebugInspector from "./DebugInspector.js";
 
 var requestRenderAfterFrame = function (scene) {
   return function () {
@@ -262,6 +260,7 @@ function Scene(options) {
   this._postRender = new Event();
 
   this._minimumDisableDepthTestDistance = 0.0;
+  this._debugInspector = new DebugInspector();
 
   /**
    * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -1555,7 +1554,6 @@ Object.defineProperties(Scene.prototype, {
       if (this._logDepthBuffer !== value) {
         this._logDepthBuffer = value;
         this._logDepthBufferDirty = true;
-        this._defaultView.updateFrustums = true;
       }
     },
   },
@@ -1965,126 +1963,6 @@ Scene.prototype.isVisible = function (command, cullingVolume, occluder) {
   );
 };
 
-function getAttributeLocations(shaderProgram) {
-  var attributeLocations = {};
-  var attributes = shaderProgram.vertexAttributes;
-  for (var a in attributes) {
-    if (attributes.hasOwnProperty(a)) {
-      attributeLocations[a] = attributes[a].index;
-    }
-  }
-
-  return attributeLocations;
-}
-
-function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
-  var context = scene.context;
-  var sp = defaultValue(shaderProgram, command.shaderProgram);
-  var fs = sp.fragmentShaderSource.clone();
-
-  var targets = [];
-  fs.sources = fs.sources.map(function (source) {
-    source = ShaderSource.replaceMain(source, "czm_Debug_main");
-    var re = /gl_FragData\[(\d+)\]/g;
-    var match;
-    while ((match = re.exec(source)) !== null) {
-      if (targets.indexOf(match[1]) === -1) {
-        targets.push(match[1]);
-      }
-    }
-    return source;
-  });
-  var length = targets.length;
-
-  var newMain = "void main() \n" + "{ \n" + "    czm_Debug_main(); \n";
-
-  var i;
-  if (scene.debugShowCommands) {
-    if (!defined(command._debugColor)) {
-      command._debugColor = Color.fromRandom();
-    }
-    var c = command._debugColor;
-    if (length > 0) {
-      for (i = 0; i < length; ++i) {
-        newMain +=
-          "    gl_FragData[" +
-          targets[i] +
-          "].rgb *= vec3(" +
-          c.red +
-          ", " +
-          c.green +
-          ", " +
-          c.blue +
-          "); \n";
-      }
-    } else {
-      newMain +=
-        "    " +
-        "gl_FragColor" +
-        ".rgb *= vec3(" +
-        c.red +
-        ", " +
-        c.green +
-        ", " +
-        c.blue +
-        "); \n";
-    }
-  }
-
-  if (scene.debugShowFrustums) {
-    // Support up to three frustums.  If a command overlaps all
-    // three, it's code is not changed.
-    var r = command.debugOverlappingFrustums & (1 << 0) ? "1.0" : "0.0";
-    var g = command.debugOverlappingFrustums & (1 << 1) ? "1.0" : "0.0";
-    var b = command.debugOverlappingFrustums & (1 << 2) ? "1.0" : "0.0";
-    if (length > 0) {
-      for (i = 0; i < length; ++i) {
-        newMain +=
-          "    gl_FragData[" +
-          targets[i] +
-          "].rgb *= vec3(" +
-          r +
-          ", " +
-          g +
-          ", " +
-          b +
-          "); \n";
-      }
-    } else {
-      newMain +=
-        "    " +
-        "gl_FragColor" +
-        ".rgb *= vec3(" +
-        r +
-        ", " +
-        g +
-        ", " +
-        b +
-        "); \n";
-    }
-  }
-
-  newMain += "}";
-
-  fs.sources.push(newMain);
-
-  var attributeLocations = getAttributeLocations(sp);
-
-  return ShaderProgram.fromCache({
-    context: context,
-    vertexShaderSource: sp.vertexShaderSource,
-    fragmentShaderSource: fs,
-    attributeLocations: attributeLocations,
-  });
-}
-
-function executeDebugCommand(command, scene, passState) {
-  var debugCommand = DrawCommand.shallowClone(command);
-  debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
-  debugCommand.execute(scene.context, passState);
-  debugCommand.shaderProgram.destroy();
-}
-
 var transformFrom2D = new Matrix4(
   0.0,
   0.0,
@@ -2261,7 +2139,11 @@ function executeCommand(command, scene, context, passState, debugFramebuffer) {
   }
 
   if (scene.debugShowCommands || scene.debugShowFrustums) {
-    executeDebugCommand(command, scene, passState);
+    scene._debugInspector.executeDebugShowFrustumsCommand(
+      scene,
+      command,
+      passState
+    );
     return;
   }
 
@@ -4372,7 +4254,7 @@ Scene.prototype.clampToHeight = function (
  * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
  * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
  * @param {Number} [width=0.1] Width of the intersection volume in meters.
- * @returns {Promise.<Number[]>} A promise that resolves to the provided list of positions when the query has completed.
+ * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when the query has completed.
  *
  * @example
  * var positions = [

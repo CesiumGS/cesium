@@ -194,6 +194,7 @@ describe(
 
       return new BingMapsImageryProvider({
         url: "http://host.invalid",
+        key: "",
         tileDiscardPolicy: new NeverTileDiscardPolicy(),
       });
     }

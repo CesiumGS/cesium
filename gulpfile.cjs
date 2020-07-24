@@ -1310,7 +1310,7 @@ function combineJavaScript(options) {
 }
 
 function glslToJavaScript(minify, minifyStateFilePath) {
-  fs.writeFileSync(minifyStateFilePath, minify);
+  fs.writeFileSync(minifyStateFilePath, minify.toString());
   var minifyStateFileLastModified = fs.existsSync(minifyStateFilePath)
     ? fs.statSync(minifyStateFilePath).mtime.getTime()
     : 0;
@@ -1591,6 +1591,11 @@ ${source}
 
   // Use tsc to compile it and make sure it is valid
   child_process.execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+    stdio: "inherit",
+  });
+
+  // Also compile our smokescreen to make sure interfaces work as expected.
+  child_process.execSync("npx tsc -p Specs/TypeScript/tsconfig.json", {
     stdio: "inherit",
   });
 

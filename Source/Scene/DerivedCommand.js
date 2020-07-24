@@ -189,14 +189,22 @@ function getLogDepthShaderProgram(context, shaderProgram) {
       sources.push(logMain);
     }
 
-    var addExtension = true;
-    writesLogDepth = false;
     sources = fs.sources;
     length = sources.length;
+
+    writesLogDepth = false;
     for (i = 0; i < length; ++i) {
       if (writeLogDepthRegex.test(sources[i])) {
         writesLogDepth = true;
       }
+    }
+    // This define indicates that a log depth value is written by the shader but doesn't use czm_writeLogDepth.
+    if (fs.defines.indexOf("LOG_DEPTH_WRITE") !== -1) {
+      writesLogDepth = true;
+    }
+
+    var addExtension = true;
+    for (i = 0; i < length; ++i) {
       if (extensionRegex.test(sources[i])) {
         addExtension = false;
       }
