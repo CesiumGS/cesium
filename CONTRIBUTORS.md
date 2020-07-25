@@ -274,3 +274,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yonatan Kra](https://github.com/yonatankra)
 - [Gusain Vipul](https://github.com/vipulgusain)
 - [Sam Bakkach](https://github.com/sambakk)
+- [Will Jadkowski](https://github.com/willjad)
