@@ -344,8 +344,8 @@ function parseUncompressed(data, header, levelIndex, result) {
       ? PixelFormat.RGBA
       : PixelFormat.RGB;
   internalFormat =
-    internalFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
-      ? PixelFormat.BGRA
+    header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
+      ? WebGLConstants.R11F_G11F_B10F
       : internalFormat;
   var dataBuffer = defined(data.buffer) ? data.buffer : data;
 
