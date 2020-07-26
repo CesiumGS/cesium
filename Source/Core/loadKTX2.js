@@ -7,6 +7,7 @@ import Resource from "./Resource.js";
 import RuntimeError from "./RuntimeError.js";
 import VulkanConstants from "./VulkanConstants.js";
 import MSC_TRANSCODER from "../ThirdParty/msc_basis_transcoder.js";
+import WebGLConstants from "./WebGLConstants.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
@@ -290,7 +291,8 @@ function parseKTX2(data) {
   var result = new Array(header.levelCount);
   if (
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8_SRGB ||
-    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB
+    header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB ||
+    header.vkFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
   ) {
     parseUncompressed(data, header, levelIndex, result);
   } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) {
@@ -341,6 +343,10 @@ function parseUncompressed(data, header, levelIndex, result) {
     header.vkFormat === VulkanConstants.VK_FORMAT_R8G8B8A8_SRGB
       ? PixelFormat.RGBA
       : PixelFormat.RGB;
+  internalFormat =
+    internalFormat === VulkanConstants.VK_FORMAT_B10G11R11_UFLOAT_PACK32
+      ? PixelFormat.BGRA
+      : internalFormat;
   var dataBuffer = defined(data.buffer) ? data.buffer : data;
 
   for (var i = 0; i < levelIndex.length; ++i) {
