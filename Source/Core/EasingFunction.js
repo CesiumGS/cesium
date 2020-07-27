@@ -22,21 +22,21 @@ var EasingFunction = {
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_IN: Tween.Easing.Quadratic.In,
+  QUADRACTIC_IN: Tween.Easing.Quadratic.In,
   /**
    * Quadratic out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_OUT: Tween.Easing.Quadratic.Out,
+  QUADRACTIC_OUT: Tween.Easing.Quadratic.Out,
   /**
    * Quadratic in then out.
    *
    * @type {EasingFunction.Callback}
    * @constant
    */
-  QUADRATIC_IN_OUT: Tween.Easing.Quadratic.InOut,
+  QUADRACTIC_IN_OUT: Tween.Easing.Quadratic.InOut,
 
   /**
    * Cubic in.
