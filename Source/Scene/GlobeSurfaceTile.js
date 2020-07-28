@@ -168,7 +168,6 @@ GlobeSurfaceTile.prototype.pick = function (
 
   // Fast acceleration structure picking that only works in 3D
   useNewPicking = defaultValue(useNewPicking, true);
-  useNewPicking = false;
   if (
     useNewPicking &&
     // mode === SceneMode.SCENE3D &&
