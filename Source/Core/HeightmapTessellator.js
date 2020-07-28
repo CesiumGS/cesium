@@ -484,6 +484,7 @@ HeightmapTessellator.computeVertices = function (options) {
       },
     });
     trianglePicking.addTriangles(0, gridTriangleCount);
+
     // Unset to avoid error when transferring back from worker (can't serialize functions)
     trianglePicking.triangleVerticesCallback = undefined;
   }

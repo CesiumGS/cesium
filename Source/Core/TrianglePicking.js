@@ -1,7 +1,6 @@
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
-import getTimestamp from "./getTimestamp.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -111,6 +110,26 @@ function rayCubeIntersect(ray) {
   return rayCubeIntersectFromOutside(ray);
 }
 
+function onTheFlyNodeAABB(level, x, y, z) {
+  // var dimAtLevel = Math.pow(2, level);
+  // var sizeAtLevel = 1.0 / dimAtLevel;
+  var sizeAtLevel = 1.0 / Math.pow(2, level);
+  return {
+    x,
+    y,
+    z,
+    aabbMinX: x * sizeAtLevel - 0.5,
+    aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
+    aabbCenterX: (x + 0.5) * sizeAtLevel - 0.5,
+    aabbMinY: y * sizeAtLevel - 0.5,
+    aabbMaxY: (y + 1) * sizeAtLevel - 0.5,
+    aabbCenterY: (y + 0.5) * sizeAtLevel - 0.5,
+    aabbMinZ: z * sizeAtLevel - 0.5,
+    aabbMaxZ: (z + 1) * sizeAtLevel - 0.5,
+    aabbCenterZ: (z + 0.5) * sizeAtLevel - 0.5,
+  };
+}
+
 /**
  * @constructor
  * @param {Number} index
@@ -146,39 +165,43 @@ function Triangle(
  * @param {Number} y
  * @param {Number} z
  */
-function Node(level, x, y, z) {
-  this.level = level;
-  this.x = x;
-  this.y = y;
-  this.z = z;
+function Node() {
+  // this.level = level;
+  // this.x = x;
+  // this.y = y;
+  // this.z = z;
+  //
+  // var dimAtLevel = Math.pow(2, level);
+  // var sizeAtLevel = 1.0 / dimAtLevel;
+  //
+  // this.aabbMinX = x * sizeAtLevel - 0.5;
+  // this.aabbMaxX = (x + 1) * sizeAtLevel - 0.5;
+  // this.aabbCenterX = (x + 0.5) * sizeAtLevel - 0.5;
+  // this.aabbMinY = y * sizeAtLevel - 0.5;
+  // this.aabbMaxY = (y + 1) * sizeAtLevel - 0.5;
+  // this.aabbCenterY = (y + 0.5) * sizeAtLevel - 0.5;
+  // this.aabbMinZ = z * sizeAtLevel - 0.5;
+  // this.aabbMaxZ = (z + 1) * sizeAtLevel - 0.5;
+  // this.aabbCenterZ = (z + 0.5) * sizeAtLevel - 0.5;
 
-  var dimAtLevel = Math.pow(2, level);
-  var sizeAtLevel = 1.0 / dimAtLevel;
-
-  this.aabbMinX = x * sizeAtLevel - 0.5;
-  this.aabbMaxX = (x + 1) * sizeAtLevel - 0.5;
-  this.aabbCenterX = (x + 0.5) * sizeAtLevel - 0.5;
-  this.aabbMinY = y * sizeAtLevel - 0.5;
-  this.aabbMaxY = (y + 1) * sizeAtLevel - 0.5;
-  this.aabbCenterY = (y + 0.5) * sizeAtLevel - 0.5;
-  this.aabbMinZ = z * sizeAtLevel - 0.5;
-  this.aabbMaxZ = (z + 1) * sizeAtLevel - 0.5;
-  this.aabbCenterZ = (z + 0.5) * sizeAtLevel - 0.5;
+  this.firstChildNodeIdx = -1;
+  // this.triSetIdx = -1;
+  // the next seven indexes are the children, we've got a compleete octree
 
   /**
    * @type {Node[]}
    */
-  this.children = undefined;
+  // this.children = [];
 
   /**
    * @type {Number[]}
    */
-  this.triangles = new Array();
+  this.triangles = [];
 
   /**
    * @type {Triangle[]}
    */
-  this.tempTriangles = new Array();
+  // this.tempTriangles = new Array();
 }
 
 /**
@@ -217,41 +240,6 @@ var scratchV1 = new Cartesian3();
 var scratchV2 = new Cartesian3();
 
 /**
- * @param {Node} node
- * @param {Ray} ray
- * @param {Boolean} cullBackFaces
- * @param {TrianglePicking~TriangleVerticesCallback} triangleVerticesCallback
- * @param {TraversalResult} result
- */
-function nodeIntersectTriangles(
-  node,
-  ray,
-  cullBackFaces,
-  triangleVerticesCallback,
-  result
-) {
-  var triangleCount = node.triangles.length;
-  for (var i = 0; i < triangleCount; i++) {
-    var triIndex = node.triangles[i];
-
-    var v0 = scratchV0;
-    var v1 = scratchV1;
-    var v2 = scratchV2;
-    triangleVerticesCallback(triIndex, v0, v1, v2);
-    var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
-
-    if (triT !== invalidIntersection && triT < result.t) {
-      result.t = triT;
-      result.triangleIndex = triIndex;
-      result.level = node.level;
-      result.x = node.x;
-      result.y = node.y;
-      result.z = node.z;
-    }
-  }
-}
-
-/**
  * Find the closest intersection against the node's triangles, if there are any,
  * and recurse over children that might have a closer intersection.
  * Adapted from https://daeken.svbtle.com/a-stupidly-simple-fast-octree-traversal-for-ray-intersection
@@ -267,6 +255,14 @@ function nodeIntersectTriangles(
  */
 function nodeRayIntersect(
   node,
+  packedNodeIdx,
+  packedNodes,
+  packedTriangleSets,
+  nodes,
+  level,
+  x,
+  y,
+  z,
   ray,
   transformedRay,
   t,
@@ -274,17 +270,43 @@ function nodeRayIntersect(
   triangleVerticesCallback,
   result
 ) {
+  // var triCount = packedNodes[packedNodeIdx + 1];
+  var nodeFirstChildIdx = packedNodes[packedNodeIdx];
+
+  // console.assert(triCount === node.triangles.length);
+  // if (triCount !== node.triangles.length) {
+  //   console.error('whoops');
+  // }
+  // // console.assert(nodeFirstChildIdx === node.firstChildNodeIdx);
+  // if (nodeFirstChildIdx !== node.firstChildNodeIdx) {
+  //   console.error('whoops');
+  // }
+
   nodeIntersectTriangles(
     node,
+    packedNodes[packedNodeIdx],
+    packedNodes[packedNodeIdx + 1],
+    packedNodes[packedNodeIdx + 2],
+    packedTriangleSets,
     ray,
     cullBackFaces,
     triangleVerticesCallback,
     result
   );
 
-  if (!defined(node.children)) {
+  // var noChildren = !defined(node.children) || node.children.length === 0;
+  // var noChildAgain = node.firstChildNodeIdx === -1;
+  var noChildAgain = nodeFirstChildIdx === -1;
+  // console.assert(noChildren === noChildAgain);
+
+  if (noChildAgain) {
     return result;
   }
+
+  const onTheFlyAABB = onTheFlyNodeAABB(level, x, y, z);
+  // recurse the node tree
+  //  check if the node AABB contains the ray
+  //  if so, recurse one layer down into the correct child
 
   var dirX = transformedRay.direction.x;
   var dirY = transformedRay.direction.y;
@@ -294,22 +316,22 @@ function nodeRayIntersect(
   var originY = transformedRay.origin.y + t * dirY;
   var originZ = transformedRay.origin.z + t * dirZ;
 
-  var sideX = originX >= node.aabbCenterX;
-  var sideY = originY >= node.aabbCenterY;
-  var sideZ = originZ >= node.aabbCenterZ;
+  var sideX = originX >= onTheFlyAABB.aabbCenterX;
+  var sideY = originY >= onTheFlyAABB.aabbCenterY;
+  var sideZ = originZ >= onTheFlyAABB.aabbCenterZ;
 
   var canCrossX = sideX !== dirX >= 0.0;
   var canCrossY = sideY !== dirY >= 0.0;
   var canCrossZ = sideZ !== dirZ >= 0.0;
 
   var distX = canCrossX
-    ? (node.aabbCenterX - originX) / dirX
+    ? (onTheFlyAABB.aabbCenterX - originX) / dirX
     : invalidIntersection;
   var distY = canCrossY
-    ? (node.aabbCenterY - originY) / dirY
+    ? (onTheFlyAABB.aabbCenterY - originY) / dirY
     : invalidIntersection;
   var distZ = canCrossZ
-    ? (node.aabbCenterZ - originZ) / dirZ
+    ? (onTheFlyAABB.aabbCenterZ - originZ) / dirZ
     : invalidIntersection;
 
   var minDist = 0;
@@ -319,9 +341,96 @@ function nodeRayIntersect(
   // There is a maximum of four possible child overlaps, but usually it's less than that.
   // Start by checking the one that the ray is inside, then move to the next closest, etc.
   for (var i = 0; i < 4; i++) {
-    var child = node.children[childIdx];
+    // var oldChild = node.children[childIdx];
+    var child = null; // nodes[node.firstChildNodeIdx + childIdx];
+    // var child = packedNodes[packedNodeIdx + childIdx];
+
+    // console.assert(oldChild === child);
+    // for each level, x doubles
+    var childXMin = x * 2;
+    var childXMax = x * 2 + 1;
+    var childYMin = y * 2;
+    var childYMax = y * 2 + 1;
+    var childZMin = z * 2;
+    var childZMax = z * 2 + 1;
+    var _x, _y, _z;
+    switch (childIdx) {
+      case 0: {
+        _x = childXMin;
+        _y = childYMin;
+        _z = childZMin;
+        break;
+      }
+      case 1: {
+        _x = childXMax;
+        _y = childYMin;
+        _z = childZMin;
+        break;
+      }
+      case 2: {
+        _x = childXMin;
+        _y = childYMax;
+        _z = childZMin;
+        break;
+      }
+      case 3: {
+        _x = childXMax;
+        _y = childYMax;
+        _z = childZMin;
+        break;
+      }
+      case 4: {
+        _x = childXMin;
+        _y = childYMin;
+        _z = childZMax;
+        break;
+      }
+      case 5: {
+        _x = childXMax;
+        _y = childYMin;
+        _z = childZMax;
+        break;
+      }
+      case 6: {
+        _x = childXMin;
+        _y = childYMax;
+        _z = childZMax;
+        break;
+      }
+      case 7: {
+        _x = childXMax;
+        _y = childYMax;
+        _z = childZMax;
+        break;
+      }
+    }
+
+    var firstChildIdx = packedNodes[packedNodeIdx];
+    var childNodeIdx = firstChildIdx * 3 + childIdx * 3 /* packed node space */;
+    // var childNodeTriangleCount = packedNodes[childNodeIdx + 1];
+    // var childNodeTriangleSetIdx = packedNodes[childNodeIdx + 2];
+
+    /// console.assert(childNodeTriangleCount === child.triangles.length);
+    // if (childNodeTriangleCount !== child.triangles.length) {
+    //   console.error('whoops');
+    // }
+    // for (var g = 0; g < child.triangles.length; g++) {
+    //   var q = child.triangles[g];
+    //   var packedT = packedTriangleSets[childNodeTriangleSetIdx + g];
+    //   if (q !== packedT) {
+    //     console.error('whoops');
+    //   }
+    // }
     nodeRayIntersect(
       child,
+      childNodeIdx,
+      packedNodes,
+      packedTriangleSets,
+      nodes,
+      level + 1,
+      _x,
+      _y,
+      _z,
       ray,
       transformedRay,
       t + minDist,
@@ -339,12 +448,12 @@ function nodeRayIntersect(
         originX + minDist * dirX,
         originY + minDist * dirY,
         originZ + minDist * dirZ,
-        node.aabbMinX,
-        node.aabbMaxX,
-        node.aabbMinY,
-        node.aabbMaxY,
-        node.aabbMinZ,
-        node.aabbMaxZ
+        onTheFlyAABB.aabbMinX,
+        onTheFlyAABB.aabbMaxX,
+        onTheFlyAABB.aabbMinY,
+        onTheFlyAABB.aabbMaxY,
+        onTheFlyAABB.aabbMinZ,
+        onTheFlyAABB.aabbMaxZ
       )
     ) {
       break;
@@ -363,6 +472,50 @@ function nodeRayIntersect(
   }
 
   return result;
+}
+
+/**
+ * @param {Node} node
+ * @param {Ray} ray
+ * @param {Boolean} cullBackFaces
+ * @param {TrianglePicking~TriangleVerticesCallback} triangleVerticesCallback
+ * @param {TraversalResult} result
+ */
+function nodeIntersectTriangles(
+  node,
+  firstChildNodeIdx,
+  triangleCount,
+  triangleSetIdx,
+  packedTriangleSets,
+  ray,
+  cullBackFaces,
+  triangleVerticesCallback,
+  result
+) {
+  // var triangleCount = node.triangles.length;
+  // console.assert(newTriangleCount === triangleCount);
+  // triangleCount = newTriangleCount;
+  for (var i = 0; i < triangleCount; i++) {
+    // var triIndex = node.triangles[i];
+    var triIndex = packedTriangleSets[triangleSetIdx + i];
+    // console.assert(triIndex === newtriIndex);
+    // triIndex = newtriIndex;
+
+    var v0 = scratchV0;
+    var v1 = scratchV1;
+    var v2 = scratchV2;
+    triangleVerticesCallback(triIndex, v0, v1, v2);
+    var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
+
+    if (triT !== invalidIntersection && triT < result.t) {
+      result.t = triT;
+      result.triangleIndex = triIndex;
+      // result.level = node.level;
+      // result.x = node.x;
+      // result.y = node.y;
+      // result.z = node.z;
+    }
+  }
 }
 
 /**
@@ -442,12 +595,81 @@ var scratchOverlap1 = {
  * @param {Triangle} triangle
  * @param {Number} overlapMask
  */
-function nodeAddTriangleToChildren(node, triangle, overlapMask) {
+function nodeAddTriangleToChildren(
+  node,
+  level,
+  x,
+  y,
+  z,
+  triangle,
+  overlapMask,
+  triangles,
+  nodes
+) {
   for (var childIdx = 0; childIdx < 8; childIdx++) {
     var overlapsChild = (overlapMask & (1 << childIdx)) > 0;
     if (overlapsChild) {
-      var childNode = node.children[childIdx];
-      nodeAddTriangle(childNode, triangle);
+      var childNode = nodes[childIdx + node.firstChildNodeIdx];
+      var _x, _y, _z;
+      if (childIdx === 0) {
+        {
+          _x = x * 2;
+          _y = y * 2;
+          _z = z * 2;
+        }
+      } else if (childIdx === 1) {
+        {
+          _x = x * 2 + 1;
+          _y = y * 2;
+          _z = z * 2;
+        }
+      } else if (childIdx === 2) {
+        {
+          _x = x * 2;
+          _y = y * 2 + 1;
+          _z = z * 2;
+        }
+      } else if (childIdx === 3) {
+        {
+          _x = x * 2 + 1;
+          _y = y * 2 + 1;
+          _z = z * 2;
+        }
+      } else if (childIdx === 4) {
+        {
+          _x = x * 2;
+          _y = y * 2;
+          _z = z * 2 + 1;
+        }
+      } else if (childIdx === 5) {
+        {
+          _x = x * 2 + 1;
+          _y = y * 2;
+          _z = z * 2 + 1;
+        }
+      } else if (childIdx === 6) {
+        {
+          _x = x * 2;
+          _y = y * 2 + 1;
+          _z = z * 2 + 1;
+        }
+      } else if (childIdx === 7) {
+        {
+          _x = x * 2 + 1;
+          _y = y * 2 + 1;
+          _z = z * 2 + 1;
+        }
+      }
+      nodeAddTriangle(
+        childNode,
+        level + 1,
+        _x,
+        _y,
+        _z,
+        triangle,
+        triangles,
+        nodes
+      );
     }
   }
 }
@@ -461,15 +683,17 @@ function nodeAddTriangleToChildren(node, triangle, overlapMask) {
  * @param {Triangle} triangle
  */
 
-function nodeAddTriangle(node, triangle) {
-  var level = node.level;
-  var x = node.x;
-  var y = node.y;
-  var z = node.z;
+// If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
+var maxLevels = 10;
+var maxTrianglesPerNode = 50;
+// how many axis of the current triangle are within the node's axis-aligned-bounding-box
+var smallOverlapCount = 2;
 
-  var aabbCenterX = node.aabbCenterX;
-  var aabbCenterY = node.aabbCenterY;
-  var aabbCenterZ = node.aabbCenterZ;
+function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
+  var sizeAtLevel = 1.0 / Math.pow(2, level);
+  var aabbCenterX = (x + 0.5) * sizeAtLevel - 0.5;
+  var aabbCenterY = (y + 0.5) * sizeAtLevel - 0.5;
+  var aabbCenterZ = (z + 0.5) * sizeAtLevel - 0.5;
   var overlap = getOverlap(
     aabbCenterX,
     aabbCenterY,
@@ -477,116 +701,110 @@ function nodeAddTriangle(node, triangle) {
     triangle,
     scratchOverlap0
   );
-  var overlapBitCount = overlap.bitCount;
-  var overlapBitMask = overlap.bitMask;
-
-  // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
-  var maxLevels = 10;
-  var maxTrianglesPerNode = 50;
-  var smallOverlapCount = 2;
-
-  var tempTriangles = node.tempTriangles;
   var triangleIdxs = node.triangles;
-  var triangleCount = triangleIdxs.length;
-  var exceedsTriCount = triangleCount >= maxTrianglesPerNode;
-
-  var isSmall = overlapBitCount <= smallOverlapCount;
+  var exceedsTriCount = triangleIdxs.length >= maxTrianglesPerNode;
+  // the current triangle is a good fit for the current node.
+  //  it's either fully contained within the bounding box or 2 out of the 3 planes are contained within the AABB
+  var isSmall = overlap.bitCount <= smallOverlapCount;
   var atMaxLevel = level === maxLevels - 1;
   var shouldFilterDown = isSmall && !atMaxLevel;
-
-  var hasChildren = defined(node.children);
+  var hasChildren = node.firstChildNodeIdx !== -1;
+  // cut our current node up into 8 children, redistribute all triangles in the current node into new children
   var subdivide = shouldFilterDown && !hasChildren && exceedsTriCount;
+  // put the current triangle further down in the tree
   var filterDown = shouldFilterDown && (hasChildren || subdivide);
-
   if (subdivide) {
-    var childLevel = level + 1;
-    var childXMin = x * 2 + 0;
-    var childXMax = x * 2 + 1;
-    var childYMin = y * 2 + 0;
-    var childYMax = y * 2 + 1;
-    var childZMin = z * 2 + 0;
-    var childZMax = z * 2 + 1;
-
-    node.children = new Array(
-      new Node(childLevel, childXMin, childYMin, childZMin),
-      new Node(childLevel, childXMax, childYMin, childZMin),
-      new Node(childLevel, childXMin, childYMax, childZMin),
-      new Node(childLevel, childXMax, childYMax, childZMin),
-      new Node(childLevel, childXMin, childYMin, childZMax),
-      new Node(childLevel, childXMax, childYMin, childZMax),
-      new Node(childLevel, childXMin, childYMax, childZMax),
-      new Node(childLevel, childXMax, childYMax, childZMax)
+    node.firstChildNodeIdx = nodes.length;
+    nodes.push(
+      new Node(),
+      new Node(),
+      new Node(),
+      new Node(),
+      new Node(),
+      new Node(),
+      new Node(),
+      new Node()
     );
-
-    var tempTriangleLength = tempTriangles.length;
-    for (var t = 0; t < tempTriangleLength; t++) {
-      var overflowTri = tempTriangles[t];
-      var overflowOverlap = getOverlap(
+    for (var triidx of triangleIdxs) {
+      var overflowTri2 = triangles[triidx];
+      var overflowOverlap2 = getOverlap(
         aabbCenterX,
         aabbCenterY,
         aabbCenterZ,
-        overflowTri,
+        overflowTri2,
         scratchOverlap1
       );
-      nodeAddTriangleToChildren(node, overflowTri, overflowOverlap.bitMask);
+      nodeAddTriangleToChildren(
+        node,
+        level,
+        x,
+        y,
+        z,
+        overflowTri2,
+        overflowOverlap2.bitMask,
+        triangles,
+        nodes
+      );
     }
-    triangleIdxs.length -= tempTriangles.length;
-    node.tempTriangles = undefined;
+    triangleIdxs.length = 0;
   }
-
   if (filterDown) {
-    nodeAddTriangleToChildren(node, triangle, overlapBitMask);
-  } else if (isSmall) {
-    triangleIdxs.push(triangle.index);
-    tempTriangles.push(triangle);
+    nodeAddTriangleToChildren(
+      node,
+      level,
+      x,
+      y,
+      z,
+      triangle,
+      overlap.bitMask,
+      triangles,
+      nodes
+    );
   } else {
-    triangleIdxs.unshift(triangle.index);
+    triangleIdxs.push(triangle.index);
   }
 }
 
 /**
  * @param {TrianglePicking} that
  */
-function printDebugInfo(that) {
-  var rootNode = that._rootNode;
-
-  var triCount = 0;
-  var triCountLeaf = 0;
-  var nodeCount = 0;
-  var nodeCountLeaf = 0;
-
-  function accumTriCount(node) {
-    var isLeaf = defined(node.children);
-
-    var triCountNode = node.triangles.length;
-    if (triCountNode > 0) {
-      triCount += triCountNode;
-      triCountLeaf += isLeaf ? triCountNode : 0;
-      nodeCount += 1;
-      nodeCountLeaf += isLeaf ? 1 : 0;
-    }
-
-    var children = node.children;
-    if (defined(children)) {
-      for (var i = 0; i < 8; i++) {
-        accumTriCount(children[i]);
-      }
-    }
-  }
-
-  accumTriCount(rootNode);
-
-  console.log(
-    "tri count: " +
-      triCount +
-      " node count: " +
-      nodeCount +
-      " ratio: " +
-      triCount / nodeCount +
-      " ratio leaf: " +
-      triCountLeaf / nodeCountLeaf
-  );
-}
+// function printDebugInfo(that) {
+//   var rootNode = that._rootNode;
+//
+//   var triCount = 0;
+//   var triCountLeaf = 0;
+//   var nodeCount = 0;
+//   var nodeCountLeaf = 0;
+//
+//   function accumTriCount(node) {
+//     // var isLeaf = !children || !node.children.length;
+//     var isLeaf = node.firstChildNodeIdx === -1;
+//
+//     var triCountNode = node.triangles.length;
+//     if (triCountNode > 0) {
+//       triCount += triCountNode;
+//       triCountLeaf += isLeaf ? triCountNode : 0;
+//       nodeCount += 1;
+//       nodeCountLeaf += isLeaf ? 1 : 0;
+//     }
+//
+//     var firstChildIdx = node.firstChildNodeIdx;
+//     if (firstChildIdx !== -1) {
+//       for (var i = 0; i < 8; i++) {
+//         accumTriCount(that._nodes[firstChildIdx + i]);
+//       }
+//     }
+//   }
+//
+//   accumTriCount(rootNode);
+//   console.log(rootNode);
+//   console.table({
+//     tri_count : triCount,
+//     node_count : nodeCount,
+//     ratio : triCount / nodeCount,
+//     ratioLeaf : triCountLeaf / nodeCountLeaf
+//   });
+// }
 
 var scratchTransform = new Matrix4();
 
@@ -614,6 +832,7 @@ function TrianglePicking(options) {
   );
   this._invTransform = Matrix4.inverse(transform, new Matrix4());
   this._rootNode = new Node(0, 0, 0, 0);
+  this._nodes = [this._rootNode];
 }
 
 Object.defineProperties(TrianglePicking.prototype, {
@@ -640,47 +859,81 @@ TrianglePicking.prototype.addTriangles = function (
   triangleIndex,
   triangleCount
 ) {
-  // var time0 = getTimestamp();
-
-  var invTransform = this._invTransform;
+  console.time("creating triangles");
   var rootNode = this._rootNode;
+  var invTransform = this._invTransform;
+  var nodes = this._nodes;
+  var triangleIndexEnd = triangleIndex + triangleCount;
   var triangleVerticesCallback = this._triangleVerticesCallback;
+
+  var triangles = [];
+
+  var i = 0;
+  for (var triIdx2 = triangleIndex; triIdx2 < triangleIndexEnd; triIdx2++) {
+    i++;
+    triangleVerticesCallback(triIdx2, scratchV0, scratchV1, scratchV2);
+
+    var v0Local2 = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
+    var v1Local2 = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
+    var v2Local2 = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
+
+    // Get local space AABBs for triangle
+    var triAabbMinX2 = Math.min(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMaxX2 = Math.max(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMinY2 = Math.min(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMaxY2 = Math.max(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
+    var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
+
+    var triangle2 = new Triangle(
+      triIdx2,
+      triAabbMinX2,
+      triAabbMaxX2,
+      triAabbMinY2,
+      triAabbMaxY2,
+      triAabbMinZ2,
+      triAabbMaxZ2
+    );
+    triangles.push(triangle2);
+  }
+  console.timeEnd("creating triangles");
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
   //>>includeEnd('debug');
 
-  // Build the octree by adding each triangle one at a time.
-  var triangleIndexEnd = triangleIndex + triangleCount;
-  for (var triIdx = triangleIndex; triIdx < triangleIndexEnd; triIdx++) {
-    triangleVerticesCallback(triIdx, scratchV0, scratchV1, scratchV2);
-
-    var v0Local = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
-    var v1Local = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
-    var v2Local = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
-
-    // Get local space AABBs for triangle
-    var triAabbMinX = Math.min(v0Local.x, v1Local.x, v2Local.x);
-    var triAabbMaxX = Math.max(v0Local.x, v1Local.x, v2Local.x);
-    var triAabbMinY = Math.min(v0Local.y, v1Local.y, v2Local.y);
-    var triAabbMaxY = Math.max(v0Local.y, v1Local.y, v2Local.y);
-    var triAabbMinZ = Math.min(v0Local.z, v1Local.z, v2Local.z);
-    var triAabbMaxZ = Math.max(v0Local.z, v1Local.z, v2Local.z);
-
-    var triangle = new Triangle(
-      triIdx,
-      triAabbMinX,
-      triAabbMaxX,
-      triAabbMinY,
-      triAabbMaxY,
-      triAabbMinZ,
-      triAabbMaxZ
-    );
-    nodeAddTriangle(rootNode, triangle);
+  console.time("creating octree");
+  for (var x = 0; x < triangles.length; x++) {
+    nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
   }
+  console.timeEnd("creating octree");
 
-  // var time1 = getTimestamp();
-  // console.log("time: " + triangleCount + " " + (time1 - time0));
+  console.time("creating packed");
+  var packedNodeSpace = 3;
+  var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
+  var triangleSets = [];
+  var n;
+  for (var w = 0; w < nodes.length; w++) {
+    n = nodes[w];
+    // a reference to the packed node index (*3)
+    packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
+    // the number of triangles this node contains
+    packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
+    // the index of the first triangle in thee packed triangles
+    packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
+    triangleSets.push(...n.triangles);
+  }
+  var packedTriangles = new Int32Array(triangleSets);
+
+  console.timeEnd("creating packed");
+
+  this._packedTriangles = packedTriangles;
+  this._packedNodes = packedNodes;
+  // printDebugInfo(this);
+  // null these properties out so they don't get copied across the worker thead.
+  //  instead we'll use their array buffer variants
+  this._rootNode = null;
+  this._nodes = null;
 };
 
 var scratchTraversalResult = new TraversalResult();
@@ -697,7 +950,11 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
     result = new Cartesian3();
   }
   var invTransform = this._invTransform;
-  var rootNode = this._rootNode;
+  var rootNode = null; //this._rootNode;
+  var nodes = this._nodes;
+
+  var packedTriangleSets = this._packedTriangles;
+  var packedNodes = this._packedNodes;
 
   var transformedRay = scratchTransformedRay;
   transformedRay.origin = Matrix4.multiplyByPoint(
@@ -721,6 +978,14 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
 
   traversalResult = nodeRayIntersect(
     rootNode,
+    0,
+    packedNodes,
+    packedTriangleSets,
+    nodes,
+    0,
+    0,
+    0,
+    0,
     ray,
     transformedRay,
     t,
@@ -753,6 +1018,9 @@ TrianglePicking.clone = function (trianglePicking) {
   });
 
   result._rootNode = trianglePicking._rootNode;
+  result._nodes = trianglePicking._nodes;
+  result._packedTriangles = trianglePicking._packedTriangles;
+  result._packedNodes = trianglePicking._packedNodes;
   return result;
 };
 

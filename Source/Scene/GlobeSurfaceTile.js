@@ -164,15 +164,22 @@ GlobeSurfaceTile.prototype.pick = function (
     return undefined;
   }
 
+  var time = true;
+
   // Fast acceleration structure picking that only works in 3D
   useNewPicking = defaultValue(useNewPicking, true);
+  useNewPicking = false;
   if (
     useNewPicking &&
-    mode === SceneMode.SCENE3D &&
+    // mode === SceneMode.SCENE3D &&
     defined(mesh.trianglePicking)
   ) {
-    return mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
+    if (time) console.time("triangle pick");
+    var r = mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
+    if (time) console.timeEnd("triangle pick");
+    return r;
   }
+  if (time) console.time("normal pick");
 
   var vertices = mesh.vertices;
   var indices = mesh.indices;
@@ -202,6 +209,7 @@ GlobeSurfaceTile.prototype.pick = function (
     }
   }
 
+  if (time) console.timeEnd("normal pick");
   return minT !== Number.MAX_VALUE
     ? Ray.getPoint(ray, minT, result)
     : undefined;
@@ -263,7 +271,6 @@ GlobeSurfaceTile.processStateMachine = function (
   terrainOnly
 ) {
   GlobeSurfaceTile.initialize(tile, terrainProvider, imageryLayerCollection);
-
   var surfaceTile = tile.data;
 
   if (tile.state === QuadtreeTileLoadState.LOADING) {

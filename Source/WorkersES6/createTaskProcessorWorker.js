@@ -83,7 +83,9 @@ function createTaskProcessorWorker(workerFunction) {
         }
 
         try {
+          console.time("post message");
           postMessage(responseMessage, transferableObjects);
+          console.timeEnd("post message");
         } catch (e) {
           // something went wrong trying to post the message, post a simpler
           // error that we can be sure will be cloneable
