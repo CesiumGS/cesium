@@ -24,6 +24,10 @@
 - Fixed issue where wall doesn't have correct texture coordinates when there are duplicate positions input [#9042](https://github.com/CesiumGS/cesium/issues/9042)
 - Fixed an issue where clipping planes would not clip at the correct distances on some Android devices, most commonly reproducible on devices with `Mali` GPUs that do not support float textures via WebGL [#9023](https://github.com/CesiumGS/cesium/issues/9023)
 
+##### Additions :tada:
+
+- Added `fovy` as an editable variable to `PerspectiveFrustum`. [#9073](https://github.com/CesiumGS/cesium/pull/9073) 
+
 ### 1.71 - 2020-07-01
 
 ##### Breaking Changes :mega:
