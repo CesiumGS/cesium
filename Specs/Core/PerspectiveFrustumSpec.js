@@ -15,6 +15,7 @@ describe("Core/PerspectiveFrustum", function () {
     frustum.far = 2.0;
     frustum.aspectRatio = 1.0;
     frustum.fov = Math.PI / 3;
+    frustum.fovy = 0;
     planes = frustum.computeCullingVolume(
       new Cartesian3(),
       Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
@@ -25,6 +26,7 @@ describe("Core/PerspectiveFrustum", function () {
   it("constructs", function () {
     var options = {
       fov: 1.0,
+      fovy: 1.0,
       aspectRatio: 2.0,
       near: 3.0,
       far: 4.0,
@@ -33,6 +35,7 @@ describe("Core/PerspectiveFrustum", function () {
     };
     var f = new PerspectiveFrustum(options);
     expect(f.fov).toEqual(options.fov);
+    expect(f.fovy).toEqual(options.fovy);
     expect(f.aspectRatio).toEqual(options.aspectRatio);
     expect(f.near).toEqual(options.near);
     expect(f.far).toEqual(options.far);
@@ -43,6 +46,7 @@ describe("Core/PerspectiveFrustum", function () {
   it("default constructs", function () {
     var f = new PerspectiveFrustum();
     expect(f.fov).toBeUndefined();
+    expect(f.fovy).toBeUndefined();
     expect(f.aspectRatio).toBeUndefined();
     expect(f.near).toEqual(1.0);
     expect(f.far).toEqual(500000000.0);
@@ -57,6 +61,18 @@ describe("Core/PerspectiveFrustum", function () {
     }).toThrowDeveloperError();
 
     frustum.fov = CesiumMath.TWO_PI;
+    expect(function () {
+      return frustum.projectionMatrix;
+    }).toThrowDeveloperError();
+  });
+
+  it("out of range fovy causes an exception", function () {
+    frustum.fovy = -1.0;
+    expect(function () {
+      return frustum.projectionMatrix;
+    }).toThrowDeveloperError();
+
+    frustum.fovy = CesiumMath.TWO_PI;
     expect(function () {
       return frustum.projectionMatrix;
     }).toThrowDeveloperError();
@@ -274,6 +290,7 @@ describe("Core/PerspectiveFrustum", function () {
     frustum2.near = 1.0;
     frustum2.far = 2.0;
     frustum2.fov = Math.PI / 3.0;
+    frustum2.fovy = Math.PI / 3.0;
     frustum2.aspectRatio = 1.0;
     expect(frustum.equals(frustum2)).toEqual(true);
   });
@@ -283,6 +300,7 @@ describe("Core/PerspectiveFrustum", function () {
     frustum2.near = 1.0;
     frustum2.far = 2.0;
     frustum2.fov = Math.PI / 3.0;
+    frustum2.fovy = Math.PI / 3.0;
     frustum2.aspectRatio = 1.0;
     expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
 
@@ -290,6 +308,7 @@ describe("Core/PerspectiveFrustum", function () {
     frustum3.near = 1.01;
     frustum3.far = 2.01;
     frustum3.fov = Math.PI / 3.0 + 0.01;
+    frustum2.fovy = Math.PI / 3.0 + 0.01;
     frustum3.aspectRatio = 1.01;
     expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
 
@@ -297,6 +316,7 @@ describe("Core/PerspectiveFrustum", function () {
     frustum4.near = 1.0;
     frustum4.far = 2.0;
     frustum4.fov = Math.PI / 3.0;
+    frustum2.fovy = Math.PI / 3.0;
     frustum4.aspectRatio = 1.1;
     expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
   });
@@ -333,7 +353,8 @@ describe("Core/PerspectiveFrustum", function () {
       far: 4.0,
       xOffset: 5.0,
       yOffset: 6.0,
+      fovy: 7.0,
     }),
-    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
   );
 });
