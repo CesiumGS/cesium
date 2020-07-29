@@ -9,7 +9,7 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - `MapboxApi.defaultAccessToken` was deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors.
-- `BingMapxApi` was deprecated and will be removed in CesiumJS 1.73. Pass your access key directly to the BingMapsImageryProvider or BingMapsGeocoderService constructors.
+- `BingMapsApi` was deprecated and will be removed in CesiumJS 1.73. Pass your access key directly to the BingMapsImageryProvider or BingMapsGeocoderService constructors.
 
 ##### Fixes :wrench:
 
