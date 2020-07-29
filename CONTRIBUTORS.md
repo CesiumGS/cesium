@@ -114,6 +114,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Natanael Rivera](https://github.com/njrivera/)
   - [Justin Burr](https://github.com/jburr-nc/)
   - [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
+  - [Omari Halford](https://github.com/OHalford-Novetta)
 - [Orbit Logic](http://www.orbitlogic.com)
   - [Roderick Green](https://github.com/roderickgreen/)
   - [Sam Parrish](https://github.com/sgparrish/)
