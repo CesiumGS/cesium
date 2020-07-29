@@ -575,7 +575,7 @@ function generateTechnique(
     );
     emissiveTexCoord = addTextureCoordinates(
       gltf,
-      "u_emmissiveTexture",
+      "u_emissiveTexture",
       generatedMaterialValues,
       v_texCoord,
       result
