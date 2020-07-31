@@ -91,6 +91,10 @@ function addTextureCoordinates(
   result
 ) {
   var texCoord;
+  var texInfo = generatedMaterialValues[textureName];
+  if (defined(texInfo) && defined(texInfo.texCoord) && texInfo.texCoord === 1) {
+    defaultTexCoord = defaultTexCoord.replace("0", "1");
+  }
   if (defined(generatedMaterialValues[textureName + "Offset"])) {
     texCoord = textureName + "Coord";
     result.fragmentShaderMain +=
@@ -235,6 +239,7 @@ function generateTechnique(
   var hasNormals = false;
   var hasTangents = false;
   var hasTexCoords = false;
+  var hasTexCoord1 = false;
   var hasOutline = false;
   var isUnlit = false;
 
@@ -246,6 +251,7 @@ function generateTechnique(
     hasNormals = primitiveInfo.hasNormals;
     hasTangents = primitiveInfo.hasTangents;
     hasTexCoords = primitiveInfo.hasTexCoords;
+    hasTexCoord1 = primitiveInfo.hasTexCoord1;
     hasOutline = primitiveInfo.hasOutline;
   }
 
@@ -527,6 +533,19 @@ function generateTechnique(
     vertexShaderMain += "    " + v_texCoord + " = a_texcoord_0;\n";
 
     fragmentShader += "varying vec2 " + v_texCoord + ";\n";
+
+    if (hasTexCoord1) {
+      techniqueAttributes.a_texcoord_1 = {
+        semantic: "TEXCOORD_1",
+      };
+
+      var v_texCoord1 = v_texCoord.replace("0", "1");
+      vertexShader += "attribute vec2 a_texcoord_1;\n";
+      vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
+      vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
+
+      fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
+    }
 
     var result = {
       fragmentShaderMain: fragmentShaderMain,
