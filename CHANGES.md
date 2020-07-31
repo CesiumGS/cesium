@@ -6,6 +6,10 @@
 
 - CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. If you are using `MapboxImageryProvider` or `MapboxStyleImageryProvider`, use `options.accessToken` when initializing the imagery provider.
 
+##### Additions :tada:
+
+- Added support for glTF multi-texturing via `TEXCOORD_1`.
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `MapboxApi.defaultAccessToken` was deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors.
