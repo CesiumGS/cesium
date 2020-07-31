@@ -8,7 +8,7 @@
 
 ##### Additions :tada:
 
-- Added support for glTF multi-texturing via `TEXCOORD_1`.
+- Added support for glTF multi-texturing via `TEXCOORD_1`. [#9075](https://github.com/CesiumGS/cesium/pull/9075)
 
 ##### Deprecated :hourglass_flowing_sand:
 
