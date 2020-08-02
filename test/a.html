@@ -1,0 +1,46 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script type="text/javascript" src="../Build/Cesium/Cesium.js"></script>
+  <link rel="stylesheet" href="../Build/Cesium/Widgets/widgets.css">
+</head>
+<style>
+  *{
+    padding: 0;
+    margin: 0;
+  }
+  html,body,#map{
+    width: 100%;
+    height: 100%;
+  }
+</style>
+<body>
+<div id="map"></div>
+</body>
+</html>
+<script type="text/javascript">
+  let viewer=new Cesium.Viewer('map',{
+    imageryProvider:new Cesium.UrlTemplateImageryProvider({
+      url:'http://mt0.google.cn/vt/lyrs=y&hl=zh-CN&gl=cn&scale=1&x={x}&y={y}&z={z}',
+    })
+  });
+  viewer.entities.add({
+    polygon:{
+      extrudedHeight:500000,
+      hierarchy:Cesium.Cartesian3.fromDegreesArray([104,30,114,29,116,39]),
+      material:new Cesium.Material({
+        fabric: {
+          components : {
+            diffuse : 'vec3(1.0)'
+          }
+        }
+      })
+    }
+  });
+  // new Cesium.PolylineGlowMaterialProperty()
+  viewer.flyTo(viewer.entities);
+</script>
