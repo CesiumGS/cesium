@@ -5,6 +5,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { PolylineGeometry } from "../../Source/Cesium.js";
 import { VertexFormat } from "../../Source/Cesium.js";
 import createPackableSpecs from "../createPackableSpecs.js";
+import CesiumMath from "../../Source/Core/Math.js";
 
 describe("Core/PolylineGeometry", function () {
   it("constructor throws with no positions", function () {
@@ -182,6 +183,64 @@ describe("Core/PolylineGeometry", function () {
       })
     );
     expect(geometry).not.toBeDefined();
+  });
+
+  it("createGeometry returns positions if their endpoints'longtitude and latitude are the same for rhumb line", function () {
+    var positions = Cartesian3.fromDegreesArrayHeights([
+      30.0,
+      30.0,
+      10.0,
+      30.0,
+      30.0,
+      5.0,
+    ]);
+    var geometry = PolylineGeometry.createGeometry(
+      new PolylineGeometry({
+        positions: positions,
+        width: 10.0,
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        arcType: ArcType.RHUMB,
+      })
+    );
+
+    var attributePositions = geometry.attributes.position.values;
+    var geometryPosition = new Cartesian3();
+
+    Cartesian3.fromArray(attributePositions, 0, geometryPosition);
+    expect(
+      Cartesian3.equalsEpsilon(
+        geometryPosition,
+        positions[0],
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
+
+    Cartesian3.fromArray(attributePositions, 3, geometryPosition);
+    expect(
+      Cartesian3.equalsEpsilon(
+        geometryPosition,
+        positions[0],
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
+
+    Cartesian3.fromArray(attributePositions, 6, geometryPosition);
+    expect(
+      Cartesian3.equalsEpsilon(
+        geometryPosition,
+        positions[1],
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
+
+    Cartesian3.fromArray(attributePositions, 9, geometryPosition);
+    expect(
+      Cartesian3.equalsEpsilon(
+        geometryPosition,
+        positions[1],
+        CesiumMath.EPSILON7
+      )
+    ).toBe(true);
   });
 
   var positions = [

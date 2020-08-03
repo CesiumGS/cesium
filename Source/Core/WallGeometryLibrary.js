@@ -20,7 +20,7 @@ function latLonEquals(c0, c1) {
 var scratchCartographic1 = new Cartographic();
 var scratchCartographic2 = new Cartographic();
 function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
-  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
+  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
   var length = positions.length;
   if (length < 2) {
@@ -29,7 +29,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
 
   var hasBottomHeights = defined(bottomHeights);
   var hasTopHeights = defined(topHeights);
-  var hasAllZeroHeights = true;
 
   var cleanedPositions = new Array(length);
   var cleanedTopHeights = new Array(length);
@@ -43,8 +42,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     c0.height = topHeights[0];
   }
 
-  hasAllZeroHeights = hasAllZeroHeights && c0.height <= 0;
-
   cleanedTopHeights[0] = c0.height;
 
   if (hasBottomHeights) {
@@ -53,6 +50,10 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     cleanedBottomHeights[0] = 0.0;
   }
 
+  var startTopHeight = cleanedTopHeights[0];
+  var startBottomHeight = cleanedBottomHeights[0];
+  var hasAllSameHeights = startTopHeight === startBottomHeight;
+
   var index = 1;
   for (var i = 1; i < length; ++i) {
     var v1 = positions[i];
@@ -60,7 +61,7 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     if (hasTopHeights) {
       c1.height = topHeights[i];
     }
-    hasAllZeroHeights = hasAllZeroHeights && c1.height <= 0;
+    hasAllSameHeights = hasAllSameHeights && c1.height === 0;
 
     if (!latLonEquals(c0, c1)) {
       cleanedPositions[index] = v1; // Shallow copy!
@@ -71,15 +72,19 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
       } else {
         cleanedBottomHeights[index] = 0.0;
       }
+      hasAllSameHeights =
+        hasAllSameHeights &&
+        cleanedTopHeights[index] === cleanedBottomHeights[index];
 
       Cartographic.clone(c1, c0);
       ++index;
     } else if (c0.height < c1.height) {
+      // two adjacent positions are the same, so use whichever has the greater height
       cleanedTopHeights[index - 1] = c1.height;
     }
   }
 
-  if (hasAllZeroHeights || index < 2) {
+  if (hasAllSameHeights || index < 2) {
     return;
   }
 
