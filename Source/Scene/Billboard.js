@@ -1114,7 +1114,12 @@ Billboard._updateClamping = function (collection, owner) {
       owner._clampedPosition
     );
   }
-  owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
+  var ownerId = defined(owner) && defined(owner.id) ? owner.id.id : undefined;
+  owner._removeCallbackFunc = surface.updateHeight(
+    position,
+    updateFunction,
+    ownerId
+  );
 
   Cartographic.clone(position, scratchCartographic);
   var height = globe.getHeight(position);
