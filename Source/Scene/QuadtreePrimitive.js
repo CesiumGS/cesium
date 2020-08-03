@@ -208,11 +208,13 @@ QuadtreePrimitive.prototype.invalidateAllTiles = function () {
 
 function containsOwnerHeightCallbackData(heightCallbacks, ownerId) {
   var found = false;
-  for (var i = 0; i < heightCallbacks.length; ++i) {
-    var cbData = heightCallbacks[i];
-    if (cbData.ownerId === ownerId) {
-      found = true;
-      break;
+  if (defined(ownerId)) {
+    for (var i = 0; i < heightCallbacks.length; ++i) {
+      var cbData = heightCallbacks[i];
+      if (cbData.ownerId === ownerId) {
+        found = true;
+        break;
+      }
     }
   }
   return found;
