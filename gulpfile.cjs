@@ -1889,16 +1889,23 @@ function filePathToModuleId(moduleId) {
 }
 
 // TerriajS-specific tasks.
-gulp.task('terria-copy-cesium-assets', function() {
-    return gulp.src([
-            'Source/Workers/transferTypedArrayTest.js',
-            'Source/ThirdParty/Workers/**',
-            'Source/Assets/**',
-            'Source/Widgets/**/*.css',
-            'Source/Widgets/Images/**'
-        ], { base: 'Source' })
-        .pipe(gulp.dest('wwwroot/build/'));
+gulp.task("terria-copy-cesium-assets", function () {
+  return gulp
+    .src(
+      [
+        "Source/Workers/transferTypedArrayTest.js",
+        "Source/ThirdParty/Workers/**",
+        "Source/Assets/**",
+        "Source/Widgets/**/*.css",
+        "Source/Widgets/Images/**",
+      ],
+      { base: "Source" }
+    )
+    .pipe(gulp.dest("wwwroot/build/"));
 });
 
-gulp.task('terria-prepare-cesium', gulp.series('build', 'terria-copy-cesium-assets'));
-gulp.task('terria-default', gulp.series('terria-prepare-cesium'));
+gulp.task(
+  "terria-prepare-cesium",
+  gulp.series("build", "terria-copy-cesium-assets", "build-ts")
+);
+gulp.task("terria-default", gulp.series("terria-prepare-cesium"));

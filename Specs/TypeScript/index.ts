@@ -96,7 +96,7 @@ import {
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
-} from "cesium";
+} from "terriajs-cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
