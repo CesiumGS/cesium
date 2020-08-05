@@ -12,7 +12,7 @@ Cesium's `exports` object in `package.json` allows users of the "cesium" package
 However in TerriaJS we only import individual files from "terriajs-cesium". These imports would be broken by Cesium's current `exports`
 object when webpack or TypeScript respects this (implemented in webpack v5 beta version https://github.com/webpack/webpack/issues/9509).
 
-Also, and of more immediate concern, it also breaks our build process' method of finding the root directory of "terriajs-cesium" in Node v12.7.0+: 
+Also, and of more immediate concern, it also breaks our build process' method of finding the root directory of "terriajs-cesium" in Node v12.17.0+: 
 ```js
 require.resolve("terriajs-cesium/package.json")
 ```
