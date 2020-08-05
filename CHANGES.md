@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.73 - 2020-09-01
+
+##### Fixes :wrench:
+
+- Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+
 ### 1.72 - 2020-08-03
 
 ##### Breaking Changes :mega:
