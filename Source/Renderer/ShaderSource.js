@@ -241,6 +241,7 @@ function combineShader(shaderSource, isFragmentShader, context) {
     precision highp float;\n\
 #else\n\
     precision mediump float;\n\
+    #define highp mediump;\n\
 #endif\n\n";
   }
 
