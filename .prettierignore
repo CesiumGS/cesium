@@ -12,6 +12,8 @@
 !Specs/**/
 !Tools/**/
 
+!terria-adr/**/
+
 !**/*.js
 !**/*.cjs
 !**/*.css
