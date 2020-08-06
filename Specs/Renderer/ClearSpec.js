@@ -1,134 +1,133 @@
-defineSuite([
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Renderer/ClearCommand',
-        'Renderer/Framebuffer',
-        'Renderer/RenderState',
-        'Renderer/Texture',
-        'Specs/createContext'
-    ], 'Renderer/Clear', function(
-        BoundingRectangle,
-        Color,
-        ClearCommand,
-        Framebuffer,
-        RenderState,
-        Texture,
-        createContext) {
-    'use strict';
+import { BoundingRectangle } from "../../Source/Cesium.js";
+import { Color } from "../../Source/Cesium.js";
+import { ClearCommand } from "../../Source/Cesium.js";
+import { Framebuffer } from "../../Source/Cesium.js";
+import { RenderState } from "../../Source/Cesium.js";
+import { Texture } from "../../Source/Cesium.js";
+import createContext from "../createContext.js";
 
+describe(
+  "Renderer/Clear",
+  function () {
     var context;
 
-    beforeAll(function() {
-        context = createContext();
+    beforeAll(function () {
+      context = createContext();
     });
 
-    afterAll(function() {
-        context.destroyForSpecs();
+    afterAll(function () {
+      context.destroyForSpecs();
     });
 
-    it('default clear', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
+    it("default clear", function () {
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
-    it('clears to white', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
+    it("clears to white", function () {
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
 
-        var command = new ClearCommand({
-            color : Color.WHITE
-        });
-        command.execute(context);
-        expect(context).toReadPixels([255, 255, 255, 255]);
+      var command = new ClearCommand({
+        color: Color.WHITE,
+      });
+      command.execute(context);
+      expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
-    it('clears with a color mask', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
+    it("clears with a color mask", function () {
+      ClearCommand.ALL.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
 
-        var command = new ClearCommand({
-            color : Color.WHITE,
-            renderState : RenderState.fromCache({
-                colorMask : {
-                    red : true,
-                    green : false,
-                    blue : true,
-                    alpha : true
-                }
-            })
-        });
-        command.execute(context);
-        expect(context).toReadPixels([255, 0, 255, 255]);
+      var command = new ClearCommand({
+        color: Color.WHITE,
+        renderState: RenderState.fromCache({
+          colorMask: {
+            red: true,
+            green: false,
+            blue: true,
+            alpha: true,
+          },
+        }),
+      });
+      command.execute(context);
+      expect(context).toReadPixels([255, 0, 255, 255]);
     });
 
-    it('clears with scissor test', function() {
-        var command = new ClearCommand({
-            color : Color.WHITE
-        });
+    it("clears with scissor test", function () {
+      var command = new ClearCommand({
+        color: Color.WHITE,
+      });
 
-        command.execute(context);
-        expect(context).toReadPixels([255, 255, 255, 255]);
+      command.execute(context);
+      expect(context).toReadPixels([255, 255, 255, 255]);
 
-        command.color = Color.BLACK;
-        command.renderState = RenderState.fromCache({
-            scissorTest : {
-                enabled : true,
-                rectangle : new BoundingRectangle()
-            }
-        });
+      command.color = Color.BLACK;
+      command.renderState = RenderState.fromCache({
+        scissorTest: {
+          enabled: true,
+          rectangle: new BoundingRectangle(),
+        },
+      });
 
-        command.execute(context);
-        expect(context).toReadPixels([255, 255, 255, 255]);
+      command.execute(context);
+      expect(context).toReadPixels([255, 255, 255, 255]);
 
-        command.renderState = RenderState.fromCache({
-            scissorTest : {
-                enabled : true,
-                rectangle : new BoundingRectangle(0, 0, 1, 1)
-            }
-        });
+      command.renderState = RenderState.fromCache({
+        scissorTest: {
+          enabled: true,
+          rectangle: new BoundingRectangle(0, 0, 1, 1),
+        },
+      });
 
-        command.execute(context);
-        expect(context).toReadPixels([0, 0, 0, 255]);
+      command.execute(context);
+      expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
-    it('clears a framebuffer color attachment', function() {
-        var colorTexture = new Texture({
-            context : context,
-            width : 1,
-            height : 1
-        });
-        var framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [colorTexture]
-        });
+    it("clears a framebuffer color attachment", function () {
+      var colorTexture = new Texture({
+        context: context,
+        width: 1,
+        height: 1,
+      });
+      var framebuffer = new Framebuffer({
+        context: context,
+        colorTextures: [colorTexture],
+      });
 
-        var command = new ClearCommand({
-            color : new Color(0.0, 1.0, 0.0, 1.0),
-            framebuffer : framebuffer
-        });
-        command.execute(context);
+      var command = new ClearCommand({
+        color: new Color(0.0, 1.0, 0.0, 1.0),
+        framebuffer: framebuffer,
+      });
+      command.execute(context);
 
-        expect({
-            context : context,
-            framebuffer : framebuffer
-        }).toReadPixels([0, 255, 0, 255]);
+      expect({
+        context: context,
+        framebuffer: framebuffer,
+      }).toReadPixels([0, 255, 0, 255]);
 
-        framebuffer = framebuffer.destroy();
+      framebuffer = framebuffer.destroy();
     });
 
-    it('fails to read pixels (width)', function() {
-        expect(function() {
-            expect(context.readPixels({
-                width : -1
-            })).toEqual([0, 0, 0, 0]);
-        }).toThrowDeveloperError();
+    it("fails to read pixels (width)", function () {
+      expect(function () {
+        expect(
+          context.readPixels({
+            width: -1,
+          })
+        ).toEqual([0, 0, 0, 0]);
+      }).toThrowDeveloperError();
     });
 
-    it('fails to read pixels (height)', function() {
-        expect(function() {
-            expect(context.readPixels({
-                height : -1
-            })).toEqual([0, 0, 0, 0]);
-        }).toThrowDeveloperError();
+    it("fails to read pixels (height)", function () {
+      expect(function () {
+        expect(
+          context.readPixels({
+            height: -1,
+          })
+        ).toEqual([0, 0, 0, 0]);
+      }).toThrowDeveloperError();
     });
-}, 'WebGL');
+  },
+  "WebGL"
+);

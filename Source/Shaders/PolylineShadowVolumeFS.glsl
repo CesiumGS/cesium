@@ -65,7 +65,7 @@ void main(void)
     distanceFromEnd = czm_planeDistance(alignedPlaneNormal, -dot(alignedPlaneNormal, v_endEcAndStartEcX.xyz), eyeCoordinate.xyz);
 
 #ifdef PER_INSTANCE_COLOR
-    gl_FragColor = v_color;
+    gl_FragColor = czm_gammaCorrect(v_color);
 #else // PER_INSTANCE_COLOR
     // Clamp - distance to aligned planes may be negative due to mitering,
     // so fragment texture coordinate might be out-of-bounds.
@@ -83,5 +83,8 @@ void main(void)
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 #endif // PER_INSTANCE_COLOR
 
-    czm_writeDepthClampedToFarPlane();
+    // Premultiply alpha. Required for classification primitives on translucent globe.
+    gl_FragColor.rgb *= gl_FragColor.a;
+
+    czm_writeDepthClamp();
 }

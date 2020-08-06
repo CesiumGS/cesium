@@ -1,203 +1,178 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
-    ], function(
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    'use strict';
+import Color from "../Core/Color.js";
+import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
+import PixelFormat from "../Core/PixelFormat.js";
+import ClearCommand from "../Renderer/ClearCommand.js";
+import Framebuffer from "../Renderer/Framebuffer.js";
+import PixelDatatype from "../Renderer/PixelDatatype.js";
+import Renderbuffer from "../Renderer/Renderbuffer.js";
+import RenderbufferFormat from "../Renderer/RenderbufferFormat.js";
+import Sampler from "../Renderer/Sampler.js";
+import Texture from "../Renderer/Texture.js";
 
-    /**
-     * @private
-     */
-    function SceneFramebuffer() {
-        this._colorTexture = undefined;
-        this._idTexture = undefined;
-        this._depthStencilTexture = undefined;
-        this._depthStencilRenderbuffer = undefined;
-        this._framebuffer = undefined;
-        this._idFramebuffer = undefined;
+/**
+ * @private
+ */
+function SceneFramebuffer() {
+  this._colorTexture = undefined;
+  this._idTexture = undefined;
+  this._depthStencilTexture = undefined;
+  this._depthStencilRenderbuffer = undefined;
+  this._framebuffer = undefined;
+  this._idFramebuffer = undefined;
 
-        this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
-        this._clearCommand = new ClearCommand({
-            color : new Color(0.0, 0.0, 0.0, 0.0),
-            depth : 1.0,
-            owner : this
-        });
-    }
+  this._idClearColor = new Color(0.0, 0.0, 0.0, 0.0);
 
-    function destroyResources(post) {
-        post._framebuffer = post._framebuffer && post._framebuffer.destroy();
-        post._idFramebuffer = post._idFramebuffer && post._idFramebuffer.destroy();
-        post._colorTexture = post._colorTexture && post._colorTexture.destroy();
-        post._idTexture = post._idTexture && post._idTexture.destroy();
-        post._depthStencilTexture = post._depthStencilTexture && post._depthStencilTexture.destroy();
-        post._depthStencilRenderbuffer = post._depthStencilRenderbuffer && post._depthStencilRenderbuffer.destroy();
-        post._depthStencilIdTexture = post._depthStencilIdTexture && post._depthStencilIdTexture.destroy();
-        post._depthStencilIdRenderbuffer = post._depthStencilIdRenderbuffer && post._depthStencilIdRenderbuffer.destroy();
+  this._useHdr = undefined;
 
-        post._framebuffer = undefined;
-        post._idFramebuffer = undefined;
-        post._colorTexture = undefined;
-        post._idTexture = undefined;
-        post._depthStencilTexture = undefined;
-        post._depthStencilRenderbuffer = undefined;
-        post._depthStencilIdTexture = undefined;
-        post._depthStencilIdRenderbuffer = undefined;
-    }
+  this._clearCommand = new ClearCommand({
+    color: new Color(0.0, 0.0, 0.0, 0.0),
+    depth: 1.0,
+    owner: this,
+  });
+}
 
-    SceneFramebuffer.prototype.update = function(context) {
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-        var colorTexture = this._colorTexture;
-        if (defined(colorTexture) && colorTexture.width === width && colorTexture.height === height) {
-            return;
-        }
+function destroyResources(post) {
+  post._framebuffer = post._framebuffer && post._framebuffer.destroy();
+  post._idFramebuffer = post._idFramebuffer && post._idFramebuffer.destroy();
+  post._colorTexture = post._colorTexture && post._colorTexture.destroy();
+  post._idTexture = post._idTexture && post._idTexture.destroy();
+  post._depthStencilTexture =
+    post._depthStencilTexture && post._depthStencilTexture.destroy();
+  post._depthStencilRenderbuffer =
+    post._depthStencilRenderbuffer && post._depthStencilRenderbuffer.destroy();
+  post._depthStencilIdTexture =
+    post._depthStencilIdTexture && post._depthStencilIdTexture.destroy();
+  post._depthStencilIdRenderbuffer =
+    post._depthStencilIdRenderbuffer &&
+    post._depthStencilIdRenderbuffer.destroy();
 
-        destroyResources(this);
+  post._framebuffer = undefined;
+  post._idFramebuffer = undefined;
+  post._colorTexture = undefined;
+  post._idTexture = undefined;
+  post._depthStencilTexture = undefined;
+  post._depthStencilRenderbuffer = undefined;
+  post._depthStencilIdTexture = undefined;
+  post._depthStencilIdRenderbuffer = undefined;
+}
 
-        this._colorTexture = new Texture({
-            context : context,
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
-        });
+SceneFramebuffer.prototype.update = function (context, viewport, hdr) {
+  var width = viewport.width;
+  var height = viewport.height;
+  var colorTexture = this._colorTexture;
+  if (
+    defined(colorTexture) &&
+    colorTexture.width === width &&
+    colorTexture.height === height &&
+    hdr === this._useHdr
+  ) {
+    return;
+  }
 
-        this._idTexture = new Texture({
-            context : context,
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
-        });
+  destroyResources(this);
+  this._useHdr = hdr;
 
-        if (context.depthTexture) {
-            this._depthStencilTexture = new Texture({
-                context : context,
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
-            });
-            this._depthStencilIdTexture = new Texture({
-                context : context,
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
-            });
-        } else {
-            this._depthStencilRenderbuffer = new Renderbuffer({
-                context : context,
-                width : width,
-                height : height,
-                format : RenderbufferFormat.DEPTH_STENCIL
-            });
-            this._depthStencilIdRenderbuffer = new Renderbuffer({
-                context : context,
-                width : width,
-                height : height,
-                format : RenderbufferFormat.DEPTH_STENCIL
-            });
-        }
+  var pixelDatatype = hdr
+    ? context.halfFloatingPointTexture
+      ? PixelDatatype.HALF_FLOAT
+      : PixelDatatype.FLOAT
+    : PixelDatatype.UNSIGNED_BYTE;
+  this._colorTexture = new Texture({
+    context: context,
+    width: width,
+    height: height,
+    pixelFormat: PixelFormat.RGBA,
+    pixelDatatype: pixelDatatype,
+    sampler: Sampler.NEAREST,
+  });
 
-        this._framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [this._colorTexture],
-            depthStencilTexture : this._depthStencilTexture,
-            depthStencilRenderbuffer : this._depthStencilRenderbuffer,
-            destroyAttachments : false
-        });
+  this._idTexture = new Texture({
+    context: context,
+    width: width,
+    height: height,
+    pixelFormat: PixelFormat.RGBA,
+    pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
+    sampler: Sampler.NEAREST,
+  });
 
-        this._idFramebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [this._idTexture],
-            depthStencilTexture : this._depthStencilIdTexture,
-            depthStencilRenderbuffer : this._depthStencilIdRenderbuffer,
-            destroyAttachments : false
-        });
-    };
+  if (context.depthTexture) {
+    this._depthStencilTexture = new Texture({
+      context: context,
+      width: width,
+      height: height,
+      pixelFormat: PixelFormat.DEPTH_STENCIL,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+      sampler: Sampler.NEAREST,
+    });
+    this._depthStencilIdTexture = new Texture({
+      context: context,
+      width: width,
+      height: height,
+      pixelFormat: PixelFormat.DEPTH_STENCIL,
+      pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+      sampler: Sampler.NEAREST,
+    });
+  } else {
+    this._depthStencilRenderbuffer = new Renderbuffer({
+      context: context,
+      width: width,
+      height: height,
+      format: RenderbufferFormat.DEPTH_STENCIL,
+    });
+    this._depthStencilIdRenderbuffer = new Renderbuffer({
+      context: context,
+      width: width,
+      height: height,
+      format: RenderbufferFormat.DEPTH_STENCIL,
+    });
+  }
 
-    SceneFramebuffer.prototype.clear = function(context, passState, clearColor) {
-        var framebuffer = passState.framebuffer;
+  this._framebuffer = new Framebuffer({
+    context: context,
+    colorTextures: [this._colorTexture],
+    depthStencilTexture: this._depthStencilTexture,
+    depthStencilRenderbuffer: this._depthStencilRenderbuffer,
+    destroyAttachments: false,
+  });
 
-        passState.framebuffer = this._framebuffer;
-        Color.clone(clearColor, this._clearCommand.color);
-        this._clearCommand.execute(context, passState);
+  this._idFramebuffer = new Framebuffer({
+    context: context,
+    colorTextures: [this._idTexture],
+    depthStencilTexture: this._depthStencilIdTexture,
+    depthStencilRenderbuffer: this._depthStencilIdRenderbuffer,
+    destroyAttachments: false,
+  });
+};
 
-        passState.framebuffer = this._idFramebuffer;
-        Color.clone(this._idClearColor, this._clearCommand.color);
-        this._clearCommand.execute(context, passState);
+SceneFramebuffer.prototype.clear = function (context, passState, clearColor) {
+  var framebuffer = passState.framebuffer;
 
-        passState.framebuffer = framebuffer;
-    };
+  passState.framebuffer = this._framebuffer;
+  Color.clone(clearColor, this._clearCommand.color);
+  this._clearCommand.execute(context, passState);
 
-    SceneFramebuffer.prototype.getFramebuffer = function() {
-        return this._framebuffer;
-    };
+  passState.framebuffer = this._idFramebuffer;
+  Color.clone(this._idClearColor, this._clearCommand.color);
+  this._clearCommand.execute(context, passState);
 
-    SceneFramebuffer.prototype.getIdFramebuffer = function() {
-        return this._idFramebuffer;
-    };
+  passState.framebuffer = framebuffer;
+};
 
-    SceneFramebuffer.prototype.isDestroyed = function() {
-        return false;
-    };
+SceneFramebuffer.prototype.getFramebuffer = function () {
+  return this._framebuffer;
+};
 
-    SceneFramebuffer.prototype.destroy = function() {
-        destroyResources(this);
-        return destroyObject(this);
-    };
+SceneFramebuffer.prototype.getIdFramebuffer = function () {
+  return this._idFramebuffer;
+};
 
-    return SceneFramebuffer;
-});
+SceneFramebuffer.prototype.isDestroyed = function () {
+  return false;
+};
+
+SceneFramebuffer.prototype.destroy = function () {
+  destroyResources(this);
+  return destroyObject(this);
+};
+export default SceneFramebuffer;

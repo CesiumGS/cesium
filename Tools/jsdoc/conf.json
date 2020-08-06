@@ -3,18 +3,25 @@
         "allowUnknownTags": false
     },
     "source": {
-        "include": ["Source"],
-        "exclude": ["Source/ThirdParty", "Source/Workers/cesiumWorkerBootstrapper.js"],
+        "include": [
+            "Source"
+        ],
+        "exclude": [
+            "Source/ThirdParty",
+            "Source/Workers"
+        ],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },
-    "plugins": ["./Tools/jsdoc/cesiumTags"],
+    "plugins": [
+        "./Tools/jsdoc/cesiumTags"
+    ],
     "templates": {
         "cleverLinks": true,
         "default": {
             "outputSourceFiles": false
         },
-        "sourceUrl": "https://github.com/AnalyticalGraphicsInc/cesium/blob/{version}/Source/{filename}"
+        "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
     },
     "opts": {
         "destination": "Build/Documentation",

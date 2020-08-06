@@ -9,9 +9,9 @@ uniform vec4 u_highlightColor;
 void main(void)
 {
 #ifdef VECTOR_TILE
-    gl_FragColor = u_highlightColor;
+    gl_FragColor = czm_gammaCorrect(u_highlightColor);
 #else
     gl_FragColor = vec4(1.0);
 #endif
-    czm_writeDepthClampedToFarPlane();
+    czm_writeDepthClamp();
 }

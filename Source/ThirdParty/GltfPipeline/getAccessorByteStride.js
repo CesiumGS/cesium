@@ -1,12 +1,6 @@
-define([
-        './byteLengthForComponentType',
-        './numberOfComponentsForType',
-        '../../Core/defined'
-    ], function(
-        byteLengthForComponentType,
-        numberOfComponentsForType,
-        defined) {
-    'use strict';
+import numberOfComponentsForType from './numberOfComponentsForType.js'
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Returns the byte stride of the provided accessor.
@@ -15,13 +9,18 @@ define([
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {Object} accessor The accessor.
      * @returns {Number} The byte stride of the accessor.
+     *
+     * @private
      */
     function getAccessorByteStride(gltf, accessor) {
-        var bufferView = gltf.bufferViews[accessor.bufferView];
-        if (defined(bufferView.byteStride) && bufferView.byteStride > 0) {
-            return bufferView.byteStride;
+        var bufferViewId = accessor.bufferView;
+        if (defined(bufferViewId)) {
+            var bufferView = gltf.bufferViews[bufferViewId];
+            if (defined(bufferView.byteStride) && bufferView.byteStride > 0) {
+                return bufferView.byteStride;
+            }
         }
-        return byteLengthForComponentType(accessor.componentType) * numberOfComponentsForType(accessor.type);
+        return ComponentDatatype.getSizeInBytes(accessor.componentType) * numberOfComponentsForType(accessor.type);
     }
-    return getAccessorByteStride;
-});
+
+    export default getAccessorByteStride;

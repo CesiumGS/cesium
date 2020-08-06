@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstration of imagery layers with rectangular cutouts."
+    />
+    <meta name="cesium-sandcastle-labels" content="Tutorials" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table class="infoPanel">
+        <tbody>
+          <tr>
+            <td>Click on the Cesium display to start.</td>
+          </tr>
+          <tr>
+            <td>w/s - move cutout north/south</td>
+          </tr>
+          <tr>
+            <td>a/d - move cutout west/east</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          imageryProvider: new Cesium.TileMapServiceImageryProvider({
+            url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+          }),
+          baseLayerPicker: false,
+        });
+
+        var canvas = viewer.canvas;
+        canvas.setAttribute("tabindex", "0"); // needed to put focus on the canvas
+        canvas.onclick = function () {
+          canvas.focus();
+        };
+
+        var scene = viewer.scene;
+
+        var defaultImageryLayerCutout = Cesium.Rectangle.fromDegrees(
+          -90,
+          20,
+          -70,
+          40
+        );
+
+        // Cut a rectangle out of the base layer
+        var layers = viewer.imageryLayers;
+        var imageryBaseLayer = layers.get(0);
+
+        imageryBaseLayer.cutoutRectangle = defaultImageryLayerCutout;
+
+        // Fit a SingleTileImageryProvider inside the cutout on the lowest layer
+        layers.addImageryProvider(
+          new Cesium.SingleTileImageryProvider({
+            url: "../images/Cesium_Logo_overlay.png",
+            rectangle: defaultImageryLayerCutout,
+          })
+        );
+
+        // Add an Earth at Night layer and a "traveling" cutout
+        var earthAtNight = layers.addImageryProvider(
+          new Cesium.IonImageryProvider({ assetId: 3812 })
+        );
+        earthAtNight.cutoutRectangle = Cesium.Rectangle.fromDegrees(
+          -100,
+          10,
+          -60,
+          50
+        );
+        earthAtNight.alpha = 0.9;
+
+        // "traveling" code
+        var flags = {
+          moveEast: false,
+          moveWest: false,
+          moveNorth: false,
+          moveSouth: false,
+        };
+
+        function getFlagForKeyCode(keyCode) {
+          switch (keyCode) {
+            case "W".charCodeAt(0):
+              return "moveNorth";
+            case "S".charCodeAt(0):
+              return "moveSouth";
+            case "D".charCodeAt(0):
+              return "moveEast";
+            case "A".charCodeAt(0):
+              return "moveWest";
+            default:
+              return undefined;
+          }
+        }
+
+        document.addEventListener(
+          "keydown",
+          function (e) {
+            var flagName = getFlagForKeyCode(e.keyCode);
+            if (typeof flagName !== "undefined") {
+              flags[flagName] = true;
+            }
+          },
+          false
+        );
+
+        document.addEventListener(
+          "keyup",
+          function (e) {
+            var flagName = getFlagForKeyCode(e.keyCode);
+            if (typeof flagName !== "undefined") {
+              flags[flagName] = false;
+            }
+          },
+          false
+        );
+
+        var moveIncrement = 0.05;
+        viewer.clock.onTick.addEventListener(function (clock) {
+          var travelingRectangle = earthAtNight.cutoutRectangle;
+          if (
+            flags.moveNorth &&
+            travelingRectangle.north + moveIncrement < Cesium.Math.PI_OVER_TWO
+          ) {
+            travelingRectangle.north += moveIncrement;
+            travelingRectangle.south += moveIncrement;
+          }
+          if (
+            flags.moveSouth &&
+            travelingRectangle.south - moveIncrement > -Cesium.Math.PI_OVER_TWO
+          ) {
+            travelingRectangle.north -= moveIncrement;
+            travelingRectangle.south -= moveIncrement;
+          }
+          if (flags.moveEast) {
+            travelingRectangle.east += moveIncrement;
+            travelingRectangle.west += moveIncrement;
+          }
+          if (flags.moveWest) {
+            travelingRectangle.east -= moveIncrement;
+            travelingRectangle.west -= moveIncrement;
+          }
+          travelingRectangle.east = wrapLongitude(travelingRectangle.east);
+          travelingRectangle.west = wrapLongitude(travelingRectangle.west);
+        });
+
+        function wrapLongitude(value) {
+          if (value < -Cesium.Math.PI) {
+            return value + Cesium.Math.TWO_PI;
+          }
+          if (value > Cesium.Math.PI) {
+            return value - Cesium.Math.TWO_PI;
+          }
+          return value;
+        }
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

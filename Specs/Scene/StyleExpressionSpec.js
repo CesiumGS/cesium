@@ -1,28 +1,22 @@
-defineSuite([
-        'Scene/StyleExpression'
-    ], function(
-        StyleExpression) {
-    'use strict';
+import { StyleExpression } from "../../Source/Cesium.js";
 
-    var frameState = {};
+describe("Scene/StyleExpression", function () {
+  function MockFeature() {}
 
-    function MockFeature() {
-    }
+  MockFeature.prototype.getProperty = function (name) {
+    return undefined;
+  };
 
-    MockFeature.prototype.getProperty = function(name) {
-        return undefined;
-    };
+  it("throws", function () {
+    var expression = new StyleExpression();
+    var feature = new MockFeature();
 
-    it('throws', function() {
-        var expression = new StyleExpression();
-        var feature = new MockFeature();
+    expect(function () {
+      return expression.evaluate(feature);
+    }).toThrowDeveloperError();
 
-        expect(function() {
-            return expression.evaluate(frameState, feature);
-        }).toThrowDeveloperError();
-
-        expect(function() {
-            return expression.evaluateColor(frameState, feature);
-        }).toThrowDeveloperError();
-    });
+    expect(function () {
+      return expression.evaluateColor(feature);
+    }).toThrowDeveloperError();
+  });
 });

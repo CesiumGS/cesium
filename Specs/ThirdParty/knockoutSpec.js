@@ -1,24 +1,21 @@
-defineSuite([
-        'ThirdParty/knockout'
-    ], function(
-        knockout) {
-    'use strict';
+import { knockout } from "../../Source/Cesium.js";
 
-    it('can track all properties', function() {
-        var obj = {
-            one : 1,
-            two : undefined,
-            three : knockout.observable()
-        };
+describe("ThirdParty/knockout", function () {
+  it("can track all properties", function () {
+    var obj = {
+      one: 1,
+      two: undefined,
+      three: knockout.observable(),
+    };
 
-        expect(knockout.getObservable(obj, 'one')).toBeNull();
-        expect(knockout.getObservable(obj, 'two')).toBeNull();
-        expect(knockout.getObservable(obj, 'three')).toBeNull();
+    expect(knockout.getObservable(obj, "one")).toBeNull();
+    expect(knockout.getObservable(obj, "two")).toBeNull();
+    expect(knockout.getObservable(obj, "three")).toBeNull();
 
-        knockout.track(obj);
+    knockout.track(obj);
 
-        expect(knockout.getObservable(obj, 'one')).not.toBeNull();
-        expect(knockout.getObservable(obj, 'two')).not.toBeNull();
-        expect(knockout.getObservable(obj, 'three')).not.toBeNull();
-    });
+    expect(knockout.getObservable(obj, "one")).not.toBeNull();
+    expect(knockout.getObservable(obj, "two")).not.toBeNull();
+    expect(knockout.getObservable(obj, "three")).not.toBeNull();
+  });
 });

@@ -1,124 +1,181 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Depth of field.">
-    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Depth of field." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table><tbody>
-    <tr>
-        <td>Depth Of Field</td>
-        <td><input type="checkbox" data-bind="checked: show"></td>
-    </tr>
-    <tr>
-        <td>Focal Distance</td>
-        <td><input type="range" min="0.0" max="500.0" step="1" data-bind="value: focalDistance, valueUpdate: 'input'"/></td>
-    </tr>
-    <tr>
-        <td>Delta</td>
-        <td><input type="range" min="0.1" max="2" step="0.01" data-bind="value: delta, valueUpdate: 'input'"/></td>
-    </tr>
-    <tr>
-        <td>Sigma</td>
-        <td><input type="range" min="0.5" max="5" step="0.01" data-bind="value: sigma, valueUpdate: 'input'"/></td>
-    </tr>
-    <tr>
-        <td>Step Size</td>
-        <td><input type="range" min="0" max="7" step="0.01" data-bind="value: stepSize, valueUpdate: 'input'"/></td>
-    </tr>
-</tbody></table>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Depth Of Field</td>
+            <td><input type="checkbox" data-bind="checked: show" /></td>
+          </tr>
+          <tr>
+            <td>Focal Distance</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="500.0"
+                step="1"
+                data-bind="value: focalDistance, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Delta</td>
+            <td>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.01"
+                data-bind="value: delta, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Sigma</td>
+            <td>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.01"
+                data-bind="value: sigma, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Step Size</td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="7"
+                step="0.01"
+                data-bind="value: stepSize, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
 
-function createModel(url, x, y, height) {
-    var position = Cesium.Cartesian3.fromDegrees(x, y, height);
-    viewer.entities.add({
-        name : url,
-        position : position,
-        model : {
-            uri : url
+        function createModel(url, x, y, height) {
+          var position = Cesium.Cartesian3.fromDegrees(x, y, height);
+          viewer.entities.add({
+            name: url,
+            position: position,
+            model: {
+              uri: url,
+            },
+          });
         }
-    });
-}
 
-var numberOfBalloons = 13;
-var lonIncrement = 0.00025;
-var initialLon = -122.99875;
-var lat = 44.0503706;
-var height = 100.0;
+        var numberOfBalloons = 13;
+        var lonIncrement = 0.00025;
+        var initialLon = -122.99875;
+        var lat = 44.0503706;
+        var height = 100.0;
 
-var url = '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb';
+        var url = "../../SampleData/models/CesiumBalloon/CesiumBalloon.glb";
 
-for (var i = 0; i < numberOfBalloons; ++i) {
-    var lon = initialLon + i * lonIncrement;
-    createModel(url, lon, lat, height);
-}
+        for (var i = 0; i < numberOfBalloons; ++i) {
+          var lon = initialLon + i * lonIncrement;
+          createModel(url, lon, lat, height);
+        }
 
-var viewModel = {
-    show : true,
-    focalDistance : 87,
-    delta : 1,
-    sigma : 3.78,
-    stepSize : 2.46
-};
+        var viewModel = {
+          show: true,
+          focalDistance: 87,
+          delta: 1,
+          sigma: 3.78,
+          stepSize: 2.46,
+        };
 
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name)) {
-        Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
-    }
-}
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (var name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout
+              .getObservable(viewModel, name)
+              .subscribe(updatePostProcess);
+          }
+        }
 
-if (!Cesium.PostProcessStageLibrary.isDepthOfFieldSupported(viewer.scene)) {
-    console.log('This browser does not support the depth of field post process.');
-}
+        if (
+          !Cesium.PostProcessStageLibrary.isDepthOfFieldSupported(viewer.scene)
+        ) {
+          window.alert(
+            "This browser does not support the depth of field post process."
+          );
+        }
 
-var depthOfField = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createDepthOfFieldStage());
+        var depthOfField = viewer.scene.postProcessStages.add(
+          Cesium.PostProcessStageLibrary.createDepthOfFieldStage()
+        );
 
-function updatePostProcess() {
-    depthOfField.enabled = Boolean(viewModel.show);
-    depthOfField.uniforms.focalDistance = Number(viewModel.focalDistance);
-    depthOfField.uniforms.delta = Number(viewModel.delta);
-    depthOfField.uniforms.sigma = Number(viewModel.sigma);
-    depthOfField.uniforms.stepSize = Number(viewModel.stepSize);
-}
-updatePostProcess();
+        function updatePostProcess() {
+          depthOfField.enabled = Boolean(viewModel.show);
+          depthOfField.uniforms.focalDistance = Number(viewModel.focalDistance);
+          depthOfField.uniforms.delta = Number(viewModel.delta);
+          depthOfField.uniforms.sigma = Number(viewModel.sigma);
+          depthOfField.uniforms.stepSize = Number(viewModel.stepSize);
+        }
+        updatePostProcess();
 
-var target = Cesium.Cartesian3.fromDegrees(initialLon + lonIncrement, lat, height + 7.5);
-var offset = new Cesium.Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);
-viewer.scene.camera.lookAt(target, offset);
-//Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+        var target = Cesium.Cartesian3.fromDegrees(
+          initialLon + lonIncrement,
+          lat,
+          height + 7.5
+        );
+        var offset = new Cesium.Cartesian3(
+          -37.048378684557974,
+          -24.852967044804245,
+          4.352023653686047
+        );
+        viewer.scene.camera.lookAt(target, offset);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>

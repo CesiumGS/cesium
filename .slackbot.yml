@@ -1,0 +1,12 @@
+# List of Slack usernames (not GitHub) for the Cesium Concierge Slackbot to send release reminders for.
+releaseSchedule:
+  mamato: 3/2/2020
+  oshehata: 4/1/2020
+  lilleyse: 5/1/2020
+  ian: 6/1/2020
+  sam.suhag: 7/1/2020
+  sam.vargas: 8/3/2020
+  kevin: 9/1/2020
+  mamato: 10/1/2020
+  oshehata: 11/2/2020
+  lilleyse: 12/1/2020

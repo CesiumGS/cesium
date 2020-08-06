@@ -1,78 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="CZML Wall">
-    <meta name="cesium-sandcastle-labels" content="CZML">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="CZML Wall" />
+    <meta name="cesium-sandcastle-labels" content="CZML" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var czml = [
+          {
+            id: "document",
+            name: "CZML Wall",
+            version: "1.0",
+          },
+          {
+            id: "wall",
+            wall: {
+              positions: {
+                cartographicDegrees: [
+                  -115.0,
+                  50.0,
+                  1500000,
+                  -112.5,
+                  50.0,
+                  500000,
+                  -110.0,
+                  50.0,
+                  1500000,
+                  -107.5,
+                  50.0,
+                  500000,
+                  -105.0,
+                  50.0,
+                  1500000,
+                  -102.5,
+                  50.0,
+                  500000,
+                  -100.0,
+                  50.0,
+                  1500000,
+                  -97.5,
+                  50.0,
+                  500000,
+                  -95.0,
+                  50.0,
+                  1500000,
+                  -92.5,
+                  50.0,
+                  500000,
+                  -90.0,
+                  50.0,
+                  1500000,
+                ],
+              },
+              material: {
+                solidColor: {
+                  color: {
+                    rgba: [255, 0, 0, 150],
+                  },
+                },
+              },
+            },
+          },
+        ];
+
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+        viewer.dataSources.add(dataSourcePromise);
+        viewer.zoomTo(dataSourcePromise);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-@import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var czml = [{
-    "id" : "document",
-    "name" : "CZML Wall",
-    "version" : "1.0"
-}, {
-    "id" : "wall",
-    "wall" : {
-        "positions" : {
-            "cartographicDegrees" : [
-                -115.0, 50.0, 1500000,
-                -112.5, 50.0, 500000,
-                -110.0, 50.0,1500000,
-                -107.5, 50.0,500000,
-                -105.0, 50.0,1500000,
-                -102.5, 50.0,500000,
-                -100.0, 50.0,1500000,
-                -97.5, 50.0,500000,
-                -95.0, 50.0,1500000,
-                -92.5, 50.0,500000,
-                -90.0, 50.0, 1500000
-            ]
-        },
-        "material" : {
-            "solidColor" : {
-                "color" : {
-                    "rgba" : [255, 0, 0, 150]
-                }
-            }
-        }
-    }
-}];
-
-var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSourcePromise);
-viewer.zoomTo(dataSourcePromise);
-
-    //Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>

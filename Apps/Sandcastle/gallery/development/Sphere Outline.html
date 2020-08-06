@@ -1,77 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw the outline of a sphere.">
-    <meta name="cesium-sandcastle-labels" content="Development">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Draw the outline of a sphere." />
+    <meta name="cesium-sandcastle-labels" content="Development" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create the viewer.
+        var viewer = new Cesium.Viewer("cesiumContainer");
+        var scene = viewer.scene;
+
+        // Draw a the outline of a sphere and position
+        // it on the globe surface.
+
+        var radius = 300000;
+        var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-98.0, 45.0);
+        var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+          Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+          new Cesium.Cartesian3(0.0, 0.0, radius),
+          new Cesium.Matrix4()
+        );
+        // Create the sphere outline geometry instance. Use the
+        // stackPartitions and slicePartitions options to determine
+        // the number of latitude and longitude lines to draw.
+        var sphereOutlineInstance = new Cesium.GeometryInstance({
+          geometry: new Cesium.SphereOutlineGeometry({
+            radius: radius,
+            stackPartitions: 8,
+            slicePartitions: 12,
+          }),
+          modelMatrix: modelMatrix,
+          attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(
+              Cesium.Color.WHITE
+            ),
+          },
+        });
+        // Add the instance to primitives.
+        scene.primitives.add(
+          new Cesium.Primitive({
+            geometryInstances: sphereOutlineInstance,
+            appearance: new Cesium.PerInstanceColorAppearance({
+              flat: true,
+              renderState: {
+                lineWidth: Math.min(2.0, scene.maximumAliasedLineWidth),
+              },
+            }),
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-// Create the viewer.
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-
-// Draw a the outline of a sphere and position
-// it on the globe surface.
-
-var radius = 300000;
-var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-98.0, 45.0);
-var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-    Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-    new Cesium.Cartesian3(0.0, 0.0, radius), new Cesium.Matrix4()
-);
-// Create the sphere outline geometry instance. Use the
-// stackPartitions and slicePartitions options to determine
-// the number of latitude and longitude lines to draw.
-var sphereOutlineInstance = new Cesium.GeometryInstance({
-    geometry : new Cesium.SphereOutlineGeometry({
-        radius : radius,
-        stackPartitions : 8,
-        slicePartitions : 12
-    }),
-    modelMatrix : modelMatrix,
-    attributes : {
-        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-    }
-});
-// Add the instance to primitives.
-scene.primitives.add(new Cesium.Primitive({
-    geometryInstances : sphereOutlineInstance,
-    appearance : new Cesium.PerInstanceColorAppearance({
-        flat : true,
-        renderState : {
-            lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
-        }
-    })
-}));
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+  </body>
 </html>
