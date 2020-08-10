@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - "10"
+  - "12"
 addons:
   chrome: stable
   firefox: latest
@@ -12,6 +12,7 @@ script:
   - npm --silent run prettier-check
 
   - npm --silent run build
+  - npm --silent run build-ts
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
   - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1

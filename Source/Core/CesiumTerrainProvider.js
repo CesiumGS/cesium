@@ -485,7 +485,7 @@ function CesiumTerrainProvider(options) {
  * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
  * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
  *
- * @exports QuantizedMeshExtensionIds
+ * @namespace QuantizedMeshExtensionIds
  * @see CesiumTerrainProvider
  * @private
  */
@@ -1201,7 +1201,7 @@ CesiumTerrainProvider.prototype.getTileDataAvailable = function (x, y, level) {
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 CesiumTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

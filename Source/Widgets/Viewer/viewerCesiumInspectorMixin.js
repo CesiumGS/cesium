@@ -6,7 +6,7 @@ import CesiumInspector from "../CesiumInspector/CesiumInspector.js";
  * A mixin which adds the CesiumInspector widget to the Viewer widget.
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
- * @exports viewerCesiumInspectorMixin
+ * @function
  *
  * @param {Viewer} viewer The viewer instance.
  *

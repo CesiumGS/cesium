@@ -29,7 +29,7 @@ if (typeof cancelAnimationFrame !== "undefined") {
 /**
  * A browser-independent function to cancel an animation frame requested using {@link requestAnimationFrame}.
  *
- * @exports cancelAnimationFrame
+ * @function cancelAnimationFrame
  *
  * @param {Number} requestID The value returned by {@link requestAnimationFrame}.
  *

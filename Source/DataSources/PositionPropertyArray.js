@@ -7,7 +7,7 @@ import ReferenceFrame from "../Core/ReferenceFrame.js";
 import Property from "./Property.js";
 
 /**
- * A {@link PositionProperty} whose value is an array whose items are the computed value
+ * A {@link Property} whose value is an array whose items are the computed value
  * of other PositionProperty instances.
  *
  * @alias PositionPropertyArray

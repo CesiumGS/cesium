@@ -15,7 +15,7 @@ import createCommand from "../createCommand.js";
  * @param {String} options.tooltip The tooltip to show when the item is moused over.
  * @param {String} options.iconUrl An icon representing the layer.
  * @param {String} [options.category] A category for the layer.
- * @param {ProviderViewModel~CreationFunction|Command} options.creationFunction A function or Command
+ * @param {ProviderViewModel.CreationFunction|Command} options.creationFunction A function or Command
  *        that creates one or more providers which will be added to the globe when this item is selected.
  *
  * @see BaseLayerPicker
@@ -98,7 +98,7 @@ Object.defineProperties(ProviderViewModel.prototype, {
 
 /**
  * A function which creates one or more providers.
- * @callback ProviderViewModel~CreationFunction
+ * @callback ProviderViewModel.CreationFunction
  * @returns {ImageryProvider|TerrainProvider|ImageryProvider[]|TerrainProvider[]}
  *          The ImageryProvider or TerrainProvider, or array of providers, to be added
  *          to the globe.

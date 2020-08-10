@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines which triangles, if any, are culled.
  *
- * @exports CullFace
+ * @enum {Number}
  */
 var CullFace = {
   /**

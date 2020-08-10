@@ -558,6 +558,22 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
 }
 
 /**
+ * @typedef {Object} GeoJsonDataSource.LoadOptions
+ *
+ * Initialization options for the `load` method.
+ *
+ * @property {String} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {Number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
+ * @property {String} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
+ * @property {Color} [markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
+ * @property {Color} [stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
+ * @property {Number} [strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
+ * @property {Color} [fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+ * @property {Boolean} [clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * A {@link DataSource} which processes both
  * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
  * {@link https://github.com/mapbox/simplestyle-spec|simplestyle-spec} properties will also be used if they
@@ -599,16 +615,7 @@ function GeoJsonDataSource(name) {
  * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
  *
  * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
- * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
- * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
- * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
- * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
- * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
- * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
  */
@@ -888,7 +895,7 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
  * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
  * @param {Object} [options] An object with the following properties:
  * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
+ * @param {GeoJsonDataSource.describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
  *                                                                                which converts the properties into an html description.
  * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
  * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
@@ -964,6 +971,19 @@ GeoJsonDataSource.prototype.load = function (data, options) {
   });
 };
 
+/**
+ * Updates the data source to the provided time.  This function is optional and
+ * is not required to be implemented.  It is provided for data sources which
+ * retrieve data based on the current animation time or scene state.
+ * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
+ *
+ * @param {JulianDate} time The simulation time.
+ * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+ */
+GeoJsonDataSource.prototype.update = function (time) {
+  return true;
+};
+
 function load(that, geoJson, options, sourceUri) {
   var name;
   if (defined(sourceUri)) {
@@ -1037,7 +1057,7 @@ function load(that, geoJson, options, sourceUri) {
 
 /**
  * This callback is displayed as part of the GeoJsonDataSource class.
- * @callback GeoJsonDataSource~describe
+ * @callback GeoJsonDataSource.describe
  * @param {Object} properties The properties of the feature.
  * @param {String} nameProperty The property key that Cesium estimates to have the name of the feature.
  */

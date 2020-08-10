@@ -191,7 +191,7 @@ Object.defineProperties(ReferenceProperty.prototype, {
   /**
    * Gets the resolved instance of the underlying referenced property.
    * @memberof ReferenceProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @readonly
    */
   resolvedProperty: {

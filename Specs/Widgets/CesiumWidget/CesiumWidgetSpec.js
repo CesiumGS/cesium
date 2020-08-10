@@ -370,7 +370,7 @@ describe(
 
         var found = false;
         for (var i = 0; i < messages.length; ++i) {
-          if (messages[i].textContent === error) {
+          if (messages[i].textContent.indexOf(error) !== -1) {
             found = true;
           }
         }

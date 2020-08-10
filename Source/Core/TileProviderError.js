@@ -102,7 +102,7 @@ function TileProviderError(
  *        error is not specific to a particular tile.
  * @param {Number} level The level-of-detail of the tile that experienced the error, or undefined if the
  *        error is not specific to a particular tile.
- * @param {TileProviderError~RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
+ * @param {TileProviderError.RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
  *        operation will not be retried.
  * @param {Error} [errorDetails] The error or exception that occurred, if any.
  * @returns {TileProviderError} The error instance that was passed to the event listeners and that
@@ -175,6 +175,6 @@ TileProviderError.handleSuccess = function (previousError) {
 
 /**
  * A function that will be called to retry the operation.
- * @callback TileProviderError~RetryFunction
+ * @callback TileProviderError.RetryFunction
  */
 export default TileProviderError;

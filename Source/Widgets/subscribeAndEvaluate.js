@@ -6,7 +6,7 @@ import knockout from "../ThirdParty/knockout.js";
  *
  * @private
  *
- * @exports subscribeAndEvaluate
+ * @function subscribeAndEvaluate
  *
  * @param {Object} owner The object containing the observable property.
  * @param {String} observablePropertyName The name of the observable property.

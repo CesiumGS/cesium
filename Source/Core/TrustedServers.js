@@ -6,7 +6,7 @@ import DeveloperError from "./DeveloperError.js";
  * A singleton that contains all of the servers that are trusted. Credentials will be sent with
  * any requests to these servers.
  *
- * @exports TrustedServers
+ * @namespace TrustedServers
  *
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  */

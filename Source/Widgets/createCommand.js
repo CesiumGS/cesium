@@ -12,7 +12,7 @@ import knockout from "../ThirdParty/knockout.js";
  * value of <code>canExecute</code> and throw if false.  It also provides events for when
  * a command has been or is about to be executed.
  *
- * @exports createCommand
+ * @function
  *
  * @param {Function} func The function to execute.
  * @param {Boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.

@@ -5,6 +5,7 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import Uri from "../ThirdParty/Uri.js";
 
 var mobileWidth = 576;
 var lightboxHeight = 100;
@@ -512,6 +513,18 @@ var defaultCredit;
 function getDefaultCredit() {
   if (!defined(defaultCredit)) {
     var logo = buildModuleUrl("Assets/Images/ion-credit.png");
+
+    // When hosting in a WebView, the base URL scheme is file:// or ms-appx-web://
+    // which is stripped out from the Credit's <img> tag; use the full path instead
+    if (
+      logo.indexOf("http://") !== 0 &&
+      logo.indexOf("https://") !== 0 &&
+      logo.indexOf("data:") !== 0
+    ) {
+      var logoUrl = new Uri(logo);
+      logo = logoUrl.getPath();
+    }
+
     defaultCredit = new Credit(
       '<a href="https://cesium.com/" target="_blank"><img src="' +
         logo +

@@ -1,7 +1,7 @@
 /**
  * Represents the position relative to the terrain.
  *
- * @exports HeightReference
+ * @enum {Number}
  */
 var HeightReference = {
   /**

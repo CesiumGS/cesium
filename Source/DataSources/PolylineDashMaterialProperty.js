@@ -16,10 +16,10 @@ var defaultDashPattern = 255.0;
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
- * @param {Property} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
- * @param {Property} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
- * @param {Property} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
+ * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+ * @param {Property|Color} [options.gapColor=Color.TRANSPARENT] A Property specifying the {@link Color} of the gaps in the line.
+ * @param {Property|Number} [options.dashLength=16.0] A numeric Property specifying the length of the dash pattern in pixels.
+ * @param {Property|Number} [options.dashPattern=255.0] A numeric Property specifying a 16 bit pattern for the dash
  */
 function PolylineDashMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -74,28 +74,28 @@ Object.defineProperties(PolylineDashMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the line.
    * @memberof PolylineDashMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   color: createPropertyDescriptor("color"),
 
   /**
    * Gets or sets the Property specifying the {@link Color} of the gaps in the line.
    * @memberof PolylineDashMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   gapColor: createPropertyDescriptor("gapColor"),
 
   /**
    * Gets or sets the numeric Property specifying the length of a dash cycle
    * @memberof PolylineDashMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   dashLength: createPropertyDescriptor("dashLength"),
 
   /**
    * Gets or sets the numeric Property specifying a dash pattern
    * @memberof PolylineDashMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   dashPattern: createPropertyDescriptor("dashPattern"),
 });

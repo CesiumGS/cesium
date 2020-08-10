@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines how blending factors are computed.
  *
- * @exports BlendFunction
+ * @enum {Number}
  */
 var BlendFunction = {
   /**
