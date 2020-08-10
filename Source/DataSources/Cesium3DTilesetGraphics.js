@@ -5,6 +5,16 @@ import Event from "../Core/Event.js";
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} Cesium3DTilesetGraphics.ConstructorOptions
+ *
+ * Initialization options for the Cesium3DTilesetGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the tileset.
+ * @property {Property | string | Resource} [uri] A string or Resource Property specifying the URI of the tileset.
+ * @property {Property | number} [maximumScreenSpaceError] A number or Property specifying the maximum screen space error used to drive level of detail refinement.
+ */
+
+/**
  * A 3D Tiles tileset represented by an {@link Entity}.
  * The tileset modelMatrix is determined by the containing Entity position and orientation
  * or is left unset if position is undefined.
@@ -12,10 +22,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias Cesium3DTilesetGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the tileset.
- * @param {Property} [options.uri] A string or Resource Property specifying the URI of the tileset.
- * @param {Property} [options.maximumScreenSpaceError] A number or Property specifying the maximum screen space error used to drive level of detail refinement.
+ * @param {Cesium3DTilesetGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function Cesium3DTilesetGraphics(options) {
   this._definitionChanged = new Event();
@@ -45,7 +52,7 @@ Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the model.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -53,14 +60,14 @@ Object.defineProperties(Cesium3DTilesetGraphics.prototype, {
   /**
    * Gets or sets the string Property specifying the URI of the glTF asset.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   uri: createPropertyDescriptor("uri"),
 
   /**
    * Gets or sets the maximum screen space error used to drive level of detail refinement.
    * @memberof Cesium3DTilesetGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   maximumScreenSpaceError: createPropertyDescriptor("maximumScreenSpaceError"),
 });

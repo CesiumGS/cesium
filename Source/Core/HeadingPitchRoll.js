@@ -15,8 +15,23 @@ import CesiumMath from "./Math.js";
  * @param {Number} [roll=0.0] The roll component in radians.
  */
 function HeadingPitchRoll(heading, pitch, roll) {
+  /**
+   * Gets or sets the heading.
+   * @type {Number}
+   * @default 0.0
+   */
   this.heading = defaultValue(heading, 0.0);
+  /**
+   * Gets or sets the pitch.
+   * @type {Number}
+   * @default 0.0
+   */
   this.pitch = defaultValue(pitch, 0.0);
+  /**
+   * Gets or sets the roll.
+   * @type {Number}
+   * @default 0.0
+   */
   this.roll = defaultValue(roll, 0.0);
 }
 
@@ -131,7 +146,7 @@ HeadingPitchRoll.equals = function (left, right) {
  *
  * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
  * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
  */
@@ -193,7 +208,7 @@ HeadingPitchRoll.prototype.equals = function (right) {
  * <code>false</code> otherwise.
  *
  * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
- * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+ * @param {Number} [relativeEpsilon=0] The relative epsilon tolerance to use for equality testing.
  * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
  * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
  */

@@ -14,7 +14,7 @@ import DeveloperError from "./DeveloperError.js";
  * @param {ComponentDatatype} [options.componentDatatype] The datatype of each component in the attribute, e.g., individual elements in values.
  * @param {Number} [options.componentsPerAttribute] A number between 1 and 4 that defines the number of components in an attributes.
  * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
- * @param {TypedArray} [options.values] The values for the attributes stored in a typed array.
+ * @param {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} [options.values] The values for the attributes stored in a typed array.
  *
  * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
  *
@@ -120,7 +120,7 @@ function GeometryAttribute(options) {
    * every three elements in <code>values</code> defines one attributes since
    * <code>componentsPerAttribute</code> is 3.
    *
-   * @type TypedArray
+   * @type {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array}
    *
    * @default undefined
    *

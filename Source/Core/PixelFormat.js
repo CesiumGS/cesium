@@ -4,7 +4,7 @@ import WebGLConstants from "./WebGLConstants.js";
 /**
  * The format of a pixel, i.e., the number of components it has and what they represent.
  *
- * @exports PixelFormat
+ * @enum {Number}
  */
 var PixelFormat = {
   /**
@@ -134,223 +134,290 @@ var PixelFormat = {
    * @constant
    */
   RGB_ETC1: WebGLConstants.COMPRESSED_RGB_ETC1_WEBGL,
-
-  /**
-   * @private
-   */
-  componentsLength: function (pixelFormat) {
-    switch (pixelFormat) {
-      case PixelFormat.RGB:
-        return 3;
-      case PixelFormat.RGBA:
-        return 4;
-      case PixelFormat.LUMINANCE_ALPHA:
-        return 2;
-      case PixelFormat.ALPHA:
-      case PixelFormat.LUMINANCE:
-        return 1;
-      default:
-        return 1;
-    }
-  },
-
-  /**
-   * @private
-   */
-  validate: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.DEPTH_COMPONENT ||
-      pixelFormat === PixelFormat.DEPTH_STENCIL ||
-      pixelFormat === PixelFormat.ALPHA ||
-      pixelFormat === PixelFormat.RGB ||
-      pixelFormat === PixelFormat.RGBA ||
-      pixelFormat === PixelFormat.LUMINANCE ||
-      pixelFormat === PixelFormat.LUMINANCE_ALPHA ||
-      pixelFormat === PixelFormat.RGB_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT3 ||
-      pixelFormat === PixelFormat.RGBA_DXT5 ||
-      pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
-      pixelFormat === PixelFormat.RGB_ETC1
-    );
-  },
-
-  /**
-   * @private
-   */
-  isColorFormat: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.ALPHA ||
-      pixelFormat === PixelFormat.RGB ||
-      pixelFormat === PixelFormat.RGBA ||
-      pixelFormat === PixelFormat.LUMINANCE ||
-      pixelFormat === PixelFormat.LUMINANCE_ALPHA
-    );
-  },
-
-  /**
-   * @private
-   */
-  isDepthFormat: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.DEPTH_COMPONENT ||
-      pixelFormat === PixelFormat.DEPTH_STENCIL
-    );
-  },
-
-  /**
-   * @private
-   */
-  isCompressedFormat: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.RGB_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT3 ||
-      pixelFormat === PixelFormat.RGBA_DXT5 ||
-      pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
-      pixelFormat === PixelFormat.RGB_ETC1
-    );
-  },
-
-  /**
-   * @private
-   */
-  isDXTFormat: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.RGB_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT1 ||
-      pixelFormat === PixelFormat.RGBA_DXT3 ||
-      pixelFormat === PixelFormat.RGBA_DXT5
-    );
-  },
-
-  /**
-   * @private
-   */
-  isPVRTCFormat: function (pixelFormat) {
-    return (
-      pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
-      pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1
-    );
-  },
-
-  /**
-   * @private
-   */
-  isETC1Format: function (pixelFormat) {
-    return pixelFormat === PixelFormat.RGB_ETC1;
-  },
-
-  /**
-   * @private
-   */
-  compressedTextureSizeInBytes: function (pixelFormat, width, height) {
-    switch (pixelFormat) {
-      case PixelFormat.RGB_DXT1:
-      case PixelFormat.RGBA_DXT1:
-      case PixelFormat.RGB_ETC1:
-        return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 8;
-
-      case PixelFormat.RGBA_DXT3:
-      case PixelFormat.RGBA_DXT5:
-        return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 16;
-
-      case PixelFormat.RGB_PVRTC_4BPPV1:
-      case PixelFormat.RGBA_PVRTC_4BPPV1:
-        return Math.floor(
-          (Math.max(width, 8) * Math.max(height, 8) * 4 + 7) / 8
-        );
-
-      case PixelFormat.RGB_PVRTC_2BPPV1:
-      case PixelFormat.RGBA_PVRTC_2BPPV1:
-        return Math.floor(
-          (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8
-        );
-
-      default:
-        return 0;
-    }
-  },
-
-  /**
-   * @private
-   */
-  textureSizeInBytes: function (pixelFormat, pixelDatatype, width, height) {
-    var componentsLength = PixelFormat.componentsLength(pixelFormat);
-    if (PixelDatatype.isPacked(pixelDatatype)) {
-      componentsLength = 1;
-    }
-    return (
-      componentsLength *
-      PixelDatatype.sizeInBytes(pixelDatatype) *
-      width *
-      height
-    );
-  },
-
-  /**
-   * @private
-   */
-  alignmentInBytes: function (pixelFormat, pixelDatatype, width) {
-    var mod =
-      PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
-    return mod === 0 ? 4 : mod === 2 ? 2 : 1;
-  },
-
-  /**
-   * @private
-   */
-  createTypedArray: function (pixelFormat, pixelDatatype, width, height) {
-    var constructor;
-    var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
-    if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
-      constructor = Uint8Array;
-    } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
-      constructor = Uint16Array;
-    } else if (
-      sizeInBytes === Float32Array.BYTES_PER_ELEMENT &&
-      pixelDatatype === PixelDatatype.FLOAT
-    ) {
-      constructor = Float32Array;
-    } else {
-      constructor = Uint32Array;
-    }
-
-    var size = PixelFormat.componentsLength(pixelFormat) * width * height;
-    return new constructor(size);
-  },
-
-  /**
-   * @private
-   */
-  flipY: function (bufferView, pixelFormat, pixelDatatype, width, height) {
-    if (height === 1) {
-      return bufferView;
-    }
-    var flipped = PixelFormat.createTypedArray(
-      pixelFormat,
-      pixelDatatype,
-      width,
-      height
-    );
-    var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
-    var textureWidth = width * numberOfComponents;
-    for (var i = 0; i < height; ++i) {
-      var row = i * height * numberOfComponents;
-      var flippedRow = (height - i - 1) * height * numberOfComponents;
-      for (var j = 0; j < textureWidth; ++j) {
-        flipped[flippedRow + j] = bufferView[row + j];
-      }
-    }
-    return flipped;
-  },
 };
+
+/**
+ * @private
+ */
+PixelFormat.componentsLength = function (pixelFormat) {
+  switch (pixelFormat) {
+    case PixelFormat.RGB:
+      return 3;
+    case PixelFormat.RGBA:
+      return 4;
+    case PixelFormat.LUMINANCE_ALPHA:
+      return 2;
+    case PixelFormat.ALPHA:
+    case PixelFormat.LUMINANCE:
+      return 1;
+    default:
+      return 1;
+  }
+};
+
+/**
+ * @private
+ */
+PixelFormat.validate = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.DEPTH_COMPONENT ||
+    pixelFormat === PixelFormat.DEPTH_STENCIL ||
+    pixelFormat === PixelFormat.ALPHA ||
+    pixelFormat === PixelFormat.RGB ||
+    pixelFormat === PixelFormat.RGBA ||
+    pixelFormat === PixelFormat.LUMINANCE ||
+    pixelFormat === PixelFormat.LUMINANCE_ALPHA ||
+    pixelFormat === PixelFormat.RGB_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT3 ||
+    pixelFormat === PixelFormat.RGBA_DXT5 ||
+    pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
+    pixelFormat === PixelFormat.RGB_ETC1
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isColorFormat = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.ALPHA ||
+    pixelFormat === PixelFormat.RGB ||
+    pixelFormat === PixelFormat.RGBA ||
+    pixelFormat === PixelFormat.LUMINANCE ||
+    pixelFormat === PixelFormat.LUMINANCE_ALPHA
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isDepthFormat = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.DEPTH_COMPONENT ||
+    pixelFormat === PixelFormat.DEPTH_STENCIL
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isCompressedFormat = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.RGB_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT3 ||
+    pixelFormat === PixelFormat.RGBA_DXT5 ||
+    pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1 ||
+    pixelFormat === PixelFormat.RGB_ETC1
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isDXTFormat = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.RGB_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT1 ||
+    pixelFormat === PixelFormat.RGBA_DXT3 ||
+    pixelFormat === PixelFormat.RGBA_DXT5
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isPVRTCFormat = function (pixelFormat) {
+  return (
+    pixelFormat === PixelFormat.RGB_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGB_PVRTC_2BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_4BPPV1 ||
+    pixelFormat === PixelFormat.RGBA_PVRTC_2BPPV1
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.isETC1Format = function (pixelFormat) {
+  return pixelFormat === PixelFormat.RGB_ETC1;
+};
+
+/**
+ * @private
+ */
+PixelFormat.compressedTextureSizeInBytes = function (
+  pixelFormat,
+  width,
+  height
+) {
+  switch (pixelFormat) {
+    case PixelFormat.RGB_DXT1:
+    case PixelFormat.RGBA_DXT1:
+    case PixelFormat.RGB_ETC1:
+      return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 8;
+
+    case PixelFormat.RGBA_DXT3:
+    case PixelFormat.RGBA_DXT5:
+      return Math.floor((width + 3) / 4) * Math.floor((height + 3) / 4) * 16;
+
+    case PixelFormat.RGB_PVRTC_4BPPV1:
+    case PixelFormat.RGBA_PVRTC_4BPPV1:
+      return Math.floor((Math.max(width, 8) * Math.max(height, 8) * 4 + 7) / 8);
+
+    case PixelFormat.RGB_PVRTC_2BPPV1:
+    case PixelFormat.RGBA_PVRTC_2BPPV1:
+      return Math.floor(
+        (Math.max(width, 16) * Math.max(height, 8) * 2 + 7) / 8
+      );
+
+    default:
+      return 0;
+  }
+};
+
+/**
+ * @private
+ */
+PixelFormat.textureSizeInBytes = function (
+  pixelFormat,
+  pixelDatatype,
+  width,
+  height
+) {
+  var componentsLength = PixelFormat.componentsLength(pixelFormat);
+  if (PixelDatatype.isPacked(pixelDatatype)) {
+    componentsLength = 1;
+  }
+  return (
+    componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height
+  );
+};
+
+/**
+ * @private
+ */
+PixelFormat.alignmentInBytes = function (pixelFormat, pixelDatatype, width) {
+  var mod =
+    PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
+  return mod === 0 ? 4 : mod === 2 ? 2 : 1;
+};
+
+/**
+ * @private
+ */
+PixelFormat.createTypedArray = function (
+  pixelFormat,
+  pixelDatatype,
+  width,
+  height
+) {
+  var constructor;
+  var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
+  if (sizeInBytes === Uint8Array.BYTES_PER_ELEMENT) {
+    constructor = Uint8Array;
+  } else if (sizeInBytes === Uint16Array.BYTES_PER_ELEMENT) {
+    constructor = Uint16Array;
+  } else if (
+    sizeInBytes === Float32Array.BYTES_PER_ELEMENT &&
+    pixelDatatype === PixelDatatype.FLOAT
+  ) {
+    constructor = Float32Array;
+  } else {
+    constructor = Uint32Array;
+  }
+
+  var size = PixelFormat.componentsLength(pixelFormat) * width * height;
+  return new constructor(size);
+};
+
+/**
+ * @private
+ */
+PixelFormat.flipY = function (
+  bufferView,
+  pixelFormat,
+  pixelDatatype,
+  width,
+  height
+) {
+  if (height === 1) {
+    return bufferView;
+  }
+  var flipped = PixelFormat.createTypedArray(
+    pixelFormat,
+    pixelDatatype,
+    width,
+    height
+  );
+  var numberOfComponents = PixelFormat.componentsLength(pixelFormat);
+  var textureWidth = width * numberOfComponents;
+  for (var i = 0; i < height; ++i) {
+    var row = i * width * numberOfComponents;
+    var flippedRow = (height - i - 1) * width * numberOfComponents;
+    for (var j = 0; j < textureWidth; ++j) {
+      flipped[flippedRow + j] = bufferView[row + j];
+    }
+  }
+  return flipped;
+};
+
+/**
+ * @private
+ */
+PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
+  // WebGL 1 require internalFormat to be the same as PixelFormat
+  if (!context.webgl2) {
+    return pixelFormat;
+  }
+
+  // Convert pixelFormat to correct internalFormat for WebGL 2
+  if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
+    return WebGLConstants.DEPTH24_STENCIL8;
+  }
+
+  if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
+    if (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) {
+      return WebGLConstants.DEPTH_COMPONENT16;
+    } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+      return WebGLConstants.DEPTH_COMPONENT24;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.FLOAT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA32F;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB32F;
+      case PixelFormat.RG:
+        return WebGLConstants.RG32F;
+      case PixelFormat.R:
+        return WebGLConstants.R32F;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA16F;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB16F;
+      case PixelFormat.RG:
+        return WebGLConstants.RG16F;
+      case PixelFormat.R:
+        return WebGLConstants.R16F;
+    }
+  }
+
+  return pixelFormat;
+};
+
 export default Object.freeze(PixelFormat);

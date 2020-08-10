@@ -740,12 +740,6 @@ describe("Core/Matrix2", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with non-number parameter", function () {
-    expect(function () {
-      Matrix2.equalsEpsilon(new Matrix2(), new Matrix2(), {});
-    }).toThrowDeveloperError();
-  });
-
   it("getColumn throws without result parameter", function () {
     expect(function () {
       Matrix2.getColumn(new Matrix2(), 1);

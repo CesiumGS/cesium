@@ -7,7 +7,7 @@ import oneTimeWarning from "./oneTimeWarning.js";
  * <code>console.log</code> directly since this does not log duplicate messages
  * unless it is called from multiple workers.
  *
- * @exports deprecationWarning
+ * @function deprecationWarning
  *
  * @param {String} identifier The unique identifier for this deprecated API.
  * @param {String} message The message to log to the console.

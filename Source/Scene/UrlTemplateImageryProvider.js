@@ -50,13 +50,12 @@ var pickFeaturesTags = combine(tags, {
 });
 
 /**
- * Provides imagery by requesting tiles using a specified URL template.
+ * @typedef {Object} UrlTemplateImageryProvider.ConstructorOptions
  *
- * @alias UrlTemplateImageryProvider
- * @constructor
+ * Initialization options for the UrlTemplateImageryProvider constructor
  *
- * @param {Promise.<Object>|Object} [options] Object with the following properties:
- * @param {Resource|String} options.url  The URL template to use to request tiles.  It has the following keywords:
+ * @property {Promise.<Object>|Object} [options] Object with the following properties:
+ * @property {Resource|String} url  The URL template to use to request tiles.  It has the following keywords:
  * <ul>
  *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
  *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -76,7 +75,7 @@ var pickFeaturesTags = combine(tags, {
  *     <li><code>{width}</code>: The width of each tile in pixels.</li>
  *     <li><code>{height}</code>: The height of each tile in pixels.</li>
  * </ul>
- * @param {Resource|String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
+ * @property {Resource|String} [pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
  *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
  *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
  *                 parameter, plus the following:
@@ -91,7 +90,7 @@ var pickFeaturesTags = combine(tags, {
  *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
  *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
  * </ul>
- * @param {Object} [options.urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
+ * @property {Object} [urlSchemeZeroPadding] Gets the URL scheme zero padding for each tile coordinate. The format is '000' where
  * each coordinate will be padded on the left with zeros to match the width of the passed string of zeros. e.g. Setting:
  * urlSchemeZeroPadding : { '{x}' : '0000'}
  * will cause an 'x' value of 12 to return the string '0012' for {x} in the generated URL.
@@ -104,40 +103,48 @@ var pickFeaturesTags = combine(tags, {
  *  <li> <code>{reverseY}</code>: The zero padding for the tile reverseY coordinate in the tiling scheme.</li>
  *  <li> <code>{reverseZ}</code>: The zero padding for the reverseZ coordinate of the tile in the tiling scheme.</li>
  * </ul>
- * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
- * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ * @property {Credit|String} [credit=''] A credit for the data source, which is displayed on the canvas.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
  *                 to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {TilingScheme} [options.tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {TilingScheme} [tilingScheme=WebMercatorTilingScheme] The tiling scheme specifying how the ellipsoidal
  * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
  * is used.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.tileWidth=256] Pixel width of image tiles.
- * @param {Number} [options.tileHeight=256] Pixel height of image tiles.
- * @param {Boolean} [options.hasAlphaChannel=true] true if the images provided by this imagery provider
+ * @property {Number} [tileWidth=256] Pixel width of image tiles.
+ * @property {Number} [tileHeight=256] Pixel height of image tiles.
+ * @property {Boolean} [hasAlphaChannel=true] true if the images provided by this imagery provider
  *                  include an alpha channel; otherwise, false.  If this property is false, an alpha channel, if
  *                  present, will be ignored.  If this property is true, any images without an alpha channel will
  *                  be treated as if their alpha is 1.0 everywhere.  When this property is false, memory usage
  *                  and texture upload time are potentially reduced.
- * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
+ * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats] The formats in which to get feature information at a
  *                                 specific location when {@link UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
  *                                 parameter is not specified, feature picking is disabled.
- * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
- *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+ *        request the <code>pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
  *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
  *        features) without communicating with the server.  Set this property to false if you know your data
  *        source does not support picking features or if you don't want this provider's features to be pickable. Note
  *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
  *        property.
- * @param {Object} [options.customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
+ * @property {Object} [customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
+ */
+
+/**
+ * Provides imagery by requesting tiles using a specified URL template.
  *
+ * @alias UrlTemplateImageryProvider
+ * @constructor
+ *
+ * @param {UrlTemplateImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
@@ -208,6 +215,92 @@ function UrlTemplateImageryProvider(options) {
   this._readyPromise = undefined;
   this._tags = undefined;
   this._pickFeaturesTags = undefined;
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   /**
    * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
@@ -281,7 +374,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
 
   /**
    * Gets the URL template to use to use to pick features.  If this property is not specified,
-   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+   * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined, indicating no
    * features picked.  The URL template supports all of the keywords supported by the
    * {@link UrlTemplateImageryProvider#url} property, plus the following:
    * <ul>
@@ -364,7 +457,7 @@ Object.defineProperties(UrlTemplateImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested, or undefined if there is no limit.
    * This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
    * @memberof UrlTemplateImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    * @default undefined
    */
@@ -660,7 +753,7 @@ UrlTemplateImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

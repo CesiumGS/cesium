@@ -16,6 +16,9 @@ import TileProviderError from "../Core/TileProviderError.js";
 import protobuf from "../ThirdParty/protobuf-minimal.js";
 import when from "../ThirdParty/when.js";
 
+/**
+ * @private
+ */
 function GoogleEarthEnterpriseDiscardPolicy() {
   this._image = new Image();
 }
@@ -31,7 +34,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.isReady = function () {
 /**
  * Given a tile image, decide whether to discard that image.
  *
- * @param {Image} image An image to test.
+ * @param {HTMLImageElement} image An image to test.
  * @returns {Boolean} True if the image should be discarded; otherwise, false.
  */
 GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
@@ -39,6 +42,20 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
 ) {
   return image === this._image;
 };
+
+/**
+ * @typedef {Object} GoogleEarthEnterpriseImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the GoogleEarthEnterpriseImageryProvider constructor
+ *
+ * @property {Resource|String} url The url of the Google Earth Enterprise server hosting the imagery.
+ * @property {GoogleEarthEnterpriseMetadata} metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
+ *        is invalid and should be discarded. If this value is not specified, a default
+ *        is to discard tiles that fail to download.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
 
 /**
  * Provides tiled imagery using the Google Earth Enterprise REST API.
@@ -49,14 +66,7 @@ GoogleEarthEnterpriseDiscardPolicy.prototype.shouldDiscardImage = function (
  * @alias GoogleEarthEnterpriseImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
- * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
- *        is invalid and should be discarded. If this value is not specified, a default
- *        is to discard tiles that fail to download.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {GoogleEarthEnterpriseImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see GoogleEarthEnterpriseTerrainProvider
  * @see ArcGisMapServerImageryProvider
@@ -85,6 +95,92 @@ function GoogleEarthEnterpriseImageryProvider(options) {
     throw new DeveloperError("options.url or options.metadata is required.");
   }
   //>>includeEnd('debug');
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   var metadata;
   if (defined(options.metadata)) {
@@ -237,7 +333,7 @@ Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link GoogleEarthEnterpriseImageryProvider#ready} returns true.
    * @memberof GoogleEarthEnterpriseImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -451,7 +547,7 @@ GoogleEarthEnterpriseImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

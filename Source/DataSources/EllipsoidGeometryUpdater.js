@@ -92,6 +92,7 @@ Object.defineProperties(EllipsoidGeometryUpdater.prototype, {
    * @type {TerrainOffsetProperty}
    * @memberof EllipsoidGeometryUpdater.prototype
    * @readonly
+   * @private
    */
   terrainOffsetProperty: {
     get: function () {

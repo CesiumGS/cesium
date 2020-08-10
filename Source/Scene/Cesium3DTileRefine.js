@@ -5,7 +5,7 @@
  * in the 3D Tiles spec.
  * </p>
  *
- * @exports Cesium3DTileRefine
+ * @enum {Number}
  *
  * @private
  */

@@ -427,7 +427,6 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 };
 
 Gltf3DTileContent.prototype.destroy = function () {
-  debugger;
   this._model = this._model && this._model.destroy();
   this._batchTable = this._batchTable && this._batchTable.destroy();
   this._featureMetadata =
