@@ -81,45 +81,30 @@ function GltfFeatureTableArrayProperty(options) {
 }
 
 Object.defineProperties(GltfFeatureTableArrayProperty.prototype, {
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   name: {
     get: function () {
       return this._name;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   semantic: {
     get: function () {
       return this._semantic;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   type: {
     get: function () {
       return this._type;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   extras: {
     get: function () {
       return this._extras;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   readyPromise: {
     get: function () {
       return this._readyPromise;
@@ -174,16 +159,10 @@ GltfFeatureTableArrayProperty.prototype.setValue = function (featureId, value) {
   values[featureId] = clone(value, true);
 };
 
-/**
- * @inheritdoc GltfFeatureTableProperty#name
- */
 GltfFeatureTableArrayProperty.prototype.isDestroyed = function () {
   return false;
 };
 
-/**
- * @inheritdoc GltfFeatureTableProperty#name
- */
 GltfFeatureTableArrayProperty.prototype.destroy = function () {
   var cache = this._cache;
   var cacheItem = this._cacheItem;

@@ -49,45 +49,30 @@ function GltfFeatureTableDescriptorProperty(options) {
 }
 
 Object.defineProperties(GltfFeatureTableDescriptorProperty.prototype, {
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   name: {
     get: function () {
       return this._name;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   semantic: {
     get: function () {
       return this._semantic;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   type: {
     get: function () {
       return this._type;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   extras: {
     get: function () {
       return this._extras;
     },
   },
 
-  /**
-   * @inheritdoc GltfFeatureTableProperty#name
-   */
   readyPromise: {
     get: function () {
       return this._readyPromise;
@@ -111,16 +96,10 @@ GltfFeatureTableDescriptorProperty.prototype.getValue = function () {
  */
 GltfFeatureTableDescriptorProperty.prototype.setValue = function () {};
 
-/**
- * @inheritdoc GltfFeatureTableProperty#name
- */
 GltfFeatureTableDescriptorProperty.prototype.isDestroyed = function () {
   return false;
 };
 
-/**
- * @inheritdoc GltfFeatureTableProperty#name
- */
 GltfFeatureTableDescriptorProperty.prototype.destroy = function () {
   return destroyObject(this);
 };
