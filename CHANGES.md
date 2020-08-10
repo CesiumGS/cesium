@@ -5,6 +5,7 @@
 ##### Fixes :wrench:
 
 - Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+- Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
 
 ### 1.72 - 2020-08-03
 
