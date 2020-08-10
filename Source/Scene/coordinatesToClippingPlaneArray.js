@@ -39,9 +39,9 @@ function simplifyData(polygons, holes, tolerance) {
  * @param {Array.<Array.<Array.<Cartesian3>>>} options.holes A 3D array of
  * coordinates in ECEF that represent holes in the clipping planes. holes[i] should correspond to
  * polygons[i]. holes[i][...] may not overlap or self-intersect
- * @param {Matrix4} [options.toLocal-Matrix4.IDENTITY] Transformation matrix to convert each point
+ * @param {Matrix4} [options.toLocal=Matrix4.IDENTITY] Transformation matrix to convert each point
  * @param {Number} [options.tolerance] Simplification tolerance for combining adjacent lines.
- * @param {Boolean} [options.union-false] If the clipping plane should be
+ * @param {Boolean} [options.union=false] If the clipping plane should be
  * selected for union mode or not.
  */
 
