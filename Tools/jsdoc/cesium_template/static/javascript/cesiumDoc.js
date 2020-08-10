@@ -47,8 +47,11 @@
     for (var i = 0; i < links.length; i++) {
       var link = links[i];
       var prefix = link.href.split("?")[0];
+      var parts = prefix.split("#");
       link.href =
-        prefix + (searchTerm === "" ? "" : "?classFilter=" + searchTerm);
+        parts[0] +
+        (searchTerm === "" ? "" : "?classFilter=" + searchTerm) +
+        (parts[1] ? "#" + parts[1] : "");
     }
   }
 

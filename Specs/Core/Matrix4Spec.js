@@ -4306,12 +4306,6 @@ describe("Core/Matrix4", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with non-number parameter", function () {
-    expect(function () {
-      Matrix4.equalsEpsilon(new Matrix4(), new Matrix4(), {});
-    }).toThrowDeveloperError();
-  });
-
   it("getTranslation throws without matrix parameter", function () {
     expect(function () {
       Matrix4.getTranslation(undefined);
@@ -4563,21 +4557,6 @@ describe("Core/Matrix4", function () {
         bottom = 0,
         top = 0;
       Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, 0);
-    }).toThrowDeveloperError();
-  });
-
-  it("computeViewportTransformation works", function () {
-    expect(function () {
-      Matrix4.computeViewportTransformation(
-        {
-          x: 0,
-          y: 0,
-          width: 4.0,
-          height: 6.0,
-        },
-        0.0,
-        2.0
-      );
     }).toThrowDeveloperError();
   });
 

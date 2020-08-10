@@ -108,8 +108,8 @@ Object.defineProperties(SampledPositionProperty.prototype, {
    * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
    * @memberof SampledPositionProperty.prototype
    *
-   * @type {Boolean}
-   * @default false
+   * @type {Number}
+   * @default 0
    */
   numberOfDerivatives: {
     get: function () {
@@ -295,7 +295,7 @@ SampledPositionProperty.prototype.addSamplesPackedArray = function (
  * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
  */
 SampledPositionProperty.prototype.removeSample = function (time) {
-  this._property.removeSample(time);
+  return this._property.removeSample(time);
 };
 
 /**

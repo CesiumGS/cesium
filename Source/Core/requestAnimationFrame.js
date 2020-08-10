@@ -41,9 +41,9 @@ if (typeof requestAnimationFrame !== "undefined") {
  * A browser-independent function to request a new animation frame.  This is used to create
  * an application's draw loop as shown in the example below.
  *
- * @exports requestAnimationFrame
+ * @function requestAnimationFrame
  *
- * @param {requestAnimationFrame~Callback} callback The function to call when the next frame should be drawn.
+ * @param {requestAnimationFrameCallback} callback The function to call when the next frame should be drawn.
  * @returns {Number} An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
  *
  *
@@ -67,7 +67,7 @@ function requestAnimationFramePolyFill(callback) {
 
 /**
  * A function that will be called when the next frame should be drawn.
- * @callback requestAnimationFrame~Callback
+ * @callback requestAnimationFrameCallback
  *
  * @param {Number} timestamp A timestamp for the frame, in milliseconds.
  */

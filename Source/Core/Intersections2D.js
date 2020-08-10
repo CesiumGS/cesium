@@ -7,7 +7,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Contains functions for operating on 2D triangles.
  *
- * @exports Intersections2D
+ * @namespace Intersections2D
  */
 var Intersections2D = {};
 

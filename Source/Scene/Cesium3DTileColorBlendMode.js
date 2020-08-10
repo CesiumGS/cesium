@@ -22,7 +22,7 @@
  * }
  * </code></pre>
  *
- * @exports Cesium3DTileColorBlendMode
+ * @enum {Number}
  */
 var Cesium3DTileColorBlendMode = {
   /**

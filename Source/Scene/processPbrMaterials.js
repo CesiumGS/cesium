@@ -5,7 +5,6 @@ import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
 import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -92,6 +91,10 @@ function addTextureCoordinates(
   result
 ) {
   var texCoord;
+  var texInfo = generatedMaterialValues[textureName];
+  if (defined(texInfo) && defined(texInfo.texCoord) && texInfo.texCoord === 1) {
+    defaultTexCoord = defaultTexCoord.replace("0", "1");
+  }
   if (defined(generatedMaterialValues[textureName + "Offset"])) {
     texCoord = textureName + "Coord";
     result.fragmentShaderMain +=
@@ -236,6 +239,7 @@ function generateTechnique(
   var hasNormals = false;
   var hasTangents = false;
   var hasTexCoords = false;
+  var hasTexCoord1 = false;
   var hasOutline = false;
   var isUnlit = false;
 
@@ -247,6 +251,7 @@ function generateTechnique(
     hasNormals = primitiveInfo.hasNormals;
     hasTangents = primitiveInfo.hasTangents;
     hasTexCoords = primitiveInfo.hasTexCoords;
+    hasTexCoord1 = primitiveInfo.hasTexCoord1;
     hasOutline = primitiveInfo.hasOutline;
   }
 
@@ -374,44 +379,12 @@ function generateTechnique(
   // Add attributes with semantics
   var vertexShaderMain = "";
   if (hasSkinning) {
-    var i, j;
-    var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
-    var matrix = false;
-    if (skinningInfo.type.indexOf("MAT") === 0) {
-      matrix = true;
-      numberOfComponents = Math.sqrt(numberOfComponents);
-    }
-    if (!matrix) {
-      for (i = 0; i < numberOfComponents; i++) {
-        if (i === 0) {
-          vertexShaderMain += "    mat4 skinMatrix = ";
-        } else {
-          vertexShaderMain += "    skinMatrix += ";
-        }
-        vertexShaderMain +=
-          "a_weight[" + i + "] * u_jointMatrix[int(a_joint[" + i + "])];\n";
-      }
-    } else {
-      for (i = 0; i < numberOfComponents; i++) {
-        for (j = 0; j < numberOfComponents; j++) {
-          if (i === 0 && j === 0) {
-            vertexShaderMain += "    mat4 skinMatrix = ";
-          } else {
-            vertexShaderMain += "    skinMatrix += ";
-          }
-          vertexShaderMain +=
-            "a_weight[" +
-            i +
-            "][" +
-            j +
-            "] * u_jointMatrix[int(a_joint[" +
-            i +
-            "][" +
-            j +
-            "])];\n";
-        }
-      }
-    }
+    vertexShaderMain +=
+      "    mat4 skinMatrix =\n" +
+      "        a_weight.x * u_jointMatrix[int(a_joint.x)] +\n" +
+      "        a_weight.y * u_jointMatrix[int(a_joint.y)] +\n" +
+      "        a_weight.z * u_jointMatrix[int(a_joint.z)] +\n" +
+      "        a_weight.w * u_jointMatrix[int(a_joint.w)];\n";
   }
 
   // Add position always
@@ -561,6 +534,19 @@ function generateTechnique(
 
     fragmentShader += "varying vec2 " + v_texCoord + ";\n";
 
+    if (hasTexCoord1) {
+      techniqueAttributes.a_texcoord_1 = {
+        semantic: "TEXCOORD_1",
+      };
+
+      var v_texCoord1 = v_texCoord.replace("0", "1");
+      vertexShader += "attribute vec2 a_texcoord_1;\n";
+      vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
+      vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
+
+      fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
+    }
+
     var result = {
       fragmentShaderMain: fragmentShaderMain,
     };
@@ -608,7 +594,7 @@ function generateTechnique(
     );
     emissiveTexCoord = addTextureCoordinates(
       gltf,
-      "u_emmissiveTexture",
+      "u_emissiveTexture",
       generatedMaterialValues,
       v_texCoord,
       result
@@ -619,7 +605,6 @@ function generateTechnique(
 
   // Add skinning information if available
   if (hasSkinning) {
-    var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
     techniqueAttributes.a_joint = {
       semantic: "JOINTS_0",
     };
@@ -627,8 +612,8 @@ function generateTechnique(
       semantic: "WEIGHTS_0",
     };
 
-    vertexShader += "attribute " + attributeType + " a_joint;\n";
-    vertexShader += "attribute " + attributeType + " a_weight;\n";
+    vertexShader += "attribute vec4 a_joint;\n";
+    vertexShader += "attribute vec4 a_weight;\n";
   }
 
   if (hasVertexColors) {
@@ -801,8 +786,7 @@ function generateTechnique(
       fragmentShader += "    vec3 n = ng;\n";
     }
     if (material.doubleSided) {
-      // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
-      fragmentShader += "    if (gl_FrontFacing == false)\n";
+      fragmentShader += "    if (czm_backFacing())\n";
       fragmentShader += "    {\n";
       fragmentShader += "        n = -n;\n";
       fragmentShader += "    }\n";

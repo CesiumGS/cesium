@@ -49,7 +49,7 @@ Object.defineProperties(Event.prototype, {
  * @param {Function} listener The function to be executed when the event is raised.
  * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
  *        pointer in which the listener function will execute.
- * @returns {Event~RemoveCallback} A function that will remove this event listener when invoked.
+ * @returns {Event.RemoveCallback} A function that will remove this event listener when invoked.
  *
  * @see Event#raiseEvent
  * @see Event#removeEventListener
@@ -119,7 +119,7 @@ function compareNumber(a, b) {
 /**
  * Raises the event by calling each registered listener with all supplied arguments.
  *
- * @param {*} arguments This method takes any number of parameters and passes them through to the listener functions.
+ * @param {...Object} arguments This method takes any number of parameters and passes them through to the listener functions.
  *
  * @see Event#addEventListener
  * @see Event#removeEventListener
@@ -157,6 +157,6 @@ Event.prototype.raiseEvent = function () {
 
 /**
  * A function that removes a listener.
- * @callback Event~RemoveCallback
+ * @callback Event.RemoveCallback
  */
 export default Event;

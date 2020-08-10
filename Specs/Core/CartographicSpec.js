@@ -216,10 +216,4 @@ describe("Core/Cartographic", function () {
   it("clone returns undefined without cartographic parameter", function () {
     expect(Cartographic.clone(undefined)).toBeUndefined();
   });
-
-  it("equalsEpsilon throws without numeric epsilon", function () {
-    expect(function () {
-      Cartographic.equalsEpsilon(new Cartographic(), new Cartographic(), {});
-    }).toThrowDeveloperError();
-  });
 });

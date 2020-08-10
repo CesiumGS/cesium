@@ -1,7 +1,7 @@
 import DeveloperError from "./DeveloperError.js";
 
 /**
- * @typedef {Object} GeocoderService~Result
+ * @typedef {Object} GeocoderService.Result
  * @property {String} displayName The display name for a location
  * @property {Rectangle|Cartesian3} destination The bounding box for a location
  */
@@ -23,7 +23,7 @@ function GeocoderService() {}
  *
  * @param {String} query The query to be sent to the geocoder service
  * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
- * @returns {Promise<GeocoderService~Result[]>}
+ * @returns {Promise<GeocoderService.Result[]>}
  */
 GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
 export default GeocoderService;

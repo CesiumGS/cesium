@@ -9,7 +9,7 @@ import CubeMap from "./CubeMap.js";
  * Asynchronously loads six images and creates a cube map.  Returns a promise that
  * will resolve to a {@link CubeMap} once loaded, or reject if any image fails to load.
  *
- * @exports loadCubeMap
+ * @function loadCubeMap
  *
  * @param {Context} context The context to use to create the cube map.
  * @param {Object} urls The source URL of each image.  See the example below.

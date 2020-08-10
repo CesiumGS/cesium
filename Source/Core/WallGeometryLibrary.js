@@ -1,10 +1,9 @@
+import arrayRemoveDuplicates from "./arrayRemoveDuplicates.js";
+import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import defined from "./defined.js";
-import EllipsoidTangentPlane from "./EllipsoidTangentPlane.js";
 import CesiumMath from "./Math.js";
-import PolygonPipeline from "./PolygonPipeline.js";
 import PolylinePipeline from "./PolylinePipeline.js";
-import WindingOrder from "./WindingOrder.js";
 
 /**
  * @private
@@ -13,14 +12,16 @@ var WallGeometryLibrary = {};
 
 function latLonEquals(c0, c1) {
   return (
-    CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON14) &&
-    CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON14)
+    CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON10) &&
+    CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON10)
   );
 }
 
 var scratchCartographic1 = new Cartographic();
 var scratchCartographic2 = new Cartographic();
 function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
+  positions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
+
   var length = positions.length;
   if (length < 2) {
     return;
@@ -28,7 +29,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
 
   var hasBottomHeights = defined(bottomHeights);
   var hasTopHeights = defined(topHeights);
-  var hasAllZeroHeights = true;
 
   var cleanedPositions = new Array(length);
   var cleanedTopHeights = new Array(length);
@@ -42,8 +42,6 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     c0.height = topHeights[0];
   }
 
-  hasAllZeroHeights = hasAllZeroHeights && c0.height <= 0;
-
   cleanedTopHeights[0] = c0.height;
 
   if (hasBottomHeights) {
@@ -52,6 +50,10 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     cleanedBottomHeights[0] = 0.0;
   }
 
+  var startTopHeight = cleanedTopHeights[0];
+  var startBottomHeight = cleanedBottomHeights[0];
+  var hasAllSameHeights = startTopHeight === startBottomHeight;
+
   var index = 1;
   for (var i = 1; i < length; ++i) {
     var v1 = positions[i];
@@ -59,7 +61,7 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
     if (hasTopHeights) {
       c1.height = topHeights[i];
     }
-    hasAllZeroHeights = hasAllZeroHeights && c1.height <= 0;
+    hasAllSameHeights = hasAllSameHeights && c1.height === 0;
 
     if (!latLonEquals(c0, c1)) {
       cleanedPositions[index] = v1; // Shallow copy!
@@ -70,15 +72,19 @@ function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
       } else {
         cleanedBottomHeights[index] = 0.0;
       }
+      hasAllSameHeights =
+        hasAllSameHeights &&
+        cleanedTopHeights[index] === cleanedBottomHeights[index];
 
       Cartographic.clone(c1, c0);
       ++index;
     } else if (c0.height < c1.height) {
+      // two adjacent positions are the same, so use whichever has the greater height
       cleanedTopHeights[index - 1] = c1.height;
     }
   }
 
-  if (hasAllZeroHeights || index < 2) {
+  if (hasAllSameHeights || index < 2) {
     return;
   }
 
@@ -127,24 +133,6 @@ WallGeometryLibrary.computePositions = function (
   wallPositions = o.positions;
   maximumHeights = o.topHeights;
   minimumHeights = o.bottomHeights;
-
-  if (wallPositions.length >= 3) {
-    // Order positions counter-clockwise
-    var tangentPlane = EllipsoidTangentPlane.fromPoints(
-      wallPositions,
-      ellipsoid
-    );
-    var positions2D = tangentPlane.projectPointsOntoPlane(wallPositions);
-
-    if (
-      PolygonPipeline.computeWindingOrder2D(positions2D) ===
-      WindingOrder.CLOCKWISE
-    ) {
-      wallPositions.reverse();
-      maximumHeights.reverse();
-      minimumHeights.reverse();
-    }
-  }
 
   var length = wallPositions.length;
   var numCorners = length - 2;

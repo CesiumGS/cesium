@@ -1031,12 +1031,6 @@ describe("Core/Cartesian3", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws with no epsilon", function () {
-    expect(function () {
-      Cartesian3.equalsEpsilon(new Cartesian3(), new Cartesian3(), undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("cross throw with no left paramater", function () {
     var right = new Cartesian3(4, 3, 6);
     expect(function () {

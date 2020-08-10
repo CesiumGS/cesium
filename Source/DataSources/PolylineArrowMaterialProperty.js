@@ -7,7 +7,7 @@ import Property from "./Property.js";
 /**
  * A {@link MaterialProperty} that maps to PolylineArrow {@link Material} uniforms.
  *
- * @param {Property} [color=Color.WHITE] The {@link Color} Property to be used.
+ * @param {Property|Color} [color=Color.WHITE] The {@link Color} Property to be used.
  *
  * @alias PolylineArrowMaterialProperty
  * @constructor
@@ -51,7 +51,7 @@ Object.defineProperties(PolylineArrowMaterialProperty.prototype, {
   /**
    * Gets or sets the {@link Color} {@link Property}.
    * @memberof PolylineArrowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.WHITE
    */
   color: createPropertyDescriptor("color"),

@@ -15,9 +15,9 @@ var defaultTaperPower = 1.0;
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
- * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
- * @param {Property} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
+ * @param {Property|Color} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
+ * @param {Property|Number} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
+ * @param {Property|Number} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
  */
 function PolylineGlowMaterialProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -66,21 +66,21 @@ Object.defineProperties(PolylineGlowMaterialProperty.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the line.
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   color: createPropertyDescriptor("color"),
 
   /**
    * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   glowPower: createPropertyDescriptor("glowPower"),
 
   /**
    * Gets or sets the numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
    * @memberof PolylineGlowMaterialProperty.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   taperPower: createPropertyDescriptor("taperPower"),
 });

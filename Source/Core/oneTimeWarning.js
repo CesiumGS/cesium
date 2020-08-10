@@ -9,7 +9,7 @@ var warnings = {};
  * <code>console.log</code> directly since this does not log duplicate messages
  * unless it is called from multiple workers.
  *
- * @exports oneTimeWarning
+ * @function oneTimeWarning
  *
  * @param {String} identifier The unique identifier for this warning.
  * @param {String} [message=identifier] The message to log to the console.

@@ -11,7 +11,7 @@ var scratchCartesian3 = new Cartesian3();
 /**
  * Computes the barycentric coordinates for a point with respect to a triangle.
  *
- * @exports barycentricCoordinates
+ * @function
  *
  * @param {Cartesian2|Cartesian3} point The point to test.
  * @param {Cartesian2|Cartesian3} p0 The first point of the triangle, corresponding to the barycentric x-axis.

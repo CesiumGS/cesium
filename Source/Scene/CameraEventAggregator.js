@@ -296,7 +296,7 @@ function listenMouseMove(aggregator, modifier) {
  * @alias CameraEventAggregator
  * @constructor
  *
- * @param {Canvas} [canvas=document] The element to handle events for.
+ * @param {HTMLCanvasElement} [canvas=document] The element to handle events for.
  *
  * @see ScreenSpaceEventHandler
  */

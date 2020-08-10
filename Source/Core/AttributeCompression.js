@@ -11,7 +11,7 @@ var LEFT_SHIFT = 256.0;
 /**
  * Attribute compression and decompression functions.
  *
- * @exports AttributeCompression
+ * @namespace AttributeCompression
  *
  * @private
  */

@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Determines the function used to compare stencil values for the stencil test.
  *
- * @exports StencilFunction
+ * @enum {Number}
  */
 var StencilFunction = {
   /**

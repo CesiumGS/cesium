@@ -5,7 +5,7 @@ import Cesium3DTilesInspector from "../Cesium3DTilesInspector/Cesium3DTilesInspe
  * A mixin which adds the {@link Cesium3DTilesInspector} widget to the {@link Viewer} widget.
  * Rather than being called directly, this function is normally passed as
  * a parameter to {@link Viewer#extend}, as shown in the example below.
- * @exports viewerCesium3DTilesInspectorMixin
+ * @function
  *
  * @param {Viewer} viewer The viewer instance.
  *

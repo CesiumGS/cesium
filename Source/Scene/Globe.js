@@ -2,6 +2,7 @@ import BoundingSphere from "../Core/BoundingSphere.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
+import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -10,6 +11,7 @@ import Ellipsoid from "../Core/Ellipsoid.js";
 import EllipsoidTerrainProvider from "../Core/EllipsoidTerrainProvider.js";
 import Event from "../Core/Event.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
+import NearFarScalar from "../Core/NearFarScalar.js";
 import Ray from "../Core/Ray.js";
 import Rectangle from "../Core/Rectangle.js";
 import Resource from "../Core/Resource.js";
@@ -21,6 +23,7 @@ import GroundAtmosphere from "../Shaders/GroundAtmosphere.js";
 import when from "../ThirdParty/when.js";
 import GlobeSurfaceShaderSet from "./GlobeSurfaceShaderSet.js";
 import GlobeSurfaceTileProvider from "./GlobeSurfaceTileProvider.js";
+import GlobeTranslucency from "./GlobeTranslucency.js";
 import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
@@ -59,6 +62,16 @@ function Globe(ellipsoid) {
 
   this._terrainProvider = terrainProvider;
   this._terrainProviderChanged = new Event();
+
+  this._undergroundColor = Color.clone(Color.BLACK);
+  this._undergroundColorAlphaByDistance = new NearFarScalar(
+    ellipsoid.maximumRadius / 1000.0,
+    0.0,
+    ellipsoid.maximumRadius / 5.0,
+    1.0
+  );
+
+  this._translucency = new GlobeTranslucency();
 
   makeShadersDirty(this);
 
@@ -271,7 +284,7 @@ function Globe(ellipsoid) {
 
   /**
    * Whether to show terrain skirts. Terrain skirts are geometry extending downwards from a tile's edges used to hide seams between neighboring tiles.
-   * It may be desirable to hide terrain skirts if terrain is translucent or when viewing terrain from below the surface.
+   * Skirts are always hidden when the camera is underground or translucency is enabled.
    *
    * @type {Boolean}
    * @default true
@@ -279,7 +292,7 @@ function Globe(ellipsoid) {
   this.showSkirts = true;
 
   /**
-   * Whether to cull back-facing terrain. Set this to false when viewing terrain from below the surface.
+   * Whether to cull back-facing terrain. Back faces are not culled when the camera is underground or translucency is enabled.
    *
    * @type {Boolean}
    * @default true
@@ -374,9 +387,9 @@ Object.defineProperties(Globe.prototype, {
    * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
    * Defaults to the maximum extent of cartographic coordinates.
    *
-   * @member Globe.prototype
+   * @memberof Globe.prototype
    * @type {Rectangle}
-   * @default Rectangle.MAX_VALUE
+   * @default {@link Rectangle.MAX_VALUE}
    */
   cartographicLimitRectangle: {
     get: function () {
@@ -469,6 +482,75 @@ Object.defineProperties(Globe.prototype, {
       }
     },
   },
+
+  /**
+   * The color to render the back side of the globe when the camera is underground or the globe is translucent,
+   * blended with the globe color based on the camera's distance.
+   * <br /><br />
+   * To disable underground coloring, set <code>undergroundColor</code> to <code>undefined</code>.
+   *
+   * @memberof Globe.prototype
+   * @type {Color}
+   * @default {@link Color.BLACK}
+   *
+   * @see Globe#undergroundColorAlphaByDistance
+   */
+  undergroundColor: {
+    get: function () {
+      return this._undergroundColor;
+    },
+    set: function (value) {
+      this._undergroundColor = Color.clone(value, this._undergroundColor);
+    },
+  },
+
+  /**
+   * Gets or sets the near and far distance for blending {@link Globe#undergroundColor} with the globe color.
+   * The alpha will interpolate between the {@link NearFarScalar#nearValue} and
+   * {@link NearFarScalar#farValue} while the camera distance falls within the lower and upper bounds
+   * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+   * Outside of these ranges the alpha remains clamped to the nearest bound. If undefined,
+   * the underground color will not be blended with the globe color.
+   * <br /> <br />
+   * When the camera is above the ellipsoid the distance is computed from the nearest
+   * point on the ellipsoid instead of the camera's position.
+   *
+   * @memberof Globe.prototype
+   * @type {NearFarScalar}
+   *
+   * @see Globe#undergroundColor
+   *
+   */
+  undergroundColorAlphaByDistance: {
+    get: function () {
+      return this._undergroundColorAlphaByDistance;
+    },
+    set: function (value) {
+      //>>includeStart('debug', pragmas.debug);
+      if (defined(value) && value.far < value.near) {
+        throw new DeveloperError(
+          "far distance must be greater than near distance."
+        );
+      }
+      //>>includeEnd('debug');
+      this._undergroundColorAlphaByDistance = NearFarScalar.clone(
+        value,
+        this._undergroundColorAlphaByDistance
+      );
+    },
+  },
+
+  /**
+   * Properties for controlling globe translucency.
+   *
+   * @memberof Globe.prototype
+   * @type {GlobeTranslucency}
+   */
+  translucency: {
+    get: function () {
+      return this._translucency;
+    },
+  },
 });
 
 function makeShadersDirty(globe) {
@@ -486,9 +568,9 @@ function makeShadersDirty(globe) {
   ) {
     fragmentSources.push(globe._material.shaderSource);
     defines.push("APPLY_MATERIAL");
-    globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+    globe._surface._tileProvider.materialUniformMap = globe._material._uniforms;
   } else {
-    globe._surface._tileProvider.uniformMap = undefined;
+    globe._surface._tileProvider.materialUniformMap = undefined;
   }
   fragmentSources.push(GlobeFS);
 
@@ -530,12 +612,18 @@ var scratchSphereIntersectionResult = {
  *
  * @param {Ray} ray The ray to test for intersection.
  * @param {Scene} scene The scene.
+ * @param {Boolean} [cullBackFaces=true] Set to true to not pick back faces.
  * @param {Cartesian3} [result] The object onto which to store the result.
  * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.  The returned position is in projected coordinates for 2D and Columbus View.
  *
  * @private
  */
-Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
+Globe.prototype.pickWorldCoordinates = function (
+  ray,
+  scene,
+  cullBackFaces,
+  result
+) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
     throw new DeveloperError("ray is required");
@@ -544,6 +632,8 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
     throw new DeveloperError("scene is required");
   }
   //>>includeEnd('debug');
+
+  cullBackFaces = defaultValue(cullBackFaces, true);
 
   var mode = scene.mode;
   var projection = scene.mapProjection;
@@ -609,7 +699,7 @@ Globe.prototype.pickWorldCoordinates = function (ray, scene, result) {
       ray,
       scene.mode,
       scene.mapProjection,
-      true,
+      cullBackFaces,
       result
     );
     if (defined(intersection)) {
@@ -635,7 +725,7 @@ var cartoScratch = new Cartographic();
  * var intersection = globe.pick(ray, scene);
  */
 Globe.prototype.pick = function (ray, scene, result) {
-  result = this.pickWorldCoordinates(ray, scene, result);
+  result = this.pickWorldCoordinates(ray, scene, true, result);
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     var carto = scene.mapProjection.unproject(result, cartoScratch);
@@ -868,6 +958,8 @@ Globe.prototype.beginFrame = function (frameState) {
     tileProvider.fillHighlightColor = this.fillHighlightColor;
     tileProvider.showSkirts = this.showSkirts;
     tileProvider.backFaceCulling = this.backFaceCulling;
+    tileProvider.undergroundColor = this._undergroundColor;
+    tileProvider.undergroundColorAlphaByDistance = this._undergroundColorAlphaByDistance;
     surface.beginFrame(frameState);
   }
 };
