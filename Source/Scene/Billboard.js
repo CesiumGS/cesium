@@ -1109,11 +1109,17 @@ Billboard._updateClamping = function (collection, owner) {
         clampedPosition.x += position.height;
       }
     }
-    owner._clampedPosition = Cartesian3.clone(
-      clampedPosition,
-      owner._clampedPosition
-    );
+
+    // Billboards can be reused, i.e. by EntityCluster so check that the height
+    // reference did not change since the clamping callback was created
+    if (owner._heightReference !== HeightReference.NONE) {
+      owner._clampedPosition = Cartesian3.clone(
+        clampedPosition,
+        owner._clampedPosition
+      );
+    }
   }
+
   var ownerId = defined(owner) && defined(owner.id) ? owner.id.id : undefined;
   owner._removeCallbackFunc = surface.updateHeight(
     position,
