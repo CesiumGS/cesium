@@ -206,12 +206,12 @@ QuadtreePrimitive.prototype.invalidateAllTiles = function () {
   this._tilesInvalidated = true;
 };
 
-function containsOwnerHeightCallbackData(heightCallbacks, ownerId) {
+function containsOwnerHeightCallbackData(heightCallbacks, owner) {
   var found = false;
-  if (defined(ownerId)) {
+  if (defined(owner)) {
     for (var i = 0; i < heightCallbacks.length; ++i) {
       var cbData = heightCallbacks[i];
-      if (cbData.ownerId === ownerId) {
+      if (cbData.owner === owner) {
         found = true;
         break;
       }
@@ -244,7 +244,7 @@ function invalidateAllTiles(primitive) {
         if (
           !containsOwnerHeightCallbackData(
             primitive._addHeightCallbacks,
-            data.ownerId
+            data.owner
           )
         ) {
           primitive._addHeightCallbacks.push(data);
@@ -297,13 +297,13 @@ QuadtreePrimitive.prototype.forEachRenderedTile = function (tileFunction) {
  *
  * @param {Cartographic} cartographic The cartographic position.
  * @param {Function} callback The function to be called when a new tile is loaded containing cartographic.
- * @param {string} [ownerId] ID of the object requesting height update callback
+ * @param {string} [owner] Object requesting height update callback
  * @returns {Function} The function to remove this callback from the quadtree.
  */
 QuadtreePrimitive.prototype.updateHeight = function (
   cartographic,
   callback,
-  ownerId
+  owner
 ) {
   var primitive = this;
   var object = {
@@ -311,7 +311,7 @@ QuadtreePrimitive.prototype.updateHeight = function (
     positionCartographic: cartographic,
     level: -1,
     callback: callback,
-    ownerId: ownerId,
+    owner: owner,
   };
 
   object.removeFunc = function () {
