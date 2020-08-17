@@ -431,7 +431,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
     var query = {
       bbox: bbox,
       size: imageryProvider._tileWidth + "," + imageryProvider._tileHeight,
-      format: "png",
+      format: "png32",
       transparent: true,
       f: "image",
     };

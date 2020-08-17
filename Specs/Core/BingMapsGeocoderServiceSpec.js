@@ -29,7 +29,7 @@ describe("Core/BingMapsGeocoderService", function () {
     ) {
       deferred.resolve(data);
     };
-    var service = new BingMapsGeocoderService();
+    var service = new BingMapsGeocoderService({ key: "" });
     service.geocode(query).then(function (results) {
       expect(results.length).toEqual(1);
       expect(results[0].displayName).toEqual("a");
@@ -50,7 +50,7 @@ describe("Core/BingMapsGeocoderService", function () {
     ) {
       deferred.resolve(data);
     };
-    var service = new BingMapsGeocoderService();
+    var service = new BingMapsGeocoderService({ key: "" });
     service.geocode(query).then(function (results) {
       expect(results.length).toEqual(0);
       done();
@@ -73,7 +73,7 @@ describe("Core/BingMapsGeocoderService", function () {
     ) {
       deferred.resolve(data);
     };
-    var service = new BingMapsGeocoderService();
+    var service = new BingMapsGeocoderService({ key: "" });
     service.geocode(query).then(function (results) {
       expect(results.length).toEqual(0);
       done();

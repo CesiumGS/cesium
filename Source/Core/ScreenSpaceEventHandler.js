@@ -969,6 +969,8 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
  * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
+ * @returns {Function} The function to be executed on an input event.
+ *
  * @see ScreenSpaceEventHandler#setInputAction
  * @see ScreenSpaceEventHandler#removeInputAction
  */

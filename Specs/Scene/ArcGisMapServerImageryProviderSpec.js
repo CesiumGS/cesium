@@ -428,7 +428,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         expect(params.f).toEqual("image");
         expect(params.bboxSR).toEqual("4326");
         expect(params.imageSR).toEqual("4326");
-        expect(params.format).toEqual("png");
+        expect(params.format).toEqual("png32");
         expect(params.transparent).toEqual("true");
         expect(params.size).toEqual("256,256");
 
@@ -507,7 +507,7 @@ describe("Scene/ArcGisMapServerImageryProvider", function () {
         expect(params.f).toEqual("image");
         expect(params.bboxSR).toEqual("3857");
         expect(params.imageSR).toEqual("3857");
-        expect(params.format).toEqual("png");
+        expect(params.format).toEqual("png32");
         expect(params.transparent).toEqual("true");
         expect(params.size).toEqual("128,512");
         expect(params.layers).toEqual("show:foo,bar");
