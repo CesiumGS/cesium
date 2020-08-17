@@ -2,6 +2,10 @@
 
 ### 1.73 - 2020-09-01
 
+##### Additions :tada:
+
+- Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+
 ##### Fixes :wrench:
 
 - Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
@@ -71,7 +75,6 @@
 
 - Add a `toString` method to the `Resource` class in case an instance gets logged as a string. [#8722](https://github.com/CesiumGS/cesium/issues/8722)
 - Exposed `Transforms.rotationMatrixFromPositionVelocity` method from Cesium's private API. [#8927](https://github.com/CesiumGS/cesium/issues/8927)
-- Add CSS line-height support to Label/LabelCollection.
 
 ##### Fixes :wrench:
 
