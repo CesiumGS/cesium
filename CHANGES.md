@@ -2,6 +2,10 @@
 
 ### 1.73 - 2020-09-01
 
+##### Additions :tada:
+
+- Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+
 ##### Fixes :wrench:
 
 - Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
