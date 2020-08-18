@@ -232,7 +232,7 @@ describe("Core/TileAvailability", function () {
       ).toBe(1);
     });
 
-    it("ensure the boundary rectangle is sorted properly", function () {
+    it("ensure the boundary rectangles are sorted properly", function () {
       var availability = new TileAvailability(geographic, 6);
       availability.addAvailableTileRange(0, 0, 0, 1, 0);
       availability.addAvailableTileRange(1, 0, 0, 2, 0);
