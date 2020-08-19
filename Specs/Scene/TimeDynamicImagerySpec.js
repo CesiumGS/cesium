@@ -142,7 +142,7 @@ describe("Scene/TimeDynamicImagery", function () {
     options.reloadFunction.calls.reset(); // Constructor calls reload
 
     var request = new Request({
-      throttle: true,
+      throttle: false,
       throttleByServer: true,
       type: RequestType.IMAGERY,
     });
@@ -173,7 +173,7 @@ describe("Scene/TimeDynamicImagery", function () {
     options.reloadFunction.calls.reset(); // Constructor calls reload
 
     var request = new Request({
-      throttle: true,
+      throttle: false,
       throttleByServer: true,
       type: RequestType.IMAGERY,
     });
