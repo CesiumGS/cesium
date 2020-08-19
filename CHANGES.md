@@ -6,6 +6,7 @@
 
 - Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
 - Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
+- Fixed an issue where the boundary rectangles in TileAvailability are not sorted correctly. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
 
 ### 1.72 - 2020-08-03
 
