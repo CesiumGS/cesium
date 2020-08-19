@@ -13,6 +13,7 @@
 - Added the ability to enable/disable shadows on an Instanced 3D Model tileset.
 - Added support for the `TERRIA_solid_outlines` extension to glTF.
 - Avoided double-counting of `createImageBitmap` requests. There is an open Cesium PR: https://github.com/AnalyticalGraphicsInc/cesium/pull/8163
+- Modified FXAA shader to leave grey fragments alone to prevent blurring of text
 
 ### 1.71 - 2020-07-01
 
