@@ -193,6 +193,8 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
 };
 
 var scratchPosition = new Cartesian3();
+var scratchInverseTransform = new Matrix4();
+var scratchTransposeTransform = new Matrix4();
 /**
  * Transforms the plane by the given transformation matrix.
  *
@@ -207,7 +209,11 @@ Plane.transform = function (plane, transform, result) {
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
 
-  Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
+  var normalTransform = Matrix4.transpose(
+    Matrix4.inverse(transform, scratchInverseTransform),
+    scratchTransposeTransform
+  );
+  Matrix4.multiplyByPointAsVector(normalTransform, plane.normal, scratchNormal);
   Cartesian3.normalize(scratchNormal, scratchNormal);
 
   Cartesian3.multiplyByScalar(plane.normal, -plane.distance, scratchPosition);
