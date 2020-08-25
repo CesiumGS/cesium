@@ -323,12 +323,12 @@ DynamicPlaneGeometryUpdater.prototype._setOptions = function (
 };
 
 var scratchAxis = new Cartesian3();
-var scratchAxis2 = new Cartesian3();
+var scratchUp = new Cartesian3();
 var scratchTranslation = new Cartesian3();
-var scratchNormal = new Cartesian3();
 var scratchScale = new Cartesian3();
-var scratchQuaternion = new Quaternion();
-var scratchMatrix3 = new Matrix3();
+var scratchRotationMatrix3 = new Matrix3();
+var scratchRotationScaleMatrix3 = new Matrix3();
+var scratchMatrix4 = new Matrix4();
 function createPrimitiveMatrix(
   plane,
   dimensions,
@@ -344,19 +344,11 @@ function createPrimitiveMatrix(
     -distance,
     scratchTranslation
   );
-  translation = Matrix4.multiplyByPoint(transform, translation, translation);
 
-  var transformedNormal = Matrix4.multiplyByPointAsVector(
-    transform,
-    normal,
-    scratchNormal
-  );
-  Cartesian3.normalize(transformedNormal, transformedNormal);
-
-  var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
+  var up = Cartesian3.clone(Cartesian3.UNIT_Y, scratchUp);
   if (
     CesiumMath.equalsEpsilon(
-      Math.abs(Cartesian3.dot(up, transformedNormal)),
+      Math.abs(Cartesian3.dot(up, normal)),
       1.0,
       CesiumMath.EPSILON8
     )
@@ -364,7 +356,7 @@ function createPrimitiveMatrix(
     up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
     if (
       CesiumMath.equalsEpsilon(
-        Math.abs(Cartesian3.dot(up, transformedNormal)),
+        Math.abs(Cartesian3.dot(up, normal)),
         1.0,
         CesiumMath.EPSILON8
       )
@@ -373,29 +365,34 @@ function createPrimitiveMatrix(
     }
   }
 
-  var left = Cartesian3.cross(up, transformedNormal, scratchAxis);
-  up = Cartesian3.cross(transformedNormal, left, up);
+  var left = Cartesian3.cross(up, normal, scratchAxis);
+  up = Cartesian3.cross(normal, left, up);
   Cartesian3.normalize(left, left);
   Cartesian3.normalize(up, up);
 
-  var rotationMatrix = scratchMatrix3;
+  var rotationMatrix = scratchRotationMatrix3;
   Matrix3.setColumn(rotationMatrix, 0, left, rotationMatrix);
   Matrix3.setColumn(rotationMatrix, 1, up, rotationMatrix);
-  Matrix3.setColumn(rotationMatrix, 2, transformedNormal, rotationMatrix);
-  var rotation = Quaternion.fromRotationMatrix(
+  Matrix3.setColumn(rotationMatrix, 2, normal, rotationMatrix);
+
+  var scale = Cartesian3.fromElements(
+    dimensions.x,
+    dimensions.y,
+    1.0,
+    scratchScale
+  );
+  var rotationScaleMatrix = Matrix3.multiplyByScale(
     rotationMatrix,
-    scratchQuaternion
-  );
-
-  var scale = Cartesian2.clone(dimensions, scratchScale);
-  scale.z = 1.0;
-
-  return Matrix4.fromTranslationQuaternionRotationScale(
-    translation,
-    rotation,
     scale,
-    result
+    scratchRotationScaleMatrix3
   );
+
+  var localTransform = Matrix4.fromRotationTranslation(
+    rotationScaleMatrix,
+    translation,
+    scratchMatrix4
+  );
+  return Matrix4.multiplyTransformation(transform, localTransform, result);
 }
 
 /**
