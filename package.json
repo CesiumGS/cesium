@@ -33,8 +33,11 @@
   "module": "./Source/Cesium.js",
   "types": "./Source/Cesium.d.ts",
   "exports": {
-    "require": "./index.cjs",
-    "import": "./Source/Cesium.js"
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./index.cjs",
+      "import": "./Source/Cesium.js"
+    }
   },
   "type": "module",
   "devDependencies": {
