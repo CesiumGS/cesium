@@ -868,6 +868,39 @@ function createResources(pointCloud, frameState) {
   });
 }
 
+function calcClippingPlanesMatrix(pointCloud, frameState) {
+  var context = frameState.context;
+  var clippingPlanes = pointCloud.clippingPlanes;
+  if (!defined(clippingPlanes)) {
+    return Matrix4.IDENTITY;
+  }
+
+  var clippingPlanesOriginMatrix = defaultValue(
+    pointCloud.clippingPlanesOriginMatrix,
+    pointCloud._modelMatrix
+  );
+  Matrix4.multiply(
+    context.uniformState.view3D,
+    clippingPlanesOriginMatrix,
+    scratchClippingPlaneMatrix
+  );
+  return Matrix4.multiply(
+    scratchClippingPlaneMatrix,
+    clippingPlanes.modelMatrix,
+    scratchClippingPlaneMatrix
+  );
+}
+
+var scratchInverseClippingPlaneMatrix = new Matrix4();
+var scratchTransposeClippingPlaneMatrix = new Matrix4();
+function calcNormalClippingPlanesMatrix(pointCloud, frameState) {
+  var transform = calcClippingPlanesMatrix(pointCloud, frameState);
+  return Matrix4.transpose(
+    Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+    scratchTransposeClippingPlaneMatrix
+  );
+}
+
 function createUniformMap(pointCloud, frameState) {
   var context = frameState.context;
   var isQuantized = pointCloud._isQuantized;
@@ -927,25 +960,10 @@ function createUniformMap(pointCloud, frameState) {
       return style;
     },
     u_clippingPlanesMatrix: function () {
-      var clippingPlanes = pointCloud.clippingPlanes;
-      if (!defined(clippingPlanes)) {
-        return Matrix4.IDENTITY;
-      }
-
-      var clippingPlanesOriginMatrix = defaultValue(
-        pointCloud.clippingPlanesOriginMatrix,
-        pointCloud._modelMatrix
-      );
-      Matrix4.multiply(
-        context.uniformState.view3D,
-        clippingPlanesOriginMatrix,
-        scratchClippingPlaneMatrix
-      );
-      return Matrix4.multiply(
-        scratchClippingPlaneMatrix,
-        clippingPlanes.modelMatrix,
-        scratchClippingPlaneMatrix
-      );
+      return calcClippingPlanesMatrix(pointCloud, frameState);
+    },
+    u_normalClippingPlanesMatrix: function () {
+      return calcNormalClippingPlanesMatrix(pointCloud, frameState);
     },
   };
 
@@ -1358,6 +1376,7 @@ function createShaders(pointCloud, frameState, style) {
     fs +=
       "uniform highp sampler2D u_clippingPlanes; \n" +
       "uniform mat4 u_clippingPlanesMatrix; \n" +
+      "uniform mat4 u_normalClippingPlanesMatrix; \n" +
       "uniform vec4 u_clippingPlanesEdgeStyle; \n";
     fs += "\n";
     fs += getClippingFunction(clippingPlanes, context);
@@ -1373,6 +1392,7 @@ function createShaders(pointCloud, frameState, style) {
     fs += getClipAndStyleCode(
       "u_clippingPlanes",
       "u_clippingPlanesMatrix",
+      "u_normalClippingPlanesMatrix",
       "u_clippingPlanesEdgeStyle"
     );
   }

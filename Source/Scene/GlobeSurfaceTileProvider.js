@@ -1502,6 +1502,30 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
 };
 
 var scratchClippingPlaneMatrix = new Matrix4();
+function calcClippingPlanesMatrix(frameState, globeSurfaceTileProvider) {
+  var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+  return defined(clippingPlanes)
+    ? Matrix4.multiply(
+        frameState.context.uniformState.view,
+        clippingPlanes.modelMatrix,
+        scratchClippingPlaneMatrix
+      )
+    : Matrix4.IDENTITY;
+}
+
+var scratchInverseClippingPlaneMatrix = new Matrix4();
+var scratchTransposeClippingPlaneMatrix = new Matrix4();
+function calcNormalClippingPlanesMatrix(frameState, globeSurfaceTileProvider) {
+  var transform = calcClippingPlanesMatrix(
+    frameState,
+    globeSurfaceTileProvider
+  );
+  return Matrix4.transpose(
+    Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+    scratchTransposeClippingPlaneMatrix
+  );
+}
+
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   var uniformMap = {
     u_initialColor: function () {
@@ -1633,14 +1657,13 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
       return this.properties.localizedCartographicLimitRectangle;
     },
     u_clippingPlanesMatrix: function () {
-      var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
-      return defined(clippingPlanes)
-        ? Matrix4.multiply(
-            frameState.context.uniformState.view,
-            clippingPlanes.modelMatrix,
-            scratchClippingPlaneMatrix
-          )
-        : Matrix4.IDENTITY;
+      return calcClippingPlanesMatrix(frameState, globeSurfaceTileProvider);
+    },
+    u_normalClippingPlanesMatrix: function () {
+      return calcNormalClippingPlanesMatrix(
+        frameState,
+        globeSurfaceTileProvider
+      );
     },
     u_clippingPlanesEdgeStyle: function () {
       var style = this.properties.clippingPlanesEdgeColor;

@@ -3660,23 +3660,39 @@ function createColorFunction(model) {
 }
 
 var scratchClippingPlaneMatrix = new Matrix4();
+function calcClippingPlanesMatrix(model) {
+  var clippingPlanes = model.clippingPlanes;
+  if (
+    !defined(clippingPlanes) &&
+    !defined(model._sphericalHarmonicCoefficients) &&
+    !defined(model._specularEnvironmentMaps)
+  ) {
+    return Matrix4.IDENTITY;
+  }
+  var modelMatrix = defined(clippingPlanes)
+    ? clippingPlanes.modelMatrix
+    : Matrix4.IDENTITY;
+  return Matrix4.multiply(
+    model._clippingPlaneModelViewMatrix,
+    modelMatrix,
+    scratchClippingPlaneMatrix
+  );
+}
+
 function createClippingPlanesMatrixFunction(model) {
   return function () {
-    var clippingPlanes = model.clippingPlanes;
-    if (
-      !defined(clippingPlanes) &&
-      !defined(model._sphericalHarmonicCoefficients) &&
-      !defined(model._specularEnvironmentMaps)
-    ) {
-      return Matrix4.IDENTITY;
-    }
-    var modelMatrix = defined(clippingPlanes)
-      ? clippingPlanes.modelMatrix
-      : Matrix4.IDENTITY;
-    return Matrix4.multiply(
-      model._clippingPlaneModelViewMatrix,
-      modelMatrix,
-      scratchClippingPlaneMatrix
+    return calcClippingPlanesMatrix(model);
+  };
+}
+
+var scratchInverseClippingPlaneMatrix = new Matrix4();
+var scratchTransposeClippingPlaneMatrix = new Matrix4();
+function createNormalClippingPlanesMatrixFunction(model) {
+  return function () {
+    var transform = calcClippingPlanesMatrix(model);
+    return Matrix4.transpose(
+      Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+      scratchTransposeClippingPlaneMatrix
     );
   };
 }
@@ -3859,6 +3875,9 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         model
       ),
       gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model),
+      gltf_normalClippingPlanesMatrix: createNormalClippingPlanesMatrixFunction(
+        model
+      ),
       gltf_iblFactor: createIBLFactorFunction(model),
       gltf_lightColor: createLightColorFunction(model),
       gltf_sphericalHarmonicCoefficients: createSphericalHarmonicCoefficientsFunction(
@@ -4799,6 +4818,7 @@ function modifyShaderForClippingPlanes(
   shader +=
     "uniform highp sampler2D gltf_clippingPlanes; \n" +
     "uniform mat4 gltf_clippingPlanesMatrix; \n" +
+    "uniform mat4 gltf_normalClippingPlanesMatrix; \n" +
     "uniform vec4 gltf_clippingPlanesEdgeStyle; \n" +
     "void main() \n" +
     "{ \n" +
@@ -4806,6 +4826,7 @@ function modifyShaderForClippingPlanes(
     getClipAndStyleCode(
       "gltf_clippingPlanes",
       "gltf_clippingPlanesMatrix",
+      "gltf_normalClippingPlanesMatrix",
       "gltf_clippingPlanesEdgeStyle"
     ) +
     "} \n";

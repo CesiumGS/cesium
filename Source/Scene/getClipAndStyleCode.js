@@ -12,11 +12,13 @@ import Check from "../Core/Check.js";
 function getClipAndStyleCode(
   samplerUniformName,
   matrixUniformName,
+  normalMatrixUniformName,
   styleUniformName
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("samplerUniformName", samplerUniformName);
   Check.typeOf.string("matrixUniformName", matrixUniformName);
+  Check.typeOf.string("normalMatrixUniformName", normalMatrixUniformName);
   Check.typeOf.string("styleUniformName", styleUniformName);
   //>>includeEnd('debug');
 
@@ -25,6 +27,8 @@ function getClipAndStyleCode(
     samplerUniformName +
     ", " +
     matrixUniformName +
+    ", " +
+    normalMatrixUniformName +
     "); \n" +
     "    vec4 clippingPlanesEdgeColor = vec4(1.0); \n" +
     "    clippingPlanesEdgeColor.rgb = " +
