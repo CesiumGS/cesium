@@ -322,9 +322,9 @@ var scratchAxis = new Cartesian3();
 var scratchUp = new Cartesian3();
 var scratchTranslation = new Cartesian3();
 var scratchScale = new Cartesian3();
-var scratchRotationMatrix3 = new Matrix3();
-var scratchRotationScaleMatrix3 = new Matrix3();
-var scratchMatrix4 = new Matrix4();
+var scratchRotation = new Matrix3();
+var scratchRotationScale = new Matrix3();
+var scratchLocalTransform = new Matrix4();
 function createPrimitiveMatrix(plane, dimensions, transform, result) {
   var normal = plane.normal;
   var distance = plane.distance;
@@ -360,7 +360,7 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
   Cartesian3.normalize(left, left);
   Cartesian3.normalize(up, up);
 
-  var rotationMatrix = scratchRotationMatrix3;
+  var rotationMatrix = scratchRotation;
   Matrix3.setColumn(rotationMatrix, 0, left, rotationMatrix);
   Matrix3.setColumn(rotationMatrix, 1, up, rotationMatrix);
   Matrix3.setColumn(rotationMatrix, 2, normal, rotationMatrix);
@@ -374,13 +374,13 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
   var rotationScaleMatrix = Matrix3.multiplyByScale(
     rotationMatrix,
     scale,
-    scratchRotationScaleMatrix3
+    scratchRotationScale
   );
 
   var localTransform = Matrix4.fromRotationTranslation(
     rotationScaleMatrix,
     translation,
-    scratchMatrix4
+    scratchLocalTransform
   );
   return Matrix4.multiplyTransformation(transform, localTransform, result);
 }
