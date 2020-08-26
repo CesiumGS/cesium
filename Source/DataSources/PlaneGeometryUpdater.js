@@ -1,4 +1,3 @@
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -13,7 +12,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PlaneGeometry from "../Core/PlaneGeometry.js";
 import PlaneOutlineGeometry from "../Core/PlaneOutlineGeometry.js";
-import Quaternion from "../Core/Quaternion.js";
 import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -140,7 +138,6 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    this._scene.mapProjection.ellipsoid,
     modelMatrix
   );
 
@@ -204,7 +201,6 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    this._scene.mapProjection.ellipsoid,
     modelMatrix
   );
 
@@ -329,13 +325,7 @@ var scratchScale = new Cartesian3();
 var scratchRotationMatrix3 = new Matrix3();
 var scratchRotationScaleMatrix3 = new Matrix3();
 var scratchMatrix4 = new Matrix4();
-function createPrimitiveMatrix(
-  plane,
-  dimensions,
-  transform,
-  ellipsoid,
-  result
-) {
+function createPrimitiveMatrix(plane, dimensions, transform, result) {
   var normal = plane.normal;
   var distance = plane.distance;
 
