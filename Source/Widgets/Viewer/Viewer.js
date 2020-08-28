@@ -96,16 +96,14 @@ function getCesium3DTileFeatureName(feature) {
     }
   }
 
-  var name = "Unnamed Feature";
   var length = possibleNames.length;
   for (i = 0; i < length; i++) {
     var item = possibleNames[i];
-    if (!defined(item) || item === "") {
-      name = possibleNames[i];
-      break;
+    if (defined(item) && item !== "") {
+      return item;
     }
   }
-  return name;
+  return "Unnamed Feature";
 }
 
 function pickEntity(viewer, e) {
