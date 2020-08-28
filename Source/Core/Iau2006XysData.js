@@ -251,7 +251,7 @@ function requestXysChunk(xysData, chunkIndex) {
   if (defined(xysFileUrlTemplate)) {
     chunkUrl = xysFileUrlTemplate.getDerivedResource({
       templateValues: {
-        "0": chunkIndex,
+        0: chunkIndex,
       },
     });
   } else {
