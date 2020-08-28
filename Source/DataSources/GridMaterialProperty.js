@@ -188,10 +188,10 @@ GridMaterialProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof GridMaterialProperty && //
-    Property.equals(this._color, other._color) && //
-    Property.equals(this._cellAlpha, other._cellAlpha) && //
-    Property.equals(this._lineCount, other._lineCount) && //
-    Property.equals(this._lineThickness, other._lineThickness) && //
+      Property.equals(this._color, other._color) && //
+      Property.equals(this._cellAlpha, other._cellAlpha) && //
+      Property.equals(this._lineCount, other._lineCount) && //
+      Property.equals(this._lineThickness, other._lineThickness) && //
       Property.equals(this._lineOffset, other._lineOffset))
   );
 };
