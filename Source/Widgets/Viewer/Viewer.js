@@ -76,6 +76,12 @@ function getCesium3DTileFeatureDescription(feature) {
 }
 
 function getCesium3DTileFeatureName(feature) {
+  // We need to iterate all property names to find potential
+  // candidates, but since we prefer some property names
+  // over others, we store them in an indexed array
+  // and then use the first defined element in the array
+  // as the preferred choice.
+
   var i;
   var possibleNames = [];
   var propertyNames = feature.getPropertyNames();
@@ -1437,6 +1443,10 @@ Object.defineProperties(Viewer.prototype, {
   },
   /**
    * Gets or sets the object instance for which to display a selection indicator.
+   *
+   * If a user interactively picks a Cesium3DTilesFeature instance, then this property
+   * will contain a transient Entity instance with a property named "feature" that is
+   * the instance that was picked.
    * @memberof Viewer.prototype
    * @type {Entity | undefined}
    */

@@ -5,11 +5,11 @@
 ##### Additions :tada:
 
 - Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
-- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data.
+- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data. [#9121](https://github.com/CesiumGS/cesium/pull/9121).
 
 ##### Fixes :wrench:
 
-- Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+- Fixed several artifacts on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
 - Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
 - Fixed an issue where the boundary rectangles in `TileAvailability` are not sorted correctly, causing terrain to sometimes fail to achieve its maximum detail. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
 - Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
