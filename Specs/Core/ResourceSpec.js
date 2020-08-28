@@ -224,8 +224,8 @@ describe("Core/Resource", function () {
     var resource = new Resource({
       url: "http://test.com/tileset/{0}/{1}",
       templateValues: {
-        "0": "test1",
-        "1": "test2",
+        0: "test1",
+        1: "test2",
       },
     });
 
