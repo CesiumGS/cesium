@@ -44,6 +44,7 @@ import SelectionIndicator from "../SelectionIndicator/SelectionIndicator.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
+import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
 
 var boundingSphereScratch = new BoundingSphere();
 
@@ -53,12 +54,68 @@ function onTimelineScrubfunction(e) {
   clock.shouldAnimate = false;
 }
 
+function getCesium3DTileFeatureDescription(feature) {
+  var propertyNames = feature.getPropertyNames();
+
+  var html = "";
+  propertyNames.forEach((propertyName) => {
+    var value = feature.getProperty(propertyName);
+    if (defined(value)) {
+      html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
+    }
+  });
+
+  if (html.length > 0) {
+    html =
+      '<table class="cesium-infoBox-defaultTable"><tbody>' +
+      html +
+      "</tbody></table>";
+  }
+
+  return html;
+}
+
+function getCesium3DTileFeatureName(feature) {
+  var possibleNames = [];
+  var propertyNames = feature.getPropertyNames();
+  for (var i = 0; i < propertyNames.length; i++) {
+    var propertyName = propertyNames[i];
+    if (/^name$/i.test(propertyName)) {
+      possibleNames[0] = feature.getProperty(propertyName);
+    } else if (/name/i.test(propertyName)) {
+      possibleNames[1] = feature.getProperty(propertyName);
+    } else if (/^title$/i.test(propertyName)) {
+      possibleNames[2] = feature.getProperty(propertyName);
+    } else if (/^(id|identifier)$/i.test(propertyName)) {
+      possibleNames[3] = feature.getProperty(propertyName);
+    } else if (/element/i.test(propertyName)) {
+      possibleNames[4] = feature.getProperty(propertyName);
+    } else if (/(id|identifier)$/i.test(propertyName)) {
+      possibleNames[5] = feature.getProperty(propertyName);
+    }
+  }
+
+  var name = possibleNames.find((item) => defined(item));
+  if (!defined(name) || name === "") {
+    name = "Unnamed Feature";
+  }
+  return name;
+}
+
 function pickEntity(viewer, e) {
   var picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
     var id = defaultValue(picked.id, picked.primitive.id);
     if (id instanceof Entity) {
       return id;
+    }
+
+    if (picked instanceof Cesium3DTileFeature) {
+      return new Entity({
+        name: getCesium3DTileFeatureName(picked),
+        description: getCesium3DTileFeatureDescription(picked),
+        feature: picked,
+      });
     }
   }
 
