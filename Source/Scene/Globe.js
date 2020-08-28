@@ -860,11 +860,12 @@ Globe.prototype.getHeight = function (cartographic) {
   }
 
   var intersection = tile.data.pick(
-    ray,
-    undefined,
-    undefined,
-    false,
-    scratchGetHeightIntersection
+    ray, // ray
+    undefined, //SceneMode.SCENE3D,  // mode
+    undefined, // projection
+    false, // cullBackFaces
+    scratchGetHeightIntersection // result
+    // useNewPicking
   );
   if (!defined(intersection)) {
     return undefined;

@@ -374,6 +374,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
           : ALL_CHILDREN,
         structure: that._terrainDataStructure,
         encoding: that._encoding,
+        _originalUrl: "tile/" + level + "/" + y + "/" + x,
       });
     })
     .otherwise(function (error) {

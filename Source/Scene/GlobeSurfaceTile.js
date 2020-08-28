@@ -164,54 +164,98 @@ GlobeSurfaceTile.prototype.pick = function (
     return undefined;
   }
 
-  var time = true;
-
-  // Fast acceleration structure picking that only works in 3D
-  useNewPicking = defaultValue(useNewPicking, true);
-  if (
-    useNewPicking &&
-    // mode === SceneMode.SCENE3D &&
-    defined(mesh.trianglePicking)
-  ) {
-    if (time) console.time("triangle pick");
-    var r = mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
-    if (time) console.timeEnd("triangle pick");
-    return r;
+  function newPick() {
+    return mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
   }
-  if (time) console.time("normal pick");
 
-  var vertices = mesh.vertices;
-  var indices = mesh.indices;
-  var encoding = mesh.encoding;
-  var indicesLength = indices.length;
+  function oldPick() {
+    var vertices = mesh.vertices;
+    var indices = mesh.indices;
+    var encoding = mesh.encoding;
+    var indicesLength = indices.length;
 
-  var minT = Number.MAX_VALUE;
+    var minT = Number.MAX_VALUE;
 
-  for (var i = 0; i < indicesLength; i += 3) {
-    var i0 = indices[i];
-    var i1 = indices[i + 1];
-    var i2 = indices[i + 2];
+    for (var i = 0; i < indicesLength; i += 3) {
+      var i0 = indices[i];
+      var i1 = indices[i + 1];
+      var i2 = indices[i + 2];
 
-    var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-    var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-    var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
+      var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
+      var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
+      var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
-    var t = IntersectionTests.rayTriangleParametric(
-      ray,
-      v0,
-      v1,
-      v2,
-      cullBackFaces
-    );
-    if (defined(t) && t < minT && t >= 0.0) {
-      minT = t;
+      var t = IntersectionTests.rayTriangleParametric(
+        ray,
+        v0,
+        v1,
+        v2,
+        cullBackFaces
+      );
+      if (defined(t) && t < minT && t >= 0.0) {
+        minT = t;
+      }
     }
+    return minT !== Number.MAX_VALUE
+      ? Ray.getPoint(ray, minT, result)
+      : undefined;
   }
 
-  if (time) console.timeEnd("normal pick");
-  return minT !== Number.MAX_VALUE
-    ? Ray.getPoint(ray, minT, result)
-    : undefined;
+  var pickedValue;
+
+  useNewPicking = defaultValue(useNewPicking, true);
+  var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
+  var doNewPick = useNewPicking && canNewPick;
+
+  var time = false;
+
+  var newPickedValue;
+  if (canNewPick) {
+    if (time) console.time(`new pick`);
+    newPickedValue = newPick();
+    if (time) console.timeEnd(`new pick`);
+  }
+  if (time) console.time(`old pick`);
+  var oldPickedValue = oldPick();
+  if (time) console.timeEnd(`old pick`);
+
+  if (doNewPick) {
+    pickedValue = newPickedValue;
+  } else {
+    pickedValue = oldPickedValue;
+  }
+
+  if (!Cartesian3.equals(newPickedValue, oldPickedValue) && canNewPick) {
+    console.log(
+      "pick results were different",
+      "new",
+      newPickedValue,
+      "old",
+      oldPickedValue
+    );
+  }
+
+  function toStr(c) {
+    return `new Cartesian3(${c.x}, ${c.y}, ${c.z})`;
+  }
+
+  if (doNewPick && newPickedValue) {
+    console.log(
+      mesh._buffer,
+      `
+    ${toStr(ray.origin)}
+    ${toStr(ray.direction)}
+    ${toStr(newPickedValue)}
+
+new Uint8Array([
+    ${new Uint8Array(mesh._buffer)}
+])
+`
+    );
+    // console.log('pick', toStr(newPickedValue), toStr(ray.origin), toStr(ray.direction), new Uint8Array(mesh._buffer));
+  }
+
+  return pickedValue;
 };
 
 GlobeSurfaceTile.prototype.freeResources = function () {

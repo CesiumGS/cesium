@@ -111,6 +111,7 @@ function HeightmapTerrainData(options) {
   this._height = options.height;
   this._childTileMask = defaultValue(options.childTileMask, 15);
   this._encoding = defaultValue(options.encoding, HeightmapEncoding.NONE);
+  this._originalUrl = options._originalUrl;
 
   var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
   var structure = options.structure;
@@ -303,8 +304,9 @@ HeightmapTerrainData.prototype.createMesh = function (
       TrianglePicking.clone(result.trianglePicking)
     );
 
+    that._mesh._url = `${x}/${y}/${level}/`;
     // Free memory received from server after mesh is created.
-    that._buffer = undefined;
+    that._mesh._buffer = that._buffer;
     return that._mesh;
   });
 };

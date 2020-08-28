@@ -41,9 +41,9 @@ function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
  * @returns {Number} t
  */
 function rayCubeIntersectFromOutside(ray) {
-  var mX = 1.0 / ray.direction.x;
-  var mY = 1.0 / ray.direction.y;
-  var mZ = 1.0 / ray.direction.z;
+  var mX = ray.direction.x === 0 ? 0 : 1.0 / ray.direction.x;
+  var mY = ray.direction.y === 0 ? 0 : 1.0 / ray.direction.y;
+  var mZ = ray.direction.z === 0 ? 0 : 1.0 / ray.direction.z;
 
   var nX = -mX * ray.origin.x;
   var nY = -mY * ray.origin.y;
@@ -406,7 +406,7 @@ function nodeRayIntersect(
     }
 
     var firstChildIdx = packedNodes[packedNodeIdx];
-    var childNodeIdx = firstChildIdx * 3 + childIdx * 3 /* packed node space */;
+    var childNodeIdx = firstChildIdx * 3 + childIdx * 3; /* packed node space */
     // var childNodeTriangleCount = packedNodes[childNodeIdx + 1];
     // var childNodeTriangleSetIdx = packedNodes[childNodeIdx + 2];
 

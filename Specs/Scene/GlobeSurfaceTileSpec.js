@@ -1,20 +1,25 @@
 import MockImageryProvider from "../MockImageryProvider.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cartesian4 } from "../../Source/Cesium.js";
-import { createWorldTerrain } from "../../Source/Cesium.js";
-import { Ellipsoid } from "../../Source/Cesium.js";
-import { EllipsoidTerrainProvider } from "../../Source/Cesium.js";
-import { GeographicTilingScheme } from "../../Source/Cesium.js";
-import { Ray } from "../../Source/Cesium.js";
-import { GlobeSurfaceTile } from "../../Source/Cesium.js";
-import { ImageryLayerCollection } from "../../Source/Cesium.js";
-import { QuadtreeTile } from "../../Source/Cesium.js";
-import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
-import { TerrainState } from "../../Source/Cesium.js";
+import {
+  ArcGISTiledElevationTerrainProvider,
+  Cartesian3,
+  Cartesian4,
+  createWorldTerrain,
+  Ellipsoid,
+  EllipsoidTerrainProvider,
+  GeographicTilingScheme,
+  GlobeSurfaceTile,
+  ImageryLayerCollection,
+  QuadtreeTile,
+  QuadtreeTileLoadState,
+  Ray,
+  SceneMode,
+  TerrainState,
+  when,
+} from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
-import { when } from "../../Source/Cesium.js";
+import arcGisTestData from "./GlobeSurfaceTileSpecData.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   var frameState;
@@ -413,6 +418,86 @@ describe("Scene/GlobeSurfaceTile", function () {
             cullBackFaces
           );
           expect(pickResult.x).toBeGreaterThan(0.0);
+        });
+      });
+
+      function base64ToArrayBuffer(base64) {
+        var binary_string = window.atob(base64);
+        var len = binary_string.length;
+        var bytes = new Uint8Array(len);
+        for (var i = 0; i < len; i++) {
+          bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+      }
+
+      function loadTileAndPick(tileData, origin, direction) {
+        function mockResource() {
+          return {
+            appendForwardSlash: function () {
+              return this;
+            },
+            getDerivedResource: function () {
+              return this;
+            },
+            fetchJson: function () {
+              return when(arcGisTestData.metadata);
+            },
+            fetchArrayBuffer: function () {
+              return when(tileData);
+            },
+          };
+        }
+
+        var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+          url: mockResource(),
+          token: "something",
+          ellipsoid: Ellipsoid.WGS84,
+        });
+
+        var tile = new QuadtreeTile({
+          tilingScheme: new GeographicTilingScheme(),
+          level: 11,
+          x: 102,
+          y: 103,
+        });
+
+        processor.frameState = scene.frameState;
+        processor.terrainProvider = terrainProvider;
+
+        return processor.process([tile]).then(function () {
+          var ray = new Ray(origin, direction);
+          var cullBackFaces = false;
+          return tile.data.pick(
+            ray,
+            SceneMode.SCENE3D,
+            undefined,
+            cullBackFaces
+          );
+        });
+      }
+
+      it("should work for an arcgis heightmap tile", function () {
+        return loadTileAndPick(
+          arcGisTestData.tile_2.buffer,
+          new Cartesian3(
+            -1919497.530180931,
+            -4780966.888096772,
+            3750968.0087956334
+          ),
+          new Cartesian3(
+            0.9973272510623228,
+            -0.07143061383398,
+            -0.015362997616719925
+          )
+        ).then((result) => {
+          expect(result).toEqual(
+            new Cartesian3(
+              -1917529.1291086827,
+              -4781107.869000195,
+              3750937.687212673
+            )
+          );
         });
       });
     },
