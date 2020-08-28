@@ -58,7 +58,7 @@ function getCesium3DTileFeatureDescription(feature) {
   var propertyNames = feature.getPropertyNames();
 
   var html = "";
-  propertyNames.forEach((propertyName) => {
+  propertyNames.forEach(function (propertyName) {
     var value = feature.getProperty(propertyName);
     if (defined(value)) {
       html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
@@ -76,9 +76,10 @@ function getCesium3DTileFeatureDescription(feature) {
 }
 
 function getCesium3DTileFeatureName(feature) {
+  var i;
   var possibleNames = [];
   var propertyNames = feature.getPropertyNames();
-  for (var i = 0; i < propertyNames.length; i++) {
+  for (i = 0; i < propertyNames.length; i++) {
     var propertyName = propertyNames[i];
     if (/^name$/i.test(propertyName)) {
       possibleNames[0] = feature.getProperty(propertyName);
@@ -95,9 +96,14 @@ function getCesium3DTileFeatureName(feature) {
     }
   }
 
-  var name = possibleNames.find((item) => defined(item));
-  if (!defined(name) || name === "") {
-    name = "Unnamed Feature";
+  var name = "Unnamed Feature";
+  var length = possibleNames.length;
+  for (i = 0; i < length; i++) {
+    var item = possibleNames[i];
+    if (!defined(item) || item === "") {
+      name = possibleNames[i];
+      break;
+    }
   }
   return name;
 }
