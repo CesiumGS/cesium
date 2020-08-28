@@ -176,7 +176,7 @@ PositionPropertyArray.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof PositionPropertyArray && //
-    this._referenceFrame === other._referenceFrame && //
+      this._referenceFrame === other._referenceFrame && //
       Property.arrayEquals(this._value, other._value))
   );
 };
