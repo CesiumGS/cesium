@@ -14,6 +14,7 @@
 - Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
 - Fixed an issue where Node.js tooling could not resolve package.json. [#9105](https://github.com/CesiumGS/cesium/pull/9105)
 - Fixed classification artifacts on some mobile devices. [#9108](https://github.com/CesiumGS/cesium/pull/9108)
+- Fixed an issue where Resource silently fails to load if being used multiple times. [#9093](https://github.com/CesiumGS/cesium/issues/9093)
 
 ### 1.72 - 2020-08-03
 
