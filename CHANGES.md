@@ -13,6 +13,7 @@
 - Fixed an issue where the boundary rectangles in `TileAvailability` are not sorted correctly, causing terrain to sometimes fail to achieve its maximum detail. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
 - Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
 - Fixed an issue where Node.js tooling could not resolve package.json. [#9105](https://github.com/CesiumGS/cesium/pull/9105)
+- Fixed an issue where Resource silently fails to load if being used multiple times. [#9093](https://github.com/CesiumGS/cesium/issues/9093)
 - Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
 
 ### 1.72 - 2020-08-03
