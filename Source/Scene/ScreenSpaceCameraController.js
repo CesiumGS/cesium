@@ -709,7 +709,9 @@ function handleZoom(
           zoomOnVector = true;
         } else if (camera.positionCartographic.height < 1000000) {
           // The math in the else block assumes the camera
-          // points toward the earth surface, so we check it here
+          // points toward the earth surface, so we check it here.
+          // Theoretically, we should check for 90 degree, but it doesn't behave well when parallel
+          // to the earth surface
           if (Cartesian3.dot(camera.direction, cameraPositionNormal) >= -0.5) {
             zoomOnVector = true;
           } else {
