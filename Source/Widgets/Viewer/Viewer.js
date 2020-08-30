@@ -4,13 +4,11 @@ import Cartographic from '../../Core/Cartographic.js';
 import Clock from '../../Core/Clock.js';
 import defaultValue from '../../Core/defaultValue.js';
 import defined from '../../Core/defined.js';
-import defineProperties from '../../Core/defineProperties.js';
 import destroyObject from '../../Core/destroyObject.js';
 import DeveloperError from '../../Core/DeveloperError.js';
 import Event from '../../Core/Event.js';
 import EventHelper from '../../Core/EventHelper.js';
 import HeadingPitchRange from '../../Core/HeadingPitchRange.js';
-import isArray from '../../Core/isArray.js';
 import Matrix4 from '../../Core/Matrix4.js';
 import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
 import BoundingSphereState from '../../DataSources/BoundingSphereState.js';
@@ -231,7 +229,7 @@ import VRButton from '../VRButton/VRButton.js';
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=true] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -243,8 +241,8 @@ import VRButton from '../VRButton/VRButton.js';
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by light sources.
+     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from light sources.
      * @param {MapMode2D} [options.mapMode2D] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction. <code>MapMode2D.INFINITE_SCROLL</code> is default for scenes using {@link GeographicProjection} or {@link WebMercatorProjection}.
      * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
@@ -278,7 +276,6 @@ import VRButton from '../VRButton/VRButton.js';
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
-     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
      *         sources : {
      *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
@@ -444,7 +441,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(geocoderContainer);
             var geocoderService;
             if (defined(options.geocoder) && typeof options.geocoder !== 'boolean') {
-                geocoderService = isArray(options.geocoder) ? options.geocoder : [options.geocoder];
+                geocoderService = Array.isArray(options.geocoder) ? options.geocoder : [options.geocoder];
             }
             geocoder = new Geocoder({
                 container : geocoderContainer,
@@ -711,7 +708,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
-    defineProperties(Viewer.prototype, {
+    Object.defineProperties(Viewer.prototype, {
         /**
          * Gets the parent container.
          * @memberof Viewer.prototype
@@ -955,7 +952,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Determines if shadows are cast by the sun.
+         * Determines if shadows are cast by light sources.
          * @memberof Viewer.prototype
          * @type {Boolean}
          */
@@ -969,7 +966,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Determines if the terrain casts or shadows from the sun.
+         * Determines if the terrain casts or shadows from light sources.
          * @memberof Viewer.prototype
          * @type {ShadowMode}
          */
@@ -1820,7 +1817,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //Zoom target is already an array, just copy it and return.
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
                 return;
             }
@@ -1834,7 +1831,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //Zoom target is already an array, just copy it and return.
-            if (isArray(zoomTarget)) {
+            if (Array.isArray(zoomTarget)) {
                 that._zoomTarget = zoomTarget.slice(0);
             } else {
                 //Single entity

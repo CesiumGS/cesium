@@ -139,9 +139,10 @@ import WallGeometryUpdater from './WallGeometryUpdater.js';
         var groundColorBatches = new Array(numberOfClassificationTypes);
         var groundMaterialBatches = [];
         if (supportsMaterialsforEntitiesOnTerrain) {
+            var mapProjection = scene.mapProjection;
             for (i = 0; i < numberOfClassificationTypes; ++i) {
-                groundMaterialBatches.push(new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, MaterialAppearance, scene.mapProjection));
-                groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, PerInstanceColorAppearance, scene.mapProjection);
+                groundMaterialBatches.push(new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, MaterialAppearance, mapProjection));
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i, mapProjection);
             }
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {

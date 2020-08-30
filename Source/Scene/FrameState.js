@@ -136,6 +136,14 @@ import SceneMode from './SceneMode.js';
         this.camera = undefined;
 
         /**
+         * Whether the camera is underground.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.cameraUnderground = false;
+
+        /**
          * The culling volume.
          *
          * @type {CullingVolume}
@@ -357,11 +365,11 @@ import SceneMode from './SceneMode.js';
         this.backgroundColor = undefined;
 
         /**
-         * The color of the light emitted by the sun.
+         * The light used to shade the scene.
          *
-         * @type {Color}
+         * @type {Light}
          */
-        this.sunColor = undefined;
+        this.light = undefined;
 
         /**
          * The distance from the camera at which to disable the depth test of billboards, labels and points

@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import Event from '../Core/Event.js';
 import TranslationRotationScale from '../Core/TranslationRotationScale.js';
 import createPropertyDescriptor from './createPropertyDescriptor.js';
@@ -18,7 +17,7 @@ import Property from './Property.js';
      * @param {Property} [options.rotation=Quaternion.IDENTITY] A {@link Quaternion} Property specifying the (x, y, z, w) rotation to apply to the node.
      * @param {Property} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A {@link Cartesian3} Property specifying the (x, y, z) scaling to apply to the node.
      */
-    var NodeTransformationProperty = function(options) {
+    function NodeTransformationProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -32,9 +31,9 @@ import Property from './Property.js';
         this.translation = options.translation;
         this.rotation = options.rotation;
         this.scale = options.scale;
-    };
+    }
 
-    defineProperties(NodeTransformationProperty.prototype, {
+    Object.defineProperties(NodeTransformationProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.

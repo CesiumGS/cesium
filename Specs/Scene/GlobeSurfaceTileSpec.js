@@ -315,8 +315,9 @@ describe('Scene/GlobeSurfaceTile', function() {
         });
 
         it('gets correct result when a closer triangle is processed after a farther triangle', function() {
-            // Pick root tile (0,0). It will intersect a triangle on the east and the west side.
-            // The east triangle is closer and should be the pick result even though the west triangle is checked first.
+            // Pick root tile (level=0, x=0, y=0) from the east side towards the west.
+            // Based on heightmap triangle processing order the west triangle will be tested first, followed
+            // by the east triangle. But since the east triangle is closer we expect it to be the pick result.
             var terrainProvider = new EllipsoidTerrainProvider();
 
             var tile = new QuadtreeTile({
@@ -330,10 +331,33 @@ describe('Scene/GlobeSurfaceTile', function() {
             processor.terrainProvider = terrainProvider;
 
             return processor.process([tile]).then(function() {
-                var ray = new Ray(
-                    new Cartesian3(50000000.0, 0.0, 0.0),
-                    // nudge the direction to be pointing at the (0,0) tile
-                    new Cartesian3(-0.9999422718925407, -0.007344489332226594, -0.007842917749982258));
+                var origin = new Cartesian3(50000000.0, -1.0, 0.0);
+                var direction = new Cartesian3(-1.0, 0.0, 0.0);
+                var ray = new Ray(origin, direction);
+                var cullBackFaces = false;
+                var pickResult = tile.data.pick(ray, undefined, undefined, cullBackFaces);
+                expect(pickResult.x).toBeGreaterThan(0.0);
+            });
+        });
+
+        it('ignores triangles that are behind the ray', function() {
+            // Pick root tile (level=0, x=0, y=0) from the center towards the east side (+X).
+            var terrainProvider = new EllipsoidTerrainProvider();
+
+            var tile = new QuadtreeTile({
+                tilingScheme : new GeographicTilingScheme(),
+                level : 0,
+                x : 0,
+                y : 0
+            });
+
+            processor.frameState = scene.frameState;
+            processor.terrainProvider = terrainProvider;
+
+            return processor.process([tile]).then(function() {
+                var origin = new Cartesian3(0.0, -1.0, 0.0);
+                var direction = new Cartesian3(1.0, 0.0, 0.0);
+                var ray = new Ray(origin, direction);
                 var cullBackFaces = false;
                 var pickResult = tile.data.pick(ray, undefined, undefined, cullBackFaces);
                 expect(pickResult.x).toBeGreaterThan(0.0);

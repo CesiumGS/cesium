@@ -160,8 +160,8 @@ import Transforms from './Transforms.js';
         this.boundingSphereCV = options.boundingSphereCV;
 
         /**
-         * @private
          * Used for computing the bounding sphere for geometry using the applyOffset vertex attribute
+         * @private
          */
         this.offsetAttribute = options.offsetAttribute;
     }

@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used in determining to what extent an object, the occludee,
@@ -33,4 +32,4 @@ import freezeObject from './freezeObject.js';
         */
         FULL : 1
     };
-export default freezeObject(Visibility);
+export default Object.freeze(Visibility);

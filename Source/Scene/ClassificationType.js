@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Whether a classification affects terrain, 3D Tiles or both.
@@ -32,4 +31,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         NUMBER_OF_CLASSIFICATION_TYPES : 3
     };
-export default freezeObject(ClassificationType);
+export default Object.freeze(ClassificationType);

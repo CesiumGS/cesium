@@ -1,11 +1,8 @@
-import Cartesian2 from './Cartesian2.js';
 import Cartesian3 from './Cartesian3.js';
 import Cartesian4 from './Cartesian4.js';
 import CullingVolume from './CullingVolume.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
-import deprecationWarning from './deprecationWarning.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
@@ -128,7 +125,7 @@ import Matrix4 from './Matrix4.js';
         }
     }
 
-    defineProperties(OrthographicOffCenterFrustum.prototype, {
+    Object.defineProperties(OrthographicOffCenterFrustum.prototype, {
         /**
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicOffCenterFrustum.prototype
@@ -289,12 +286,6 @@ import Matrix4 from './Matrix4.js';
      */
     OrthographicOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
-
-        if (pixelRatio instanceof Cartesian2) {
-            result = pixelRatio;
-            pixelRatio = 1.0;
-            deprecationWarning('getPixelDimensions-parameter-change', 'getPixelDimensions now takes a pixelRatio argument before the result argument in Cesium 1.63. The previous function definition will no longer work in 1.65.');
-        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {

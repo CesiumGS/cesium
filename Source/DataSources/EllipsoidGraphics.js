@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
@@ -29,7 +28,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
      * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
      *
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
@@ -76,7 +75,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(EllipsoidGraphics.prototype, {
+    Object.defineProperties(EllipsoidGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof EllipsoidGraphics.prototype
@@ -219,7 +218,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the ellipsoid
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED

@@ -2,11 +2,9 @@ import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribu
 import combine from '../Core/combine.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
-import isArray from '../Core/isArray.js';
 import DrawCommand from '../Renderer/DrawCommand.js';
 import Pass from '../Renderer/Pass.js';
 import RenderState from '../Renderer/RenderState.js';
@@ -25,8 +23,6 @@ import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
 import StencilConstants from './StencilConstants.js';
 import StencilFunction from './StencilFunction.js';
 import StencilOperation from './StencilOperation.js';
-
-    var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
 
     /**
      * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.
@@ -172,11 +168,6 @@ import StencilOperation from './StencilOperation.js';
 
         this.appearance = options.appearance;
 
-        var readOnlyAttributes;
-        if (defined(geometryInstances) && isArray(geometryInstances) && geometryInstances.length > 1) {
-            readOnlyAttributes = ClassificationPrimitiveReadOnlyInstanceAttributes;
-        }
-
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
@@ -191,7 +182,6 @@ import StencilOperation from './StencilOperation.js';
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
-            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createBoundingVolumeFunction : undefined,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
@@ -201,7 +191,7 @@ import StencilOperation from './StencilOperation.js';
         };
     }
 
-    defineProperties(ClassificationPrimitive.prototype, {
+    Object.defineProperties(ClassificationPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
@@ -533,14 +523,9 @@ import StencilOperation from './StencilOperation.js';
         }
 
         var extrudedDefine = classificationPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
-        // Tesselation on ClassificationPrimitives tends to be low,
-        // which causes problems when interpolating log depth from vertices.
-        // So force computing and writing logarithmic depth in the fragment shader.
-        // Re-enable at far distances to avoid z-fighting.
-        var disableGlPositionLogDepth = 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT';
 
         var vsSource = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
+            defines : [extrudedDefine],
             sources : [vs]
         });
         var fsSource = new ShaderSource({
@@ -564,7 +549,7 @@ import StencilOperation from './StencilOperation.js';
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
             var pickFS3D = shadowVolumeAppearance.createPickFragmentShader(false);
-            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, false, frameState.mapProjection);
+            var pickVS3D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine], vsPick, false, frameState.mapProjection);
 
             classificationPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
@@ -580,7 +565,7 @@ import StencilOperation from './StencilOperation.js';
                 var pickProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spPick, '2dPick');
                 if (!defined(pickProgram2D)) {
                     var pickFS2D = shadowVolumeAppearance.createPickFragmentShader(true);
-                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine, disableGlPositionLogDepth], vsPick, true, frameState.mapProjection);
+                    var pickVS2D = shadowVolumeAppearance.createPickVertexShader([extrudedDefine], vsPick, true, frameState.mapProjection);
 
                     pickProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spPick, '2dPick', {
                         vertexShaderSource : pickVS2D,
@@ -601,7 +586,7 @@ import StencilOperation from './StencilOperation.js';
 
         vs = Primitive._appendShowToShader(primitive, vs);
         vsSource = new ShaderSource({
-            defines : [extrudedDefine, disableGlPositionLogDepth],
+            defines : [extrudedDefine],
             sources : [vs]
         });
 
@@ -615,7 +600,7 @@ import StencilOperation from './StencilOperation.js';
 
         // Create a fragment shader that computes only required material hookups using screen space techniques
         var fsColorSource = shadowVolumeAppearance.createFragmentShader(false);
-        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, false, frameState.mapProjection);
+        var vsColorSource = shadowVolumeAppearance.createVertexShader([extrudedDefine], vs, false, frameState.mapProjection);
 
         classificationPrimitive._spColor = ShaderProgram.replaceCache({
             context : context,
@@ -632,7 +617,7 @@ import StencilOperation from './StencilOperation.js';
             var colorProgram2D = context.shaderCache.getDerivedShaderProgram(classificationPrimitive._spColor, '2dColor');
             if (!defined(colorProgram2D)) {
                 var fsColorSource2D = shadowVolumeAppearance.createFragmentShader(true);
-                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine, disableGlPositionLogDepth], vs, true, frameState.mapProjection);
+                var vsColorSource2D = shadowVolumeAppearance.createVertexShader([extrudedDefine], vs, true, frameState.mapProjection);
 
                 colorProgram2D = context.shaderCache.createDerivedShaderProgram(classificationPrimitive._spColor, '2dColor', {
                     vertexShaderSource : vsColorSource2D,
@@ -1002,7 +987,7 @@ import StencilOperation from './StencilOperation.js';
         var primitiveOptions = this._primitiveOptions;
 
         if (!defined(this._primitive)) {
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var instances = Array.isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
 
             var i;

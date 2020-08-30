@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -9,4 +8,4 @@ import freezeObject from '../Core/freezeObject.js';
         BUFFER : 2,
         NUMBER_OF_JOB_TYPES : 3
     };
-export default freezeObject(JobType);
+export default Object.freeze(JobType);

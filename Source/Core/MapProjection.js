@@ -1,6 +1,5 @@
 import Cartographic from './Cartographic.js';
 import Check from './Check.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Rectangle from './Rectangle.js';
 
@@ -21,7 +20,7 @@ import Rectangle from './Rectangle.js';
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(MapProjection.prototype, {
+    Object.defineProperties(MapProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

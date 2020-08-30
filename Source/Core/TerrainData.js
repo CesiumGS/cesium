@@ -1,4 +1,3 @@
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 
     /**
@@ -10,12 +9,13 @@ import DeveloperError from './DeveloperError.js';
      *
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
+     * @see GoogleEarthEnterpriseTerrainData
      */
     function TerrainData() {
         DeveloperError.throwInstantiationError();
     }
 
-    defineProperties(TerrainData.prototype, {
+    Object.defineProperties(TerrainData.prototype, {
         /**
          * An array of credits for this tile.
          * @memberof TerrainData.prototype

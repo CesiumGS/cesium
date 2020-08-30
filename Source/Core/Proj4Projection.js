@@ -4,7 +4,6 @@ import CesiumMath from './Math.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import MapProjectionType from './MapProjectionType.js';
 import Rectangle from './Rectangle.js';
@@ -100,7 +99,7 @@ import proj4 from '../ThirdParty/proj4-2.6.0.js';
         }));
     };
 
-    defineProperties(Proj4Projection.prototype, {
+    Object.defineProperties(Proj4Projection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

@@ -1,5 +1,3 @@
-import freezeObject from './freezeObject.js';
-
     /**
      * MapProjectionType defines the path that should be taken connecting vertices.
      *
@@ -47,4 +45,4 @@ import freezeObject from './freezeObject.js';
          */
         MATRIX4 : 4
     };
-export default freezeObject(MapProjectionType);
+export default Object.freeze(MapProjectionType);

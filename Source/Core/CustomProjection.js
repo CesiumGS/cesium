@@ -3,7 +3,6 @@ import Cartographic from './Cartographic.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Ellipsoid from './Ellipsoid.js';
 import FeatureDetection from './FeatureDetection.js';
@@ -83,7 +82,7 @@ import when from '../ThirdParty/when.js';
         return projection.readyPromise;
     };
 
-    defineProperties(CustomProjection.prototype, {
+    Object.defineProperties(CustomProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

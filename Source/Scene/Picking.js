@@ -20,7 +20,6 @@ import  Camera from './Camera.js';
 import  Cesium3DTileFeature from './Cesium3DTileFeature.js';
 import  Cesium3DTilePass from './Cesium3DTilePass.js';
 import  Cesium3DTilePassState from './Cesium3DTilePassState.js';
-import  Cesium3DTileset from './Cesium3DTileset.js';
 import  PickDepth from './PickDepth.js';
 import  PrimitiveCollection from './PrimitiveCollection.js';
 import  SceneMode from './SceneMode.js';
@@ -546,7 +545,7 @@ import  View from './View.js';
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if (primitive.show) {
-                if ((primitive instanceof Cesium3DTileset)) {
+                if (defined(primitive.isCesium3DTileset)) {
                     if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
                         tilesets.push(primitive);
                     }

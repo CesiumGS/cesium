@@ -9,7 +9,6 @@ import DeveloperError from '../Core/DeveloperError.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
-import isArray from '../Core/isArray.js';
 import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
 import MapProjection from '../Core/MapProjection.js';
 import CesiumMath from '../Core/Math.js';
@@ -267,6 +266,7 @@ import TweenCollection from './TweenCollection.js';
         this._strafing = false;
         this._zoomingOnVector = false;
         this._rotatingZoom = false;
+        this._adjustedHeightForTerrain = false;
 
         var projection = scene.mapProjection;
         this._maxCoord = MapProjection.approximateMaximumCoordinate(projection, new Cartesian2());
@@ -370,7 +370,7 @@ import TweenCollection from './TweenCollection.js';
 
         var aggregator = controller._aggregator;
 
-        if (!isArray(eventTypes)) {
+        if (!Array.isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }
@@ -940,10 +940,8 @@ import TweenCollection from './TweenCollection.js';
 
         var scene = controller._scene;
         var camera = scene.camera;
-        var maxCoord = controller._maxCoord;
-        var onMap = Math.abs(camera.position.x) - maxCoord.x < 0 && Math.abs(camera.position.y) - maxCoord.y < 0;
 
-        if (controller._tiltCVOffMap || !onMap || camera.position.z > controller._minimumPickingTerrainHeight) {
+        if (controller._tiltCVOffMap || !controller.onMap() || camera.position.z > controller._minimumPickingTerrainHeight) {
             controller._tiltCVOffMap = true;
             rotateCVOnPlane(controller, startPosition, movement);
         } else {
@@ -1141,7 +1139,10 @@ import TweenCollection from './TweenCollection.js';
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, rotateCVCartesian3);
-        camera._adjustHeightForTerrain();
+
+        if (controller.enableCollisionDetection) {
+            adjustHeightForTerrain(controller);
+        }
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1770,7 +1771,10 @@ import TweenCollection from './TweenCollection.js';
         controller._rotateRateRangeAdjustment = radius;
 
         var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
-        camera._adjustHeightForTerrain();
+
+        if (controller.enableCollisionDetection) {
+            adjustHeightForTerrain(controller);
+        }
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera._setTransform(verticalTransform);
@@ -1922,11 +1926,93 @@ import TweenCollection from './TweenCollection.js';
         reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
+    var scratchAdjustHeightTransform = new Matrix4();
+    var scratchAdjustHeightCartographic = new Cartographic();
+
+    function adjustHeightForTerrain(controller) {
+        controller._adjustedHeightForTerrain = true;
+
+        var scene = controller._scene;
+        var mode = scene.mode;
+        var globe = scene.globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        var camera = scene.camera;
+        var ellipsoid = globe.ellipsoid;
+        var projection = scene.mapProjection;
+
+        var transform;
+        var mag;
+        if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
+            transform = Matrix4.clone(camera.transform, scratchAdjustHeightTransform);
+            mag = Cartesian3.magnitude(camera.position);
+            camera._setTransform(Matrix4.IDENTITY);
+        }
+
+        var cartographic = scratchAdjustHeightCartographic;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartesianToCartographic(camera.position, cartographic);
+        } else {
+            projection.unproject(camera.position, cartographic);
+        }
+
+        var heightUpdated = false;
+        if (cartographic.height < controller._minimumCollisionTerrainHeight) {
+            var height = globe.getHeight(cartographic);
+            if (defined(height)) {
+                height += controller.minimumZoomDistance;
+                if (cartographic.height < height) {
+                    cartographic.height = height;
+                    if (mode === SceneMode.SCENE3D) {
+                        ellipsoid.cartographicToCartesian(cartographic, camera.position);
+                    } else {
+                        projection.project(cartographic, camera.position);
+                    }
+                    heightUpdated = true;
+                }
+            }
+        }
+
+        if (defined(transform)) {
+            camera._setTransform(transform);
+            if (heightUpdated) {
+                Cartesian3.normalize(camera.position, camera.position);
+                Cartesian3.negate(camera.position, camera.direction);
+                Cartesian3.multiplyByScalar(camera.position, Math.max(mag, controller.minimumZoomDistance), camera.position);
+                Cartesian3.normalize(camera.direction, camera.direction);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.cross(camera.right, camera.direction, camera.up);
+            }
+        }
+    }
+
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.onMap = function() {
+        var scene = this._scene;
+        var mode = scene.mode;
+        var camera = scene.camera;
+
+        if (mode === SceneMode.COLUMBUS_VIEW) {
+            return Math.abs(camera.position.x) - this._maxCoord.x < 0 && Math.abs(camera.position.y) - this._maxCoord.y < 0;
+        }
+
+        return true;
+    };
+
+    var scratchPreviousPosition = new Cartesian3();
+    var scratchPreviousDirection = new Cartesian3();
+
     /**
      * @private
      */
     ScreenSpaceCameraController.prototype.update = function() {
-        if (!Matrix4.equals(this._scene.camera.transform, Matrix4.IDENTITY)) {
+        var camera = this._scene.camera;
+        if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
             this._globe = undefined;
             this._ellipsoid = Ellipsoid.UNIT_SPHERE;
         } else {
@@ -1942,6 +2028,10 @@ import TweenCollection from './TweenCollection.js';
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
 
+        this._adjustedHeightForTerrain = false;
+        var previousPosition = Cartesian3.clone(camera.positionWC, scratchPreviousPosition);
+        var previousDirection = Cartesian3.clone(camera.directionWC, scratchPreviousDirection);
+
         var scene = this._scene;
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
@@ -1954,7 +2044,22 @@ import TweenCollection from './TweenCollection.js';
             update3D(this);
         }
 
+        if (this.enableCollisionDetection && !this._adjustedHeightForTerrain) {
+            // Adjust the camera height if the camera moved at all (user input or intertia) and an action didn't already adjust the camera height
+            var cameraChanged = !Cartesian3.equals(previousPosition, camera.positionWC) || !Cartesian3.equals(previousDirection, camera.directionWC);
+            if (cameraChanged) {
+                adjustHeightForTerrain(this);
+            }
+        }
+
         this._aggregator.reset();
+    };
+
+    /**
+     * @private
+     */
+    ScreenSpaceCameraController.prototype.adjustedHeightForTerrain = function() {
+        return this._adjustedHeightForTerrain;
     };
 
     /**

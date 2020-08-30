@@ -1,7 +1,6 @@
 import when from '../ThirdParty/when.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
 import Fullscreen from './Fullscreen.js';
     /*global CanvasPixelArray*/
@@ -168,7 +167,7 @@ import Fullscreen from './Fullscreen.js';
             //that rely on it, such as the Windows WebBrowser control which defines
             //PointerEvent but sets navigator.pointerEnabled to false.
 
-            //Firefox disabled because of https://github.com/AnalyticalGraphicsInc/cesium/issues/6372
+            //Firefox disabled because of https://github.com/CesiumGS/cesium/issues/6372
             hasPointerEvents = !isFirefox() && typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;
@@ -237,7 +236,7 @@ import Fullscreen from './Fullscreen.js';
 
         return supportsWebPDeferred.promise;
     };
-    defineProperties(supportsWebP, {
+    Object.defineProperties(supportsWebP, {
         initialized: {
             get: function() {
                 return defined(supportsWebP._result);

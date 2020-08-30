@@ -90,7 +90,7 @@ import Property from './Property.js';
                 primitive = new Primitive({
                     show : false,
                     asynchronous : true,
-                    geometryInstances : geometries,
+                    geometryInstances : geometries.slice(),
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
                         translucent : this.translucent,

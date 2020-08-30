@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * The encoding that is used for a heightmap
@@ -24,4 +23,4 @@ import freezeObject from './freezeObject.js';
          */
         LERC: 1
     };
-export default freezeObject(HeightmapEncoding);
+export default Object.freeze(HeightmapEncoding);

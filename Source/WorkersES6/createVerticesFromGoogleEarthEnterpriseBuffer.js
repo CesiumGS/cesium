@@ -43,8 +43,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         return deserializeMapProjection(parameters.serializedMapProjection).then(function(mapProjection) {
             var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
                 parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
-                parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold,
-                mapProjection);
+                parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold, mapProjection);
             var vertices = statistics.vertices;
             transferableObjects.push(vertices.buffer);
             var indices = statistics.indices;
@@ -61,7 +60,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
                 occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
                 encoding : statistics.encoding,
                 vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-                skirtIndex : statistics.skirtIndex,
+                indexCountWithoutSkirts : statistics.indexCountWithoutSkirts,
                 westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
                 southIndicesEastToWest : statistics.southIndicesEastToWest,
                 eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
@@ -336,7 +335,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var vertexCountWithoutSkirts = pointOffset;
-        var skirtIndex = indicesOffset;
+        var indexCountWithoutSkirts = indicesOffset;
 
         // Add skirt points
         var skirtOptions = {
@@ -433,7 +432,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex,
+            indexCountWithoutSkirts : indexCountWithoutSkirts,
             westIndicesSouthToNorth : westIndicesSouthToNorth,
             southIndicesEastToWest : southIndicesEastToWest,
             eastIndicesNorthToSouth : eastIndicesNorthToSouth,

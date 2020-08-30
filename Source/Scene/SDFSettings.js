@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Settings for the generation of signed distance field glyphs
@@ -38,4 +37,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         CUTOFF: 0.25
     };
-export default freezeObject(SDFSettings);
+export default Object.freeze(SDFSettings);

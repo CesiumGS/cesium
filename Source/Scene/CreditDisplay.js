@@ -4,7 +4,6 @@ import Check from '../Core/Check.js';
 import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 
     var mobileWidth = 576;
@@ -499,7 +498,7 @@ import destroyObject from '../Core/destroyObject.js';
         return defaultCredit;
     }
 
-    defineProperties(CreditDisplay, {
+    Object.defineProperties(CreditDisplay, {
         /**
          * Gets or sets the Cesium logo credit.
          * @memberof CreditDisplay

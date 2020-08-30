@@ -2,7 +2,6 @@ import Credit from '../Core/Credit.js';
 import decodeGoogleEarthEnterpriseData from '../Core/decodeGoogleEarthEnterpriseData.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
@@ -140,7 +139,7 @@ import when from '../ThirdParty/when.js';
             });
     }
 
-    defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
+    Object.defineProperties(GoogleEarthEnterpriseImageryProvider.prototype, {
         /**
          * Gets the name of the Google Earth Enterprise server url hosting the imagery.
          * @memberof GoogleEarthEnterpriseImageryProvider.prototype

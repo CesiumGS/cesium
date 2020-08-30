@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents the position relative to the terrain.
@@ -27,4 +26,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         RELATIVE_TO_GROUND : 2
     };
-export default freezeObject(HeightReference);
+export default Object.freeze(HeightReference);

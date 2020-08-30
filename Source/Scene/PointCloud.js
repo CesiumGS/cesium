@@ -8,7 +8,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
 import CesiumMath from '../Core/Math.js';
@@ -45,7 +44,7 @@ import StencilConstants from './StencilConstants.js';
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
+     * {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/PointCloud|Point Cloud}
      * tile. Used internally by {@link PointCloud3DTileContent} and {@link TimeDynamicPointCloud}.
      *
      * @alias PointCloud
@@ -149,7 +148,7 @@ import StencilConstants from './StencilConstants.js';
         initialize(this, options);
     }
 
-    defineProperties(PointCloud.prototype, {
+    Object.defineProperties(PointCloud.prototype, {
         pointsLength : {
             get : function() {
                 return this._pointsLength;
@@ -188,9 +187,10 @@ import StencilConstants from './StencilConstants.js';
                 if (defined(this._drawCommand)) {
                     return this._drawCommand.boundingVolume;
                 }
+                return undefined;
             },
             set : function(value) {
-                this._boundingSphere = BoundingSphere.clone(value);
+                this._boundingSphere = BoundingSphere.clone(value, this._boundingSphere);
             }
         }
     });
@@ -1112,9 +1112,9 @@ import StencilConstants from './StencilConstants.js';
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_lightDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
-                  '    color.xyz *= diffuseStrength; \n';
+                  '    color.xyz *= diffuseStrength * czm_lightColor; \n';
         }
 
         vs += '    v_color = color; \n' +
@@ -1127,8 +1127,8 @@ import StencilConstants from './StencilConstants.js';
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n' +
-                  '    gl_PointSize *= show; \n';
+            vs += '    gl_Position.w *= float(show); \n' +
+                  '    gl_PointSize *= float(show); \n';
         }
 
         vs += '} \n';

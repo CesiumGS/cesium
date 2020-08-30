@@ -5,7 +5,6 @@ import CesiumMath from './Math.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import Ellipsoid from './Ellipsoid.js';
 import MapProjectionType from './MapProjectionType.js';
 import Matrix4 from './Matrix4.js';
@@ -50,7 +49,7 @@ import when from '../ThirdParty/when.js';
         this._radiansMultiplier = this._degrees ? CesiumMath.DEGREES_PER_RADIAN : 1.0;
     }
 
-    defineProperties(Matrix4Projection.prototype, {
+    Object.defineProperties(Matrix4Projection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
          *

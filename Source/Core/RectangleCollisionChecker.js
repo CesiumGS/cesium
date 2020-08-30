@@ -1,4 +1,4 @@
-import rbush from '../ThirdParty/rbush.js';
+import RBush from '../ThirdParty/rbush.js';
 import Rectangle from './Rectangle.js';
 import Check from './Check.js';
 
@@ -8,7 +8,7 @@ import Check from './Check.js';
      * @private
      */
     function RectangleCollisionChecker(mapProjection) {
-        this._tree = rbush();
+        this._tree = new RBush();
         this._mapProjection = mapProjection;
     }
 

@@ -7,7 +7,6 @@ import combine from '../Core/combine.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
@@ -218,7 +217,7 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         this._rtcCenter2D = undefined;  // in projected world coordinates
     }
 
-    defineProperties(ClassificationModel.prototype, {
+    Object.defineProperties(ClassificationModel.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.

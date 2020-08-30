@@ -5,6 +5,7 @@ import { GeographicTilingScheme } from '../../Source/Cesium.js';
 import { GoogleEarthEnterpriseMetadata } from '../../Source/Cesium.js';
 import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
 import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
 import { RequestScheduler } from '../../Source/Cesium.js';
 import { Resource } from '../../Source/Cesium.js';
 import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
@@ -69,10 +70,11 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
     }
 
     function installFakeImageRequest(expectedUrl, proxy) {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -82,7 +84,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
                     expect(url).toEqual(expectedUrl);
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 
