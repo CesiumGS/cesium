@@ -12,6 +12,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
 import OrthographicFrustum from "../Core/OrthographicFrustum.js";
@@ -891,12 +892,14 @@ function calcClippingPlanesMatrix(pointCloud, frameState) {
   );
 }
 
-var scratchInverseClippingPlaneMatrix = new Matrix4();
-var scratchTransposeClippingPlaneMatrix = new Matrix4();
+var scratchTransformMatrix3 = new Matrix3();
+var scratchInverseClippingPlaneMatrix = new Matrix3();
+var scratchTransposeClippingPlaneMatrix = new Matrix3();
 function calcNormalClippingPlanesMatrix(pointCloud, frameState) {
   var transform = calcClippingPlanesMatrix(pointCloud, frameState);
-  return Matrix4.transpose(
-    Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+  var transformMatrix3 = Matrix4.getMatrix3(transform, scratchTransformMatrix3);
+  return Matrix3.transpose(
+    Matrix3.inverse(transformMatrix3, scratchInverseClippingPlaneMatrix),
     scratchTransposeClippingPlaneMatrix
   );
 }
@@ -1376,7 +1379,7 @@ function createShaders(pointCloud, frameState, style) {
     fs +=
       "uniform highp sampler2D u_clippingPlanes; \n" +
       "uniform mat4 u_clippingPlanesMatrix; \n" +
-      "uniform mat4 u_normalClippingPlanesMatrix; \n" +
+      "uniform mat3 u_normalClippingPlanesMatrix; \n" +
       "uniform vec4 u_clippingPlanesEdgeStyle; \n";
     fs += "\n";
     fs += getClippingFunction(clippingPlanes, context);

@@ -18,6 +18,7 @@ import GeometryPipeline from "../Core/GeometryPipeline.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
 import Intersect from "../Core/Intersect.js";
 import CesiumMath from "../Core/Math.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import NearFarScalar from "../Core/NearFarScalar.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
@@ -1513,15 +1514,18 @@ function calcClippingPlanesMatrix(frameState, globeSurfaceTileProvider) {
     : Matrix4.IDENTITY;
 }
 
-var scratchInverseClippingPlaneMatrix = new Matrix4();
-var scratchTransposeClippingPlaneMatrix = new Matrix4();
+var scratchTransformMatrix3 = new Matrix3();
+var scratchInverseClippingPlaneMatrix = new Matrix3();
+var scratchTransposeClippingPlaneMatrix = new Matrix3();
 function calcNormalClippingPlanesMatrix(frameState, globeSurfaceTileProvider) {
   var transform = calcClippingPlanesMatrix(
     frameState,
     globeSurfaceTileProvider
   );
-  return Matrix4.transpose(
-    Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+  var transformMatrix3 = Matrix4.getMatrix3(transform, scratchTransformMatrix3);
+
+  return Matrix3.transpose(
+    Matrix3.inverse(transformMatrix3, scratchInverseClippingPlaneMatrix),
     scratchTransposeClippingPlaneMatrix
   );
 }

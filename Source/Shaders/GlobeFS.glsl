@@ -74,7 +74,7 @@ uniform vec2 u_nightFadeDistance;
 #ifdef ENABLE_CLIPPING_PLANES
 uniform highp sampler2D u_clippingPlanes;
 uniform mat4 u_clippingPlanesMatrix;
-uniform mat4 u_normalClippingPlanesMatrix;
+uniform mat3 u_normalClippingPlanesMatrix;
 uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 

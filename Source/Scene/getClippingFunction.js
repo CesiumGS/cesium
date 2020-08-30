@@ -39,7 +39,7 @@ function getClippingFunction(clippingPlaneCollection, context) {
 
 function clippingFunctionUnion(clippingPlanesLength) {
   var functionString =
-    "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix, mat4 normalClippingPlanesMatrix)\n" +
+    "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix, mat3 normalClippingPlanesMatrix)\n" +
     "{\n" +
     "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
     "    vec3 clipNormal = vec3(0.0);\n" +
@@ -72,7 +72,7 @@ function clippingFunctionUnion(clippingPlanesLength) {
 
 function clippingFunctionIntersect(clippingPlanesLength) {
   var functionString =
-    "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix, mat4 normalClippingPlanesMatrix)\n" +
+    "float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix, mat3 normalClippingPlanesMatrix)\n" +
     "{\n" +
     "    bool clipped = true;\n" +
     "    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n" +
@@ -114,7 +114,7 @@ function getClippingPlaneFloat(width, height) {
   }
 
   var functionString =
-    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, mat4 normalTransform)\n" +
+    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, mat3 normalTransform)\n" +
     "{\n" +
     "    int pixY = clippingPlaneNumber / " +
     width +
@@ -148,7 +148,7 @@ function getClippingPlaneUint8(width, height) {
   }
 
   var functionString =
-    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, mat4 normalTransform)\n" +
+    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform, mat3 normalTransform)\n" +
     "{\n" +
     "    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n" + // clipping planes are two pixels each
     "    int pixY = clippingPlaneStartIndex / " +

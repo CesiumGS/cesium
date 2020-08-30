@@ -3685,13 +3685,18 @@ function createClippingPlanesMatrixFunction(model) {
   };
 }
 
-var scratchInverseClippingPlaneMatrix = new Matrix4();
-var scratchTransposeClippingPlaneMatrix = new Matrix4();
+var scratchTransformMatrix3 = new Matrix3();
+var scratchInverseClippingPlaneMatrix = new Matrix3();
+var scratchTransposeClippingPlaneMatrix = new Matrix3();
 function createNormalClippingPlanesMatrixFunction(model) {
   return function () {
     var transform = calcClippingPlanesMatrix(model);
-    return Matrix4.transpose(
-      Matrix4.inverse(transform, scratchInverseClippingPlaneMatrix),
+    var transformMatrix3 = Matrix4.getMatrix3(
+      transform,
+      scratchTransformMatrix3
+    );
+    return Matrix3.transpose(
+      Matrix3.inverse(transformMatrix3, scratchInverseClippingPlaneMatrix),
       scratchTransposeClippingPlaneMatrix
     );
   };
@@ -4818,7 +4823,7 @@ function modifyShaderForClippingPlanes(
   shader +=
     "uniform highp sampler2D gltf_clippingPlanes; \n" +
     "uniform mat4 gltf_clippingPlanesMatrix; \n" +
-    "uniform mat4 gltf_normalClippingPlanesMatrix; \n" +
+    "uniform mat3 gltf_normalClippingPlanesMatrix; \n" +
     "uniform vec4 gltf_clippingPlanesEdgeStyle; \n" +
     "void main() \n" +
     "{ \n" +
