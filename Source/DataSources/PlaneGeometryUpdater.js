@@ -344,15 +344,6 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
     )
   ) {
     up = Cartesian3.clone(Cartesian3.UNIT_Y, up);
-    if (
-      CesiumMath.equalsEpsilon(
-        Math.abs(Cartesian3.dot(up, normal)),
-        1.0,
-        CesiumMath.EPSILON8
-      )
-    ) {
-      up = Cartesian3.clone(Cartesian3.UNIT_X, up);
-    }
   }
 
   var left = Cartesian3.cross(up, normal, scratchAxis);
