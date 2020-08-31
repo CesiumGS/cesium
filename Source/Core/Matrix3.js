@@ -1363,6 +1363,27 @@ Matrix3.inverse = function (matrix, result) {
   return Matrix3.multiplyByScalar(result, scale, result);
 };
 
+var scratchInverseMatrix = new Matrix3();
+
+/**
+ * Computes the matrix that is used to transform normal vector
+ *
+ * @param {Matrix3} matrix The matrix to invert and transpose.
+ * @param {Matrix3} result The object onto which to store the result.
+ * @returns {Matrix3} The modified result parameter.
+ */
+Matrix3.transposeInverse = function (matrix, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  return Matrix3.transpose(
+    Matrix3.inverse(matrix, scratchInverseMatrix),
+    result
+  );
+};
+
 /**
  * Compares the provided matrices componentwise and returns
  * <code>true</code> if they are equal, <code>false</code> otherwise.

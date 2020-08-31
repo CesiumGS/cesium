@@ -3660,6 +3660,7 @@ function createColorFunction(model) {
 }
 
 var scratchClippingPlaneMatrix = new Matrix4();
+var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
 function createClippingPlanesMatrixFunction(model) {
   return function () {
     var clippingPlanes = model.clippingPlanes;
@@ -3673,10 +3674,15 @@ function createClippingPlanesMatrixFunction(model) {
     var modelMatrix = defined(clippingPlanes)
       ? clippingPlanes.modelMatrix
       : Matrix4.IDENTITY;
-    return Matrix4.multiply(
+    var transform = Matrix4.multiply(
       model._clippingPlaneModelViewMatrix,
       modelMatrix,
       scratchClippingPlaneMatrix
+    );
+
+    return Matrix4.transposeInverse(
+      transform,
+      scratchTransposeInverseClippingPlaneMatrix
     );
   };
 }

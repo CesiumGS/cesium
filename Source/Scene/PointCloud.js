@@ -614,6 +614,7 @@ var batchIdLocation = 3;
 var numberOfAttributes = 4;
 
 var scratchClippingPlaneMatrix = new Matrix4();
+var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
 
 function createResources(pointCloud, frameState) {
   var context = frameState.context;
@@ -941,10 +942,15 @@ function createUniformMap(pointCloud, frameState) {
         clippingPlanesOriginMatrix,
         scratchClippingPlaneMatrix
       );
-      return Matrix4.multiply(
+      var transform = Matrix4.multiply(
         scratchClippingPlaneMatrix,
         clippingPlanes.modelMatrix,
         scratchClippingPlaneMatrix
+      );
+
+      return Matrix4.transposeInverse(
+        transform,
+        scratchTransposeInverseClippingPlaneMatrix
       );
     },
   };

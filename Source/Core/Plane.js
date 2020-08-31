@@ -4,6 +4,7 @@ import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
+import Cartesian4 from "./Cartesian4.js";
 
 /**
  * A plane in Hessian Normal Form defined by
@@ -192,7 +193,9 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   return Cartesian3.subtract(point, scaledNormal, result);
 };
 
-var scratchPosition = new Cartesian3();
+var scratchTransposeInverse = new Matrix4();
+var scratchPlaneCartesian4 = new Cartesian4();
+var scratchTransformNormal = new Cartesian3();
 /**
  * Transforms the plane by the given transformation matrix.
  *
@@ -207,13 +210,39 @@ Plane.transform = function (plane, transform, result) {
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
 
-  Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
-  Cartesian3.normalize(scratchNormal, scratchNormal);
+  var normal = plane.normal;
+  var distance = plane.distance;
+  var transposeInverse = Matrix4.transposeInverse(
+    transform,
+    scratchTransposeInverse
+  );
+  var planeAsCartesian4 = Cartesian4.fromElements(
+    normal.x,
+    normal.y,
+    normal.z,
+    distance,
+    scratchPlaneCartesian4
+  );
+  planeAsCartesian4 = Matrix4.multiplyByVector(
+    transposeInverse,
+    planeAsCartesian4,
+    planeAsCartesian4
+  );
 
-  Cartesian3.multiplyByScalar(plane.normal, -plane.distance, scratchPosition);
-  Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
+  // Convert the transformed plane to Hessian normal form
+  var transformNormal = Cartesian3.fromCartesian4(
+    planeAsCartesian4,
+    scratchTransformNormal
+  );
+  var inverseTransformNormalMagnitude =
+    1.0 / Cartesian3.magnitude(transformNormal);
+  planeAsCartesian4 = Cartesian4.multiplyByScalar(
+    planeAsCartesian4,
+    inverseTransformNormalMagnitude,
+    planeAsCartesian4
+  );
 
-  return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
+  return Plane.fromCartesian4(planeAsCartesian4, result);
 };
 
 /**
