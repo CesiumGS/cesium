@@ -335,7 +335,7 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
     scratchTranslation
   );
 
-  var up = Cartesian3.clone(Cartesian3.UNIT_Y, scratchUp);
+  var up = Cartesian3.clone(Cartesian3.UNIT_Z, scratchUp);
   if (
     CesiumMath.equalsEpsilon(
       Math.abs(Cartesian3.dot(up, normal)),
@@ -343,7 +343,7 @@ function createPrimitiveMatrix(plane, dimensions, transform, result) {
       CesiumMath.EPSILON8
     )
   ) {
-    up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
+    up = Cartesian3.clone(Cartesian3.UNIT_Y, up);
     if (
       CesiumMath.equalsEpsilon(
         Math.abs(Cartesian3.dot(up, normal)),
