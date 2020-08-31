@@ -103,7 +103,15 @@ function ArcGISTiledElevationTerrainProvider(options) {
         spatialReference.latestWkid,
         spatialReference.wkid
       );
-      var extent = metadata.extent;
+      var extent = defaultValue(
+        metadata.extent,
+        defaultValue(metadata.fullExtent, metadata.initialExtent)
+      );
+      if (!defined(extent)) {
+        return when.reject(
+          new RuntimeError("extent, fullExtent or InitialExtent is required")
+        );
+      }
       var tilingSchemeOptions = {
         ellipsoid: ellipsoid,
       };
@@ -168,16 +176,25 @@ function ArcGISTiledElevationTerrainProvider(options) {
         that._tilingScheme.getNumberOfXTilesAtLevel(0)
       );
 
-      if (metadata.bandCount > 1) {
+      var bandCount = defaultValue(metadata.bandCount, tileInfo.bandCount);
+      if (bandCount > 1) {
         console.log(
           "ArcGISTiledElevationTerrainProvider: Terrain data has more than 1 band. Using the first one."
         );
       }
 
+      var minValue;
+      var maxValue;
+      if (defined(metadata.minValues)) {
+        minValue = metadata.minValues[0];
+      }
+      if (defined(metadata.minValues)) {
+        maxValue = metadata.maxValues[0];
+      }
       that._terrainDataStructure = {
         elementMultiplier: 1.0,
-        lowestEncodedHeight: metadata.minValues[0],
-        highestEncodedHeight: metadata.maxValues[0],
+        lowestEncodedHeight: minValue,
+        highestEncodedHeight: maxValue,
       };
 
       that._ready = true;
@@ -486,6 +503,14 @@ function findRange(origin, width, height, data) {
   var endCol = width - 1;
   var endRow = height - 1;
 
+  var corner = new Cartesian2(origin.x + 1, origin.y + 1);
+  var doneX = corner.x > endCol;
+  var doneY = corner.y > endRow;
+
+  if (doneX && doneY) {
+    return;
+  }
+
   var value = data[origin.y * width + origin.x];
   var endingIndices = [];
   var range = {
@@ -495,9 +520,6 @@ function findRange(origin, width, height, data) {
     endY: 0,
   };
 
-  var corner = new Cartesian2(origin.x + 1, origin.y + 1);
-  var doneX = false;
-  var doneY = false;
   while (!(doneX && doneY)) {
     // We want to use the original value when checking Y,
     //  so get it before it possibly gets incremented
@@ -586,19 +608,21 @@ function computeAvailability(x, y, width, height, data) {
     var origin = positions.pop();
     var result = findRange(origin, width, height, data);
 
-    if (result.value === 1) {
-      // Convert range into the array into global tile coordinates
-      var range = result.range;
-      range.startX += x;
-      range.endX += x;
-      range.startY += y;
-      range.endY += y;
-      ranges.push(range);
-    }
+    if (defined(result)) {
+      if (result.value === 1) {
+        // Convert range into the array into global tile coordinates
+        var range = result.range;
+        range.startX += x;
+        range.endX += x;
+        range.startY += y;
+        range.endY += y;
+        ranges.push(range);
+      }
 
-    var endingIndices = result.endingIndices;
-    if (endingIndices.length > 0) {
-      positions = positions.concat(endingIndices);
+      var endingIndices = result.endingIndices;
+      if (endingIndices.length > 0) {
+        positions = positions.concat(endingIndices);
+      }
     }
   }
 
