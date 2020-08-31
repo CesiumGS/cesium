@@ -2,6 +2,10 @@
 
 ### 1.73 - 2020-09-01
 
+##### Breaking Changes :mega:
+
+- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+
 ##### Additions :tada:
 
 - Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
