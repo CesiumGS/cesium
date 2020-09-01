@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.74 - 2020-10-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
+
 ### 1.73 - 2020-09-01
 
 ##### Breaking Changes :mega:
