@@ -1,0 +1,240 @@
+diff --git a/Source/Core/Matrix3.js b/Source/Core/Matrix3.js
+index f01c549fc6..96366db405 100644
+--- a/Source/Core/Matrix3.js
++++ b/Source/Core/Matrix3.js
+@@ -1363,6 +1363,27 @@ Matrix3.inverse = function (matrix, result) {
+   return Matrix3.multiplyByScalar(result, scale, result);
+ };
+ 
++var scratchInverseMatrix = new Matrix3();
++
++/**
++ * Computes the matrix that is used to transform normal vector
++ *
++ * @param {Matrix3} matrix The matrix to invert and transpose.
++ * @param {Matrix3} result The object onto which to store the result.
++ * @returns {Matrix3} The modified result parameter.
++ */
++Matrix3.transposeInverse = function (matrix, result) {
++  //>>includeStart('debug', pragmas.debug);
++  Check.typeOf.object("matrix", matrix);
++  Check.typeOf.object("result", result);
++  //>>includeEnd('debug');
++
++  return Matrix3.transpose(
++    Matrix3.inverse(matrix, scratchInverseMatrix),
++    result
++  );
++};
++
+ /**
+  * Compares the provided matrices componentwise and returns
+  * <code>true</code> if they are equal, <code>false</code> otherwise.
+diff --git a/Source/Core/Matrix4.js b/Source/Core/Matrix4.js
+index 1d9d536208..d01e29b56b 100644
+--- a/Source/Core/Matrix4.js
++++ b/Source/Core/Matrix4.js
+@@ -2647,6 +2647,27 @@ Matrix4.inverseTransformation = function (matrix, result) {
+   return result;
+ };
+ 
++var scratchInverseMatrix = new Matrix4();
++
++/**
++ * Computes the matrix that is used to transform normal vector
++ *
++ * @param {Matrix4} matrix The matrix to invert and transpose.
++ * @param {Matrix4} result The object onto which to store the result.
++ * @returns {Matrix4} The modified result parameter.
++ */
++Matrix4.transposeInverse = function (matrix, result) {
++  //>>includeStart('debug', pragmas.debug);
++  Check.typeOf.object("matrix", matrix);
++  Check.typeOf.object("result", result);
++  //>>includeEnd('debug');
++
++  return Matrix4.transpose(
++    Matrix4.inverse(matrix, scratchInverseMatrix),
++    result
++  );
++};
++
+ /**
+  * An immutable Matrix4 instance initialized to the identity matrix.
+  *
+diff --git a/Source/Core/Plane.js b/Source/Core/Plane.js
+index 5638d11b9b..b4d1a4b4ce 100644
+--- a/Source/Core/Plane.js
++++ b/Source/Core/Plane.js
+@@ -4,6 +4,7 @@ import defined from "./defined.js";
+ import DeveloperError from "./DeveloperError.js";
+ import CesiumMath from "./Math.js";
+ import Matrix4 from "./Matrix4.js";
++import Cartesian4 from "./Cartesian4.js";
+ 
+ /**
+  * A plane in Hessian Normal Form defined by
+@@ -192,7 +193,9 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
+   return Cartesian3.subtract(point, scaledNormal, result);
+ };
+ 
+-var scratchPosition = new Cartesian3();
++var scratchTransposeInverse = new Matrix4();
++var scratchPlaneCartesian4 = new Cartesian4();
++var scratchTransformNormal = new Cartesian3();
+ /**
+  * Transforms the plane by the given transformation matrix.
+  *
+@@ -207,13 +210,39 @@ Plane.transform = function (plane, transform, result) {
+   Check.typeOf.object("transform", transform);
+   //>>includeEnd('debug');
+ 
+-  Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
+-  Cartesian3.normalize(scratchNormal, scratchNormal);
++  var normal = plane.normal;
++  var distance = plane.distance;
++  var transposeInverse = Matrix4.transposeInverse(
++    transform,
++    scratchTransposeInverse
++  );
++  var planeAsCartesian4 = Cartesian4.fromElements(
++    normal.x,
++    normal.y,
++    normal.z,
++    distance,
++    scratchPlaneCartesian4
++  );
++  planeAsCartesian4 = Matrix4.multiplyByVector(
++    transposeInverse,
++    planeAsCartesian4,
++    planeAsCartesian4
++  );
+ 
+-  Cartesian3.multiplyByScalar(plane.normal, -plane.distance, scratchPosition);
+-  Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
++  // Convert the transformed plane to Hessian normal form
++  var transformNormal = Cartesian3.fromCartesian4(
++    planeAsCartesian4,
++    scratchTransformNormal
++  );
++  var inverseTransformNormalMagnitude =
++    1.0 / Cartesian3.magnitude(transformNormal);
++  planeAsCartesian4 = Cartesian4.multiplyByScalar(
++    planeAsCartesian4,
++    inverseTransformNormalMagnitude,
++    planeAsCartesian4
++  );
+ 
+-  return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
++  return Plane.fromCartesian4(planeAsCartesian4, result);
+ };
+ 
+ /**
+diff --git a/Source/Scene/GlobeSurfaceTileProvider.js b/Source/Scene/GlobeSurfaceTileProvider.js
+index 92f97c25d4..e50d4fb6db 100644
+--- a/Source/Scene/GlobeSurfaceTileProvider.js
++++ b/Source/Scene/GlobeSurfaceTileProvider.js
+@@ -1502,6 +1502,7 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
+ };
+ 
+ var scratchClippingPlaneMatrix = new Matrix4();
++var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
+ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
+   var uniformMap = {
+     u_initialColor: function () {
+@@ -1634,13 +1635,18 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
+     },
+     u_clippingPlanesMatrix: function () {
+       var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
+-      return defined(clippingPlanes)
++      var transform = defined(clippingPlanes)
+         ? Matrix4.multiply(
+             frameState.context.uniformState.view,
+             clippingPlanes.modelMatrix,
+             scratchClippingPlaneMatrix
+           )
+         : Matrix4.IDENTITY;
++
++      return Matrix4.transposeInverse(
++        transform,
++        scratchTransposeInverseClippingPlaneMatrix
++      );
+     },
+     u_clippingPlanesEdgeStyle: function () {
+       var style = this.properties.clippingPlanesEdgeColor;
+diff --git a/Source/Scene/Model.js b/Source/Scene/Model.js
+index 7963516104..36b8d14075 100644
+--- a/Source/Scene/Model.js
++++ b/Source/Scene/Model.js
+@@ -3660,6 +3660,7 @@ function createColorFunction(model) {
+ }
+ 
+ var scratchClippingPlaneMatrix = new Matrix4();
++var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
+ function createClippingPlanesMatrixFunction(model) {
+   return function () {
+     var clippingPlanes = model.clippingPlanes;
+@@ -3673,11 +3674,16 @@ function createClippingPlanesMatrixFunction(model) {
+     var modelMatrix = defined(clippingPlanes)
+       ? clippingPlanes.modelMatrix
+       : Matrix4.IDENTITY;
+-    return Matrix4.multiply(
++    var transform = Matrix4.multiply(
+       model._clippingPlaneModelViewMatrix,
+       modelMatrix,
+       scratchClippingPlaneMatrix
+     );
++
++    return Matrix4.transposeInverse(
++      transform,
++      scratchTransposeInverseClippingPlaneMatrix
++    );
+   };
+ }
+ 
+diff --git a/Source/Scene/PointCloud.js b/Source/Scene/PointCloud.js
+index 7a992a0b06..d6359e1ce4 100644
+--- a/Source/Scene/PointCloud.js
++++ b/Source/Scene/PointCloud.js
+@@ -614,6 +614,7 @@ var batchIdLocation = 3;
+ var numberOfAttributes = 4;
+ 
+ var scratchClippingPlaneMatrix = new Matrix4();
++var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
+ 
+ function createResources(pointCloud, frameState) {
+   var context = frameState.context;
+@@ -941,11 +942,16 @@ function createUniformMap(pointCloud, frameState) {
+         clippingPlanesOriginMatrix,
+         scratchClippingPlaneMatrix
+       );
+-      return Matrix4.multiply(
++      var transform = Matrix4.multiply(
+         scratchClippingPlaneMatrix,
+         clippingPlanes.modelMatrix,
+         scratchClippingPlaneMatrix
+       );
++
++      return Matrix4.transposeInverse(
++        transform,
++        scratchTransposeInverseClippingPlaneMatrix
++      );
+     },
+   };
+ 
+diff --git a/Source/Shaders/Builtin/Functions/transformPlane.glsl b/Source/Shaders/Builtin/Functions/transformPlane.glsl
+index 6838805a82..53170f0f2d 100644
+--- a/Source/Shaders/Builtin/Functions/transformPlane.glsl
++++ b/Source/Shaders/Builtin/Functions/transformPlane.glsl
+@@ -1,8 +1,5 @@
+ vec4 czm_transformPlane(vec4 clippingPlane, mat4 transform) {
+-    vec3 transformedDirection = normalize((transform * vec4(clippingPlane.xyz, 0.0)).xyz);
+-    vec3 transformedPosition = (transform * vec4(clippingPlane.xyz * -clippingPlane.w, 1.0)).xyz;
+-    vec4 transformedPlane;
+-    transformedPlane.xyz = transformedDirection;
+-    transformedPlane.w = -dot(transformedDirection, transformedPosition);
+-    return transformedPlane;
++    vec4 transformPlane = transform * clippingPlane;
++    vec3 normalMagnitude = length(transformPlane.xyz);
++    return transformPlane / normalMagnitude;
+ }
