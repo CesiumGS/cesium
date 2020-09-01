@@ -3688,10 +3688,8 @@ var scratchTransposeMatrix = new Matrix3();
 function createReferenceFrameMatrixFunction(model) {
   return function () {
     if (
-      !defined(
-        model._sphericalHarmonicCoefficients &&
-          !defined(model._specularEnvironmentMaps)
-      )
+      !defined(model._sphericalHarmonicCoefficients) &&
+      !defined(model._specularEnvironmentMaps)
     ) {
       return Matrix4.IDENTITY;
     }
