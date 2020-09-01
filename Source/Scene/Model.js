@@ -2489,7 +2489,7 @@ function createProgram(programToCreate, model, context) {
       model._useDefaultSpecularMaps;
     var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_referenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -2605,9 +2605,9 @@ function recreateProgram(programToCreate, model, context) {
       (defined(model._specularEnvironmentMapAtlas) &&
         model._specularEnvironmentMapAtlas.ready) ||
       model._useDefaultSpecularMaps;
-    var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+    var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_referenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -3664,11 +3664,7 @@ var scratchTransposeInverseClippingPlaneMatrix = new Matrix4();
 function createClippingPlanesMatrixFunction(model) {
   return function () {
     var clippingPlanes = model.clippingPlanes;
-    if (
-      !defined(clippingPlanes) &&
-      !defined(model._sphericalHarmonicCoefficients) &&
-      !defined(model._specularEnvironmentMaps)
-    ) {
+    if (!defined(clippingPlanes)) {
       return Matrix4.IDENTITY;
     }
     var modelMatrix = defined(clippingPlanes)
@@ -3683,6 +3679,29 @@ function createClippingPlanesMatrixFunction(model) {
     return Matrix4.transposeInverse(
       transform,
       scratchTransposeInverseClippingPlaneMatrix
+    );
+  };
+}
+
+var scratchReferenceFrameMatrix = new Matrix3();
+var scratchTransposeMatrix = new Matrix3();
+function createReferenceFrameMatrixFunction(model) {
+  return function () {
+    if (
+      !defined(
+        model._sphericalHarmonicCoefficients &&
+          !defined(model._specularEnvironmentMaps)
+      )
+    ) {
+      return Matrix4.IDENTITY;
+    }
+
+    return Matrix3.transpose(
+      Matrix4.getMatrix3(
+        model._clippingPlaneModelViewMatrix,
+        scratchReferenceFrameMatrix
+      ),
+      scratchTransposeMatrix
     );
   };
 }
@@ -3865,6 +3884,7 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         model
       ),
       gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model),
+      gltf_referenceFrameMatrix: createReferenceFrameMatrixFunction(model),
       gltf_iblFactor: createIBLFactorFunction(model),
       gltf_lightColor: createLightColorFunction(model),
       gltf_sphericalHarmonicCoefficients: createSphericalHarmonicCoefficientsFunction(
