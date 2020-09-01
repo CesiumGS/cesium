@@ -1,4 +1,3 @@
-import BingMapsApi from "./BingMapsApi.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import Rectangle from "./Rectangle.js";
@@ -18,7 +17,7 @@ var url = "https://dev.virtualearth.net/REST/v1/Locations";
  */
 function BingMapsGeocoderService(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var key = BingMapsApi._getKeyNoDeprecate(options.key);
+  var key = options.key;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(key)) {
     throw new DeveloperError("options.key is required.");
