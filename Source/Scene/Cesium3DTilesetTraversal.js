@@ -653,18 +653,25 @@ function executeEmptyTraversal(tileset, root, frameState) {
 
     // Only traverse if the tile is empty - traversal stop at descendants with content
     var emptyContent = hasEmptyContent(tile);
-    var traverse = emptyContent && canTraverse(tileset, tile);
     var emptyLeaf = emptyContent && tile.children.length === 0;
+    var traverse = true;
+    if (tile.children.length === 0) {
+      traverse = false;
+    } else if (tile.hasTilesetContent) {
+      traverse = !tile.contentExpired;
+    }
+    traverse = emptyContent && traverse;
 
     // Traversal stops but the tile does not have content yet
     // There will be holes if the parent tries to refine to its children, so don't refine
     // One exception: a parent may refine even if one of its descendants is an empty leaf
     if (!traverse && !tile.contentAvailable && !emptyLeaf) {
+      root._criminal = tile;
       allDescendantsLoaded = false;
     }
 
     updateTile(tileset, tile, frameState);
-    if (!isVisible(tile)) {
+    if (!isVisible(tile) || !tile.contentAvailable) {
       // Load tiles that aren't visible since they are still needed for the parent to refine
       loadTile(tileset, tile, frameState);
       touchTile(tileset, tile, frameState);
