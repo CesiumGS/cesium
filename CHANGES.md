@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `ElevationBand` material, which maps colors / gradients to exact elevations [#9132](https://github.com/CesiumGS/cesium/pull/9132)
+- Added `ElevationBand` material, which maps colors / gradients to exact elevations. [#9132](https://github.com/CesiumGS/cesium/pull/9132)
 
 ##### Fixes :wrench:
 
