@@ -19,32 +19,22 @@ var scratchColor = new Color();
 var scratchColorAbove = new Color();
 var scratchColorBelow = new Color();
 var scratchColorBlend = new Color();
-var scratchColorBlendNext = new Color();
 var scratchPackedFloat = new Cartesian4();
+var scratchColorBytes = new Uint8Array(4);
 var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
 var maximumHeight = +5906376425472.0;
 var minimumHeight = -5906376425472.0;
 
-function lerpColor(
-  height,
-  minimumHeight,
-  maximumHeight,
-  minColor,
-  maxColor,
-  result
-) {
+function lerpEntryColor(height, entryBefore, entryAfter, result) {
   var lerpFactor =
     minimumHeight === maximumHeight
       ? 0.0
-      : (height - minimumHeight) / (maximumHeight - minimumHeight);
-  return Color.lerp(minColor, maxColor, lerpFactor, result);
+      : (height - entryBefore.height) /
+        (entryAfter.height - entryBefore.height);
+  return Color.lerp(entryBefore.color, entryAfter.color, lerpFactor, result);
 }
-function alphaBlendColor(colorAbove, colorBelow, result) {
-  result = Color.multiplyByScalar(colorBelow, 1.0 - colorAbove.alpha, result);
-  result = Color.add(result, colorAbove, result);
-  return result;
-}
+
 function createNewEntry(height, color) {
   return {
     height: height,
@@ -269,6 +259,15 @@ function createElevationBandMaterial(options) {
   var entriesAccumCurr = [];
   var i;
 
+  function addEntry(height, color) {
+    entriesAccumNext.push(createNewEntry(height, color));
+  }
+  function addBlendEntry(height, a, b) {
+    var result = Color.multiplyByScalar(b, 1.0 - a.alpha, scratchColorBlend);
+    result = Color.add(result, a, result);
+    addEntry(height, result);
+  }
+
   // alpha blend new layers on top of old ones
   var layerLength = layeredEntries.length;
   for (i = 0; i < layerLength; i++) {
@@ -296,13 +295,12 @@ function createElevationBandMaterial(options) {
           ? entriesAccumCurr[accumIdx + 1]
           : undefined;
 
-      var colorAbove, colorBelow, colorBlend;
       if (
         defined(entry) &&
         defined(entryAccum) &&
         entry.height === entryAccum.height
       ) {
-        // New entry on top of accum entry
+        // New entry directly on top of accum entry
         var isSplitAccum =
           defined(nextEntryAccum) &&
           entryAccum.height === nextEntryAccum.height;
@@ -313,217 +311,61 @@ function createElevationBandMaterial(options) {
         var isStart = !defined(prevEntry);
         var isEnd = !defined(nextEntry);
 
-        var height = entry.height;
-
         if (isSplitAccum) {
           if (isSplit) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  nextEntry.color,
-                  nextEntryAccum.color,
-                  scratchColorBlendNext
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addBlendEntry(entry.height, nextEntry.color, nextEntryAccum.color);
           } else if (isStart) {
-            entriesAccumNext.push(createNewEntry(height, entryAccum.color));
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  nextEntryAccum.color,
-                  scratchColorBlendNext
-                )
-              )
-            );
+            addEntry(entry.height, entryAccum.color);
+            addBlendEntry(entry.height, entry.color, nextEntryAccum.color);
           } else if (isEnd) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(createNewEntry(height, nextEntryAccum.color));
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addEntry(entry.height, nextEntryAccum.color);
           } else {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  nextEntryAccum.color,
-                  scratchColorBlendNext
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addBlendEntry(entry.height, entry.color, nextEntryAccum.color);
           }
         } else if (isStartAccum) {
           if (isSplit) {
-            entriesAccumNext.push(createNewEntry(height, entry.color));
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  nextEntry.color,
-                  entryAccum.color,
-                  scratchColorBlendNext
-                )
-              )
-            );
+            addEntry(entry.height, entry.color);
+            addBlendEntry(entry.height, nextEntry.color, entryAccum.color);
           } else if (isEnd) {
-            entriesAccumNext.push(createNewEntry(height, entry.color));
-            entriesAccumNext.push(createNewEntry(height, entryAccum.color));
+            addEntry(entry.height, entry.color);
+            addEntry(entry.height, entryAccum.color);
           } else if (isStart) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
           } else {
-            entriesAccumNext.push(createNewEntry(height, entry.color));
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
+            addEntry(entry.height, entry.color);
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
           }
         } else if (isEndAccum) {
           if (isSplit) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(createNewEntry(height, nextEntry.color));
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addEntry(entry.height, nextEntry.color);
           } else if (isStart) {
-            entriesAccumNext.push(createNewEntry(height, entryAccum.color));
-            entriesAccumNext.push(createNewEntry(height, entry.color));
+            addEntry(entry.height, entryAccum.color);
+            addEntry(entry.height, entry.color);
           } else if (isEnd) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
           } else {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(createNewEntry(height, entry.color));
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addEntry(entry.height, entry.color);
           }
         } else {
           // eslint-disable-next-line no-lonely-if
           if (isSplit) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  nextEntry.color,
-                  entryAccum.color,
-                  scratchColorBlendNext
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addBlendEntry(entry.height, nextEntry.color, entryAccum.color);
           } else if (isStart) {
-            entriesAccumNext.push(createNewEntry(height, entryAccum.color));
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
+            addEntry(entry.height, entryAccum.color);
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
           } else if (isEnd) {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
-            entriesAccumNext.push(createNewEntry(height, entryAccum.color));
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
+            addEntry(entry.height, entryAccum.color);
           } else {
-            entriesAccumNext.push(
-              createNewEntry(
-                height,
-                alphaBlendColor(
-                  entry.color,
-                  entryAccum.color,
-                  scratchColorBlend
-                )
-              )
-            );
+            addBlendEntry(entry.height, entry.color, entryAccum.color);
           }
         }
-
         idx += isSplit ? 2 : 1;
         accumIdx += isSplitAccum ? 2 : 1;
       } else if (
@@ -533,25 +375,21 @@ function createElevationBandMaterial(options) {
         entry.height < entryAccum.height
       ) {
         // New entry between two accum entries
-        colorAbove = Color.clone(entry.color, scratchColorAbove);
-        colorBelow = lerpColor(
+        var colorBelow = lerpEntryColor(
           entry.height,
-          prevEntryAccum.height,
-          entryAccum.height,
-          prevEntryAccum.color,
-          entryAccum.color,
+          prevEntryAccum,
+          entryAccum,
           scratchColorBelow
         );
-        colorBlend = alphaBlendColor(colorAbove, colorBelow, scratchColorBlend);
 
         if (!defined(prevEntry)) {
-          entriesAccumNext.push(createNewEntry(entry.height, colorBelow));
-          entriesAccumNext.push(createNewEntry(entry.height, colorBlend));
+          addEntry(entry.height, colorBelow);
+          addBlendEntry(entry.height, entry.color, colorBelow);
         } else if (!defined(nextEntry)) {
-          entriesAccumNext.push(createNewEntry(entry.height, colorBlend));
-          entriesAccumNext.push(createNewEntry(entry.height, colorBelow));
+          addBlendEntry(entry.height, entry.color, colorBelow);
+          addEntry(entry.height, colorBelow);
         } else {
-          entriesAccumNext.push(createNewEntry(entry.height, colorBlend));
+          addBlendEntry(entry.height, entry.color, colorBelow);
         }
         idx++;
       } else if (
@@ -561,18 +399,14 @@ function createElevationBandMaterial(options) {
         entryAccum.height < entry.height
       ) {
         // Accum entry between two new entries
-        colorAbove = lerpColor(
+        var colorAbove = lerpEntryColor(
           entryAccum.height,
-          prevEntry.height,
-          entry.height,
-          prevEntry.color,
-          entry.color,
+          prevEntry,
+          entry,
           scratchColorAbove
         );
-        colorBelow = Color.clone(entryAccum.color, scratchColorBelow);
-        colorBlend = alphaBlendColor(colorAbove, colorBelow, scratchColorBlend);
 
-        entriesAccumNext.push(createNewEntry(entryAccum.height, colorBlend));
+        addBlendEntry(entryAccum.height, colorAbove, entryAccum.color);
         accumIdx++;
       } else if (
         defined(entry) &&
@@ -585,22 +419,20 @@ function createElevationBandMaterial(options) {
           !defined(nextEntry)
         ) {
           // Insert blank gap between last entry and first accum entry
-          entriesAccumNext.push(createNewEntry(entry.height, entry.color));
-          entriesAccumNext.push(createNewEntry(entry.height, blankColor));
-          entriesAccumNext.push(createNewEntry(entryAccum.height, blankColor));
+          addEntry(entry.height, entry.color);
+          addEntry(entry.height, blankColor);
+          addEntry(entryAccum.height, blankColor);
         } else if (
           !defined(entryAccum) &&
           defined(prevEntryAccum) &&
           !defined(prevEntry)
         ) {
           // Insert blank gap between last accum entry and first entry
-          entriesAccumNext.push(
-            createNewEntry(prevEntryAccum.height, blankColor)
-          );
-          entriesAccumNext.push(createNewEntry(entry.height, blankColor));
-          entriesAccumNext.push(createNewEntry(entry.height, entry.color));
+          addEntry(prevEntryAccum.height, blankColor);
+          addEntry(entry.height, blankColor);
+          addEntry(entry.height, entry.color);
         } else {
-          entriesAccumNext.push(createNewEntry(entry.height, entry.color));
+          addEntry(entry.height, entry.color);
         }
         idx++;
       } else if (
@@ -608,9 +440,7 @@ function createElevationBandMaterial(options) {
         (!defined(entry) || entryAccum.height < entry.height)
       ) {
         // Accum entry completely before or completely after new entries
-        entriesAccumNext.push(
-          createNewEntry(entryAccum.height, entryAccum.color)
-        );
+        addEntry(entryAccum.height, entryAccum.color);
         accumIdx++;
       }
     }
@@ -666,22 +496,11 @@ function createElevationBandMaterial(options) {
   var colorsArray = new Uint8Array(allEntriesLength * 4);
   for (i = 0; i < allEntriesLength; i++) {
     var color = allEntries[i].color;
-
-    // bring back to non-premulitplied for consumption by shader
-    var invAlpha = color.alpha > 0.0 ? 1.0 / color.alpha : 1.0;
-
-    colorsArray[i * 4 + 0] = Math.floor(
-      CesiumMath.clamp(color.red * invAlpha, 0.0, 1.0) * 255.0
-    );
-    colorsArray[i * 4 + 1] = Math.floor(
-      CesiumMath.clamp(color.green * invAlpha, 0.0, 1.0) * 255.0
-    );
-    colorsArray[i * 4 + 2] = Math.floor(
-      CesiumMath.clamp(color.blue * invAlpha, 0.0, 1.0) * 255.0
-    );
-    colorsArray[i * 4 + 3] = Math.floor(
-      CesiumMath.clamp(color.alpha, 0.0, 1.0) * 255.0
-    );
+    color.toBytes(scratchColorBytes);
+    colorsArray[i * 4 + 0] = scratchColorBytes[0];
+    colorsArray[i * 4 + 1] = scratchColorBytes[1];
+    colorsArray[i * 4 + 2] = scratchColorBytes[2];
+    colorsArray[i * 4 + 3] = scratchColorBytes[3];
   }
 
   var colorsTex = Texture.create({

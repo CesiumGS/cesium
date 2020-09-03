@@ -59,6 +59,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float lerper = heightBelow == heightAbove ? 1.0 : (height - heightBelow) / (heightAbove - heightBelow);
     vec2 colorUv = vec2(invTexSize * (float(idxBelow) + 0.5 + lerper), 0.5);
     vec4 color = texture2D(colors, colorUv);
+
+    // undo preumultiplied alpha
+    if (color.a > 0.0) 
+    {
+        color.rgb /= color.a;
+    }
+    
     color.rgb = czm_gammaCorrect(color.rgb);
 
     material.diffuse = color.rgb;

@@ -52,7 +52,15 @@ describe("Scene/createElevationBandMaterial", function () {
     var b = colorData[texel * 4 + 2];
     var a = colorData[texel * 4 + 3];
     var color = [r, g, b, a];
-    expect(color).toEqualEpsilon(expectedColor.toBytes(), 1);
+
+    // The teture stores colors as premultiplied alpha, so we need to convert
+    // the expected color to premultiplied alpha before comparing.
+    var premulipliedColor = Color.clone(expectedColor, new Color());
+    premulipliedColor.red *= premulipliedColor.alpha;
+    premulipliedColor.green *= premulipliedColor.alpha;
+    premulipliedColor.blue *= premulipliedColor.alpha;
+
+    expect(color).toEqualEpsilon(premulipliedColor.toBytes(), 1);
 
     var height = isHeightDataPacked
       ? Cartesian4.unpackFloat(Cartesian4.unpack(heightData, texel * 4))

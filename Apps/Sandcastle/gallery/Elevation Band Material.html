@@ -286,7 +286,7 @@
             var combinedBand = {
               entries: [
                 {
-                  height: band1Position,
+                  height: band1Position - bandThickness * 0.5,
                   color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
                 },
                 {
@@ -294,7 +294,7 @@
                   color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
                 },
                 {
-                  height: band3Position,
+                  height: band3Position + bandThickness * 0.5,
                   color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
                 },
               ],
