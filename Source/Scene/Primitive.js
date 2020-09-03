@@ -498,7 +498,7 @@ Object.defineProperties(Primitive.prototype, {
     get: function () {
       return this._pickIds;
     }
- },
+  },
 });
 
 function getCommonPerInstanceAttributeNames(instances) {
