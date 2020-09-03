@@ -487,6 +487,18 @@ Object.defineProperties(Primitive.prototype, {
       return this._readyPromise.promise;
     },
   },
+  
+  /**
+   * get pickIds. insure primitive can be used to per-feature postprocess .
+   * @memberof Primitive.prototype
+   * @type {PickId[]}
+   * @readonly
+   */
+  pickIds: {
+    get: function () {
+      return this._pickIds;
+    }
+ },
 });
 
 function getCommonPerInstanceAttributeNames(instances) {
