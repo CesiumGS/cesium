@@ -53,7 +53,7 @@ describe("Scene/createElevationBandMaterial", function () {
     var a = colorData[texel * 4 + 3];
     var color = [r, g, b, a];
 
-    // The teture stores colors as premultiplied alpha, so we need to convert
+    // The texture stores colors as premultiplied alpha, so we need to convert
     // the expected color to premultiplied alpha before comparing.
     var premulipliedColor = Color.clone(expectedColor, new Color());
     premulipliedColor.red *= premulipliedColor.alpha;
