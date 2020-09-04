@@ -555,6 +555,12 @@ function canTraverse(tileset, tile) {
     // Don't traverse if the subtree is expired because it will be destroyed
     return !tile.contentExpired;
   }
+
+  // We ignore empty tile SSE and traverse down the tree
+  if (tile.hasEmptyContent) {
+    return true;
+  }
+
   return tile._screenSpaceError > tileset._maximumScreenSpaceError;
 }
 
@@ -662,18 +668,41 @@ function executeEmptyTraversal(tileset, root, frameState) {
       allDescendantsLoaded = false;
     }
 
-    updateTile(tileset, tile, frameState);
     if (!isVisible(tile)) {
       // Load tiles that aren't visible since they are still needed for the parent to refine
       loadTile(tileset, tile, frameState);
+      touchTile(tileset, tile, frameState);
     }
-    touchTile(tileset, tile, frameState);
 
     // Only traverse down for empty tile
     if (emptyContent) {
-      for (var i = 0; i < childrenLength; ++i) {
-        var child = children[i];
-        stack.push(child);
+      var childUpdated = false;
+      var addRefineHasAllEmpty = true;
+      var anyVisibleChild = false;
+      var i;
+      var child;
+      if (tile.refine === Cesium3DTileRefine.ADD) {
+        childUpdated = true;
+        for (i = 0; i < childrenLength; ++i) {
+          child = children[i];
+          updateTile(tileset, child, frameState);
+          addRefineHasAllEmpty &= hasEmptyContent(child);
+          anyVisibleChild |= isVisible(child) && child.contentAvailable;
+        }
+
+        if (!anyVisibleChild && !addRefineHasAllEmpty) {
+          allDescendantsLoaded = false;
+        }
+      }
+
+      if (addRefineHasAllEmpty || tile.refine === Cesium3DTileRefine.REPLACE) {
+        for (i = 0; i < childrenLength; ++i) {
+          child = children[i];
+          if (!childUpdated) {
+            updateTile(tileset, child, frameState);
+          }
+          stack.push(child);
+        }
       }
     }
   }
