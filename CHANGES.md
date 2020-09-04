@@ -1,10 +1,23 @@
 # Change Log
 
+### 1.74 - 2020-10-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where the camera zooming is stuck when looking up. [#9126](https://github.com/CesiumGS/cesium/pull/9126)
+- Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
+
 ### 1.73 - 2020-09-01
+
+##### Breaking Changes :mega:
+
+- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
 
 ##### Additions :tada:
 
-- Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- Added support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data. [#9121](https://github.com/CesiumGS/cesium/pull/9121).
 
 ##### Fixes :wrench:
 

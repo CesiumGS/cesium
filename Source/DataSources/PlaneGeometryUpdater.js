@@ -1,4 +1,3 @@
-import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -13,7 +12,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
 import PlaneGeometry from "../Core/PlaneGeometry.js";
 import PlaneOutlineGeometry from "../Core/PlaneOutlineGeometry.js";
-import Quaternion from "../Core/Quaternion.js";
 import ShowGeometryInstanceAttribute from "../Core/ShowGeometryInstanceAttribute.js";
 import MaterialAppearance from "../Scene/MaterialAppearance.js";
 import PerInstanceColorAppearance from "../Scene/PerInstanceColorAppearance.js";
@@ -140,7 +138,6 @@ PlaneGeometryUpdater.prototype.createFillGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    this._scene.mapProjection.ellipsoid,
     modelMatrix
   );
 
@@ -204,7 +201,6 @@ PlaneGeometryUpdater.prototype.createOutlineGeometryInstance = function (time) {
     plane,
     dimensions,
     modelMatrix,
-    this._scene.mapProjection.ellipsoid,
     modelMatrix
   );
 
@@ -323,19 +319,13 @@ DynamicPlaneGeometryUpdater.prototype._setOptions = function (
 };
 
 var scratchAxis = new Cartesian3();
-var scratchAxis2 = new Cartesian3();
+var scratchUp = new Cartesian3();
 var scratchTranslation = new Cartesian3();
-var scratchNormal = new Cartesian3();
 var scratchScale = new Cartesian3();
-var scratchQuaternion = new Quaternion();
-var scratchMatrix3 = new Matrix3();
-function createPrimitiveMatrix(
-  plane,
-  dimensions,
-  transform,
-  ellipsoid,
-  result
-) {
+var scratchRotation = new Matrix3();
+var scratchRotationScale = new Matrix3();
+var scratchLocalTransform = new Matrix4();
+function createPrimitiveMatrix(plane, dimensions, transform, result) {
   var normal = plane.normal;
   var distance = plane.distance;
 
@@ -344,58 +334,46 @@ function createPrimitiveMatrix(
     -distance,
     scratchTranslation
   );
-  translation = Matrix4.multiplyByPoint(transform, translation, translation);
 
-  var transformedNormal = Matrix4.multiplyByPointAsVector(
-    transform,
-    normal,
-    scratchNormal
-  );
-  Cartesian3.normalize(transformedNormal, transformedNormal);
-
-  var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
+  var up = Cartesian3.clone(Cartesian3.UNIT_Z, scratchUp);
   if (
     CesiumMath.equalsEpsilon(
-      Math.abs(Cartesian3.dot(up, transformedNormal)),
+      Math.abs(Cartesian3.dot(up, normal)),
       1.0,
       CesiumMath.EPSILON8
     )
   ) {
-    up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
-    if (
-      CesiumMath.equalsEpsilon(
-        Math.abs(Cartesian3.dot(up, transformedNormal)),
-        1.0,
-        CesiumMath.EPSILON8
-      )
-    ) {
-      up = Cartesian3.clone(Cartesian3.UNIT_X, up);
-    }
+    up = Cartesian3.clone(Cartesian3.UNIT_Y, up);
   }
 
-  var left = Cartesian3.cross(up, transformedNormal, scratchAxis);
-  up = Cartesian3.cross(transformedNormal, left, up);
+  var left = Cartesian3.cross(up, normal, scratchAxis);
+  up = Cartesian3.cross(normal, left, up);
   Cartesian3.normalize(left, left);
   Cartesian3.normalize(up, up);
 
-  var rotationMatrix = scratchMatrix3;
+  var rotationMatrix = scratchRotation;
   Matrix3.setColumn(rotationMatrix, 0, left, rotationMatrix);
   Matrix3.setColumn(rotationMatrix, 1, up, rotationMatrix);
-  Matrix3.setColumn(rotationMatrix, 2, transformedNormal, rotationMatrix);
-  var rotation = Quaternion.fromRotationMatrix(
+  Matrix3.setColumn(rotationMatrix, 2, normal, rotationMatrix);
+
+  var scale = Cartesian3.fromElements(
+    dimensions.x,
+    dimensions.y,
+    1.0,
+    scratchScale
+  );
+  var rotationScaleMatrix = Matrix3.multiplyByScale(
     rotationMatrix,
-    scratchQuaternion
-  );
-
-  var scale = Cartesian2.clone(dimensions, scratchScale);
-  scale.z = 1.0;
-
-  return Matrix4.fromTranslationQuaternionRotationScale(
-    translation,
-    rotation,
     scale,
-    result
+    scratchRotationScale
   );
+
+  var localTransform = Matrix4.fromRotationTranslation(
+    rotationScaleMatrix,
+    translation,
+    scratchLocalTransform
+  );
+  return Matrix4.multiplyTransformation(transform, localTransform, result);
 }
 
 /**
