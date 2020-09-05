@@ -23,12 +23,9 @@ var scratchPackedFloat = new Cartesian4();
 var scratchColorBytes = new Uint8Array(4);
 var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
-var maximumHeight = +5906376425472.0;
-var minimumHeight = -5906376425472.0;
-
 function lerpEntryColor(height, entryBefore, entryAfter, result) {
   var lerpFactor =
-    minimumHeight === maximumHeight
+    entryBefore.height === entryAfter.height
       ? 0.0
       : (height - entryBefore.height) /
         (entryAfter.height - entryBefore.height);
@@ -124,8 +121,8 @@ function preprocess(layers) {
 
       var height = CesiumMath.clamp(
         entryOrig.height,
-        minimumHeight,
-        maximumHeight
+        createElevationBandMaterial._minimumHeight,
+        createElevationBandMaterial._maximumHeight
       );
 
       // premultiplied alpha
@@ -168,13 +165,23 @@ function preprocess(layers) {
     }
 
     if (extendDownwards) {
-      entries.splice(0, 0, createNewEntry(minimumHeight, entries[0].color));
+      entries.splice(
+        0,
+        0,
+        createNewEntry(
+          createElevationBandMaterial._minimumHeight,
+          entries[0].color
+        )
+      );
     }
     if (extendUpwards) {
       entries.splice(
         entries.length,
         0,
-        createNewEntry(maximumHeight, entries[entries.length - 1].color)
+        createNewEntry(
+          createElevationBandMaterial._maximumHeight,
+          entries[entries.length - 1].color
+        )
       );
     }
 
@@ -536,5 +543,15 @@ function createElevationBandMaterial(options) {
 createElevationBandMaterial._useFloatTexture = function (context) {
   return context.floatingPointTexture;
 };
+
+/**
+ * @private
+ */
+createElevationBandMaterial._maximumHeight = +100000000.0;
+
+/**
+ * @private
+ */
+createElevationBandMaterial._minimumHeight = -100000000.0;
 
 export default createElevationBandMaterial;

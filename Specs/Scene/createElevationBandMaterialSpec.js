@@ -161,8 +161,16 @@ describe("Scene/createElevationBandMaterial", function () {
     });
 
     checkTextureDimensions(2);
-    checkTexel(1, new Color(1, 0, 0, 1), +5906376425472.0);
-    checkTexel(0, new Color(1, 0, 0, 1), -5906376425472.0);
+    checkTexel(
+      1,
+      new Color(1, 0, 0, 1),
+      createElevationBandMaterial._maximumHeight
+    );
+    checkTexel(
+      0,
+      new Color(1, 0, 0, 1),
+      createElevationBandMaterial._minimumHeight
+    );
   });
 
   it("creates material with one entry that extends upwards", function () {
@@ -184,7 +192,11 @@ describe("Scene/createElevationBandMaterial", function () {
     });
 
     checkTextureDimensions(2);
-    checkTexel(1, new Color(1, 0, 0, 1), +5906376425472.0);
+    checkTexel(
+      1,
+      new Color(1, 0, 0, 1),
+      createElevationBandMaterial._maximumHeight
+    );
     checkTexel(0, new Color(1, 0, 0, 1), 0.0);
   });
 
@@ -208,7 +220,11 @@ describe("Scene/createElevationBandMaterial", function () {
 
     checkTextureDimensions(2);
     checkTexel(1, new Color(1, 0, 0, 1), 0.0);
-    checkTexel(0, new Color(1, 0, 0, 1), -5906376425472.0);
+    checkTexel(
+      0,
+      new Color(1, 0, 0, 1),
+      createElevationBandMaterial._minimumHeight
+    );
   });
 
   it("removes unused entries", function () {
@@ -998,7 +1014,11 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(3, new Color(0.625, 0.125, 0.125, 1), -500.0);
     checkTexel(2, new Color(0.25, 0.25, 0.25, 1), -500.0);
     checkTexel(1, new Color(0, 0, 0, 1), -1000.0);
-    checkTexel(0, new Color(0, 0, 0, 1), -5906376425472.0);
+    checkTexel(
+      0,
+      new Color(0, 0, 0, 1),
+      createElevationBandMaterial._minimumHeight
+    );
   });
 
   it("creates material with unpacked height", function () {
