@@ -1039,7 +1039,7 @@ function generateTechnique(
     fragmentShader +=
       "    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n";
     fragmentShader +=
-      "    vec3 cubeDir = normalize(yUpToZUp * gltf_referenceFrameMatrix * normalize(reflect(-v, n))); \n";
+      "    vec3 cubeDir = normalize(yUpToZUp * gltf_iblReferenceFrameMatrix * normalize(reflect(-v, n))); \n";
 
     fragmentShader += "#ifdef DIFFUSE_IBL \n";
     fragmentShader += "#ifdef CUSTOM_SPHERICAL_HARMONICS \n";

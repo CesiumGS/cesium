@@ -2647,23 +2647,23 @@ Matrix4.inverseTransformation = function (matrix, result) {
   return result;
 };
 
-var scratchInverseMatrix = new Matrix4();
+var scratchTransposeMatrix = new Matrix4();
 
 /**
  * Computes the matrix that is used to transform normal vector
  *
- * @param {Matrix4} matrix The matrix to invert and transpose.
+ * @param {Matrix4} matrix The matrix to transpose and invert.
  * @param {Matrix4} result The object onto which to store the result.
  * @returns {Matrix4} The modified result parameter.
  */
-Matrix4.transposeInverse = function (matrix, result) {
+Matrix4.inverseTranspose = function (matrix, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("matrix", matrix);
   Check.typeOf.object("result", result);
   //>>includeEnd('debug');
 
-  return Matrix4.transpose(
-    Matrix4.inverse(matrix, scratchInverseMatrix),
+  return Matrix4.inverse(
+    Matrix4.transpose(matrix, scratchTransposeMatrix),
     result
   );
 };

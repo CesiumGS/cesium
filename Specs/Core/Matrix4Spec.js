@@ -2341,7 +2341,7 @@ describe("Core/Matrix4", function () {
     expect(result).toEqual(expected);
   });
 
-  it("transposeInverse works", function () {
+  it("inverseTranspose works", function () {
     var matrix = new Matrix4(
       1.0,
       2.0,
@@ -2361,12 +2361,12 @@ describe("Core/Matrix4", function () {
       16.0
     );
     var expectedInverse = Matrix4.inverse(matrix, new Matrix4());
-    var expectedTransposeInverse = Matrix4.transpose(
+    var expectedInverseTranspose = Matrix4.transpose(
       expectedInverse,
       new Matrix4()
     );
-    var result = Matrix4.transposeInverse(matrix, new Matrix4());
-    expect(result).toEqual(expectedTransposeInverse);
+    var result = Matrix4.inverseTranspose(matrix, new Matrix4());
+    expect(result).toEqual(expectedInverseTranspose);
   });
 
   it("transpose works with a result parameter that is an input result parameter", function () {

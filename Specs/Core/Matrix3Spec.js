@@ -779,15 +779,15 @@ describe("Core/Matrix3", function () {
     expect(result).toEqual(expected);
   });
 
-  it("transposeInverse works", function () {
+  it("inverseTranspose works", function () {
     var matrix = new Matrix3(1.0, 5.0, 2.0, 1.0, 1.0, 7.0, 0.0, -3.0, 4.0);
     var expectedInverse = Matrix3.inverse(matrix, new Matrix3());
-    var expectedTransposeInverse = Matrix3.transpose(
+    var expectedInverseTranspose = Matrix3.transpose(
       expectedInverse,
       new Matrix3()
     );
-    var result = Matrix3.transposeInverse(matrix, new Matrix3());
-    expect(result).toEqual(expectedTransposeInverse);
+    var result = Matrix3.inverseTranspose(matrix, new Matrix3());
+    expect(result).toEqual(expectedInverseTranspose);
   });
 
   it("getRotation returns matrix without scale", function () {

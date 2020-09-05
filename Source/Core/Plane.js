@@ -1,10 +1,10 @@
 import Cartesian3 from "./Cartesian3.js";
+import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
 import Matrix4 from "./Matrix4.js";
-import Cartesian4 from "./Cartesian4.js";
 
 /**
  * A plane in Hessian Normal Form defined by
@@ -193,7 +193,7 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   return Cartesian3.subtract(point, scaledNormal, result);
 };
 
-var scratchTransposeInverse = new Matrix4();
+var scratchInverseTranspose = new Matrix4();
 var scratchPlaneCartesian4 = new Cartesian4();
 var scratchTransformNormal = new Cartesian3();
 /**
@@ -212,9 +212,9 @@ Plane.transform = function (plane, transform, result) {
 
   var normal = plane.normal;
   var distance = plane.distance;
-  var transposeInverse = Matrix4.transposeInverse(
+  var inverseTranspose = Matrix4.inverseTranspose(
     transform,
-    scratchTransposeInverse
+    scratchInverseTranspose
   );
   var planeAsCartesian4 = Cartesian4.fromElements(
     normal.x,
@@ -224,7 +224,7 @@ Plane.transform = function (plane, transform, result) {
     scratchPlaneCartesian4
   );
   planeAsCartesian4 = Matrix4.multiplyByVector(
-    transposeInverse,
+    inverseTranspose,
     planeAsCartesian4,
     planeAsCartesian4
   );
