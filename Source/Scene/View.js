@@ -126,6 +126,9 @@ function updateFrustums(view, scene, near, far) {
   var is2D = scene.mode === SceneMode.SCENE2D;
   var nearToFarDistance2D = scene.nearToFarDistance2D;
 
+  // Extend the far plane slightly further to prevent geometry clipping against the far plane.
+  far *= 1.0 + CesiumMath.EPSILON2;
+
   // The computed near plane must be between the user defined near and far planes.
   // The computed far plane must between the user defined far and computed near.
   // This will handle the case where the computed near plane is further than the user defined far plane.
