@@ -323,7 +323,7 @@ function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
   var parent = tile.parent;
   if (
     !defined(parent) ||
-    parent.hasTilesetContent ||
+    hasEmptyContent(parent) ||
     parent.refine !== Cesium3DTileRefine.ADD
   ) {
     return false;
@@ -660,40 +660,15 @@ function executeEmptyTraversal(tileset, root, frameState) {
     // Only traverse if the tile is empty - traversal stop at descendants with content
     var emptyContent = hasEmptyContent(tile);
     var emptyLeaf = emptyContent && tile.children.length === 0;
-    var traverse = emptyContent;
-    var childUpdated = false;
-    var child;
-    var i;
 
     // Traversal stops but the tile does not have content yet
     // There will be holes if the parent tries to refine to its children, so don't refine
     // One exception: a parent may refine even if one of its descendants is an empty leaf
     if (!emptyContent && !tile.contentAvailable && !emptyLeaf) {
       allDescendantsLoaded = false;
-    } else if (emptyContent && tile.refine === Cesium3DTileRefine.ADD) {
-      // set flag to prevent another update tile when traversing down
-      childUpdated = true;
-
-      // check if any child is visible and content is available to render in this frame
-      var anyVisibleChild = false;
-      var addRefineHasAllEmpty = true;
-      for (i = 0; i < childrenLength; ++i) {
-        child = children[i];
-        updateTile(tileset, child, frameState);
-        addRefineHasAllEmpty &= hasEmptyContent(child);
-        anyVisibleChild |= isVisible(child) && child.contentAvailable;
-      }
-
-      // if at least one children has content, but none of them are visible or
-      // content are not ready, then we don't want to refine to prevent hole
-      if (!anyVisibleChild && !addRefineHasAllEmpty) {
-        allDescendantsLoaded = false;
-      }
-
-      // only traverse down if all children are empty
-      traverse = emptyContent && addRefineHasAllEmpty;
     }
 
+    updateTile(tileset, tile, frameState);
     if (!isVisible(tile)) {
       // Load tiles that aren't visible since they are still needed for the parent to refine
       loadTile(tileset, tile, frameState);
@@ -701,12 +676,9 @@ function executeEmptyTraversal(tileset, root, frameState) {
     }
 
     // Only traverse down for empty tile
-    if (traverse) {
-      for (i = 0; i < childrenLength; ++i) {
-        child = children[i];
-        if (!childUpdated) {
-          updateTile(tileset, child, frameState);
-        }
+    if (emptyContent) {
+      for (var i = 0; i < childrenLength; ++i) {
+        var child = children[i];
         stack.push(child);
       }
     }
