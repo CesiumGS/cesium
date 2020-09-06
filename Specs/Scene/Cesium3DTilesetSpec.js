@@ -1286,7 +1286,7 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when tile with add refinement doesn't have available children to render", function () {
+    it("replacement refinement - refines when ignoring empty tiles", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
@@ -1301,24 +1301,6 @@ describe(
         setZoom(80);
         scene.renderForSpecs();
 
-        var statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
-        expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
-      });
-    });
-
-    it("replacement refinement - refines when tile with add refinement has children to render", function () {
-      // No children have content, but all grandchildren have content
-      //
-      //          C
-      //      E       E
-      //    C   C   C   C
-      //
-      return Cesium3DTilesTester.loadTileset(
-        scene,
-        tilesetReplacement1Url
-      ).then(function (tileset) {
         var statistics = tileset._statistics;
         expect(statistics.selected).toEqual(4);
         expect(statistics.visited).toEqual(7);
