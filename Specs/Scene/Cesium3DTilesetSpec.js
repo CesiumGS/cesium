@@ -1308,7 +1308,7 @@ describe(
       });
     });
 
-    it("replacement refinement - refines when tile with ADD refinement has children to render", function () {
+    it("replacement refinement - refines when tile with add refinement has children to render", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
