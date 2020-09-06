@@ -1366,7 +1366,7 @@ Matrix3.inverse = function (matrix, result) {
 var scratchTransposeMatrix = new Matrix3();
 
 /**
- * Computes the matrix that is used to transform normal vector
+ * Computes the inverse transpose of a matrix.
  *
  * @param {Matrix3} matrix The matrix to transpose and invert.
  * @param {Matrix3} result The object onto which to store the result.

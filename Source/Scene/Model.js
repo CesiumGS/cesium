@@ -566,8 +566,8 @@ function Model(options) {
   this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
   this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-  this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
-  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from modelMatrix rotation and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
   this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
   this._boundingSphere = undefined;
   this._scaledBoundingSphere = new BoundingSphere();
@@ -3662,39 +3662,14 @@ function createColorFunction(model) {
   };
 }
 
-var scratchClippingPlaneMatrix = new Matrix4();
-var scratchInverseTransposeClippingPlaneMatrix = new Matrix4();
 function createClippingPlanesMatrixFunction(model) {
   return function () {
-    var clippingPlanes = model.clippingPlanes;
-    if (!defined(clippingPlanes)) {
-      return Matrix4.IDENTITY;
-    }
-    var clippingPlaneModelMatrix = defined(clippingPlanes)
-      ? clippingPlanes.modelMatrix
-      : Matrix4.IDENTITY;
-    var transform = Matrix4.multiply(
-      model._clippingPlaneModelViewMatrix,
-      clippingPlaneModelMatrix,
-      scratchClippingPlaneMatrix
-    );
-
-    return Matrix4.inverseTranspose(
-      transform,
-      scratchInverseTransposeClippingPlaneMatrix
-    );
+    return model._clippingPlanesMatrix;
   };
 }
 
 function createIBLReferenceFrameMatrixFunction(model) {
   return function () {
-    if (
-      !defined(model._sphericalHarmonicCoefficients) &&
-      !defined(model._specularEnvironmentMaps)
-    ) {
-      return Matrix4.IDENTITY;
-    }
-
     return model._iblReferenceFrameMatrix;
   };
 }
@@ -5122,9 +5097,9 @@ function distanceDisplayConditionVisible(model, frameState) {
   return distance2 >= nearSquared && distance2 <= farSquared;
 }
 
+var scratchClippingPlanesMatrix = new Matrix4();
 var scratchIBLReferenceFrameMatrix4 = new Matrix4();
 var scratchIBLReferenceFrameMatrix3 = new Matrix3();
-var scratchIBLReferenceFrameRotation = new Matrix3();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -5533,11 +5508,27 @@ Model.prototype.update = function (frameState) {
       clippingPlanes.enabled &&
       clippingPlanes.length > 0;
 
+    // If defined, use the reference matrix to transform miscellaneous properties like
+    // clipping planes and IBL instead of the modelMatrix. This is so that when
+    // models are part of a tileset these properties get transformed relative to
+    // a common reference (such as the root).
+    var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
+
     if (useClippingPlanes) {
-      Matrix4.multiply(
+      var clippingPlanesMatrix = scratchClippingPlanesMatrix;
+      clippingPlanesMatrix = Matrix4.multiply(
         context.uniformState.view3D,
-        defaultValue(this.referenceMatrix, modelMatrix),
-        this._clippingPlaneModelViewMatrix
+        referenceMatrix,
+        clippingPlanesMatrix
+      );
+      clippingPlanesMatrix = Matrix4.multiply(
+        clippingPlanesMatrix,
+        clippingPlanes.modelMatrix,
+        clippingPlanesMatrix
+      );
+      this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+        clippingPlanesMatrix,
+        this._clippingPlanesMatrix
       );
       currentClippingPlanesState = clippingPlanes.clippingPlanesState;
     }
@@ -5551,18 +5542,24 @@ Model.prototype.update = function (frameState) {
       this._useDefaultSpecularMaps;
 
     if (usesSH || usesSM) {
-      Matrix3.transpose(
-        Matrix3.getRotation(
-          Matrix4.getMatrix3(
-            Matrix4.multiply(
-              context.uniformState.view3D,
-              defaultValue(this.referenceMatrix, modelMatrix),
-              scratchIBLReferenceFrameMatrix4
-            ),
-            scratchIBLReferenceFrameMatrix3
-          ),
-          scratchIBLReferenceFrameRotation
-        ),
+      var iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+      var iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+      iblReferenceFrameMatrix4 = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        iblReferenceFrameMatrix4
+      );
+      iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+        iblReferenceFrameMatrix4,
+        iblReferenceFrameMatrix3
+      );
+      iblReferenceFrameMatrix3 = Matrix3.getRotation(
+        iblReferenceFrameMatrix3,
+        iblReferenceFrameMatrix3
+      );
+      this._iblReferenceFrameMatrix = Matrix3.transpose(
+        iblReferenceFrameMatrix3,
         this._iblReferenceFrameMatrix
       );
     }

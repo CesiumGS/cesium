@@ -1501,8 +1501,8 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
   }
 };
 
-var scratchClippingPlaneMatrix = new Matrix4();
-var scratchInverseTransposeClippingPlaneMatrix = new Matrix4();
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   var uniformMap = {
     u_initialColor: function () {
@@ -1639,13 +1639,13 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
         ? Matrix4.multiply(
             frameState.context.uniformState.view,
             clippingPlanes.modelMatrix,
-            scratchClippingPlaneMatrix
+            scratchClippingPlanesMatrix
           )
         : Matrix4.IDENTITY;
 
       return Matrix4.inverseTranspose(
         transform,
-        scratchInverseTransposeClippingPlaneMatrix
+        scratchInverseTransposeClippingPlanesMatrix
       );
     },
     u_clippingPlanesEdgeStyle: function () {

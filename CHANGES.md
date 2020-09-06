@@ -2,10 +2,15 @@
 
 ### 1.74 - 2020-10-01
 
+##### Additions :tada:
+
+- Added `Matrix3.inverseTranspose` and `Matrix4.inverseTranspose`. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
+
 ##### Fixes :wrench:
 
 - Fixed an issue where the camera zooming is stuck when looking up. [#9126](https://github.com/CesiumGS/cesium/pull/9126)
 - Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
+- Fixed clipping planes with non-uniform scale. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
 
 ### 1.73 - 2020-09-01
 

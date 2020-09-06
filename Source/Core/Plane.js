@@ -229,16 +229,15 @@ Plane.transform = function (plane, transform, result) {
     planeAsCartesian4
   );
 
-  // Convert the transformed plane to Hessian normal form
-  var transformNormal = Cartesian3.fromCartesian4(
+  // Convert the transformed plane to Hessian Normal Form
+  var transformedNormal = Cartesian3.fromCartesian4(
     planeAsCartesian4,
     scratchTransformNormal
   );
-  var inverseTransformNormalMagnitude =
-    1.0 / Cartesian3.magnitude(transformNormal);
-  planeAsCartesian4 = Cartesian4.multiplyByScalar(
+
+  planeAsCartesian4 = Cartesian4.divideByScalar(
     planeAsCartesian4,
-    inverseTransformNormalMagnitude,
+    Cartesian3.magnitude(transformedNormal),
     planeAsCartesian4
   );
 

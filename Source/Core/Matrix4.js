@@ -2650,7 +2650,7 @@ Matrix4.inverseTransformation = function (matrix, result) {
 var scratchTransposeMatrix = new Matrix4();
 
 /**
- * Computes the matrix that is used to transform normal vector
+ * Computes the inverse transpose of a matrix.
  *
  * @param {Matrix4} matrix The matrix to transpose and invert.
  * @param {Matrix4} result The object onto which to store the result.

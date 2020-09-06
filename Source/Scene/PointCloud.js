@@ -613,8 +613,8 @@ var normalLocation = 2;
 var batchIdLocation = 3;
 var numberOfAttributes = 4;
 
-var scratchClippingPlaneMatrix = new Matrix4();
-var scratchInverseTransposeClippingPlaneMatrix = new Matrix4();
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 
 function createResources(pointCloud, frameState) {
   var context = frameState.context;
@@ -940,17 +940,17 @@ function createUniformMap(pointCloud, frameState) {
       Matrix4.multiply(
         context.uniformState.view3D,
         clippingPlanesOriginMatrix,
-        scratchClippingPlaneMatrix
+        scratchClippingPlanesMatrix
       );
       var transform = Matrix4.multiply(
-        scratchClippingPlaneMatrix,
+        scratchClippingPlanesMatrix,
         clippingPlanes.modelMatrix,
-        scratchClippingPlaneMatrix
+        scratchClippingPlanesMatrix
       );
 
       return Matrix4.inverseTranspose(
         transform,
-        scratchInverseTransposeClippingPlaneMatrix
+        scratchInverseTransposeClippingPlanesMatrix
       );
     },
   };
