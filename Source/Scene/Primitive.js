@@ -491,7 +491,7 @@ Object.defineProperties(Primitive.prototype, {
   /**
    * get pickIds. insure primitive can be used to per-feature postprocess .
    * @memberof Primitive.prototype
-   * @type {PickId[]}
+   * @type {Array}
    * @readonly
    */
   pickIds: {
