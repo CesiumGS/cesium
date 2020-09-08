@@ -258,7 +258,7 @@ function WebMapServiceImageryProvider(options) {
     info_format: "{format}",
   };
   // use correct pixel coordinate identifier based on version
-  if (parseFloat(resource.queryParameters.version) >= 1.3) {
+  if (parseFloat(pickFeatureResource.queryParameters.version) >= 1.3) {
     pickFeatureParams.i = "{i}";
     pickFeatureParams.j = "{j}";
   } else {
