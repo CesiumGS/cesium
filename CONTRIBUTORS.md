@@ -158,6 +158,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Joey Rafidi](https://github.com/jrafidi)
 - [Geoplex GIS GmbH](https://www.geoplex.de)
   - [Leonard Holst](https://github.com/LHolst)
+- [onXmaps, Inc.](https://onxmaps.com)
+  - [Brian Maher](https://github.com/brianpmaher)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
