@@ -554,6 +554,9 @@ function createHeightmapTerrainData(provider, buffer, level, x, y) {
 }
 
 function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
+  // console.log(provider);
+  // console.log("tile loading..");
+  var t0 = performance.now();
   var littleEndianExtensionSize = layer.littleEndianExtensionSize;
   var pos = 0;
   var cartesian3Elements = 3;
@@ -772,6 +775,8 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     provider._tilingScheme.ellipsoid
   );
 
+  var t1 = performance.now();
+  console.log("Decoding took " + (t1 - t0).toFixed(3) + " milliseconds.\n");
   return new QuantizedMeshTerrainData({
     center: center,
     minimumHeight: minimumHeight,
@@ -922,6 +927,7 @@ function requestTileGeometry(provider, x, y, level, layerToUse, request) {
     return undefined;
   }
 
+  // console.log("gltf/komatsu-iot/" + level + "/" +  x + "/" + terrainY + ".glb");
   return promise.then(function (buffer) {
     if (defined(provider._heightmapStructure)) {
       return createHeightmapTerrainData(provider, buffer, level, x, y);

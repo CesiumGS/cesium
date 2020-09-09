@@ -58,6 +58,7 @@ import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import ColorBlendMode from "./ColorBlendMode.js";
 import DepthFunction from "./DepthFunction.js";
 import DracoLoader from "./DracoLoader.js";
+import MeshoptLoader from "./MeshoptLoader.js";
 import getClipAndStyleCode from "./getClipAndStyleCode.js";
 import getClippingFunction from "./getClippingFunction.js";
 import HeightReference from "./HeightReference.js";
@@ -1750,6 +1751,10 @@ function bufferLoad(model, id) {
 }
 
 function parseBufferViews(model) {
+  if (MeshoptLoader.hasExtension(model)) {
+    return; // Meshopt handles BufferViews if it exists
+  }
+
   var bufferViews = model.gltf.bufferViews;
   var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
@@ -5263,12 +5268,17 @@ Model.prototype.update = function (frameState) {
 
         // Start draco decoding
         DracoLoader.parse(this, context);
+        MeshoptLoader.parse(this, context);
 
         loadResources.initialized = true;
       }
 
       if (!loadResources.finishedDecoding()) {
         DracoLoader.decodeModel(this, context).otherwise(
+          ModelUtility.getFailedLoadFunction(this, "model", this.basePath)
+        );
+
+        MeshoptLoader.decodeModel(this, context).otherwise(
           ModelUtility.getFailedLoadFunction(this, "model", this.basePath)
         );
       }
@@ -5278,6 +5288,7 @@ Model.prototype.update = function (frameState) {
         this._initialRadius = this._boundingSphere.radius;
 
         DracoLoader.cacheDataForModel(this);
+        MeshoptLoader.cacheDataForModel(this);
 
         loadResources.resourcesParsed = true;
       }
@@ -5790,6 +5801,7 @@ Model.prototype.destroy = function () {
   this._cachedRendererResources =
     this._cachedRendererResources && this._cachedRendererResources.release();
   DracoLoader.destroyCachedDataForModel(this);
+  MeshoptLoader.destroyCachedDataForModel(this);
 
   var pickIds = this._pickIds;
   var length = pickIds.length;

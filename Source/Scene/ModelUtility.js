@@ -163,6 +163,7 @@ ModelUtility.getFailedLoadFunction = function (model, type, path) {
     if (defined(error)) {
       message += "\n" + error.message;
     }
+    console.log(message);
     model._readyPromise.reject(new RuntimeError(message));
   };
 };
@@ -571,6 +572,9 @@ ModelUtility.supportedExtensions = {
   KHR_materials_pbrSpecularGlossiness: true,
   KHR_texture_transform: true,
   WEB3D_quantized_attributes: true,
+  KHR_mesh_quantization: true,
+  EXT_meshopt_compression: true,
+  MESHOPT_compression: true, // Older version
 };
 
 ModelUtility.checkSupportedExtensions = function (
