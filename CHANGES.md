@@ -6,10 +6,6 @@
 
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
 
-##### Fixes :wrench:
-
-- Fixes zoom factor not being exposed publicly. [#7978](https://github.com/CesiumGS/cesium/issues/7978)
-
 ### 1.74 - 2020-10-01
 
 ##### Additions :tada:
