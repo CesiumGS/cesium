@@ -142,6 +142,7 @@ function ScreenSpaceCameraController(scene) {
    * @default 5.0
    */
   this.zoomFactor = 5.0;
+  this._zoomFactor = this.zoomFactor;
   /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
    * <p>
@@ -978,7 +979,7 @@ function zoom2D(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller.zoomFactor,
+    controller._zoomFactor,
     camera.getMagnitude()
   );
 }
@@ -1732,7 +1733,7 @@ function zoomCV(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller.zoomFactor,
+    controller._zoomFactor,
     distance
   );
 }
@@ -2211,7 +2212,7 @@ function zoom3D(controller, startPosition, movement) {
     controller,
     startPosition,
     movement,
-    controller.zoomFactor,
+    controller._zoomFactor,
     distance,
     Cartesian3.dot(unitPosition, camera.direction)
   );
