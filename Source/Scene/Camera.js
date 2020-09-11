@@ -182,7 +182,7 @@ function Camera(scene) {
    * @type {Number}
    * @default undefined
    */
-  this.maxTilt = undefined;
+  this.maximumTilt = undefined;
   /**
    * If set, the camera will not be able to rotate past this axis in either direction.
    * @type {Cartesian3}
