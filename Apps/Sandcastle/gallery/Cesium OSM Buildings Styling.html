@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
+    />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Beginner, Showcases, ion Assets"
+    />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+      <h1>Loading...</h1>
+    </div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        // Create the OSM buildings
+        var buildings = Cesium.createOsmBuildings();
+        viewer.scene.primitives.add(buildings);
+
+        // Set the initial camera to look at Hong Kong
+        viewer.scene.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(-122.3472, 47.598, 370),
+          orientation: {
+            heading: Cesium.Math.toRadians(10),
+            pitch: Cesium.Math.toRadians(-10),
+          },
+        });
+
+        // Styling functions
+        function colorByHeight() {
+          buildings.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [
+                  "${feature['cesium#estimatedHeight']} >= 100",
+                  "color('#581845')",
+                ],
+                [
+                  "${feature['cesium#estimatedHeight']} >= 50",
+                  "color('#900C3F')",
+                ],
+                [
+                  "${feature['cesium#estimatedHeight']} >= 25",
+                  "color('#C70039')",
+                ],
+                [
+                  "${feature['cesium#estimatedHeight']} >= 10",
+                  "color('#FF5733')",
+                ],
+                ["true", "color('#FFC300')"],
+              ],
+            },
+          });
+        }
+
+        function colorByLatitude() {
+          buildings.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              lagitudeRadians: "radians(${feature['cesium#latitude']})",
+            },
+            color: {
+              conditions: [
+                ["${lagitudeRadians} >= 0.83117", "color('purple')"],
+                ["${lagitudeRadians} >= 0.83112", "color('red')"],
+                ["${lagitudeRadians} >= 0.83107", "color('orange')"],
+                ["${lagitudeRadians} >= 0.83102", "color('yellow')"],
+                ["${lagitudeRadians} >= 0.83097", "color('lime')"],
+                ["${lagitudeRadians} >= 0.83092", "color('cyan')"],
+                ["true", "color('blue')"],
+              ],
+            },
+          });
+        }
+
+        function colorByMaterial() {
+          buildings.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              material: "${feature['building:material']}",
+            },
+            color: {
+              conditions: [
+                ["${material} === null", "color('white')"],
+                ["${material} === undefined", "color('white')"],
+                ["${material} === 'glass'", "color('skyblue', 0.5)"],
+                ["${material} === 'concrete'", "color('grey')"],
+                ["${material} === 'brick'", "color('indianred')"],
+                ["${material} === 'stone'", "color('lightslategrey')"],
+                ["${material} === 'metal'", "color('lightgrey')"],
+                ["${material} === 'steel'", "color('lightsteelblue')"],
+                ["true", "color('white')"],
+              ],
+            },
+          });
+        }
+
+        function colorByType() {
+          buildings.style = new Cesium.Cesium3DTileStyle({
+            color: {
+              conditions: [
+                [
+                  "${feature['building']} === 'apartments' || ${feature['building']} === 'residential'",
+                  "color('cyan', 0.9)",
+                ],
+                [
+                  "${feature['building']} === 'school' || ${feature['building']} === 'university'",
+                  "color('lawngreen', 0.9)",
+                ],
+                [
+                  "${feature['building']} === 'hospital'",
+                  "color('yellow', 0.9)",
+                ],
+                [
+                  "${feature['building']} === 'construction'",
+                  "color('orangered', 0.9)",
+                ],
+                [
+                  "${feature['building']} === 'office' || ${feature['building']} === 'commercial'",
+                  "color('blueviolet', 0.9)",
+                ],
+                [true, "color('white')"],
+              ],
+            },
+          });
+        }
+
+        function colorByDistance() {
+          buildings.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              distance:
+                "distance(vec2(radians(${feature['cesium#longitude']}), radians(${feature['cesium#latitude']})), vec2(-2.13539829704, 0.83113469098))",
+            },
+            color: {
+              conditions: [
+                ["${distance} > 0.0010", "color('gray')"],
+                [
+                  "${distance} > 0.0006",
+                  "mix(color('yellow'), color('red'), (${distance} - 0.008) / 0.0004)",
+                ],
+                [
+                  "${distance} > 0.0002",
+                  "mix(color('green'), color('yellow'), (${distance} - 0.0004) / 0.0004)",
+                ],
+                ["${distance} < 0.00001", "color('white')"],
+                [
+                  "true",
+                  "mix(color('blue'), color('green'), ${distance} / 0.0004)",
+                ],
+              ],
+            },
+          });
+        }
+
+        // Hide all buildings with height less than 100.
+        function showByBuildingType(buildingType) {
+          switch (buildingType) {
+            case "office":
+              buildings.style = new Cesium.Cesium3DTileStyle({
+                show: "${feature['building']} === 'office'",
+              });
+              break;
+            case "apartments":
+              buildings.style = new Cesium.Cesium3DTileStyle({
+                show: "${feature['building']} === 'apartments'",
+              });
+              break;
+            default:
+              break;
+          }
+        }
+
+        // Dropdown menu for styling options
+        Sandcastle.addToolbarMenu([
+          {
+            text: "Color By Height",
+            onselect: function () {
+              colorByHeight();
+            },
+          },
+          {
+            text: "Color By Latitude",
+            onselect: function () {
+              colorByLatitude();
+            },
+          },
+          {
+            text: "Color By Building Material",
+            onselect: function () {
+              colorByMaterial();
+            },
+          },
+          {
+            text: "Color By Building Type",
+            onselect: function () {
+              colorByType();
+            },
+          },
+          {
+            text: "Color By Distance",
+            onselect: function () {
+              colorByDistance();
+            },
+          },
+          {
+            text: "Show Office Buildings Only",
+            onselect: function () {
+              showByBuildingType("office");
+            },
+          },
+          {
+            text: "Show Apartment Buildings Only",
+            onselect: function () {
+              showByBuildingType("apartments");
+            },
+          },
+        ]);
+
+        colorByHeight();
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
