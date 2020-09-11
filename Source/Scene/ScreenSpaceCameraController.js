@@ -137,6 +137,15 @@ function ScreenSpaceCameraController(scene) {
    */
   this.maximumZoomDistance = Number.POSITIVE_INFINITY;
   /**
+   * The maximum rate at which the camera can rotate.  Can be used to constrain
+   * how many rotations the camera can make when dragging the cursor from one
+   * end of the screen to the other.
+   * @type {Number}
+   * @default 1.77
+   */
+  this.maximumRotateRate = 1.77;
+  this._maximumRotateRate = this.maximumRotateRate;
+  /**
    * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
    * <p>
    * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
@@ -303,7 +312,6 @@ function ScreenSpaceCameraController(scene) {
   this._zoomFactor = 5.0;
   this._rotateFactor = undefined;
   this._rotateRateRangeAdjustment = undefined;
-  this._maximumRotateRate = 1.77;
   this._minimumRotateRate = 1.0 / 5000.0;
   this._minimumZoomRate = 20.0;
   this._maximumZoomRate = 5906376272000.0; // distance from the Sun to Pluto in meters.

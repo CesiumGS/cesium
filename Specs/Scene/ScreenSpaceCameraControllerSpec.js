@@ -1170,6 +1170,44 @@ describe("Scene/ScreenSpaceCameraController", function () {
     );
   });
 
+  it("rotates in 3D with maximum rate", function () {
+    setUp3D();
+    var initialPosition = Cartesian3.clone(camera.position);
+    var initialDirection = Cartesian3.clone(camera.direction);
+
+    function moveTheMouse() {
+      var startPosition = new Cartesian2(0, 0);
+      var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
+      moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+    }
+
+    // Small rotation.
+    controller.maximumRotateRate = 1;
+    moveTheMouse();
+    updateController();
+    var smallRotationPosition = Cartesian3.clone(camera.position);
+    var smallDistanceFromOrigin = Cartesian3.distance(
+      initialPosition,
+      smallRotationPosition
+    );
+
+    // Reset the camera.
+    camera.position = Cartesian3.clone(initialPosition);
+    camera.direction = Cartesian3.clone(initialDirection);
+
+    // Large rotation.
+    controller.maximumRotateRate = 2;
+    moveTheMouse();
+    updateController();
+    var largeRotationPosition = Cartesian3.clone(camera.position);
+    var largeDistanceFromOrigin = Cartesian3.distance(
+      initialPosition,
+      largeRotationPosition
+    );
+
+    expect(largeDistanceFromOrigin).toBeGreaterThan(smallDistanceFromOrigin);
+  });
+
   it("zoom in 3D", function () {
     setUp3D();
     var position = Cartesian3.clone(camera.position);
