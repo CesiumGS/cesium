@@ -2014,6 +2014,16 @@ function rotate3D(
   var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
   var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
+  if (defined(constrainedAxis) && defined(camera.maxTilt)) {
+    var maxTilt = camera.maxTilt;
+    var tilt = Cartesian3.dot(camera.direction, constrainedAxis);
+    tilt = Math.PI - Math.acos(tilt);
+    tilt += deltaTheta;
+    if (tilt > maxTilt) {
+      deltaTheta -= tilt - maxTilt;
+    }
+  }
+
   if (!rotateOnlyVertical) {
     camera.rotateRight(deltaPhi);
   }
