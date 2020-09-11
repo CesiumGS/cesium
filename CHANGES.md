@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.75 - 2020-11-09
+
+##### Additions :tada:
+
+- Added `ScreenSpaceCameraController.maximumRotateRate` to allow constraining the maximum speed that the camera can be rotated.
+
 ### 1.74 - 2020-10-01
 
 ##### Additions :tada:
