@@ -134,7 +134,7 @@ function main() {
         camera: scene.camera,
         canvas: scene.canvas,
       });
-    else if (sourceType === "gpx") {
+    } else if (sourceType === "gpx") {
       loadPromise = GpxDataSource.load(source);
     } else {
       showLoadError(source, "Unknown format.");

@@ -272,11 +272,11 @@ function createOnLoadCallback(viewer, file, proxy, clampToGround) {
           canvas: scene.canvas,
           clampToGround: clampToGround,
         });
-      else if (/\.gpx$/i.test(fileName)) {
+      } else if (/\.gpx$/i.test(fileName)) {
         loadPromise = GpxDataSource.load(file, {
-                        sourceUri : fileName,
-                        proxy : proxy
-                    });
+          sourceUri: fileName,
+          proxy: proxy,
+        });
       } else {
         viewer.dropError.raiseEvent(
           viewer,

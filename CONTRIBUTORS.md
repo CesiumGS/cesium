@@ -149,6 +149,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Eli Bogomolny](https://github.com/ebogo1)
   - [Erixen Cruz](https://github.com/ErixenCruz)
   - [Dzung Nguyen](https://github.com/dzungpng)
+  - [Jordi Torres](https://github.com/jtorresfabra)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
