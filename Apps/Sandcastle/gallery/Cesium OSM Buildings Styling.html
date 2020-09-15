@@ -9,12 +9,9 @@
     />
     <meta
       name="description"
-      content="Worldwide 3D buildings with rich metadata from OpenStreetMap."
+      content="Use 3D Tiles Styling to assign colors based on material or find all office buildings."
     />
-    <meta
-      name="cesium-sandcastle-labels"
-      content="Beginner, Showcases, ion Assets"
-    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, 3D Tiles" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script
@@ -46,10 +43,10 @@
         });
 
         // Create the OSM buildings
-        var buildings = Cesium.createOsmBuildings();
-        viewer.scene.primitives.add(buildings);
+        var osmBuildingsTileset = Cesium.createOsmBuildings();
+        viewer.scene.primitives.add(osmBuildingsTileset);
 
-        // Set the initial camera to look at Hong Kong
+        // Set the initial camera to look at Seattle
         viewer.scene.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(-122.3472, 47.598, 370),
           orientation: {
@@ -59,95 +56,36 @@
         });
 
         // Styling functions
-        function colorByHeight() {
-          buildings.style = new Cesium.Cesium3DTileStyle({
-            color: {
-              conditions: [
-                [
-                  "${feature['cesium#estimatedHeight']} >= 100",
-                  "color('#581845')",
-                ],
-                [
-                  "${feature['cesium#estimatedHeight']} >= 50",
-                  "color('#900C3F')",
-                ],
-                [
-                  "${feature['cesium#estimatedHeight']} >= 25",
-                  "color('#C70039')",
-                ],
-                [
-                  "${feature['cesium#estimatedHeight']} >= 10",
-                  "color('#FF5733')",
-                ],
-                ["true", "color('#FFC300')"],
-              ],
-            },
-          });
-        }
 
-        function colorByLatitude() {
-          buildings.style = new Cesium.Cesium3DTileStyle({
-            defines: {
-              lagitudeRadians: "radians(${feature['cesium#latitude']})",
-            },
-            color: {
-              conditions: [
-                ["${lagitudeRadians} >= 0.83117", "color('purple')"],
-                ["${lagitudeRadians} >= 0.83112", "color('red')"],
-                ["${lagitudeRadians} >= 0.83107", "color('orange')"],
-                ["${lagitudeRadians} >= 0.83102", "color('yellow')"],
-                ["${lagitudeRadians} >= 0.83097", "color('lime')"],
-                ["${lagitudeRadians} >= 0.83092", "color('cyan')"],
-                ["true", "color('blue')"],
-              ],
-            },
-          });
-        }
-
+        // Color by material checks for null values since not all
+        // buildings have the material property.
         function colorByMaterial() {
-          buildings.style = new Cesium.Cesium3DTileStyle({
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
             defines: {
               material: "${feature['building:material']}",
             },
             color: {
               conditions: [
                 ["${material} === null", "color('white')"],
-                ["${material} === undefined", "color('white')"],
                 ["${material} === 'glass'", "color('skyblue', 0.5)"],
                 ["${material} === 'concrete'", "color('grey')"],
                 ["${material} === 'brick'", "color('indianred')"],
                 ["${material} === 'stone'", "color('lightslategrey')"],
                 ["${material} === 'metal'", "color('lightgrey')"],
                 ["${material} === 'steel'", "color('lightsteelblue')"],
-                ["true", "color('white')"],
+                ["true", "color('white')"], // This is the else case
               ],
             },
           });
         }
 
-        function colorByType() {
-          buildings.style = new Cesium.Cesium3DTileStyle({
+        function highlightAllResidentialBuildings() {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
             color: {
               conditions: [
                 [
                   "${feature['building']} === 'apartments' || ${feature['building']} === 'residential'",
                   "color('cyan', 0.9)",
-                ],
-                [
-                  "${feature['building']} === 'school' || ${feature['building']} === 'university'",
-                  "color('lawngreen', 0.9)",
-                ],
-                [
-                  "${feature['building']} === 'hospital'",
-                  "color('yellow', 0.9)",
-                ],
-                [
-                  "${feature['building']} === 'construction'",
-                  "color('orangered', 0.9)",
-                ],
-                [
-                  "${feature['building']} === 'office' || ${feature['building']} === 'commercial'",
-                  "color('blueviolet', 0.9)",
                 ],
                 [true, "color('white')"],
               ],
@@ -155,43 +93,36 @@
           });
         }
 
-        function colorByDistance() {
-          buildings.style = new Cesium.Cesium3DTileStyle({
+        // Considering the Space Needle as the central point, colors are assigned to buildings based
+        // on their distance to this central point. Get the latitude and longitude of a building by
+        // clicking on a building and looking at its metadata.
+        function colorByDistanceToSpaceNeedle() {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
             defines: {
               distance:
-                "distance(vec2(radians(${feature['cesium#longitude']}), radians(${feature['cesium#latitude']})), vec2(-2.13539829704, 0.83113469098))",
+                "distance(vec2(${feature['cesium#longitude']}, ${feature['cesium#latitude']}), vec2(-122.34931, 47.62051))",
             },
             color: {
               conditions: [
-                ["${distance} > 0.0010", "color('gray')"],
-                [
-                  "${distance} > 0.0006",
-                  "mix(color('yellow'), color('red'), (${distance} - 0.008) / 0.0004)",
-                ],
-                [
-                  "${distance} > 0.0002",
-                  "mix(color('green'), color('yellow'), (${distance} - 0.0004) / 0.0004)",
-                ],
-                ["${distance} < 0.00001", "color('white')"],
-                [
-                  "true",
-                  "mix(color('blue'), color('green'), ${distance} / 0.0004)",
-                ],
+                ["${distance} > 0.014", "color('blue')"],
+                ["${distance} > 0.010", "color('green')"],
+                ["${distance} > 0.006", "color('yellow')"],
+                ["${distance} > 0.0001", "color('red')"],
+                ["true", "color('white')"],
               ],
             },
           });
         }
 
-        // Hide all buildings with height less than 100.
         function showByBuildingType(buildingType) {
           switch (buildingType) {
             case "office":
-              buildings.style = new Cesium.Cesium3DTileStyle({
+              osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
                 show: "${feature['building']} === 'office'",
               });
               break;
             case "apartments":
-              buildings.style = new Cesium.Cesium3DTileStyle({
+              osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
                 show: "${feature['building']} === 'apartments'",
               });
               break;
@@ -203,33 +134,21 @@
         // Dropdown menu for styling options
         Sandcastle.addToolbarMenu([
           {
-            text: "Color By Height",
-            onselect: function () {
-              colorByHeight();
-            },
-          },
-          {
-            text: "Color By Latitude",
-            onselect: function () {
-              colorByLatitude();
-            },
-          },
-          {
             text: "Color By Building Material",
             onselect: function () {
               colorByMaterial();
             },
           },
           {
-            text: "Color By Building Type",
+            text: "Color By Distance To Space Needle",
             onselect: function () {
-              colorByType();
+              colorByDistanceToSpaceNeedle();
             },
           },
           {
-            text: "Color By Distance",
+            text: "Highlight Residential Buildings",
             onselect: function () {
-              colorByDistance();
+              highlightAllResidentialBuildings();
             },
           },
           {
@@ -246,10 +165,13 @@
           },
         ]);
 
-        colorByHeight();
+        colorByMaterial();
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
+
+        // To learn more about Cesium OSM Buildings such as properties and metadata,
+        // visit  https://cesium.com/content/cesium-osm-buildings/
       }
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
