@@ -47,7 +47,7 @@
         viewer.scene.primitives.add(osmBuildingsTileset);
 
         // Set the initial camera to look at Seattle
-        viewer.scene.camera.flyTo({
+        viewer.scene.camera.setView({
           destination: Cesium.Cartesian3.fromDegrees(-122.3472, 47.598, 370),
           orientation: {
             heading: Cesium.Math.toRadians(10),
@@ -169,9 +169,6 @@
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
-
-        // To learn more about Cesium OSM Buildings such as properties and metadata,
-        // visit  https://cesium.com/content/cesium-osm-buildings/
       }
       if (typeof Cesium !== "undefined") {
         window.startupCalled = true;
