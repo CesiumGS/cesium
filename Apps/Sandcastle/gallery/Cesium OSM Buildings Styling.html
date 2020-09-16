@@ -33,7 +33,15 @@
     <div id="loadingOverlay">
       <h1>Loading...</h1>
     </div>
-    <div id="toolbar"></div>
+    <div id="toolbar">
+      <table class="infoPanel">
+        <tbody>
+          <tr>
+            <td>Click on a building to select as the central location</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
@@ -41,6 +49,7 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
         // Create the OSM buildings
         var osmBuildingsTileset = Cesium.createOsmBuildings();
@@ -93,27 +102,6 @@
           });
         }
 
-        // Considering the Space Needle as the central point, colors are assigned to buildings based
-        // on their distance to this central point. Get the latitude and longitude of a building by
-        // clicking on a building and looking at its metadata.
-        function colorByDistanceToSpaceNeedle() {
-          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
-            defines: {
-              distance:
-                "distance(vec2(${feature['cesium#longitude']}, ${feature['cesium#latitude']}), vec2(-122.34931, 47.62051))",
-            },
-            color: {
-              conditions: [
-                ["${distance} > 0.014", "color('blue')"],
-                ["${distance} > 0.010", "color('green')"],
-                ["${distance} > 0.006", "color('yellow')"],
-                ["${distance} > 0.0001", "color('red')"],
-                ["true", "color('white')"],
-              ],
-            },
-          });
-        }
-
         function showByBuildingType(buildingType) {
           switch (buildingType) {
             case "office":
@@ -131,35 +119,85 @@
           }
         }
 
+        // Color the buildings based on their distance from a selected central location
+        function colorByDistanceToCoordinate(pickedLatitude, pickedLongitude) {
+          osmBuildingsTileset.style = new Cesium.Cesium3DTileStyle({
+            defines: {
+              distance:
+                "distance(vec2(${feature['cesium#longitude']}, ${feature['cesium#latitude']}), vec2(" +
+                pickedLongitude +
+                "," +
+                pickedLatitude +
+                "))",
+            },
+            color: {
+              conditions: [
+                ["${distance} > 0.014", "color('blue')"],
+                ["${distance} > 0.010", "color('green')"],
+                ["${distance} > 0.006", "color('yellow')"],
+                ["${distance} > 0.0001", "color('red')"],
+                ["true", "color('white')"],
+              ],
+            },
+          });
+        }
+
+        // When dropdown option is not "Color By Distance To Selected Location",
+        // remove the left click input event for selecting a central location
+        function removeCoordinatePickingOnLeftClick() {
+          document.querySelector(".infoPanel").style.visibility = "hidden";
+          handler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        }
+
         // Dropdown menu for styling options
         Sandcastle.addToolbarMenu([
           {
             text: "Color By Building Material",
             onselect: function () {
+              removeCoordinatePickingOnLeftClick();
               colorByMaterial();
             },
           },
           {
-            text: "Color By Distance To Space Needle",
+            text: "Color By Distance To Selected Location",
             onselect: function () {
-              colorByDistanceToSpaceNeedle();
+              // Default to Space Needle as the central location
+              colorByDistanceToCoordinate(47.62051, -122.34931);
+              document.querySelector(".infoPanel").style.visibility = "visible";
+              // Add left click input to select a building to and extract its coordinates
+              handler.setInputAction(function (movement) {
+                viewer.selectedEntity = undefined;
+                var pickedBuilding = viewer.scene.pick(movement.position);
+                if (pickedBuilding) {
+                  var pickedLatitude = pickedBuilding.getProperty(
+                    "cesium#latitude"
+                  );
+                  var pickedLongitude = pickedBuilding.getProperty(
+                    "cesium#longitude"
+                  );
+                  colorByDistanceToCoordinate(pickedLatitude, pickedLongitude);
+                }
+              }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
             },
           },
           {
             text: "Highlight Residential Buildings",
             onselect: function () {
+              removeCoordinatePickingOnLeftClick();
               highlightAllResidentialBuildings();
             },
           },
           {
             text: "Show Office Buildings Only",
             onselect: function () {
+              removeCoordinatePickingOnLeftClick();
               showByBuildingType("office");
             },
           },
           {
             text: "Show Apartment Buildings Only",
             onselect: function () {
+              removeCoordinatePickingOnLeftClick();
               showByBuildingType("apartments");
             },
           },
