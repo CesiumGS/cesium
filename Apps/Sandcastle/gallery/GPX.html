@@ -38,12 +38,13 @@
           terrainProvider: Cesium.createWorldTerrain(),
         });
 
+        var pinBuilder = new Cesium.PinBuilder();
+
         Sandcastle.addToolbarMenu(
           [
             {
-              text: "GPX - Track with Waypoint",
+              text: "GPX - Track with waypoints",
               onselect: function () {
-                viewer.homeButton.viewModel.command();
                 viewer.dataSources
                   .add(
                     Cesium.GpxDataSource.load(
@@ -59,9 +60,25 @@
               },
             },
             {
+              text: "GPX - Route",
+              onselect: function () {
+                viewer.dataSources
+                  .add(
+                    Cesium.GpxDataSource.load(
+                      "../../SampleData/gpx/route.gpx",
+                      {
+                        clampToGround: true,
+                      }
+                    )
+                  )
+                  .then(function (dataSource) {
+                    viewer.flyTo(dataSource.entities);
+                  });
+              },
+            },
+            {
               text: "GPX - Waypoints",
               onselect: function () {
-                viewer.homeButton.viewModel.command();
                 viewer.dataSources
                   .add(
                     Cesium.GpxDataSource.load("../../SampleData/gpx/wpt.gpx", {
@@ -76,7 +93,6 @@
             {
               text: "GPX - multiple Tracks with waypoints",
               onselect: function () {
-                viewer.homeButton.viewModel.command();
                 viewer.dataSources
                   .add(
                     Cesium.GpxDataSource.load(
@@ -90,12 +106,22 @@
               },
             },
             {
-              text: "GPX - Route",
+              text: "GPX - Symbology options",
               onselect: function () {
-                viewer.homeButton.viewModel.command();
                 viewer.dataSources
                   .add(
-                    Cesium.GpxDataSource.load("../../SampleData/gpx/route.gpx")
+                    Cesium.GpxDataSource.load(
+                      "../../SampleData/gpx/lamina.gpx",
+                      {
+                        clampToGround: true,
+                        trkColor: Cesium.Color.YELLOW,
+                        wptImage: pinBuilder.fromMakiIconId(
+                          "bicycle",
+                          Cesium.Color.BLUE,
+                          48
+                        ),
+                      }
+                    )
                   )
                   .then(function (dataSource) {
                     viewer.flyTo(dataSource.entities);

@@ -366,7 +366,7 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
   if (isTimeDynamic) {
     // Assign billboard image
     var image = defined(options.wptImage)
-      ? options.trkImage
+      ? options.wptImage
       : dataSource._pinBuilder.fromMakiIconId(
           "marker",
           Color.RED,
@@ -776,9 +776,10 @@ function GpxDataSource() {
  *
  * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data.
  * @param {Object} [options] An object with the following properties:
+ * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
  * @param {String} [options.wptImage] Image to use for waypoint billboards.
  * @param {String} [options.trkImage] Image to use for track billboards.
- * @param {String} [options.trkColor] Color to use for track lines and paths.
+ * @param {String} [options.trkColor] Color to use for track lines.
  * @returns {Promise.<GpxDataSource>} A promise that will resolve to a new GpxDataSource instance once the gpx is loaded.
  */
 GpxDataSource.load = function (data, options) {
@@ -942,6 +943,10 @@ GpxDataSource.prototype.update = function (time) {
  *
  * @param {String|Document|Blob} data A url, parsed GPX document, or Blob containing binary GPX data or a parsed GPX document.
  * @param {Object} [options] An object with the following properties:
+ * @param {Boolean} [options.clampToGround] True if the symbols should be rendered at the same height as the terrain
+ * @param {String} [options.wptImage] Image to use for waypoint billboards.
+ * @param {String} [options.trkImage] Image to use for track billboards.
+ * @param {String} [options.trkColor] Color to use for track lines.
  * @returns {Promise.<GpxDataSource>} A promise that will resolve to this instances once the GPX is loaded.
  */
 GpxDataSource.prototype.load = function (data, options) {
