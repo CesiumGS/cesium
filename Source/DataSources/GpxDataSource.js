@@ -385,8 +385,6 @@ function processTrk(dataSource, geometryNode, entityCollection, options) {
       })
     );
   }
-  // Note: we always draw a polyline to be able to clamp it to ground.
-  // Dynamic paths don't support that feature
   entity.polyline = createDefaultPolyline(options.trkColor);
   entity.polyline.positions = positions;
   if (options.clampToGround) {
@@ -744,7 +742,7 @@ function load(dataSource, entityCollection, data, options) {
 }
 
 /**
- * A {@link DataSource} which processes The GPS Exchange Format (GPX).
+ * A {@link DataSource} which processes the GPS Exchange Format (GPX).
  *
  * @alias GpxDataSource
  * @constructor
