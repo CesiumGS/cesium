@@ -12,6 +12,7 @@
 - Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
 - Fixed clipping planes with non-uniform scale. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
 - Fixed an issue where ground primitives would get clipped at certain camera angles. [#9114](https://github.com/CesiumGS/cesium/issues/9114)
+- Fixed a bug that could cause half of the globe to disappear when setting the `terrainProvider. [#9161](https://github.com/CesiumGS/cesium/pull/9161)
 
 ### 1.73 - 2020-09-01
 
