@@ -165,7 +165,7 @@ property = new ConstantProperty(1);
 property = new TimeIntervalCollectionProperty();
 property = new CompositeProperty();
 property = new SampledProperty(Cartesian3);
-property = {} as PropertyBag;
+property = new PropertyBag();
 property = new PropertyArray();
 property = new PositionProperty();
 property = new MaterialProperty();
@@ -387,3 +387,7 @@ geometryInstance = new GeometryInstance({
 });
 
 const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
+
+let pb = new PropertyBag();
+let hasProp: boolean = pb.hasProperty("xyz");
+property = pb.xyz;
