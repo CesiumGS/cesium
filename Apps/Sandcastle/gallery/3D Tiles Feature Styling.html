@@ -54,15 +54,14 @@
         "use strict";
         //Sandcastle_Begin
 
-        // A demo of interactive 3D Tiles styling
-        // Styling language Documentation: https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling
-        // Additional information on Cesium OSM Buildings: https://cesium.com/content/cesium-osm-buildings/
+        // How to use the 3D Tiles Styling language to style individual features, like buildings.
+        // Styling language specification: https://github.com/CesiumGS/3d-tiles/tree/master/specification/Styling
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: Cesium.createWorldTerrain(),
         });
         var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-        // Create the OSM buildings
+        // Add Cesium OSM buildings to the scene as our example 3D Tileset.
         var osmBuildingsTileset = Cesium.createOsmBuildings();
         viewer.scene.primitives.add(osmBuildingsTileset);
 
