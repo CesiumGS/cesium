@@ -236,44 +236,17 @@ IdManager.prototype.get = function (id) {
  */
 
 /**
- * Exports an EntityCollection as a KML document or KMZ archive.
+ * Exports an EntityCollection as a KML document. Only Point, Billboard, Model, Path, Polygon, Polyline geometries
+ * will be exported. Note that there is not a 1 to 1 mapping of Entity properties to KML Feature properties. For
+ * example, entity properties that are time dynamic but cannot be dynamic in KML are exported with their values at
+ * options.time or the beginning of the EntityCollection's time interval if not specified. For time-dynamic properties
+ * that are supported in KML, we use the samples if it is a {@link SampledProperty} otherwise we sample the value using
+ * the options.sampleDuration. Point, Billboard, Model and Path geometries with time-dynamic positions will be exported
+ * as gx:Track Features. Not all Materials are representable in KML, so for more advanced Materials just the primary
+ * color is used. Canvas objects are exported as PNG images.
  *
- * Only Point, Billboard, Model, Path, Polygon, Polyline geometries will be exported.
- * Note that there is not a 1 to 1 mapping of Entity properties to KML Feature
- * properties. For example, entity properties that are time dynamic but cannot
- * be dynamic in KML are exported with their values at `options.time` or the
- * beginning of the EntityCollection's time interval if not specified. For
- * time-dynamic properties that are supported in KML, we use the samples if it
- * is a {@link SampledProperty}, otherwise we sample the value using the
- * `options.sampleDuration`. Point, Billboard, Model and Path geometries with
- * time-dynamic positions will be exported as gx:Track Features.
+ * @function exportKml
  *
- * Not all Materials are representable in KML, so for more advanced Materials
- * just the primary color is used. Canvas objects are exported as PNG images.
- *
- * @variation 1 KMZ return
- * @param {Object} options An object with the following properties:
- * @param {EntityCollection} options.entities The EntityCollection to export as KML.
- * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
- * @param {exportKmlModelCallback} [options.modelCallback] A callback that will be called with a {@link ModelGraphics} instance and should return the URI to use in the KML. Required if a model exists in the entity collection.
- * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
- * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
- * @param {number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
- * @param {true} options.kmz If true, KML and external files will be compressed into a single KMZ file.
- *
- * @returns {Promise<exportKmlResultKmz>} A promise that resolves to a KMZ file as a Blob.
- *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
- * @example
- * Cesium.exportKml({
- *   entities: entityCollection,
- *   options: { kmz: true }
- * })
- * .then(function(result) {
- *   downloadFile(result.kmz);
- * });
- *//**
- * @variation 2 KML return
  * @param {Object} options An object with the following properties:
  * @param {EntityCollection} options.entities The EntityCollection to export as KML.
  * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file.
@@ -281,25 +254,26 @@ IdManager.prototype.get = function (id) {
  * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
  * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
  * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
- * @param {false} [options.kmz=false] If false or unset, returns the KML file and referenced resources individually
+ * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
  *
- * @returns {Promise<exportKmlResultKml>} A promise that resolved to an object containing the KML string and a dictionary of external file Blobs
- *
+ * @returns {Promise<exportKmlResultKml|exportKmlResultKmz>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
  * @example
  * Cesium.exportKml({
- *   entities: entityCollection
- * })
- * .then(function(result) {
- *   // The XML string is in result.kml
+ *      entities: entityCollection
+ *  })
+ *   .then(function(result) {
+ *     // The XML string is in result.kml
  *
- *   var externalFiles = result.externalFiles
- *   for(var file in externalFiles) {
- *     // file is the name of the file used in the KML document as the href
- *     // externalFiles[file] is a Blob with the contents of the file
- *   }
- * });
+ *     var externalFiles = result.externalFiles
+ *     for(var file in externalFiles) {
+ *       // file is the name of the file used in the KML document as the href
+ *       // externalFiles[file] is a blob with the contents of the file
+ *     }
+ *   });
+ *
  */
- function exportKml(options) {
+function exportKml(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var entities = options.entities;
   var kmz = defaultValue(options.kmz, false);

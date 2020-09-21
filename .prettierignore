@@ -22,8 +22,6 @@
 # Re-ignore a few things caught above
 **/*.min.js
 Source/Cesium.js
-# Needed until prettier#8473 is resolved
-Source/DataSources/exportKml.js
 Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/Workers/**/*
