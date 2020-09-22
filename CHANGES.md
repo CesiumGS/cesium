@@ -15,6 +15,56 @@
 - Avoided double-counting of `createImageBitmap` requests. There is an open Cesium PR: https://github.com/AnalyticalGraphicsInc/cesium/pull/8163
 - Modified FXAA shader to leave grey fragments alone to prevent blurring of text
 
+### 1.73 - 2020-09-01
+
+##### Breaking Changes :mega:
+
+- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
+
+##### Additions :tada:
+
+- Added support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data. [#9121](https://github.com/CesiumGS/cesium/pull/9121).
+
+##### Fixes :wrench:
+
+- Fixed several artifacts on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+- Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
+- Fixed an issue where the boundary rectangles in `TileAvailability` are not sorted correctly, causing terrain to sometimes fail to achieve its maximum detail. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
+- Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
+- Fixed an issue where Node.js tooling could not resolve package.json. [#9105](https://github.com/CesiumGS/cesium/pull/9105)
+- Fixed classification artifacts on some mobile devices. [#9108](https://github.com/CesiumGS/cesium/pull/9108)
+- Fixed an issue where Resource silently fails to load if being used multiple times. [#9093](https://github.com/CesiumGS/cesium/issues/9093)
+
+### 1.72 - 2020-08-03
+
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. If you are using `MapboxImageryProvider` or `MapboxStyleImageryProvider`, use `options.accessToken` when initializing the imagery provider.
+
+##### Additions :tada:
+
+- Added support for glTF multi-texturing via `TEXCOORD_1`. [#9075](https://github.com/CesiumGS/cesium/pull/9075)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `MapboxApi.defaultAccessToken` was deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors.
+- `BingMapsApi` was deprecated and will be removed in CesiumJS 1.73. Pass your access key directly to the BingMapsImageryProvider or BingMapsGeocoderService constructors.
+
+##### Fixes :wrench:
+
+- Fixed `Color.fromCssColorString` when color string contains spaces. [#9015](https://github.com/CesiumGS/cesium/issues/9015)
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/pull/8996)
+- Fixed a bug in the assessment of terrain tile visibility [#9033](https://github.com/CesiumGS/cesium/issues/9033)
+- Fixed vertical polylines with `arcType: ArcType.RHUMB`, including lines drawn via GeoJSON. [#9028](https://github.com/CesiumGS/cesium/pull/9028)
+- Fixed wall rendering when underground [#9041](https://github.com/CesiumGS/cesium/pull/9041)
+- Fixed issue where a side of the wall was missing if the first position and the last position were equal [#9044](https://github.com/CesiumGS/cesium/pull/9044)
+- Fixed `translucencyByDistance` for label outline color [#9003](https://github.com/CesiumGS/cesium/pull/9003)
+- Fixed return value for `SampledPositionProperty.removeSample` [#9017](https://github.com/CesiumGS/cesium/pull/9017)
+- Fixed issue where wall doesn't have correct texture coordinates when there are duplicate positions input [#9042](https://github.com/CesiumGS/cesium/issues/9042)
+- Fixed an issue where clipping planes would not clip at the correct distances on some Android devices, most commonly reproducible on devices with `Mali` GPUs that do not support float textures via WebGL [#9023](https://github.com/CesiumGS/cesium/issues/9023)
+
 ### 1.71 - 2020-07-01
 
 ##### Breaking Changes :mega:

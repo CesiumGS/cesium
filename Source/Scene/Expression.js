@@ -2060,8 +2060,6 @@ Node.prototype.getShaderExpression = function (
         throw new RuntimeError(
           'Error generating style shader: "' + value + '" is not supported.'
         );
-      } else if (defined(unaryFunctions[value])) {
-        return value + "(" + left + ")";
       }
       return value + left;
     case ExpressionNodeType.BINARY:

@@ -379,6 +379,9 @@ Color.fromCssColorString = function (color, result) {
     result = new Color();
   }
 
+  // Remove all whitespaces from the color string
+  color = color.replace(/\s/g, "");
+
   var namedColor = Color[color.toUpperCase()];
   if (defined(namedColor)) {
     Color.clone(namedColor, result);
@@ -538,10 +541,10 @@ Color.equals = function (left, right) {
   return (
     left === right || //
     (defined(left) && //
-    defined(right) && //
-    left.red === right.red && //
-    left.green === right.green && //
-    left.blue === right.blue && //
+      defined(right) && //
+      left.red === right.red && //
+      left.green === right.green && //
+      left.blue === right.blue && //
       left.alpha === right.alpha)
   );
 };
@@ -589,9 +592,9 @@ Color.prototype.equalsEpsilon = function (other, epsilon) {
   return (
     this === other || //
     (defined(other) && //
-    Math.abs(this.red - other.red) <= epsilon && //
-    Math.abs(this.green - other.green) <= epsilon && //
-    Math.abs(this.blue - other.blue) <= epsilon && //
+      Math.abs(this.red - other.red) <= epsilon && //
+      Math.abs(this.green - other.green) <= epsilon && //
+      Math.abs(this.blue - other.blue) <= epsilon && //
       Math.abs(this.alpha - other.alpha) <= epsilon)
   );
 };

@@ -143,8 +143,8 @@ CheckerboardMaterialProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof CheckerboardMaterialProperty && //
-    Property.equals(this._evenColor, other._evenColor) && //
-    Property.equals(this._oddColor, other._oddColor) && //
+      Property.equals(this._evenColor, other._evenColor) && //
+      Property.equals(this._oddColor, other._oddColor) && //
       Property.equals(this._repeat, other._repeat))
   );
 };

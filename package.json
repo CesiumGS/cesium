@@ -1,8 +1,8 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.71.3",
+  "version": "1.73.0",
   "description": "Cesium for TerriaJS.",
-  "homepage": "http://cesiumjs.org",
+  "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
   "author": {
     "name": "Cesium GS, Inc.",
@@ -35,6 +35,13 @@
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
   "types": "./Source/Cesium.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./index.cjs",
+      "import": "./Source/Cesium.js"
+    }
+  },
   "dependencies": {
     "dompurify": "^2.0.7"
   },
@@ -44,7 +51,7 @@
     "bluebird": "^3.4.6",
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
-    "eslint": "^6.4.0",
+    "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
@@ -61,7 +68,7 @@
     "husky": "^4.2.5",
     "jasmine-core": "^3.3.0",
     "jsdoc": "^3.4.3",
-    "karma": "^4.0.0",
+    "karma": "^5.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.1",
     "karma-coverage-istanbul-instrumenter": "^1.0.1",
@@ -77,15 +84,15 @@
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
     "open": "^7.0.0",
-    "prettier": "^2.0.4",
+    "prettier": "2.1.1",
     "pretty-quick": "^2.0.1",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
-    "rollup": "^1.21.4",
+    "rollup": "^2.22.1",
     "rollup-plugin-external-globals": "^0.4.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
-    "stream-to-promise": "^2.2.0",
+    "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.2",
     "yargs": "^15.0.1"

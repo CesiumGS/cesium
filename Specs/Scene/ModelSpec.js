@@ -143,6 +143,7 @@ describe(
       "./Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf";
     var dracoBoxVertexColorsRGBAUrl =
       "./Data/Models/DracoCompression/BoxVertexColorsDracoRGBA.gltf";
+    var multiUvTestUrl = "./Data/Models/MultiUVTest/MultiUVTest.glb";
 
     var boxGltf2Url = "./Data/Models/Box-Gltf-2/Box.gltf";
     var boxGltf2WithTechniquesUrl =
@@ -3318,6 +3319,13 @@ describe(
 
     it("loads draco compressed glTF with RGB per-vertex color", function () {
       return loadModel(dracoBoxVertexColorsRGBUrl).then(function (m) {
+        verifyRender(m);
+        primitives.remove(m);
+      });
+    });
+
+    it("loads a glTF with multiple texCoords", function () {
+      return loadModel(multiUvTestUrl).then(function (m) {
         verifyRender(m);
         primitives.remove(m);
       });
