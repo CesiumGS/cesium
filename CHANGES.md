@@ -2,6 +2,7 @@
 
 ### TerriaJS-only
 
+- Fix WebMapTileServiceImageryProvider `buildGetFeatureInfoUrl + add check for invalid tile matrix sets
 - Added `fetchXHR` method to `Resource` for fetching a resource and returning the raw XHR data.
 - Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
 - Added support for `parameters` to `ArcGisMapServerImageryProvider`.
