@@ -60,8 +60,6 @@ This only needs to be completed once, and enables contributions to all of the pr
 
 If you have any questions, feel free to reach out to [hello@cesium.com](mailto:hello@cesium)!
 
-CesiumJS maintainers can access the submitted CLA's [in this Google Drive folder](https://drive.google.com/drive/u/0/folders/1bLc_vxV5KvXVhO1E4Aqyi4dLjrL1jZPp).
-
 ## Pull Request Guidelines
 
 Our code is our lifeblood so maintaining CesiumJS's high code quality is important to us.
