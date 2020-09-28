@@ -316,8 +316,17 @@ function WebMapTileServiceImageryProvider(options) {
     Rectangle.northeast(this._rectangle),
     this._minimumLevel
   );
+
+  if (!defined(swTile) || !defined(neTile)) {
+    throw new DeveloperError(
+      "Failed to check tiles at the minimum level. This may be due to using an incompatible tile matrix set: " +
+        tileMatrixSetID
+    );
+  }
+
   var tileCount =
     (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+
   //>>includeStart('debug', pragmas.debug);
   if (tileCount > 4) {
     throw new DeveloperError(
@@ -824,7 +833,7 @@ function buildGetFeatureInfoUrl(
   i,
   j
 ) {
-  var uri = new Uri(imageryProvider._url);
+  var uri = new Uri(imageryProvider.url);
   var queryOptions = queryToObject(defaultValue(uri.query, ""));
 
   queryOptions = combine(
