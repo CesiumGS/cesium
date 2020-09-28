@@ -96,7 +96,7 @@ function barycentricCoordinates(point, p0, p1, p2, result) {
   result.z = dot00 * dot12 - dot01 * dot02;
   var q = dot00 * dot11 - dot01 * dot01;
 
-  // This is done to avoid dividing by 0 causing infinity
+  // This is done to avoid dividing by 0
   if (q !== 0) {
     result.y /= q;
     result.z /= q;
