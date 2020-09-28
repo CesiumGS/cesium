@@ -82,6 +82,17 @@ describe("Scene/BingMapsImageryProvider", function () {
     function constructWithoutServer() {
       return new BingMapsImageryProvider({
         mapStyle: BingMapsStyle.AERIAL,
+        key: "",
+      });
+    }
+    expect(constructWithoutServer).toThrowDeveloperError();
+  });
+
+  it("constructor throws when key is not specified", function () {
+    function constructWithoutServer() {
+      return new BingMapsImageryProvider({
+        url: "http://fake.fake.invalid",
+        mapStyle: BingMapsStyle.AERIAL,
       });
     }
     expect(constructWithoutServer).toThrowDeveloperError();
@@ -278,6 +289,7 @@ describe("Scene/BingMapsImageryProvider", function () {
 
     var provider = new BingMapsImageryProvider({
       url: url,
+      key: "",
       mapStyle: mapStyle,
     });
 
@@ -296,6 +308,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
     var provider2;
     var provider3;
@@ -310,6 +323,7 @@ describe("Scene/BingMapsImageryProvider", function () {
         provider2 = new BingMapsImageryProvider({
           url: url,
           mapStyle: mapStyle,
+          key: "",
         });
         return provider2.readyPromise;
       })
@@ -325,6 +339,7 @@ describe("Scene/BingMapsImageryProvider", function () {
         provider3 = new BingMapsImageryProvider({
           url: url,
           mapStyle: BingMapsStyle.AERIAL,
+          key: "",
         });
         return provider3.readyPromise;
       })
@@ -347,6 +362,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
 
     return provider.readyPromise.then(function (result) {
@@ -365,6 +381,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
 
     return provider.readyPromise.then(function (result) {
@@ -387,6 +404,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: resource,
       mapStyle: mapStyle,
+      key: "",
     });
 
     return provider.readyPromise.then(function (result) {
@@ -399,6 +417,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var url = "http://host.invalid";
     var provider = new BingMapsImageryProvider({
       url: url,
+      key: "",
     });
 
     return provider.readyPromise
@@ -421,6 +440,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
 
     return pollToPromise(function () {
@@ -489,6 +509,7 @@ describe("Scene/BingMapsImageryProvider", function () {
       url: url,
       mapStyle: mapStyle,
       culture: culture,
+      key: "",
     });
 
     expect(provider.culture).toEqual(culture);
@@ -514,6 +535,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var url = "http://host.invalid";
     var provider = new BingMapsImageryProvider({
       url: url,
+      key: "",
     });
 
     var errorEventRaised = false;
@@ -540,6 +562,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
 
     var layer = new ImageryLayer(provider);
@@ -638,6 +661,7 @@ describe("Scene/BingMapsImageryProvider", function () {
     var provider = new BingMapsImageryProvider({
       url: url,
       mapStyle: mapStyle,
+      key: "",
     });
 
     var layer = new ImageryLayer(provider);

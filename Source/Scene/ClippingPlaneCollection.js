@@ -752,7 +752,7 @@ ClippingPlaneCollection.prototype.isDestroyed = function () {
  *
  *
  * @example
- * clippingPlanes = clippingPlanes && clippingPlanes .destroy();
+ * clippingPlanes = clippingPlanes && clippingPlanes.destroy();
  *
  * @see ClippingPlaneCollection#isDestroyed
  */

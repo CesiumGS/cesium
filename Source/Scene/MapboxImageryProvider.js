@@ -2,7 +2,6 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import MapboxApi from "../Core/MapboxApi.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
@@ -18,7 +17,7 @@ var defaultCredit = new Credit(
  *
  * @property {String} [url='https://api.mapbox.com/v4/'] The Mapbox server url.
  * @property {String} mapId The Mapbox Map ID.
- * @property {String} [accessToken] The public access token for the imagery.
+ * @property {String} accessToken The public access token for the imagery.
  * @property {String} [format='png'] The format of the image request.
  * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
@@ -53,6 +52,13 @@ function MapboxImageryProvider(options) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(mapId)) {
     throw new DeveloperError("options.mapId is required.");
+  }
+  //>>includeEnd('debug');
+
+  var accessToken = options.accessToken;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(accessToken)) {
+    throw new DeveloperError("options.accessToken is required.");
   }
   //>>includeEnd('debug');
 
@@ -146,13 +152,9 @@ function MapboxImageryProvider(options) {
     defaultValue(options.url, "https://{s}.tiles.mapbox.com/v4/")
   );
 
-  var accessToken = MapboxApi.getAccessToken(options.accessToken);
   this._mapId = mapId;
   this._accessToken = accessToken;
 
-  this._accessTokenErrorCredit = Credit.clone(
-    MapboxApi.getErrorCredit(options.accessToken)
-  );
   var format = defaultValue(options.format, "png");
   if (!/\./.test(format)) {
     format = "." + format;
@@ -393,9 +395,7 @@ Object.defineProperties(MapboxImageryProvider.prototype, {
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 MapboxImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  if (defined(this._accessTokenErrorCredit)) {
-    return [this._accessTokenErrorCredit];
-  }
+  return undefined;
 };
 
 /**

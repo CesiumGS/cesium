@@ -58,6 +58,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Alex Gilleran](https://github.com/AlexGilleran)
   - [Emma Krantz](https://github.com/KeyboardSounds)
   - [Stephen Davies](https://github.com/steve9164)
+  - [Rowan Winsemius](https://github.com/rowanwins)
+  - [Regina Pramesti](https://github.com/reginapramesti)
 - [EU Edge](http://euedge.com/)
   - [Ákos Maróy](https://github.com/akosmaroy)
 - [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
@@ -154,6 +156,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Jonathan Nogueira](https://github.com/LuminousPath)
 - [Palantir Technologies, Inc.](https://palantir.com)
   - [Joey Rafidi](https://github.com/jrafidi)
+- [Geoplex GIS GmbH](https://www.geoplex.de)
+  - [Leonard Holst](https://github.com/LHolst)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 
@@ -270,3 +274,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [John Remsberg](https://github.com/easternmotors)
 - [Bao Thien Tran](https://github.com/baothientran)
 - [Yonatan Kra](https://github.com/yonatankra)
+- [Gusain Vipul](https://github.com/vipulgusain)
+- [Sam Bakkach](https://github.com/sambakk)

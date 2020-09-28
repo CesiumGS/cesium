@@ -82,6 +82,8 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
       var hasNormals = defined(primitive.attributes.NORMAL);
       var hasTangents = defined(primitive.attributes.TANGENT);
       var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+      var hasTexCoord1 =
+        hasTexCoords && defined(primitive.attributes.TEXCOORD_1);
       var hasOutline =
         defined(primitive.extensions) &&
         defined(primitive.extensions.CESIUM_primitive_outline);
@@ -98,6 +100,7 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasTexCoord1: hasTexCoord1,
           hasOutline: hasOutline,
         };
       } else if (
@@ -107,6 +110,7 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
         primitiveInfo.hasNormals !== hasNormals ||
         primitiveInfo.hasTangents !== hasTangents ||
         primitiveInfo.hasTexCoords !== hasTexCoords ||
+        primitiveInfo.hasTexCoord1 !== hasTexCoord1 ||
         primitiveInfo.hasOutline !== hasOutline
       ) {
         // This primitive uses the same material as another one that either:
@@ -128,6 +132,7 @@ ModelUtility.splitIncompatibleMaterials = function (gltf) {
           hasNormals: hasNormals,
           hasTangents: hasTangents,
           hasTexCoords: hasTexCoords,
+          hasTexCoord1: hasTexCoord1,
           hasOutline: hasOutline,
         };
       }

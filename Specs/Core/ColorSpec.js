@@ -358,6 +358,19 @@ describe("Core/Color", function () {
     expect(c).toEqual(Color.LIME);
   });
 
+  it("fromCssColorString understands the color string even with any number of unnecessary leading, trailing or middle spaces", function () {
+    expect(Color.fromCssColorString(" rgb( 0, 0, 255)")).toEqual(Color.BLUE);
+    expect(Color.fromCssColorString("rgb( 255, 255, 255) ")).toEqual(
+      Color.WHITE
+    );
+    expect(Color.fromCssColorString("  #FF0000")).toEqual(Color.RED);
+    expect(Color.fromCssColorString("#FF0  ")).toEqual(Color.YELLOW);
+    expect(Color.fromCssColorString(" hsla(720,   100%, 50%, 1.0)  ")).toEqual(
+      Color.RED
+    );
+    expect(Color.fromCssColorString("hsl (720, 100%, 50%)")).toEqual(Color.RED);
+  });
+
   it("fromHsl produces expected output", function () {
     expect(Color.fromHsl(0.0, 1.0, 0.5, 1.0)).toEqual(Color.RED);
     expect(Color.fromHsl(120.0 / 360.0, 1.0, 0.5, 1.0)).toEqual(Color.LIME);

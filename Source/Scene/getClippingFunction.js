@@ -114,7 +114,7 @@ function getClippingPlaneFloat(width, height) {
   }
 
   var functionString =
-    "vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
+    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
     "{\n" +
     "    int pixY = clippingPlaneNumber / " +
     width +
@@ -148,7 +148,7 @@ function getClippingPlaneUint8(width, height) {
   }
 
   var functionString =
-    "vec4 getClippingPlane(sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
+    "vec4 getClippingPlane(highp sampler2D packedClippingPlanes, int clippingPlaneNumber, mat4 transform)\n" +
     "{\n" +
     "    int clippingPlaneStartIndex = clippingPlaneNumber * 2;\n" + // clipping planes are two pixels each
     "    int pixY = clippingPlaneStartIndex / " +

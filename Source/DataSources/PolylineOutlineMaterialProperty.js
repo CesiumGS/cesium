@@ -144,8 +144,8 @@ PolylineOutlineMaterialProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof PolylineOutlineMaterialProperty && //
-    Property.equals(this._color, other._color) && //
-    Property.equals(this._outlineColor, other._outlineColor) && //
+      Property.equals(this._color, other._color) && //
+      Property.equals(this._outlineColor, other._outlineColor) && //
       Property.equals(this._outlineWidth, other._outlineWidth))
   );
 };
