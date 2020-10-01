@@ -1,18 +1,40 @@
 # Change Log
 
-### 1.73 - 2020-09-01
+### 1.74 - 2020-10-01
 
 ##### Additions :tada:
 
-- Add support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- Added `Matrix3.inverseTranspose` and `Matrix4.inverseTranspose`. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
 
 ##### Fixes :wrench:
 
-- Fixed several artifcats on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+- Fixed an issue where the camera zooming is stuck when looking up. [#9126](https://github.com/CesiumGS/cesium/pull/9126)
+- Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
+- Fixed clipping planes with non-uniform scale. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
+- Fixed an issue where ground primitives would get clipped at certain camera angles. [#9114](https://github.com/CesiumGS/cesium/issues/9114)
+- Fixed a crash when loading Cesium OSM buildings with shadows enabled. [#9172](https://github.com/CesiumGS/cesium/pull/9172)
+
+### 1.73 - 2020-09-01
+
+##### Breaking Changes :mega:
+
+- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
+
+##### Additions :tada:
+
+- Added support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data. [#9121](https://github.com/CesiumGS/cesium/pull/9121).
+
+##### Fixes :wrench:
+
+- Fixed several artifacts on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
 - Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
 - Fixed an issue where the boundary rectangles in `TileAvailability` are not sorted correctly, causing terrain to sometimes fail to achieve its maximum detail. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
 - Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
 - Fixed an issue where Node.js tooling could not resolve package.json. [#9105](https://github.com/CesiumGS/cesium/pull/9105)
+- Fixed classification artifacts on some mobile devices. [#9108](https://github.com/CesiumGS/cesium/pull/9108)
+- Fixed an issue where Resource silently fails to load if being used multiple times. [#9093](https://github.com/CesiumGS/cesium/issues/9093)
 
 ### 1.72 - 2020-08-03
 

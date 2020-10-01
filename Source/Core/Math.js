@@ -631,7 +631,7 @@ CesiumMath.lessThan = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right < -absoluteEpsilon;
@@ -656,7 +656,7 @@ CesiumMath.lessThanOrEquals = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right < absoluteEpsilon;
@@ -682,7 +682,7 @@ CesiumMath.greaterThan = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right > absoluteEpsilon;
@@ -707,7 +707,7 @@ CesiumMath.greaterThanOrEquals = function (left, right, absoluteEpsilon) {
     throw new DeveloperError("second is required.");
   }
   if (!defined(absoluteEpsilon)) {
-    throw new DeveloperError("relativeEpsilon is required.");
+    throw new DeveloperError("absoluteEpsilon is required.");
   }
   //>>includeEnd('debug');
   return left - right > -absoluteEpsilon;
