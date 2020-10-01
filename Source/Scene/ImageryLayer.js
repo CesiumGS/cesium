@@ -1273,7 +1273,7 @@ ImageryLayer.prototype.queueReprojectionCommands = function (frameState) {
  */
 ImageryLayer.prototype.cancelReprojections = function () {
   this._reprojectComputeCommands.forEach(function (command) {
-    if (command.canceled) {
+    if (defined(command.canceled)) {
       command.canceled();
     }
   });
