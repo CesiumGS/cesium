@@ -13,6 +13,7 @@
 - Fixed clipping planes with non-uniform scale. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
 - Fixed an issue where ground primitives would get clipped at certain camera angles. [#9114](https://github.com/CesiumGS/cesium/issues/9114)
 - Fixed a bug that could cause half of the globe to disappear when setting the `terrainProvider. [#9161](https://github.com/CesiumGS/cesium/pull/9161)
+- Fixed a crash when loading Cesium OSM buildings with shadows enabled. [#9172](https://github.com/CesiumGS/cesium/pull/9172)
 
 ### 1.73 - 2020-09-01
 
