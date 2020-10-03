@@ -1058,17 +1058,10 @@ function generateTechnique(
 
     // Environment maps were provided, use them for IBL
     fragmentShader += "#elif defined(DIFFUSE_IBL) || defined(SPECULAR_IBL) \n";
-
-    fragmentShader +=
-      "    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][2], gltf_clippingPlanesMatrix[1][2], gltf_clippingPlanesMatrix[2][2]); \n";
     fragmentShader +=
       "    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n";
     fragmentShader +=
-      "    vec3 cubeDir = normalize(yUpToZUp * fixedToENU * normalize(reflect(-v, n))); \n";
+      "    vec3 cubeDir = normalize(yUpToZUp * gltf_iblReferenceFrameMatrix * normalize(reflect(-v, n))); \n";
 
     fragmentShader += "#ifdef DIFFUSE_IBL \n";
     fragmentShader += "#ifdef CUSTOM_SPHERICAL_HARMONICS \n";

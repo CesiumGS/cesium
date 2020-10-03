@@ -2341,6 +2341,34 @@ describe("Core/Matrix4", function () {
     expect(result).toEqual(expected);
   });
 
+  it("inverseTranspose works", function () {
+    var matrix = new Matrix4(
+      1.0,
+      2.0,
+      6.0,
+      4.0,
+      8.0,
+      6.0,
+      -7.0,
+      8.0,
+      9.0,
+      -20.0,
+      -11.0,
+      12.0,
+      13.0,
+      -27.0,
+      15.0,
+      16.0
+    );
+    var expectedInverse = Matrix4.inverse(matrix, new Matrix4());
+    var expectedInverseTranspose = Matrix4.transpose(
+      expectedInverse,
+      new Matrix4()
+    );
+    var result = Matrix4.inverseTranspose(matrix, new Matrix4());
+    expect(result).toEqual(expectedInverseTranspose);
+  });
+
   it("transpose works with a result parameter that is an input result parameter", function () {
     var matrix = new Matrix4(
       1.0,

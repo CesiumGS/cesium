@@ -14,18 +14,18 @@ var defaultBackgroundColor = new Color(0.0, 0.5, 0.0, 0.2);
  *
  * Initialization options for the GridImageryProvider constructor
  *
- * @param {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
- * @param {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [cells=8] The number of grids cells.
- * @param {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
- * @param {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
- * @param {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
- * @param {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
- * @param {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
- * @param {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
- * @param {Number} [canvasSize=256] The size of the canvas used for rendering.
+ * @property {Number} [cells=8] The number of grids cells.
+ * @property {Color} [color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
+ * @property {Color} [glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
+ * @property {Number} [glowWidth=6] The width of lines used for rendering the line glow effect.
+ * @property {Color} [backgroundColor=Color(0.0, 0.5, 0.0, 0.2)] Background fill color.
+ * @property {Number} [tileWidth=256] The width of the tile for level-of-detail selection purposes.
+ * @property {Number} [tileHeight=256] The height of the tile for level-of-detail selection purposes.
+ * @property {Number} [canvasSize=256] The size of the canvas used for rendering.
  */
 
 /**

@@ -604,7 +604,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   if (metadata.isValid(quadKey)) {
     // We will need this tile, so request metadata and return false for now
     var request = new Request({
-      throttle: true,
+      throttle: false,
       throttleByServer: true,
       type: RequestType.TERRAIN,
     });
