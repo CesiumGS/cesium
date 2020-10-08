@@ -278,3 +278,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Gusain Vipul](https://github.com/vipulgusain)
 - [Sam Bakkach](https://github.com/sambakk)
 - [Zoran Kokeza](https://github.com/zoran995)
+- [Robin Danielsson](https://github.com/robdan7)
+- [Oskar Havo](https://github.com/OskarHavo)
