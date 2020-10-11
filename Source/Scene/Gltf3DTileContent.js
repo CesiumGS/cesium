@@ -17,6 +17,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Color from "../Core/Color.js";
 import defaultValue from "../Core/defaultValue.js";
 import GltfFeatureMetadataCache from "./GltfFeatureMetadataCache.js";
+import GltfFeatureMetadata from "./GltfFeatureMetadata.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset.
@@ -245,6 +246,44 @@ function initializeLegacyFeatureMetadata(content, gltf, resource, extension) {
     addFeatureIdToGeneratedShaders =
       defaultValue(featureTable.featureCount, 0) > 0;
   }
+  var batchTable = createBatchTableFromLegacyFeatureMetadata(
+    content,
+    featureTable
+  );
+  return {
+    batchTable: batchTable,
+    featureIdTextureInfo: featureIdTextureInfo,
+    featureMetadata: featureMetadata,
+    addFeatureIdTextureToGeneratedShaders: addFeatureIdTextureToGeneratedShaders,
+    addFeatureIdToGeneratedShaders: addFeatureIdToGeneratedShaders,
+    featureMetadataReadyPromise: featureMetadata.readyPromise,
+  };
+}
+
+function initializeFeatureMetadata(content, gltf, resource, extension) {
+  var addFeatureIdTextureToGeneratedShaders = false;
+  var addFeatureIdToGeneratedShaders = false;
+  var featureIdTextureInfo;
+
+  var featureMetadata = new GltfFeatureMetadata({
+    gltf: gltf,
+    featureMetadata: extension,
+    cache: new GltfFeatureMetadataCache({
+      basePath: resource,
+    }),
+  });
+  var featureTable = featureMetadata.featureTables[0];
+  var metadataPrimitive = featureMetadata.primitives[0];
+  var featureTextureMapping = metadataPrimitive.featureTextureMappings[0];
+  var featureAttributeMapping = metadataPrimitive.featureAttributeMappings[0];
+
+  if (defined(featureTextureMapping)) {
+    addFeatureIdTextureToGeneratedShaders = true;
+    featureIdTextureInfo = featureTextureMapping._featureIds.textureInfo;
+  } else if (defined(featureAttributeMapping)) {
+    addFeatureIdToGeneratedShaders = true;
+  }
+
   var batchTable = createBatchTableFromLegacyFeatureMetadata(
     content,
     featureTable

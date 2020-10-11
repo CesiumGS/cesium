@@ -15,7 +15,7 @@ import when from "../ThirdParty/when.js";
  * @param {Number} options.primitive The primitive ID.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfLegacyFeatureTable
+ * @alias GltfLegacyFeatureMetadataPrimitive
  * @constructor
  *
  * @private
@@ -74,7 +74,7 @@ Object.defineProperties(GltfLegacyFeatureMetadataPrimitive.prototype, {
   /**
    * Feature layers contained by the primitive.
    *
-   * @memberof GltfLegacyFeatureLayer.prototype
+   * @memberof GltfLegacyFeatureMetadataPrimitive.prototype
    * @type {GltfLegacyFeatureLayer[]}
    * @readonly
    * @private
