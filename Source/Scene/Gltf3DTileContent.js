@@ -37,7 +37,7 @@ function Gltf3DTileContent(options) {
   this._batchTable = undefined;
   this._features = undefined;
 
-  this._legacyFeatureMetadata = undefined;
+  this._featureMetadata = undefined;
   this._readyPromise = undefined;
 
   // Populate from gltf when available
@@ -192,7 +192,7 @@ function getPickIdCallback(content) {
   };
 }
 
-function createBatchTable(content, featureTable) {
+function createBatchTableFromLegacyFeatureMetadata(content, featureTable) {
   var batchTableJson = {};
   var batchTableBinary;
   var properties = featureTable.properties;
@@ -222,6 +222,43 @@ function createBatchTable(content, featureTable) {
   );
 }
 
+function initializeLegacyFeatureMetadata(content, gltf, resource, extension) {
+  var addFeatureIdTextureToGeneratedShaders = false;
+  var addFeatureIdToGeneratedShaders = false;
+  var featureIdTextureInfo;
+
+  var featureMetadata = new GltfLegacyFeatureMetadata({
+    gltf: gltf,
+    featureMetadata: extension,
+    cache: new GltfFeatureMetadataCache({
+      basePath: resource,
+    }),
+  });
+  var featureTable = featureMetadata.featureTables[0];
+  var metadataPrimitive = featureMetadata.primitives[0];
+  var featureLayer = metadataPrimitive.featureLayers[0];
+  if (defined(featureLayer._textureFeatureIds)) {
+    addFeatureIdTextureToGeneratedShaders = true;
+    featureIdTextureInfo =
+      featureLayer._textureFeatureIds.textureAccessor.texture;
+  } else if (defined(featureLayer._attributeFeatureIds)) {
+    addFeatureIdToGeneratedShaders =
+      defaultValue(featureTable.featureCount, 0) > 0;
+  }
+  var batchTable = createBatchTableFromLegacyFeatureMetadata(
+    content,
+    featureTable
+  );
+  return {
+    batchTable: batchTable,
+    featureIdTextureInfo: featureIdTextureInfo,
+    featureMetadata: featureMetadata,
+    addFeatureIdTextureToGeneratedShaders: addFeatureIdTextureToGeneratedShaders,
+    addFeatureIdToGeneratedShaders: addFeatureIdToGeneratedShaders,
+    featureMetadataReadyPromise: featureMetadata.readyPromise,
+  };
+}
+
 function initialize(content, gltf) {
   var tileset = content._tileset;
   var tile = content._tile;
@@ -231,41 +268,34 @@ function initialize(content, gltf) {
     gltf = parseGlb(gltf);
   }
 
-  var legacyFeatureMetadataPromise;
-  var addFeatureIdToGeneratedShaders = false;
-  var addFeatureIdTextureToGeneratedShaders = false;
-  var featureIdTextureInfo;
-  var batchTable;
+  var results;
 
   var extensions = gltf.extensions;
   if (defined(extensions)) {
-    var legacyFeatureMetadataExtension =
-      extensions.EXT_3dtiles_feature_metadata;
-    if (defined(legacyFeatureMetadataExtension)) {
-      var legacyFeatureMetadata = new GltfLegacyFeatureMetadata({
-        gltf: gltf,
-        featureMetadata: legacyFeatureMetadataExtension,
-        cache: new GltfFeatureMetadataCache({
-          basePath: resource,
-        }),
-      });
-      content._legacyFeatureMetadata = legacyFeatureMetadata;
-      var featureTable = legacyFeatureMetadata.featureTables[0];
-      var metadataPrimitive = legacyFeatureMetadata.primitives[0];
-      var featureLayer = metadataPrimitive.featureLayers[0];
-      if (defined(featureLayer._textureFeatureIds)) {
-        addFeatureIdTextureToGeneratedShaders = true;
-        featureIdTextureInfo =
-          featureLayer._textureFeatureIds.textureAccessor.texture;
-      } else if (defined(featureLayer._attributeFeatureIds)) {
-        addFeatureIdToGeneratedShaders =
-          defaultValue(featureTable.featureCount, 0) > 0;
-      }
-      batchTable = createBatchTable(content, featureTable);
-      content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
-      legacyFeatureMetadataPromise = legacyFeatureMetadata.readyPromise;
+    var legacyExtension = extensions.EXT_3dtiles_feature_metadata;
+    var extension = extensions.EXT_feature_metadata;
+    if (defined(legacyExtension)) {
+      results = initializeLegacyFeatureMetadata(
+        content,
+        gltf,
+        resource,
+        legacyExtension
+      );
+    } else if (defined(extension)) {
+      results = initializeFeatureMetadata(content, gltf, resource, extension);
     }
   }
+
+  var batchTable = results.batchTable;
+  var featureIdTextureInfo = results.featureIdTextureInfo;
+  var featureMetadata = results.featureMetadata;
+  var addFeatureIdTextureToGeneratedShaders =
+    results.addFeatureIdTextureToGeneratedShaders;
+  var addFeatureIdToGeneratedShaders = results.addFeatureIdToGeneratedShaders;
+  var featureMetadataReadyPromise = results.featureMetadataReadyPromise;
+
+  content._featureMetadata = featureMetadata;
+  content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
 
   if (!defined(batchTable)) {
     batchTable = new Cesium3DTileBatchTable(content, 0, {}, undefined);
@@ -308,7 +338,7 @@ function initialize(content, gltf) {
 
   content._model = model;
 
-  var promises = [legacyFeatureMetadataPromise, model.readyPromise];
+  var promises = [featureMetadataReadyPromise, model.readyPromise];
   promises = promises.filter(function (promise) {
     return defined(promise);
   });
@@ -432,8 +462,8 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 Gltf3DTileContent.prototype.destroy = function () {
   this._model = this._model && this._model.destroy();
   this._batchTable = this._batchTable && this._batchTable.destroy();
-  this._legacyFeatureMetadata =
-    this._legacyFeatureMetadata && this._legacyFeatureMetadata.destroy();
+  this._featureMetadata =
+    this._featureMetadata && this._featureMetadata.destroy();
   return destroyObject(this);
 };
 
