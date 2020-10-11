@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
-import GltfFeatureLayer from "./GltfFeatureLayer.js";
+import GltfLegacyFeatureLayer from "./GltfLegacyFeatureLayer.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -10,17 +10,17 @@ import when from "../ThirdParty/when.js";
  * @param {Object} options Object with the following properties:
  * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {Object} options.primitive The primitive JSON object from the glTF.
- * @param {GltfFeatureTable[]} options.featureTables An array of feature tables.
+ * @param {GltfLegacyFeatureTable[]} options.featureTables An array of feature tables.
  * @param {Number} options.meshId The mesh ID.
  * @param {Number} options.primitive The primitive ID.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureTable
+ * @alias GltfLegacyFeatureTable
  * @constructor
  *
  * @private
  */
-function GltfFeatureMetadataPrimitive(options) {
+function GltfLegacyFeatureMetadataPrimitive(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
   var primitive = options.primitive;
@@ -46,7 +46,7 @@ function GltfFeatureMetadataPrimitive(options) {
   for (var i = 0; i < featureLayersLength; ++i) {
     var featureLayer = featureLayers[i];
     var featureTable = featureTables[featureLayer.featureTable];
-    layers[i] = new GltfFeatureLayer({
+    layers[i] = new GltfLegacyFeatureLayer({
       gltfContainer: gltfContainer,
       primitive: primitive,
       featureLayer: featureLayer,
@@ -70,12 +70,12 @@ function GltfFeatureMetadataPrimitive(options) {
   this._readyPromise = readyPromise;
 }
 
-Object.defineProperties(GltfFeatureMetadataPrimitive.prototype, {
+Object.defineProperties(GltfLegacyFeatureMetadataPrimitive.prototype, {
   /**
    * Feature layers contained by the primitive.
    *
-   * @memberof GltfFeatureLayer.prototype
-   * @type {GltfFeatureLayer[]}
+   * @memberof GltfLegacyFeatureLayer.prototype
+   * @type {GltfLegacyFeatureLayer[]}
    * @readonly
    * @private
    */
@@ -88,8 +88,8 @@ Object.defineProperties(GltfFeatureMetadataPrimitive.prototype, {
   /**
    * Promise that resolves when the primitive is ready.
    *
-   * @memberof GltfFeatureMetadataPrimitive.prototype
-   * @type {Promise.<GltfFeatureMetadataPrimitive>}
+   * @memberof GltfLegacyFeatureMetadataPrimitive.prototype
+   * @type {Promise.<GltfLegacyFeatureMetadataPrimitive>}
    * @readonly
    * @private
    */
@@ -108,11 +108,11 @@ Object.defineProperties(GltfFeatureMetadataPrimitive.prototype, {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureMetadataPrimitive#destroy
+ * @see GltfLegacyFeatureMetadataPrimitive#destroy
  *
  * @private
  */
-GltfFeatureMetadataPrimitive.prototype.isDestroyed = function () {
+GltfLegacyFeatureMetadataPrimitive.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -126,11 +126,11 @@ GltfFeatureMetadataPrimitive.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureMetadataPrimitive#isDestroyed
+ * @see GltfLegacyFeatureMetadataPrimitive#isDestroyed
  *
  * @private
  */
-GltfFeatureMetadataPrimitive.prototype.destroy = function () {
+GltfLegacyFeatureMetadataPrimitive.prototype.destroy = function () {
   this._featureLayers.forEach(function (featureLayer) {
     featureLayer.destroy();
   });
@@ -138,4 +138,4 @@ GltfFeatureMetadataPrimitive.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureMetadataPrimitive;
+export default GltfLegacyFeatureMetadataPrimitive;

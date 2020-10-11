@@ -7,9 +7,9 @@ import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import Model from "./Model.js";
 import ModelUtility from "./ModelUtility.js";
-import GltfFeatureMetadata from "./GltfFeatureMetadata.js";
-import GltfFeatureTableAccessorProperty from "./GltfFeatureTableAccessorProperty.js";
-import GltfFeatureTableArrayProperty from "./GltfFeatureTableArrayProperty.js";
+import GltfLegacyFeatureMetadata from "./GltfLegacyFeatureMetadata.js";
+import GltfLegacyFeatureTableAccessorProperty from "./GltfLegacyFeatureTableAccessorProperty.js";
+import GltfLegacyFeatureTableArrayProperty from "./GltfLegacyFeatureTableArrayProperty.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
@@ -37,7 +37,7 @@ function Gltf3DTileContent(options) {
   this._batchTable = undefined;
   this._features = undefined;
 
-  this._featureMetadata = undefined;
+  this._legacyFeatureMetadata = undefined;
   this._readyPromise = undefined;
 
   // Populate from gltf when available
@@ -199,7 +199,7 @@ function createBatchTable(content, featureTable) {
   for (var name in properties) {
     if (properties.hasOwnProperty(name)) {
       var property = properties[name];
-      if (property instanceof GltfFeatureTableAccessorProperty) {
+      if (property instanceof GltfLegacyFeatureTableAccessorProperty) {
         batchTableJson[name] = {
           byteOffset: property._typedArray.byteOffset,
           componentType: property._componentType,
@@ -208,7 +208,7 @@ function createBatchTable(content, featureTable) {
         if (!defined(batchTableBinary)) {
           batchTableBinary = new Uint8Array(property._typedArray.buffer);
         }
-      } else if (property instanceof GltfFeatureTableArrayProperty) {
+      } else if (property instanceof GltfLegacyFeatureTableArrayProperty) {
         batchTableJson[name] = property._values;
       }
     }
@@ -231,7 +231,7 @@ function initialize(content, gltf) {
     gltf = parseGlb(gltf);
   }
 
-  var featureMetadataPromise;
+  var legacyFeatureMetadataPromise;
   var addFeatureIdToGeneratedShaders = false;
   var addFeatureIdTextureToGeneratedShaders = false;
   var featureIdTextureInfo;
@@ -239,18 +239,19 @@ function initialize(content, gltf) {
 
   var extensions = gltf.extensions;
   if (defined(extensions)) {
-    var featureMetadataExtension = extensions.EXT_3dtiles_feature_metadata;
-    if (defined(featureMetadataExtension)) {
-      var featureMetadata = new GltfFeatureMetadata({
+    var legacyFeatureMetadataExtension =
+      extensions.EXT_3dtiles_feature_metadata;
+    if (defined(legacyFeatureMetadataExtension)) {
+      var legacyFeatureMetadata = new GltfLegacyFeatureMetadata({
         gltf: gltf,
-        featureMetadata: featureMetadataExtension,
+        featureMetadata: legacyFeatureMetadataExtension,
         cache: new GltfFeatureMetadataCache({
           basePath: resource,
         }),
       });
-      content._featureMetadata = featureMetadata;
-      var featureTable = featureMetadata.featureTables[0];
-      var metadataPrimitive = featureMetadata.primitives[0];
+      content._legacyFeatureMetadata = legacyFeatureMetadata;
+      var featureTable = legacyFeatureMetadata.featureTables[0];
+      var metadataPrimitive = legacyFeatureMetadata.primitives[0];
       var featureLayer = metadataPrimitive.featureLayers[0];
       if (defined(featureLayer._textureFeatureIds)) {
         addFeatureIdTextureToGeneratedShaders = true;
@@ -262,7 +263,7 @@ function initialize(content, gltf) {
       }
       batchTable = createBatchTable(content, featureTable);
       content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
-      featureMetadataPromise = featureMetadata.readyPromise;
+      legacyFeatureMetadataPromise = legacyFeatureMetadata.readyPromise;
     }
   }
 
@@ -307,7 +308,7 @@ function initialize(content, gltf) {
 
   content._model = model;
 
-  var promises = [featureMetadataPromise, model.readyPromise];
+  var promises = [legacyFeatureMetadataPromise, model.readyPromise];
   promises = promises.filter(function (promise) {
     return defined(promise);
   });
@@ -431,8 +432,8 @@ Gltf3DTileContent.prototype.isDestroyed = function () {
 Gltf3DTileContent.prototype.destroy = function () {
   this._model = this._model && this._model.destroy();
   this._batchTable = this._batchTable && this._batchTable.destroy();
-  this._featureMetadata =
-    this._featureMetadata && this._featureMetadata.destroy();
+  this._legacyFeatureMetadata =
+    this._legacyFeatureMetadata && this._legacyFeatureMetadata.destroy();
   return destroyObject(this);
 };
 

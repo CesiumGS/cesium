@@ -13,15 +13,15 @@ import when from "../ThirdParty/when.js";
  * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {Object} options.primitive The primitive JSON object from the glTF.
  * @param {Object} options.featureLayer The feature layer JSON object from the glTF.
- * @param {GltfFeatureTable} options.featureTable The feature table.
+ * @param {GltfLegacyFeatureTable} options.featureTable The feature table.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureLayer
+ * @alias GltfLegacyFeatureLayer
  * @constructor
  *
  * @private
  */
-function GltfFeatureLayer(options) {
+function GltfLegacyFeatureLayer(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
   var primitive = options.primitive;
@@ -78,12 +78,12 @@ function GltfFeatureLayer(options) {
   this._readyPromise = readyPromise;
 }
 
-Object.defineProperties(GltfFeatureLayer.prototype, {
+Object.defineProperties(GltfLegacyFeatureLayer.prototype, {
   /**
    * Promise that resolves when the feature layer is ready.
    *
-   * @memberof GltfFeatureLayer.prototype
-   * @type {Promise.<GltfFeatureLayer>}
+   * @memberof GltfLegacyFeatureLayer.prototype
+   * @type {Promise.<GltfLegacyFeatureLayer>}
    * @readonly
    * @private
    */
@@ -213,11 +213,11 @@ function AttributeFeatureIds(options) {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureLayer#destroy
+ * @see GltfLegacyFeatureLayer#destroy
  *
  * @private
  */
-GltfFeatureLayer.prototype.isDestroyed = function () {
+GltfLegacyFeatureLayer.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -231,11 +231,11 @@ GltfFeatureLayer.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureLayer#isDestroyed
+ * @see GltfLegacyFeatureLayer#isDestroyed
  *
  * @private
  */
-GltfFeatureLayer.prototype.destroy = function () {
+GltfLegacyFeatureLayer.prototype.destroy = function () {
   var cache = this._cache;
   var textureFeatureIds = this._textureFeatureIds;
   var attributeFeatureIds = this._attributeFeatureIds;
@@ -251,4 +251,4 @@ GltfFeatureLayer.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureLayer;
+export default GltfLegacyFeatureLayer;

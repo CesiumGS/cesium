@@ -2,13 +2,13 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
-import GltfFeatureTablePropertyType from "./GltfFeatureTablePropertyType.js";
+import GltfLegacyFeatureTablePropertyType from "./GltfLegacyFeatureTablePropertyType.js";
 import when from "../ThirdParty/when.js";
 
 /**
  * A feature table descriptor property.
  * <p>
- * Implements the {@link GltfFeatureTableProperty} interface.
+ * Implements the {@link GltfLegacyFeatureTableProperty} interface.
  * </p>
  *
  * @param {Object} options Object with the following properties:
@@ -17,12 +17,12 @@ import when from "../ThirdParty/when.js";
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureTableDescriptorProperty
+ * @alias GltfLegacyFeatureTableDescriptorProperty
  * @constructor
  *
  * @private
  */
-function GltfFeatureTableDescriptorProperty(options) {
+function GltfLegacyFeatureTableDescriptorProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
   var name = options.name;
@@ -43,12 +43,12 @@ function GltfFeatureTableDescriptorProperty(options) {
 
   this._name = name;
   this._semantic = property.semantic;
-  this._type = GltfFeatureTablePropertyType.getTypeFromAccessorType(type);
+  this._type = GltfLegacyFeatureTablePropertyType.getTypeFromAccessorType(type);
   this._extras = extras;
   this._readyPromise = when.resolve(this);
 }
 
-Object.defineProperties(GltfFeatureTableDescriptorProperty.prototype, {
+Object.defineProperties(GltfLegacyFeatureTableDescriptorProperty.prototype, {
   name: {
     get: function () {
       return this._name;
@@ -81,27 +81,27 @@ Object.defineProperties(GltfFeatureTableDescriptorProperty.prototype, {
 });
 
 /**
- * Implements the {@link GltfFeatureTableProperty} interface
+ * Implements the {@link GltfLegacyFeatureTableProperty} interface
  *
  * @private
  */
-GltfFeatureTableDescriptorProperty.prototype.getValue = function () {
+GltfLegacyFeatureTableDescriptorProperty.prototype.getValue = function () {
   return undefined;
 };
 
 /**
- * Implements the {@link GltfFeatureTableProperty} interface.
+ * Implements the {@link GltfLegacyFeatureTableProperty} interface.
  *
  * @private
  */
-GltfFeatureTableDescriptorProperty.prototype.setValue = function () {};
+GltfLegacyFeatureTableDescriptorProperty.prototype.setValue = function () {};
 
-GltfFeatureTableDescriptorProperty.prototype.isDestroyed = function () {
+GltfLegacyFeatureTableDescriptorProperty.prototype.isDestroyed = function () {
   return false;
 };
 
-GltfFeatureTableDescriptorProperty.prototype.destroy = function () {
+GltfLegacyFeatureTableDescriptorProperty.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureTableDescriptorProperty;
+export default GltfLegacyFeatureTableDescriptorProperty;

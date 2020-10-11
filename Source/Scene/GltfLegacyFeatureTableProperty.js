@@ -15,22 +15,22 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @param {Object} options.property The feature property JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureTableProperty
+ * @alias GltfLegacyFeatureTableProperty
  * @constructor
  *
- * @see GltfFeatureTableArrayProperty
- * @see GltfFeatureTableAccessorProperty
- * @see GltfFeatureTableDescriptorProperty
+ * @see GltfLegacyFeatureTableArrayProperty
+ * @see GltfLegacyFeatureTableAccessorProperty
+ * @see GltfLegacyFeatureTableDescriptorProperty
  *
  * @private
  */
-function GltfFeatureTableProperty(options) {}
+function GltfLegacyFeatureTableProperty(options) {}
 
-Object.defineProperties(GltfFeatureTableProperty.prototype, {
+Object.defineProperties(GltfLegacyFeatureTableProperty.prototype, {
   /**
    * The name of the property.
    *
-   * @memberof GltfFeatureTableProperty.prototype
+   * @memberof GltfLegacyFeatureTableProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -45,7 +45,7 @@ Object.defineProperties(GltfFeatureTableProperty.prototype, {
   /**
    * The semantic of the property.
    *
-   * @memberof GltfFeatureTableProperty.prototype
+   * @memberof GltfLegacyFeatureTableProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -60,8 +60,8 @@ Object.defineProperties(GltfFeatureTableProperty.prototype, {
   /**
    * The type of the property.
    *
-   * @memberof GltfFeatureTableProperty.prototype
-   * @type {GltfFeatureTablePropertyType}
+   * @memberof GltfLegacyFeatureTableProperty.prototype
+   * @type {GltfLegacyFeatureTablePropertyType}
    * @readonly
    * @private
    */
@@ -75,7 +75,7 @@ Object.defineProperties(GltfFeatureTableProperty.prototype, {
   /**
    * Extras in the feature property JSON object from the glTF.
    *
-   * @memberof GltfFeatureTableProperty.prototype
+   * @memberof GltfLegacyFeatureTableProperty.prototype
    * @type {*}
    * @readonly
    * @private
@@ -90,8 +90,8 @@ Object.defineProperties(GltfFeatureTableProperty.prototype, {
   /**
    * Promise that resolves when the property is ready.
    *
-   * @memberof GltfFeatureTableProperty.prototype
-   * @type {Promise.<GltfFeatureTableProperty>}
+   * @memberof GltfLegacyFeatureTableProperty.prototype
+   * @type {Promise.<GltfLegacyFeatureTableProperty>}
    * @readonly
    * @private
    */
@@ -122,7 +122,10 @@ Object.defineProperties(GltfFeatureTableProperty.prototype, {
  *
  * @private
  */
-GltfFeatureTableProperty.prototype.getValue = function (featureId, result) {
+GltfLegacyFeatureTableProperty.prototype.getValue = function (
+  featureId,
+  result
+) {
   DeveloperError.throwInstantiationError();
 };
 
@@ -142,7 +145,10 @@ GltfFeatureTableProperty.prototype.getValue = function (featureId, result) {
  *
  * @private
  */
-GltfFeatureTableProperty.prototype.setValue = function (featureId, value) {
+GltfLegacyFeatureTableProperty.prototype.setValue = function (
+  featureId,
+  value
+) {
   DeveloperError.throwInstantiationError();
 };
 
@@ -154,11 +160,11 @@ GltfFeatureTableProperty.prototype.setValue = function (featureId, value) {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureTableProperty#destroy
+ * @see GltfLegacyFeatureTableProperty#destroy
  *
  * @private
  */
-GltfFeatureTableProperty.prototype.isDestroyed = function () {
+GltfLegacyFeatureTableProperty.prototype.isDestroyed = function () {
   DeveloperError.throwInstantiationError();
 };
 
@@ -172,12 +178,12 @@ GltfFeatureTableProperty.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureTableProperty#isDestroyed
+ * @see GltfLegacyFeatureTableProperty#isDestroyed
  *
  * @private
  */
-GltfFeatureTableProperty.prototype.destroy = function () {
+GltfLegacyFeatureTableProperty.prototype.destroy = function () {
   DeveloperError.throwInstantiationError();
 };
 
-export default GltfFeatureTableProperty;
+export default GltfLegacyFeatureTableProperty;

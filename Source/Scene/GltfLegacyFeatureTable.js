@@ -10,11 +10,11 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Matrix2 from "../Core/Matrix2.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
-import GltfFeature from "./GltfFeature.js";
-import GltfFeatureTableAccessorProperty from "./GltfFeatureTableAccessorProperty.js";
-import GltfFeatureTableArrayProperty from "./GltfFeatureTableArrayProperty.js";
-import GltfFeatureTableDescriptorProperty from "./GltfFeatureTableDescriptorProperty.js";
-import GltfFeatureTablePropertyType from "./GltfFeatureTablePropertyType.js";
+import GltfLegacyFeature from "./GltfLegacyFeature.js";
+import GltfLegacyFeatureTableAccessorProperty from "./GltfLegacyFeatureTableAccessorProperty.js";
+import GltfLegacyFeatureTableArrayProperty from "./GltfLegacyFeatureTableArrayProperty.js";
+import GltfLegacyFeatureTableDescriptorProperty from "./GltfLegacyFeatureTableDescriptorProperty.js";
+import GltfLegacyFeatureTablePropertyType from "./GltfLegacyFeatureTablePropertyType.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -25,12 +25,12 @@ import when from "../ThirdParty/when.js";
  * @param {Object} options.featureTable The feature table JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureTable
+ * @alias GltfLegacyFeatureTable
  * @constructor
  *
  * @private
  */
-function GltfFeatureTable(options) {
+function GltfLegacyFeatureTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
   var featureTable = options.featureTable;
@@ -50,21 +50,21 @@ function GltfFeatureTable(options) {
       var featureProperty = featureProperties[name];
       var property;
       if (defined(featureProperty.descriptor)) {
-        property = new GltfFeatureTableDescriptorProperty({
+        property = new GltfLegacyFeatureTableDescriptorProperty({
           gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
           cache: cache,
         });
       } else if (defined(featureProperty.accessor)) {
-        property = new GltfFeatureTableAccessorProperty({
+        property = new GltfLegacyFeatureTableAccessorProperty({
           gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
           cache: cache,
         });
       } else {
-        property = new GltfFeatureTableArrayProperty({
+        property = new GltfLegacyFeatureTableArrayProperty({
           gltfContainer: gltfContainer,
           name: name,
           property: featureProperty,
@@ -92,12 +92,12 @@ function GltfFeatureTable(options) {
   this._readyPromise = readyPromise;
 }
 
-Object.defineProperties(GltfFeatureTable.prototype, {
+Object.defineProperties(GltfLegacyFeatureTable.prototype, {
   /**
    * The feature table properties.
    *
-   * @memberof GltfFeatureTable.prototype
-   * @type {Object.<String, GltfFeatureTableProperty>}
+   * @memberof GltfLegacyFeatureTable.prototype
+   * @type {Object.<String, GltfLegacyFeatureTableProperty>}
    * @readonly
    * @private
    */
@@ -111,7 +111,7 @@ Object.defineProperties(GltfFeatureTable.prototype, {
    * The number of features in the feature table.
    * <code>featureCount</code> is undefined if the feature table is a descriptor table.
    *
-   * @memberof GltfFeatureTable.prototype
+   * @memberof GltfLegacyFeatureTable.prototype
    * @type {Number|undefined}
    * @readonly
    * @private
@@ -125,7 +125,7 @@ Object.defineProperties(GltfFeatureTable.prototype, {
   /**
    * The name of the feature table.
    *
-   * @memberof GltfFeatureTable.prototype
+   * @memberof GltfLegacyFeatureTable.prototype
    * @type {String}
    * @readonly
    * @private
@@ -139,7 +139,7 @@ Object.defineProperties(GltfFeatureTable.prototype, {
   /**
    * Extras in the feature table JSON object from the glTF.
    *
-   * @memberof GltfFeatureTable.prototype
+   * @memberof GltfLegacyFeatureTable.prototype
    * @type {*}
    * @readonly
    * @private
@@ -153,8 +153,8 @@ Object.defineProperties(GltfFeatureTable.prototype, {
   /**
    * Promise that resolves when the feature table is ready.
    *
-   * @memberof GltfFeatureTable.prototype
-   * @type {Promise.<GltfFeatureTable>}
+   * @memberof GltfLegacyFeatureTable.prototype
+   * @type {Promise.<GltfLegacyFeatureTable>}
    * @readonly
    * @private
    */
@@ -187,7 +187,7 @@ function createFeatures(featureTable) {
   if (!defined(featureTable._features)) {
     var features = new Array(featureCount);
     for (var i = 0; i < featureCount; ++i) {
-      features[i] = new GltfFeature({
+      features[i] = new GltfLegacyFeature({
         featureTable: featureTable,
         featureId: i,
       });
@@ -197,7 +197,7 @@ function createFeatures(featureTable) {
 }
 
 /**
- * Returns the {@link GltfFeature} object for the feature with the
+ * Returns the {@link GltfLegacyFeature} object for the feature with the
  * given <code>featureId</code>. This object is used to get and modify the
  * feature's properties.
  * <p>
@@ -205,11 +205,11 @@ function createFeatures(featureTable) {
  * </p>
  *
  * @param {Number} featureId The featureId for the feature.
- * @returns {GltfFeature} The corresponding {@link GltfFeature} object.
+ * @returns {GltfLegacyFeature} The corresponding {@link GltfLegacyFeature} object.
  *
- * @throws {DeveloperError} if <code>featureId<code> is not between zero and {@link GltfFeatureTable#featureCount} - 1.
+ * @throws {DeveloperError} if <code>featureId<code> is not between zero and {@link GltfLegacyFeatureTable#featureCount} - 1.
  */
-GltfFeatureTable.prototype.getFeature = function (featureId) {
+GltfLegacyFeatureTable.prototype.getFeature = function (featureId) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("featureId", featureId);
   checkFeatureId(featureId, this._featureCount);
@@ -236,13 +236,13 @@ GltfFeatureTable.prototype.getFeature = function (featureId) {
  * For scalar properties a number is returned.
  * For array properties a value of the array's type is returned, which may be a string, number, boolean, or any other valid JSON type.
  *
- * @throws {DeveloperError} if <code>featureId<code> is not between zero and {@link GltfFeatureTable#featureCount} - 1.
+ * @throws {DeveloperError} if <code>featureId<code> is not between zero and {@link GltfLegacyFeatureTable#featureCount} - 1.
  * @throws {DeveloperError} if the feature table does not have a property with the specified name.
  * @throws {DeveloperError} if <code>result</code>'s type doesn't match the property's type.
  *
  * @private
  */
-GltfFeatureTable.prototype.getPropertyValue = function (
+GltfLegacyFeatureTable.prototype.getPropertyValue = function (
   featureId,
   name,
   result
@@ -264,32 +264,32 @@ GltfFeatureTable.prototype.getPropertyValue = function (
   if (defined(result)) {
     var type = property.type;
     if (
-      type === GltfFeatureTablePropertyType.VEC2 &&
+      type === GltfLegacyFeatureTablePropertyType.VEC2 &&
       !(result instanceof Cartesian2)
     ) {
       throw new DeveloperError("result must be a Cartesian2");
     } else if (
-      type === GltfFeatureTablePropertyType.VEC3 &&
+      type === GltfLegacyFeatureTablePropertyType.VEC3 &&
       !(result instanceof Cartesian3)
     ) {
       throw new DeveloperError("result must be a Cartesian3");
     } else if (
-      type === GltfFeatureTablePropertyType.VEC4 &&
+      type === GltfLegacyFeatureTablePropertyType.VEC4 &&
       !(result instanceof Cartesian4)
     ) {
       throw new DeveloperError("result must be a Cartesian4");
     } else if (
-      type === GltfFeatureTablePropertyType.MAT2 &&
+      type === GltfLegacyFeatureTablePropertyType.MAT2 &&
       !(result instanceof Matrix2)
     ) {
       throw new DeveloperError("result must be a Matrix2");
     } else if (
-      type === GltfFeatureTablePropertyType.MAT3 &&
+      type === GltfLegacyFeatureTablePropertyType.MAT3 &&
       !(result instanceof Matrix3)
     ) {
       throw new DeveloperError("result must be a Matrix3");
     } else if (
-      type === GltfFeatureTablePropertyType.MAT4 &&
+      type === GltfLegacyFeatureTablePropertyType.MAT4 &&
       !(result instanceof Matrix4)
     ) {
       throw new DeveloperError("result must be a Matrix4");
@@ -320,7 +320,7 @@ GltfFeatureTable.prototype.getPropertyValue = function (
  *
  * @private
  */
-GltfFeatureTable.prototype.setPropertyValue = function (
+GltfLegacyFeatureTable.prototype.setPropertyValue = function (
   featureId,
   name,
   value
@@ -341,47 +341,47 @@ GltfFeatureTable.prototype.setPropertyValue = function (
   }
   var type = property.type;
   if (
-    type === GltfFeatureTablePropertyType.VEC2 &&
+    type === GltfLegacyFeatureTablePropertyType.VEC2 &&
     !(value instanceof Cartesian2)
   ) {
     throw new DeveloperError("value must be a Cartesian2");
   } else if (
-    type === GltfFeatureTablePropertyType.VEC3 &&
+    type === GltfLegacyFeatureTablePropertyType.VEC3 &&
     !(value instanceof Cartesian3)
   ) {
     throw new DeveloperError("value must be a Cartesian3");
   } else if (
-    type === GltfFeatureTablePropertyType.VEC4 &&
+    type === GltfLegacyFeatureTablePropertyType.VEC4 &&
     !(value instanceof Cartesian4)
   ) {
     throw new DeveloperError("value must be a Cartesian4");
   } else if (
-    type === GltfFeatureTablePropertyType.MAT2 &&
+    type === GltfLegacyFeatureTablePropertyType.MAT2 &&
     !(value instanceof Matrix2)
   ) {
     throw new DeveloperError("value must be a Matrix2");
   } else if (
-    type === GltfFeatureTablePropertyType.MAT3 &&
+    type === GltfLegacyFeatureTablePropertyType.MAT3 &&
     !(value instanceof Matrix3)
   ) {
     throw new DeveloperError("value must be a Matrix3");
   } else if (
-    type === GltfFeatureTablePropertyType.MAT4 &&
+    type === GltfLegacyFeatureTablePropertyType.MAT4 &&
     !(value instanceof Matrix4)
   ) {
     throw new DeveloperError("value must be a Matrix4");
   } else if (
-    type === GltfFeatureTablePropertyType.STRING &&
+    type === GltfLegacyFeatureTablePropertyType.STRING &&
     typeof value !== "string"
   ) {
     throw new DeveloperError("value must be a string");
   } else if (
-    type === GltfFeatureTablePropertyType.NUMBER &&
+    type === GltfLegacyFeatureTablePropertyType.NUMBER &&
     typeof value !== "number"
   ) {
     throw new DeveloperError("value must be a number");
   } else if (
-    type === GltfFeatureTablePropertyType.BOOLEAN &&
+    type === GltfLegacyFeatureTablePropertyType.BOOLEAN &&
     typeof value !== "boolean"
   ) {
     throw new DeveloperError("value must be a boolean");
@@ -399,11 +399,11 @@ GltfFeatureTable.prototype.setPropertyValue = function (
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureTable#destroy
+ * @see GltfLegacyFeatureTable#destroy
  *
  * @private
  */
-GltfFeatureTable.prototype.isDestroyed = function () {
+GltfLegacyFeatureTable.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -417,11 +417,11 @@ GltfFeatureTable.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureTable#isDestroyed
+ * @see GltfLegacyFeatureTable#isDestroyed
  *
  * @private
  */
-GltfFeatureTable.prototype.destroy = function () {
+GltfLegacyFeatureTable.prototype.destroy = function () {
   var properties = this._properties;
   for (var name in properties) {
     if (properties.hasOwnProperty(name)) {
@@ -433,4 +433,4 @@ GltfFeatureTable.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureTable;
+export default GltfLegacyFeatureTable;

@@ -6,26 +6,26 @@ import defaultValue from "../Core/defaultValue.js";
  * <p>
  * Provides access to a feature's properties stored in the feature table, as well
  * as the ability to show/hide a feature and change its highlight color via
- * {@link GltfFeature#show} and {@link GltfFeature#color}, respectively.
+ * {@link GltfLegacyFeature#show} and {@link GltfLegacyFeature#color}, respectively.
  * </p>
  * <p>
- * Modifications to a <code>GltfFeature</code> object have the lifetime of the glTF.
+ * Modifications to a <code>GltfLegacyFeature</code> object have the lifetime of the glTF.
  * </p>
  * <p>
- * Do not construct this directly. Access it through {@link GltfFeatureTable#getFeature}
+ * Do not construct this directly. Access it through {@link GltfLegacyFeatureTable#getFeature}
  * or picking using {@link Scene#pick}.
  * </p>
  *
  * @param {Object} options Object with the following properties:
- * @param {GltfFeatureTable} options.featureTable The feature table.
+ * @param {GltfLegacyFeatureTable} options.featureTable The feature table.
  * @param {Number} options.featureId The feature ID.
  *
- * @alias GltfFeature
+ * @alias GltfLegacyFeature
  * @constructor
  *
  * @private
  */
-function GltfFeature(options) {
+function GltfLegacyFeature(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var featureTable = options.featureTable;
   var featureId = options.featureId;
@@ -40,8 +40,8 @@ function GltfFeature(options) {
 }
 
 // TODO
-GltfFeature.prototype.getProperty = function (name, result) {
+GltfLegacyFeature.prototype.getProperty = function (name, result) {
   return this._featureTable.getPropertyValue(this._featureId, name, result);
 };
 
-export default GltfFeature;
+export default GltfLegacyFeature;

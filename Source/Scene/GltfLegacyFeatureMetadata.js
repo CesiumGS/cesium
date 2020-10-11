@@ -3,8 +3,8 @@ import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
 import GltfContainer from "./GltfContainer.js";
-import GltfFeatureMetadataPrimitive from "./GltfFeatureMetadataPrimitive.js";
-import GltfFeatureTable from "./GltfFeatureTable.js";
+import GltfLegacyFeatureMetadataPrimitive from "./GltfLegacyFeatureMetadataPrimitive.js";
+import GltfLegacyFeatureTable from "./GltfLegacyFeatureTable.js";
 import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
 
@@ -16,12 +16,12 @@ import when from "../ThirdParty/when.js";
  * @param {Object} options.featureMetadata The feature metadata JSON object from the glTF.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureMetadata
+ * @alias GltfLegacyFeatureMetadata
  * @constructor
  *
  * @private
  */
-function GltfFeatureMetadata(options) {
+function GltfLegacyFeatureMetadata(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var featureMetadata = options.featureMetadata;
@@ -39,7 +39,7 @@ function GltfFeatureMetadata(options) {
 
   var featureTables = featureMetadata.featureTables;
   featureTables = featureTables.map(function (featureTable) {
-    return new GltfFeatureTable({
+    return new GltfLegacyFeatureTable({
       gltfContainer: gltfContainer,
       featureTable: featureTable,
       cache: cache,
@@ -62,7 +62,7 @@ function GltfFeatureMetadata(options) {
             extensions.EXT_3dtiles_feature_metadata;
           if (defined(featureMetadataExtension)) {
             metadataPrimitives.push(
-              new GltfFeatureMetadataPrimitive({
+              new GltfLegacyFeatureMetadataPrimitive({
                 gltfContainer: gltfContainer,
                 primitive: primitive,
                 featureTables: featureTables,
@@ -95,12 +95,12 @@ function GltfFeatureMetadata(options) {
   this._readyPromise = readyPromise;
 }
 
-Object.defineProperties(GltfFeatureMetadata.prototype, {
+Object.defineProperties(GltfLegacyFeatureMetadata.prototype, {
   /**
    * Feature tables in the feature metadata extension.
    *
-   * @memberof GltfFeatureMetadata.prototype
-   * @type {GltfFeatureTable[]}
+   * @memberof GltfLegacyFeatureMetadata.prototype
+   * @type {GltfLegacyFeatureTable[]}
    * @readonly
    * @private
    */
@@ -113,8 +113,8 @@ Object.defineProperties(GltfFeatureMetadata.prototype, {
   /**
    * Primitives with the feature metadata extension.
    *
-   * @memberof GltfFeatureMetadata.prototype
-   * @type {GltfFeatureMetadataPrimitive[]}
+   * @memberof GltfLegacyFeatureMetadata.prototype
+   * @type {GltfLegacyFeatureMetadataPrimitive[]}
    * @readonly
    * @private
    */
@@ -127,7 +127,7 @@ Object.defineProperties(GltfFeatureMetadata.prototype, {
   /**
    * Extras in the feature property JSON object from the glTF.
    *
-   * @memberof GltfFeatureMetadata.prototype
+   * @memberof GltfLegacyFeatureMetadata.prototype
    * @type {*}
    * @readonly
    * @private
@@ -141,8 +141,8 @@ Object.defineProperties(GltfFeatureMetadata.prototype, {
   /**
    * Promise that resolves when the feature metadata is ready.
    *
-   * @memberof GltfFeatureMetadata.prototype
-   * @type {Promise.<GltfFeatureMetadata>}
+   * @memberof GltfLegacyFeatureMetadata.prototype
+   * @type {Promise.<GltfLegacyFeatureMetadata>}
    * @readonly
    * @private
    */
@@ -161,11 +161,11 @@ Object.defineProperties(GltfFeatureMetadata.prototype, {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureMetadata#destroy
+ * @see GltfLegacyFeatureMetadata#destroy
  *
  * @private
  */
-GltfFeatureMetadata.prototype.isDestroyed = function () {
+GltfLegacyFeatureMetadata.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -179,11 +179,11 @@ GltfFeatureMetadata.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureMetadata#isDestroyed
+ * @see GltfLegacyFeatureMetadata#isDestroyed
  *
  * @private
  */
-GltfFeatureMetadata.prototype.destroy = function () {
+GltfLegacyFeatureMetadata.prototype.destroy = function () {
   this._featureTables.forEach(function (featureTable) {
     featureTable.destroy();
   });
@@ -195,4 +195,4 @@ GltfFeatureMetadata.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureMetadata;
+export default GltfLegacyFeatureMetadata;

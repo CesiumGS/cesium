@@ -11,7 +11,7 @@ import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
 import when from "../ThirdParty/when.js";
 
 /**
- * Cache for feature table properties that are referenced from external files.
+ * Cache for feature properties that are referenced from external files.
  * <p>
  * Calls to {@link GltfFeatureMetadataCache#getJson}, {@link GltfFeatureMetadataCache#getBuffer},
  * and {@link GltfFeatureMetadataCache#getTexture} are reference counted. Make sure to call
