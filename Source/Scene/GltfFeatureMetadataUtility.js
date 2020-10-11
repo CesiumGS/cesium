@@ -102,4 +102,20 @@ GltfFeatureMetadataUtility.getTypedArrayForAccessor = function (
   );
 };
 
+GltfFeatureMetadataUtility.getTypedArrayForBufferView = function (
+  bufferView,
+  componentsLength,
+  componentDatatype,
+  bufferData
+) {
+  var byteOffset = bufferData.byteOffset + bufferView.byteOffset;
+
+  return ComponentDatatype.createArrayBufferView(
+    componentDatatype,
+    bufferData.buffer,
+    byteOffset,
+    componentsLength
+  );
+};
+
 export default GltfFeatureMetadataUtility;
