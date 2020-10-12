@@ -21,6 +21,10 @@ var supportedTranscoderFormats;
 var transcoderModule;
 var transcoderPromise;
 
+var ImageInfo;
+var BasisUastcImageTranscoder;
+var BasisLzEtc1sImageTranscoder;
+
 loadKTX2.setKTX2SupportedFormats = function (etc1, s3tc, pvrtc) {
   supportedTranscoderFormats = {
     etc1: etc1,
@@ -91,6 +95,12 @@ function loadKTX2(resourceOrUrlOrBuffer) {
     // eslint-disable-next-line new-cap
     MSC_TRANSCODER().then(function (basisModule) {
       transcoderModule = basisModule;
+      basisModule.initTranscoders();
+
+      ImageInfo = basisModule.ImageInfo;
+      BasisUastcImageTranscoder = basisModule.BasisUastcImageTranscoder;
+      BasisLzEtc1sImageTranscoder = basisModule.BasisLzEtc1sImageTranscoder;
+
       deferred.resolve();
     });
   }
@@ -297,10 +307,8 @@ function parseKTX2(data) {
     parseUncompressed(data, header, levelIndex, result);
   } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelETC1S) {
     // Compressed, initialize transcoder module
-    var BasisTranscoder = transcoderModule.BasisTranscoder;
-    BasisTranscoder.init();
-    var transcoder = new BasisTranscoder();
-    parseCompressed(
+    var transcoder = new BasisLzEtc1sImageTranscoder();
+    transcodeEtc1s(
       data,
       view,
       header,
@@ -310,7 +318,6 @@ function parseKTX2(data) {
       result
     );
   } else if (header.vkFormat === 0x0 && dfd.colorModel === colorModelUASTC) {
-    throw new RuntimeError("UASTC Basis Encoding not yet supported");
   } else {
     throw new RuntimeError("KTX2 pixel format is not yet supported.");
   }
@@ -375,7 +382,7 @@ function parseUncompressed(data, header, levelIndex, result) {
   }
 }
 
-function parseCompressed(
+function transcodeEtc1s(
   data,
   view,
   header,
@@ -411,8 +418,8 @@ function parseCompressed(
       alphaSliceByteOffset: view.getUint32((byteOffset += sizeOfUint32), true),
       alphaSliceByteLength: view.getUint32((byteOffset += sizeOfUint32), true),
     });
+    byteOffset += sizeOfUint32;
   }
-  byteOffset += sizeOfUint32;
 
   var hasAlphaSlices = imageDescs[0].alphaSliceByteLength > 0;
 
@@ -441,7 +448,7 @@ function parseCompressed(
   }
 
   var dataBuffer = defined(data.buffer) ? data.buffer : data;
-  var endpoints = new Uint8Array(dataBuffer, byteOffset, selectorsByteLength);
+  var endpoints = new Uint8Array(dataBuffer, byteOffset, endpointsByteLength);
   byteOffset += endpointsByteLength;
   var selectors = new Uint8Array(dataBuffer, byteOffset, selectorsByteLength);
   byteOffset += selectorsByteLength;
@@ -457,15 +464,15 @@ function parseCompressed(
   for (var i = 0; i < levelIndex.length; ++i) {
     var level = (result[i] = {});
     var levelInfo = levelIndex[i];
-    var imageInfo = imageDescs[i];
+    var imageDesc = imageDescs[i];
 
     // BasisU blocks are 4x4: https://github.com/BinomialLLC/basis_universal/wiki/.basis-File-Format-and-ETC1S-Texture-Video-Specification
-    var blockWidth = 4;
-    var blockHeight = 4;
+    //var blockWidth = 4;
+    //var blockHeight = 4;
 
     // NumBlocks formula: http://github.khronos.org/KTX-Specification/#_supercompression_global_data
-    var numBlocksX = Math.ceil(header.pixelWidth / blockWidth);
-    var numBlocksY = Math.max(1, Math.ceil(header.pixelHeight / blockHeight));
+    //var numBlocksX = Math.ceil(header.pixelWidth / blockWidth);
+    //var numBlocksY = Math.max(1, Math.ceil(header.pixelHeight / blockHeight));
 
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
@@ -473,15 +480,44 @@ function parseCompressed(
       var levelOffset = ktx2Offset + levelInfo.byteOffset;
 
       var transcoded;
+
+      var levelData = new Uint8Array(
+        dataBuffer,
+        levelOffset + imageDesc.rgbSliceByteOffset,
+        imageDesc.rgbSliceByteLength + imageDesc.alphaSliceByteLength
+      );
+
+      var imageInfo = new ImageInfo(
+        transcoderModule.TextureFormat.ETC1S,
+        width,
+        height,
+        i
+      );
+      imageInfo.flags = imageDesc.imageFlags;
+      imageInfo.rgbByteOffset = 0;
+      imageInfo.rgbByteLength = imageDesc.rgbSliceByteLength;
+      imageInfo.alphaByteOffset =
+        imageDesc.alphaSliceByteOffset > 0 ? imageDesc.rgbSliceByteLength : 0;
+      imageInfo.alphaByteLength = imageDesc.alphaSliceByteLength;
+
+      transcoded = transcoder.transcodeImage(
+        transcoderFormat,
+        levelData,
+        imageInfo,
+        0,
+        isVideo
+      );
+
+      /*
       var rgbData = new Uint8Array(
         dataBuffer,
-        levelOffset + imageInfo.rgbSliceByteOffset,
-        imageInfo.rgbSliceByteLength
+        levelOffset + imageInfo.rgbByteOffset,
+        imageInfo.rgbByteLength
       );
       var alphaData = new Uint8Array(
         dataBuffer,
-        levelOffset + imageInfo.alphaSliceByteOffset,
-        imageInfo.alphaSliceByteLength
+        levelOffset + imageInfo.alphaByteOffset,
+        imageInfo.alphaByteLength
       );
 
       transcoded = transcoder.transcodeImage(
@@ -500,6 +536,10 @@ function parseCompressed(
 
       // Check Error Here
       if (transcoded.error) {
+        throw new RuntimeError("Error transcoding Image");
+      }*/
+
+      if (transcoded.transcodedImage === undefined) {
         throw new RuntimeError("Error transcoding Image");
       }
 
