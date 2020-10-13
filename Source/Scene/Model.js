@@ -1907,6 +1907,16 @@ function imageLoad(model, textureId) {
   return function (image) {
     var loadResources = model._loadResources;
     --loadResources.pendingTextureLoads;
+
+    // Images transcoded from KTX2 can contain multiple mip levels:
+    // https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_texture_basisu
+    var mipLevels;
+    if (Array.isArray(image)) {
+      // hightest detail mip should be level 0
+      mipLevels = image.slice(1, image.length);
+      image = image[0];
+    }
+
     loadResources.texturesToCreate.enqueue({
       id: textureId,
       image: image,
@@ -1914,6 +1924,7 @@ function imageLoad(model, textureId) {
       width: image.width,
       height: image.height,
       internalFormat: image.internalFormat,
+      mipLevels: mipLevels,
     });
   };
 }
@@ -2875,6 +2886,7 @@ function createTexture(gltfTexture, model, context) {
       height: gltfTexture.height,
       pixelFormat: internalFormat,
       sampler: sampler,
+      mipLevels: gltfTexture.mipLevels,
     });
   } else if (defined(source)) {
     var npot =
