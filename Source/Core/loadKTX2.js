@@ -81,6 +81,7 @@ loadKTX2.setKTX2SupportedFormats = function (etc1, s3tc, pvrtc) {
  * @see {@link hhttp://github.khronos.org/KTX-Specification/|KTX file format}
  * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
  * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+ * @private
  */
 function loadKTX2(resourceOrUrlOrBuffer) {
   //>>includeStart('debug', pragmas.debug);
