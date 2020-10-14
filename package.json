@@ -35,13 +35,6 @@
   "main": "index.cjs",
   "module": "./Source/Cesium.js",
   "types": "./Source/Cesium.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "require": "./index.cjs",
-      "import": "./Source/Cesium.js"
-    }
-  },
   "dependencies": {
     "dompurify": "^2.0.7"
   },
