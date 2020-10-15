@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2"
+xmlns:gx="http://www.google.com/kml/ext/2.2"
+xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+<open>1</open>
+<visibility>1</visibility>
+<name><![CDATA[Schuylkill River Trail Bike Ride]]></name>
+<Style id="track">
+<LineStyle><color>7f0000ff</color><width>4</width></LineStyle>
+<IconStyle>
+<scale>1.3</scale>
+<Icon><href>http://maps.google.com/mapfiles/kml/paddle/ylw-circle.png</href></Icon>
+</IconStyle>
+</Style>
+<Style id="start"><IconStyle>
+<scale>1.3</scale>
+<Icon><href>http://maps.google.com/mapfiles/kml/paddle/grn-circle.png</href></Icon>
+<hotSpot x="32" y="1" xunits="pixels" yunits="pixels"/>
+</IconStyle></Style>
+<Style id="end"><IconStyle>
+<scale>1.3</scale>
+<Icon><href>http://maps.google.com/mapfiles/kml/paddle/red-circle.png</href></Icon>
+<hotSpot x="32" y="1" xunits="pixels" yunits="pixels"/>
+</IconStyle></Style>
+<Style id="statistics"><IconStyle>
+<scale>1.3</scale>
+<Icon><href>http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png</href></Icon>
+<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+</IconStyle></Style>
+<Style id="waypoint"><IconStyle>
+<scale>1.3</scale>
+<Icon><href>http://maps.google.com/mapfiles/kml/pushpin/blue-pushpin.png</href></Icon>
+<hotSpot x="20" y="2" xunits="pixels" yunits="pixels"/>
+</IconStyle></Style>
+<Schema id="schema">
+<gx:SimpleArrayField name="power" type="int">
+<displayName><![CDATA[Power (W)]]></displayName>
+</gx:SimpleArrayField>
+<gx:SimpleArrayField name="cadence" type="int">
+<displayName><![CDATA[Cadence (rpm)]]></displayName>
+</gx:SimpleArrayField>
+<gx:SimpleArrayField name="heart_rate" type="int">
+<displayName><![CDATA[Heart rate (bpm)]]></displayName>
+</gx:SimpleArrayField>
+</Schema>
+<Placemark>
+<name><![CDATA[Schuylkill River Trail Bike Ride (Start)]]></name>
+<description><![CDATA[]]></description>
+<TimeStamp><when>2013-07-25T19:33:58.000Z</when></TimeStamp>
+<styleUrl>#start</styleUrl>
+<Point>
+<coordinates>39.974979,16.086632,-2.799999952316284</coordinates>
+</Point>
+</Placemark>
+<Placemark id="tour">
+<name><![CDATA[Matt]]></name>
+<description><![CDATA[
+Name: Schuylkill River Trail Bike Ride<br>
+Activity type: biking<br>
+Total distance: 26.30 km (16.3 mi)<br>
+Total time: 1:33:41<br>
+Moving time: 1:32:26<br>
+Average speed: 16.84 km/h (10.5 mi/h)<br>
+Average moving speed: 17.07 km/h (10.6 mi/h)<br>
+Max speed: 36.90 km/h (22.9 mi/h)<br>
+Average pace: 3.56 min/km (5.7 min/mi)<br>
+Average moving pace: 3.51 min/km (5.7 min/mi)<br>
+Fastest pace: 1.63 min/km (2.6 min/mi)<br>
+Max elevation: 54 m (176 ft)<br>
+Min elevation: -32 m (-105 ft)<br>
+Elevation gain: 740 m (2429 ft)<br>
+Max grade: 30 %<br>
+Min grade: -23 %<br>
+Recorded: 7/25/2013 3:33pm
+]]></description>
+<styleUrl>#track</styleUrl>
+<ExtendedData>
+<Data name="type"><value><![CDATA[biking]]></value></Data>
+</ExtendedData>
+<gx:MultiTrack>
+<altitudeMode>absolute</altitudeMode>
+<gx:interpolate>1</gx:interpolate>
+<gx:Track>
+<when>2013-07-25T19:33:58.000Z</when>
+<gx:coord>39.974238,16.086584 -2.799999952316284</gx:coord>
+<when>2013-07-25T19:33:59.000Z</when>
+<gx:coord>39.974234,16.086597 38.0</gx:coord>
+<when>2013-07-25T19:34:00.000Z</when>
+<gx:coord>39.974214,16.086641 36.099998474121094</gx:coord>
+<when>2013-07-25T19:34:09.000Z</when>
+<gx:coord>39.974233,16.086603 20.700000762939453</gx:coord>
+<when>2013-07-25T19:34:10.000Z</when>
+<gx:coord>39.97425,16.086586 25.600000381469727</gx:coord>
+<when>2013-07-25T19:34:42.000Z</when>
+<gx:coord>39.97426 16.086963 36.5</gx:coord>
+<when>2013-07-25T19:34:43.000Z</when>
+<gx:coord>39.974268 16.086631 37.900001525878906</gx:coord>
+<when>2013-07-25T19:34:57.000Z</when>
+<gx:coord>39.974292 16.086618 39.70000076293945</gx:coord>
+<when>2013-07-25T19:34:58.000Z</when>
+<gx:coord>39.97432 16.086599 40.70000076293945</gx:coord>
+<when>2013-07-25T19:34:59.000Z</when>
+<gx:coord>39.974355 16.086574 40.70000076293945</gx:coord>
+<when>2013-07-25T19:35:00.000Z</when>
+<gx:coord>39.974391 16.086544 35.29999923706055</gx:coord>
+<when>2013-07-25T19:35:01.000Z</when>
+<gx:coord>39.974423 16.086513 33.20000076293945</gx:coord>
+<when>2013-07-25T19:35:02.000Z</when>
+<gx:coord>39.974446 16.086481 31.5</gx:coord>
+<when>2013-07-25T19:35:03.000Z</when>
+<gx:coord>39.974441 16.086397 29.100000381469727</gx:coord>
+<when>2013-07-25T19:35:04.000Z</when>
+<gx:coord>39.974476 16.086341 28.0</gx:coord>
+<when>2013-07-25T19:35:05.000Z</when>
+<gx:coord>39.974515 16.086283 26.299999237060547</gx:coord>
+<when>2013-07-25T19:35:06.000Z</when>
+<gx:coord>39.974541 16.086225 24.5</gx:coord>
+<when>2013-07-25T19:35:07.000Z</when>
+<gx:coord>39.974559 16.086158 23.600000381469727</gx:coord>
+<when>2013-07-25T19:35:08.000Z</when>
+<gx:coord>39.974542 16.08608 22.5</gx:coord>
+<when>2013-07-25T19:35:09.000Z</when>
+<gx:coord>39.974506 16.086006 21.799999237060547</gx:coord>
+<when>2013-07-25T19:35:10.000Z</when>
+<gx:coord>39.974485 16.086955 22.5</gx:coord>
+<when>2013-07-25T19:35:11.000Z</when>
+<gx:coord>39.97447 16.086896 22.0</gx:coord>
+<when>2013-07-25T19:35:12.000Z</when>
+<gx:coord>39.974473 16.086851 21.799999237060547</gx:coord>
+<when>2013-07-25T19:35:13.000Z</when>
+<gx:coord>39.974476 16.086809 21.100000381469727</gx:coord>
+<when>2013-07-25T19:35:14.000Z</when>
+<gx:coord>39.974501 16.086767 19.700000762939453</gx:coord>
+<when>2013-07-25T19:35:15.000Z</when>
+<gx:coord>39.974594 16.086757 18.799999237060547</gx:coord>
+<when>2013-07-25T19:35:16.000Z</when>
+<gx:coord>39.974664,16.086737 17.600000381469727</gx:coord>
+<when>2013-07-25T19:35:17.000Z</when>
+<gx:coord>39.974737,16.086722 17.100000381469727</gx:coord>
+<when>2013-07-25T19:35:18.000Z</when>
+<gx:coord>39.974809,16.086693 16.600000381469727</gx:coord>
+<when>2013-07-25T19:35:19.000Z</when>
+<gx:coord>39.974886,16.086666 15.800000190734863</gx:coord>
+<when>2013-07-25T19:35:20.000Z</when>
+<gx:coord>39.974979,16.086632 13.300000190734863</gx:coord>
+<ExtendedData>
+<SchemaData schemaUrl="#schema">
+</SchemaData>
+</ExtendedData>
+</gx:Track>
+</gx:MultiTrack>
+</Placemark>
+<Placemark>
+<name><![CDATA[Schuylkill River Trail Bike Ride (End)]]></name>
+<TimeStamp><when>2013-07-25T21:07:25.000Z</when></TimeStamp>
+<styleUrl>#end</styleUrl>
+<Point>
+<coordinates>39.974979,16.086632 13.300000190734863</coordinates>
+</Point>
+</Placemark>
+</Document>
+</kml>
