@@ -34,7 +34,6 @@ function LayerInformation(layer) {
   this.availabilityLevels = layer.availabilityLevels;
   this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-  this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.availabilityPromiseCache = {};
 }
 
