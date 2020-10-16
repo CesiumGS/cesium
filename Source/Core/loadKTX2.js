@@ -1,9 +1,10 @@
-import when from "../ThirdParty/when.js";
+import arraySlice from "./arraySlice.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import Resource from "./Resource.js";
-
+import RuntimeError from "./RuntimeError.js";
 import KTX2Transcoder from "../Scene/KTX2Transcoder.js";
+import when from "../ThirdParty/when.js";
 
 /**
  * Stores the supported formats that KTX2 can transcode to. Called during context creation.
@@ -97,16 +98,12 @@ function loadKTX2(resourceOrUrlOrBuffer) {
   // load module then return
   return loadPromise.then(function (data) {
     if (defined(data)) {
-      try {
-        // data array can be a view of a shared buffer,
-        // so make a copy that can be given to the worker.
-        var copy = data.slice();
-        return KTX2Transcoder.transcode(copy, supportedTranscoderFormats);
-      } catch (e) {
-        console.log("KTX2 Loading Error:");
-        console.log(e);
-      }
+      // data array can be a view of a shared buffer,
+      // so make a copy that can be given to the worker.
+      var copy = arraySlice(data);
+      return KTX2Transcoder.transcode(copy, supportedTranscoderFormats);
     }
+    return when.reject(new RuntimeError("failed to load KTX2 data."));
   });
 }
 

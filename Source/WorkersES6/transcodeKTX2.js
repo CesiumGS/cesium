@@ -36,6 +36,10 @@ function transcodeKTX2(event) {
         mscBasisTranscoder(wasmConfig).then(function (compiledModule) {
           initWorker(compiledModule);
         });
+      } else {
+        return mscBasisTranscoder().then(function (transcoder) {
+          initWorker(transcoder);
+        });
       }
     });
   }

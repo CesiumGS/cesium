@@ -19,8 +19,9 @@ KTX2Transcoder._readyPromise = undefined;
 function makeReadyPromise() {
   var readyPromise = KTX2Transcoder._transcodeTaskProcessor
     .initWebAssemblyModule({
-      modulePath: "ThirdParty/Workers/msc_basis_transcoder.js",
+      modulePath: "ThirdParty/Workers/msc_basis_transcoder_wrapper.js",
       wasmBinaryFile: "ThirdParty/msc_basis_transcoder.wasm",
+      fallbackModulePath: "ThirdParty/Workers/msc_basis_transcoder.js",
     })
     .then(function () {
       return KTX2Transcoder._transcodeTaskProcessor;

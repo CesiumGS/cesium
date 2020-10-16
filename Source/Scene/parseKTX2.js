@@ -1,4 +1,6 @@
+import arraySlice from "../Core/arraySlice.js";
 import defined from "../Core/defined.js";
+import getUint64FromDataView from "../Core/getUint64FromDataView.js";
 import PixelFormat from "../Core/PixelFormat.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import VulkanConstants from "../Core/VulkanConstants.js";
@@ -37,24 +39,6 @@ var sizeOfUint64 = 8;
 // // Flags
 var colorModelETC1S = 163;
 var colorModelUASTC = 166;
-
-// Needed to support Int64 parsing, taken from: https://stackoverflow.com/a/53107482/5420846
-function getUint64(view, byteOffset, littleEndian) {
-  // split 64-bit number into two 32-bit parts
-  var left = view.getUint32(byteOffset, littleEndian);
-  var right = view.getUint32(byteOffset + 4, littleEndian);
-
-  // combine the two 32-bit values
-  var combined = littleEndian
-    ? left + Math.pow(2, 32) * right
-    : Math.pow(2, 32) * left + right;
-
-  if (!Number.isSafeInteger(combined)) {
-    console.warn(combined, "exceeds MAX_SAFE_INTEGER. Precision may be lost");
-  }
-
-  return combined;
-}
 
 /**
  * Parses and transcodes KTX2 buffers to an appropriate target format.
@@ -123,9 +107,9 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   byteOffset += sizeOfUint32;
   // var kvdByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
-  var sgdByteOffset = getUint64(view, byteOffset, true);
+  var sgdByteOffset = getUint64FromDataView(view, byteOffset, true);
   byteOffset += sizeOfUint64;
-  var sgdByteLength = getUint64(view, byteOffset, true);
+  var sgdByteLength = getUint64FromDataView(view, byteOffset, true);
   byteOffset += sizeOfUint64;
   var sgdIndex = {
     byteOffset: sgdByteOffset,
@@ -135,11 +119,15 @@ function parseKTX2(data, supportedTargetFormats, transcoderModule) {
   // 2 -- Level Index
   var levelIndex = [];
   for (var l = 0; l < header.levelCount; l++) {
-    var levelByteOffset = getUint64(view, byteOffset, true);
+    var levelByteOffset = getUint64FromDataView(view, byteOffset, true);
     byteOffset += sizeOfUint64;
-    var levelByteLength = getUint64(view, byteOffset, true);
+    var levelByteLength = getUint64FromDataView(view, byteOffset, true);
     byteOffset += sizeOfUint64;
-    var levelUncompressedByteLength = getUint64(view, byteOffset, true);
+    var levelUncompressedByteLength = getUint64FromDataView(
+      view,
+      byteOffset,
+      true
+    );
     byteOffset += sizeOfUint64;
 
     levelIndex.push({
@@ -387,9 +375,12 @@ function transcodeEtc1s(
       }
 
       // Create a copy and delete transcoder wasm allocated memory
-      var levelBuffer = transcoded.transcodedImage
-        .get_typed_memory_view()
-        .slice();
+      //var levelBuffer = transcoded.transcodedImage
+      //  .get_typed_memory_view()
+      //  .slice();
+      var levelBuffer = arraySlice(
+        transcoded.transcodedImage.get_typed_memory_view()
+      );
       transcoded.transcodedImage.delete();
 
       // console.log(levelBuffer.byteLength);
