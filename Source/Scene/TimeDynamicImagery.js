@@ -282,7 +282,7 @@ function addToCache(that, tile, interval) {
 
   var keyElements = getKeyElements(key);
   var request = new Request({
-    throttle: true,
+    throttle: false,
     throttleByServer: true,
     type: RequestType.IMAGERY,
     priorityFunction: tile.priorityFunction,

@@ -624,7 +624,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   if (defined(model)) {
     // Update for clipping planes
     var tilesetClippingPlanes = this._tileset.clippingPlanes;
-    model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+    model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
     if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
       // Dereference the clipping planes from the model if they are irrelevant - saves on shading
       // Link/Dereference directly to avoid ownership checks.

@@ -624,7 +624,7 @@ function requestAvailability(that, level, x, y) {
   }
 
   var request = new Request({
-    throttle: true,
+    throttle: false,
     throttleByServer: true,
     type: RequestType.TERRAIN,
   });

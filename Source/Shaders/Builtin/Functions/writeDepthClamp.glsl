@@ -1,9 +1,11 @@
 // emulated noperspective
-#ifndef LOG_DEPTH
+#if defined(GL_EXT_frag_depth) && !defined(LOG_DEPTH)
 varying float v_WindowZ;
 #endif
+
 /**
- * Clamps a vertex to the far plane by writing the fragments depth.
+ * Emulates GL_DEPTH_CLAMP. Clamps a fragment to the near and far plane
+ * by writing the fragment's depth. See czm_depthClamp for more details.
  * <p>
  * The shader must enable the GL_EXT_frag_depth extension.
  * </p>
