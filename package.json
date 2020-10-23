@@ -85,7 +85,7 @@
     "rollup": "^2.22.1",
     "rollup-plugin-external-globals": "^0.6.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
-    "rollup-plugin-uglify": "^6.0.3",
+    "rollup-plugin-terser": "*",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.2",

@@ -32,7 +32,7 @@ var mime = require("mime");
 var rollup = require("rollup");
 var rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 var rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
-var rollupPluginUglify = require("rollup-plugin-uglify");
+var rollupPluginTerser = require("rollup-plugin-terser");
 var cleanCSS = require("gulp-clean-css");
 var typescript = require("typescript");
 
@@ -1158,7 +1158,7 @@ function combineCesium(debug, optimizer, combineOutput) {
     );
   }
   if (optimizer === "uglify2") {
-    plugins.push(rollupPluginUglify.uglify());
+    plugins.push(rollupPluginTerser.terser());
   }
 
   return rollup
@@ -1231,7 +1231,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
         );
       }
       if (optimizer === "uglify2") {
-        plugins.push(rollupPluginUglify.uglify());
+        plugins.push(rollupPluginTerser.terser());
       }
 
       return rollup
@@ -1819,7 +1819,7 @@ function buildCesiumViewer() {
           rollupPluginStripPragma({
             pragmas: ["debug"],
           }),
-          rollupPluginUglify.uglify(),
+          rollupPluginTerser.terser(),
         ],
         onwarn: rollupWarning,
       })
