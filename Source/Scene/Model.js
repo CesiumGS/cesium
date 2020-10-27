@@ -4903,7 +4903,6 @@ function modifyShaderForClippingPolygon(shader, clippingPolygon, context) {
   var newMain =
     "void main() {\n" +
     "vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord);\n" +
-    "positionEC /= positionEC.w;\n" +
     "vec4 positionENU = u_clippingPolygonEyeToWorldToENU * vec4(positionEC.xyz, 1.0);\n" +
     "clippingPolygon(positionENU.xyz);\n" +
     "gltf_clip_polygon_main();\n" +
