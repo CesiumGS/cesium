@@ -497,6 +497,9 @@ function Model(options) {
   // to the root tile.
   this.clippingPlanesOriginMatrix = undefined;
 
+  // Used for checking if shaders need to be regenerated due to clipping polygon changes.
+  this._clippingPolygonState = 0;
+
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
    * <p>
@@ -5609,6 +5612,7 @@ Model.prototype.update = function (frameState) {
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
+    var currentClippingPolygonState = 0;
     var useClippingPlanes =
       defined(clippingPlanes) &&
       clippingPlanes.enabled &&
@@ -5638,8 +5642,13 @@ Model.prototype.update = function (frameState) {
 
     var shouldRegenerateShaders = this._shouldRegenerateShaders;
     var clippingPolygon = this._clippingPolygon;
-    if (defined(clippingPolygon) && clippingPolygon._dirty) {
-      shouldRegenerateShaders = true;
+    if (defined(clippingPolygon)) {
+      currentClippingPolygonState = clippingPolygon.state;
+
+      shouldRegenerateShaders =
+        shouldRegenerateShaders ||
+        currentClippingPolygonState !== this._clippingPolygonState;
+      this._clippingPolygonState = currentClippingPolygonState;
     }
 
     shouldRegenerateShaders =
@@ -5779,6 +5788,7 @@ function regenerateShaders(model, frameState) {
   if (
     isClippingEnabled(model) ||
     isColorShadingEnabled(model) ||
+    isClippingPolygonEnabled(model) ||
     model._shouldRegenerateShaders
   ) {
     model._shouldRegenerateShaders = false;

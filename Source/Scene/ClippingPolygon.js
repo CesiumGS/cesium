@@ -250,11 +250,27 @@ Object.defineProperties(ClippingPolygon.prototype, {
   union: {
     set: function (v) {
       this._dirty = true;
-      this._dirty = v;
+      this._union = v;
     },
 
     get: function () {
       return this._union;
+    },
+  },
+
+  /**
+   * Returns a Number encapsulating the state for this ClippingPolygon.
+   *
+   * 1 indicates Union.
+   * -1 indicates non-Union
+   * 0 indicates disabled.
+   */
+  state: {
+    get: function () {
+      if (!this._enabled) {
+        return 0;
+      }
+      return this._union ? 1 : -1;
     },
   },
 
