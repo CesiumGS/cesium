@@ -177,10 +177,10 @@ StripeMaterialProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof StripeMaterialProperty && //
-    Property.equals(this._orientation, other._orientation) && //
-    Property.equals(this._evenColor, other._evenColor) && //
-    Property.equals(this._oddColor, other._oddColor) && //
-    Property.equals(this._offset, other._offset) && //
+      Property.equals(this._orientation, other._orientation) && //
+      Property.equals(this._evenColor, other._evenColor) && //
+      Property.equals(this._oddColor, other._oddColor) && //
+      Property.equals(this._offset, other._offset) && //
       Property.equals(this._repeat, other._repeat))
   );
 };

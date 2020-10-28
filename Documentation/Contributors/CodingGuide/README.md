@@ -182,6 +182,7 @@ Cartesian3.fromDegrees = function (
 
 ```javascript
 "use strict";
+
 ```
 
 - :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
