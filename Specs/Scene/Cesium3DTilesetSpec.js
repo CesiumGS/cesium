@@ -7,6 +7,7 @@ import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
 import { getStringFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
+import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -100,6 +101,8 @@ describe(
       "Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/tileset.json";
     var instancedRedMaterialUrl =
       "Data/Cesium3DTiles/Instanced/InstancedRedMaterial/tileset.json";
+    var instancedAnimationUrl =
+      "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
 
     // 1 tile where each feature is a different source color
     var colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -142,6 +145,8 @@ describe(
       "Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm";
     var batchedVertexColorsUrl =
       "Data/Cesium3DTiles/Batched/BatchedWithVertexColors/tileset.json";
+    var batchedAnimationUrl =
+      "Data/Cesium3DTiles/Batched/BatchedAnimated/tileset.json";
 
     var styleUrl = "Data/Cesium3DTiles/Style/style.json";
 
@@ -635,6 +640,35 @@ describe(
         expect(statistics.visited).toEqual(5);
         expect(statistics.numberOfCommands).toEqual(5);
       });
+    });
+
+    function checkAnimation(url) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        var renderOptions = {
+          scene: scene,
+          time: new JulianDate(271.828),
+        };
+
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          var commandList = scene.frameState.commandList;
+          var modelMatrix1 = Matrix4.clone(commandList[0].modelMatrix);
+          // Check that the scene changes after .5 seconds. (it animates)
+          renderOptions.time.secondsOfDay += 0.5;
+          expect(renderOptions).toRenderAndCall(function (rgba) {
+            var modelMatrix2 = Matrix4.clone(commandList[0].modelMatrix);
+            expect(modelMatrix1).not.toEqual(modelMatrix2);
+          });
+        });
+      });
+    }
+    it("animates instanced tileset", function () {
+      return checkAnimation(instancedAnimationUrl);
+    });
+
+    it("animates batched tileset", function () {
+      return checkAnimation(batchedAnimationUrl);
     });
 
     it("renders tileset in CV", function () {
@@ -1374,6 +1408,32 @@ describe(
             }
           );
         });
+      });
+    });
+
+    it("replacement refinement - refines if descendant is empty leaf tile", function () {
+      // Check that the root is refinable once its children with content are loaded
+      //
+      //          C
+      //     C  C  C  E
+      //
+      viewAllTiles();
+      var originalLoadJson = Cesium3DTileset.loadJson;
+      spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+        return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+          tilesetJson.root.refine = "REPLACE";
+          tilesetJson.root.children[3].content = undefined;
+          return tilesetJson;
+        });
+      });
+
+      return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
+        tileset
+      ) {
+        tileset.skipLevelOfDetail = false;
+        var statistics = tileset._statistics;
+        scene.renderForSpecs();
+        expect(statistics.numberOfCommands).toEqual(3);
       });
     });
 
@@ -2432,6 +2492,61 @@ describe(
           });
         }
       );
+    });
+
+    function testBackFaceCulling(url, setViewOptions) {
+      var renderOptions = {
+        scene: scene,
+        time: new JulianDate(2457522.154792),
+      };
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        scene.camera.setView(setViewOptions);
+        expect(renderOptions).toRenderAndCall(function (rgba) {
+          expect(rgba).toEqual([0, 0, 0, 255]);
+          tileset.backFaceCulling = false;
+          expect(renderOptions).toRenderAndCall(function (rgba2) {
+            expect(rgba2).not.toEqual(rgba);
+          });
+        });
+      });
+    }
+
+    it("renders b3dm tileset when back face culling is disabled", function () {
+      var setViewOptions = {
+        destination: new Cartesian3(
+          1215012.6853779217,
+          -4736313.101374343,
+          4081603.4657718465
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179584,
+          -0.49999825387267993,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
+    });
+
+    it("renders i3dm tileset when back face culling is disabled", function () {
+      var setViewOptions = {
+        destination: new Cartesian3(
+          1215015.8599828142,
+          -4736324.65638894,
+          4081609.967056947
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179585,
+          -0.5000006393986758,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(instancedUrl, setViewOptions);
     });
 
     ///////////////////////////////////////////////////////////////////////////

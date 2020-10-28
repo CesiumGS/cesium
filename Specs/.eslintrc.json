@@ -9,7 +9,7 @@
     "overrides": [
         {
             "files": [
-                "karma.conf.js"
+                "karma.conf.cjs"
             ],
             "parserOptions": {
                 "sourceType": "script"

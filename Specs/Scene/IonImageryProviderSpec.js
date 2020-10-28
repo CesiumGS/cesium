@@ -326,7 +326,7 @@ describe("Scene/IonImageryProvider", function () {
     );
     return testExternalImagery(
       "BING",
-      { url: "http://test.invalid" },
+      { url: "http://test.invalid", key: "" },
       BingMapsImageryProvider
     );
   });
@@ -354,7 +354,7 @@ describe("Scene/IonImageryProvider", function () {
   it("createImageryProvider works with MAPBOX", function () {
     return testExternalImagery(
       "MAPBOX",
-      { url: "http://test.invalid", mapId: 1 },
+      { accessToken: "test-token", url: "http://test.invalid", mapId: 1 },
       MapboxImageryProvider
     );
   });

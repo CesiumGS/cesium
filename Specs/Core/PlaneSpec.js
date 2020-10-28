@@ -241,6 +241,37 @@ describe("Core/Plane", function () {
     expect(transformedPlane.normal.z).toEqual(-plane.normal.z);
   });
 
+  it("transforms a plane according to a non-uniform scale transform", function () {
+    var normal = new Cartesian3(1.0, 0.0, 1.0);
+    normal = Cartesian3.normalize(normal, normal);
+    var plane = new Plane(normal, 0.0);
+    var planeOrigin = new Cartesian3(0.0, 0.0, 0.0);
+    var planePosition = new Cartesian3(1.0, 0.0, -1.0);
+    var planeDiff = Cartesian3.subtract(
+      planePosition,
+      planeOrigin,
+      new Cartesian3()
+    );
+    expect(Cartesian3.dot(planeDiff, plane.normal)).toEqualEpsilon(
+      0.0,
+      CesiumMath.EPSILON16
+    );
+
+    var transform = Matrix4.fromScale(
+      new Cartesian3(4.0, 1.0, 10.0),
+      new Matrix4()
+    );
+    var transformPlane = Plane.transform(plane, transform);
+    var transformPlaneDiff = Matrix4.multiplyByPointAsVector(
+      transform,
+      planeDiff,
+      new Cartesian3()
+    );
+    expect(
+      Cartesian3.dot(transformPlaneDiff, transformPlane.normal)
+    ).toEqualEpsilon(0.0, CesiumMath.EPSILON16);
+  });
+
   it("transform throws without a plane", function () {
     var transform = Matrix4.IDENTITY;
     expect(function () {

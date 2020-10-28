@@ -7,7 +7,6 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import CesiumMath from "../Core/Math.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import WebGLConstants from "../Core/WebGLConstants.js";
 import ContextLimits from "./ContextLimits.js";
 import MipmapHint from "./MipmapHint.js";
 import PixelDatatype from "./PixelDatatype.js";
@@ -44,53 +43,13 @@ function Texture(options) {
     options.pixelDatatype,
     PixelDatatype.UNSIGNED_BYTE
   );
-  var internalFormat = pixelFormat;
+  var internalFormat = PixelFormat.toInternalFormat(
+    pixelFormat,
+    pixelDatatype,
+    context
+  );
 
   var isCompressed = PixelFormat.isCompressedFormat(internalFormat);
-
-  if (context.webgl2) {
-    if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
-      internalFormat = WebGLConstants.DEPTH24_STENCIL8;
-    } else if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
-      if (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) {
-        internalFormat = WebGLConstants.DEPTH_COMPONENT16;
-      } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
-        internalFormat = WebGLConstants.DEPTH_COMPONENT24;
-      }
-    }
-
-    if (pixelDatatype === PixelDatatype.FLOAT) {
-      switch (pixelFormat) {
-        case PixelFormat.RGBA:
-          internalFormat = WebGLConstants.RGBA32F;
-          break;
-        case PixelFormat.RGB:
-          internalFormat = WebGLConstants.RGB32F;
-          break;
-        case PixelFormat.RG:
-          internalFormat = WebGLConstants.RG32F;
-          break;
-        case PixelFormat.R:
-          internalFormat = WebGLConstants.R32F;
-          break;
-      }
-    } else if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
-      switch (pixelFormat) {
-        case PixelFormat.RGBA:
-          internalFormat = WebGLConstants.RGBA16F;
-          break;
-        case PixelFormat.RGB:
-          internalFormat = WebGLConstants.RGB16F;
-          break;
-        case PixelFormat.RG:
-          internalFormat = WebGLConstants.RG16F;
-          break;
-        case PixelFormat.R:
-          internalFormat = WebGLConstants.R16F;
-          break;
-      }
-    }
-  }
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(width) || !defined(height)) {
@@ -273,7 +232,7 @@ function Texture(options) {
           height,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
 
@@ -297,7 +256,7 @@ function Texture(options) {
               mipHeight,
               0,
               pixelFormat,
-              pixelDatatype,
+              PixelDatatype.toWebGLConstant(pixelDatatype, context),
               source.mipLevels[i]
             );
           }
@@ -337,7 +296,7 @@ function Texture(options) {
         0,
         internalFormat,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
     }
@@ -350,7 +309,7 @@ function Texture(options) {
       height,
       0,
       pixelFormat,
-      pixelDatatype,
+      PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
     initialized = false;
@@ -378,6 +337,7 @@ function Texture(options) {
   this._textureFilterAnisotropic = context._textureFilterAnisotropic;
   this._textureTarget = textureTarget;
   this._texture = texture;
+  this._internalFormat = internalFormat;
   this._pixelFormat = pixelFormat;
   this._pixelDatatype = pixelDatatype;
   this._width = width;
@@ -535,6 +495,9 @@ Object.defineProperties(Texture.prototype, {
     set: function (sampler) {
       var minificationFilter = sampler.minificationFilter;
       var magnificationFilter = sampler.magnificationFilter;
+      var context = this._context;
+      var pixelFormat = this._pixelFormat;
+      var pixelDatatype = this._pixelDatatype;
 
       var mipmap =
         minificationFilter ===
@@ -544,9 +507,6 @@ Object.defineProperties(Texture.prototype, {
         minificationFilter ===
           TextureMinificationFilter.LINEAR_MIPMAP_NEAREST ||
         minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-
-      var context = this._context;
-      var pixelDatatype = this._pixelDatatype;
 
       // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
       if (
@@ -559,6 +519,14 @@ Object.defineProperties(Texture.prototype, {
           ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST
           : TextureMinificationFilter.NEAREST;
         magnificationFilter = TextureMagnificationFilter.NEAREST;
+      }
+
+      // WebGL 2 depth texture only support nearest filtering. See section 3.8.13 OpenGL ES 3 spec
+      if (context.webgl2) {
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+          minificationFilter = TextureMinificationFilter.NEAREST;
+          magnificationFilter = TextureMagnificationFilter.NEAREST;
+        }
       }
 
       var gl = context._gl;
@@ -686,7 +654,8 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   );
   //>>includeEnd('debug');
 
-  var gl = this._context._gl;
+  var context = this._context;
+  var gl = context._gl;
   var target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);
@@ -698,6 +667,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var textureWidth = this._width;
   var textureHeight = this._height;
+  var internalFormat = this._internalFormat;
   var pixelFormat = this._pixelFormat;
   var pixelDatatype = this._pixelDatatype;
 
@@ -740,12 +710,12 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           target,
           0,
-          pixelFormat,
+          internalFormat,
           textureWidth,
           textureHeight,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
       } else {
@@ -756,9 +726,9 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           target,
           0,
+          internalFormat,
           pixelFormat,
-          pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, context),
           source
         );
       }
@@ -777,12 +747,12 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
       gl.texImage2D(
         target,
         0,
-        pixelFormat,
+        internalFormat,
         textureWidth,
         textureHeight,
         0,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         bufferView
       );
     }
@@ -811,7 +781,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         width,
         height,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         arrayBufferView
       );
     } else {
@@ -825,7 +795,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         xOffset,
         yOffset,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
     }

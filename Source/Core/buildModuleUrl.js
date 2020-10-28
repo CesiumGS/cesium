@@ -90,13 +90,21 @@ function buildModuleUrlFromBaseUrl(moduleID) {
 var implementation;
 
 /**
- * Given a non-relative moduleID, returns an absolute URL to the file represented by that module ID,
- * using, in order of preference, require.toUrl, the value of a global CESIUM_BASE_URL, or
- * the base URL of the Cesium.js script.
+ * Given a relative URL under the Cesium base URL, returns an absolute URL.
+ * @function
  *
- * @private
+ * @param {String} relativeUrl The relative path.
+ * @returns {String} The absolutely URL representation of the provided path.
+ *
+ * @example
+ * var viewer = new Cesium.Viewer("cesiumContainer", {
+ *   imageryProvider: new Cesium.TileMapServiceImageryProvider({
+ *   url: Cesium.buildModuleUrl("Assets/Textures/NaturalEarthII"),
+ *   }),
+ *   baseLayerPicker: false,
+ * });
  */
-function buildModuleUrl(moduleID) {
+function buildModuleUrl(relativeUrl) {
   if (!defined(implementation)) {
     //select implementation
     if (
@@ -111,7 +119,7 @@ function buildModuleUrl(moduleID) {
     }
   }
 
-  var url = implementation(moduleID);
+  var url = implementation(relativeUrl);
   return url;
 }
 

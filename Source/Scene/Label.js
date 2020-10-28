@@ -17,6 +17,8 @@ import VerticalOrigin from "./VerticalOrigin.js";
 var fontInfoCache = {};
 var fontInfoCacheLength = 0;
 var fontInfoCacheMaxSize = 256;
+var defaultBackgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+var defaultBackgroundPadding = new Cartesian2(7, 5);
 
 var textTypes = Object.freeze({
   LTR: 0,
@@ -56,11 +58,18 @@ function parseFont(label) {
     div.style.font = label._font;
     document.body.appendChild(div);
 
+    var lineHeight = Number.parseFloat(getCSSValue(div, "line-height"));
+    if (isNaN(lineHeight)) {
+      // line-height isn't a number, i.e. 'normal'; apply default line-spacing
+      lineHeight = undefined;
+    }
+
     fontInfo = {
       family: getCSSValue(div, "font-family"),
       size: getCSSValue(div, "font-size").replace("px", ""),
       style: getCSSValue(div, "font-style"),
       weight: getCSSValue(div, "font-weight"),
+      lineHeight: lineHeight,
     };
 
     document.body.removeChild(div);
@@ -73,6 +82,7 @@ function parseFont(label) {
   label._fontSize = fontInfo.size;
   label._fontStyle = fontInfo.style;
   label._fontWeight = fontInfo.weight;
+  label._lineHeight = fontInfo.lineHeight;
 }
 
 /**
@@ -165,13 +175,11 @@ function Label(options, labelCollection) {
   );
   this._outlineWidth = defaultValue(options.outlineWidth, 1.0);
   this._showBackground = defaultValue(options.showBackground, false);
-  this._backgroundColor = defaultValue(
-    options.backgroundColor,
-    new Color(0.165, 0.165, 0.165, 0.8)
+  this._backgroundColor = Color.clone(
+    defaultValue(options.backgroundColor, defaultBackgroundColor)
   );
-  this._backgroundPadding = defaultValue(
-    options.backgroundPadding,
-    new Cartesian2(7, 5)
+  this._backgroundPadding = Cartesian2.clone(
+    defaultValue(options.backgroundPadding, defaultBackgroundPadding)
   );
   this._style = defaultValue(options.style, LabelStyle.FILL);
   this._verticalOrigin = defaultValue(

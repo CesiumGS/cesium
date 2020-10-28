@@ -1,10 +1,101 @@
 # Change Log
 
-### 1.71.1
+### 1.74 - 2020-10-01
 
-- Add `ClippingPolygon` support.
+##### Additions :tada:
 
-### 1.71.0 - 2020-07-01
+- Added `Matrix3.inverseTranspose` and `Matrix4.inverseTranspose`. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
+
+##### Fixes :wrench:
+
+- Fixed an issue where the camera zooming is stuck when looking up. [#9126](https://github.com/CesiumGS/cesium/pull/9126)
+- Fixed an issue where Plane doesn't rotate correctly around the main local axis. [#8268](https://github.com/CesiumGS/cesium/issues/8268)
+- Fixed clipping planes with non-uniform scale. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
+- Fixed an issue where ground primitives would get clipped at certain camera angles. [#9114](https://github.com/CesiumGS/cesium/issues/9114)
+- Fixed a bug that could cause half of the globe to disappear when setting the `terrainProvider. [#9161](https://github.com/CesiumGS/cesium/pull/9161)
+- Fixed a crash when loading Cesium OSM buildings with shadows enabled. [#9172](https://github.com/CesiumGS/cesium/pull/9172)
+
+### 1.73 - 2020-09-01
+
+##### Breaking Changes :mega:
+
+- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
+
+##### Additions :tada:
+
+- Added support for the CSS `line-height` specifier in the `font` property of a `Label`. [#8954](https://github.com/CesiumGS/cesium/pull/8954)
+- `Viewer` now has default pick handling for `Cesium3DTileFeature` data and will display its properties in the default Viewer `InfoBox` as well as set `Viewer.selectedEntity` to a transient Entity instance representing the data. [#9121](https://github.com/CesiumGS/cesium/pull/9121).
+
+##### Fixes :wrench:
+
+- Fixed several artifacts on mobile devices caused by using insufficient precision. [#9064](https://github.com/CesiumGS/cesium/pull/9064)
+- Fixed handling of `data:` scheme for the Cesium ion logo URL. [#9085](https://github.com/CesiumGS/cesium/pull/9085)
+- Fixed an issue where the boundary rectangles in `TileAvailability` are not sorted correctly, causing terrain to sometimes fail to achieve its maximum detail. [#9098](https://github.com/CesiumGS/cesium/pull/9098)
+- Fixed an issue where a request for an availability tile of the reference layer is delayed because the throttle option is on. [#9099](https://github.com/CesiumGS/cesium/pull/9099)
+- Fixed an issue where Node.js tooling could not resolve package.json. [#9105](https://github.com/CesiumGS/cesium/pull/9105)
+- Fixed classification artifacts on some mobile devices. [#9108](https://github.com/CesiumGS/cesium/pull/9108)
+- Fixed an issue where Resource silently fails to load if being used multiple times. [#9093](https://github.com/CesiumGS/cesium/issues/9093)
+
+### 1.72 - 2020-08-03
+
+##### Breaking Changes :mega:
+
+- CesiumJS no longer ships with a default Mapbox access token and Mapbox imagery layers have been removed from the `BaseLayerPicker` defaults. If you are using `MapboxImageryProvider` or `MapboxStyleImageryProvider`, use `options.accessToken` when initializing the imagery provider.
+
+##### Additions :tada:
+
+- Added support for glTF multi-texturing via `TEXCOORD_1`. [#9075](https://github.com/CesiumGS/cesium/pull/9075)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `MapboxApi.defaultAccessToken` was deprecated and will be removed in CesiumJS 1.73. Pass your access token directly to the MapboxImageryProvider or MapboxStyleImageryProvider constructors.
+- `BingMapsApi` was deprecated and will be removed in CesiumJS 1.73. Pass your access key directly to the BingMapsImageryProvider or BingMapsGeocoderService constructors.
+
+##### Fixes :wrench:
+
+- Fixed `Color.fromCssColorString` when color string contains spaces. [#9015](https://github.com/CesiumGS/cesium/issues/9015)
+- Fixed 3D Tileset replacement refinement when leaf is empty. [#8996](https://github.com/CesiumGS/cesium/pull/8996)
+- Fixed a bug in the assessment of terrain tile visibility [#9033](https://github.com/CesiumGS/cesium/issues/9033)
+- Fixed vertical polylines with `arcType: ArcType.RHUMB`, including lines drawn via GeoJSON. [#9028](https://github.com/CesiumGS/cesium/pull/9028)
+- Fixed wall rendering when underground [#9041](https://github.com/CesiumGS/cesium/pull/9041)
+- Fixed issue where a side of the wall was missing if the first position and the last position were equal [#9044](https://github.com/CesiumGS/cesium/pull/9044)
+- Fixed `translucencyByDistance` for label outline color [#9003](https://github.com/CesiumGS/cesium/pull/9003)
+- Fixed return value for `SampledPositionProperty.removeSample` [#9017](https://github.com/CesiumGS/cesium/pull/9017)
+- Fixed issue where wall doesn't have correct texture coordinates when there are duplicate positions input [#9042](https://github.com/CesiumGS/cesium/issues/9042)
+- Fixed an issue where clipping planes would not clip at the correct distances on some Android devices, most commonly reproducible on devices with `Mali` GPUs that do not support float textures via WebGL [#9023](https://github.com/CesiumGS/cesium/issues/9023)
+
+### 1.71 - 2020-07-01
+
+##### Breaking Changes :mega:
+
+- Updated `WallGeometry` to respect the order of positions passed in, instead of making the positions respect a counter clockwise winding order. This will only affect the look of walls with an image material. If this changed the way your wall is drawing, reverse the order of the positions. [#8955](https://github.com/CesiumGS/cesium/pull/8955/)
+
+##### Additions :tada:
+
+- Added `backFaceCulling` property to `Cesium3DTileset` and `Model` to support viewing the underside or interior of a tileset or model. [#8981](https://github.com/CesiumGS/cesium/pull/8981)
+- Added `Ellipsoid.surfaceArea` for computing the approximate surface area of a rectangle on the surface of an ellipsoid. [#8986](https://github.com/CesiumGS/cesium/pull/8986)
+- Added support for PolylineVolume in CZML. [#8841](https://github.com/CesiumGS/cesium/pull/8841)
+- Added `Color.toCssHexString` for getting the CSS hex string equivalent for a color. [#8987](https://github.com/CesiumGS/cesium/pull/8987)
+
+##### Fixes :wrench:
+
+- Fixed issue where tileset was not playing glTF animations. [#8962](https://github.com/CesiumGS/cesium/issues/8962)
+- Fixed a divide-by-zero bug in `Ellipsoid.geodeticSurfaceNormal` when given the origin as input. `undefined` is returned instead. [#8986](https://github.com/CesiumGS/cesium/pull/8986)
+- Fixed error with `WallGeometry` when there were adjacent positions with very close values. [#8952](https://github.com/CesiumGS/cesium/pull/8952)
+- Fixed artifact for skinned model when log depth is enabled. [#6447](https://github.com/CesiumGS/cesium/issues/6447)
+- Fixed a bug where certain rhumb arc polylines would lead to a crash. [#8787](https://github.com/CesiumGS/cesium/pull/8787)
+- Fixed handling of Label's backgroundColor and backgroundPadding option [#8949](https://github.com/CesiumGS/cesium/pull/8949)
+- Fixed several bugs when rendering CesiumJS in a WebGL 2 context. [#797](https://github.com/CesiumGS/cesium/issues/797)
+- Fixed a bug where switching from perspective to orthographic caused triangles to overlap each other incorrectly. [#8346](https://github.com/CesiumGS/cesium/issues/8346)
+- Fixed a bug where switching to orthographic camera on the first frame caused the zoom level to be incorrect. [#8853](https://github.com/CesiumGS/cesium/pull/8853)
+- Fixed `scene.pickFromRay` intersection inaccuracies. [#8439](https://github.com/CesiumGS/cesium/issues/8439)
+- Fixed a bug where a null or undefined name property passed to the `Entity` constructor would throw an exception.[#8832](https://github.com/CesiumGS/cesium/pull/8832)
+- Fixed JSDoc and TypeScript type definitions for `ScreenSpaceEventHandler.getInputAction` which listed incorrect return type. [#9002](https://github.com/CesiumGS/cesium/pull/9002)
+- Improved the style of the error panel. [#8739](https://github.com/CesiumGS/cesium/issues/8739)
+- Fixed animation widget SVG icons not appearing in iOS 13.5.1. [#8993](https://github.com/CesiumGS/cesium/pull/8993)
+
+### 1.70.1 - 2020-06-10
 
 ##### Additions :tada:
 
@@ -13,14 +104,16 @@
 
 ##### Fixes :wrench:
 
-- Improved `MaterialProperty` JSDoc and TypeScript type definitions, which were missing the ability to take primitive types in addition to Property instances in their constructor. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
-- Fixed `EllipsoidGeodesic` JSDoc and TypeScript type definitions which incorrectly listed `result` as required. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
-- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
 - Fixed JSDoc and TypeScript type definitions for all `ImageryProvider` types, which were missing `defaultNightAlpha` and `defaultDayAlpha` properties. [#8908](https://github.com/CesiumGS/cesium/pull/8908)
+- Fixed JSDoc and TypeScript for `MaterialProperty`, which were missing the ability to take primitive types in their constructor. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
+- Fixed JSDoc and TypeScript type definitions to allow the creation of `GeometryInstance` instances using `XXXGeometry` classes. [#8941](https://github.com/CesiumGS/cesium/pull/8941).
+- Fixed JSDoc and TypeScript for `buildModuleUrl`, which was accidentally excluded from the official CesiumJS API. [#8923](https://github.com/CesiumGS/cesium/pull/8923)
+- Fixed JSDoc and TypeScript type definitions for `EllipsoidGeodesic` which incorrectly listed `result` as required. [#8904](https://github.com/CesiumGS/cesium/pull/8904)
 - Fixed JSDoc and TypeScript type definitions for `EllipsoidTangentPlane.fromPoints`, which takes an array of `Cartesian3`, not a single instance. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
 - Fixed JSDoc and TypeScript type definitions for `EntityCollection.getById` and `CompositeEntityCollection.getById`, which can both return undefined. [#8928](https://github.com/CesiumGS/cesium/pull/8928)
-- Fixed JSDoc and TypeScript type definitions for `Viewer` options parameter, which was incorrectly listed as required.
+- Fixed JSDoc and TypeScript type definitions for `Viewer` options parameters.
 - Fixed a memory leak where some 3D Tiles requests were being unintentionally retained after the requests were cancelled. [#8843](https://github.com/CesiumGS/cesium/pull/8843)
+- Fixed a bug with handling of PixelFormat's flipY. [#8893](https://github.com/CesiumGS/cesium/pull/8893)
 
 ### 1.70.0 - 2020-06-01
 
@@ -1016,7 +1109,7 @@ _This is an npm-only release to fix a publishing issue_.
 
 ##### Highlights :sparkler:
 
-- Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData). ([#4665](https://github.com/CesiumGS/cesium/pull/4665))
+- Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData). ([#4665](https://github.com/CesiumGS/cesium/pull/4665))
 - Added optional mode to reduce CPU usage. See [Improving Performance with Explicit Rendering](https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/). ([#6115](https://github.com/CesiumGS/cesium/pull/6115))
 - Added experimental `CesiumIon` utility class for working with the Cesium ion beta API. [#6136](https://github.com/CesiumGS/cesium/pull/6136)
 - Major refactor of URL handling. All classes that take a url parameter, can now take a Resource or a String. This includes all imagery providers, all terrain providers, `Cesium3DTileset`, `KMLDataSource`, `CZMLDataSource`, `GeoJsonDataSource`, `Model`, and `Billboard`.
@@ -1032,7 +1125,7 @@ _This is an npm-only release to fix a publishing issue_.
 
 ##### Additions :tada:
 
-- Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/TileFormats/VectorData) ([#4665](https://github.com/CesiumGS/cesium/pull/4665)). The new and modified Cesium APIs are:
+- Added experimental support for [3D Tiles Vector and Geometry data](https://github.com/CesiumGS/3d-tiles/tree/vctr/TileFormats/VectorData) ([#4665](https://github.com/CesiumGS/cesium/pull/4665)). The new and modified Cesium APIs are:
   - `Cesium3DTileStyle` has expanded to include styling point features. See the [styling specification](https://github.com/CesiumGS/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
   - `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
   - `Cesium3DTilePointFeature` can modify the styling options for a point feature.

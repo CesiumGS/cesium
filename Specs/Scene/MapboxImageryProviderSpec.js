@@ -1,4 +1,3 @@
-import { MapboxApi } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { Request } from "../../Source/Cesium.js";
@@ -28,12 +27,13 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("requires the mapId to be specified", function () {
     expect(function () {
-      return new MapboxImageryProvider({});
+      return new MapboxImageryProvider({ accessToken: "test-token" });
     }).toThrowDeveloperError();
   });
 
   it("resolves readyPromise", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
@@ -50,6 +50,7 @@ describe("Scene/MapboxImageryProvider", function () {
     });
 
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: resource,
       mapId: "test-id",
     });
@@ -62,6 +63,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("returns valid value for hasAlphaChannel", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
@@ -75,6 +77,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("supports a slash at the end of the URL", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
@@ -106,6 +109,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("supports no slash at the endof the URL", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server",
       mapId: "test-id",
     });
@@ -137,13 +141,13 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("requestImage returns a promise for an image and loads it for cross-origin use", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
 
     expect(provider.url).toEqual(
-      "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=" +
-        MapboxApi.getAccessToken()
+      "made/up/mapbox/server/test-id/{z}/{x}/{y}.png?access_token=test-token"
     );
 
     return pollToPromise(function () {
@@ -180,6 +184,7 @@ describe("Scene/MapboxImageryProvider", function () {
   it("rectangle passed to constructor does not affect tile numbering", function () {
     var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       rectangle: rectangle,
@@ -222,6 +227,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("uses maximumLevel passed to constructor", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       maximumLevel: 5,
@@ -231,6 +237,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("uses minimumLevel passed to constructor", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       minimumLevel: 1,
@@ -240,6 +247,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("when no credit is supplied, the provider adds a default credit", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
@@ -249,6 +257,7 @@ describe("Scene/MapboxImageryProvider", function () {
   it("turns the supplied credit into a logo", function () {
     var creditText = "Thanks to our awesome made up source of this imagery!";
     var providerWithCredit = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       credit: creditText,
@@ -258,6 +267,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("raises error event when image cannot be loaded", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
     });
@@ -316,6 +326,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("appends specified format", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       format: "@2x.png",
@@ -351,6 +362,7 @@ describe("Scene/MapboxImageryProvider", function () {
 
   it("adds missing period for format", function () {
     var provider = new MapboxImageryProvider({
+      accessToken: "test-token",
       url: "made/up/mapbox/server/",
       mapId: "test-id",
       format: "png",

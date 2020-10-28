@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.70.0",
+  "version": "1.74.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -33,8 +33,11 @@
   "module": "./Source/Cesium.js",
   "types": "./Source/Cesium.d.ts",
   "exports": {
-    "require": "./index.cjs",
-    "import": "./Source/Cesium.js"
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./index.cjs",
+      "import": "./Source/Cesium.js"
+    }
   },
   "type": "module",
   "devDependencies": {
@@ -42,7 +45,7 @@
     "bluebird": "^3.4.6",
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
-    "eslint": "^6.4.0",
+    "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
@@ -59,7 +62,7 @@
     "husky": "^4.2.5",
     "jasmine-core": "^3.3.0",
     "jsdoc": "^3.4.3",
-    "karma": "^4.0.0",
+    "karma": "^5.1.0",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^2.0.1",
     "karma-coverage-istanbul-instrumenter": "^1.0.1",
@@ -67,7 +70,7 @@
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
     "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^3.1.1",
+    "karma-jasmine": "^4.0.1",
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
@@ -75,18 +78,18 @@
     "mime": "^2.0.3",
     "mkdirp": "^1.0.0",
     "open": "^7.0.0",
-    "prettier": "^2.0.4",
-    "pretty-quick": "^2.0.1",
+    "prettier": "2.1.2",
+    "pretty-quick": "^3.0.2",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
-    "rollup": "^1.21.4",
-    "rollup-plugin-external-globals": "^0.5.0",
+    "rollup": "^2.22.1",
+    "rollup-plugin-external-globals": "^0.6.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
-    "stream-to-promise": "^2.2.0",
+    "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.2",
-    "yargs": "^15.0.1"
+    "yargs": "^16.0.3"
   },
   "husky": {
     "hooks": {

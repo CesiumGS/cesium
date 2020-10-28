@@ -369,4 +369,55 @@ PixelFormat.flipY = function (
   return flipped;
 };
 
+/**
+ * @private
+ */
+PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
+  // WebGL 1 require internalFormat to be the same as PixelFormat
+  if (!context.webgl2) {
+    return pixelFormat;
+  }
+
+  // Convert pixelFormat to correct internalFormat for WebGL 2
+  if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
+    return WebGLConstants.DEPTH24_STENCIL8;
+  }
+
+  if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
+    if (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) {
+      return WebGLConstants.DEPTH_COMPONENT16;
+    } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+      return WebGLConstants.DEPTH_COMPONENT24;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.FLOAT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA32F;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB32F;
+      case PixelFormat.RG:
+        return WebGLConstants.RG32F;
+      case PixelFormat.R:
+        return WebGLConstants.R32F;
+    }
+  }
+
+  if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
+    switch (pixelFormat) {
+      case PixelFormat.RGBA:
+        return WebGLConstants.RGBA16F;
+      case PixelFormat.RGB:
+        return WebGLConstants.RGB16F;
+      case PixelFormat.RG:
+        return WebGLConstants.RG16F;
+      case PixelFormat.R:
+        return WebGLConstants.R16F;
+    }
+  }
+
+  return pixelFormat;
+};
+
 export default Object.freeze(PixelFormat);

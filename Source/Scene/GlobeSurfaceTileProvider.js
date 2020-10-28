@@ -612,7 +612,8 @@ GlobeSurfaceTileProvider.prototype.loadTile = function (frameState, tile) {
     // b) The bounding volume is accurate (updated as a side effect of computing visibility)
     // Then we'll load imagery, too.
     if (
-      this.computeTileVisibility(tile, frameState, this.quadtree.occluders) &&
+      this.computeTileVisibility(tile, frameState, this.quadtree.occluders) !==
+        Visibility.NONE &&
       surfaceTile.boundingVolumeSourceTile === tile
     ) {
       terrainOnly = false;
@@ -690,7 +691,9 @@ function isUndergroundVisible(tileProvider, frameState) {
  * @param {FrameState} frameState The state information about the current frame.
  * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
  *
- * @returns {Visibility} The visibility of the tile.
+ * @returns {Visibility} Visibility.NONE if the tile is not visible,
+ *                       Visibility.PARTIAL if the tile is partially visible, or
+ *                       Visibility.FULL if the tile is fully visible.
  */
 GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   tile,
@@ -771,7 +774,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   }
 
   if (!defined(boundingVolume)) {
-    return Intersect.INTERSECTING;
+    return Visibility.PARTIAL;
   }
 
   var clippingPlanes = this._clippingPlanes;
@@ -785,9 +788,19 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
     }
   }
 
+  var visibility;
   var intersection = cullingVolume.computeVisibility(boundingVolume);
+
   if (intersection === Intersect.OUTSIDE) {
-    return Visibility.NONE;
+    visibility = Visibility.NONE;
+  } else if (intersection === Intersect.INTERSECTING) {
+    visibility = Visibility.PARTIAL;
+  } else if (intersection === Intersect.INSIDE) {
+    visibility = Visibility.FULL;
+  }
+
+  if (visibility === Visibility.NONE) {
+    return visibility;
   }
 
   var ortho3D =
@@ -801,7 +814,7 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
   ) {
     var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
     if (!defined(occludeePointInScaledSpace)) {
-      return intersection;
+      return visibility;
     }
 
     if (
@@ -810,13 +823,13 @@ GlobeSurfaceTileProvider.prototype.computeTileVisibility = function (
         tileBoundingRegion.minimumHeight
       )
     ) {
-      return intersection;
+      return visibility;
     }
 
     return Visibility.NONE;
   }
 
-  return intersection;
+  return visibility;
 };
 
 /**
@@ -1520,9 +1533,9 @@ GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function (
   }
 };
 
-var scratchClippingPlaneMatrix = new Matrix4();
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchInverseTransposeClippingPlanesMatrix = new Matrix4();
 var scratchClippingPolygonEyeToWorldMatrix = new Matrix4();
-
 function createTileUniformMap(frameState, globeSurfaceTileProvider) {
   var uniformMap = {
     u_initialColor: function () {
@@ -1655,13 +1668,18 @@ function createTileUniformMap(frameState, globeSurfaceTileProvider) {
     },
     u_clippingPlanesMatrix: function () {
       var clippingPlanes = globeSurfaceTileProvider._clippingPlanes;
-      return defined(clippingPlanes)
+      var transform = defined(clippingPlanes)
         ? Matrix4.multiply(
             frameState.context.uniformState.view,
             clippingPlanes.modelMatrix,
-            scratchClippingPlaneMatrix
+            scratchClippingPlanesMatrix
           )
         : Matrix4.IDENTITY;
+
+      return Matrix4.inverseTranspose(
+        transform,
+        scratchInverseTransposeClippingPlanesMatrix
+      );
     },
     u_clippingPlanesEdgeStyle: function () {
       var style = this.properties.clippingPlanesEdgeColor;

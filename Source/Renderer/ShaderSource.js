@@ -235,12 +235,16 @@ function combineShader(shaderSource, isFragmentShader, context) {
   }
 
   if (isFragmentShader) {
+    // If high precision isn't support replace occurrences of highp with mediump
+    // The highp keyword is not always available on older mobile devices
+    // See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#In_WebGL_1_highp_float_support_is_optional_in_fragment_shaders
     result +=
       "\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
     precision highp float;\n\
 #else\n\
     precision mediump float;\n\
+    #define highp mediump\n\
 #endif\n\n";
   }
 

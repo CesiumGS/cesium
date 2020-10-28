@@ -516,7 +516,11 @@ function getDefaultCredit() {
 
     // When hosting in a WebView, the base URL scheme is file:// or ms-appx-web://
     // which is stripped out from the Credit's <img> tag; use the full path instead
-    if (logo.indexOf("http://") !== 0 && logo.indexOf("https://") !== 0) {
+    if (
+      logo.indexOf("http://") !== 0 &&
+      logo.indexOf("https://") !== 0 &&
+      logo.indexOf("data:") !== 0
+    ) {
       var logoUrl = new Uri(logo);
       logo = logoUrl.getPath();
     }

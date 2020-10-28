@@ -1,79 +1,122 @@
 import {
   ArcGisMapServerImageryProvider,
+  ArcGISTiledElevationTerrainProvider,
   BingMapsImageryProvider,
-  ImageryProvider,
-  WebMapServiceImageryProvider,
-  OpenStreetMapImageryProvider,
-  TileMapServiceImageryProvider,
+  BoxGeometry,
+  BoxOutlineGeometry,
+  CallbackProperty,
+  Camera,
+  Cartesian3,
+  CesiumTerrainProvider,
+  CheckerboardMaterialProperty,
+  CircleGeometry,
+  CircleOutlineGeometry,
+  ColorMaterialProperty,
+  Color,
+  CompositeMaterialProperty,
+  CompositePositionProperty,
+  CompositeProperty,
+  ConstantPositionProperty,
+  ConstantProperty,
+  CoplanarPolygonGeometry,
+  CoplanarPolygonOutlineGeometry,
+  CorridorGeometry,
+  CorridorOutlineGeometry,
+  CustomDataSource,
+  CylinderGeometry,
+  CylinderOutlineGeometry,
+  CzmlDataSource,
+  DataSource,
+  EllipseGeometry,
+  EllipseOutlineGeometry,
+  EllipsoidGeometry,
+  EllipsoidOutlineGeometry,
+  EllipsoidTerrainProvider,
+  EntityCollection,
+  FrustumGeometry,
+  FrustumOutlineGeometry,
+  GeoJsonDataSource,
+  GeometryInstance,
   GoogleEarthEnterpriseImageryProvider,
   GoogleEarthEnterpriseMapsProvider,
+  GoogleEarthEnterpriseMetadata,
+  GoogleEarthEnterpriseTerrainProvider,
   GridImageryProvider,
+  GridMaterialProperty,
+  GroundPolylineGeometry,
+  ImageMaterialProperty,
+  ImageryProvider,
   IonImageryProvider,
+  KmlDataSource,
   MapboxImageryProvider,
   MapboxStyleImageryProvider,
-  SingleTileImageryProvider,
-  TileCoordinatesImageryProvider,
-  UrlTemplateImageryProvider,
-  WebMapTileServiceImageryProvider,
-  GoogleEarthEnterpriseMetadata,
-  TerrainProvider,
-  ArcGISTiledElevationTerrainProvider,
-  CesiumTerrainProvider,
-  EllipsoidTerrainProvider,
-  GoogleEarthEnterpriseTerrainProvider,
-  VRTheWorldTerrainProvider,
-  DataSource,
-  CzmlDataSource,
-  GeoJsonDataSource,
-  KmlDataSource,
-  CustomDataSource,
-  Camera,
-  Scene,
-  Property,
-  PropertyBag,
-  ConstantProperty,
-  SampledProperty,
-  PositionProperty,
-  SampledPositionProperty,
-  TimeIntervalCollectionProperty,
-  CompositeProperty,
-  CompositePositionProperty,
-  Cartesian3,
-  ReferenceProperty,
   MaterialProperty,
-  EntityCollection,
-  CallbackProperty,
-  ConstantPositionProperty,
-  TimeIntervalCollectionPositionProperty,
-  ColorMaterialProperty,
-  CompositeMaterialProperty,
-  GridMaterialProperty,
-  ImageMaterialProperty,
+  NodeTransformationProperty,
+  OpenStreetMapImageryProvider,
+  OrthographicFrustum,
+  PlaneGeometry,
+  PlaneOutlineGeometry,
+  PolygonGeometry,
+  PolygonHierarchy,
+  PolygonOutlineGeometry,
+  PolylineArrowMaterialProperty,
+  PolylineDashMaterialProperty,
+  PolylineGeometry,
   PolylineGlowMaterialProperty,
   PolylineOutlineMaterialProperty,
-  StripeMaterialProperty,
-  CheckerboardMaterialProperty,
-  PolylineDashMaterialProperty,
-  VelocityVectorProperty,
-  VelocityOrientationProperty,
-  PropertyArray,
+  PolylineVolumeGeometry,
+  PolylineVolumeOutlineGeometry,
+  PositionProperty,
   PositionPropertyArray,
-  PolylineArrowMaterialProperty,
-  NodeTransformationProperty,
+  Property,
+  PropertyArray,
+  PropertyBag,
+  Quaternion,
+  Rectangle,
+  RectangleGeometry,
+  RectangleOutlineGeometry,
+  ReferenceProperty,
+  SampledPositionProperty,
+  SampledProperty,
+  Scene,
+  SimplePolylineGeometry,
+  SingleTileImageryProvider,
+  SphereGeometry,
+  SphereOutlineGeometry,
+  StripeMaterialProperty,
+  TerrainProvider,
+  TileCoordinatesImageryProvider,
+  TileMapServiceImageryProvider,
+  TimeIntervalCollectionPositionProperty,
+  TimeIntervalCollectionProperty,
+  UrlTemplateImageryProvider,
+  VelocityOrientationProperty,
+  VelocityVectorProperty,
+  VRTheWorldTerrainProvider,
+  WallGeometry,
+  WallOutlineGeometry,
+  WebMapServiceImageryProvider,
+  WebMapTileServiceImageryProvider,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
 imageryProvider = new WebMapServiceImageryProvider({ url: "", layers: "0" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
 imageryProvider = new ArcGisMapServerImageryProvider({ url: "" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
+imageryProvider = new BingMapsImageryProvider({ url: "", key: "" });
 imageryProvider = new OpenStreetMapImageryProvider({ url: "" });
 imageryProvider = new TileMapServiceImageryProvider({ url: "" });
-imageryProvider = new GridImageryProvider({ url: "" });
+imageryProvider = new GridImageryProvider({
+  tileWidth: 256,
+  tileHeight: 256,
+  color: new Color(1.0, 1.0, 1.0, 0.4),
+});
 imageryProvider = new IonImageryProvider({ assetId: 2 });
-imageryProvider = new MapboxImageryProvider({ mapId: "" });
-imageryProvider = new MapboxStyleImageryProvider({ styleId: "" });
+imageryProvider = new MapboxImageryProvider({ mapId: "", accessToken: "" });
+imageryProvider = new MapboxStyleImageryProvider({
+  styleId: "",
+  accessToken: "",
+});
 imageryProvider = new SingleTileImageryProvider({ url: "" });
 imageryProvider = new TileCoordinatesImageryProvider();
 imageryProvider = new UrlTemplateImageryProvider({ url: "" });
@@ -158,3 +201,186 @@ property = materialProperty = new StripeMaterialProperty();
 property = materialProperty = new CheckerboardMaterialProperty();
 property = materialProperty = new PolylineDashMaterialProperty();
 property = materialProperty = new PolylineArrowMaterialProperty();
+
+// Verify GeometryInstance can be take XXXGeometry objects.
+let geometryInstance: GeometryInstance;
+
+geometryInstance = new GeometryInstance({
+  geometry: new BoxGeometry({
+    minimum: new Cartesian3(0, 0, 0),
+    maximum: new Cartesian3(1, 1, 1),
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new BoxOutlineGeometry({
+    minimum: new Cartesian3(0, 0, 0),
+    maximum: new Cartesian3(1, 1, 1),
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CircleGeometry({
+    center: new Cartesian3(0, 0, 0),
+    radius: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CircleOutlineGeometry({
+    center: new Cartesian3(0, 0, 0),
+    radius: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CoplanarPolygonGeometry({
+    polygonHierarchy: new PolygonHierarchy(),
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CoplanarPolygonOutlineGeometry({
+    polygonHierarchy: new PolygonHierarchy(),
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CorridorGeometry({ positions: [], width: 1 }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CorridorOutlineGeometry({ positions: [], width: 1 }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CylinderGeometry({
+    bottomRadius: 10,
+    length: 10,
+    topRadius: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new CylinderOutlineGeometry({
+    bottomRadius: 10,
+    length: 10,
+    topRadius: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new EllipseGeometry({
+    center: Cartesian3.ZERO,
+    semiMajorAxis: 1,
+    semiMinorAxis: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new EllipseOutlineGeometry({
+    center: Cartesian3.ZERO,
+    semiMajorAxis: 1,
+    semiMinorAxis: 10,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new EllipsoidGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new EllipsoidOutlineGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new FrustumGeometry({
+    frustum: new OrthographicFrustum(),
+    orientation: new Quaternion(),
+    origin: Cartesian3.ZERO,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new FrustumOutlineGeometry({
+    frustum: new OrthographicFrustum(),
+    orientation: new Quaternion(),
+    origin: Cartesian3.ZERO,
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new GroundPolylineGeometry({ positions: [] }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PlaneGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PlaneOutlineGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PolygonGeometry({ polygonHierarchy: new PolygonHierarchy() }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PolygonOutlineGeometry({
+    polygonHierarchy: new PolygonHierarchy(),
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PolylineGeometry({
+    positions: [],
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PolylineVolumeGeometry({
+    polylinePositions: [],
+    shapePositions: [],
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new PolylineVolumeOutlineGeometry({
+    polylinePositions: [],
+    shapePositions: [],
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new RectangleGeometry({ rectangle: Rectangle.MAX_VALUE }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new RectangleOutlineGeometry({ rectangle: Rectangle.MAX_VALUE }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new SimplePolylineGeometry({
+    positions: [],
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new SphereGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new SphereOutlineGeometry(),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new WallGeometry({
+    positions: [],
+  }),
+});
+
+geometryInstance = new GeometryInstance({
+  geometry: new WallOutlineGeometry({
+    positions: [],
+  }),
+});

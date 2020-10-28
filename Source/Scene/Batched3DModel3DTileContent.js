@@ -18,6 +18,7 @@ import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ClassificationModel from "./ClassificationModel.js";
 import Model from "./Model.js";
 import ModelUtility from "./ModelUtility.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
@@ -431,6 +432,12 @@ function initialize(content, arrayBuffer, byteOffset) {
       luminanceAtZenith: tileset.luminanceAtZenith,
       sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
       specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+      backFaceCulling: tileset.backFaceCulling,
+    });
+    content._model.readyPromise.then(function (model) {
+      model.activeAnimations.addAll({
+        loop: ModelAnimationLoop.REPEAT,
+      });
     });
   } else {
     // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -533,11 +540,12 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
   this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._model.backFaceCulling = this._tileset.backFaceCulling;
   this._model.debugWireframe = this._tileset.debugWireframe;
 
   // Update clipping planes
   var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
   if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.

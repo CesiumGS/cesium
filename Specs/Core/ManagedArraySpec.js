@@ -1,6 +1,15 @@
 import { ManagedArray } from "../../Source/Cesium.js";
 
 describe("Core/ManagedArray", function () {
+  function expectTrailingReferenceToBeRemoved(managedArray) {
+    var array = managedArray._array;
+    var length = managedArray._length;
+    var reservedLength = array.length;
+    for (var i = length; i < reservedLength; ++i) {
+      expect(array[i]).toBeUndefined();
+    }
+  }
+
   it("constructor has expected default values", function () {
     var array = new ManagedArray();
     expect(array.length).toEqual(0);
@@ -39,6 +48,13 @@ describe("Core/ManagedArray", function () {
     array.resize(10);
     expect(function () {
       array.set(undefined, 5);
+    }).toThrowDeveloperError();
+  });
+
+  it("length setter throws if length is less than 0", function () {
+    var array = new ManagedArray();
+    expect(function () {
+      array.length = -1;
     }).toThrowDeveloperError();
   });
 
@@ -90,6 +106,24 @@ describe("Core/ManagedArray", function () {
     }
   });
 
+  it("pop removes trailing references", function () {
+    var length = 10;
+    var array = new ManagedArray(length);
+    array.set(0, Math.random());
+    array.set(1, Math.random());
+    array.set(2, Math.random());
+    array.pop();
+    array.pop();
+    expectTrailingReferenceToBeRemoved(array);
+  });
+
+  it("pop returns undefined if array is empty", function () {
+    var array = new ManagedArray();
+    array.push(1);
+    expect(array.pop()).toBe(1);
+    expect(array.pop()).toBeUndefined();
+  });
+
   it("reserve throws if length is less than 0", function () {
     var array = new ManagedArray();
     expect(function () {
@@ -128,6 +162,16 @@ describe("Core/ManagedArray", function () {
     array.resize(5);
     expect(array.values.length).toEqual(20);
     expect(array.length).toEqual(5);
+  });
+
+  it("resize removes trailing references", function () {
+    var length = 10;
+    var array = new ManagedArray(length);
+    array.set(0, Math.random());
+    array.set(1, Math.random());
+    array.set(2, Math.random());
+    array.resize(1);
+    expectTrailingReferenceToBeRemoved(array);
   });
 
   it("trim", function () {
