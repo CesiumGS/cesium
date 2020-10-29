@@ -80,7 +80,7 @@ describe("Scene/ClippingPolygon", function () {
     clippingPolygon.union = false;
     expect(clippingPolygon.union).toEqual(false);
     clippingPolygon.union = true;
-    expect(clippingPolygon.union).toEqual(false);
+    expect(clippingPolygon.union).toEqual(true);
   });
 
   it("getters are defined and valid", function () {
