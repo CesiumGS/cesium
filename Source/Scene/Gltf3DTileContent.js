@@ -248,6 +248,7 @@ function initialize(content, gltf) {
           basePath: resource,
         }),
       });
+      featureMetadataPromise = featureMetadata.readyPromise;
       content._featureMetadata = featureMetadata;
       var featureTable = featureMetadata.featureTables[0];
       var metadataPrimitive = featureMetadata.primitives[0];
@@ -256,15 +257,16 @@ function initialize(content, gltf) {
         addFeatureIdTextureToGeneratedShaders = true;
         featureIdTextureInfo =
           featureLayer._textureFeatureIds.textureAccessor.texture;
+        batchTable = createBatchTable(content, featureTable);
       } else if (defined(featureLayer._attributeFeatureIds)) {
         addFeatureIdToGeneratedShaders =
           defaultValue(featureTable.featureCount, 0) > 0;
+        batchTable = createBatchTable(content, featureTable);
       }
-      batchTable = createBatchTable(content, featureTable);
-      content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
-      featureMetadataPromise = featureMetadata.readyPromise;
     }
   }
+
+  content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
 
   if (!defined(batchTable)) {
     batchTable = new Cesium3DTileBatchTable(content, 0, {}, undefined);
