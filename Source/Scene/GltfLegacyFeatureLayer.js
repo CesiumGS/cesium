@@ -37,31 +37,36 @@ function GltfLegacyFeatureLayer(options) {
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
-  var featureIds = featureLayer.featureIds;
-  var textureAccessor = featureIds.textureAccessor;
-  var attributeName = featureIds.attribute;
-
   var readyPromise;
   var textureFeatureIds;
   var attributeFeatureIds;
 
-  if (defined(textureAccessor)) {
-    textureFeatureIds = getTextureFeatureIds(
-      this,
-      gltfContainer,
-      textureAccessor,
-      cache
-    );
-    readyPromise = textureFeatureIds.readyPromise;
+  var featureIds = featureLayer.featureIds;
+
+  if (defined(featureIds)) {
+    var textureAccessor = featureIds.textureAccessor;
+    var attributeName = featureIds.attribute;
+
+    if (defined(textureAccessor)) {
+      textureFeatureIds = getTextureFeatureIds(
+        this,
+        gltfContainer,
+        textureAccessor,
+        cache
+      );
+      readyPromise = textureFeatureIds.readyPromise;
+    } else if (defined(attributeName)) {
+      attributeFeatureIds = getAttributeFeatureIds(
+        this,
+        gltfContainer,
+        primitive,
+        attributeName,
+        cache
+      );
+      readyPromise = attributeFeatureIds.readyPromise;
+    }
   } else {
-    attributeFeatureIds = getAttributeFeatureIds(
-      this,
-      gltfContainer,
-      primitive,
-      attributeName,
-      cache
-    );
-    readyPromise = attributeFeatureIds.readyPromise;
+    readyPromise = when.resolve();
   }
 
   var that = this;

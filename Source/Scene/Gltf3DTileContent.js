@@ -261,18 +261,23 @@ function initializeLegacyFeatureMetadata(content, gltf, resource, extension) {
   var featureTable = featureMetadata.featureTables[0];
   var metadataPrimitive = featureMetadata.primitives[0];
   var featureLayer = metadataPrimitive.featureLayers[0];
+  var batchTable;
   if (defined(featureLayer._textureFeatureIds)) {
     addFeatureIdTextureToGeneratedShaders = true;
     featureIdTextureInfo =
       featureLayer._textureFeatureIds.textureAccessor.texture;
+    batchTable = createBatchTableFromLegacyFeatureMetadata(
+      content,
+      featureTable
+    );
   } else if (defined(featureLayer._attributeFeatureIds)) {
     addFeatureIdToGeneratedShaders =
       defaultValue(featureTable.featureCount, 0) > 0;
+    batchTable = createBatchTableFromLegacyFeatureMetadata(
+      content,
+      featureTable
+    );
   }
-  var batchTable = createBatchTableFromLegacyFeatureMetadata(
-    content,
-    featureTable
-  );
   return {
     batchTable: batchTable,
     featureIdTextureInfo: featureIdTextureInfo,
