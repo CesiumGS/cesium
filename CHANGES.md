@@ -1,5 +1,9 @@
 # Change Log
 
+### 1.75 - 2020-11-02
+
+- Fixed JSDoc and TypeScript type definitions for `writeTextToCanvas` which listed incorrect return type. [#9196](https://github.com/CesiumGS/cesium/pull/9196)
+
 ### 1.74 - 2020-10-01
 
 ##### Additions :tada:
