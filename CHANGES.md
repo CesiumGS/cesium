@@ -3,6 +3,7 @@
 ### 1.75 - 2020-11-02
 
 - Fixed JSDoc and TypeScript type definitions for `writeTextToCanvas` which listed incorrect return type. [#9196](https://github.com/CesiumGS/cesium/pull/9196)
+- Fixed JSDoc and TypeScript type definitions for `Viewer.globe` constructor option to allow disabling the globe on startup. [#9063](https://github.com/CesiumGS/cesium/pull/9063)
 
 ### 1.74 - 2020-10-01
 
