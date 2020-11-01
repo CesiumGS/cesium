@@ -11,6 +11,7 @@ import {
   CheckerboardMaterialProperty,
   CircleGeometry,
   CircleOutlineGeometry,
+  Color,
   ColorMaterialProperty,
   CompositeMaterialProperty,
   CompositePositionProperty,
@@ -96,6 +97,7 @@ import {
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
+  writeTextToCanvas,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -105,7 +107,11 @@ imageryProvider = new ArcGisMapServerImageryProvider({ url: "" });
 imageryProvider = new BingMapsImageryProvider({ url: "", key: "" });
 imageryProvider = new OpenStreetMapImageryProvider({ url: "" });
 imageryProvider = new TileMapServiceImageryProvider({ url: "" });
-imageryProvider = new GridImageryProvider({ url: "" });
+imageryProvider = new GridImageryProvider({
+  tileWidth: 256,
+  tileHeight: 256,
+  color: new Color(1.0, 1.0, 1.0, 0.4),
+});
 imageryProvider = new IonImageryProvider({ assetId: 2 });
 imageryProvider = new MapboxImageryProvider({ mapId: "", accessToken: "" });
 imageryProvider = new MapboxStyleImageryProvider({
@@ -379,3 +385,5 @@ geometryInstance = new GeometryInstance({
     positions: [],
   }),
 });
+
+const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
