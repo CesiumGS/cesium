@@ -11,8 +11,8 @@ import {
   CheckerboardMaterialProperty,
   CircleGeometry,
   CircleOutlineGeometry,
-  ColorMaterialProperty,
   Color,
+  ColorMaterialProperty,
   CompositeMaterialProperty,
   CompositePositionProperty,
   CompositeProperty,
@@ -97,6 +97,7 @@ import {
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
+  writeTextToCanvas,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
@@ -384,3 +385,5 @@ geometryInstance = new GeometryInstance({
     positions: [],
   }),
 });
+
+const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");
