@@ -3003,12 +3003,10 @@ function getAttributeLocations(model, primitive) {
 
   var attributes = technique.attributes;
   var program = model._rendererResources.programs[technique.program];
-  var programVertexAttributes = program.vertexAttributes;
   var programAttributeLocations = program._attributeLocations;
 
-  // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-  for (location in programVertexAttributes) {
-    if (programVertexAttributes.hasOwnProperty(location)) {
+  for (location in programAttributeLocations) {
+    if (programAttributeLocations.hasOwnProperty(location)) {
       var attribute = attributes[location];
       if (defined(attribute)) {
         index = programAttributeLocations[location];
@@ -3017,11 +3015,7 @@ function getAttributeLocations(model, primitive) {
     }
   }
 
-  // Always add pre-created attributes.
-  // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-  // but should be included in the list of attribute locations for the pick program.
-  // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-  // that programVertexAttributes optimizes out unused attributes.
+  // Add pre-created attributes.
   var precreatedAttributes = model._precreatedAttributes;
   if (defined(precreatedAttributes)) {
     for (location in precreatedAttributes) {
