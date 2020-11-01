@@ -44,6 +44,7 @@ import SelectionIndicator from "../SelectionIndicator/SelectionIndicator.js";
 import subscribeAndEvaluate from "../subscribeAndEvaluate.js";
 import Timeline from "../Timeline/Timeline.js";
 import VRButton from "../VRButton/VRButton.js";
+import Cesium3DTileFeature from "../../Scene/Cesium3DTileFeature.js";
 
 var boundingSphereScratch = new BoundingSphere();
 
@@ -53,12 +54,78 @@ function onTimelineScrubfunction(e) {
   clock.shouldAnimate = false;
 }
 
+function getCesium3DTileFeatureDescription(feature) {
+  var propertyNames = feature.getPropertyNames();
+
+  var html = "";
+  propertyNames.forEach(function (propertyName) {
+    var value = feature.getProperty(propertyName);
+    if (defined(value)) {
+      html += "<tr><th>" + propertyName + "</th><td>" + value + "</td></tr>";
+    }
+  });
+
+  if (html.length > 0) {
+    html =
+      '<table class="cesium-infoBox-defaultTable"><tbody>' +
+      html +
+      "</tbody></table>";
+  }
+
+  return html;
+}
+
+function getCesium3DTileFeatureName(feature) {
+  // We need to iterate all property names to find potential
+  // candidates, but since we prefer some property names
+  // over others, we store them in an indexed array
+  // and then use the first defined element in the array
+  // as the preferred choice.
+
+  var i;
+  var possibleNames = [];
+  var propertyNames = feature.getPropertyNames();
+  for (i = 0; i < propertyNames.length; i++) {
+    var propertyName = propertyNames[i];
+    if (/^name$/i.test(propertyName)) {
+      possibleNames[0] = feature.getProperty(propertyName);
+    } else if (/name/i.test(propertyName)) {
+      possibleNames[1] = feature.getProperty(propertyName);
+    } else if (/^title$/i.test(propertyName)) {
+      possibleNames[2] = feature.getProperty(propertyName);
+    } else if (/^(id|identifier)$/i.test(propertyName)) {
+      possibleNames[3] = feature.getProperty(propertyName);
+    } else if (/element/i.test(propertyName)) {
+      possibleNames[4] = feature.getProperty(propertyName);
+    } else if (/(id|identifier)$/i.test(propertyName)) {
+      possibleNames[5] = feature.getProperty(propertyName);
+    }
+  }
+
+  var length = possibleNames.length;
+  for (i = 0; i < length; i++) {
+    var item = possibleNames[i];
+    if (defined(item) && item !== "") {
+      return item;
+    }
+  }
+  return "Unnamed Feature";
+}
+
 function pickEntity(viewer, e) {
   var picked = viewer.scene.pick(e.position);
   if (defined(picked)) {
     var id = defaultValue(picked.id, picked.primitive.id);
     if (id instanceof Entity) {
       return id;
+    }
+
+    if (picked instanceof Cesium3DTileFeature) {
+      return new Entity({
+        name: getCesium3DTileFeatureName(picked),
+        description: getCesium3DTileFeatureDescription(picked),
+        feature: picked,
+      });
     }
   }
 
@@ -1376,6 +1443,10 @@ Object.defineProperties(Viewer.prototype, {
   },
   /**
    * Gets or sets the object instance for which to display a selection indicator.
+   *
+   * If a user interactively picks a Cesium3DTilesFeature instance, then this property
+   * will contain a transient Entity instance with a property named "feature" that is
+   * the instance that was picked.
    * @memberof Viewer.prototype
    * @type {Entity | undefined}
    */
