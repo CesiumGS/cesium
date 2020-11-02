@@ -626,4 +626,20 @@ function generateWorldToENUMatrixFromPolygonHierarchies(polygonHierarchies) {
   return Matrix4.inverse(enu, new Matrix4());
 }
 
+ClippingPolygon.DEFAULTS = Object.freeze({
+  boundingBox: [
+    Cartesian2.ZERO,
+    Cartesian2.ZERO,
+    Cartesian2.ZERO,
+    Cartesian2.ZERO,
+  ],
+  cellDimensions: Cartesian2.ZERO,
+  overlappingTriangleIndices: new Float32Array([0]),
+  gridPixelDimensions: Cartesian2.ZERO,
+  overlappingTrianglePixelIndicesDimensions: Cartesian2.ZERO,
+  meshPositionPixelDimensions: Cartesian2.ZERO,
+  worldToENU: Matrix4.IDENTITY,
+  minimumZ: 0.0,
+});
+
 export default ClippingPolygon;

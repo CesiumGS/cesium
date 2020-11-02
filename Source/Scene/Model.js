@@ -512,6 +512,8 @@ function Model(options) {
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
+  this._clippingPolygon = undefined;
+
   // Used for checking if shaders need to be regenerated due to clipping polygon changes.
   this._clippingPolygonState = 0;
 
@@ -2597,7 +2599,7 @@ function recreateProgram(programToCreate, model, context) {
   }
 
   if (isClippingPolygonEnabled(model)) {
-    finalFS = modifyShaderForClippingPolygon(finalFS, clippingPolygon, context);
+    finalFS = modifyShaderForClippingPolygon(finalFS, clippingPolygon, context); // recreate
   }
 
   if (addClippingPlaneCode) {
@@ -3903,80 +3905,104 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       gltf_luminanceAtZenith: createLuminanceAtZenithFunction(model),
     });
 
-    var clippingPolygon = model._clippingPolygon;
-    if (defined(clippingPolygon)) {
-      uniformMap = combine(uniformMap, {
-        u_clippingPolygonBoundingBox: (function (model) {
-          return function () {
-            return model.clippingPolygon.boundingBox;
-          };
-        })(model),
+    uniformMap = combine(uniformMap, {
+      u_clippingPolygonBoundingBox: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.boundingBox;
+        };
+      })(model),
 
-        u_clippingPolygonCellDimensions: (function (model) {
-          return function () {
-            return model.clippingPolygon.cellDimensions;
-          };
-        })(model),
+      u_clippingPolygonCellDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.cellDimensions;
+        };
+      })(model),
 
-        u_clippingPolygonAccelerationGrid: (function (model) {
-          return function () {
-            return model.clippingPolygon.gridTexture;
-          };
-        })(model),
+      u_clippingPolygonAccelerationGrid: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.gridTexture
+            : model._defaultTexture;
+        };
+      })(model),
 
-        u_clippingPolygonMeshPositions: (function (model) {
-          return function () {
-            return model.clippingPolygon.meshPositionsTexture;
-          };
-        })(model),
+      u_clippingPolygonMeshPositions: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.meshPositionsTexture
+            : model._defaultTexture;
+        };
+      })(model),
 
-        u_clippingPolygonOverlappingTriangleIndices: (function (model) {
-          return function () {
-            return model.clippingPolygon.overlappingTriangleIndicesTexture;
-          };
-        })(model),
+      u_clippingPolygonOverlappingTriangleIndices: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.overlappingTriangleIndicesTexture
+            : model._defaultTexture;
+        };
+      })(model),
 
-        u_clippingPolygonAccelerationGridPixelDimensions: (function (model) {
-          return function () {
-            return model.clippingPolygon.gridPixelDimensions;
-          };
-        })(model),
+      u_clippingPolygonAccelerationGridPixelDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.gridPixelDimensions;
+        };
+      })(model),
 
-        u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: (function (
-          model
-        ) {
-          return function () {
-            return model.clippingPolygon
-              .overlappingTrianglePixelIndicesDimensions;
-          };
-        })(model),
+      u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: (function (
+        model
+      ) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.overlappingTrianglePixelIndicesDimensions;
+        };
+      })(model),
 
-        u_clippingPolygonMeshPositionPixelDimensions: (function (model) {
-          return function () {
-            return model.clippingPolygon.meshPositionPixelDimensions;
-          };
-        })(model),
+      u_clippingPolygonMeshPositionPixelDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.meshPositionPixelDimensions;
+        };
+      })(model),
 
-        u_clippingPolygonEyeToWorldToENU: (function (model, context) {
-          return function () {
-            var eyeToWorld = context.uniformState.inverseView3D;
-            var eyeToWorldToENU = Matrix4.multiply(
-              model.clippingPolygon.worldToENU,
-              eyeToWorld,
-              scratchClippingPolygonEyeToWorldMatrix
-            );
+      u_clippingPolygonEyeToWorldToENU: (function (model, context) {
+        return function () {
+          var worldToENU = defined(model.clippingPolygon)
+            ? model.clippingPolygon.worldToENU
+            : ClippingPolygon.DEFAULTS.worldToENU;
 
-            return eyeToWorldToENU;
-          };
-        })(model, context),
+          var eyeToWorld = context.uniformState.inverseView3D;
+          var eyeToWorldToENU = Matrix4.multiply(
+            worldToENU,
+            eyeToWorld,
+            scratchClippingPolygonEyeToWorldMatrix
+          );
 
-        u_clippingPolygonMinimumZ: (function (model) {
-          return function () {
-            return model.clippingPolygon.minimumZ;
-          };
-        })(model),
-      });
-    }
+          return eyeToWorldToENU;
+        };
+      })(model, context),
+
+      u_clippingPolygonMinimumZ: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.minimumZ;
+        };
+      })(model),
+    });
 
     // Allow callback to modify the uniformMap
     if (defined(model._uniformMapLoaded)) {
