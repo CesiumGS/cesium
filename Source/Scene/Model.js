@@ -55,6 +55,7 @@ import when from "../ThirdParty/when.js";
 import Axis from "./Axis.js";
 import BlendingState from "./BlendingState.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ClippingPolygon from "./ClippingPolygon.js";
 import ColorBlendMode from "./ColorBlendMode.js";
 import DepthFunction from "./DepthFunction.js";
 import DracoLoader from "./DracoLoader.js";
@@ -75,8 +76,10 @@ import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
 import processPbrMaterials from "./processPbrMaterials.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
+import getPolygonClippingFunction from "./getPolygonClippingFunction.js";
 
 var boundingSphereCartesian3Scratch = new Cartesian3();
+var scratchClippingPolygonEyeToWorldMatrix = new Matrix4();
 
 var ModelState = ModelUtility.ModelState;
 
@@ -210,6 +213,7 @@ var uriToGuid = {};
  * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
  * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+ * @param {ClippingPolygon} [options.clippingPolygon] The {@link ClippingPolygon} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
  * @param {Cartesian3} [options.lightColor] The light color when shading the model. When <code>undefined</code> the scene's light color is used instead.
@@ -507,6 +511,11 @@ function Model(options) {
    * @default true
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
+
+  this._clippingPolygon = undefined;
+
+  // Used for checking if shaders need to be regenerated due to clipping polygon changes.
+  this._clippingPolygonState = 0;
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -1100,6 +1109,25 @@ Object.defineProperties(Model.prototype, {
   },
 
   /**
+   * The {@link ClippingPolygon} used to selectively disable rendering the model.
+   *
+   * @memberof Model.prototype
+   *
+   * @type {ClippingPolygon}
+   */
+  clippingPolygon: {
+    get: function () {
+      return this._clippingPolygon;
+    },
+    set: function (value) {
+      if (value === this._clippingPolygon) {
+        return;
+      }
+      ClippingPolygon.setOwner(value, this, "_clippingPolygon");
+    },
+  },
+
+  /**
    * @private
    */
   pickIds: {
@@ -1307,6 +1335,11 @@ function isClippingEnabled(model) {
     clippingPlanes.enabled &&
     clippingPlanes.length !== 0
   );
+}
+
+function isClippingPolygonEnabled(model) {
+  var clippingPolygon = model._clippingPolygon;
+  return defined(clippingPolygon) && clippingPolygon.enabled;
 }
 
 /**
@@ -2552,6 +2585,7 @@ function recreateProgram(programToCreate, model, context) {
 
   var clippingPlaneCollection = model.clippingPlanes;
   var addClippingPlaneCode = isClippingEnabled(model);
+  var clippingPolygon = model.clippingPolygon;
 
   var vs = shaders[program.vertexShader];
   var fs = shaders[program.fragmentShader];
@@ -2567,6 +2601,11 @@ function recreateProgram(programToCreate, model, context) {
   if (isColorShadingEnabled(model)) {
     finalFS = Model._modifyShaderForColor(finalFS);
   }
+
+  if (isClippingPolygonEnabled(model)) {
+    finalFS = modifyShaderForClippingPolygon(finalFS, clippingPolygon, context); // recreate
+  }
+
   if (addClippingPlaneCode) {
     finalFS = modifyShaderForClippingPlanes(
       finalFS,
@@ -3875,6 +3914,105 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       gltf_luminanceAtZenith: createLuminanceAtZenithFunction(model),
     });
 
+    uniformMap = combine(uniformMap, {
+      u_clippingPolygonBoundingBox: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.boundingBox;
+        };
+      })(model),
+
+      u_clippingPolygonCellDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.cellDimensions;
+        };
+      })(model),
+
+      u_clippingPolygonAccelerationGrid: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.gridTexture
+            : model._defaultTexture;
+        };
+      })(model),
+
+      u_clippingPolygonMeshPositions: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.meshPositionsTexture
+            : model._defaultTexture;
+        };
+      })(model),
+
+      u_clippingPolygonOverlappingTriangleIndices: (function (model) {
+        return function () {
+          return defined(model.clippingPolygon)
+            ? model.clippingPolygon.overlappingTriangleIndicesTexture
+            : model._defaultTexture;
+        };
+      })(model),
+
+      u_clippingPolygonAccelerationGridPixelDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.gridPixelDimensions;
+        };
+      })(model),
+
+      u_clippingPolygonOverlappingTrianglePixelIndicesDimensions: (function (
+        model
+      ) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.overlappingTrianglePixelIndicesDimensions;
+        };
+      })(model),
+
+      u_clippingPolygonMeshPositionPixelDimensions: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.meshPositionPixelDimensions;
+        };
+      })(model),
+
+      u_clippingPolygonEyeToWorldToENU: (function (model, context) {
+        return function () {
+          var worldToENU = defined(model.clippingPolygon)
+            ? model.clippingPolygon.worldToENU
+            : ClippingPolygon.DEFAULTS.worldToENU;
+
+          var eyeToWorld = context.uniformState.inverseView3D;
+          var eyeToWorldToENU = Matrix4.multiply(
+            worldToENU,
+            eyeToWorld,
+            scratchClippingPolygonEyeToWorldMatrix
+          );
+
+          return eyeToWorldToENU;
+        };
+      })(model, context),
+
+      u_clippingPolygonMinimumZ: (function (model) {
+        return function () {
+          var clippingPolygon = defined(model.clippingPolygon)
+            ? model.clippingPolygon
+            : ClippingPolygon.DEFAULTS;
+          return clippingPolygon.minimumZ;
+        };
+      })(model),
+    });
+
     // Allow callback to modify the uniformMap
     if (defined(model._uniformMapLoaded)) {
       uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
@@ -4817,6 +4955,25 @@ function modifyShaderForClippingPlanes(
   return shader;
 }
 
+function modifyShaderForClippingPolygon(shader, clippingPolygon, context) {
+  shader = ShaderSource.replaceMain(shader, "gltf_clip_polygon_main");
+  var clippingFunc = getPolygonClippingFunction(clippingPolygon.union);
+  // TODO: We should avoid clip space entirely to avoid precision issues
+  //       with the clipspace -> ec  -> eyespace conversion. See Globe.VS
+  //       and how it forwards EC coordinates to the fragment shader if
+  //       clipping polygons for the globe are enabled.
+
+  var newMain =
+    "void main() {\n" +
+    "vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord);\n" +
+    "vec4 positionENU = u_clippingPolygonEyeToWorldToENU * vec4(positionEC.xyz, 1.0);\n" +
+    "clippingPolygon(positionENU.xyz);\n" +
+    "gltf_clip_polygon_main();\n" +
+    "}\n";
+
+  return shader + "#define ENABLE_CLIPPING_POLYGON\n" + clippingFunc + newMain;
+}
+
 function updateSilhouette(model, frameState, force) {
   // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
   // There are two silhouette commands:
@@ -4849,6 +5006,13 @@ function updateClippingPlanes(model, frameState) {
     if (clippingPlanes.enabled) {
       clippingPlanes.update(frameState);
     }
+  }
+}
+
+function updateClippingPolygon(model, frameState) {
+  var clippingPolygon = model._clippingPolygon;
+  if (defined(clippingPolygon)) {
+    clippingPolygon.update(frameState);
   }
 }
 
@@ -5512,10 +5676,12 @@ Model.prototype.update = function (frameState) {
     updateShowBoundingVolume(this);
     updateShadows(this);
     updateClippingPlanes(this, frameState);
+    updateClippingPolygon(this, frameState);
 
     // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
     var clippingPlanes = this._clippingPlanes;
     var currentClippingPlanesState = 0;
+    var currentClippingPolygonState = 0;
     var useClippingPlanes =
       defined(clippingPlanes) &&
       clippingPlanes.enabled &&
@@ -5578,6 +5744,16 @@ Model.prototype.update = function (frameState) {
     }
 
     var shouldRegenerateShaders = this._shouldRegenerateShaders;
+    var clippingPolygon = this._clippingPolygon;
+    if (defined(clippingPolygon)) {
+      currentClippingPolygonState = clippingPolygon.state;
+
+      shouldRegenerateShaders =
+        shouldRegenerateShaders ||
+        currentClippingPolygonState !== this._clippingPolygonState;
+      this._clippingPolygonState = currentClippingPolygonState;
+    }
+
     shouldRegenerateShaders =
       shouldRegenerateShaders ||
       this._clippingPlanesState !== currentClippingPlanesState;
@@ -5726,6 +5902,7 @@ function regenerateShaders(model, frameState) {
   if (
     isClippingEnabled(model) ||
     isColorShadingEnabled(model) ||
+    isClippingPolygonEnabled(model) ||
     model._shouldRegenerateShaders
   ) {
     model._shouldRegenerateShaders = false;
@@ -5846,6 +6023,16 @@ Model.prototype.destroy = function () {
 
   releaseCachedGltf(this);
   this._quantizedVertexShaders = undefined;
+
+  // Only destroy the ClippingPolygon collection if this is the owner.
+  var clippingPolygon = this._clippingPolygon;
+  if (
+    defined(clippingPolygon) &&
+    !clippingPolygon.isDestroyed() &&
+    clippingPolygon.owner === this
+  ) {
+    clippingPolygon.destroy();
+  }
 
   // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
   // _clippingPlanes references a ClippingPlaneCollection that this model does not own.
