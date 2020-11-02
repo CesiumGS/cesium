@@ -165,6 +165,16 @@ function generateTechnique(
     false
   );
 
+  var addFeatureIdToGenerateShaders = defaultValue(
+    options.addFeatureIdToGenerateShaders,
+    false
+  );
+
+  var addFeatureIdTextureToGeneratedShaders = defaultValue(
+    options.addFeatureIdTextureToGeneratedShaders,
+    false
+  );
+
   var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
   var techniques = techniquesWebgl.techniques;
   var shaders = techniquesWebgl.shaders;
@@ -513,6 +523,7 @@ function generateTechnique(
 
   // Add texture coordinates if the material uses them
   var v_texCoord;
+  var v_texCoord1;
   var normalTexCoord;
   var baseColorTexCoord;
   var specularGlossinessTexCoord;
@@ -538,7 +549,7 @@ function generateTechnique(
         semantic: "TEXCOORD_1",
       };
 
-      var v_texCoord1 = v_texCoord.replace("0", "1");
+      v_texCoord1 = v_texCoord.replace("0", "1");
       vertexShader += "attribute vec2 a_texcoord_1;\n";
       vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
       vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
@@ -630,6 +641,17 @@ function generateTechnique(
       semantic: "_BATCHID",
     };
     vertexShader += "attribute float a_batchId;\n";
+  }
+
+  if (addFeatureIdToGenerateShaders) {
+    techniqueAttributes.a_featureId_0 = {
+      semantic: "_FEATURE_ID_0",
+    };
+    vertexShader += "attribute float a_featureId_0;\n";
+  }
+
+  if (addFeatureIdTextureToGeneratedShaders) {
+    fragmentShader += "uniform sampler2D u_featureIdTexture;\n";
   }
 
   vertexShader += "void main(void) \n{\n";

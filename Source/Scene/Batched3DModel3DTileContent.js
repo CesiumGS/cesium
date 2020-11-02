@@ -193,6 +193,7 @@ function getFragmentShaderCallback(content) {
     }
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
+      undefined,
       content._diffuseAttributeOrUniformName[programId]
     );
     return defined(callback) ? callback(fs) : fs;

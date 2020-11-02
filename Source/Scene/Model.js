@@ -542,6 +542,10 @@ function Model(options) {
 
   // Undocumented options
   this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
+  this._addFeatureIdToGeneratedShaders = options.addFeatureIdToGeneratedShaders;
+  this._addFeatureIdTextureToGeneratedShaders =
+    options.addFeatureIdTextureToGeneratedShaders;
+  this._featureIdTextureInfo = options.featureIdTextureInfo;
   this._precreatedAttributes = options.precreatedAttributes;
   this._vertexShaderLoaded = options.vertexShaderLoaded;
   this._fragmentShaderLoaded = options.fragmentShaderLoaded;
@@ -3601,6 +3605,17 @@ function createUniformMaps(model, context) {
         return outlineTexture;
       };
     }
+
+    if (model._addFeatureIdTextureToGeneratedShaders) {
+      var uv = ModelUtility.createUniformFunction(
+        WebGLConstants.SAMPLER_2D,
+        model._featureIdTextureInfo,
+        textures,
+        defaultTexture
+      );
+      u.uniformMap.u_featureIdTexture = uv.func;
+      u.values.u_featureIdTexture = uv;
+    }
   });
 }
 
@@ -5228,6 +5243,10 @@ Model.prototype.update = function (frameState) {
 
           var options = {
             addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders,
+            addFeatureIdToGeneratedShaders: this
+              ._addFeatureIdToGeneratedShaders,
+            addFeatureIdTextureToGeneratedShaders: this
+              ._addFeatureIdTextureToGeneratedShaders,
           };
 
           processModelMaterialsCommon(gltf, options);

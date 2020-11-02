@@ -958,8 +958,9 @@ function getGlslComputeSt(batchTable) {
 
 Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
   handleTranslucent,
-  batchIdAttributeName,
-  diffuseAttributeOrUniformName
+  batchIdExpression,
+  diffuseAttributeOrUniformName,
+  addFeatureIdTextureToGeneratedShaders
 ) {
   if (this.featuresLength === 0) {
     return;
@@ -976,7 +977,14 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
     );
     var newMain;
 
-    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+    addFeatureIdTextureToGeneratedShaders = defaultValue(
+      addFeatureIdTextureToGeneratedShaders,
+      false
+    );
+
+    if (addFeatureIdTextureToGeneratedShaders) {
+      newMain = "void main() {tile_color(vec4(1.0));}\n";
+    } else if (ContextLimits.maximumVertexTextureImageUnits > 0) {
       // When VTF is supported, perform per-feature show/hide in the vertex shader
       newMain = "";
       if (handleTranslucent) {
@@ -989,7 +997,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
         "void main() \n" +
         "{ \n" +
         "    vec2 st = computeSt(" +
-        batchIdAttributeName +
+        batchIdExpression +
         "); \n" +
         "    vec4 featureProperties = texture2D(tile_batchTexture, st); \n" +
         "    tile_color(featureProperties); \n" +
@@ -1025,7 +1033,7 @@ Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function (
         "{ \n" +
         "    tile_color(vec4(1.0)); \n" +
         "    tile_featureSt = computeSt(" +
-        batchIdAttributeName +
+        batchIdExpression +
         "); \n" +
         "}";
     }
@@ -1195,14 +1203,24 @@ function modifyDiffuse(source, diffuseAttributeOrUniformName, applyHighlight) {
 
 Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
   handleTranslucent,
-  diffuseAttributeOrUniformName
+  batchIdExpression,
+  diffuseAttributeOrUniformName,
+  addFeatureIdTextureToGeneratedShaders
 ) {
   if (this.featuresLength === 0) {
     return;
   }
+  var that = this;
   return function (source) {
+    addFeatureIdTextureToGeneratedShaders = defaultValue(
+      addFeatureIdTextureToGeneratedShaders,
+      false
+    );
     source = modifyDiffuse(source, diffuseAttributeOrUniformName, true);
-    if (ContextLimits.maximumVertexTextureImageUnits > 0) {
+    if (
+      ContextLimits.maximumVertexTextureImageUnits > 0 &&
+      !addFeatureIdTextureToGeneratedShaders
+    ) {
       // When VTF is supported, per-feature show/hide already happened in the fragment shader
       source +=
         "uniform sampler2D tile_pickTexture; \n" +
@@ -1216,13 +1234,30 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
       if (handleTranslucent) {
         source += "uniform bool tile_translucentCommand; \n";
       }
+
+      if (!addFeatureIdTextureToGeneratedShaders) {
+        source += "varying vec2 tile_featureSt; \n";
+      }
+
       source +=
         "uniform sampler2D tile_pickTexture; \n" +
         "uniform sampler2D tile_batchTexture; \n" +
-        "varying vec2 tile_featureSt; \n" +
         "void main() \n" +
-        "{ \n" +
-        "    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n" +
+        "{ \n";
+
+      if (!addFeatureIdTextureToGeneratedShaders) {
+        source +=
+          "    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n";
+      } else {
+        source +=
+          "    float batchId = " +
+          batchIdExpression +
+          "; \n" +
+          "    vec2 st = computeSt(batchId); \n" +
+          "    vec4 featureProperties = texture2D(tile_batchTexture, st); \n";
+      }
+
+      source +=
         "    if (featureProperties.a == 0.0) { \n" + // show: alpha == 0 - false, non-zeo - true
         "        discard; \n" +
         "    } \n";
@@ -1248,7 +1283,8 @@ Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function (
 
       source += "    tile_color(featureProperties); \n" + "} \n";
     }
-    return source;
+
+    return getGlslComputeSt(that) + "\n" + source;
   };
 };
 
@@ -1339,7 +1375,19 @@ Cesium3DTileBatchTable.prototype.getUniformMapCallback = function () {
   };
 };
 
-Cesium3DTileBatchTable.prototype.getPickId = function () {
+Cesium3DTileBatchTable.prototype.getPickId = function (
+  batchIdExpression,
+  addFeatureIdTextureToGeneratedShaders
+) {
+  addFeatureIdTextureToGeneratedShaders = defaultValue(
+    addFeatureIdTextureToGeneratedShaders,
+    false
+  );
+
+  if (addFeatureIdTextureToGeneratedShaders) {
+    return "texture2D(tile_pickTexture, computeSt(" + batchIdExpression + "))";
+  }
+
   return "texture2D(tile_pickTexture, tile_featureSt)";
 };
 
