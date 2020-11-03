@@ -230,7 +230,7 @@ function parseUncompressed(data, header, levelIndex, result) {
 
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
-      var height = header.pixelWidth >> i;
+      var height = header.pixelHeight >> i;
       // var levelLength = levelInfo.byteLength;
       var faceLength =
         header.typeSize *
@@ -339,7 +339,7 @@ function transcodeEtc1s(
 
     for (var j = 0; j < header.faceCount; ++j) {
       var width = header.pixelWidth >> i;
-      var height = header.pixelWidth >> i;
+      var height = header.pixelHeight >> i;
       var levelOffset = ktx2Offset + levelInfo.byteOffset;
 
       var levelData = new Uint8Array(
