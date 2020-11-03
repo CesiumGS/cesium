@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.76 - 2020-12-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true. Also fixed a related issue were styles would be reapplied if the style being set is the same as the active style.
+
 ### 1.75 - 2020-11-02
 
 ##### Fixes :wrench:
