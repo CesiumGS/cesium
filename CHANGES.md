@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-- Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true. Also fixed a related issue were styles would be reapplied if the style being set is the same as the active style.
+- Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true and `tileset.show` is false. Also fixed a related issue where styles would be reapplied if the style being set is the same as the active style. [#9223](https://github.com/CesiumGS/cesium/pull/9223)
 
 ### 1.75 - 2020-11-02
 
