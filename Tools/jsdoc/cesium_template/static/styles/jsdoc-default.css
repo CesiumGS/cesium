@@ -176,6 +176,7 @@ div.menu {
 div.nav {
   overflow-x: hidden;
   overflow-y: auto;
+  background: #f8f8f8; /* Can be any color, but is needed for horizontal scrolling of main content. */
 }
 
 @media (max-width: 839px) {
