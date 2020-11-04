@@ -2,6 +2,10 @@
 
 ### 1.77 - 2020-11-04
 
+##### Breaking Changes :mega:
+
+- ScreenSpaceCameraController.\_zoomFactor replaced with public zoomFactor attribute.
+
 ##### Additions :tada:
 
 - Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
