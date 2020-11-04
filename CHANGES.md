@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.77 - 2020-11-04
+
+##### Additions :tada:
+
+- Exposes `ScreenSpaceCameraController.zoomFactor` to allow adjusting the zoom factor (speed). [#9145](https://github.com/CesiumGS/cesium/pull/9145)
+
 ### 1.76 - 2020-12-01
 
 ##### Fixes :wrench:
