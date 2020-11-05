@@ -332,7 +332,7 @@ function initialize(content, gltf) {
     gltf = parseGlb(gltf);
   }
 
-  var results;
+  var results = defaultValue.EMPTY_OBJECT;
 
   var extensions = gltf.extensions;
   if (defined(extensions)) {
