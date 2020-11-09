@@ -1390,6 +1390,131 @@ describe("Scene/WebMapServiceImageryProvider", function () {
       });
     });
 
+    it("generates correct getFeatureInfo link, WMS 1.1.1, version in getFeatureInfoParameters", function () {
+      var provider = new WebMapServiceImageryProvider({
+        url: "made/up/wms/server",
+        layers: "someLayer",
+        getFeatureInfoParameters: {
+          version: "1.1.1",
+        },
+      });
+
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        expect(url).toContain("GetFeatureInfo");
+        expect(url).toContain("1.1.1");
+        expect(url).not.toContain("1.3.0");
+        expect(url).toContain("&x=");
+        expect(url).toContain("&y=");
+        expect(url).not.toContain("&i=");
+        expect(url).not.toContain("&j=");
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
+
+      return pollToPromise(function () {
+        return provider.ready;
+      }).then(function () {
+        return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      });
+    });
+
+    it("generates correct getFeatureInfo link, WMS 1.3.0, version in getFeatureInfoParameters", function () {
+      var provider = new WebMapServiceImageryProvider({
+        url: "made/up/wms/server",
+        layers: "someLayer",
+        getFeatureInfoParameters: {
+          version: "1.3.0",
+        },
+      });
+
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        expect(url).toContain("GetFeatureInfo");
+        expect(url).not.toContain("1.1.1");
+        expect(url).toContain("1.3.0");
+        expect(url).not.toContain("&x=");
+        expect(url).not.toContain("&y=");
+        expect(url).toContain("&i=");
+        expect(url).toContain("&j=");
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
+
+      return pollToPromise(function () {
+        return provider.ready;
+      }).then(function () {
+        return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      });
+    });
+
+    it("generates correct getFeatureInfo link, WMS 1.1.1, default version", function () {
+      var provider = new WebMapServiceImageryProvider({
+        url: "made/up/wms/server",
+        layers: "someLayer",
+      });
+
+      Resource._Implementations.loadWithXhr = function (
+        url,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred,
+        overrideMimeType
+      ) {
+        expect(url).toContain("GetFeatureInfo");
+        expect(url).toContain("1.1.1");
+        expect(url).not.toContain("1.3.0");
+        expect(url).toContain("&x=");
+        expect(url).toContain("&y=");
+        expect(url).not.toContain("&i=");
+        expect(url).not.toContain("&j=");
+        Resource._DefaultImplementations.loadWithXhr(
+          "Data/WMS/GetFeatureInfo-MapInfoMXP.xml",
+          responseType,
+          method,
+          data,
+          headers,
+          deferred,
+          overrideMimeType
+        );
+      };
+      return pollToPromise(function () {
+        return provider.ready;
+      }).then(function () {
+        return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
+      });
+    });
+
     it("uses custom GetFeatureInfo handling function if specified", function () {
       function fooProcessor(response) {
         var json = JSON.parse(response);

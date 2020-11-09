@@ -3723,8 +3723,6 @@ describe(
         scene.renderForSpecs();
         var callsBeforeClipping = gl.texImage2D.calls.count();
 
-        expect(model._clippingPlaneModelViewMatrix).toEqual(Matrix4.IDENTITY);
-
         model.clippingPlanes = new ClippingPlaneCollection({
           planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],
         });

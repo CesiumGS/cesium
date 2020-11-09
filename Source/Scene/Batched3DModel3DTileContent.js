@@ -545,7 +545,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
 
   // Update clipping planes
   var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
   if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.

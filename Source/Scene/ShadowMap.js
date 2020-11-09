@@ -1518,10 +1518,8 @@ function updateCameras(shadowMap, frameState) {
       frameState.shadowState.nearPlane,
       shadowMap.maximumDistance
     );
-    far = Math.min(
-      frameState.shadowState.farPlane,
-      shadowMap.maximumDistance + 1.0
-    );
+    far = Math.min(frameState.shadowState.farPlane, shadowMap.maximumDistance);
+    far = Math.max(far, near + 1.0);
   } else {
     near = camera.frustum.near;
     far = shadowMap.maximumDistance;
