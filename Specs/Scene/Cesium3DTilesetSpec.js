@@ -1286,7 +1286,7 @@ describe(
       });
     });
 
-    it("replacement refinement - selects upwards when traversal stops at empty tile", function () {
+    it("replacement refinement - refines when ignoring empty tiles", function () {
       // No children have content, but all grandchildren have content
       //
       //          C
@@ -1302,9 +1302,8 @@ describe(
         scene.renderForSpecs();
 
         var statistics = tileset._statistics;
-        expect(statistics.selected).toEqual(1);
-        expect(statistics.visited).toEqual(3);
-        expect(isSelected(tileset, tileset.root)).toBe(true);
+        expect(statistics.selected).toEqual(4);
+        expect(statistics.visited).toEqual(7);
       });
     });
 
