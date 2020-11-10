@@ -231,15 +231,16 @@ function rebindAllGlyphs(labelCollection, label) {
       glyphTextureCache[id] = glyphTextureInfo;
 
       if (canvas.width > 0 && canvas.height > 0) {
-        var sdfValues = bitmapSDF(canvas, {
-          cutoff: SDFSettings.CUTOFF,
-          radius: SDFSettings.RADIUS,
-        });
-
         var ctx = canvas.getContext("2d");
         var canvasWidth = canvas.width;
         var canvasHeight = canvas.height;
         var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+
+        var sdfValues = bitmapSDF(imgData, {
+          cutoff: SDFSettings.CUTOFF,
+          radius: SDFSettings.RADIUS,
+        });
+
         for (var i = 0; i < canvasWidth; i++) {
           for (var j = 0; j < canvasHeight; j++) {
             var baseIndex = j * canvasWidth + i;

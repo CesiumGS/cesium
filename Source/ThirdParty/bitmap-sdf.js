@@ -1,4 +1,8 @@
 /*
+* calcSDF src parameter handing order change(ImageData first).
+*/
+
+/*
 * https://github.com/dy/bitmap-sdf
 * Calculate SDF for image/bitmap/bw data
 * This project is a fork of MapBox's TinySDF that works directly on an input Canvas instead of generating the glyphs themselves.
@@ -21,37 +25,32 @@
         var w, h, size, data, intData, stride, ctx, canvas, imgData, i, l
 
         // handle image container
-        if (ArrayBuffer.isView(src) || Array.isArray(src)) {
+        if (window.ImageData && src instanceof window.ImageData) {
+            imgData = src
+            w = src.width, h = src.height
+            data = imgData.data
+            stride = 4
+        } else if (ArrayBuffer.isView(src) || Array.isArray(src)) {
             if (!options.width || !options.height) throw Error('For raw data width and height should be provided by options')
             w = options.width, h = options.height
             data = src
 
             if (!options.stride) stride = Math.floor(src.length / w / h)
             else stride = options.stride
-        }
-        else {
-            if (window.HTMLCanvasElement && src instanceof window.HTMLCanvasElement) {
-                canvas = src
-                ctx = canvas.getContext('2d')
-                w = canvas.width, h = canvas.height
-                imgData = ctx.getImageData(0, 0, w, h)
-                data = imgData.data
-                stride = 4
-            }
-            else if (window.CanvasRenderingContext2D && src instanceof window.CanvasRenderingContext2D) {
-                canvas = src.canvas
-                ctx = src
-                w = canvas.width, h = canvas.height
-                imgData = ctx.getImageData(0, 0, w, h)
-                data = imgData.data
-                stride = 4
-            }
-            else if (window.ImageData && src instanceof window.ImageData) {
-                imgData = src
-                w = src.width, h = src.height
-                data = imgData.data
-                stride = 4
-            }
+        } else if (window.HTMLCanvasElement && src instanceof window.HTMLCanvasElement) {
+            canvas = src
+            ctx = canvas.getContext('2d')
+            w = canvas.width, h = canvas.height
+            imgData = ctx.getImageData(0, 0, w, h)
+            data = imgData.data
+            stride = 4
+        } else if (window.CanvasRenderingContext2D && src instanceof window.CanvasRenderingContext2D) {
+            canvas = src.canvas
+            ctx = src
+            w = canvas.width, h = canvas.height
+            imgData = ctx.getImageData(0, 0, w, h)
+            data = imgData.data
+            stride = 4
         }
 
         size = Math.max(w, h)
