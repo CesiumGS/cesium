@@ -1,5 +1,19 @@
 # Change Log
 
+### 1.76 - 2020-12-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true and `tileset.show` is false. Also fixed a related issue where styles would be reapplied if the style being set is the same as the active style. [#9223](https://github.com/CesiumGS/cesium/pull/9223)
+
+### 1.75 - 2020-11-02
+
+##### Fixes :wrench:
+
+- Fixed an issue in the PBR material where models with the `KHR_materials_unlit` extension had the normal attribute disabled. [#9173](https://github.com/CesiumGS/cesium/pull/9173).
+- Fixed JSDoc and TypeScript type definitions for `writeTextToCanvas` which listed incorrect return type. [#9196](https://github.com/CesiumGS/cesium/pull/9196)
+- Fixed JSDoc and TypeScript type definitions for `Viewer.globe` constructor option to allow disabling the globe on startup. [#9063](https://github.com/CesiumGS/cesium/pull/9063)
+
 ### 1.74 - 2020-10-01
 
 ##### Additions :tada:

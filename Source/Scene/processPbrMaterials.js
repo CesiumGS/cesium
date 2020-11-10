@@ -299,8 +299,6 @@ function generateTechnique(
     defined(material.extensions.KHR_materials_unlit)
   ) {
     isUnlit = true;
-    hasNormals = false;
-    hasTangents = false;
   }
 
   if (hasNormals) {
@@ -490,15 +488,16 @@ function generateTechnique(
       semantic: "NORMAL",
     };
     vertexShader += "attribute vec3 a_normal;\n";
-    vertexShader += "varying vec3 v_normal;\n";
-    if (hasSkinning) {
-      vertexShaderMain +=
-        "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
-    } else {
-      vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+    if (!isUnlit) {
+      vertexShader += "varying vec3 v_normal;\n";
+      if (hasSkinning) {
+        vertexShaderMain +=
+          "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
+      } else {
+        vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+      }
+      fragmentShader += "varying vec3 v_normal;\n";
     }
-
-    fragmentShader += "varying vec3 v_normal;\n";
     fragmentShader += "varying vec3 v_positionEC;\n";
   }
 
@@ -660,7 +659,7 @@ function generateTechnique(
   vertexShader += "}\n";
 
   // Fragment shader lighting
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "const float M_PI = 3.141592653589793;\n";
 
     fragmentShader +=
@@ -759,7 +758,7 @@ function generateTechnique(
   fragmentShader += fragmentShaderMain;
 
   // Add normal mapping to fragment shader
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "    vec3 ng = normalize(v_normal);\n";
     fragmentShader +=
       "    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n";
@@ -836,7 +835,7 @@ function generateTechnique(
 
   fragmentShader += "    vec3 baseColor = baseColorWithAlpha.rgb;\n";
 
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     if (useSpecGloss) {
       if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
         fragmentShader +=
