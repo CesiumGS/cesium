@@ -1918,6 +1918,7 @@ Cesium3DTileset.prototype.postPassesUpdate = function (frameState) {
   cancelOutOfViewRequests(this, frameState);
   raiseLoadProgressEvent(this, frameState);
   this._cache.unloadTiles(this, unloadTile);
+  this._styleEngine.resetDirty();
 };
 
 /**
@@ -2204,7 +2205,7 @@ function updateTileDebugLabels(tileset, frameState) {
 }
 
 function updateTiles(tileset, frameState, passOptions) {
-  tileset._styleEngine.applyStyle(tileset, passOptions);
+  tileset._styleEngine.applyStyle(tileset);
 
   var isRender = passOptions.isRender;
   var statistics = tileset._statistics;
