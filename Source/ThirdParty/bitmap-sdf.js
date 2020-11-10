@@ -1,5 +1,5 @@
 /*
-* calcSDF src parameter handing order change(ImageData first).
+* calcSDF src parameter handing order change(Uint8ClampedArray > ImageData > etc).
 */
 
 /*
@@ -25,47 +25,60 @@
         var w, h, size, data, intData, stride, ctx, canvas, imgData, i, l
 
         // handle image container
-        if (window.ImageData && src instanceof window.ImageData) {
-            imgData = src
-            w = src.width, h = src.height
-            data = imgData.data
-            stride = 4
-        } else if (ArrayBuffer.isView(src) || Array.isArray(src)) {
-            if (!options.width || !options.height) throw Error('For raw data width and height should be provided by options')
+        if ((window.Uint8ClampedArray && src instanceof window.Uint8ClampedArray) || (window.Uint8Array && src instanceof window.Uint8Array)) {
             w = options.width, h = options.height
-            data = src
-
-            if (!options.stride) stride = Math.floor(src.length / w / h)
-            else stride = options.stride
-        } else if (window.HTMLCanvasElement && src instanceof window.HTMLCanvasElement) {
-            canvas = src
-            ctx = canvas.getContext('2d')
-            w = canvas.width, h = canvas.height
-            imgData = ctx.getImageData(0, 0, w, h)
-            data = imgData.data
             stride = 4
-        } else if (window.CanvasRenderingContext2D && src instanceof window.CanvasRenderingContext2D) {
-            canvas = src.canvas
-            ctx = src
-            w = canvas.width, h = canvas.height
-            imgData = ctx.getImageData(0, 0, w, h)
-            data = imgData.data
-            stride = 4
-        }
+            size = Math.max(w, h)
 
-        size = Math.max(w, h)
-
-        //convert int data to floats
-        if ((window.Uint8ClampedArray && data instanceof window.Uint8ClampedArray) || (window.Uint8Array && data instanceof window.Uint8Array)) {
-            intData = data
+            intData = src
             data = Array(w * h)
 
             for (i = 0, l = intData.length; i < l; i++) {
-                data[i] = intData[i * stride + channel] / 255
+              data[i] = intData[i * stride + channel] / 255
             }
-        }
-        else {
-            if (stride !== 1) throw Error('Raw data can have only 1 value per pixel')
+        } else { //only for non Uint8ClampedArray
+            if (window.ImageData && src instanceof window.ImageData) {
+                imgData = src
+                w = src.width, h = src.height
+                data = imgData.data
+                stride = 4
+            } else if (ArrayBuffer.isView(src) || Array.isArray(src)) {
+                if (!options.width || !options.height) throw Error('For raw data width and height should be provided by options')
+                w = options.width, h = options.height
+                data = src
+
+                if (!options.stride) stride = Math.floor(src.length / w / h)
+                else stride = options.stride
+            } else if (window.HTMLCanvasElement && src instanceof window.HTMLCanvasElement) {
+                canvas = src
+                ctx = canvas.getContext('2d')
+                w = canvas.width, h = canvas.height
+                imgData = ctx.getImageData(0, 0, w, h)
+                data = imgData.data
+                stride = 4
+            } else if (window.CanvasRenderingContext2D && src instanceof window.CanvasRenderingContext2D) {
+                canvas = src.canvas
+                ctx = src
+                w = canvas.width, h = canvas.height
+                imgData = ctx.getImageData(0, 0, w, h)
+                data = imgData.data
+                stride = 4
+            }
+
+            size = Math.max(w, h)
+
+            //convert int data to floats
+            if ((window.Uint8ClampedArray && data instanceof window.Uint8ClampedArray) || (window.Uint8Array && data instanceof window.Uint8Array)) {
+                intData = data
+                data = Array(w * h)
+
+                for (i = 0, l = intData.length; i < l; i++) {
+                    data[i] = intData[i * stride + channel] / 255
+                }
+            }
+            else {
+                if (stride !== 1) throw Error('Raw data can have only 1 value per pixel')
+            }
         }
 
         // temporary arrays for the distance transform

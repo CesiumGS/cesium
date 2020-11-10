@@ -235,10 +235,12 @@ function rebindAllGlyphs(labelCollection, label) {
         var canvasWidth = canvas.width;
         var canvasHeight = canvas.height;
         var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-
-        var sdfValues = bitmapSDF(imgData, {
+        var imgDataData = imgData.data;
+        var sdfValues = bitmapSDF(imgDataData, {
           cutoff: SDFSettings.CUTOFF,
           radius: SDFSettings.RADIUS,
+          width: canvasWidth,
+          height: canvasHeight,
         });
 
         for (var i = 0; i < canvasWidth; i++) {
@@ -246,10 +248,10 @@ function rebindAllGlyphs(labelCollection, label) {
             var baseIndex = j * canvasWidth + i;
             var alpha = sdfValues[baseIndex] * 255;
             var imageIndex = baseIndex * 4;
-            imgData.data[imageIndex + 0] = alpha;
-            imgData.data[imageIndex + 1] = alpha;
-            imgData.data[imageIndex + 2] = alpha;
-            imgData.data[imageIndex + 3] = alpha;
+            imgDataData[imageIndex + 0] = alpha;
+            imgDataData[imageIndex + 1] = alpha;
+            imgDataData[imageIndex + 2] = alpha;
+            imgDataData[imageIndex + 3] = alpha;
           }
         }
         ctx.putImageData(imgData, 0, 0);
