@@ -323,7 +323,7 @@ function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
   var parent = tile.parent;
   if (
     !defined(parent) ||
-    parent.hasTilesetContent ||
+    hasEmptyContent(parent) ||
     parent.refine !== Cesium3DTileRefine.ADD
   ) {
     return false;
@@ -555,6 +555,12 @@ function canTraverse(tileset, tile) {
     // Don't traverse if the subtree is expired because it will be destroyed
     return !tile.contentExpired;
   }
+
+  // We ignore empty tile SSE and traverse down the tree
+  if (tile.hasEmptyContent) {
+    return true;
+  }
+
   return tile._screenSpaceError > tileset._maximumScreenSpaceError;
 }
 
@@ -653,13 +659,12 @@ function executeEmptyTraversal(tileset, root, frameState) {
 
     // Only traverse if the tile is empty - traversal stop at descendants with content
     var emptyContent = hasEmptyContent(tile);
-    var traverse = emptyContent && canTraverse(tileset, tile);
     var emptyLeaf = emptyContent && tile.children.length === 0;
 
     // Traversal stops but the tile does not have content yet
     // There will be holes if the parent tries to refine to its children, so don't refine
     // One exception: a parent may refine even if one of its descendants is an empty leaf
-    if (!traverse && !tile.contentAvailable && !emptyLeaf) {
+    if (!emptyContent && !tile.contentAvailable && !emptyLeaf) {
       allDescendantsLoaded = false;
     }
 
@@ -670,7 +675,8 @@ function executeEmptyTraversal(tileset, root, frameState) {
       touchTile(tileset, tile, frameState);
     }
 
-    if (traverse) {
+    // Only traverse down for empty tile
+    if (emptyContent) {
       for (var i = 0; i < childrenLength; ++i) {
         var child = children[i];
         stack.push(child);
