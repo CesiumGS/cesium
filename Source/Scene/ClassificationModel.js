@@ -61,7 +61,6 @@ var ModelState = ModelUtility.ModelState;
  * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
  * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
  * @exception {RuntimeError} The mesh must have a position attribute.
- * @exception {RuntimeError} The mesh must have a batch id attribute.
  */
 function ClassificationModel(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -117,11 +116,6 @@ function ClassificationModel(options) {
   var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
   if (!defined(gltfPositionAttribute)) {
     throw new RuntimeError("The mesh must have a position attribute.");
-  }
-
-  var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
-  if (!defined(gltfBatchIdAttribute)) {
-    throw new RuntimeError("The mesh must have a batch id attribute.");
   }
 
   this._gltf = gltf;
@@ -790,6 +784,7 @@ function createPrimitive(model) {
   var gltfMeshes = gltf.meshes;
   var primitive = gltfMeshes[0].primitives[0];
   var ix = accessors[primitive.indices];
+  var positions = accessors[primitive.attributes.POSITION];
 
   var positionAccessor = primitive.attributes.POSITION;
   var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
@@ -804,7 +799,6 @@ function createPrimitive(model) {
     count = ix.count;
     offset = ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType); // glTF has offset in bytes.  Cesium has offsets in indices
   } else {
-    var positions = accessors[primitive.attributes.POSITION];
     count = positions.count;
     offset = 0;
   }
@@ -839,18 +833,25 @@ function createPrimitive(model) {
     bufferLength
   );
 
-  attribute = vertexArray.attributes._BATCHID;
-  componentDatatype = attribute.componentDatatype;
-  typedArray = attribute.vertexBuffer;
-  byteOffset = typedArray.byteOffset;
-  bufferLength =
-    typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-  var vertexBatchIds = ComponentDatatype.createArrayBufferView(
-    componentDatatype,
-    typedArray.buffer,
-    byteOffset,
-    bufferLength
-  );
+  var vertexBatchIds;
+
+  if (defined(vertexArray.attributes._BATCHID)) {
+    attribute = vertexArray.attributes._BATCHID;
+    componentDatatype = attribute.componentDatatype;
+    typedArray = attribute.vertexBuffer;
+    byteOffset = typedArray.byteOffset;
+    bufferLength =
+      typedArray.byteLength /
+      ComponentDatatype.getSizeInBytes(componentDatatype);
+    vertexBatchIds = ComponentDatatype.createArrayBufferView(
+      componentDatatype,
+      typedArray.buffer,
+      byteOffset,
+      bufferLength
+    );
+  } else {
+    vertexBatchIds = new Uint8Array(positions.count);
+  }
 
   var buffer = vertexArray.indexBuffer.typedArray;
   var indices;
