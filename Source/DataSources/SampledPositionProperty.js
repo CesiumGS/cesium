@@ -318,7 +318,7 @@ SampledPositionProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof SampledPositionProperty &&
-    Property.equals(this._property, other._property) && //
+      Property.equals(this._property, other._property) && //
       this._referenceFrame === other._referenceFrame)
   );
 };

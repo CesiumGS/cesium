@@ -436,9 +436,9 @@ describe(
     it("has czm_transformPlane", function () {
       var fs =
         "void main() { " +
-        "  mat4 uniformScale2 = mat4(2.0, 0.0, 0.0, 0.0," +
-        "                            0.0, 2.0, 0.0, 0.0," +
-        "                            0.0, 0.0, 2.0, 0.0," +
+        "  mat4 uniformScale2 = mat4(0.5, 0.0, 0.0, 0.0," +
+        "                            0.0, 0.5, 0.0, 0.0," +
+        "                            0.0, 0.0, 0.5, 0.0," +
         "                            0.0, 0.0, 0.0, 1.0);" +
         "  gl_FragColor = vec4(all(equal(czm_transformPlane(vec4(1.0, 0.0, 0.0, 10.0), uniformScale2), vec4(1.0, 0.0, 0.0, 20.0))));" +
         "}";

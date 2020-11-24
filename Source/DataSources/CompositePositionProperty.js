@@ -135,7 +135,7 @@ CompositePositionProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof CompositePositionProperty && //
-    this._referenceFrame === other._referenceFrame && //
+      this._referenceFrame === other._referenceFrame && //
       this._composite.equals(other._composite, Property.equals))
   );
 };

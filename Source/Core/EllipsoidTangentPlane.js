@@ -137,6 +137,7 @@ var tmp = new AxisAlignedBoundingBox();
  *
  * @param {Cartesian3[]} cartesians The list of positions surrounding the center point.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @returns {EllipsoidTangentPlane} The new instance of EllipsoidTangentPlane.
  */
 EllipsoidTangentPlane.fromPoints = function (cartesians, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);

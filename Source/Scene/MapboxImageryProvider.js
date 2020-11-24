@@ -2,7 +2,6 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import MapboxApi from "../Core/MapboxApi.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
@@ -56,7 +55,7 @@ function MapboxImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
-  var accessToken = MapboxApi.getAccessToken(options.accessToken);
+  var accessToken = options.accessToken;
   //>>includeStart('debug', pragmas.debug);
   if (!defined(accessToken)) {
     throw new DeveloperError("options.accessToken is required.");
