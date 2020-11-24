@@ -280,3 +280,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Zoran Kokeza](https://github.com/zoran995)
 - [Benjamin Abb](https://github.com/benjaminabb)
 - [Victor Turansky](https://github.com/turansky)
+- [Will Jadkowski](https://github.com/willjad)
