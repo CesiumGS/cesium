@@ -279,3 +279,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Sam Bakkach](https://github.com/sambakk)
 - [Zoran Kokeza](https://github.com/zoran995)
 - [Benjamin Abb](https://github.com/benjaminabb)
+- [Victor Turansky](https://github.com/turansky)
