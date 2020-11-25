@@ -407,6 +407,37 @@ Buffer.prototype.getBufferData = function (
   gl.bindBuffer(target, null);
 };
 
+Buffer.prototype.cloneAndUpdateIndexDatatype = function (componentType) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("componentType", componentType);
+  //>>includeEnd('debug');
+  
+  var result = Object.assign({}, this);
+  result.__proto__ = Buffer.prototype;
+
+  var indexDatatype = componentType;
+  var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
+  var numberOfIndices = this.sizeInBytes / bytesPerIndex;
+  Object.defineProperties(result, {
+    indexDatatype: {
+      get: function () {
+        return indexDatatype;
+      },
+    },
+    bytesPerIndex: {
+      get: function () {
+        return bytesPerIndex;
+      },
+    },
+    numberOfIndices: {
+      get: function () {
+        return numberOfIndices;
+      },
+    },
+  });
+  return result;
+}
+
 Buffer.prototype.isDestroyed = function () {
   return false;
 };
