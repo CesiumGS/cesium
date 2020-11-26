@@ -3271,8 +3271,10 @@ function createVertexArrays(model, context) {
         }
 
         indexBuffer = rendererBuffers[bufferView];
-        if(indexBuffer.indexDatatype !== accessor.componentType){
-          indexBuffer = indexBuffer.cloneAndUpdateIndexDatatype(accessor.componentType);
+        if (indexBuffer.indexDatatype !== accessor.componentType) {
+          indexBuffer = indexBuffer.cloneAndUpdateIndexDatatype(
+            accessor.componentType
+          );
         }
       }
       rendererVertexArrays[

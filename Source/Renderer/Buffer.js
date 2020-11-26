@@ -411,7 +411,7 @@ Buffer.prototype.cloneAndUpdateIndexDatatype = function (componentType) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("componentType", componentType);
   //>>includeEnd('debug');
-  
+
   var result = Object.assign({}, this);
   result.__proto__ = Buffer.prototype;
 
@@ -436,7 +436,7 @@ Buffer.prototype.cloneAndUpdateIndexDatatype = function (componentType) {
     },
   });
   return result;
-}
+};
 
 Buffer.prototype.isDestroyed = function () {
   return false;
