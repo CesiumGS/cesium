@@ -1,56 +1,46 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
+import when from "../ThirdParty/when.js";
 
 /**
- * Feature mapping from a texture to a feature table.
+ * Feature ID attribute mapping to a feature table.
  *
  * @param {Object} options Object with the following properties:
  * @param {GltfContainer} options.gltfContainer The glTF container.
- * @param {Object} options.texture The texture JSON object from the glTF.
- * @param {Number} options.textureId The texture index.
- * @param {Object} options.textureInfo The texture info object.
- * @param {Object} options.featureMapping The feature mapping JSON object from the glTF.
+ * @param {Object} options.primitive The primitive JSON object from the glTF.
+ * @param {Object} options.featureIdAttribute The feature ID attribute from the glTF.
  * @param {GltfFeatureTable} options.featureTable The feature table.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
- * @alias GltfFeatureTextureMapping
+ * @alias GltfFeatureIdAttribute
  * @constructor
  *
  * @private
  */
-function GltfFeatureTextureMapping(options) {
+function GltfFeatureIdAttribute(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
-  var texture = options.texture;
-  var textureId = options.textureId;
-  var textureInfo = options.textureInfo;
-  var featureMapping = options.featureMapping;
+  var primitive = options.primitive;
+  var featureIdAttribute = options.featureIdAttribute;
   var featureTable = options.featureTable;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfContainer", gltfContainer);
-  Check.typeOf.object("options.texture", texture);
-  Check.typeOf.number("options.textureId", textureId);
-  Check.typeOf.object("options.textureInfo", textureInfo);
-  Check.typeOf.object("options.featureMapping", featureMapping);
+  Check.typeOf.object("options.primitive", primitive);
+  Check.typeOf.object("options.featureIdAttribute", featureIdAttribute);
   Check.typeOf.object("options.featureTable", featureTable);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
-  // Clone so that this object doesn't hold on to a reference to the gltf JSON
-  textureInfo = clone(textureInfo, true);
-
   var featureIds = getFeatureIds(
     this,
-    featureMapping.featureIds,
+    featureIdAttribute.featureIds,
     gltfContainer,
-    texture,
-    textureId,
-    textureInfo,
+    primitive,
     cache
   );
 
@@ -69,12 +59,12 @@ function GltfFeatureTextureMapping(options) {
   this._readyPromise = readyPromise;
 }
 
-Object.defineProperties(GltfFeatureTextureMapping.prototype, {
+Object.defineProperties(GltfFeatureIdAttribute.prototype, {
   /**
-   * Promise that resolves when the feature mapping is ready.
+   * Promise that resolves when the feature ID attribute is ready.
    *
-   * @memberof GltfFeatureTextureMapping.prototype
-   * @type {Promise.<GltfFeatureTextureMapping>}
+   * @memberof GltfFeatureIdAttribute.prototype
+   * @type {Promise.<GltfFeatureIdAttribute>}
    * @readonly
    * @private
    */
@@ -86,51 +76,71 @@ Object.defineProperties(GltfFeatureTextureMapping.prototype, {
 });
 
 function getFeatureIds(
-  featureMapping,
+  featureIdAttribute,
   featureIdsObject,
   gltfContainer,
-  texture,
-  textureId,
-  textureInfo,
+  primitive,
   cache
 ) {
-  var channel = featureIdsObject.channel;
+  var attribute = featureIdsObject.attribute;
+  var constant = featureIdsObject.constant;
+  var vertexStride = featureIdsObject.vertexStride;
 
   var featureIds = new FeatureIds({
-    channel: channel,
-    textureInfo: textureInfo,
-    imageData: undefined,
+    constant: constant,
+    vertexStride: vertexStride,
+    typedArray: undefined,
     cacheItem: undefined,
     readyPromise: undefined,
   });
 
-  featureIds.readyPromise = cache
-    .getTexture({
-      gltfContainer: gltfContainer,
-      texture: texture,
-      textureId: textureId,
-    })
-    .then(function (cacheItem) {
-      if (featureMapping.isDestroyed()) {
-        // The feature mapping was destroyed before the request came back
-        cache.releaseCacheItem(cacheItem);
-        return;
-      }
-      featureIds.cacheItem = cacheItem;
-      var imageData = cacheItem.contents;
-      if (defined(imageData)) {
-        featureIds.imageData = imageData;
-      }
-      return featureIds;
-    });
+  if (defined(attribute)) {
+    var gltf = gltfContainer.gltf;
+    var attributes = primitive.attributes;
+    var accessorId = attributes[attribute];
+    var accessor = gltf.accessors[accessorId];
+    var bufferId = GltfFeatureMetadataUtility.getAccessorBufferId(
+      gltf,
+      accessor
+    );
+
+    if (defined(bufferId)) {
+      var buffer = gltf.buffers[bufferId];
+      featureIds.readyPromise = cache
+        .getBuffer({
+          gltfContainer: gltfContainer,
+          buffer: buffer,
+          bufferId: bufferId,
+        })
+        .then(function (cacheItem) {
+          if (featureIdAttribute.isDestroyed()) {
+            // The feature ID attribute was destroyed before the request came back
+            cache.releaseCacheItem(cacheItem);
+            return;
+          }
+          featureIds.cacheItem = cacheItem;
+          var bufferData = cacheItem.contents;
+          if (defined(bufferData)) {
+            featureIds.typedArray = GltfFeatureMetadataUtility.getTypedArrayForAccessor(
+              gltf,
+              accessor,
+              bufferData
+            );
+          }
+          return featureIds;
+        });
+    }
+  } else {
+    featureIds.readyPromise = when.resolve(featureIds);
+  }
 
   return featureIds;
 }
 
 function FeatureIds(options) {
-  this.channel = options.channel;
-  this.textureInfo = options.textureInfo;
-  this.imageData = options.imageData;
+  this.constant = options.constant;
+  this.vertexStride = options.vertexStride;
+  this.typedArray = options.typedArray;
   this.cacheItem = options.cacheItem;
   this.readyPromise = options.readyPromise;
 }
@@ -143,11 +153,11 @@ function FeatureIds(options) {
  *
  * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
  *
- * @see GltfFeatureTextureMapping#destroy
+ * @see GltfFeatureIdAttribute#destroy
  *
  * @private
  */
-GltfFeatureTextureMapping.prototype.isDestroyed = function () {
+GltfFeatureIdAttribute.prototype.isDestroyed = function () {
   return false;
 };
 
@@ -161,11 +171,11 @@ GltfFeatureTextureMapping.prototype.isDestroyed = function () {
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
  *
- * @see GltfFeatureTextureMapping#isDestroyed
+ * @see GltfFeatureIdAttribute#isDestroyed
  *
  * @private
  */
-GltfFeatureTextureMapping.prototype.destroy = function () {
+GltfFeatureIdAttribute.prototype.destroy = function () {
   var cache = this._cache;
   var featureIds = this._featureIds;
 
@@ -176,4 +186,4 @@ GltfFeatureTextureMapping.prototype.destroy = function () {
   return destroyObject(this);
 };
 
-export default GltfFeatureTextureMapping;
+export default GltfFeatureIdAttribute;

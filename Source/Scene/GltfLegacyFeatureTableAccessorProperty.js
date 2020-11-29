@@ -50,6 +50,27 @@ function GltfLegacyFeatureTableAccessorProperty(options) {
   var normalized = isNormalized(accessor.normalized, componentType);
   var bufferId = GltfFeatureMetadataUtility.getAccessorBufferId(gltf, accessor);
 
+  // Clone so that this object doesn't hold on to a reference to the glTF JSON
+  var extras = clone(property.extras, true);
+
+  this._componentType = componentType;
+  this._componentCount = binaryAccessor.componentsPerAttribute;
+  this._accessorType = type;
+  this._count = count;
+  this._classType = binaryAccessor.classType;
+  this._initializedWithZeros = !defined(bufferId);
+  this._typedArray = undefined;
+  this._cache = cache;
+  this._cacheItem = undefined;
+  this._signed = isSignedComponentType(componentType);
+  this._normalized = normalized;
+  this._lowestValue = getLowestValue(componentType);
+  this._maximumValue = getMaximumValue(componentType);
+  this._name = name;
+  this._semantic = property.semantic;
+  this._type = GltfLegacyFeatureTablePropertyType.getTypeFromAccessorType(type);
+  this._extras = extras;
+
   var readyPromise;
   if (defined(bufferId)) {
     var buffer = gltf.buffers[bufferId];
@@ -83,26 +104,6 @@ function GltfLegacyFeatureTableAccessorProperty(options) {
     readyPromise = when.resolve(this);
   }
 
-  // Clone so that this object doesn't hold on to a reference to the gltf JSON
-  var extras = clone(property.extras, true);
-
-  this._componentType = componentType;
-  this._componentCount = binaryAccessor.componentsPerAttribute;
-  this._accessorType = type;
-  this._count = count;
-  this._classType = binaryAccessor.classType;
-  this._initializedWithZeros = !defined(bufferId);
-  this._typedArray = undefined;
-  this._cache = cache;
-  this._cacheItem = undefined;
-  this._signed = isSignedComponentType(componentType);
-  this._normalized = normalized;
-  this._lowestValue = getLowestValue(componentType);
-  this._maximumValue = getMaximumValue(componentType);
-  this._name = name;
-  this._semantic = property.semantic;
-  this._type = GltfLegacyFeatureTablePropertyType.getTypeFromAccessorType(type);
-  this._extras = extras;
   this._readyPromise = readyPromise;
 }
 

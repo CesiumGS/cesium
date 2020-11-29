@@ -1,12 +1,12 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import GltfContainer from "./GltfContainer.js";
 import GltfFeatureClass from "./GltfFeatureClass.js";
 import GltfFeatureMetadataPrimitive from "./GltfFeatureMetadataPrimitive.js";
 import GltfFeatureTable from "./GltfFeatureTable.js";
-import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -38,12 +38,12 @@ function GltfFeatureMetadata(options) {
     gltf: gltf,
   });
 
-  var featureClasses = {};
-  for (var featureClassId in featureMetadata.featureClasses) {
-    if (featureMetadata.featureClasses.hasOwnProperty(featureClassId)) {
-      featureClasses[featureClassId] = new GltfFeatureClass({
-        id: featureClassId,
-        featureClass: featureMetadata.featureClasses[featureClassId],
+  var classes = {};
+  for (var classId in featureMetadata.classes) {
+    if (featureMetadata.classes.hasOwnProperty(classId)) {
+      classes[classId] = new GltfFeatureClass({
+        id: classId,
+        class: featureMetadata.classes[classId],
       });
     }
   }
@@ -52,12 +52,12 @@ function GltfFeatureMetadata(options) {
   for (var featureTableId in featureMetadata.featureTables) {
     if (featureMetadata.featureTables.hasOwnProperty(featureTableId)) {
       var featureTable = featureMetadata.featureTables[featureTableId];
-      var featureClass = featureClasses[featureTable.featureClass];
+      var classDefinition = classes[featureTable.class];
       featureTables[featureTableId] = new GltfFeatureTable({
         gltfContainer: gltfContainer,
         id: featureTableId,
         featureTable: featureTable,
-        featureClass: featureClass,
+        class: classDefinition,
         cache: cache,
       });
     }
@@ -77,15 +77,7 @@ function GltfFeatureMetadata(options) {
           defined(primitive.extensions) &&
           defined(primitive.extensions.EXT_feature_metadata);
 
-        var hasMaterialExtension = false;
-        if (defined(primitive.material)) {
-          var material = gltf.materials[primitive.material];
-          hasMaterialExtension =
-            defined(material.extensions) &&
-            defined(material.extensions.EXT_feature_metadata);
-        }
-
-        if (hasPrimitiveExtension || hasMaterialExtension) {
+        if (hasPrimitiveExtension) {
           metadataPrimitives.push(
             new GltfFeatureMetadataPrimitive({
               gltfContainer: gltfContainer,
@@ -110,25 +102,25 @@ function GltfFeatureMetadata(options) {
     return that;
   });
 
-  this._featureClasses = featureClasses;
+  this._classes = classes;
   this._featureTables = featureTables;
   this._primitives = metadataPrimitives;
-  this._extras = clone(featureMetadata.extras, true); // Clone so that this object doesn't hold on to a reference to the gltf JSON
+  this._extras = clone(featureMetadata.extras, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
   this._readyPromise = readyPromise;
 }
 
 Object.defineProperties(GltfFeatureMetadata.prototype, {
   /**
-   * Feature classes in the feature metadata extension.
+   * Classes in the feature metadata extension.
    *
    * @memberof GltfFeatureMetadata.prototype
    * @type {Object.<String, GltfFeatureClass>}
    * @readonly
    * @private
    */
-  featureClasses: {
+  classes: {
     get: function () {
-      return this._featureClasses;
+      return this._classes;
     },
   },
 

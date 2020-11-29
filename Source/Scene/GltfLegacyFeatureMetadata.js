@@ -86,7 +86,7 @@ function GltfLegacyFeatureMetadata(options) {
     return that;
   });
 
-  // Clone so that this object doesn't hold on to a reference to the gltf JSON
+  // Clone so that this object doesn't hold on to a reference to the glTF JSON
   var extras = clone(featureMetadata.extras, true);
 
   this._featureTables = featureTables;

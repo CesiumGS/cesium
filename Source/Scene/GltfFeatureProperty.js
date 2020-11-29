@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import GltfFeaturePropertyComponentType from "./GltfFeaturePropertyComponentType.js";
-import GltfFeaturePropertyElementType from "./GltfFeaturePropertyElementType.js";
+import GltfFeaturePropertyType from "./GltfFeaturePropertyType.js";
 
 /**
  * A feature class property.
@@ -29,10 +29,12 @@ function GltfFeatureProperty(options) {
   this._id = id;
   this._name = property.name;
   this._description = property.description;
-  this._elementType = GltfFeaturePropertyElementType[property.elementType];
+  this._type = GltfFeaturePropertyType[property.type];
   this._componentType =
     GltfFeaturePropertyComponentType[property.componentType];
-  this._componentsPerElement = defaultValue(property.componentsPerElement, 1);
+  this._componentCount = defaultValue(property.componentCount, 1);
+  this._stringByteLength = property.stringByteLength;
+  this._blobByteLength = property.blobByteLength;
   this._normalized = defaultValue(property.normalized, false);
   this._max = clone(property.max, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
   this._min = clone(property.min, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
@@ -83,21 +85,21 @@ Object.defineProperties(GltfFeatureProperty.prototype, {
   },
 
   /**
-   * The element type.
+   * The type of the property.
    *
    * @memberof GltfFeatureProperty.prototype
-   * @type {GltfFeaturePropertyElementType}
+   * @type {GltfFeaturePropertyType}
    * @readonly
    * @private
    */
-  elementType: {
+  type: {
     get: function () {
-      return this._elementType;
+      return this._type;
     },
   },
 
   /**
-   * The component type.
+   * The component type of the property.
    *
    * @memberof GltfFeatureProperty.prototype
    * @type {GltfFeaturePropertyComponentType}
@@ -118,9 +120,37 @@ Object.defineProperties(GltfFeatureProperty.prototype, {
    * @readonly
    * @private
    */
-  componentsPerElement: {
+  componentCount: {
     get: function () {
-      return this._componentsPerElement;
+      return this._componentCount;
+    },
+  },
+
+  /**
+   * The byte length of all string elements.
+   *
+   * @memberof GltfFeatureProperty.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  stringByteLength: {
+    get: function () {
+      return this._stringByteLength;
+    },
+  },
+
+  /**
+   * The byte length of all blob elements.
+   *
+   * @memberof GltfFeatureProperty.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  blobByteLength: {
+    get: function () {
+      return this._blobByteLength;
     },
   },
 
