@@ -5,8 +5,8 @@
 ##### Fixes :wrench:
 
 - Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true and `tileset.show` is false. Also fixed a related issue where styles would be reapplied if the style being set is the same as the active style. [#9223](https://github.com/CesiumGS/cesium/pull/9223)
-- Updated DOMPurify from 1.0.8 to 2.2.2. [#9240](https://github.com/CesiumGS/cesium/issues/9240)
 - Fixed JSDoc and TypeScript type definitions for `EllipsoidTangentPlane.fromPoints` which didn't listed a return type. [#9227](https://github.com/CesiumGS/cesium/pull/9227)
+- Updated DOMPurify from 1.0.8 to 2.2.2. [#9240](https://github.com/CesiumGS/cesium/issues/9240)
 
 ### 1.75 - 2020-11-02
 
