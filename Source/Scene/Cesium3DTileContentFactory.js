@@ -1,5 +1,6 @@
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
+import Gltf3DTileContent from "./Gltf3DTileContent.js"; // PROPELLER HACK
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
@@ -92,10 +93,35 @@ const Cesium3DTileContentFactory = {
     const dataView = new DataView(arrayBuffer, byteOffset);
     const byteLength = dataView.getUint32(8, true);
     const glb = new Uint8Array(arrayBuffer, byteOffset, byteLength);
+<<<<<<< HEAD
     return Model3DTileContent.fromGltf(tileset, tile, resource, glb);
   },
   gltf: function (tileset, tile, resource, json) {
     return Model3DTileContent.fromGltf(tileset, tile, resource, json);
+=======
+    //// PROPELLER HACK  rolled back
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromGltf(
+        tileset,
+        tile,
+        resource,
+        glb
+      );
+    }
+    return new Gltf3DTileContent(tileset, tile, resource, glb);
+  },
+  gltf: function (tileset, tile, resource, json) {
+    //// PROPELLER HACK  rolled back
+    if (tileset.enableModelExperimental) {
+      return ModelExperimental3DTileContent.fromGltf(
+        tileset,
+        tile,
+        resource,
+        json
+      );
+    }
+    return new Gltf3DTileContent(tileset, tile, resource, json);
+>>>>>>> ab5e8839f7... All the Propeller mods in a single commit
   },
   geoJson: function (tileset, tile, resource, json) {
     return Model3DTileContent.fromGeoJson(tileset, tile, resource, json);
