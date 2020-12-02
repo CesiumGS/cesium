@@ -29,6 +29,34 @@ import CameraFlightPath from "./CameraFlightPath.js";
 import MapMode2D from "./MapMode2D.js";
 import SceneMode from "./SceneMode.js";
 
+//PROPELLER HACK
+function clampSphere(sphere, position, result) {
+  if (
+    !defined(sphere) ||
+    !defined(position) ||
+    !position ||
+    Cartesian3.equals(position, Cartesian3.ZERO)
+  ) {
+    return position;
+  }
+
+  result = Cartesian3.clone(position, result);
+  if (Cartesian3.distance(result, sphere.center) <= sphere.radius) {
+    return result;
+  }
+  var directionVector = new Cartesian3();
+  directionVector = Cartesian3.normalize(
+    Cartesian3.subtract(result, sphere.center, directionVector),
+    directionVector
+  );
+  directionVector = Cartesian3.multiplyByScalar(
+    directionVector,
+    sphere.radius,
+    directionVector
+  );
+  return Cartesian3.add(sphere.center, directionVector, result);
+}
+
 /**
  * @typedef {Object} DirectionUp
  *
@@ -85,6 +113,8 @@ function Camera(scene) {
   }
   //>>includeEnd('debug');
   this._scene = scene;
+  //PROPELLER HACK
+  this.boundingSphere = undefined;
 
   this._transform = Matrix4.clone(Matrix4.IDENTITY);
   this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
@@ -700,6 +730,14 @@ function updateMembers(camera) {
 
     // Compute the Cartographic position of the camera.
     if (mode === SceneMode.SCENE3D || mode === SceneMode.MORPHING) {
+      //PROPELLER HACK
+      if (camera.boundingSphere) {
+        clampSphere(
+          camera.boundingSphere,
+          camera._positionWC,
+          camera._positionWC
+        );
+      }
       camera._positionCartographic = camera._projection.ellipsoid.cartesianToCartographic(
         camera._positionWC,
         camera._positionCartographic
@@ -1475,7 +1513,12 @@ Camera.prototype.setView = function (options) {
     );
     convert = false;
   }
-
+  //PROPELLER HACK
+  if (typeof destination !== "undefined") {
+    if (this.boundingSphere) {
+      clampSphere(this.boundingSphere, destination, destination);
+    }
+  }
   if (defined(orientation.direction)) {
     orientation = directionUpToHeadingPitchRoll(
       this,

@@ -1263,7 +1263,7 @@ function createTypeScriptDefinitions() {
 
   // Wrap the source to actually be inside of a declared cesium module
   // and add any workaround and private utility types.
-  source = `declare module "cesium" {
+  source = `declare module "@propelleraero/cesium" {
 ${source}
 }
 
@@ -1280,7 +1280,7 @@ ${source}
     const assignmentName = path.basename(file, path.extname(file));
     if (publicModules.has(assignmentName)) {
       publicModules.delete(assignmentName);
-      source += `declare module "cesium/Source/${moduleId}" { import { ${assignmentName} } from 'cesium'; export default ${assignmentName}; }\n`;
+      source += `declare module "@propelleraero/cesium/Source/${moduleId}" { import { ${assignmentName} } from '@propelleraero/cesium'; export default ${assignmentName}; }\n`;
     }
   });
 

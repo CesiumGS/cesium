@@ -3,6 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Event from "../Core/Event.js";
 
 /**
  * A collection of primitives.  This is most often used with {@link Scene#primitives},
@@ -31,6 +32,8 @@ function PrimitiveCollection(options) {
 
   this._primitives = [];
   this._guid = createGuid();
+  this._primitiveAdded = new Event();
+  this._primitiveRemoved = new Event();
 
   // Used by the OrderedGroundPrimitiveCollection
   this._zIndex = undefined;
@@ -84,6 +87,32 @@ Object.defineProperties(PrimitiveCollection.prototype, {
       return this._primitives.length;
     },
   },
+
+  /**
+   * An event that is raised when a primitive is added to the collection.
+   * Event handlers are passed the primitive that was added.
+   * @memberof PrimitiveCollection.prototype
+   * @type {Event}
+   * @readonly
+   */
+  primitiveAdded: {
+    get: function () {
+      return this._primitiveAdded;
+    },
+  },
+
+  /**
+   * An event that is raised when a primitive is removed from the collection.
+   * Event handlers are passed the primitive that was removed.
+   * @memberof PrimitiveCollection.prototype
+   * @type {Event}
+   * @readonly
+   */
+  primitiveRemoved: {
+    get: function () {
+      return this._primitiveRemoved;
+    },
+  },
 });
 
 /**
@@ -128,6 +157,8 @@ PrimitiveCollection.prototype.add = function (primitive, index) {
     this._primitives.splice(index, 0, primitive);
   }
 
+  this._primitiveAdded.raiseEvent(primitive);
+
   return primitive;
 };
 
@@ -158,6 +189,8 @@ PrimitiveCollection.prototype.remove = function (primitive) {
       if (this.destroyPrimitives) {
         primitive.destroy();
       }
+
+      this._primitiveRemoved.raiseEvent(primitive);
 
       return true;
     }
@@ -191,6 +224,7 @@ PrimitiveCollection.prototype.removeAll = function () {
   const length = primitives.length;
   for (let i = 0; i < length; ++i) {
     delete primitives[i]._external._composites[this._guid];
+    this._primitiveRemoved.raiseEvent(primitives[i]);
     if (this.destroyPrimitives) {
       primitives[i].destroy();
     }

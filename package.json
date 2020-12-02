@@ -1,7 +1,7 @@
 {
-  "name": "cesium",
-  "version": "1.96.0",
-  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "name": "@propelleraero/cesium",
+  "version": "1.96.2",
+  "description": "Propeller fork of Cesium",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
   "author": {
@@ -37,11 +37,12 @@
     ".": {
       "require": "./index.cjs",
       "import": "./Source/Cesium.js"
-    }
+    },
+    "./Source/Scene/CameraFlightPath": "./Source/Scene/CameraFlightPath.js"
   },
   "type": "module",
   "dependencies": {
-    "@zip.js/zip.js": "^2.3.12",
+    "@zip.js/zip.js": "2.4.x",
     "autolinker": "^3.14.3",
     "bitmap-sdf": "^1.0.3",
     "dompurify": "^2.2.2",
@@ -122,6 +123,9 @@
   },
   "scripts": {
     "prepare": "gulp prepare && husky install",
+    "codeship:decrypt": "./deployment/crypto.sh decrypt ./deployment/encrypted ./deployment/secrets",
+    "codeship:encrypt": "./deployment/crypto.sh encrypt ./deployment/secrets ./deployment/encrypted",
+    "convertToModules": "gulp convertToModules",
     "start": "node server.cjs",
     "start-public": "node server.cjs --public",
     "build": "gulp build",

@@ -39,9 +39,12 @@ Source/ThirdParty/Workers/z-worker-pako.js
 npm-debug.log
 npm-debug.log.*
 package-lock.json
-yarn.lock
 
 # WebStorm user-specific
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/shelf
+
+# Codeship
+deployment/secrets
+*.aes

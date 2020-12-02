@@ -1,0 +1,22 @@
+builder:
+  encrypted_env_file: deployment/encrypted/build_args.sec
+  volumes:
+    - ./Build:/build/Build
+    - ./Source:/build/Source
+  build:
+    dockerfile: deployment/Dockerfile
+    encrypted_args_file: deployment/encrypted/build_args.sec
+
+
+dockercfg-production:
+  image: codeship/aws-ecr-dockercfg-generator
+  add_docker: true
+  encrypted_dockercfg_path: deployment/encrypted/dockerhub_dockercfg.sec
+  encrypted_env_file: deployment/encrypted/deploy_creds_production.sec
+
+publisher:
+  image: 621673481476.dkr.ecr.us-east-1.amazonaws.com/deploy-tools
+  volumes:
+    - .:/code-to-deploy
+  cached: true
+  encrypted_env_file: deployment/encrypted/deploy_creds_production.sec
