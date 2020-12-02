@@ -1,0 +1,15 @@
+- name: Test
+  service: builder
+  encrypted_dockercfg_path: deployment/encrypted/dockerhub_dockercfg.sec
+  command: yarn test
+
+- name: Build
+  service: builder
+  encrypted_dockercfg_path: deployment/encrypted/dockerhub_dockercfg.sec
+  command: yarn release
+
+- name: Publish
+  tag: main
+  service: publisher
+  dockercfg_service: dockercfg-production
+  command: publish-javascript-package --git-tag-prefix propeller

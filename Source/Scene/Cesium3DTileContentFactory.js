@@ -1,5 +1,6 @@
 import Composite3DTileContent from "./Composite3DTileContent.js";
 import Geometry3DTileContent from "./Geometry3DTileContent.js";
+import Gltf3DTileContent from "./Gltf3DTileContent.js"; // PROPELLER HACK
 import Implicit3DTileContent from "./Implicit3DTileContent.js";
 import Model3DTileContent from "./Model/Model3DTileContent.js";
 import Tileset3DTileContent from "./Tileset3DTileContent.js";
