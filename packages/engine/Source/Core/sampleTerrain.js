@@ -34,7 +34,6 @@ import defined from "./defined.js";
  * const updatedPositions = await Cesium.sampleTerrain(terrainProvider, 11, positions);
  * // positions[0].height and positions[1].height have been updated.
  * // updatedPositions is just a reference to positions.
- */
 async function sampleTerrain(terrainProvider, level, positions) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("terrainProvider", terrainProvider);
@@ -51,6 +50,31 @@ async function sampleTerrain(terrainProvider, level, positions) {
 
   return doSampling(terrainProvider, level, positions);
 }
+*/
+// PROPELLER HACK
+async function sampleTerrain(
+  terrainProvider,
+  level,
+  positions,
+  failResultOnTileFail
+) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("terrainProvider", terrainProvider);
+  Check.typeOf.number("level", level);
+  Check.defined("positions", positions);
+  //>>includeEnd('debug');
+
+  // readyPromise has been deprecated; This is here for backwards compatibility
+  if (defined(terrainProvider._readyPromise)) {
+    await terrainProvider._readyPromise;
+  } else if (defined(terrainProvider.readyPromise)) {
+    await terrainProvider.readyPromise;
+  }
+
+    // PROPELLER HACK
+    return doSampling(terrainProvider, level, positions, failResultOnTileFail);
+  });
+}
 
 /**
  * @param {object[]} tileRequests The mutated list of requests, the first one will be attempted
@@ -60,7 +84,11 @@ async function sampleTerrain(terrainProvider, level, positions) {
  *
  * @private
  */
-function attemptConsumeNextQueueItem(tileRequests, results) {
+function attemptConsumeNextQueueItem(
+  tileRequests,
+  results,
+  failResultOnTileFail
+) {
   const tileRequest = tileRequests[0];
   const requestPromise = tileRequest.terrainProvider.requestTileGeometry(
     tileRequest.x,
@@ -73,9 +101,16 @@ function attemptConsumeNextQueueItem(tileRequests, results) {
     return false;
   }
 
-  const promise = requestPromise
-    .then(createInterpolateFunction(tileRequest))
-    .catch(createMarkFailedFunction(tileRequest));
+  let promise;
+  // PROPELLER HACK
+  if (failResultOnTileFail) {
+    promise = requestPromise.then(createInterpolateFunction(tileRequest));
+  } else {
+    promise = requestPromise
+      .then(createInterpolateFunction(tileRequest))
+      .catch(createMarkFailedFunction(tileRequest));
+  }
+  // END PROPELLER HACK
 
   // remove the request we've just done from the queue
   //  and add its promise result to the result list
@@ -106,7 +141,7 @@ function delay(ms) {
  *
  * @private
  */
-function drainTileRequestQueue(tileRequests, results) {
+function drainTileRequestQueue(tileRequests, results, failResultOnTileFail) {
   // nothing left to do
   if (!tileRequests.length) {
     return Promise.resolve();
@@ -115,7 +150,11 @@ function drainTileRequestQueue(tileRequests, results) {
   // consume an item from the queue, which will
   //  mutate the request and result lists, and return true if we should
   //  immediately attempt to consume the next item as well
-  const success = attemptConsumeNextQueueItem(tileRequests, results);
+  const success = attemptConsumeNextQueueItem(
+    tileRequests,
+    results,
+    failResultOnTileFail
+  );
   if (success) {
     return drainTileRequestQueue(tileRequests, results);
   }
@@ -126,7 +165,7 @@ function drainTileRequestQueue(tileRequests, results) {
   });
 }
 
-function doSampling(terrainProvider, level, positions) {
+function doSampling(terrainProvider, level, positions, failResultOnTileFail) {
   const tilingScheme = terrainProvider.tilingScheme;
 
   let i;
@@ -150,7 +189,7 @@ function doSampling(terrainProvider, level, positions) {
         level: level,
         tilingScheme: tilingScheme,
         terrainProvider: terrainProvider,
-        positions: [],
+        positions: []
       };
       tileRequestSet[key] = value;
       tileRequests.push(value);
@@ -162,7 +201,11 @@ function doSampling(terrainProvider, level, positions) {
 
   // create our list of result promises to be filled
   const tilePromises = [];
-  return drainTileRequestQueue(tileRequests, tilePromises).then(function () {
+  return drainTileRequestQueue(
+    tileRequests,
+    tilePromises,
+    failResultOnTileFail
+  ).then(function () {
     // now all the required requests have been started
     //  we just wait for them all to finish
     return Promise.all(tilePromises).then(function () {
@@ -238,7 +281,7 @@ function createInterpolateFunction(tileRequest) {
         level: tileRequest.level,
         // don't throttle this mesh creation because we've asked to sample these points;
         //  so sample them! We don't care how many tiles that is!
-        throttle: false,
+        throttle: false
       })
       .then(function () {
         // mesh has been created - so go through every position (maybe again)
