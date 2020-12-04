@@ -2,6 +2,12 @@
 
 ### 1.76 - 2020-12-01
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `EasingFunction.QUADRACTIC_IN` was deprecated and will be removed in Cesium ???. It has been replaced with `EasingFunction.QUADRATIC_IN`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+- `EasingFunction.QUADRACTIC_OUT` was deprecated and will be removed in Cesium ???. It has been replaced with `EasingFunction.QUADRATIC_OUT`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+- `EasingFunction.QUADRACTIC_IN_OUT` was deprecated and will be removed in Cesium ???. It has been replaced with `EasingFunction.QUADRATIC_IN_OUT`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+
 ##### Fixes :wrench:
 
 - Fixed an issue where tileset styles would be reapplied every frame when a tileset has a style and `tileset.preloadWhenHidden` is true and `tileset.show` is false. Also fixed a related issue where styles would be reapplied if the style being set is the same as the active style. [#9223](https://github.com/CesiumGS/cesium/pull/9223)
