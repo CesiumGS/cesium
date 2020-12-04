@@ -397,9 +397,11 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RGBA32F;
       case PixelFormat.RGB:
         return WebGLConstants.RGB32F;
-      case PixelFormat.RG:
+      case PixelFormat.LUMINANCE_ALPHA:
         return WebGLConstants.RG32F;
-      case PixelFormat.R:
+      case PixelFormat.LUMINANCE:
+        return WebGLConstants.R32F;
+      case PixelFormat.ALPHA:
         return WebGLConstants.R32F;
     }
   }
@@ -410,10 +412,40 @@ PixelFormat.toInternalFormat = function (pixelFormat, pixelDatatype, context) {
         return WebGLConstants.RGBA16F;
       case PixelFormat.RGB:
         return WebGLConstants.RGB16F;
-      case PixelFormat.RG:
+      case PixelFormat.LUMINANCE_ALPHA:
         return WebGLConstants.RG16F;
-      case PixelFormat.R:
+      case PixelFormat.LUMINANCE:
         return WebGLConstants.R16F;
+      case PixelFormat.ALPHA:
+        return WebGLConstants.R16F;
+    }
+  }
+
+  return pixelFormat;
+};
+
+/**
+ * @private
+ */
+PixelFormat.toWebGLPixelFormat = function (
+  pixelFormat,
+  pixelDatatype,
+  context
+) {
+  // WebGL 2 does not allow floating point LUMINANCE_ALPHA, LUMINANCE, or ALPHA pixel formats
+  if (
+    (pixelDatatype === PixelDatatype.FLOAT ||
+      pixelDatatype === PixelDatatype.HALF_FLOAT) &&
+    context.webgl2
+  ) {
+    if (pixelFormat === PixelFormat.LUMINANCE_ALPHA) {
+      return WebGLConstants.RG;
+    }
+    if (pixelFormat === PixelFormat.LUMINANCE) {
+      return WebGLConstants.RED;
+    }
+    if (pixelFormat === PixelFormat.ALPHA) {
+      return WebGLConstants.RED;
     }
   }
 

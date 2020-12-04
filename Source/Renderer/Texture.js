@@ -48,7 +48,11 @@ function Texture(options) {
     pixelDatatype,
     context
   );
-
+  var webGLPixelFormat = PixelFormat.toWebGLPixelFormat(
+    pixelFormat,
+    pixelDatatype,
+    context
+  );
   var isCompressed = PixelFormat.isCompressedFormat(internalFormat);
 
   //>>includeStart('debug', pragmas.debug);
@@ -224,6 +228,7 @@ function Texture(options) {
             height
           );
         }
+
         gl.texImage2D(
           textureTarget,
           0,
@@ -231,7 +236,7 @@ function Texture(options) {
           width,
           height,
           0,
-          pixelFormat,
+          webGLPixelFormat,
           PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
@@ -255,7 +260,7 @@ function Texture(options) {
               mipWidth,
               mipHeight,
               0,
-              pixelFormat,
+              webGLPixelFormat,
               PixelDatatype.toWebGLConstant(pixelDatatype, context),
               source.mipLevels[i]
             );
@@ -295,7 +300,7 @@ function Texture(options) {
         textureTarget,
         0,
         internalFormat,
-        pixelFormat,
+        webGLPixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
@@ -308,7 +313,7 @@ function Texture(options) {
       width,
       height,
       0,
-      pixelFormat,
+      webGLPixelFormat,
       PixelDatatype.toWebGLConstant(pixelDatatype, context),
       null
     );
@@ -339,6 +344,7 @@ function Texture(options) {
   this._texture = texture;
   this._internalFormat = internalFormat;
   this._pixelFormat = pixelFormat;
+  this._webGLPixelFormat = webGLPixelFormat;
   this._pixelDatatype = pixelDatatype;
   this._width = width;
   this._height = height;
@@ -669,6 +675,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
   var textureHeight = this._height;
   var internalFormat = this._internalFormat;
   var pixelFormat = this._pixelFormat;
+  var webGLPixelFormat = this._webGLPixelFormat;
   var pixelDatatype = this._pixelDatatype;
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
@@ -714,7 +721,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
           textureWidth,
           textureHeight,
           0,
-          pixelFormat,
+          webGLPixelFormat,
           PixelDatatype.toWebGLConstant(pixelDatatype, context),
           arrayBufferView
         );
@@ -727,7 +734,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
           target,
           0,
           internalFormat,
-          pixelFormat,
+          webGLPixelFormat,
           PixelDatatype.toWebGLConstant(pixelDatatype, context),
           source
         );
@@ -751,7 +758,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         textureWidth,
         textureHeight,
         0,
-        pixelFormat,
+        webGLPixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
         bufferView
       );
@@ -780,7 +787,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         yOffset,
         width,
         height,
-        pixelFormat,
+        webGLPixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
         arrayBufferView
       );
@@ -794,7 +801,7 @@ Texture.prototype.copyFrom = function (source, xOffset, yOffset) {
         0,
         xOffset,
         yOffset,
-        pixelFormat,
+        webGLPixelFormat,
         PixelDatatype.toWebGLConstant(pixelDatatype, context),
         source
       );
