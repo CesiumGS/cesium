@@ -40,49 +40,6 @@ var EasingFunction = {
   QUADRATIC_IN_OUT: Tween.Easing.Quadratic.InOut,
 
   /**
-   * Quadratic in.
-   *
-   * @type {EasingFunction.Callback}
-   * @constant
-   * @deprecated This enum has been deprecated and will be removed in Cesium ????. Use {@link EasingFunction.QUADRATIC_IN} instead.
-   */
-  get QUADRACTIC_IN() {
-    deprecationWarning(
-      "QUADRACTIC_IN",
-      "QUADRACTIC_IN is deprecated and will be removed in Cesium ????. Use QUADRATIC_IN instead."
-    );
-    return Tween.Easing.Quadratic.In;
-  },
-  /**
-   * Quadratic out.
-   *
-   * @type {EasingFunction.Callback}
-   * @constant
-   * @deprecated This enum has been deprecated and will be removed in Cesium ????. Use {@link EasingFunction.QUADRATIC_OUT} instead.
-   */
-  get QUADRACTIC_OUT() {
-    deprecationWarning(
-      "QUADRACTIC_OUT",
-      "QUADRACTIC_OUT is deprecated and will be removed in Cesium ????. Use QUADRATIC_OUT instead."
-    );
-    return Tween.Easing.Quadratic.Out;
-  },
-  /**
-   * Quadratic in then out.
-   *
-   * @type {EasingFunction.Callback}
-   * @constant
-   * @deprecated This enum has been deprecated and will be removed in Cesium ????. Use {@link EasingFunction.QUADRATIC_IN_OUT} instead.
-   */
-  get QUADRACTIC_IN_OUT() {
-    deprecationWarning(
-      "QUADRACTIC_IN_OUT",
-      "QUADRACTIC_IN_OUT is deprecated and will be removed in Cesium ????. Use QUADRATIC_IN_OUT instead."
-    );
-    return Tween.Easing.Quadratic.InOut;
-  },
-
-  /**
    * Cubic in.
    *
    * @type {EasingFunction.Callback}
@@ -281,6 +238,57 @@ var EasingFunction = {
   BOUNCE_IN_OUT: Tween.Easing.Bounce.InOut,
 };
 
+Object.defineProperties(EasingFunction, {
+  /**
+   * Quadratic in.
+   * @memberof EasingFunction
+   * @type {EasingFunction.Callback}
+   * @constant
+   * @deprecated This enum has been deprecated and will be removed in Cesium 1.79. Use {@link EasingFunction.QUADRATIC_IN} instead.
+   */
+  QUADRACTIC_IN: {
+    get: function () {
+      deprecationWarning(
+        "QUADRACTIC_IN",
+        "QUADRACTIC_IN is deprecated and will be removed in Cesium 1.79. Use QUADRATIC_IN instead."
+      );
+      return Tween.Easing.Quadratic.In;
+    },
+  },
+  /**
+   * Quadratic out.
+   * @memberof EasingFunction
+   * @type {EasingFunction.Callback}
+   * @constant
+   * @deprecated This enum has been deprecated and will be removed in Cesium 1.79. Use {@link EasingFunction.QUADRATIC_OUT} instead.
+   */
+  QUADRACTIC_OUT: {
+    get: function () {
+      deprecationWarning(
+        "QUADRACTIC_OUT",
+        "QUADRACTIC_OUT is deprecated and will be removed in Cesium 1.79. Use QUADRATIC_OUT instead."
+      );
+      return Tween.Easing.Quadratic.Out;
+    },
+  },
+  /**
+   * Quadratic in then out.
+   * @memberof EasingFunction
+   * @type {EasingFunction.Callback}
+   * @constant
+   * @deprecated This enum has been deprecated and will be removed in Cesium 1.79. Use {@link EasingFunction.QUADRATIC_IN_OUT} instead.
+   */
+  QUADRACTIC_IN_OUT: {
+    get: function () {
+      deprecationWarning(
+        "QUADRACTIC_IN_OUT",
+        "QUADRACTIC_IN_OUT is deprecated and will be removed in Cesium 1.79. Use QUADRATIC_IN_OUT instead."
+      );
+      return Tween.Easing.Quadratic.InOut;
+    },
+  },
+});
+
 /**
  * Function interface for implementing a custom easing function.
  * @callback EasingFunction.Callback
@@ -297,4 +305,5 @@ var EasingFunction = {
  *     return time * (2.0 - time);
  * }
  */
+
 export default Object.freeze(EasingFunction);
