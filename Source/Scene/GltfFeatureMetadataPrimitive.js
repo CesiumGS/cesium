@@ -1,20 +1,20 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
-import GltfFeatureAttributeMapping from "./GltfFeatureAttributeMapping.js";
-import GltfFeatureTextureMapping from "./GltfFeatureTextureMapping.js";
+import GltfFeatureIdAttribute from "./GltfFeatureIdAttribute.js";
+import GltfFeatureIdTexture from "./GltfFeatureIdTexture.js";
 import when from "../ThirdParty/when.js";
 import defined from "../Core/defined.js";
 
 /**
- * A primitive contain feature mappings.
+ * A primitive with the feature metadata extension.
  *
  * @param {Object} options Object with the following properties:
  * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {Object} options.primitive The primitive JSON object from the glTF.
  * @param {GltfFeatureTable[]} options.featureTables An array of feature tables.
  * @param {Number} options.meshId The mesh ID.
- * @param {Number} options.primitive The primitive ID.
+ * @param {Number} options.primitiveId The primitive ID.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
  * @alias GltfFeatureMetadataPrimitive
@@ -40,81 +40,49 @@ function GltfFeatureMetadataPrimitive(options) {
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
-  var i;
-  var featureMapping;
-  var featureTable;
-
   var featureMetadataExtension = primitive.extensions.EXT_feature_metadata;
-  var featureMappings = featureMetadataExtension.featureMappings;
-  var featureMappingsLength = featureMappings.length;
-  var featureAttributeMappings = new Array(featureMappingsLength);
-  for (i = 0; i < featureMappingsLength; ++i) {
-    featureMapping = featureMappings[i];
-    featureTable = featureTables[featureMapping.featureTable];
-    featureAttributeMappings[i] = new GltfFeatureAttributeMapping({
+  var featureIdAttributes = featureMetadataExtension.featureIdAttributes;
+  var featureIdTextures = featureMetadataExtension.featureIdTextures;
+
+  featureIdAttributes = defined(featureIdAttributes) ? featureIdAttributes : [];
+  featureIdTextures = defined(featureIdTextures) ? featureIdTextures : [];
+
+  featureIdAttributes = featureIdAttributes.map(function (featureIdAttribute) {
+    return new GltfFeatureIdAttribute({
       gltfContainer: gltfContainer,
       primitive: primitive,
-      featureMapping: featureMapping,
-      featureTable: featureTable,
+      featureIdAttribute: featureIdAttribute,
+      featureTable: featureTables[featureIdAttribute.featureTable],
       cache: cache,
     });
-  }
-
-  var featureTextureMappings = [];
-  var material = primitive.material;
-  if (
-    defined(material) &&
-    defined(material.extensions) &&
-    defined(material.extensions.EXT_feature_metadata)
-  ) {
-    var textures = material.extensions.EXT_feature_metadata.textures;
-    var texturesLength = textures.length;
-    for (i = 0; i < texturesLength; ++i) {
-      var textureInfo = textures[i];
-      var textureIndex = textureInfo.index;
-      var texture = gltfContainer.gltf.textures[textureIndex];
-      featureMetadataExtension = texture.extensions.EXT_feature_metadata;
-      featureMappings = featureMetadataExtension.featureMappings;
-      featureMappingsLength = featureMappings.length;
-      for (var j = 0; j < featureMappingsLength; ++j) {
-        featureMapping = featureMappings[j];
-        featureTable = featureTables[featureMapping.featureTable];
-        featureTextureMappings.push(
-          new GltfFeatureTextureMapping({
-            gltfContainer: gltfContainer,
-            texture: texture,
-            textureId: textureIndex,
-            textureInfo: textureInfo,
-            featureMapping: featureMapping,
-            featureTable: featureTable,
-            cache: cache,
-          })
-        );
-      }
-    }
-  }
-
-  var attributePromises = featureAttributeMappings.map(function (
-    featureAttributeMapping
-  ) {
-    return featureAttributeMapping.readyPromise;
   });
 
-  var texturePromises = featureTextureMappings.map(function (
-    featureTextureMapping
-  ) {
-    return featureTextureMapping.readyPromise;
+  featureIdTextures = featureIdTextures.map(function (featureIdTexture) {
+    return new GltfFeatureIdTexture({
+      gltfContainer: gltfContainer,
+      featureIdTexture: featureIdTexture,
+      featureTable: featureTables[featureIdTexture.featureTable],
+      cache: cache,
+    });
   });
 
-  var promises = attributePromises.concat(texturePromises);
+  var promises = [];
+  featureIdAttributes.forEach(function (featureIdAttribute) {
+    promises.push(featureIdAttribute.readyPromise);
+  });
+  featureIdTextures.forEach(function (featureIdTexture) {
+    promises.push(featureIdTexture.readyPromise);
+  });
+
+  // TODO: support feature textures
 
   var that = this;
   var readyPromise = when.all(promises).then(function () {
     return that;
   });
 
-  this._featureAttributeMappings = featureAttributeMappings;
-  this._featureTextureMappings = featureTextureMappings;
+  this._featureIdAttributes = featureIdAttributes;
+  this._featureIdTextures = featureIdTextures;
   this._meshId = meshId;
   this._primitiveId = primitiveId;
   this._readyPromise = readyPromise;
@@ -122,30 +90,30 @@ function GltfFeatureMetadataPrimitive(options) {
 
 Object.defineProperties(GltfFeatureMetadataPrimitive.prototype, {
   /**
-   * Feature attribute mappings.
+   * Feature ID attributes.
    *
    * @memberof GltfFeatureMetadataPrimitive.prototype
-   * @type {GltfFeatureAttributeMapping[]}
+   * @type {GltfFeatureIdAttribute[]}
    * @readonly
    * @private
    */
-  featureAttributeMappings: {
+  featureIdAttributes: {
     get: function () {
-      return this._featureAttributeMappings;
+      return this._featureIdAttributes;
     },
   },
 
   /**
-   * Feature texture mappings.
+   * Feature ID textures.
    *
    * @memberof GltfFeatureMetadataPrimitive.prototype
-   * @type {GltfFeatureTextureMapping[]}
+   * @type {GltfFeatureIdTexture[]}
    * @readonly
    * @private
    */
-  featureTextureMappings: {
+  featureIdTextures: {
     get: function () {
-      return this._featureTextureMappings;
+      return this._featureIdTextures;
     },
   },
 
@@ -195,11 +163,11 @@ GltfFeatureMetadataPrimitive.prototype.isDestroyed = function () {
  * @private
  */
 GltfFeatureMetadataPrimitive.prototype.destroy = function () {
-  this._featureAttributeMappings.forEach(function (featureAttributeMapping) {
-    featureAttributeMapping.destroy();
+  this._featureIdAttributes.forEach(function (featureIdAttribute) {
+    featureIdAttribute.destroy();
   });
-  this._featureTextureMappings.forEach(function (featureTextureMappings) {
-    featureTextureMappings.destroy();
+  this._featureIdTextures.forEach(function (featureIdTexture) {
+    featureIdTexture.destroy();
   });
 
   return destroyObject(this);

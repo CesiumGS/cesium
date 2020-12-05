@@ -4,7 +4,7 @@ import ComponentDatatype from "../Core/ComponentDatatype.js";
  * An enum describing component types of a feature property.
  *
  * @exports GltfFeaturePropertyComponentType
-
+ *
  * @private
  */
 var GltfFeaturePropertyComponentType = {
@@ -20,6 +20,8 @@ var GltfFeaturePropertyComponentType = {
   FLOAT16: "FLOAT16",
   FLOAT32: "FLOAT32",
   FLOAT64: "FLOAT64",
+  BLOB: "BLOB",
+  STRING: "STRING",
 };
 
 /**

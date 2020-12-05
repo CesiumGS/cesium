@@ -12,7 +12,7 @@ import GltfFeatureTableProperty from "./GltfFeatureTableProperty.js";
  * @param {GltfContainer} options.gltfContainer The glTF container.
  * @param {String} options.id The ID of the feature table.
  * @param {Object} options.featureTable The feature table JSON object from the glTF.
- * @param {GltfFeatureClass} options.featureClass The feature class.
+ * @param {GltfFeatureClass} options.class The class.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
  * @alias GltfFeatureTable
@@ -25,27 +25,31 @@ function GltfFeatureTable(options) {
   var gltfContainer = options.gltfContainer;
   var id = options.id;
   var featureTable = options.featureTable;
-  var featureClass = options.featureClass;
+  var classDefinition = options.class;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfContainer", gltfContainer);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.featureTable", featureTable);
-  Check.typeOf.object("options.featureClass", featureClass);
+  Check.typeOf.object("options.class", classDefinition);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
   var properties = {};
   var promises = [];
 
+  var count = featureTable.count;
+  var elementCount = defaultValue(featureTable.elementCount, count);
+
   for (var propertyId in featureTable.properties) {
     if (featureTable.properties.hasOwnProperty(propertyId)) {
       var property = new GltfFeatureTableProperty({
         gltfContainer: gltfContainer,
-        featureTable: this,
+        elementCount: elementCount,
         id: propertyId,
         property: featureTable.properties[propertyId],
+        propertyDefinition: classDefinition.properties[propertyId],
         cache: cache,
       });
       properties[propertyId] = property;
@@ -58,32 +62,29 @@ function GltfFeatureTable(options) {
     return that;
   });
 
-  var featureCount = featureTable.featureCount;
-  var elementCount = defaultValue(featureTable.elementCount, featureCount);
-
-  this._featureClass = featureClass;
+  this._class = classDefinition;
   this._properties = properties;
-  this._featureCount = featureCount;
+  this._count = count;
   this._elementCount = elementCount;
   this._id = id;
   this._name = featureTable.name;
   this._description = featureTable.description;
-  this._extras = clone(featureTable.extras, true); // Clone so that this object doesn't hold on to a reference to the gltf JSON
+  this._extras = clone(featureTable.extras, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
   this._readyPromise = readyPromise;
 }
 
 Object.defineProperties(GltfFeatureTable.prototype, {
   /**
-   * The feature class.
+   * The class.
    *
    * @memberof GltfFeatureTable.prototype
    * @type {GltfFeatureClass}
    * @readonly
    * @private
    */
-  featureClass: {
+  class: {
     get: function () {
-      return this._featureClass;
+      return this._class;
     },
   },
 
@@ -109,9 +110,9 @@ Object.defineProperties(GltfFeatureTable.prototype, {
    * @readonly
    * @private
    */
-  featureCount: {
+  count: {
     get: function () {
-      return this._featureCount;
+      return this._count;
     },
   },
 
@@ -125,7 +126,7 @@ Object.defineProperties(GltfFeatureTable.prototype, {
    */
   elementCount: {
     get: function () {
-      return this._featureCount;
+      return this._elementCount;
     },
   },
 
@@ -154,6 +155,20 @@ Object.defineProperties(GltfFeatureTable.prototype, {
   name: {
     get: function () {
       return this._name;
+    },
+  },
+
+  /**
+   * The description of the feature table.
+   *
+   * @memberof GltfFeatureTable.prototype
+   * @type {String}
+   * @readonly
+   * @private
+   */
+  description: {
+    get: function () {
+      return this._description;
     },
   },
 

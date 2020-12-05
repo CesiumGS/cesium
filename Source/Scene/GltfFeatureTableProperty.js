@@ -7,16 +7,17 @@ import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import GltfFeatureMetadataUtility from "./GltfFeatureMetadataUtility.js";
 import GltfFeaturePropertyComponentType from "./GltfFeaturePropertyComponentType.js";
 import when from "../ThirdParty/when.js";
-import GltfFeaturePropertyElementType from "./GltfFeaturePropertyElementType.js";
+import GltfFeaturePropertyType from "./GltfFeaturePropertyType.js";
 
 /**
  * A feature table property.
  *
  * @param {Object} options Object with the following properties:
  * @param {GltfContainer} options.gltfContainer The glTF container.
- * @param {GltfFeatureTable} options.featureTable The feature table.
+ * @param {Number} options.elementCount The element count.
  * @param {String} options.id The ID of the property.
  * @param {Object} options.property The feature property JSON object from the glTF.
+ * @param {GltfFeatureProperty} options.propertyDefinition The feature property definition.
  * @param {GltfFeatureMetadataCache} options.cache The feature metadata cache.
  *
  * @alias GltfFeatureTableProperty
@@ -27,34 +28,42 @@ import GltfFeaturePropertyElementType from "./GltfFeaturePropertyElementType.js"
 function GltfFeatureTableProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfContainer = options.gltfContainer;
-  var featureTable = options.featureTable;
+  var elementCount = options.elementCount;
   var id = options.id;
   var property = options.property;
+  var propertyDefinition = options.propertyDefinition;
   var cache = options.cache;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltfContainer", gltfContainer);
-  Check.typeOf.object("options.featureTable", featureTable);
+  Check.typeOf.number("options.elementCount", elementCount);
   Check.typeOf.string("options.id", id);
   Check.typeOf.object("options.property", property);
+  Check.typeOf.object("options.propertyDefinition", propertyDefinition);
   Check.typeOf.object("options.cache", cache);
   //>>includeEnd('debug');
 
-  var that;
-  var promises = [];
-
-  var propertyClass = featureTable.featureClass.properties[id];
-  var componentType = defaultValue(
-    propertyClass.componentType,
-    GltfFeaturePropertyComponentType.UINT8
-  );
-  var componentsPerElement = propertyClass.componentsPerElement;
-  var elementCount = featureTable.elementCount;
-
-  var componentsCount = elementCount * componentsPerElement;
+  var type = propertyDefinition.type;
+  var componentType = defaultValue(propertyDefinition.componentType, type);
+  var componentCount = propertyDefinition.componentCount;
+  var numberOfComponents = elementCount * componentCount;
   var componentDatatype = GltfFeaturePropertyComponentType.getComponentDatatype(
     componentType
   );
+
+  this._elementCount = elementCount;
+  this._propertyDefinition = propertyDefinition;
+  this._bufferViewData = undefined;
+  this._bufferViewTypedArray = undefined;
+  this._bufferViewCacheItem = undefined;
+  this._offsetBufferViewTypedArrays = [];
+  this._offsetBufferViewCacheItems = [];
+  this._cache = cache;
+  this._id = id;
+  this._extras = clone(property.extras, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
+
+  var that = this;
+  var promises = [];
 
   promises.push(
     loadBufferView(
@@ -62,65 +71,76 @@ function GltfFeatureTableProperty(options) {
       cache,
       gltfContainer,
       property.bufferView,
-      componentsCount,
+      numberOfComponents,
       componentDatatype
     ).then(function (results) {
+      that._bufferViewData = results.bufferData;
       that._bufferViewTypedArray = results.typedArray;
       that._bufferViewCacheItem = results.cacheItem;
     })
   );
 
-  if (defined(property.offsetsBufferView)) {
-    var offsetsComponentDatatype = GltfFeaturePropertyComponentType.getComponentDatatype(
+  if (defined(property.offsetBufferViews)) {
+    // TODO: UINT64 and INT64 not supported unless BigUint64Array and BigInt64Array are used
+    var offsetComponentDatatype = GltfFeaturePropertyComponentType.getComponentDatatype(
       defaultValue(
-        property.offsetsComponentType,
+        property.offsetComponentType,
         GltfFeaturePropertyComponentType.UINT32
       )
     );
-    promises.push(
-      loadBufferView(
-        this,
-        cache,
-        gltfContainer,
-        property.offsetsBufferView,
-        elementCount + 1,
-        offsetsComponentDatatype
-      ).then(function (results) {
-        that._offsetsBufferViewTypedArray = results.typedArray;
-        that._offsetsBufferViewCacheItem = results.cacheItem;
-      })
-    );
+    var offsetBufferLength = elementCount + 1;
+    var offsetBufferViewsPromise = loadBufferView(
+      this,
+      cache,
+      gltfContainer,
+      property.offsetBufferViews[0],
+      offsetBufferLength,
+      offsetComponentDatatype
+    ).then(function (results) {
+      that._offsetBufferViewTypedArrays.push(results.typedArray);
+      that._offsetBufferViewCacheItems.push(results.cacheItem);
+      return results.typedArray[offsetBufferLength - 1] + 1;
+    });
+
+    if (property.offsetBufferViews.length > 1) {
+      offsetBufferViewsPromise = offsetBufferViewsPromise.then(function (
+        nextOffsetBufferLength
+      ) {
+        return loadBufferView(
+          that,
+          cache,
+          gltfContainer,
+          property.offsetBufferViews[1],
+          nextOffsetBufferLength,
+          offsetComponentDatatype
+        ).then(function (results) {
+          that._offsetBufferViewTypedArrays.push(results.typedArray);
+          that._offsetBufferViewCacheItems.push(results.cacheItem);
+        });
+      });
+    }
+    promises.push(offsetBufferViewsPromise);
   }
 
   var readyPromise = when.all(promises).then(function () {
     return that;
   });
 
-  this._featureTable = featureTable;
-  this._propertyClass = propertyClass;
-  this._bufferViewTypedArray = undefined;
-  this._bufferViewCacheItem = undefined;
-  this._offsetsBufferViewTypedArray = undefined;
-  this._offsetsBufferViewCacheItem = undefined;
-  this._cache = cache;
-  this._id = id;
-  this._elementByteLength = property.elementByteLength;
-  this._extras = clone(property.extras, true); // Clone so that this object doesn't hold on to a reference to the gltf JSON
   this._readyPromise = readyPromise;
 }
 
 Object.defineProperties(GltfFeatureTableProperty.prototype, {
   /**
-   * The property class.
+   * The property definition from the class.
    *
    * @memberof GltfFeatureTableProperty.prototype
    * @type {GltfFeatureProperty}
    * @readonly
    * @private
    */
-  propertyClass: {
+  propertyDefinition: {
     get: function () {
-      return this._propertyClass;
+      return this._propertyDefinition;
     },
   },
 
@@ -172,7 +192,7 @@ function loadBufferView(
   cache,
   gltfContainer,
   bufferViewId,
-  componentsLength,
+  numberOfComponents,
   componentDatatype
 ) {
   var gltf = gltfContainer.gltf;
@@ -193,13 +213,21 @@ function loadBufferView(
         return;
       }
       var bufferData = cacheItem.contents;
-      var typedArray = GltfFeatureMetadataUtility.getTypedArrayForBufferView(
+      var bufferViewData = GltfFeatureMetadataUtility.getBufferViewData(
         bufferView,
-        componentsLength,
-        componentDatatype,
         bufferData
       );
+      var typedArray;
+      if (defined(componentDatatype)) {
+        typedArray = GltfFeatureMetadataUtility.getTypedArrayForBufferView(
+          bufferView,
+          numberOfComponents,
+          componentDatatype,
+          bufferData
+        );
+      }
       return {
+        bufferData: bufferViewData,
         typedArray: typedArray,
         cacheItem: cacheItem,
       };
@@ -207,56 +235,26 @@ function loadBufferView(
 }
 
 GltfFeatureTableProperty.prototype.getJsonValues = function () {
-  var featureTable = this._featureTable;
-  var elementCount = featureTable.elementCount;
-  var offsetsBufferViewTypedArray = this._offsetsBufferViewTypedArray;
-  var bufferViewTypedArray = this._bufferViewTypedArray;
+  var elementCount = this._elementCount;
+  var offsetBufferViewTypedArrays = this._offsetBufferViewTypedArrays;
+  var bufferViewData = this._bufferViewData;
 
-  var propertyClass = this._propertyClass;
-  var elementType = propertyClass.elementType;
-  var componentsPerElement = propertyClass.componentsPerElement;
+  var propertyDefinition = this._propertyDefinition;
+  var type = propertyDefinition.type;
 
-  var i;
-  var j;
-  var innerArray;
   var array = new Array(elementCount);
 
-  if (elementType === GltfFeaturePropertyElementType.STRING) {
-    for (i = 0; i < elementCount; ++i) {
-      var startByte = offsetsBufferViewTypedArray[i];
-      var endByte = offsetsBufferViewTypedArray[i + 1];
+  // TODO: need to support more than just strings
+  if (type === GltfFeaturePropertyType.STRING) {
+    var offsetBufferViewTypedArray = offsetBufferViewTypedArrays[0];
+    for (var i = 0; i < elementCount; ++i) {
+      var startByte = offsetBufferViewTypedArray[i];
+      var endByte = offsetBufferViewTypedArray[i + 1];
       array[i] = getStringFromTypedArray(
-        bufferViewTypedArray,
+        bufferViewData,
         startByte,
         endByte - startByte
       );
-    }
-  } else if (elementType === GltfFeaturePropertyElementType.SCALAR) {
-    for (i = 0; i < elementCount; ++i) {
-      array[i] = bufferViewTypedArray[i];
-    }
-  } else if (elementType === GltfFeaturePropertyElementType.ARRAY) {
-    for (i = 0; i < elementCount; ++i) {
-      innerArray = new Array(componentsPerElement);
-      array[i] = innerArray;
-      for (j = 0; j < componentsPerElement; ++j) {
-        innerArray[j] = bufferViewTypedArray[i * componentsPerElement + j];
-      }
-    }
-  } else if (
-    elementType === GltfFeaturePropertyElementType.VARIABLE_SIZE_ARRAY
-  ) {
-    var componentIndex = 0;
-    for (i = 0; i < elementCount; ++i) {
-      var start = offsetsBufferViewTypedArray[i];
-      var end = offsetsBufferViewTypedArray[i + 1];
-      var componentCount = end - start;
-      innerArray = new Array(componentCount);
-      array[i] = innerArray;
-      for (j = 0; j < componentCount; ++j) {
-        innerArray[j] = bufferViewTypedArray[componentIndex + j];
-      }
-      componentIndex += componentCount;
     }
   }
 
@@ -295,15 +293,15 @@ GltfFeatureTableProperty.prototype.isDestroyed = function () {
  */
 GltfFeatureTableProperty.prototype.destroy = function () {
   var cache = this._cache;
-  var bufferViewCacheItem = this._bufferVIewCacheItem;
-  var offsetsBufferViewCacheItem = this._offsetsBufferViewCacheItem;
+  var bufferViewCacheItem = this._bufferViewCacheItem;
+  var offsetBufferViewCacheItems = this._offsetBufferViewCacheItems;
 
   if (defined(bufferViewCacheItem)) {
     cache.releaseCacheItem(bufferViewCacheItem);
   }
 
-  if (defined(offsetsBufferViewCacheItem)) {
-    cache.releaseCacheItem(offsetsBufferViewCacheItem);
+  for (var i = 0; i < offsetBufferViewCacheItems.length; i++) {
+    cache.releaseCacheItem(offsetBufferViewCacheItems[i]);
   }
 
   return destroyObject(this);

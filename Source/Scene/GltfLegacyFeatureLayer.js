@@ -105,7 +105,7 @@ function getTextureFeatureIds(
   textureAccessor,
   cache
 ) {
-  // Clone so that this object doesn't hold on to a reference to the gltf JSON
+  // Clone so that this object doesn't hold on to a reference to the glTF JSON
   textureAccessor = clone(textureAccessor, true);
 
   var textureFeatureIds = new TextureFeatureIds({

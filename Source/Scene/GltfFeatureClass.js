@@ -8,7 +8,7 @@ import GltfFeatureProperty from "./GltfFeatureProperty.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the feature class.
- * @param {Object} options.featureClass The feature class JSON object from the glTF.
+ * @param {Object} options.class The class JSON object from the glTF.
  *
  * @alias GltfFeatureClass
  * @constructor
@@ -18,33 +18,33 @@ import GltfFeatureProperty from "./GltfFeatureProperty.js";
 function GltfFeatureClass(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var id = options.id;
-  var featureClass = options.featureClass;
+  var classDefinition = options.class;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.id", id);
-  Check.typeOf.object("options.featureClass", featureClass);
+  Check.typeOf.object("options.class", classDefinition);
   //>>includeEnd('debug');
 
   var properties = {};
-  for (var propertyId in featureClass.properties) {
-    if (featureClass.properties.hasOwnProperty(propertyId)) {
+  for (var propertyId in classDefinition.properties) {
+    if (classDefinition.properties.hasOwnProperty(propertyId)) {
       properties[propertyId] = new GltfFeatureProperty({
         id: propertyId,
-        property: featureClass.properties[propertyId],
+        property: classDefinition.properties[propertyId],
       });
     }
   }
 
   this._properties = properties;
   this._id = id;
-  this._name = featureClass.name;
-  this._description = featureClass.description;
-  this._extras = clone(featureClass.extras, true); // Clone so that this object doesn't hold on to a reference to the gltf JSON
+  this._name = classDefinition.name;
+  this._description = classDefinition.description;
+  this._extras = clone(classDefinition.extras, true); // Clone so that this object doesn't hold on to a reference to the glTF JSON
 }
 
 Object.defineProperties(GltfFeatureClass.prototype, {
   /**
-   * The feature class properties.
+   * The class properties.
    *
    * @memberof GltfFeatureClass.prototype
    * @type {Object.<String, GltfFeatureProperty>}
@@ -58,7 +58,7 @@ Object.defineProperties(GltfFeatureClass.prototype, {
   },
 
   /**
-   * The ID of the feature class.
+   * The ID of the class.
    *
    * @memberof GltfFeatureClass.prototype
    * @type {String}
@@ -72,7 +72,7 @@ Object.defineProperties(GltfFeatureClass.prototype, {
   },
 
   /**
-   * The name of the feature class.
+   * The name of the class.
    *
    * @memberof GltfFeatureClass.prototype
    * @type {String}
@@ -86,7 +86,7 @@ Object.defineProperties(GltfFeatureClass.prototype, {
   },
 
   /**
-   * The description of the feature class.
+   * The description of the class.
    *
    * @memberof GltfFeatureClass.prototype
    * @type {String}
@@ -100,7 +100,7 @@ Object.defineProperties(GltfFeatureClass.prototype, {
   },
 
   /**
-   * Extras in the feature class JSON object from the glTF.
+   * Extras in the class JSON object from the glTF.
    *
    * @memberof GltfFeatureClass.prototype
    * @type {*}

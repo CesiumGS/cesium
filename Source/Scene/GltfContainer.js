@@ -110,7 +110,7 @@ Object.defineProperties(GltfContainer.prototype, {
   },
 
   /**
-   * The gltf JSON object.
+   * The glTF JSON object.
    *
    * @memberof GltfContainer.prototype
    * @type {Object}

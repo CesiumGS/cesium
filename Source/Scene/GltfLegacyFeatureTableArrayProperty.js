@@ -41,9 +41,21 @@ function GltfLegacyFeatureTableArrayProperty(options) {
   var type = defaultValue(array.type, "any");
   var external = array.external;
 
-  var readyPromise;
+  // Clone so that this object doesn't hold on to a reference to the glTF JSON
+  var values = clone(array.values, true);
+  var extras = clone(property.extras, true);
+
+  this._values = values;
+  this._cache = cache;
+  this._cacheItem = undefined;
+  this._name = name;
+  this._semantic = property.semantic;
+  this._type = GltfLegacyFeatureTablePropertyType.getTypeFromArrayType(type);
+  this._extras = extras;
 
   var that = this;
+  var readyPromise;
+
   if (defined(external)) {
     readyPromise = cache
       .getJson({
@@ -66,17 +78,6 @@ function GltfLegacyFeatureTableArrayProperty(options) {
     readyPromise = when.resolve(this);
   }
 
-  // Clone so that this object doesn't hold on to a reference to the gltf JSON
-  var values = clone(array.values, true);
-  var extras = clone(property.extras, true);
-
-  this._values = values;
-  this._cache = cache;
-  this._cacheItem = undefined;
-  this._name = name;
-  this._semantic = property.semantic;
-  this._type = GltfLegacyFeatureTablePropertyType.getTypeFromArrayType(type);
-  this._extras = extras;
   this._readyPromise = readyPromise;
 }
 
