@@ -419,6 +419,16 @@ describe("DataSources/GeoJsonDataSource", function () {
     });
   });
 
+  it("Adds a feature without removing existing entities", function () {
+    var dataSource = new GeoJsonDataSource();
+    return dataSource.load(feature).then(function () {
+      return dataSource.process(mixedGeometries).then(function () {
+        // `feature` has one Entity, `mixedGeometries` has 3
+        expect(dataSource.entities.values.length).toBe(4);
+      });
+    });
+  });
+
   it("Creates default description from properties", function () {
     const featureWithProperties = {
       type: "Feature",

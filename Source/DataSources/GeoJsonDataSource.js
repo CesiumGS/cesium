@@ -553,7 +553,7 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
 /**
  * @typedef {Object} GeoJsonDataSource.LoadOptions
  *
- * Initialization options for the `load` method.
+ * Initialization options for the <code>load</code> method.
  *
  * @property {String} [sourceUri] Overrides the url to use for resolving relative links.
  * @property {Number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
@@ -886,29 +886,34 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
  * Asynchronously loads the provided GeoJSON or TopoJSON data, replacing any existing data.
  *
  * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
- * @param {Object} [options] An object with the following properties:
- * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
- * @param {GeoJsonDataSource.describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
- *                                                                                which converts the properties into an html description.
- * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
- * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
- * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
- * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
- * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
- * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
- * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
  *
  * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
  */
 GeoJsonDataSource.prototype.load = function (data, options) {
+  return preload(this, data, options, true);
+};
+
+/**
+ * Asynchronously loads the provided GeoJSON or TopoJSON data, without replacing any existing data.
+ *
+ * @param {Resource|String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
+ * @param {GeoJsonDataSource.LoadOptions} [options] An object specifying configuration options
+ *
+ * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
+ */
+GeoJsonDataSource.prototype.process = function (data, options) {
+  return preload(this, data, options, false);
+};
+
+function preload(that, data, options, clear) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(data)) {
     throw new DeveloperError("data is required.");
   }
   //>>includeEnd('debug');
 
-  DataSource.setLoading(this, true);
+  DataSource.setLoading(that, true);
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   // User specified credit
@@ -916,7 +921,7 @@ GeoJsonDataSource.prototype.load = function (data, options) {
   if (typeof credit === "string") {
     credit = new Credit(credit);
   }
-  this._credit = credit;
+  that._credit = credit;
 
   let promise = data;
   let sourceUri = options.sourceUri;
@@ -926,8 +931,8 @@ GeoJsonDataSource.prototype.load = function (data, options) {
     sourceUri = defaultValue(sourceUri, data.getUrlComponent());
 
     // Add resource credits to our list of credits to display
-    const resourceCredits = this._resourceCredits;
-    const credits = data.credits;
+    var resourceCredits = that._resourceCredits;
+    var credits = data.credits;
     if (defined(credits)) {
       const length = credits.length;
       for (let i = 0; i < length; i++) {
@@ -955,14 +960,14 @@ GeoJsonDataSource.prototype.load = function (data, options) {
 
   const that = this;
   return when(promise, function (geoJson) {
-    return load(that, geoJson, options, sourceUri);
+    return load(that, geoJson, options, sourceUri, clear);
   }).otherwise(function (error) {
     DataSource.setLoading(that, false);
     that._error.raiseEvent(that, error);
     console.log(error);
     return when.reject(error);
   });
-};
+}
 
 /**
  * Updates the data source to the provided time.  This function is optional and
@@ -977,8 +982,8 @@ GeoJsonDataSource.prototype.update = function (time) {
   return true;
 };
 
-function load(that, geoJson, options, sourceUri) {
-  let name;
+function load(that, geoJson, options, sourceUri, clear) {
+  var name;
   if (defined(sourceUri)) {
     name = getFilenameFromUri(sourceUri);
   }
@@ -1032,7 +1037,9 @@ function load(that, geoJson, options, sourceUri) {
   }
 
   return when(crsFunction, function (crsFunction) {
-    that._entityCollection.removeAll();
+    if (clear) {
+      that._entityCollection.removeAll();
+    }
 
     // null is a valid value for the crs, but means the entire load process becomes a no-op
     // because we can't assume anything about the coordinates.
