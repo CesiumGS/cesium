@@ -4985,10 +4985,23 @@ Object.defineProperties(CzmlDataSource.prototype, {
   },
 });
 
+// TODO: typedef for Packet (and about a hundred other things)
+/**
+ * @callback CzmlDataSource.UpdaterFunction
+ *
+ * A CZML processing function that adds or updates entities in the provided
+ * collection based on the provided CZML packet.
+ *
+ * @param {Entity} entity
+ * @param {Object} packet
+ * @param {EntityCollection} entityCollection
+ * @param {string} sourceUri
+ */
+
 /**
  * Gets the array of CZML processing functions.
  * @memberof CzmlDataSource
- * @type Array
+ * @type {Array.<CzmlDataSource.UpdaterFunction>}
  */
 CzmlDataSource.updaters = [
   processBillboard, //
