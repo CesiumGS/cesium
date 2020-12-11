@@ -46,7 +46,7 @@
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
     "eslint": "^7.5.0",
-    "eslint-config-prettier": "^6.10.1",
+    "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
     "globby": "^11.0.0",
@@ -68,7 +68,7 @@
     "karma-coverage-istanbul-instrumenter": "^1.0.1",
     "karma-detect-browsers": "^2.2.3",
     "karma-edge-launcher": "^0.4.2",
-    "karma-firefox-launcher": "^1.0.0",
+    "karma-firefox-launcher": "^2.1.0",
     "karma-ie-launcher": "^1.0.0",
     "karma-jasmine": "^4.0.1",
     "karma-longest-reporter": "^1.1.0",
@@ -88,7 +88,7 @@
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
-    "typescript": "^3.9.2",
+    "typescript": "^4.1.2",
     "yargs": "^16.0.3"
   },
   "husky": {
