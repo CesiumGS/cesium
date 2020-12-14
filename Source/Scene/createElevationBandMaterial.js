@@ -39,53 +39,55 @@ function createNewEntry(height, color) {
   };
 }
 
-function removeDuplicateColors(entries) {
+function removeDuplicates(entries) {
   // expects entries to be sorted from lowest to highest
-  return entries.filter(function (entry, index, array) {
+
+  // Remove entries that have the same height as before and after
+  entries = entries.filter(function (entry, index, array) {
     var hasPrev = index > 0;
     var hasNext = index < array.length - 1;
+
+    var sameHeightAsPrev = hasPrev
+      ? entry.height === array[index - 1].height
+      : true;
+    var sameHeightAsNext = hasNext
+      ? entry.height === array[index + 1].height
+      : true;
+
+    var keep = !sameHeightAsPrev || !sameHeightAsNext;
+    return keep;
+  });
+
+  // Remove entries that have the same color as before and after.
+  // Also remove the entry if it has the same height AND color as
+  // the entry before or the entry after.
+  entries = entries.filter(function (entry, index, array) {
+    var hasPrev = index > 0;
+    var hasNext = index < array.length - 1;
+
     var sameColorAsPrev = hasPrev
       ? Color.equals(entry.color, array[index - 1].color)
       : false;
     var sameColorAsNext = hasNext
       ? Color.equals(entry.color, array[index + 1].color)
       : false;
-    var keep = !(sameColorAsPrev && sameColorAsNext);
-    return keep;
-  });
-}
-function removeDuplicateHeights(entries) {
-  // expects entries to be sorted from lowest to highest
-  var downwardEdgeIdx = 0;
 
-  return entries.filter(function (entry, index, array) {
-    var hasPrev = index > 0;
-    var hasNext = index < array.length - 1;
-
-    var sameColorAsDownwardEdge = Color.equals(
-      entry.color,
-      array[downwardEdgeIdx].color
-    );
     var sameHeightAsPrev = hasPrev
       ? entry.height === array[index - 1].height
-      : false;
+      : true;
     var sameHeightAsNext = hasNext
       ? entry.height === array[index + 1].height
-      : false;
+      : true;
 
-    if (!sameHeightAsPrev && sameHeightAsNext) {
-      downwardEdgeIdx = index;
-    }
-
-    // throw away if entry is same height as previous
-    // One exception: If entry is end edge and different color than start edge, keep it.
-    // For example: RRGG=0,GG=1 becomes RG=0,G=1
     var keep = !(
-      sameHeightAsPrev &&
-      (sameHeightAsNext || !hasNext || sameColorAsDownwardEdge)
+      (sameColorAsPrev && sameColorAsNext) ||
+      (sameColorAsPrev && sameHeightAsPrev) ||
+      (sameColorAsNext && sameHeightAsNext)
     );
     return keep;
   });
+
+  return entries;
 }
 
 function preprocess(layers) {
@@ -185,8 +187,7 @@ function preprocess(layers) {
       );
     }
 
-    entries = removeDuplicateHeights(entries);
-    entries = removeDuplicateColors(entries);
+    entries = removeDuplicates(entries);
 
     layeredEntries.push(entries);
   }
@@ -194,71 +195,7 @@ function preprocess(layers) {
   return layeredEntries;
 }
 
-/**
- * @typedef {Object} createElevationBandMaterial~ElevationEntry
- *
- * @property {Number} height The height.
- * @property {Color} color The color at this height.
- */
-
-/**
- * @typedef {Object} createElevationBandMaterial~ElevationBand
- *
- * @property {createElevationBandMaterial~ElevationEntry[]} entries A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
- * @property {Boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
- * @property {Boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
- */
-
-/**
- * Creates a {@link Material} that combines multiple layers of color/gradient bands and maps them to terrain heights.
- *
- * The shader does a binary search over all the heights to find out which colors are above and below a given height, and
- * interpolates between them for the final color. This material supports hundreds of entries relatively cheaply.
- *
- * @exports createElevationBandMaterial
- *
- * @param {Object} options Object with the following properties:
- * @param {Scene} options.scene The scene where the visualization is taking place.
- * @param {createElevationBandMaterial~ElevationBand[]} options.layers A list of bands ordered from lowest to highest precedence.
- * @returns {Material} A new {@link Material} instance.
- *
- * @demo {@link https://sandcastle.cesium.com/index.html?src=Elevation%20Band%20Material.html|Cesium Sandcastle Elevation Band Demo}
- *
- * @example
- * scene.globe.material = Cesium.createElevationBandMaterial({
- *     scene : scene,
- *     layers : [{
- *         entries : [{
- *             height : 4200.0,
- *             color : new Cesium.Color(0.0, 0.0, 0.0, 1.0)
- *         }, {
- *             height : 8848.0,
- *             color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
- *         }],
- *         extendDownwards : true,
- *         extendUpwards : true,
- *     }, {
- *         entries : [{
- *             height : 7000.0,
- *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
- *         }, {
- *             height : 7100.0,
- *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
- *         }]
- *     }]
- * });
- */
-function createElevationBandMaterial(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var scene = options.scene;
-  var layers = options.layers;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.scene", scene);
-  Check.defined("options.layers", layers);
-  Check.typeOf.number.greaterThan("options.layers.length", layers.length, 0);
-  //>>includeEnd('debug');
-
+function createLayeredEntries(layers) {
   // clean up the input data and check for errors
   var layeredEntries = preprocess(layers);
 
@@ -454,8 +391,78 @@ function createElevationBandMaterial(options) {
   }
 
   // one final cleanup pass in case duplicate colors show up in the final result
-  var allEntries = removeDuplicateColors(entriesAccumNext);
-  var allEntriesLength = allEntries.length;
+  var allEntries = removeDuplicates(entriesAccumNext);
+  return allEntries;
+}
+
+/**
+ * @typedef {Object} createElevationBandMaterial~ElevationEntry
+ *
+ * @property {Number} height The height.
+ * @property {Color} color The color at this height.
+ */
+
+/**
+ * @typedef {Object} createElevationBandMaterial~ElevationBand
+ *
+ * @property {createElevationBandMaterial~ElevationEntry[]} entries A list of elevation entries. They will automatically be sorted from lowest to highest. If there is only one entry and <code>extendsDownards</code> and <code>extendUpwards</code> are both <code>false</code>, they will both be set to <code>true</code>.
+ * @property {Boolean} [extendDownwards=false] If <code>true</code>, the band's minimum elevation color will extend infinitely downwards.
+ * @property {Boolean} [extendUpwards=false] If <code>true</code>, the band's maximum elevation color will extend infinitely upwards.
+ */
+
+/**
+ * Creates a {@link Material} that combines multiple layers of color/gradient bands and maps them to terrain heights.
+ *
+ * The shader does a binary search over all the heights to find out which colors are above and below a given height, and
+ * interpolates between them for the final color. This material supports hundreds of entries relatively cheaply.
+ *
+ * @exports createElevationBandMaterial
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Scene} options.scene The scene where the visualization is taking place.
+ * @param {createElevationBandMaterial~ElevationBand[]} options.layers A list of bands ordered from lowest to highest precedence.
+ * @returns {Material} A new {@link Material} instance.
+ *
+ * @demo {@link https://sandcastle.cesium.com/index.html?src=Elevation%20Band%20Material.html|Cesium Sandcastle Elevation Band Demo}
+ *
+ * @example
+ * scene.globe.material = Cesium.createElevationBandMaterial({
+ *     scene : scene,
+ *     layers : [{
+ *         entries : [{
+ *             height : 4200.0,
+ *             color : new Cesium.Color(0.0, 0.0, 0.0, 1.0)
+ *         }, {
+ *             height : 8848.0,
+ *             color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
+ *         }],
+ *         extendDownwards : true,
+ *         extendUpwards : true,
+ *     }, {
+ *         entries : [{
+ *             height : 7000.0,
+ *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+ *         }, {
+ *             height : 7100.0,
+ *             color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+ *         }]
+ *     }]
+ * });
+ */
+function createElevationBandMaterial(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var scene = options.scene;
+  var layers = options.layers;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.scene", scene);
+  Check.defined("options.layers", layers);
+  Check.typeOf.number.greaterThan("options.layers.length", layers.length, 0);
+  //>>includeEnd('debug');
+
+  var entries = createLayeredEntries(layers);
+  var entriesLength = entries.length;
+  var i;
 
   var heightsArray;
   var heightTexDatatype;
@@ -468,18 +475,18 @@ function createElevationBandMaterial(options) {
     heightTexDatatype = PixelDatatype.UNSIGNED_BYTE;
     heightTexFormat = PixelFormat.RGBA;
 
-    heightsArray = new Uint8Array(allEntriesLength * 4);
-    for (i = 0; i < allEntriesLength; i++) {
-      Cartesian4.packFloat(allEntries[i].height, scratchPackedFloat);
+    heightsArray = new Uint8Array(entriesLength * 4);
+    for (i = 0; i < entriesLength; i++) {
+      Cartesian4.packFloat(entries[i].height, scratchPackedFloat);
       Cartesian4.pack(scratchPackedFloat, heightsArray, i * 4);
     }
   } else {
     heightTexDatatype = PixelDatatype.FLOAT;
     heightTexFormat = PixelFormat.LUMINANCE;
 
-    heightsArray = new Float32Array(allEntriesLength);
-    for (i = 0; i < allEntriesLength; i++) {
-      heightsArray[i] = allEntries[i].height;
+    heightsArray = new Float32Array(entriesLength);
+    for (i = 0; i < entriesLength; i++) {
+      heightsArray[i] = entries[i].height;
     }
   }
 
@@ -489,7 +496,7 @@ function createElevationBandMaterial(options) {
     pixelDatatype: heightTexDatatype,
     source: {
       arrayBufferView: heightsArray,
-      width: allEntriesLength,
+      width: entriesLength,
       height: 1,
     },
     sampler: new Sampler({
@@ -500,9 +507,9 @@ function createElevationBandMaterial(options) {
     }),
   });
 
-  var colorsArray = new Uint8Array(allEntriesLength * 4);
-  for (i = 0; i < allEntriesLength; i++) {
-    var color = allEntries[i].color;
+  var colorsArray = new Uint8Array(entriesLength * 4);
+  for (i = 0; i < entriesLength; i++) {
+    var color = entries[i].color;
     color.toBytes(scratchColorBytes);
     colorsArray[i * 4 + 0] = scratchColorBytes[0];
     colorsArray[i * 4 + 1] = scratchColorBytes[1];
@@ -516,7 +523,7 @@ function createElevationBandMaterial(options) {
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
     source: {
       arrayBufferView: colorsArray,
-      width: allEntriesLength,
+      width: entriesLength,
       height: 1,
     },
     sampler: new Sampler({
@@ -547,11 +554,11 @@ createElevationBandMaterial._useFloatTexture = function (context) {
 /**
  * @private
  */
-createElevationBandMaterial._maximumHeight = +100000000.0;
+createElevationBandMaterial._maximumHeight = +16777216;
 
 /**
  * @private
  */
-createElevationBandMaterial._minimumHeight = -100000000.0;
+createElevationBandMaterial._minimumHeight = -16777216;
 
 export default createElevationBandMaterial;
