@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.73.0",
+  "version": "1.76.0",
   "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesium.com/cesiumjs/",
   "license": "Apache-2.0",
@@ -70,7 +70,7 @@
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
     "karma-ie-launcher": "^1.0.0",
-    "karma-jasmine": "^3.1.1",
+    "karma-jasmine": "^4.0.1",
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
@@ -78,18 +78,18 @@
     "mime": "^2.0.3",
     "mkdirp": "^1.0.0",
     "open": "^7.0.0",
-    "prettier": "2.1.1",
-    "pretty-quick": "^2.0.1",
+    "prettier": "2.1.2",
+    "pretty-quick": "^3.0.2",
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
     "rollup": "^2.22.1",
-    "rollup-plugin-external-globals": "^0.5.0",
+    "rollup-plugin-external-globals": "^0.6.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^3.0.0",
     "tsd-jsdoc": "^2.5.0",
     "typescript": "^3.9.2",
-    "yargs": "^15.0.1"
+    "yargs": "^16.0.3"
   },
   "husky": {
     "hooks": {

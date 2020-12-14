@@ -263,6 +263,22 @@
             },
           },
           {
+            text: "Drone",
+            onselect: function () {
+              var height = 150.0;
+              var heading = 0.0;
+              var pitch = Cesium.Math.toRadians(10.0);
+              var roll = Cesium.Math.toRadians(-20.0);
+              createModel(
+                "../../SampleData/models/CesiumDrone/CesiumDrone.glb",
+                height,
+                heading,
+                pitch,
+                roll
+              );
+            },
+          },
+          {
             text: "Ground Vehicle",
             onselect: function () {
               createModel(
