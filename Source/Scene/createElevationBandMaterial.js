@@ -1,4 +1,3 @@
-import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -19,7 +18,6 @@ var scratchColor = new Color();
 var scratchColorAbove = new Color();
 var scratchColorBelow = new Color();
 var scratchColorBlend = new Color();
-var scratchPackedFloat = new Cartesian4();
 var scratchColorBytes = new Uint8Array(4);
 var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
@@ -40,9 +38,9 @@ function createNewEntry(height, color) {
 }
 
 function removeDuplicates(entries) {
-  // expects entries to be sorted from lowest to highest
+  // This function expects entries to be sorted from lowest to highest.
 
-  // Remove entries that have the same height as before and after
+  // Remove entries that have the same height as before and after.
   entries = entries.filter(function (entry, index, array) {
     var hasPrev = index > 0;
     var hasNext = index < array.length - 1;
@@ -59,8 +57,6 @@ function removeDuplicates(entries) {
   });
 
   // Remove entries that have the same color as before and after.
-  // Also remove the entry if it has the same height AND color as
-  // the entry before or the entry after.
   entries = entries.filter(function (entry, index, array) {
     var hasPrev = index > 0;
     var hasNext = index < array.length - 1;
@@ -72,18 +68,23 @@ function removeDuplicates(entries) {
       ? Color.equals(entry.color, array[index + 1].color)
       : false;
 
+    var keep = !sameColorAsPrev || !sameColorAsNext;
+    return keep;
+  });
+
+  // Also remove entries that have the same height AND color as the entry before.
+  entries = entries.filter(function (entry, index, array) {
+    var hasPrev = index > 0;
+
+    var sameColorAsPrev = hasPrev
+      ? Color.equals(entry.color, array[index - 1].color)
+      : false;
+
     var sameHeightAsPrev = hasPrev
       ? entry.height === array[index - 1].height
       : true;
-    var sameHeightAsNext = hasNext
-      ? entry.height === array[index + 1].height
-      : true;
 
-    var keep = !(
-      (sameColorAsPrev && sameColorAsNext) ||
-      (sameColorAsPrev && sameHeightAsPrev) ||
-      (sameColorAsNext && sameHeightAsNext)
-    );
+    var keep = !sameColorAsPrev || !sameHeightAsPrev;
     return keep;
   });
 
@@ -350,7 +351,15 @@ function createLayeredEntries(layers) {
           scratchColorAbove
         );
 
-        addBlendEntry(entryAccum.height, colorAbove, entryAccum.color);
+        if (!defined(prevEntryAccum)) {
+          addEntry(entryAccum.height, colorAbove);
+          addBlendEntry(entryAccum.height, colorAbove, entryAccum.color);
+        } else if (!defined(nextEntryAccum)) {
+          addBlendEntry(entryAccum.height, colorAbove, entryAccum.color);
+          addEntry(entryAccum.height, colorAbove);
+        } else {
+          addBlendEntry(entryAccum.height, colorAbove, entryAccum.color);
+        }
         accumIdx++;
       } else if (
         defined(entry) &&
@@ -464,7 +473,12 @@ function createElevationBandMaterial(options) {
   var entriesLength = entries.length;
   var i;
 
-  var heightsArray;
+  var heightsF32Array = new Float32Array(entriesLength);
+  for (i = 0; i < entriesLength; i++) {
+    heightsF32Array[i] = entries[i].height;
+  }
+
+  var heightTexBuffer;
   var heightTexDatatype;
   var heightTexFormat;
 
@@ -474,20 +488,11 @@ function createElevationBandMaterial(options) {
   if (isPackedHeight) {
     heightTexDatatype = PixelDatatype.UNSIGNED_BYTE;
     heightTexFormat = PixelFormat.RGBA;
-
-    heightsArray = new Uint8Array(entriesLength * 4);
-    for (i = 0; i < entriesLength; i++) {
-      Cartesian4.packFloat(entries[i].height, scratchPackedFloat);
-      Cartesian4.pack(scratchPackedFloat, heightsArray, i * 4);
-    }
+    heightTexBuffer = new Uint8Array(heightsF32Array.buffer);
   } else {
     heightTexDatatype = PixelDatatype.FLOAT;
     heightTexFormat = PixelFormat.LUMINANCE;
-
-    heightsArray = new Float32Array(entriesLength);
-    for (i = 0; i < entriesLength; i++) {
-      heightsArray[i] = entries[i].height;
-    }
+    heightTexBuffer = heightsF32Array;
   }
 
   var heightsTex = Texture.create({
@@ -495,7 +500,7 @@ function createElevationBandMaterial(options) {
     pixelFormat: heightTexFormat,
     pixelDatatype: heightTexDatatype,
     source: {
-      arrayBufferView: heightsArray,
+      arrayBufferView: heightTexBuffer,
       width: entriesLength,
       height: 1,
     },
@@ -554,11 +559,11 @@ createElevationBandMaterial._useFloatTexture = function (context) {
 /**
  * @private
  */
-createElevationBandMaterial._maximumHeight = +16777216;
+createElevationBandMaterial._maximumHeight = +5906376425472;
 
 /**
  * @private
  */
-createElevationBandMaterial._minimumHeight = -16777216;
+createElevationBandMaterial._minimumHeight = -5906376425472;
 
 export default createElevationBandMaterial;

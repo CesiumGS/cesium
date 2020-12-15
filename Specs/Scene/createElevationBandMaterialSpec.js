@@ -356,7 +356,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, new Color(1, 0, 0, 0), -1.0);
   });
 
-  it("creates material with one band completely before another", function () {
+  it("creates material with one layer completely before another", function () {
     var layers = [
       {
         entries: [
@@ -398,7 +398,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, Color.BLUE, -2.0);
   });
 
-  it("creates material with one band completely after another", function () {
+  it("creates material with one layer completely after another", function () {
     var layers = [
       {
         entries: [
@@ -440,7 +440,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, Color.BLUE, -2.0);
   });
 
-  it("creates material with transparent layer on top of solid layer", function () {
+  it("creates material with larger transparent layer on top of solid color layer", function () {
     var layers = [
       {
         entries: [
@@ -473,14 +473,58 @@ describe("Scene/createElevationBandMaterial", function () {
       layers: layers,
     });
 
-    checkTextureDimensions(4);
-    checkTexel(3, new Color(1.0, 0.0, 0.0, 0.5), +2.0);
-    checkTexel(2, new Color(1.0, 0.5, 0.5, 1.0), +1.0);
-    checkTexel(1, new Color(1.0, 0.5, 0.5, 1.0), -1.0);
+    checkTextureDimensions(6);
+    checkTexel(5, new Color(1.0, 0.0, 0.0, 0.5), +2.0);
+    checkTexel(4, new Color(1.0, 0.0, 0.0, 0.5), +1.0);
+    checkTexel(3, new Color(1.0, 0.5, 0.5, 1.0), +1.0);
+    checkTexel(2, new Color(1.0, 0.5, 0.5, 1.0), -1.0);
+    checkTexel(1, new Color(1.0, 0.0, 0.0, 0.5), -1.0);
     checkTexel(0, new Color(1.0, 0.0, 0.0, 0.5), -2.0);
   });
 
-  it("creates material with bi-color layer on top of bi-color layer", function () {
+  it("creates material with smaller transparent layer on top of solid color layer", function () {
+    var layers = [
+      {
+        entries: [
+          {
+            height: +2.0,
+            color: new Color(1.0, 1.0, 1.0, 1.0),
+          },
+          {
+            height: -2.0,
+            color: new Color(1.0, 1.0, 1.0, 1.0),
+          },
+        ],
+      },
+      {
+        entries: [
+          {
+            height: +1.0,
+            color: new Color(1.0, 0.0, 0.0, 0.5),
+          },
+          {
+            height: -1.0,
+            color: new Color(1.0, 0.0, 0.0, 0.5),
+          },
+        ],
+      },
+    ];
+
+    createElevationBandMaterial({
+      scene: scene,
+      layers: layers,
+    });
+
+    checkTextureDimensions(6);
+    checkTexel(5, new Color(1.0, 1.0, 1.0, 1.0), +2.0);
+    checkTexel(4, new Color(1.0, 1.0, 1.0, 1.0), +1.0);
+    checkTexel(3, new Color(1.0, 0.5, 0.5, 1.0), +1.0);
+    checkTexel(2, new Color(1.0, 0.5, 0.5, 1.0), -1.0);
+    checkTexel(1, new Color(1.0, 1.0, 1.0, 1.0), -1.0);
+    checkTexel(0, new Color(1.0, 1.0, 1.0, 1.0), -2.0);
+  });
+
+  it("creates material with transparent bi-color layer on top of bi-color layer", function () {
     var layers = [
       {
         entries: [
@@ -536,7 +580,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, new Color(0.0, 0.5, 0.0, 1.0), -1.0);
   });
 
-  it("creates material with bi-color layer on top of gradient layer", function () {
+  it("creates material with transparent bi-color layer on top of gradient layer", function () {
     var layers = [
       {
         entries: [
@@ -588,7 +632,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, new Color(0.0, 0.5, 0.0, 1.0), -1.0);
   });
 
-  it("creates material with gradient layer on top of bi-color layer", function () {
+  it("creates material with transparent gradient layer on top of bi-color layer", function () {
     var layers = [
       {
         entries: [
@@ -640,7 +684,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, new Color(0.5, 0.0, 0.0, 1.0), -1.0);
   });
 
-  it("creates material with gradient layer on top of gradient layer", function () {
+  it("creates material with transparent gradient layer on top of gradient layer", function () {
     var layers = [
       {
         entries: [
@@ -687,7 +731,7 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTexel(0, new Color(1.0, 0.5, 0.5, 1.0), -1.0);
   });
 
-  it("creates material with gradient layer on top of solid layer", function () {
+  it("creates material with transparent gradient layer on top of solid color layer", function () {
     var layers = [
       {
         entries: [
@@ -714,6 +758,49 @@ describe("Scene/createElevationBandMaterial", function () {
           {
             height: -1.0,
             color: new Color(1.0, 0.0, 0.0, 0.5),
+          },
+        ],
+      },
+    ];
+
+    createElevationBandMaterial({
+      scene: scene,
+      layers: layers,
+    });
+
+    checkTextureDimensions(3);
+    checkTexel(2, new Color(1.0, 0.5, 0.5, 1.0), +1.0);
+    checkTexel(1, new Color(0.5, 1.0, 0.5, 1.0), 0.0);
+    checkTexel(0, new Color(1.0, 0.5, 0.5, 1.0), -1.0);
+  });
+
+  it("creates material with transparent layer on top of gradient layer", function () {
+    var layers = [
+      {
+        entries: [
+          {
+            height: +1.0,
+            color: new Color(1.0, 0.0, 0.0, 1.0),
+          },
+          {
+            height: 0.0,
+            color: new Color(0.0, 1.0, 0.0, 1.0),
+          },
+          {
+            height: -1.0,
+            color: new Color(1.0, 0.0, 0.0, 1.0),
+          },
+        ],
+      },
+      {
+        entries: [
+          {
+            height: +1.0,
+            color: new Color(1.0, 1.0, 1.0, 0.5),
+          },
+          {
+            height: -1.0,
+            color: new Color(1.0, 1.0, 1.0, 0.5),
           },
         ],
       },

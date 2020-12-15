@@ -106,9 +106,9 @@
             </td>
           </tr>
           <tr>
-            <td>Separate Bands</td>
+            <td>Gradient</td>
             <td>
-              <input type="checkbox" data-bind="checked: separateBands" />
+              <input type="checkbox" data-bind="checked: gradient" />
             </td>
           </tr>
         </tbody>
@@ -138,7 +138,7 @@
         });
 
         var viewModel = {
-          separateBands: true,
+          gradient: true,
           band1Position: 7000.0,
           band2Position: 7500.0,
           band3Position: 8000.0,
@@ -159,7 +159,7 @@
         }
 
         function updateMaterial() {
-          var separateBands = Boolean(viewModel.separateBands);
+          var gradient = Boolean(viewModel.gradient);
           var band1Position = Number(viewModel.band1Position);
           var band2Position = Number(viewModel.band2Position);
           var band3Position = Number(viewModel.band3Position);
@@ -215,23 +215,25 @@
             });
           }
 
-          if (separateBands) {
+          var antialias = Math.min(10.0, bandThickness * 0.1);
+
+          if (gradient) {
             var band1 = {
               entries: [
                 {
-                  height: band1Position - bandThickness * 0.5,
+                  height: band1Position - bandThickness * 0.5 - antialias,
                   color: new Cesium.Color(0.0, 0.0, 1.0, 0.0),
                 },
                 {
-                  height: band1Position - bandThickness * 0.4,
-                  color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
-                },
-                {
-                  height: band1Position + bandThickness * 0.4,
+                  height: band1Position - bandThickness * 0.5,
                   color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
                 },
                 {
                   height: band1Position + bandThickness * 0.5,
+                  color: new Cesium.Color(0.0, 0.0, 1.0, bandTransparency),
+                },
+                {
+                  height: band1Position + bandThickness * 0.5 + antialias,
                   color: new Cesium.Color(0.0, 0.0, 1.0, 0.0),
                 },
               ],
@@ -240,19 +242,19 @@
             var band2 = {
               entries: [
                 {
-                  height: band2Position - bandThickness * 0.5,
+                  height: band2Position - bandThickness * 0.5 - antialias,
                   color: new Cesium.Color(0.0, 1.0, 0.0, 0.0),
                 },
                 {
-                  height: band2Position - bandThickness * 0.4,
-                  color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
-                },
-                {
-                  height: band2Position + bandThickness * 0.4,
+                  height: band2Position - bandThickness * 0.5,
                   color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
                 },
                 {
                   height: band2Position + bandThickness * 0.5,
+                  color: new Cesium.Color(0.0, 1.0, 0.0, bandTransparency),
+                },
+                {
+                  height: band2Position + bandThickness * 0.5 + antialias,
                   color: new Cesium.Color(0.0, 1.0, 0.0, 0.0),
                 },
               ],
@@ -261,19 +263,19 @@
             var band3 = {
               entries: [
                 {
-                  height: band3Position - bandThickness * 0.5,
+                  height: band3Position - bandThickness * 0.5 - antialias,
                   color: new Cesium.Color(1.0, 0.0, 0.0, 0.0),
                 },
                 {
-                  height: band3Position - bandThickness * 0.4,
-                  color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
-                },
-                {
-                  height: band3Position + bandThickness * 0.4,
+                  height: band3Position - bandThickness * 0.5,
                   color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
                 },
                 {
                   height: band3Position + bandThickness * 0.5,
+                  color: new Cesium.Color(1.0, 0.0, 0.0, bandTransparency),
+                },
+                {
+                  height: band3Position + bandThickness * 0.5 + antialias,
                   color: new Cesium.Color(1.0, 0.0, 0.0, 0.0),
                 },
               ],
