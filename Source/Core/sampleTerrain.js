@@ -89,6 +89,10 @@ function doSampling(terrainProvider, level, positions) {
       tileRequest.level
     );
     var tilePromise = requestPromise
+      // Make sure to generate our mesh for each tile first
+      //  because some tiles actually require the mesh to interpolate heights
+      //  (eg: ArcGISTiledElevationTerrainProvider)
+      .then(createMeshCreatorFunction(tileRequest))
       .then(createInterpolateFunction(tileRequest))
       .otherwise(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
@@ -97,6 +101,34 @@ function doSampling(terrainProvider, level, positions) {
   return when.all(tilePromises, function () {
     return positions;
   });
+}
+
+/**
+ *
+ * @param {Object} tileRequest
+ * @returns {function(TerrainData):Promise<TerrainData>}
+ */
+function createMeshCreatorFunction(tileRequest) {
+  /**
+   * @param {TerrainData} terrainData
+   * @return {Promise<undefined>}
+   */
+  function createMesh(terrainData) {
+    return terrainData
+      .createMesh(
+        tileRequest.tilingScheme,
+        tileRequest.x,
+        tileRequest.y,
+        tileRequest.level,
+        // I'm guessing we always want no terrain exaggeration when calling sample terrain directly
+        1
+      )
+      .then(function () {
+        // make sure we pass back the same terrain data object; not the generated mesh.
+        return terrainData;
+      });
+  }
+  return createMesh;
 }
 
 function createInterpolateFunction(tileRequest) {
