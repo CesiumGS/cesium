@@ -182,7 +182,7 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
   },
 });
 
-var taskProcessor = new TaskProcessor("createVerticesFromHeightmap");
+var taskProcessor = new TaskProcessor("createVerticesFromHeightmap", 5000);
 
 /**
  * Creates a {@link TerrainMesh} from this terrain data.

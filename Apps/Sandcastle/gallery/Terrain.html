@@ -33,6 +33,7 @@
     <div id="toolbar">
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
+      <div id="detailLevel"></div>
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -59,52 +60,110 @@
           credit: "Terrain data courtesy VT MÄK",
         });
 
+        var arcgisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
+          {
+            url:
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+          }
+        );
+
+        function changeTerrainProvider(provider, enableLighting) {
+          viewer.entities.suspendEvents();
+          viewer.entities.removeAll();
+          viewer.entities.resumeEvents();
+          viewer.terrainProvider = provider;
+          viewer.scene.globe.enableLighting = enableLighting;
+        }
+
         Sandcastle.addToolbarMenu(
           [
             {
               text: "CesiumTerrainProvider - Cesium World Terrain",
               onselect: function () {
-                viewer.terrainProvider = worldTerrain;
-                viewer.scene.globe.enableLighting = true;
+                changeTerrainProvider(worldTerrain, true);
+              },
+            },
+            {
+              text: "ArcGIS",
+              onselect: function () {
+                changeTerrainProvider(arcgisTerrainProvider, true);
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain - no effects",
               onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain();
+                changeTerrainProvider(Cesium.createWorldTerrain(), false);
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
               onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain({
-                  requestVertexNormals: true,
-                });
-                viewer.scene.globe.enableLighting = true;
+                changeTerrainProvider(
+                  Cesium.createWorldTerrain({
+                    requestVertexNormals: true,
+                  }),
+                  true
+                );
               },
             },
             {
               text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
               onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain({
-                  requestWaterMask: true,
-                });
+                changeTerrainProvider(
+                  Cesium.createWorldTerrain({
+                    requestWaterMask: true,
+                  }),
+                  false
+                );
               },
             },
             {
               text: "EllipsoidTerrainProvider",
               onselect: function () {
-                viewer.terrainProvider = ellipsoidProvider;
+                changeTerrainProvider(ellipsoidProvider, false);
               },
             },
             {
               text: "VRTheWorldTerrainProvider",
               onselect: function () {
-                viewer.terrainProvider = vrTheWorldProvider;
+                changeTerrainProvider(vrTheWorldProvider, false);
               },
             },
           ],
           "terrainMenu"
+        );
+
+        var detailLevel = 9;
+
+        function detailLevelOption(value) {
+          return {
+            text: value.toString(),
+            onselect: function () {
+              detailLevel = value;
+            },
+          };
+        }
+
+        Sandcastle.addToolbarMenu(
+          [
+            detailLevelOption(1),
+            detailLevelOption(2),
+            detailLevelOption(3),
+            detailLevelOption(4),
+            detailLevelOption(5),
+            detailLevelOption(6),
+            detailLevelOption(7),
+            detailLevelOption(8),
+            detailLevelOption(9),
+            detailLevelOption(10),
+            detailLevelOption(11),
+            detailLevelOption(12),
+            detailLevelOption(13),
+            detailLevelOption(14),
+            detailLevelOption(15),
+            detailLevelOption(16),
+          ],
+          "detailLevel"
         );
 
         Sandcastle.addDefaultToolbarMenu(
@@ -171,6 +230,7 @@
         }
 
         function sampleTerrainSuccess(terrainSamplePositions) {
+          console.log("sampling done");
           var ellipsoid = Cesium.Ellipsoid.WGS84;
 
           //By default, Cesium does not obsure geometry
@@ -182,6 +242,11 @@
 
           for (var i = 0; i < terrainSamplePositions.length; ++i) {
             var position = terrainSamplePositions[i];
+
+            if (!position.height && position.height !== 0) {
+              console.log(`invalid height for position: ${position.height}`);
+              continue;
+            }
 
             viewer.entities.add({
               name: position.height.toFixed(1),
@@ -255,13 +320,13 @@
         );
 
         Sandcastle.addToolbarButton(
-          "Sample Everest Terrain at Level 9",
+          "Sample Everest Terrain",
           function () {
             var terrainSamplePositions = createGrid(0.005);
             Cesium.when(
               Cesium.sampleTerrain(
                 viewer.terrainProvider,
-                9,
+                detailLevel,
                 terrainSamplePositions
               ),
               sampleTerrainSuccess
@@ -292,6 +357,33 @@
           },
           "sampleButtons"
         );
+
+        function mouseToCartographic(movement) {
+          var cartesian = viewer.scene.pickPosition(movement.position);
+          return Cesium.Cartographic.fromCartesian(cartesian);
+        }
+
+        var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+
+        handler.setInputAction(function (movement) {
+          var cartographic = mouseToCartographic(movement);
+          Cesium.sampleTerrain(viewer.terrainProvider, detailLevel, [
+            cartographic,
+          ]).then(function (positions) {
+            console.log("sampled height", positions[0].height);
+            sampleTerrainSuccess(positions);
+          });
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+        handler.setInputAction(function (movement) {
+          var cartographic = mouseToCartographic(movement);
+          Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, [
+            cartographic,
+          ]).then(function (positions) {
+            console.log("sampled height most detailed", positions[0].height);
+            sampleTerrainSuccess(positions);
+          });
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
