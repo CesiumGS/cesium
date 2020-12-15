@@ -1084,20 +1084,21 @@ describe("Core/Cartesian4", function () {
   });
 
   it("packs and unpacks floating point values for representation as uint8 4-vectors", function () {
-    var float = 123.456;
-    var packedFloat = Cartesian4.packFloat(float);
-    expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
-    expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
-    expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
-    expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
+    function testFloat(float) {
+      var packedFloat = Cartesian4.packFloat(float);
+      expect(0 <= packedFloat.x && packedFloat.x <= 255).toBe(true);
+      expect(0 <= packedFloat.y && packedFloat.y <= 255).toBe(true);
+      expect(0 <= packedFloat.z && packedFloat.z <= 255).toBe(true);
+      expect(0 <= packedFloat.w && packedFloat.w <= 255).toBe(true);
 
-    var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
-    expect(
-      CesiumMath.equalsEpsilon(float, unpackedFloat, CesiumMath.EPSILON7)
-    ).toBe(true);
-
-    var packedZero = Cartesian4.packFloat(0);
-    expect(packedZero).toEqual(Cartesian4.ZERO);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      expect(unpackedFloat).toEqual(float);
+    }
+    testFloat(0.0);
+    testFloat(-1.0);
+    testFloat(+1.0);
+    testFloat(123.5);
+    testFloat(16777216);
   });
 
   createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
