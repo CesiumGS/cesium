@@ -897,11 +897,8 @@ Cartesian4.packFloat = function (value, result) {
   scratchF32Array[0] = value;
 
   // Values outside the 32-bit float range get converted to the max 32-bit float.
-  if (scratchF32Array[0] === +Infinity && scratchF32Array[0] !== value) {
-    scratchF32Array[0] = +3.4028234663852886e38; // max positive 32-bit float
-  }
-  if (scratchF32Array[0] === -Infinity && scratchF32Array[0] !== value) {
-    scratchF32Array[0] = -3.4028234663852886e38; // max negative 32-bit float
+  if (!isFinite(scratchF32Array[0]) && scratchF32Array[0] !== value) {
+    scratchF32Array[0] = Math.sign(value) * 3.4028234663852886e38; // max 32-bit float
   }
 
   if (littleEndian) {
