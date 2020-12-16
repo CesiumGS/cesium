@@ -12,7 +12,6 @@ describe("Scene/createElevationBandMaterial", function () {
   var isHeightDataPacked;
   var heightData;
   var colorData;
-  var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
   beforeAll(function () {
     scene = createScene();
@@ -392,8 +391,8 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTextureDimensions(6);
     checkTexel(5, Color.RED, +2.0);
     checkTexel(4, Color.RED, +1.0);
-    checkTexel(3, blankColor, +1.0);
-    checkTexel(2, blankColor, -1.0);
+    checkTexel(3, createElevationBandMaterial._emptyColor, +1.0);
+    checkTexel(2, createElevationBandMaterial._emptyColor, -1.0);
     checkTexel(1, Color.BLUE, -1.0);
     checkTexel(0, Color.BLUE, -2.0);
   });
@@ -434,8 +433,8 @@ describe("Scene/createElevationBandMaterial", function () {
     checkTextureDimensions(6);
     checkTexel(5, Color.RED, +2.0);
     checkTexel(4, Color.RED, +1.0);
-    checkTexel(3, blankColor, +1.0);
-    checkTexel(2, blankColor, -1.0);
+    checkTexel(3, createElevationBandMaterial._emptyColor, +1.0);
+    checkTexel(2, createElevationBandMaterial._emptyColor, -1.0);
     checkTexel(1, Color.BLUE, -1.0);
     checkTexel(0, Color.BLUE, -2.0);
   });

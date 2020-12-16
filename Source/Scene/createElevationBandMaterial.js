@@ -21,7 +21,6 @@ var scratchColorBelow = new Color();
 var scratchColorBlend = new Color();
 var scratchPackedFloat = new Cartesian4();
 var scratchColorBytes = new Uint8Array(4);
-var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
 function lerpEntryColor(height, entryBefore, entryAfter, result) {
   var lerpFactor =
@@ -375,16 +374,19 @@ function createLayeredEntries(layers) {
         ) {
           // Insert blank gap between last entry and first accum entry
           addEntry(entry.height, entry.color);
-          addEntry(entry.height, blankColor);
-          addEntry(entryAccum.height, blankColor);
+          addEntry(entry.height, createElevationBandMaterial._emptyColor);
+          addEntry(entryAccum.height, createElevationBandMaterial._emptyColor);
         } else if (
           !defined(entryAccum) &&
           defined(prevEntryAccum) &&
           !defined(prevEntry)
         ) {
           // Insert blank gap between last accum entry and first entry
-          addEntry(prevEntryAccum.height, blankColor);
-          addEntry(entry.height, blankColor);
+          addEntry(
+            prevEntryAccum.height,
+            createElevationBandMaterial._emptyColor
+          );
+          addEntry(entry.height, createElevationBandMaterial._emptyColor);
           addEntry(entry.height, entry.color);
         } else {
           addEntry(entry.height, entry.color);
@@ -560,13 +562,23 @@ createElevationBandMaterial._useFloatTexture = function (context) {
 };
 
 /**
+ * This is the height that gets stored in the texture when using extendUpwards.
+ * There's nothing special about it, it's just a really big number.
  * @private
  */
 createElevationBandMaterial._maximumHeight = +5906376425472;
 
 /**
+ * This is the height that gets stored in the texture when using extendDownwards.
+ * There's nothing special about it, it's just a really big number.
  * @private
  */
 createElevationBandMaterial._minimumHeight = -5906376425472;
+
+/**
+ * Color used to create empty space in the color texture
+ * @private
+ */
+createElevationBandMaterial._emptyColor = new Color(0.0, 0.0, 0.0, 0.0);
 
 export default createElevationBandMaterial;
