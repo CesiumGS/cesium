@@ -1,3 +1,4 @@
+import Cartesian4 from "../Core/Cartesian4.js";
 import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import Color from "../Core/Color.js";
@@ -18,6 +19,7 @@ var scratchColor = new Color();
 var scratchColorAbove = new Color();
 var scratchColorBelow = new Color();
 var scratchColorBlend = new Color();
+var scratchPackedFloat = new Cartesian4();
 var scratchColorBytes = new Uint8Array(4);
 var blankColor = new Color(0.0, 0.0, 0.0, 0.0);
 
@@ -472,11 +474,6 @@ function createElevationBandMaterial(options) {
   var entriesLength = entries.length;
   var i;
 
-  var heightsF32Array = new Float32Array(entriesLength);
-  for (i = 0; i < entriesLength; i++) {
-    heightsF32Array[i] = entries[i].height;
-  }
-
   var heightTexBuffer;
   var heightTexDatatype;
   var heightTexFormat;
@@ -487,11 +484,18 @@ function createElevationBandMaterial(options) {
   if (isPackedHeight) {
     heightTexDatatype = PixelDatatype.UNSIGNED_BYTE;
     heightTexFormat = PixelFormat.RGBA;
-    heightTexBuffer = new Uint8Array(heightsF32Array.buffer);
+    heightTexBuffer = new Uint8Array(entriesLength * 4);
+    for (i = 0; i < entriesLength; i++) {
+      Cartesian4.packFloat(entries[i].height, scratchPackedFloat);
+      Cartesian4.pack(scratchPackedFloat, heightTexBuffer, i * 4);
+    }
   } else {
     heightTexDatatype = PixelDatatype.FLOAT;
     heightTexFormat = PixelFormat.LUMINANCE;
-    heightTexBuffer = heightsF32Array;
+    heightTexBuffer = new Float32Array(entriesLength);
+    for (i = 0; i < entriesLength; i++) {
+      heightTexBuffer[i] = entries[i].height;
+    }
   }
 
   var heightsTex = Texture.create({
