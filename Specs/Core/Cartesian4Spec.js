@@ -1102,7 +1102,7 @@ describe("Core/Cartesian4", function () {
       expect(unpackedFloat).toBeNaN();
     }
 
-    function testOutOfRange(float) {
+    function testFloatOutOfRange(float) {
       expect(function () {
         Cartesian4.packFloat(float);
       }).toThrowRuntimeError();
@@ -1122,8 +1122,8 @@ describe("Core/Cartesian4", function () {
     testFloat(Float32Array.of(-Infinity)[0]); // 32-bit infinity
     testFloatNaN(Float32Array.of(NaN)[0]); // 32-bit NaN
 
-    testOutOfRange(+Number.MAX_VALUE);
-    testOutOfRange(-Number.MAX_VALUE);
+    testFloatOutOfRange(+Number.MAX_VALUE);
+    testFloatOutOfRange(-Number.MAX_VALUE);
   });
 
   createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
