@@ -1103,9 +1103,10 @@ describe("Core/Cartesian4", function () {
     }
 
     function testFloatOutOfRange(float) {
-      expect(function () {
-        Cartesian4.packFloat(float);
-      }).toThrowRuntimeError();
+      var packedFloat = Cartesian4.packFloat(float);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      var maxFloat32 = 3.4028234663852886e38;
+      expect(unpackedFloat).toEqual(Math.sign(float) * maxFloat32);
     }
 
     testFloat(0.0);

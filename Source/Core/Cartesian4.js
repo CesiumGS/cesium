@@ -3,7 +3,6 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
-import RuntimeError from "./RuntimeError.js";
 
 /**
  * A 4D Cartesian point.
@@ -881,8 +880,7 @@ var littleEndian = testU8[0] === 0x44;
 /**
  * Packs an arbitrary floating point value to 4 values representable using uint8.
  *
- * @param {Number} value A floating point number. If this number exceeds the
- * 32-bit floating point range, a {@link RuntimeError} will be thrown.
+ * @param {Number} value A floating point number.
  * @param {Cartesian4} [result] The Cartesian4 that will contain the packed float.
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
@@ -898,14 +896,12 @@ Cartesian4.packFloat = function (value, result) {
   // scratchU8Array and scratchF32Array are views into the same buffer
   scratchF32Array[0] = value;
 
-  // Only allow values that fit into the 32-bit float range.
-  // Values outside the 32-bit float range can be detected by checking if
-  // the resulting 32-bit value is Infinity.
-  if (
-    (scratchF32Array[0] === +Infinity || scratchF32Array[0] === -Infinity) &&
-    scratchF32Array[0] !== value
-  ) {
-    throw new RuntimeError("Input exceeds the range of a 32-bit float");
+  // Values outside the 32-bit float range get converted to the max 32-bit float.
+  if (scratchF32Array[0] === +Infinity && scratchF32Array[0] !== value) {
+    scratchF32Array[0] = +3.4028234663852886e38; // max positive 32-bit float
+  }
+  if (scratchF32Array[0] === -Infinity && scratchF32Array[0] !== value) {
+    scratchF32Array[0] = -3.4028234663852886e38; // max negative 32-bit float
   }
 
   if (littleEndian) {
@@ -914,7 +910,7 @@ Cartesian4.packFloat = function (value, result) {
     result.z = scratchU8Array[2];
     result.w = scratchU8Array[3];
   } else {
-    // store the result as little endian
+    // convert from big-endian to little-endian
     result.x = scratchU8Array[3];
     result.y = scratchU8Array[2];
     result.z = scratchU8Array[1];
@@ -942,7 +938,7 @@ Cartesian4.unpackFloat = function (packedFloat) {
     scratchU8Array[2] = packedFloat.z;
     scratchU8Array[3] = packedFloat.w;
   } else {
-    // load the result from little endian
+    // convert from little-endian to big-endian
     scratchU8Array[0] = packedFloat.w;
     scratchU8Array[1] = packedFloat.z;
     scratchU8Array[2] = packedFloat.y;
