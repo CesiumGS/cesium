@@ -2,6 +2,10 @@
 
 ### 1.77 - 2020-01-04
 
+##### Additions :tada:
+
+- Added `ElevationBand` material, which maps colors / gradients to exact elevations. [#9132](https://github.com/CesiumGS/cesium/pull/9132)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `EasingFunction.QUADRACTIC_IN` was deprecated and will be removed in Cesium 1.79. It has been replaced with `EasingFunction.QUADRATIC_IN`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
@@ -28,7 +32,6 @@
 
 ##### Additions :tada:
 
-- Added `ElevationBand` material, which maps colors / gradients to exact elevations. [#9132](https://github.com/CesiumGS/cesium/pull/9132)
 - Added `Matrix3.inverseTranspose` and `Matrix4.inverseTranspose`. [#9135](https://github.com/CesiumGS/cesium/pull/9135)
 
 ##### Fixes :wrench:
