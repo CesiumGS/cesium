@@ -881,7 +881,8 @@ var littleEndian = testU8[0] === 0x44;
 /**
  * Packs an arbitrary floating point value to 4 values representable using uint8.
  *
- * @param {Number} value A floating point number
+ * @param {Number} value A floating point number. If this number exceeds the
+ * 32-bit floating point range, a {@link RuntimeError} will be thrown.
  * @param {Cartesian4} [result] The Cartesian4 that will contain the packed float.
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
@@ -898,7 +899,8 @@ Cartesian4.packFloat = function (value, result) {
   scratchF32Array[0] = value;
 
   // Only allow values that fit into the 32-bit float range.
-  // Values outside the 32-bit float range become Infinity.
+  // Values outside the 32-bit float range can be detected by checking if
+  // the resulting 32-bit value is Infinity.
   if (
     (scratchF32Array[0] === +Infinity || scratchF32Array[0] === -Infinity) &&
     scratchF32Array[0] !== value
