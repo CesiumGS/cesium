@@ -138,7 +138,7 @@
         });
 
         var viewModel = {
-          gradient: true,
+          gradient: false,
           band1Position: 7000.0,
           band2Position: 7500.0,
           band3Position: 8000.0,
@@ -217,7 +217,7 @@
 
           var antialias = Math.min(10.0, bandThickness * 0.1);
 
-          if (gradient) {
+          if (!gradient) {
             var band1 = {
               entries: [
                 {
