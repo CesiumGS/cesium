@@ -896,11 +896,6 @@ Cartesian4.packFloat = function (value, result) {
   // scratchU8Array and scratchF32Array are views into the same buffer
   scratchF32Array[0] = value;
 
-  // Values outside the 32-bit float range get converted to the max 32-bit float.
-  if (!isFinite(scratchF32Array[0]) && scratchF32Array[0] !== value) {
-    scratchF32Array[0] = Math.sign(value) * 3.4028234663852886e38; // max 32-bit float
-  }
-
   if (littleEndian) {
     result.x = scratchU8Array[0];
     result.y = scratchU8Array[1];
