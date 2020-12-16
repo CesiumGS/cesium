@@ -3,6 +3,7 @@ import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 import CesiumMath from "./Math.js";
+import RuntimeError from "./RuntimeError.js";
 
 /**
  * A 4D Cartesian point.
@@ -895,6 +896,16 @@ Cartesian4.packFloat = function (value, result) {
 
   // scratchU8Array and scratchF32Array are views into the same buffer
   scratchF32Array[0] = value;
+
+  // Only allow values that fit into the 32-bit float range.
+  // Values outside the 32-bit float range become Infinity.
+  if (
+    (scratchF32Array[0] === +Infinity || scratchF32Array[0] === -Infinity) &&
+    scratchF32Array[0] !== value
+  ) {
+    throw new RuntimeError("Input exceeds the range of a 32-bit float");
+  }
+
   if (littleEndian) {
     result.x = scratchU8Array[0];
     result.y = scratchU8Array[1];

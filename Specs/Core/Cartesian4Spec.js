@@ -1094,11 +1094,36 @@ describe("Core/Cartesian4", function () {
       var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
       expect(unpackedFloat).toEqual(float);
     }
+
+    function testFloatNaN(float) {
+      expect(float).toBeNaN();
+      var packedFloat = Cartesian4.packFloat(float);
+      var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
+      expect(unpackedFloat).toBeNaN();
+    }
+
+    function testOutOfRange(float) {
+      expect(function () {
+        Cartesian4.packFloat(float);
+      }).toThrowRuntimeError();
+    }
+
     testFloat(0.0);
     testFloat(-1.0);
     testFloat(+1.0);
     testFloat(123.5);
     testFloat(16777216);
+
+    testFloat(+Infinity); // 64-bit infinity -> 32-bit infinity
+    testFloat(-Infinity); // 64-bit infinity -> 32-bit infinity
+    testFloatNaN(NaN); // 64-bit NaN -> 32bit NaN
+
+    testFloat(Float32Array.of(+Infinity)[0]); // 32-bit infinity
+    testFloat(Float32Array.of(-Infinity)[0]); // 32-bit infinity
+    testFloatNaN(Float32Array.of(NaN)[0]); // 32-bit NaN
+
+    testOutOfRange(+Number.MAX_VALUE);
+    testOutOfRange(-Number.MAX_VALUE);
   });
 
   createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
