@@ -160,7 +160,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   extrudedHeightReference: createPropertyDescriptor("extrudedHeightReference"),
 
   /**
-   * Gets or sets the numeric property specifying the rotation of the ellipse clockwise from north.
+   * Gets or sets the numeric property specifying the rotation of the ellipse counter-clockwise from north.
    * @memberof EllipseGraphics.prototype
    * @type {Property|undefined}
    * @default 0
