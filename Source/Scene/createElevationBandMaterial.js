@@ -544,9 +544,10 @@ function createElevationBandMaterial(options) {
     }),
   });
 
-  var material = Material.fromType("ElevationBand");
-  material.uniforms.heights = heightsTex;
-  material.uniforms.colors = colorsTex;
+  var material = Material.fromType("ElevationBand", {
+    heights: heightsTex,
+    colors: colorsTex,
+  });
   return material;
 }
 
