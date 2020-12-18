@@ -359,13 +359,13 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   }
 
   it("maintains priority with ascending insertions", function () {
-    var length = 20;
-    var maximumLength = 10;
+    var length = 200;
+    var maximumLength = 100;
 
     var queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
+      maximumLength: maximumLength,
     });
-    queue.maximumLength = maximumLength;
 
     var pass = true;
     for (var i = 0; i < length; ++i) {
@@ -378,13 +378,13 @@ describe("Core/DoubleEndedPriorityQueue", function () {
   });
 
   it("maintains priority with descending insertions", function () {
-    var length = 20;
-    var maximumLength = 10;
+    var length = 200;
+    var maximumLength = 100;
 
     var queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
+      maximumLength: maximumLength,
     });
-    queue.maximumLength = maximumLength;
 
     var pass = true;
     for (var i = 0; i < length; ++i) {
@@ -402,8 +402,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     var queue = new DoubleEndedPriorityQueue({
       comparator: comparator,
+      maximumLength: maximumLength,
     });
-    queue.maximumLength = maximumLength;
 
     var pass = true;
     for (var i = 0; i < length; ++i) {
@@ -412,6 +412,30 @@ describe("Core/DoubleEndedPriorityQueue", function () {
       pass = pass && isValidQueue(queue);
     }
 
+    expect(pass).toBe(true);
+  });
+
+  it("resorts queue", function () {
+    var queue = new DoubleEndedPriorityQueue({
+      comparator: comparator,
+    });
+
+    var i;
+    var length = 200;
+
+    for (i = 0; i < length; ++i) {
+      queue.insert(0);
+    }
+
+    // Change all of the queue values to random values to make it unsorted
+    var array = queue.internalArray;
+    for (i = 0; i < length; i++) {
+      array[i] = Math.random();
+    }
+
+    queue.resort();
+
+    var pass = isValidQueue(queue);
     expect(pass).toBe(true);
   });
 });

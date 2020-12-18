@@ -208,7 +208,7 @@ function pushUp(that, index) {
   // 2A) is less than the grandparent when on a min level
   // 2B) is greater than the grandparent when on a max level
   while (index >= 3) {
-    var grandparentIndex = Math.floor((Math.floor((index - 1) / 2) - 1) / 2);
+    var grandparentIndex = Math.floor((index - 3) / 4);
     if (lessThan(that, index, grandparentIndex) !== lessThanParent) {
       break;
     }
@@ -230,7 +230,6 @@ function pushDown(that, index) {
   while ((leftChildIndex = 2 * index + 1) < length) {
     // Find the minimum (or maximum) child or grandchild
     var target = leftChildIndex;
-
     var rightChildIndex = leftChildIndex + 1;
     if (rightChildIndex < length) {
       if (lessThan(that, rightChildIndex, target) === onMinLevel) {
@@ -246,6 +245,7 @@ function pushDown(that, index) {
       }
     }
 
+    // Swap the element into the correct spot
     if (lessThan(that, target, index) === onMinLevel) {
       swap(that, target, index);
       if (target !== leftChildIndex && target !== rightChildIndex) {
@@ -301,6 +301,19 @@ DoubleEndedPriorityQueue.prototype.reset = function () {
   } else {
     // Dereference all elements by clearing the array
     this._array.length = 0;
+  }
+};
+
+/**
+ * Resort the queue.
+ */
+DoubleEndedPriorityQueue.prototype.resort = function () {
+  var that = this;
+  var length = that._length;
+
+  // Fix the queue from the top-down
+  for (var i = 0; i < length; i++) {
+    pushUp(that, i);
   }
 };
 
