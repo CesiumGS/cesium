@@ -1,5 +1,8 @@
-import { Cartographic } from "../../Source/Cesium.js";
-import { CesiumTerrainProvider } from "../../Source/Cesium.js";
+import { Cartographic, Resource } from "../../Source/Cesium.js";
+import {
+  CesiumTerrainProvider,
+  ArcGISTiledElevationTerrainProvider,
+} from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
 import { sampleTerrain } from "../../Source/Cesium.js";
 
@@ -97,6 +100,78 @@ describe("Core/sampleTerrain", function () {
 
     return sampleTerrain(worldTerrain, 12, positions).then(function () {
       expect(positions[0].height).toBeDefined();
+    });
+  });
+
+  function patchXHRLoad(proxySpec) {
+    Resource._Implementations.loadWithXhr = function (
+      url,
+      responseType,
+      method,
+      data,
+      headers,
+      deferred,
+      overrideMimeType
+    ) {
+      if (!Object.keys(proxySpec).includes(url)) {
+        var msg = "Unexpected XHR load to url: " + url;
+        console.error(msg);
+        throw new Error(msg);
+      }
+      let targetUrl = proxySpec[url];
+      return Resource._DefaultImplementations.loadWithXhr(
+        targetUrl,
+        responseType,
+        method,
+        data,
+        headers,
+        deferred
+      );
+    };
+  }
+
+  describe("with terrain providers", () => {
+    it("should work for Cesium World Terrain", () => {
+      patchXHRLoad({
+        "http://localhost:8080/Specs/fake/url/layer.json":
+          "Data/CesiumTerrainTileJson/tile_759_335_layer.json",
+        "http://localhost:8080/Specs/fake/url/9/759/335.terrain?v=1.2.0":
+          "Data/CesiumTerrainTileJson/tile_759_335.terrain",
+      });
+      var terrainProvider = new CesiumTerrainProvider({
+        url: "fake/url",
+        requestVertexNormals: false,
+        requestWaterMask: false,
+      });
+      var position = Cartographic.fromDegrees(
+        86.93666235421982,
+        27.97989963555095
+      );
+      var level = 9;
+      return sampleTerrain(terrainProvider, level, [position]).then(() => {
+        expect(position.height).toBeCloseTo(7780, 0);
+      });
+    });
+
+    it("should work for ArcGIS terrain", () => {
+      patchXHRLoad({
+        "fake/url/?f=pjson": "Data/ArcGIS/tile_214_379_details.json",
+        "http://localhost:8080/Specs/fake/url/tilemap/10/384/640/128/128":
+          "Data/ArcGIS/tile_214_379_tilemap.json",
+        "http://localhost:8080/Specs/fake/url/tile/9/214/379":
+          "Data/ArcGIS/tile_214_379.terrain",
+      });
+      var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+        url: "fake/url",
+      });
+      var position = Cartographic.fromDegrees(
+        86.93666235421982,
+        27.97989963555095
+      );
+      var level = 9;
+      return sampleTerrain(terrainProvider, level, [position]).then(() => {
+        expect(position.height).toBeCloseTo(7681, 0);
+      });
     });
   });
 });

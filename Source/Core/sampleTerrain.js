@@ -1,5 +1,6 @@
 import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
+import ArcGISTiledElevationTerrainProvider from "./ArcGISTiledElevationTerrainProvider.js";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -89,10 +90,10 @@ function doSampling(terrainProvider, level, positions) {
       tileRequest.level
     );
     var tilePromise = requestPromise
-      // Make sure to generate our mesh for each tile first
-      //  because some tiles actually require the mesh to interpolate heights
+      // Sometimes we need to generate our mesh for each tile first
+      //  because some tiles actually require the mesh to interpolate heights correctly
       //  (eg: ArcGISTiledElevationTerrainProvider)
-      .then(createMeshCreatorFunction(tileRequest))
+      .then(createMeshCreatorFunction(tileRequest, terrainProvider))
       .then(createInterpolateFunction(tileRequest))
       .otherwise(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
@@ -106,9 +107,10 @@ function doSampling(terrainProvider, level, positions) {
 /**
  *
  * @param {Object} tileRequest
+ * @param {TerrainProvider} terrainProvider
  * @returns {function(TerrainData):Promise<TerrainData>}
  */
-function createMeshCreatorFunction(tileRequest) {
+function createMeshCreatorFunction(tileRequest, terrainProvider) {
   /**
    * @param {TerrainData} terrainData
    * @return {Promise<undefined>}
@@ -128,7 +130,18 @@ function createMeshCreatorFunction(tileRequest) {
         return terrainData;
       });
   }
-  return createMesh;
+
+  // ArcGIS terrain needs to call createMesh before calling interpolateHeight
+  //  because the mesh creation step is when the LERC decoding happens
+  if (terrainProvider instanceof ArcGISTiledElevationTerrainProvider) {
+    return createMesh;
+  }
+
+  // no-op because interpolating height via mesh in CWT doesn't seem to work;
+  //  and there's also potentially no benefit to using that code path (extra work to create the mesh)
+  return function (terrainData) {
+    return when.resolve(terrainData);
+  };
 }
 
 function createInterpolateFunction(tileRequest) {
@@ -146,6 +159,12 @@ function createInterpolateFunction(tileRequest) {
         position.longitude,
         position.latitude
       );
+      console.log("interpolate height", {
+        terrainData: terrainData,
+        tileRequest: tileRequest,
+        rectangle: rectangle,
+        position: position,
+      });
     }
   };
 }
