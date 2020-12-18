@@ -1118,12 +1118,19 @@ describe("Core/Cartesian4", function () {
     testFloat(-Infinity); // 64-bit infinity -> 32-bit infinity
     testFloatNaN(NaN); // 64-bit NaN -> 32bit NaN
 
-    testFloat(Float32Array.of(+Infinity)[0]); // 32-bit infinity
-    testFloat(Float32Array.of(-Infinity)[0]); // 32-bit infinity
-    testFloatNaN(Float32Array.of(NaN)[0]); // 32-bit NaN
-
     testFloatOutOfRange(+Number.MAX_VALUE);
     testFloatOutOfRange(-Number.MAX_VALUE);
+
+    var f32 = new Float32Array(1);
+
+    f32[0] = +Infinity;
+    testFloat(f32[0]); // 32-bit infinity
+
+    f32[0] = -Infinity;
+    testFloat(f32[0]); // 32-bit infinity
+
+    f32[0] = NaN;
+    testFloatNaN(f32[0]); // 32-bit NaN
   });
 
   createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
