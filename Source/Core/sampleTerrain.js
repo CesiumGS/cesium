@@ -109,6 +109,7 @@ function doSampling(terrainProvider, level, positions) {
  * @param {Object} tileRequest
  * @param {TerrainProvider} terrainProvider
  * @returns {function(TerrainData):Promise<TerrainData>}
+ * @private
  */
 function createMeshCreatorFunction(tileRequest, terrainProvider) {
   /**

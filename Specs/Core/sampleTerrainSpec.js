@@ -1,4 +1,8 @@
-import { Cartographic, Resource } from "../../Source/Cesium.js";
+import {
+  Cartographic,
+  RequestScheduler,
+  Resource,
+} from "../../Source/Cesium.js";
 import {
   CesiumTerrainProvider,
   ArcGISTiledElevationTerrainProvider,
@@ -103,43 +107,62 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  function patchXHRLoad(proxySpec) {
-    Resource._Implementations.loadWithXhr = function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType
-    ) {
-      if (!Object.keys(proxySpec).includes(url)) {
-        var msg = "Unexpected XHR load to url: " + url;
-        console.error(msg);
-        throw new Error(msg);
-      }
-      let targetUrl = proxySpec[url];
-      return Resource._DefaultImplementations.loadWithXhr(
-        targetUrl,
+  describe("with terrain providers", () => {
+    beforeEach(function () {
+      RequestScheduler.clearForSpecs();
+    });
+
+    afterEach(function () {
+      Resource._Implementations.loadWithXhr =
+        Resource._DefaultImplementations.loadWithXhr;
+    });
+
+    function patchXHRLoad(proxySpec) {
+      Resource._Implementations.loadWithXhr = function (
+        url,
         responseType,
         method,
         data,
         headers,
-        deferred
-      );
-    };
-  }
+        deferred,
+        overrideMimeType
+      ) {
+        var sourceUrl = new URL(url, "https://google.com");
+        var sourceUrlPath =
+          sourceUrl.pathname + sourceUrl.search + sourceUrl.hash;
 
-  describe("with terrain providers", () => {
+        if (!Object.keys(proxySpec).includes(sourceUrlPath)) {
+          var msg =
+            "Unexpected XHR load to url: " +
+            sourceUrlPath +
+            " (from url: " +
+            url +
+            "); spec includes: " +
+            Object.keys(proxySpec).join(", ");
+          console.error(msg);
+          throw new Error(msg);
+        }
+        var targetUrl = proxySpec[sourceUrlPath];
+        return Resource._DefaultImplementations.loadWithXhr(
+          targetUrl,
+          responseType,
+          method,
+          data,
+          headers,
+          deferred
+        );
+      };
+    }
+
     it("should work for Cesium World Terrain", () => {
       patchXHRLoad({
-        "http://localhost:8080/Specs/fake/url/layer.json":
+        "/fake/url/layer.json":
           "Data/CesiumTerrainTileJson/tile_759_335_layer.json",
-        "http://localhost:8080/Specs/fake/url/9/759/335.terrain?v=1.2.0":
+        "/fake/url/9/759/335.terrain?v=1.2.0":
           "Data/CesiumTerrainTileJson/tile_759_335.terrain",
       });
       var terrainProvider = new CesiumTerrainProvider({
-        url: "fake/url",
+        url: "/fake/url",
         requestVertexNormals: false,
         requestWaterMask: false,
       });
@@ -155,14 +178,13 @@ describe("Core/sampleTerrain", function () {
 
     it("should work for ArcGIS terrain", () => {
       patchXHRLoad({
-        "fake/url/?f=pjson": "Data/ArcGIS/tile_214_379_details.json",
-        "http://localhost:8080/Specs/fake/url/tilemap/10/384/640/128/128":
+        "/fake/url/?f=pjson": "Data/ArcGIS/tile_214_379_details.json",
+        "/fake/url/tilemap/10/384/640/128/128":
           "Data/ArcGIS/tile_214_379_tilemap.json",
-        "http://localhost:8080/Specs/fake/url/tile/9/214/379":
-          "Data/ArcGIS/tile_214_379.terrain",
+        "/fake/url/tile/9/214/379": "Data/ArcGIS/tile_214_379.terrain",
       });
       var terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: "fake/url",
+        url: "/fake/url",
       });
       var position = Cartographic.fromDegrees(
         86.93666235421982,
