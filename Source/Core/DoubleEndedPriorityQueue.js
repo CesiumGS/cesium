@@ -11,7 +11,7 @@ import defined from "./defined.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {DoubleEndedPriorityQueue.ComparatorCallback} options.comparator The comparator to use for the queue. If comparator(a, b) is less than 0, a is lower priority than b.
- * @param {Number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is full, the minimum element is removed. By default, the size of the queue is unlimited.
+ * @param {Number} [options.maximumLength] The maximum length of the queue. If an element is inserted when the queue is at full capacity, the minimum element is removed. By default, the size of the queue is unlimited.
  */
 function DoubleEndedPriorityQueue(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -52,7 +52,7 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   /**
    * Gets or sets the maximum number of elements in the queue.
    * If set to a smaller value than the current length of the queue, the lowest priority elements are removed.
-   * If an element is inserted when the queue's length equals the maximum length, the minimum element is removed.
+   * If an element is inserted when the queue is at full capacity, the minimum element is removed.
    * If set to undefined, the size of the queue is unlimited.
    *
    * @memberof DoubleEndedPriorityQueue.prototype
@@ -319,11 +319,11 @@ DoubleEndedPriorityQueue.prototype.resort = function () {
 
 /**
  * Inserts an element into the queue.
- * If the queue is full, the minimum element is removed before the new element is added.
- * If the new element is lower or equal priority to the minimum element, it is not added.
+ * If the queue is at full capacity, the minimum element is removed.
+ * The new element is returned (and not added) if it is less than or equal priority to the minimum element.
  *
  * @param {*} element
- * @returns {*|undefined} The element that was removed to make room for the new element. Only applicable if maximumLength is defined.
+ * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
  */
 DoubleEndedPriorityQueue.prototype.insert = function (element) {
   var removedElement;
@@ -340,7 +340,7 @@ DoubleEndedPriorityQueue.prototype.insert = function (element) {
       if (that._comparator(element, minimumElement) <= 0.0) {
         // The element that is being inserted is less than or equal to
         // the minimum element, so don't insert anything and exit early.
-        return undefined;
+        return element;
       }
       removedElement = that.removeMinimum();
     }

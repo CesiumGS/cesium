@@ -147,10 +147,14 @@ describe("Core/DoubleEndedPriorityQueue", function () {
       maximumLength: 2,
     });
 
-    queue.insert({ value: 1, id: 0 });
-    queue.insert({ value: 2, id: 0 });
-    var result1 = queue.insert({ value: 1, id: 1 }); // ignored because equal priority to minimum
-    var result2 = queue.insert({ value: 0, id: 1 }); // ignored because lower priority than minimum
+    var obj1 = { value: 1, id: 0 };
+    var obj2 = { value: 2, id: 0 };
+    var obj3 = { value: 1, id: 1 };
+    var obj4 = { value: 0, id: 1 };
+    var result1 = queue.insert(obj1);
+    var result2 = queue.insert(obj2);
+    var result3 = queue.insert(obj3); // ignored because equal priority to minimum
+    var result4 = queue.insert(obj4); // ignored because lower priority than minimum
 
     expect(queue.length).toEqual(2);
     expect(queue.maximumLength).toEqual(2);
@@ -158,6 +162,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.minimum.id).toEqual(0);
     expect(result1).toBeUndefined();
     expect(result2).toBeUndefined();
+    expect(result3).toEqual(obj3);
+    expect(result4).toEqual(obj4);
   });
 
   it("remove and return minimum element", function () {
