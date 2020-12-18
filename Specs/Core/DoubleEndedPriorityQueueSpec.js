@@ -220,6 +220,23 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(maximumValue).toBeUndefined();
   });
 
+  it("clones queue", function () {
+    var queue = new DoubleEndedPriorityQueue({
+      comparator: comparator,
+      maximumLength: 4,
+    });
+
+    queue.insert(1);
+    queue.insert(2);
+
+    var clone = queue.clone();
+    expect(clone.length).toEqual(queue.length);
+    expect(clone.maximumLength).toEqual(queue.maximumLength);
+    expect(clone.comparator).toEqual(queue.comparator);
+    expect(clone.maximum).toEqual(queue.maximum);
+    expect(clone.minimum).toEqual(queue.minimum);
+  });
+
   it("resets queue", function () {
     var queue = new DoubleEndedPriorityQueue({
       comparator: comparator,

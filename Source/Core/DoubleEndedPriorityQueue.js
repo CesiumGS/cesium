@@ -155,11 +155,6 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   },
 });
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} index0
- * @param {Number} index1
- */
 function swap(that, index0, index1) {
   var array = that._array;
   var temp = array[index0];
@@ -167,28 +162,14 @@ function swap(that, index0, index1) {
   array[index1] = temp;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} indexA
- * @param {Number} indexB
- */
 function lessThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) < 0.0;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} indexA
- * @param {Number} indexB
- */
 function greaterThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) > 0.0;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} index
- */
 function pushUp(that, index) {
   if (index === 0) {
     return;
@@ -217,10 +198,6 @@ function pushUp(that, index) {
   }
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} index
- */
 function pushDown(that, index) {
   var length = that._length;
   var onMinLevel = Math.floor(Math.log2(index + 1)) % 2 === 0;
