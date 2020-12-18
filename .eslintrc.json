@@ -11,7 +11,7 @@
             "files": [
                 "index.cjs",
                 "server.cjs",
-                "gulpfile.js",
+                "gulpfile.cjs",
                 "Source/Workers/transferTypedArrayTest.js"
             ],
             "parserOptions": {

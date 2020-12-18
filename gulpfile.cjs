@@ -1,4 +1,4 @@
-/*eslint-env node*/
+/*eslint-env node, es6*/
 "use strict";
 
 var fs = require("fs");
