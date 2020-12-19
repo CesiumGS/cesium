@@ -378,7 +378,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       "The embedded glb is not aligned to a 4-byte boundary."
     );
     gltfView = new Uint8Array(
-      uint8Array.subarray(byteOffset, byteOffset + gltfByteLength)
+      arrayBuffer.slice(byteOffset, byteOffset + gltfByteLength)
     );
   }
 
