@@ -56,7 +56,10 @@ function Gltf3DTileContent(options) {
 Object.defineProperties(Gltf3DTileContent.prototype, {
   featuresLength: {
     get: function () {
-      return this._batchTable.featuresLength;
+      if (defined(this._batchTable)) {
+        return this._batchTable.featuresLength;
+      }
+      return 0;
     },
   },
 
@@ -68,25 +71,37 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
 
   trianglesLength: {
     get: function () {
-      return this._model.trianglesLength;
+      if (defined(this._model)) {
+        return this._model.trianglesLength;
+      }
+      return 0;
     },
   },
 
   geometryByteLength: {
     get: function () {
-      return this._model.geometryByteLength;
+      if (defined(this._model)) {
+        return this._model.geometryByteLength;
+      }
+      return 0;
     },
   },
 
   texturesByteLength: {
     get: function () {
-      return this._model.texturesByteLength;
+      if (defined(this._model)) {
+        return this._model.texturesByteLength;
+      }
+      return 0;
     },
   },
 
   batchTableByteLength: {
     get: function () {
-      return this._batchTable.memorySizeInBytes;
+      if (defined(this._batchTable)) {
+        return this._batchTable.memorySizeInBytes;
+      }
+      return 0;
     },
   },
 
@@ -488,6 +503,10 @@ Gltf3DTileContent.prototype.getFeature = function (featureId) {
 };
 
 Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
+  if (!defined(this._model)) {
+    return;
+  }
+
   color = enabled ? color : Color.WHITE;
   if (this.featuresLength === 0) {
     this._model.color = color;
@@ -497,6 +516,10 @@ Gltf3DTileContent.prototype.applyDebugSettings = function (enabled, color) {
 };
 
 Gltf3DTileContent.prototype.applyStyle = function (style) {
+  if (!defined(this._model)) {
+    return;
+  }
+
   if (this.featuresLength === 0) {
     var hasColorStyle = defined(style) && defined(style.color);
     var hasShowStyle = defined(style) && defined(style.show);
