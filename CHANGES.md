@@ -4,7 +4,7 @@
 
 ##### Fixes :wrench:
 
-- Fixed an issue where Model.updateColor, Model.updateBackFaceCulling and Model.updateSilhouette threw errors when length of nodeCommands was 0 [#9271](https://github.com/CesiumGS/cesium/pull/9271)
+- Fixed an issue where changing a model or tileset's `color`, `backFaceCulling`, or `silhouetteSize` would trigger an error. [#9271](https://github.com/CesiumGS/cesium/pull/9271)
 
 ##### Deprecated :hourglass_flowing_sand:
 
