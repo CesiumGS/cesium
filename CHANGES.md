@@ -2,6 +2,10 @@
 
 ### 1.77 - 2020-01-04
 
+##### Fixes :wrench:
+
+- Fixed an issue where Model.updateColor, Model.updateBackFaceCulling and Model.updateSilhouette threw errors when length of nodeCommands was 0 [#9271](https://github.com/CesiumGS/cesium/pull/9271)
+
 ##### Deprecated :hourglass_flowing_sand:
 
 - `EasingFunction.QUADRACTIC_IN` was deprecated and will be removed in Cesium 1.79. It has been replaced with `EasingFunction.QUADRATIC_IN`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
