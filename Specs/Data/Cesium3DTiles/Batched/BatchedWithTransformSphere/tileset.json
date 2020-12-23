@@ -42,12 +42,7 @@
     ],
     "refine": "ADD",
     "boundingVolume": {
-      "sphere": [
-        0,
-        0,
-        10,
-        141.4214
-      ]
+      "sphere": [0, 0, 10, 141.4214]
     },
     "geometricError": 0,
     "content": {

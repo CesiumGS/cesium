@@ -101,20 +101,10 @@
           1
         ],
         "viewerRequestVolume": {
-          "sphere": [
-            0,
-            0,
-            0,
-            1000
-          ]
+          "sphere": [0, 0, 0, 1000]
         },
         "boundingVolume": {
-          "sphere": [
-            0,
-            0,
-            0,
-            10
-          ]
+          "sphere": [0, 0, 0, 10]
         },
         "geometricError": 0,
         "content": {

@@ -24,30 +24,13 @@
     ],
     "refine": "ADD",
     "boundingVolume": {
-      "box": [
-        0,
-        0,
-        10,
-        50,
-        0,
-        0,
-        0,
-        50,
-        0,
-        0,
-        0,
-        10
-      ]
+      "box": [0, 0, 10, 50, 0, 0, 0, 50, 0, 0, 0, 10]
     },
     "geometricError": 0,
     "content": {
       "uri": "tile.b3dm"
     }
   },
-  "extensionsUsed": [
-    "3DTILES_batch_table_hierarchy"
-  ],
-  "extensionsRequired": [
-    "3DTILES_batch_table_hierarchy"
-  ]
+  "extensionsUsed": ["3DTILES_batch_table_hierarchy"],
+  "extensionsRequired": ["3DTILES_batch_table_hierarchy"]
 }

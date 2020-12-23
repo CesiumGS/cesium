@@ -1,5 +1,5 @@
 {
-    "flags": {
-        "gulpfile": "gulpfile.cjs"
-    }
+  "flags": {
+    "gulpfile": "gulpfile.cjs"
+  }
 }

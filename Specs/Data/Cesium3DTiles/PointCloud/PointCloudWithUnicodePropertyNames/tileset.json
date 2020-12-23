@@ -25,12 +25,7 @@
     ],
     "refine": "ADD",
     "boundingVolume": {
-      "sphere": [
-        0,
-        0,
-        0,
-        5
-      ]
+      "sphere": [0, 0, 0, 5]
     },
     "geometricError": 0,
     "content": {

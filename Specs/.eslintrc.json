@@ -1,19 +1,17 @@
 {
-    "extends": "../.eslintrc.json",
-    "env": {
-        "jasmine": true
-    },
-    "rules": {
-        "no-self-assign": "off"
-    },
-    "overrides": [
-        {
-            "files": [
-                "karma.conf.cjs"
-            ],
-            "parserOptions": {
-                "sourceType": "script"
-            }
-        }
-    ]
+  "extends": "../.eslintrc.json",
+  "env": {
+    "jasmine": true
+  },
+  "rules": {
+    "no-self-assign": "off"
+  },
+  "overrides": [
+    {
+      "files": ["karma.conf.cjs"],
+      "parserOptions": {
+        "sourceType": "script"
+      }
+    }
+  ]
 }

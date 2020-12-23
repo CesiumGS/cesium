@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
-      "noEmit": true,
-      "types": []
+    "noEmit": true,
+    "types": []
   },
-  "files": [
-    "../../Source/Cesium.d.ts"
-  ]
+  "files": ["../../Source/Cesium.d.ts"]
 }

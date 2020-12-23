@@ -18,6 +18,7 @@
 !**/*.html
 !**/*.md
 !**/*.ts
+!**/*.json
 
 # Re-ignore a few things caught above
 **/*.min.js
@@ -25,6 +26,7 @@ Source/Cesium.js
 Source/Shaders/**/*.js
 Source/ThirdParty/**
 Source/Workers/**/*
+Source/Assets/**/*.json
 Apps/Sandcastle/ThirdParty
 
 !Source/Workers/cesiumWorkerBootstrapper.js

@@ -1,31 +1,24 @@
 {
-    "tags": {
-        "allowUnknownTags": false
+  "tags": {
+    "allowUnknownTags": false
+  },
+  "source": {
+    "include": ["Source"],
+    "exclude": ["Source/ThirdParty", "Source/Workers"],
+    "includePattern": ".+\\.js(doc)?$",
+    "excludePattern": "(^|\\/|\\\\)_"
+  },
+  "plugins": ["./Tools/jsdoc/cesiumTags"],
+  "templates": {
+    "cleverLinks": true,
+    "default": {
+      "outputSourceFiles": false
     },
-    "source": {
-        "include": [
-            "Source"
-        ],
-        "exclude": [
-            "Source/ThirdParty",
-            "Source/Workers"
-        ],
-        "includePattern": ".+\\.js(doc)?$",
-        "excludePattern": "(^|\\/|\\\\)_"
-    },
-    "plugins": [
-        "./Tools/jsdoc/cesiumTags"
-    ],
-    "templates": {
-        "cleverLinks": true,
-        "default": {
-            "outputSourceFiles": false
-        },
-        "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
-    },
-    "opts": {
-        "destination": "Build/Documentation",
-        "template": "./Tools/jsdoc/cesium_template",
-        "recurse": true
-    }
+    "sourceUrl": "https://github.com/CesiumGS/cesium/blob/{version}/Source/{filename}"
+  },
+  "opts": {
+    "destination": "Build/Documentation",
+    "template": "./Tools/jsdoc/cesium_template",
+    "recurse": true
+  }
 }
