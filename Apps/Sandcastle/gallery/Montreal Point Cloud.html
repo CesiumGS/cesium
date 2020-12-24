@@ -101,31 +101,10 @@
           })
         );
 
-        // Fly to a nice overview of the city.
-        viewer.camera.flyTo({
-          destination: new Cesium.Cartesian3(
-            1223285.2286828577,
-            -4319476.080312792,
-            4562579.020145769
-          ),
-          orientation: {
-            direction: new Cesium.Cartesian3(
-              0.63053223097472,
-              0.47519958296727743,
-              -0.6136892226931869
-            ),
-            up: new Cesium.Cartesian3(
-              0.7699959023135587,
-              -0.4824455703743441,
-              0.41755548379407276
-            ),
-          },
-          easingFunction: Cesium.EasingFunction.QUADRATIC_IN_OUT,
-        });
-
         // Add stored views around Montreal. You can add to this list by capturing camera.position, camera.direction and camera.up.
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
+            // Fly to a nice overview of the city.
             text: "Overview",
             onselect: function () {
               viewer.camera.flyTo({

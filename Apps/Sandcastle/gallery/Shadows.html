@@ -207,7 +207,7 @@
           }
         }
 
-        Sandcastle.addToolbarMenu(locationToolbarOptions);
+        Sandcastle.addDefaultToolbarMenu(locationToolbarOptions);
 
         function setEntity(entity) {
           for (i = 0; i < entitiesLength; ++i) {
@@ -232,7 +232,7 @@
           });
         }
 
-        Sandcastle.addToolbarMenu(entityToolbarOptions);
+        Sandcastle.addDefaultToolbarMenu(entityToolbarOptions);
 
         Sandcastle.addToggleButton("Shadows", viewer.shadows, function (
           checked
@@ -269,7 +269,7 @@
           }
         );
 
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "Size : 2048",
             onselect: function () {

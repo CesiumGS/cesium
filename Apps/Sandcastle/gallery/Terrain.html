@@ -48,9 +48,6 @@
           terrainProvider: worldTerrain,
         });
 
-        // set lighting to true
-        viewer.scene.globe.enableLighting = true;
-
         // setup alternative terrain providers
         var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
@@ -59,7 +56,7 @@
           credit: "Terrain data courtesy VT MÄK",
         });
 
-        Sandcastle.addToolbarMenu(
+        Sandcastle.addDefaultToolbarMenu(
           [
             {
               text: "CesiumTerrainProvider - Cesium World Terrain",

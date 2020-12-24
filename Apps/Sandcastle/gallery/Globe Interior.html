@@ -78,7 +78,7 @@
           );
         }
 
-        Sandcastle.addToolbarMenu([
+        Sandcastle.addDefaultToolbarMenu([
           {
             text: "Translucency mask",
             onselect: function () {
@@ -138,10 +138,6 @@
           },
         });
 
-        innerCore.show = true;
-        outerCore.show = false;
-        mantle.show = false;
-
         var options = [
           {
             text: "Inner Core",
@@ -177,7 +173,7 @@
           },
         ];
 
-        Sandcastle.addToolbarMenu(options);
+        Sandcastle.addDefaultToolbarMenu(options);
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }
