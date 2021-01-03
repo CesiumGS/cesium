@@ -925,6 +925,8 @@ Object.defineProperties(Billboard.prototype, {
         this.setImage(value.url, value);
       } else if (defined(value.src)) {
         this.setImage(value.src, value);
+      } else if (value instanceof HTMLCanvasElement && defined(value.id)) {
+        this.setImage(value.id, value);
       } else {
         this.setImage(createGuid(), value);
       }
