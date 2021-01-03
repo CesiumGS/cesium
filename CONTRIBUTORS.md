@@ -283,3 +283,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Victor Turansky](https://github.com/turansky)
 - [Will Jadkowski](https://github.com/willjad)
 - [Mac Clayton](https://github.com/mclayton7)
+- [Nadav Peleg](https://github.com/nadav42)
