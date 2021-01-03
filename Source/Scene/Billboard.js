@@ -182,6 +182,8 @@ function Billboard(options, billboardCollection) {
         imageId = image;
       } else if (defined(image.src)) {
         imageId = image.src;
+      } else if (image instanceof HTMLCanvasElement && defined(image.id)) {
+        imageId = image.id;
       } else {
         imageId = createGuid();
       }
