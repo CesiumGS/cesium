@@ -1,5 +1,21 @@
 # Change Log
 
+### 1.77 - 2021-01-04
+
+##### Additions :tada:
+
+- Added `ElevationBand` material, which maps colors and gradients to exact elevations. [#9132](https://github.com/CesiumGS/cesium/pull/9132)
+
+##### Fixes :wrench:
+
+- Fixed an issue where changing a model or tileset's `color`, `backFaceCulling`, or `silhouetteSize` would trigger an error. [#9271](https://github.com/CesiumGS/cesium/pull/9271)
+
+##### Deprecated :hourglass_flowing_sand:
+
+- `EasingFunction.QUADRACTIC_IN` was deprecated and will be removed in Cesium 1.79. It has been replaced with `EasingFunction.QUADRATIC_IN`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+- `EasingFunction.QUADRACTIC_OUT` was deprecated and will be removed in Cesium 1.79. It has been replaced with `EasingFunction.QUADRATIC_OUT`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+- `EasingFunction.QUADRACTIC_IN_OUT` was deprecated and will be removed in Cesium 1.79. It has been replaced with `EasingFunction.QUADRATIC_IN_OUT`. [#9220](https://github.com/CesiumGS/cesium/issues/9220)
+
 ### 1.76 - 2020-12-01
 
 ##### Fixes :wrench:
