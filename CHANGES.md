@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.78 - 2021-02-01
+
+##### Additions :tada:
+
+- Added `BillboardCollection.show`, `LabelCollection.show`, `PointPrimitiveCollection.show`, and `PolylineCollection.show` for a convenient way to control show of the entire collection
+
 ### 1.77 - 2021-01-04
 
 ##### Additions :tada:
