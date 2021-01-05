@@ -221,21 +221,27 @@ function createVertexArray(polylines, context) {
       return;
     }
 
-    when(verticesPromise, function (result) {
-      polylines._currentPositions = new Float32Array(result.currentPositions);
-      polylines._previousPositions = new Float32Array(result.previousPositions);
-      polylines._nextPositions = new Float32Array(result.nextPositions);
-      polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
-      polylines._vertexBatchIds = new Uint16Array(result.batchIds);
+    when(verticesPromise)
+      .then(function (result) {
+        polylines._currentPositions = new Float32Array(result.currentPositions);
+        polylines._previousPositions = new Float32Array(
+          result.previousPositions
+        );
+        polylines._nextPositions = new Float32Array(result.nextPositions);
+        polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
+        polylines._vertexBatchIds = new Uint16Array(result.batchIds);
 
-      var indexDatatype = result.indexDatatype;
-      polylines._indices =
-        indexDatatype === IndexDatatype.UNSIGNED_SHORT
-          ? new Uint16Array(result.indices)
-          : new Uint32Array(result.indices);
+        var indexDatatype = result.indexDatatype;
+        polylines._indices =
+          indexDatatype === IndexDatatype.UNSIGNED_SHORT
+            ? new Uint16Array(result.indices)
+            : new Uint32Array(result.indices);
 
-      polylines._ready = true;
-    });
+        polylines._ready = true;
+      })
+      .otherwise(function (error) {
+        polylines._readyPromise.reject(error);
+      });
   }
 
   if (polylines._ready && !defined(polylines._va)) {
