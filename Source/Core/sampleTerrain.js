@@ -1,6 +1,5 @@
 import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
-import ArcGISTiledElevationTerrainProvider from "./ArcGISTiledElevationTerrainProvider.js";
 
 /**
  * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -90,10 +89,6 @@ function doSampling(terrainProvider, level, positions) {
       tileRequest.level
     );
     var tilePromise = requestPromise
-      // Sometimes we need to generate our mesh for each tile first
-      //  because some tiles actually require the mesh to interpolate heights correctly
-      //  (eg: ArcGISTiledElevationTerrainProvider)
-      .then(createMeshCreatorFunction(tileRequest, terrainProvider))
       .then(createInterpolateFunction(tileRequest))
       .otherwise(createMarkFailedFunction(tileRequest));
     tilePromises.push(tilePromise);
@@ -105,45 +100,38 @@ function doSampling(terrainProvider, level, positions) {
 }
 
 /**
+ * Creates a function which will call [interpolateHeight]{@link TerrainData.prototype.interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
+ *  will assign the height property if the return value is not undefined.
  *
- * @param {Object} tileRequest
- * @param {TerrainProvider} terrainProvider
- * @returns {function(TerrainData):Promise<TerrainData>}
+ * If the return value of the returned function is false; it's suggesting that
+ *  you call [createMesh]{@link TerrainData.prototype.createMesh} first.
+ * @param {Cartographic} position The position to interpolate for and assign the height value to
+ * @param {TerrainData} terrainData
+ * @param {Rectangle} rectangle
+ * @return {function(): boolean} A function which will do the interpolation and assign the height;
+ *  returning if the height was actually assigned
  * @private
  */
-function createMeshCreatorFunction(tileRequest, terrainProvider) {
-  /**
-   * @param {TerrainData} terrainData
-   * @return {Promise<undefined>}
-   */
-  function createMesh(terrainData) {
-    return terrainData
-      .createMesh(
-        tileRequest.tilingScheme,
-        tileRequest.x,
-        tileRequest.y,
-        tileRequest.level,
-        // I'm guessing we always want no terrain exaggeration when calling sample terrain directly
-        1
-      )
-      .then(function () {
-        // make sure we pass back the same terrain data object; not the generated mesh.
-        return terrainData;
-      });
-  }
-
-  // ArcGIS terrain needs to call createMesh before calling interpolateHeight
-  //  because the mesh creation step is when the LERC decoding happens
-  if (terrainProvider instanceof ArcGISTiledElevationTerrainProvider) {
-    return createMesh;
-  }
-
-  // no-op because interpolating height via mesh in CWT doesn't seem to work;
-  //  and there's also potentially no benefit to using that code path (extra work to create the mesh)
-  return function (terrainData) {
-    return when.resolve(terrainData);
+function interpolateAndAssignHeight(position, terrainData, rectangle) {
+  return function () {
+    var height = terrainData.interpolateHeight(
+      rectangle,
+      position.longitude,
+      position.latitude
+    );
+    if (height === undefined) {
+      // if height comes back as undefined, it may implicitly mean the terrain data
+      //  requires us to call TerrainData.createMesh() first (ArcGIS requires this in particular)
+      //  so we'll return false and do that next!
+      return false;
+    }
+    position.height = height;
+    return true;
   };
 }
+
+// I'm guessing we always want no terrain exaggeration when calling sample terrain directly
+var defaultTerrainExaggeration = 1;
 
 function createInterpolateFunction(tileRequest) {
   var tilePositions = tileRequest.positions;
@@ -155,17 +143,21 @@ function createInterpolateFunction(tileRequest) {
   return function (terrainData) {
     for (var i = 0; i < tilePositions.length; ++i) {
       var position = tilePositions[i];
-      position.height = terrainData.interpolateHeight(
-        rectangle,
-        position.longitude,
-        position.latitude
-      );
-      console.log("interpolate height", {
-        terrainData: terrainData,
-        tileRequest: tileRequest,
-        rectangle: rectangle,
-        position: position,
-      });
+      var fn = interpolateAndAssignHeight(position, terrainData, rectangle);
+      var isHeightAssigned = fn();
+      if (!isHeightAssigned) {
+        // no height was returned; maybe we need to call createMesh() first
+        //  and then retry interpolating the height
+        return terrainData
+          .createMesh(
+            tileRequest.tilingScheme,
+            tileRequest.x,
+            tileRequest.y,
+            tileRequest.level,
+            defaultTerrainExaggeration
+          )
+          .then(fn);
+      }
     }
   };
 }
