@@ -407,7 +407,7 @@ Cartesian2.dot = function (left, right) {
 };
 
 /**
- * Computes the cross (outer) product of two Cartesians.
+ * Computes the magnitude of the cross product that would result from implicitly setting the Z coordinate of the input vectors to 0
  *
  * @param {Cartesian2} left The first Cartesian.
  * @param {Cartesian2} right The second Cartesian.
