@@ -514,14 +514,11 @@ describe("Core/Math", function () {
   });
 
   it("isPowerOfTwo finds powers of two", function () {
-    expect(CesiumMath.isPowerOfTwo(1)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(2)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(4)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(8)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(16)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(256)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(1024)).toEqual(true);
-    expect(CesiumMath.isPowerOfTwo(16 * 1024)).toEqual(true);
+    // Test all power of twos from 1 to 2^31
+    for (var i = 0; i < 32; i++) {
+      var powerOfTwo = (1 << i) >>> 0; // `>>>` converts to unsigned
+      expect(CesiumMath.isPowerOfTwo(powerOfTwo)).toEqual(true);
+    }
   });
 
   it("isPowerOfTwo does not find powers of two", function () {
@@ -529,13 +526,33 @@ describe("Core/Math", function () {
     expect(CesiumMath.isPowerOfTwo(3)).toEqual(false);
     expect(CesiumMath.isPowerOfTwo(5)).toEqual(false);
     expect(CesiumMath.isPowerOfTwo(12)).toEqual(false);
+    expect(CesiumMath.isPowerOfTwo(4294967295)).toEqual(false); // (2^32)-1
   });
 
   it("nextPowerOfTwo finds next power of two", function () {
     expect(CesiumMath.nextPowerOfTwo(0)).toEqual(0);
+    expect(CesiumMath.nextPowerOfTwo(1)).toEqual(1);
+    expect(CesiumMath.nextPowerOfTwo(2)).toEqual(2);
+    expect(CesiumMath.nextPowerOfTwo(3)).toEqual(4);
     expect(CesiumMath.nextPowerOfTwo(257)).toEqual(512);
     expect(CesiumMath.nextPowerOfTwo(512)).toEqual(512);
     expect(CesiumMath.nextPowerOfTwo(1023)).toEqual(1024);
+    expect(CesiumMath.nextPowerOfTwo(1073741825)).toEqual(2147483648); // (2^30)+1 -> 2^31
+    expect(CesiumMath.nextPowerOfTwo(2147483647)).toEqual(2147483648); // (2^31)-1 -> 2^31
+    expect(CesiumMath.nextPowerOfTwo(2147483648)).toEqual(2147483648); // 2^31 -> 2^31
+  });
+
+  it("previousPowerOfTwo finds previous power of two", function () {
+    expect(CesiumMath.previousPowerOfTwo(0)).toEqual(0);
+    expect(CesiumMath.previousPowerOfTwo(1)).toEqual(1);
+    expect(CesiumMath.previousPowerOfTwo(2)).toEqual(2);
+    expect(CesiumMath.previousPowerOfTwo(3)).toEqual(2);
+    expect(CesiumMath.previousPowerOfTwo(257)).toEqual(256);
+    expect(CesiumMath.previousPowerOfTwo(512)).toEqual(512);
+    expect(CesiumMath.previousPowerOfTwo(1023)).toEqual(512);
+    expect(CesiumMath.previousPowerOfTwo(2147483648)).toEqual(2147483648); // 2^31 -> 2^31
+    expect(CesiumMath.previousPowerOfTwo(2147483649)).toEqual(2147483648); // (2^31)+1 -> 2^31
+    expect(CesiumMath.previousPowerOfTwo(4294967295)).toEqual(2147483648); // (2^32)-1 -> 2^31
   });
 
   it("factorial throws for non-numbers", function () {
@@ -577,6 +594,12 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
+  it("isPowerOfTwo throws for numbers that exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.isPowerOfTwo(4294967296); // 2^32
+    }).toThrowDeveloperError();
+  });
+
   it("isPowerOfTwo throws for undefined", function () {
     expect(function () {
       CesiumMath.isPowerOfTwo();
@@ -595,9 +618,39 @@ describe("Core/Math", function () {
     }).toThrowDeveloperError();
   });
 
+  it("nextPowerOfTwo throws for results that would exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.nextPowerOfTwo(2147483649); // (2^31)+1
+    }).toThrowDeveloperError();
+  });
+
   it("nextPowerOfTwo throws for undefined", function () {
     expect(function () {
       CesiumMath.nextPowerOfTwo();
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for non-numbers", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo({});
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for negative numbers", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo(-1);
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for results that would exceed maximum 32-bit unsigned int", function () {
+    expect(function () {
+      return CesiumMath.previousPowerOfTwo(4294967296); // 2^32
+    }).toThrowDeveloperError();
+  });
+
+  it("previousPowerOfTwo throws for undefined", function () {
+    expect(function () {
+      CesiumMath.previousPowerOfTwo();
     }).toThrowDeveloperError();
   });
 
