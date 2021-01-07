@@ -100,16 +100,15 @@ function doSampling(terrainProvider, level, positions) {
 }
 
 /**
- * Creates a function which will call [interpolateHeight]{@link TerrainData.prototype.interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
+ * Calls [interpolateHeight]{@link TerrainData.prototype.interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
  *  will assign the height property if the return value is not undefined.
  *
- * If the return value of the returned function is false; it's suggesting that
- *  you call [createMesh]{@link TerrainData.prototype.createMesh} first.
+ * If the return value is false; it's suggesting that
+ *  you should call [createMesh]{@link TerrainData.prototype.createMesh} first.
  * @param {Cartographic} position The position to interpolate for and assign the height value to
  * @param {TerrainData} terrainData
  * @param {Rectangle} rectangle
- * @return {function(): boolean} A function which will do the interpolation and assign the height;
- *  returning if the height was actually assigned
+ * @return {boolean} If the height was actually interpolated and assigned
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {
@@ -142,7 +141,7 @@ var defaultTerrainExaggeration = 1;
 var delayBetweenRetryingMeshCreationMs = 10;
 
 /**
- * Recursivley call [TerrainData.createMesh]{@link TerrainData.prototype.createMesh} until it returns a promise.
+ * Recursively call [TerrainData.createMesh]{@link TerrainData.prototype.createMesh} until it returns a promise.
  *  This is to work around the fact there's a small task processor behind create mesh so it can only create a few at a
  *  time.
  * @param terrainData The TerrainData to create the mesh for
