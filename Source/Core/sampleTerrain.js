@@ -179,6 +179,7 @@ function createInterpolateFunction(tileRequest) {
     tileRequest.level
   );
   return function (terrainData) {
+    var isMeshRequired = false;
     for (var i = 0; i < tilePositions.length; ++i) {
       var position = tilePositions[i];
       var isHeightAssigned = interpolateAndAssignHeight(
@@ -193,10 +194,17 @@ function createInterpolateFunction(tileRequest) {
       //  create the mesh for this terrain data,
       //  and then retry interpolating height for all the positions
       if (!isHeightAssigned) {
+        isMeshRequired = true;
         break;
       }
     }
 
+    if (!isMeshRequired) {
+      // all position heights were interpolated
+      return when.resolve();
+    }
+
+    // create the mesh - and interpolate all the positions again
     return createMeshUntilDone(terrainData, tileRequest).then(function () {
       for (var i = 0; i < tilePositions.length; ++i) {
         var position = tilePositions[i];
