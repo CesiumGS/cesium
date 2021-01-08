@@ -361,7 +361,7 @@ function putRectangleInQuadtree(maxDepth, node, rectangle) {
       rectangle.level,
       rectangleLevelComparator
     );
-    if (index <= 0) {
+    if (index < 0) {
       index = ~index;
     }
     node.rectangles.splice(index, 0, rectangle);

@@ -48,7 +48,6 @@ require({
   "dojo/promise/all",
   "dojo/query",
   "dojo/when",
-  "dojo/Deferred",
   "dojo/request/script",
   "Sandcastle/LinkButton",
   "ThirdParty/clipboard.min",
@@ -94,7 +93,6 @@ require({
   all,
   query,
   when,
-  Deferred,
   dojoscript,
   LinkButton,
   ClipboardJS,
@@ -853,51 +851,45 @@ require({
         var parser = new DOMParser();
         var doc = parser.parseFromString(demo.code, "text/html");
 
-        return waitForDoc(doc, function () {
-          return doc.querySelector('script[id="cesium_sandcastle_script"]');
-        }).then(function () {
-          var script = doc.querySelector(
-            'script[id="cesium_sandcastle_script"]'
+        var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+        if (!script) {
+          appendConsole(
+            "consoleError",
+            "Error reading source file: " + demo.name,
+            true
           );
-          if (!script) {
-            appendConsole(
-              "consoleError",
-              "Error reading source file: " + demo.name,
-              true
-            );
-            return;
-          }
+          return;
+        }
 
-          var scriptMatch = scriptCodeRegex.exec(script.textContent);
-          if (!scriptMatch) {
-            appendConsole(
-              "consoleError",
-              "Error reading source file: " + demo.name,
-              true
-            );
-            return;
-          }
+        var scriptMatch = scriptCodeRegex.exec(script.textContent);
+        if (!scriptMatch) {
+          appendConsole(
+            "consoleError",
+            "Error reading source file: " + demo.name,
+            true
+          );
+          return;
+        }
 
-          var scriptCode = scriptMatch[1];
-          scriptCode = scriptCode.replace(/^ {8}/gm, ""); //Account for Prettier spacing
+        var scriptCode = scriptMatch[1];
+        scriptCode = scriptCode.replace(/^ {8}/gm, ""); //Account for Prettier spacing
 
-          var htmlText = "";
-          var childIndex = 0;
-          var childNode = doc.body.childNodes[childIndex];
-          while (
-            childIndex < doc.body.childNodes.length &&
-            childNode !== script
-          ) {
-            htmlText +=
-              childNode.nodeType === 1
-                ? childNode.outerHTML
-                : childNode.nodeValue;
-            childNode = doc.body.childNodes[++childIndex];
-          }
-          htmlText = htmlText.replace(/^\s+/, "");
+        var htmlText = "";
+        var childIndex = 0;
+        var childNode = doc.body.childNodes[childIndex];
+        while (
+          childIndex < doc.body.childNodes.length &&
+          childNode !== script
+        ) {
+          htmlText +=
+            childNode.nodeType === 1
+              ? childNode.outerHTML
+              : childNode.nodeValue;
+          childNode = doc.body.childNodes[++childIndex];
+        }
+        htmlText = htmlText.replace(/^\s+/, "");
 
-          applyLoadedDemo(scriptCode, htmlText);
-        });
+        applyLoadedDemo(scriptCode, htmlText);
       }
     });
   }
@@ -1232,82 +1224,57 @@ require({
     });
   }
 
-  // Work around Chrome 79 bug: https://github.com/CesiumGS/cesium/issues/8460
-  function waitForDoc(doc, test) {
-    var deferred = new Deferred();
-    if (test()) {
-      deferred.resolve(doc);
-    } else {
-      var counter = 1;
-      setTimeout(function () {
-        if (test() || counter++ > 10) {
-          deferred.resolve(doc);
-        }
-      }, 100 * counter);
-    }
-    return deferred.promise;
-  }
-
   var newInLabel = "New in " + VERSION;
   function loadDemoFromFile(demo) {
-    return requestDemo(demo.name)
-      .then(function (value) {
-        // Store the file contents for later searching.
-        demo.code = value;
+    return requestDemo(demo.name).then(function (value) {
+      // Store the file contents for later searching.
+      demo.code = value;
 
-        var parser = new DOMParser();
-        var doc = parser.parseFromString(value, "text/html");
-        return waitForDoc(doc, function () {
-          return doc.body.getAttribute("data-sandcastle-bucket");
-        });
-      })
-      .then(function (doc) {
-        var bucket = doc.body.getAttribute("data-sandcastle-bucket");
-        demo.bucket = bucket ? bucket : "bucket-requirejs.html";
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(value, "text/html");
 
-        var descriptionMeta = doc.querySelector('meta[name="description"]');
-        var description =
-          descriptionMeta && descriptionMeta.getAttribute("content");
-        demo.description = description ? description : "";
+      var bucket = doc.body.getAttribute("data-sandcastle-bucket");
+      demo.bucket = bucket ? bucket : "bucket-requirejs.html";
 
-        var labelsMeta = doc.querySelector(
-          'meta[name="cesium-sandcastle-labels"]'
-        );
-        var labels = labelsMeta && labelsMeta.getAttribute("content");
-        if (demo.isNew) {
-          demo.label = labels ? labels + "," + newInLabel : newInLabel;
-        } else {
-          demo.label = labels ? labels : "";
+      var descriptionMeta = doc.querySelector('meta[name="description"]');
+      var description =
+        descriptionMeta && descriptionMeta.getAttribute("content");
+      demo.description = description ? description : "";
+
+      var labelsMeta = doc.querySelector(
+        'meta[name="cesium-sandcastle-labels"]'
+      );
+      var labels = labelsMeta && labelsMeta.getAttribute("content");
+      if (demo.isNew) {
+        demo.label = labels ? labels + "," + newInLabel : newInLabel;
+      } else {
+        demo.label = labels ? labels : "";
+      }
+
+      // Select the demo to load upon opening based on the query parameter.
+      if (defined(queryObject.src)) {
+        if (demo.name === queryObject.src.replace(".html", "")) {
+          loadFromGallery(demo).then(function () {
+            window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
+            if (defined(queryObject.gist)) {
+              document.title = "Gist Import - Cesium Sandcastle";
+            } else {
+              document.title = demo.name + " - Cesium Sandcastle";
+            }
+          });
         }
+      }
 
-        // Select the demo to load upon opening based on the query parameter.
-        if (defined(queryObject.src)) {
-          if (demo.name === queryObject.src.replace(".html", "")) {
-            loadFromGallery(demo).then(function () {
-              window.history.replaceState(
-                demo,
-                demo.name,
-                getPushStateUrl(demo)
-              );
-              if (defined(queryObject.gist)) {
-                document.title = "Gist Import - Cesium Sandcastle";
-              } else {
-                document.title = demo.name + " - Cesium Sandcastle";
-              }
-            });
-          }
-        }
-
-        // Create a tooltip containing the demo's description.
-        demoTooltips[demo.name] = new TooltipDialog({
-          id: demo.name + "TooltipDialog",
-          style: "width: 200px; font-size: 12px;",
-          content: demo.description.replace(/\\n/g, "<br/>"),
-        });
-
-        addFileToTab(demo);
-        return demo;
+      // Create a tooltip containing the demo's description.
+      demoTooltips[demo.name] = new TooltipDialog({
+        id: demo.name + "TooltipDialog",
+        style: "width: 200px; font-size: 12px;",
+        content: demo.description.replace(/\\n/g, "<br/>"),
       });
+
+      addFileToTab(demo);
+      return demo;
+    });
   }
 
   var loading = true;

@@ -90,8 +90,7 @@ Object.defineProperties(PrimitiveCollection.prototype, {
  * Adds a primitive to the collection.
  *
  * @param {Object} primitive The primitive to add.
- * @param {Number} [index] the index to add the layer at.  If omitted, the primitive will
- *                         added at the bottom  of all existing primitives.
+ * @param {Number} [index] The index to add the layer at.  If omitted, the primitive will be added at the bottom of all existing primitives.
  * @returns {Object} The primitive added to the collection.
  *
  * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.

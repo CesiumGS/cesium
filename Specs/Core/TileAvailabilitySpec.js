@@ -3,6 +3,7 @@ import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { TileAvailability } from "../../Source/Cesium.js";
 import { WebMercatorTilingScheme } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 
 describe("Core/TileAvailability", function () {
   var webMercator = new WebMercatorTilingScheme();
@@ -190,6 +191,26 @@ describe("Core/TileAvailability", function () {
   });
 
   describe("addAvailableTileRange", function () {
+    function checkNodeRectanglesSorted(node) {
+      if (!defined(node)) {
+        return;
+      }
+
+      var levelRectangles = node.rectangles;
+      for (var i = 0; i < levelRectangles.length; ++i) {
+        for (var j = i; j < levelRectangles.length; ++j) {
+          expect(levelRectangles[i].level <= levelRectangles[j].level).toBe(
+            true
+          );
+        }
+      }
+
+      checkNodeRectanglesSorted(node._ne);
+      checkNodeRectanglesSorted(node._se);
+      checkNodeRectanglesSorted(node._nw);
+      checkNodeRectanglesSorted(node._sw);
+    }
+
     it("keeps availability ranges sorted by rectangle", function () {
       var availability = createAvailability(geographic, 15);
       availability.addAvailableTileRange(0, 0, 0, 1, 0);
@@ -209,6 +230,20 @@ describe("Core/TileAvailability", function () {
           new Cartographic(-Math.PI / 2.0, 0.0)
         )
       ).toBe(1);
+    });
+
+    it("ensure the boundary rectangles are sorted properly", function () {
+      var availability = new TileAvailability(geographic, 6);
+      availability.addAvailableTileRange(0, 0, 0, 1, 0);
+      availability.addAvailableTileRange(1, 0, 0, 2, 0);
+      availability.addAvailableTileRange(2, 0, 0, 4, 0);
+      availability.addAvailableTileRange(3, 0, 0, 8, 0);
+      availability.addAvailableTileRange(0, 0, 0, 1, 0);
+
+      for (var i = 0; i < availability._rootNodes.length; ++i) {
+        var node = availability._rootNodes[i];
+        checkNodeRectanglesSorted(node);
+      }
     });
   });
 });

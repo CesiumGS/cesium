@@ -1,4 +1,5 @@
 import Cartesian3 from "./Cartesian3.js";
+import Cartesian4 from "./Cartesian4.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
@@ -192,7 +193,9 @@ Plane.projectPointOntoPlane = function (plane, point, result) {
   return Cartesian3.subtract(point, scaledNormal, result);
 };
 
-var scratchPosition = new Cartesian3();
+var scratchInverseTranspose = new Matrix4();
+var scratchPlaneCartesian4 = new Cartesian4();
+var scratchTransformNormal = new Cartesian3();
 /**
  * Transforms the plane by the given transformation matrix.
  *
@@ -207,13 +210,38 @@ Plane.transform = function (plane, transform, result) {
   Check.typeOf.object("transform", transform);
   //>>includeEnd('debug');
 
-  Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
-  Cartesian3.normalize(scratchNormal, scratchNormal);
+  var normal = plane.normal;
+  var distance = plane.distance;
+  var inverseTranspose = Matrix4.inverseTranspose(
+    transform,
+    scratchInverseTranspose
+  );
+  var planeAsCartesian4 = Cartesian4.fromElements(
+    normal.x,
+    normal.y,
+    normal.z,
+    distance,
+    scratchPlaneCartesian4
+  );
+  planeAsCartesian4 = Matrix4.multiplyByVector(
+    inverseTranspose,
+    planeAsCartesian4,
+    planeAsCartesian4
+  );
 
-  Cartesian3.multiplyByScalar(plane.normal, -plane.distance, scratchPosition);
-  Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
+  // Convert the transformed plane to Hessian Normal Form
+  var transformedNormal = Cartesian3.fromCartesian4(
+    planeAsCartesian4,
+    scratchTransformNormal
+  );
 
-  return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
+  planeAsCartesian4 = Cartesian4.divideByScalar(
+    planeAsCartesian4,
+    Cartesian3.magnitude(transformedNormal),
+    planeAsCartesian4
+  );
+
+  return Plane.fromCartesian4(planeAsCartesian4, result);
 };
 
 /**

@@ -143,6 +143,7 @@ describe(
       "./Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf";
     var dracoBoxVertexColorsRGBAUrl =
       "./Data/Models/DracoCompression/BoxVertexColorsDracoRGBA.gltf";
+    var multiUvTestUrl = "./Data/Models/MultiUVTest/MultiUVTest.glb";
 
     var boxGltf2Url = "./Data/Models/Box-Gltf-2/Box.gltf";
     var boxGltf2WithTechniquesUrl =
@@ -3323,6 +3324,13 @@ describe(
       });
     });
 
+    it("loads a glTF with multiple texCoords", function () {
+      return loadModel(multiUvTestUrl).then(function (m) {
+        verifyRender(m);
+        primitives.remove(m);
+      });
+    });
+
     it("does not issue draw commands when ignoreCommands is true", function () {
       return loadModel(texturedBoxUrl, {
         ignoreCommands: true,
@@ -3714,8 +3722,6 @@ describe(
 
         scene.renderForSpecs();
         var callsBeforeClipping = gl.texImage2D.calls.count();
-
-        expect(model._clippingPlaneModelViewMatrix).toEqual(Matrix4.IDENTITY);
 
         model.clippingPlanes = new ClippingPlaneCollection({
           planes: [new ClippingPlane(Cartesian3.UNIT_X, 0.0)],

@@ -136,7 +136,7 @@ TimeIntervalCollectionPositionProperty.prototype.equals = function (other) {
   return (
     this === other || //
     (other instanceof TimeIntervalCollectionPositionProperty && //
-    this._intervals.equals(other._intervals, Property.equals) && //
+      this._intervals.equals(other._intervals, Property.equals) && //
       this._referenceFrame === other._referenceFrame)
   );
 };

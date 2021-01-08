@@ -34,7 +34,6 @@ function LayerInformation(layer) {
   this.availabilityLevels = layer.availabilityLevels;
   this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-  this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.availabilityPromiseCache = {};
 }
 
@@ -1278,7 +1277,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
           // For cutout terrain, if this isn't the top layer the availability tiles
           //  may never get loaded, so request it here.
           var request = new Request({
-            throttle: true,
+            throttle: false,
             throttleByServer: true,
             type: RequestType.TERRAIN,
           });

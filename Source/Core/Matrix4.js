@@ -2647,6 +2647,27 @@ Matrix4.inverseTransformation = function (matrix, result) {
   return result;
 };
 
+var scratchTransposeMatrix = new Matrix4();
+
+/**
+ * Computes the inverse transpose of a matrix.
+ *
+ * @param {Matrix4} matrix The matrix to transpose and invert.
+ * @param {Matrix4} result The object onto which to store the result.
+ * @returns {Matrix4} The modified result parameter.
+ */
+Matrix4.inverseTranspose = function (matrix, result) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("matrix", matrix);
+  Check.typeOf.object("result", result);
+  //>>includeEnd('debug');
+
+  return Matrix4.inverse(
+    Matrix4.transpose(matrix, scratchTransposeMatrix),
+    result
+  );
+};
+
 /**
  * An immutable Matrix4 instance initialized to the identity matrix.
  *
