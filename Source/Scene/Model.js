@@ -489,10 +489,12 @@ function Model(options) {
   this.clippingPlanes = options.clippingPlanes;
   // Used for checking if shaders need to be regenerated due to clipping plane changes.
   this._clippingPlanesState = 0;
-  // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
-  // This is so that when models are part of a tileset they all get clipped relative
-  // to the root tile.
-  this.clippingPlanesOriginMatrix = undefined;
+
+  // If defined, use this matrix to transform miscellaneous properties like
+  // clipping planes and IBL instead of the modelMatrix. This is so that when
+  // models are part of a tileset these properties get transformed relative to
+  // a common reference (such as the root).
+  this.referenceMatrix = undefined;
 
   /**
    * Whether to cull back-facing geometry. When true, back face culling is
@@ -564,7 +566,8 @@ function Model(options) {
   this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
   this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-  this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
   this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
   this._boundingSphere = undefined;
   this._scaledBoundingSphere = new BoundingSphere();
@@ -2489,7 +2492,7 @@ function createProgram(programToCreate, model, context) {
       model._useDefaultSpecularMaps;
     var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -2605,9 +2608,9 @@ function recreateProgram(programToCreate, model, context) {
       (defined(model._specularEnvironmentMapAtlas) &&
         model._specularEnvironmentMapAtlas.ready) ||
       model._useDefaultSpecularMaps;
-    var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+    var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -3000,12 +3003,10 @@ function getAttributeLocations(model, primitive) {
 
   var attributes = technique.attributes;
   var program = model._rendererResources.programs[technique.program];
-  var programVertexAttributes = program.vertexAttributes;
   var programAttributeLocations = program._attributeLocations;
 
-  // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-  for (location in programVertexAttributes) {
-    if (programVertexAttributes.hasOwnProperty(location)) {
+  for (location in programAttributeLocations) {
+    if (programAttributeLocations.hasOwnProperty(location)) {
       var attribute = attributes[location];
       if (defined(attribute)) {
         index = programAttributeLocations[location];
@@ -3014,11 +3015,7 @@ function getAttributeLocations(model, primitive) {
     }
   }
 
-  // Always add pre-created attributes.
-  // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-  // but should be included in the list of attribute locations for the pick program.
-  // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-  // that programVertexAttributes optimizes out unused attributes.
+  // Add pre-created attributes.
   var precreatedAttributes = model._precreatedAttributes;
   if (defined(precreatedAttributes)) {
     for (location in precreatedAttributes) {
@@ -3659,25 +3656,15 @@ function createColorFunction(model) {
   };
 }
 
-var scratchClippingPlaneMatrix = new Matrix4();
 function createClippingPlanesMatrixFunction(model) {
   return function () {
-    var clippingPlanes = model.clippingPlanes;
-    if (
-      !defined(clippingPlanes) &&
-      !defined(model._sphericalHarmonicCoefficients) &&
-      !defined(model._specularEnvironmentMaps)
-    ) {
-      return Matrix4.IDENTITY;
-    }
-    var modelMatrix = defined(clippingPlanes)
-      ? clippingPlanes.modelMatrix
-      : Matrix4.IDENTITY;
-    return Matrix4.multiply(
-      model._clippingPlaneModelViewMatrix,
-      modelMatrix,
-      scratchClippingPlaneMatrix
-    );
+    return model._clippingPlanesMatrix;
+  };
+}
+
+function createIBLReferenceFrameMatrixFunction(model) {
+  return function () {
+    return model._iblReferenceFrameMatrix;
   };
 }
 
@@ -3859,6 +3846,9 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         model
       ),
       gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model),
+      gltf_iblReferenceFrameMatrix: createIBLReferenceFrameMatrixFunction(
+        model
+      ),
       gltf_iblFactor: createIBLFactorFunction(model),
       gltf_lightColor: createLightColorFunction(model),
       gltf_sphericalHarmonicCoefficients: createSphericalHarmonicCoefficientsFunction(
@@ -4517,7 +4507,10 @@ function updateColor(model, frameState, forceDerive) {
   if (alpha > 0.0 && alpha < 1.0) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].translucentCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4553,7 +4546,10 @@ function updateBackFaceCulling(model, frameState, forceDerive) {
   if (!backFaceCulling) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].disableCullingCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].disableCullingCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4823,12 +4819,13 @@ function updateSilhouette(model, frameState, force) {
 
   var nodeCommands = model._nodeCommands;
   var dirty =
-    alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
-    alphaDirty(
-      model.silhouetteColor.alpha,
-      model._silhouetteColorPreviousAlpha
-    ) ||
-    !defined(nodeCommands[0].silhouetteModelCommand);
+    nodeCommands.length > 0 &&
+    (alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+      alphaDirty(
+        model.silhouetteColor.alpha,
+        model._silhouetteColorPreviousAlpha
+      ) ||
+      !defined(nodeCommands[0].silhouetteModelCommand));
 
   model._colorPreviousAlpha = model.color.alpha;
   model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
@@ -5100,6 +5097,10 @@ function distanceDisplayConditionVisible(model, frameState) {
 
   return distance2 >= nearSquared && distance2 <= farSquared;
 }
+
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchIBLReferenceFrameMatrix4 = new Matrix4();
+var scratchIBLReferenceFrameMatrix3 = new Matrix3();
 
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -5507,6 +5508,32 @@ Model.prototype.update = function (frameState) {
       defined(clippingPlanes) &&
       clippingPlanes.enabled &&
       clippingPlanes.length > 0;
+
+    // If defined, use the reference matrix to transform miscellaneous properties like
+    // clipping planes and IBL instead of the modelMatrix. This is so that when
+    // models are part of a tileset these properties get transformed relative to
+    // a common reference (such as the root).
+    var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
+
+    if (useClippingPlanes) {
+      var clippingPlanesMatrix = scratchClippingPlanesMatrix;
+      clippingPlanesMatrix = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        clippingPlanesMatrix
+      );
+      clippingPlanesMatrix = Matrix4.multiply(
+        clippingPlanesMatrix,
+        clippingPlanes.modelMatrix,
+        clippingPlanesMatrix
+      );
+      this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+        clippingPlanesMatrix,
+        this._clippingPlanesMatrix
+      );
+      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+    }
+
     var usesSH =
       defined(this._sphericalHarmonicCoefficients) ||
       this._useDefaultSphericalHarmonics;
@@ -5514,20 +5541,28 @@ Model.prototype.update = function (frameState) {
       (defined(this._specularEnvironmentMapAtlas) &&
         this._specularEnvironmentMapAtlas.ready) ||
       this._useDefaultSpecularMaps;
-    if (useClippingPlanes || usesSH || usesSM) {
-      var clippingPlanesOriginMatrix = defaultValue(
-        this.clippingPlanesOriginMatrix,
-        modelMatrix
-      );
-      Matrix4.multiply(
-        context.uniformState.view3D,
-        clippingPlanesOriginMatrix,
-        this._clippingPlaneModelViewMatrix
-      );
-    }
 
-    if (useClippingPlanes) {
-      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+    if (usesSH || usesSM) {
+      var iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+      var iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+      iblReferenceFrameMatrix4 = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        iblReferenceFrameMatrix4
+      );
+      iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+        iblReferenceFrameMatrix4,
+        iblReferenceFrameMatrix3
+      );
+      iblReferenceFrameMatrix3 = Matrix3.getRotation(
+        iblReferenceFrameMatrix3,
+        iblReferenceFrameMatrix3
+      );
+      this._iblReferenceFrameMatrix = Matrix3.transpose(
+        iblReferenceFrameMatrix3,
+        this._iblReferenceFrameMatrix
+      );
     }
 
     var shouldRegenerateShaders = this._shouldRegenerateShaders;

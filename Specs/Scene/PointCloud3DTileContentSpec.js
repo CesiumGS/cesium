@@ -1155,7 +1155,7 @@ describe(
           tileset.clippingPlanes = new ClippingPlaneCollection({
             planes: [
               new ClippingPlane(Cartesian3.UNIT_Z, -10.0),
-              new ClippingPlane(Cartesian3.UNIT_X, 0.0),
+              new ClippingPlane(Cartesian3.UNIT_X, 1.0),
             ],
             modelMatrix: Transforms.eastNorthUpToFixedFrame(
               tileset.boundingSphere.center

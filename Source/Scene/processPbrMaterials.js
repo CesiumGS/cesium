@@ -289,8 +289,6 @@ function generateTechnique(
     defined(material.extensions.KHR_materials_unlit)
   ) {
     isUnlit = true;
-    hasNormals = false;
-    hasTangents = false;
   }
 
   if (hasNormals) {
@@ -480,15 +478,16 @@ function generateTechnique(
       semantic: "NORMAL",
     };
     vertexShader += "attribute vec3 a_normal;\n";
-    vertexShader += "varying vec3 v_normal;\n";
-    if (hasSkinning) {
-      vertexShaderMain +=
-        "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
-    } else {
-      vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+    if (!isUnlit) {
+      vertexShader += "varying vec3 v_normal;\n";
+      if (hasSkinning) {
+        vertexShaderMain +=
+          "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
+      } else {
+        vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+      }
+      fragmentShader += "varying vec3 v_normal;\n";
     }
-
-    fragmentShader += "varying vec3 v_normal;\n";
     fragmentShader += "varying vec3 v_positionEC;\n";
   }
 
@@ -638,7 +637,7 @@ function generateTechnique(
   vertexShader += "}\n";
 
   // Fragment shader lighting
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "const float M_PI = 3.141592653589793;\n";
 
     fragmentShader +=
@@ -737,7 +736,7 @@ function generateTechnique(
   fragmentShader += fragmentShaderMain;
 
   // Add normal mapping to fragment shader
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "    vec3 ng = normalize(v_normal);\n";
     fragmentShader +=
       "    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n";
@@ -814,7 +813,7 @@ function generateTechnique(
 
   fragmentShader += "    vec3 baseColor = baseColorWithAlpha.rgb;\n";
 
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     if (useSpecGloss) {
       if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
         fragmentShader +=
@@ -1036,17 +1035,10 @@ function generateTechnique(
 
     // Environment maps were provided, use them for IBL
     fragmentShader += "#elif defined(DIFFUSE_IBL) || defined(SPECULAR_IBL) \n";
-
-    fragmentShader +=
-      "    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][2], gltf_clippingPlanesMatrix[1][2], gltf_clippingPlanesMatrix[2][2]); \n";
     fragmentShader +=
       "    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n";
     fragmentShader +=
-      "    vec3 cubeDir = normalize(yUpToZUp * fixedToENU * normalize(reflect(-v, n))); \n";
+      "    vec3 cubeDir = normalize(yUpToZUp * gltf_iblReferenceFrameMatrix * normalize(reflect(-v, n))); \n";
 
     fragmentShader += "#ifdef DIFFUSE_IBL \n";
     fragmentShader += "#ifdef CUSTOM_SPHERICAL_HARMONICS \n";
