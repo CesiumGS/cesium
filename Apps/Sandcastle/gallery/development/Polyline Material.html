@@ -72,13 +72,18 @@
                   -80.0,
                   35.0,
                 ]),
-                width: 10.0,
+                width: 40.0,
                 vertexFormat: Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
               }),
             }),
             appearance: new Cesium.PolylineMaterialAppearance({
               material: Cesium.Material.fromType(
-                Cesium.Material.PolylineArrowType
+                Cesium.Material.PolylineArrowType,
+                {
+                  color: Cesium.Color.fromAlpha(Cesium.Color.GOLD, 0.3),
+                  outlineColor: Cesium.Color.GOLD,
+                  outlineWidth: 2,
+                }
               ),
             }),
           })
