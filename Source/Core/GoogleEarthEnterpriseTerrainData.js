@@ -12,8 +12,8 @@ import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import QuantizedMeshTerrainData from "./QuantizedMeshTerrainData.js";
 import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
-import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainData from "./TerrainData.js";
+import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 
 /**

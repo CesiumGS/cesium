@@ -8,7 +8,7 @@
 
 ##### Breaking Changes :mega:
 
-- Changed the `TaskProcessor.maximumActiveTasks` constructor option to be infinity by default.
+- Changed the `TaskProcessor.maximumActiveTasks` constructor option to be infinity by default. [#9313](https://github.com/CesiumGS/cesium/pull/9313)
 
 ### 1.77 - 2021-01-04
 

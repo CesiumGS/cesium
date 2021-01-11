@@ -12,8 +12,8 @@ import CesiumMath from "./Math.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Rectangle from "./Rectangle.js";
 import TaskProcessor from "./TaskProcessor.js";
-import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainData from "./TerrainData.js";
+import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
 

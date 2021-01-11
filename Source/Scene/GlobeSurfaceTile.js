@@ -633,6 +633,7 @@ var scratchCreateMeshOptions = {
   y: 0,
   level: 0,
   exaggeration: 1.0,
+  throttle: true,
 };
 
 function transform(surfaceTile, frameState, terrainProvider, x, y, level) {

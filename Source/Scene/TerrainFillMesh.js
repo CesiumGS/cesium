@@ -813,6 +813,7 @@ var scratchCreateMeshOptions = {
   y: 0,
   level: 0,
   exaggeration: 1.0,
+  throttle: true,
 };
 function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
@@ -986,7 +987,6 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
     createMeshOptions.x = tile.x;
     createMeshOptions.y = tile.y;
     createMeshOptions.level = tile.level;
-    createMeshOptions.exaggeration = 1.0;
 
     fill.mesh = terrainData._createMeshSync(createMeshOptions);
   } else {
