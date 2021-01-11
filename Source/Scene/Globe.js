@@ -705,7 +705,9 @@ Globe.prototype.pickWorldCoordinates = function (
       scene.mapProjection,
       cullBackFaces,
       result,
-      this.useNewPicking
+      this.useNewPicking,
+      sphereIntersections[i].boundingVolumeSourceTile,
+      false
     );
     if (defined(intersection)) {
       break;
@@ -757,7 +759,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Globe.prototype.getHeight = function (cartographic) {
+Globe.prototype.getHeight = function (cartographic, mode, doLog = false) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartographic)) {
     throw new DeveloperError("cartographic is required");
@@ -861,11 +863,13 @@ Globe.prototype.getHeight = function (cartographic) {
 
   var intersection = tile.data.pick(
     ray, // ray
-    undefined, //SceneMode.SCENE3D,  // mode
+    mode, //SceneMode.SCENE3D,  // mode
     undefined, // projection
     false, // cullBackFaces
-    scratchGetHeightIntersection // result
-    // useNewPicking
+    scratchGetHeightIntersection, // result
+    true, // useNewPicking
+    tile, // quadTreeTile
+    doLog // log
   );
   if (!defined(intersection)) {
     return undefined;

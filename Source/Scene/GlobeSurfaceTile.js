@@ -27,6 +27,7 @@ import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
 import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
+import CesiumMath from "../Core/Math.js";
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -151,13 +152,80 @@ var scratchV0 = new Cartesian3();
 var scratchV1 = new Cartesian3();
 var scratchV2 = new Cartesian3();
 
+function cartesianToStr(c) {
+  return `new Cartesian3(
+            ${c.x},
+            ${c.y},
+            ${c.z}
+          )`;
+}
+
+function rayToStr(ray) {
+  return `new Ray(
+          ${cartesianToStr(ray.origin)},
+          ${cartesianToStr(ray.direction)}
+        )`;
+}
+
+function debugLog(
+  self,
+  quadTreeTile,
+  ray,
+  newPickedValue,
+  oldPickedValue = null
+) {
+  var newCart;
+  if (newPickedValue) {
+    newCart = self.boundingVolumeSourceTile.tilingScheme.ellipsoid.cartesianToCartographic(
+      newPickedValue
+    );
+  }
+
+  var oldCart;
+  if (oldPickedValue) {
+    oldCart = self.boundingVolumeSourceTile.tilingScheme.ellipsoid.cartesianToCartographic(
+      oldPickedValue
+    );
+  }
+
+  var lat = 0,
+    lon = 0,
+    height = 0;
+  if (!newCart && oldCart) {
+    lat = oldCart.latitude;
+    lon = oldCart.longitude;
+    height = oldCart.height;
+  }
+
+  if (newCart) {
+    lat = newCart.latitude;
+    lon = newCart.longitude;
+    height = newCart.height;
+  }
+
+  console.log(`return pick(
+        ArcGISTerrainType,
+        {
+          level: ${quadTreeTile ? quadTreeTile.level : null},
+          x: ${quadTreeTile ? quadTreeTile.x : null},
+          y: ${quadTreeTile ? quadTreeTile.y : null},
+        },
+        ${rayToStr(ray)},
+        ${CesiumMath.toDegrees(lat)},
+        ${CesiumMath.toDegrees(lon)},
+        ${height}
+      );
+`);
+}
 GlobeSurfaceTile.prototype.pick = function (
   ray,
   mode,
   projection,
   cullBackFaces,
   result,
-  useNewPicking
+  useNewPicking,
+  quadTreeTile,
+  doLog
 ) {
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
@@ -207,7 +275,7 @@ GlobeSurfaceTile.prototype.pick = function (
   var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
   var doNewPick = useNewPicking && canNewPick;
 
-  var time = false;
+  var time = true;
 
   var newPickedValue;
   if (canNewPick) {
@@ -226,33 +294,19 @@ GlobeSurfaceTile.prototype.pick = function (
   }
 
   if (!Cartesian3.equals(newPickedValue, oldPickedValue) && canNewPick) {
-    console.log(
+    console.error(
       "pick results were different",
       "new",
       newPickedValue,
       "old",
       oldPickedValue
     );
+    debugLog(this, quadTreeTile, ray, newPickedValue, oldPickedValue);
+    // debugger;
   }
 
-  function toStr(c) {
-    return `new Cartesian3(${c.x}, ${c.y}, ${c.z})`;
-  }
-
-  if (doNewPick && newPickedValue) {
-    console.log(
-      mesh._buffer,
-      `
-    ${toStr(ray.origin)}
-    ${toStr(ray.direction)}
-    ${toStr(newPickedValue)}
-
-new Uint8Array([
-    ${new Uint8Array(mesh._buffer)}
-])
-`
-    );
-    // console.log('pick', toStr(newPickedValue), toStr(ray.origin), toStr(ray.direction), new Uint8Array(mesh._buffer));
+  if (doNewPick && newPickedValue && doLog) {
+    debugLog(this, quadTreeTile, ray, newPickedValue);
   }
 
   return pickedValue;

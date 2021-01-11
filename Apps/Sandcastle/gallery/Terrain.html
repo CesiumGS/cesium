@@ -48,6 +48,7 @@
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
+        window.viewer = viewer;
 
         // set lighting to true
         viewer.scene.globe.enableLighting = true;
@@ -337,6 +338,19 @@
         );
 
         Sandcastle.addToolbarButton(
+          "Sample The Thing",
+          function () {
+            var position = Cesium.Cartographic.fromDegrees(
+              86.93666235421982,
+              27.97989963555095
+            );
+            var height = viewer.scene.globe.getHeight(position);
+            console.log(height);
+          },
+          "sampleButtons"
+        );
+
+        Sandcastle.addToolbarButton(
           "Sample Most Detailed Everest Terrain",
           function () {
             if (!Cesium.defined(viewer.terrainProvider.availability)) {
@@ -367,12 +381,20 @@
 
         handler.setInputAction(function (movement) {
           var cartographic = mouseToCartographic(movement);
-          Cesium.sampleTerrain(viewer.terrainProvider, detailLevel, [
+          var height = viewer.scene.globe.getHeight(
             cartographic,
-          ]).then(function (positions) {
-            console.log("sampled height", positions[0].height);
-            sampleTerrainSuccess(positions);
-          });
+            viewer.scene.mode,
+            true
+          );
+          console.log(height);
+          cartographic.height = height;
+          sampleTerrainSuccess([cartographic]);
+
+          // Cesium.sampleTerrain(viewer.terrainProvider, detailLevel, [
+          //   cartographic,
+          // ]).then(function (positions) {
+          //   console.log("sampled height", positions[0].height);
+          // });
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         handler.setInputAction(function (movement) {

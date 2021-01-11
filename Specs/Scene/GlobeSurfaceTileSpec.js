@@ -16,10 +16,13 @@ import {
   Ray,
   SceneMode,
   TerrainState,
+  WebMercatorTilingScheme,
   when,
 } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import arcGisTestData from "./GlobeSurfaceTileSpecData.js";
+import { resetXHRPatch, setupXHRCache } from "../patchXHRLoad.js";
+import CesiumMath from "../../Source/Core/Math.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   var frameState;
@@ -573,3 +576,205 @@ describe("Scene/GlobeSurfaceTile", function () {
     });
   });
 });
+
+var ArcGISTerrainType = "ArcGIS";
+var CesiumWorldTerrainType = "CWT";
+
+describe(
+  "globe surface tile pick with terrain provider",
+  function () {
+    var scene;
+
+    beforeAll(function () {
+      scene = createScene();
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      resetXHRPatch();
+    });
+
+    xit("seemed to return nil CTW", function () {
+      return pick(
+        CesiumWorldTerrainType,
+        {
+          level: 9,
+          x: 758,
+          y: 177,
+        },
+        new Ray(
+          new Cartesian3(
+            311857.55464949476,
+            5656003.706636155,
+            2926806.329895747
+          ),
+          new Cartesian3(
+            0.8350919260620685,
+            0.057571663780277935,
+            -0.5470895525921834
+          )
+        ),
+        27.47724158244775,
+        86.83596141629846,
+        2267.7117421569124
+      );
+    });
+
+    it("should pick CWT 1", function () {
+      return pick(
+        CesiumWorldTerrainType,
+        {
+          level: 13,
+          x: 12148,
+          y: 2822,
+        },
+        new Ray(
+          new Cartesian3(
+            294572.06453976966,
+            5637826.573008351,
+            2978624.6868285
+          ),
+          new Cartesian3(
+            0.9682579127848576,
+            -0.23448864932548388,
+            0.08655453579692586
+          )
+        ),
+        27.987476722110003,
+        86.92709550300602,
+        8648.509232163899
+      );
+    });
+
+    it("should pick ArcGIS 1", function () {
+      return pick(
+        ArcGISTerrainType,
+        {
+          level: 13,
+          x: 6074,
+          y: 3432,
+        },
+        new Ray(
+          new Cartesian3(
+            294570.8548138021,
+            5637823.198008731,
+            2978631.1945253233
+          ),
+          new Cartesian3(
+            0.9456141995659008,
+            -0.3051366690223705,
+            0.11271822744025553
+          )
+        ),
+        27.99134174541378,
+        86.930762403258,
+        8263.848056698958
+      );
+    });
+
+    it("should pick ArcGIS 2", () => {
+      return pick(
+        ArcGISTerrainType,
+        {
+          level: 13,
+          x: 6074,
+          y: 3432,
+        },
+        new Ray(
+          new Cartesian3(
+            294598.65625736193,
+            5637822.940060011,
+            2978628.933213219
+          ),
+          new Cartesian3(
+            0.966382191319884,
+            -0.23499867020411117,
+            0.10431244078286432
+          )
+        ),
+        27.98885728722371,
+        86.92604374347968,
+        8702.236719579063
+      );
+    });
+  },
+  "WebGL"
+);
+
+function pick(
+  terrainType,
+  tileDetails,
+  rayToPick,
+  expectedLatitude,
+  expectedLongitude,
+  expectedHeight
+) {
+  var terrainProvider, tilingSceheme;
+  if (terrainType === CesiumWorldTerrainType) {
+    setupXHRCache("https://assets.cesium.com/1/", "Data/assets.cesium.com/1/");
+    terrainProvider = createWorldTerrain();
+    tilingSceheme = new GeographicTilingScheme();
+  } else if (terrainType === ArcGISTerrainType) {
+    var arcGISUrl =
+      "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer/";
+    setupXHRCache(arcGISUrl, "Data/elevation3d.arcgis.com/");
+    terrainProvider = new ArcGISTiledElevationTerrainProvider({
+      url: arcGISUrl,
+    });
+    tilingSceheme = new WebMercatorTilingScheme();
+  } else {
+    throw new Error("unknown terrain type");
+  }
+
+  var tile = new QuadtreeTile({
+    tilingScheme: tilingSceheme,
+    level: tileDetails.level,
+    x: tileDetails.x,
+    y: tileDetails.y,
+  });
+
+  var frameState = {
+    context: {
+      cache: {},
+    },
+  };
+
+  var imageryLayerCollection = new ImageryLayerCollection();
+  var processor = new TerrainTileProcessor(
+    frameState,
+    terrainProvider,
+    imageryLayerCollection
+  );
+
+  processor.mockWebGL();
+
+  return processor.process([tile]).then(function () {
+    tile.data.boundingVolumeSourceTile = tile;
+    expect(tile.data.terrainState).toEqual(TerrainState.READY);
+
+    function cartesianToCartographic(cartesian) {
+      return tile.tilingScheme.ellipsoid.cartesianToCartographic(cartesian);
+    }
+
+    var result = tile.data.pick(
+      rayToPick, // ray
+      SceneMode.SCENE3D, // mode
+      undefined, // projection
+      false, // cullBackFaces
+      null, // result
+      true, // useNewPicking
+      tile // globeSurfaceTile
+    );
+    expect(result).toBeDefined();
+
+    var toDeg = CesiumMath.toDegrees;
+    var cartographic = result ? cartesianToCartographic(result) : null;
+
+    expect(toDeg(cartographic.longitude)).toBeCloseTo(expectedLongitude, 0);
+    expect(toDeg(cartographic.latitude)).toBeCloseTo(expectedLatitude, 0);
+    expect(cartographic.height).toBeCloseTo(expectedHeight, 0);
+  });
+}
