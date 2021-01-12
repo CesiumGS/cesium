@@ -126,10 +126,11 @@ describe("Core/EllipsoidGeodesic", function () {
     var ellipsoid = new Ellipsoid(6, 6, 3);
 
     var start = new Cartographic(
-      -0.00007666666351724416, -1.0177775506062248e-12);
+      -0.00007666666351724416,
+      -1.0177775506062248e-12
+    );
 
-    var end = new Cartographic(
-      0.005225266485504501, -4.177992510444177e-30);
+    var end = new Cartographic(0.005225266485504501, -4.177992510444177e-30);
 
     var geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
     expect(geodesic.surfaceDistance).not.toBeNaN();
