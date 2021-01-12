@@ -66,6 +66,7 @@ if (!concurrency) {
 
 var sourceFiles = [
   "Source/**/*.js",
+  "ThirdParty/navigation/**/*.js",
   "!Source/*.js",
   "!Source/Workers/**",
   "!Source/WorkersES6/**",
@@ -109,6 +110,7 @@ var filesToConvertES6 = [
   "Source/**/*.js",
   "Specs/**/*.js",
   "!Source/ThirdParty/**",
+  "ThirdParty/navigation/**/*.js",
   "!Source/Cesium.js",
   "!Source/copyrightHeader.js",
   "!Source/Shaders/**",

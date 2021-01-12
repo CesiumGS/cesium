@@ -1,6 +1,6 @@
 import defaultValue from '../../Source/Core/defaultValue.js';
 import defined from '../../Source/Core/defined.js';
-import defineProperties from '../../Source/Core/defineProperties.js';
+import defineProperties from './defineProperties.js';
 import CesiumEvent from '../../Source/Core/Event.js';
 import Knockout from '../../Source/ThirdParty/knockout.js';
 import registerKnockoutBindings from './Core/registerKnockoutBindings.js';

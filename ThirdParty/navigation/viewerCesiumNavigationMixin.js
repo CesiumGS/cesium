@@ -1,5 +1,5 @@
 import defined from '../../Source/Core/defined.js';
-import defineProperties from '../../Source/Core/defineProperties.js';
+import defineProperties from './defineProperties.js';
 import DeveloperError from '../../Source/Core/DeveloperError.js';
 import CesiumNavigation from './CesiumNavigation.js';
 /**
