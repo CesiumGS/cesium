@@ -1,8 +1,12 @@
 {
     "extends": ["./Tools/eslint-config-cesium/browser.js", "prettier"],
     "plugins": [
-        "html"
+        "html",
+        "es"
     ],
+    "parserOptions": {
+        "ecmaVersion": 6
+    },
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
     },
@@ -16,6 +20,16 @@
             ],
             "parserOptions": {
                 "sourceType": "script"
+            }
+        },
+        {
+            "files":["./**/*.js"],
+            "extends": [
+                "plugin:es/restrict-to-es5"
+            ],
+            "rules": {
+                "es/no-modules": "off",
+                "es/no-typed-arrays": "off"
             }
         }
     ]
