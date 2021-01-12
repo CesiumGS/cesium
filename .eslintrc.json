@@ -1,5 +1,9 @@
 {
-    "extends": ["./Tools/eslint-config-cesium/browser.js", "prettier"],
+    "extends": [
+        "./Tools/eslint-config-cesium/browser.js", 
+        "prettier",
+        "plugin:es/restrict-to-es5"
+    ],
     "plugins": [
         "html",
         "es"
@@ -8,7 +12,9 @@
         "ecmaVersion": 6
     },
     "rules": {
-        "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
+        "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+        "es/no-modules": "off",
+        "es/no-typed-arrays": "off"
     },
     "overrides": [
         {
@@ -20,16 +26,6 @@
             ],
             "parserOptions": {
                 "sourceType": "script"
-            }
-        },
-        {
-            "files":["./**/*.js"],
-            "extends": [
-                "plugin:es/restrict-to-es5"
-            ],
-            "rules": {
-                "es/no-modules": "off",
-                "es/no-typed-arrays": "off"
             }
         }
     ]
