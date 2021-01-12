@@ -127,49 +127,8 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
   return true;
 }
 
-function sleep(ms) {
-  var deferred = when.defer();
-  window.setTimeout(function () {
-    deferred.resolve();
-  }, ms);
-  return deferred.promise;
-}
-
 // I'm guessing we always want no terrain exaggeration when calling sample terrain directly
 var defaultTerrainExaggeration = 1;
-// each time we retry creating a mesh, we're creating a deeper calls stack; so probably don't smash this too hard.
-var delayBetweenRetryingMeshCreationMs = 10;
-
-/**
- * Recursively call [TerrainData.createMesh]{@link TerrainData.prototype.createMesh} until it returns a promise.
- *  This is to work around the fact there's a small task processor behind create mesh so it can only create a few at a
- *  time.
- * @param terrainData The TerrainData to create the mesh for
- * @param tileRequest Details about how to create the mesh
- * @return {Promise<TerrainMesh>} A promise which resolves once the mesh has been created
- * @private
- */
-function createMeshUntilDone(terrainData, tileRequest) {
-  var createMeshPromise = terrainData.createMesh(
-    tileRequest.tilingScheme,
-    tileRequest.x,
-    tileRequest.y,
-    tileRequest.level,
-    defaultTerrainExaggeration
-  );
-
-  if (createMeshPromise) {
-    // if we get no promise back, it probably means the task processor is full;
-    //  so wait for the next frame, then call it again! forever!
-    return createMeshPromise;
-  }
-
-  function tryAgain() {
-    return createMeshUntilDone(terrainData, tileRequest);
-  }
-
-  return sleep(delayBetweenRetryingMeshCreationMs).then(tryAgain);
-}
 
 function createInterpolateFunction(tileRequest) {
   var tilePositions = tileRequest.positions;
@@ -187,12 +146,9 @@ function createInterpolateFunction(tileRequest) {
         terrainData,
         rectangle
       );
-
-      // if no height was returned; maybe we need to call createMesh() first
-      //  and then retry interpolating the height
-      // so break out of this loop,
-      //  create the mesh for this terrain data,
-      //  and then retry interpolating height for all the positions
+      // we've found a position which returned undefined - hinting to us
+      //  that we probably need to create a mesh for this terrain data.
+      // so break out of this loop and create the mesh - then we'll interpolate all the heights again
       if (!isHeightAssigned) {
         isMeshRequired = true;
         break;
@@ -200,17 +156,31 @@ function createInterpolateFunction(tileRequest) {
     }
 
     if (!isMeshRequired) {
-      // all position heights were interpolated
+      // all position heights were interpolated - we don't need the mesh
       return when.resolve();
     }
 
     // create the mesh - and interpolate all the positions again
-    return createMeshUntilDone(terrainData, tileRequest).then(function () {
-      for (var i = 0; i < tilePositions.length; ++i) {
-        var position = tilePositions[i];
-        interpolateAndAssignHeight(position, terrainData, rectangle);
-      }
-    });
+    return terrainData
+      .createMesh({
+        tilingScheme: tileRequest.tilingScheme,
+        x: tileRequest.x,
+        y: tileRequest.y,
+        level: tileRequest.level,
+        exaggeration: defaultTerrainExaggeration,
+        // don't throttle this mesh creation because we've asked to sample these points;
+        //  so sample them! I don't care how many tiles that is!
+        throttle: false,
+      })
+      .then(function () {
+        // mesh has been created - so go through every position (maybe again)
+        //  and re-interpolate the heights - presumably using the mesh this time
+        for (var i = 0; i < tilePositions.length; ++i) {
+          var position = tilePositions[i];
+          // if it doesn't work this time - that's fine, we tried.
+          interpolateAndAssignHeight(position, terrainData, rectangle);
+        }
+      });
   };
 }
 
