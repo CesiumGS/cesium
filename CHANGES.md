@@ -2,13 +2,13 @@
 
 ### 1.78 - 2021-02-01
 
-##### Additions :tada:
-
-- Added `Cartesian2.cross`. [#9305](https://github.com/CesiumGS/cesium/pull/9305)
-
 ##### Breaking Changes :mega:
 
 - Changed the `TaskProcessor.maximumActiveTasks` constructor option to be infinity by default. [#9313](https://github.com/CesiumGS/cesium/pull/9313)
+
+##### Additions :tada:
+
+- Added `Cartesian2.cross`. [#9305](https://github.com/CesiumGS/cesium/pull/9305)
 
 ### 1.77 - 2021-01-04
 
