@@ -1,6 +1,24 @@
 # Change Log
 
-### 1.77 - 2020-01-04
+### 1.78 - 2021-02-01
+
+##### Additions :tada:
+
+- Added `Cartesian2.cross`. [#9305](https://github.com/CesiumGS/cesium/pull/9305)
+
+##### Breaking Changes :mega:
+
+- Changed the `TaskProcessor.maximumActiveTasks` constructor option to be infinity by default. [#9313](https://github.com/CesiumGS/cesium/pull/9313)
+
+### 1.77 - 2021-01-04
+
+##### Additions :tada:
+
+- Added `ElevationBand` material, which maps colors and gradients to exact elevations. [#9132](https://github.com/CesiumGS/cesium/pull/9132)
+
+##### Fixes :wrench:
+
+- Fixed an issue where changing a model or tileset's `color`, `backFaceCulling`, or `silhouetteSize` would trigger an error. [#9271](https://github.com/CesiumGS/cesium/pull/9271)
 
 ##### Deprecated :hourglass_flowing_sand:
 
