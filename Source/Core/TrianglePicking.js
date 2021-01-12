@@ -111,6 +111,7 @@ function rayCubeIntersect(ray) {
 }
 
 function onTheFlyNodeAABB(level, x, y, z) {
+  // TODO only need the centre at this point!
   // var dimAtLevel = Math.pow(2, level);
   // var sizeAtLevel = 1.0 / dimAtLevel;
   var sizeAtLevel = 1.0 / Math.pow(2, level);
@@ -734,32 +735,167 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
         overflowTri2,
         scratchOverlap1
       );
-      nodeAddTriangleToChildren(
-        node,
-        level,
-        x,
-        y,
-        z,
-        overflowTri2,
-        overflowOverlap2.bitMask,
-        triangles,
-        nodes
-      );
+
+      // nodeAddTriangleToChildren(
+      //   node,
+      //   level,
+      //   x,
+      //   y,
+      //   z,
+      //   overflowTri2,
+      //   overflowOverlap2.bitMask,
+      //   triangles,
+      //   nodes
+      // );
+
+      for (var childIdx = 0; childIdx < 8; childIdx++) {
+        var overlapsChild = (overflowOverlap2.bitMask & (1 << childIdx)) > 0;
+        if (overlapsChild) {
+          var childNode = nodes[childIdx + node.firstChildNodeIdx];
+          var _x, _y, _z;
+          if (childIdx === 0) {
+            {
+              _x = x * 2;
+              _y = y * 2;
+              _z = z * 2;
+            }
+          } else if (childIdx === 1) {
+            {
+              _x = x * 2 + 1;
+              _y = y * 2;
+              _z = z * 2;
+            }
+          } else if (childIdx === 2) {
+            {
+              _x = x * 2;
+              _y = y * 2 + 1;
+              _z = z * 2;
+            }
+          } else if (childIdx === 3) {
+            {
+              _x = x * 2 + 1;
+              _y = y * 2 + 1;
+              _z = z * 2;
+            }
+          } else if (childIdx === 4) {
+            {
+              _x = x * 2;
+              _y = y * 2;
+              _z = z * 2 + 1;
+            }
+          } else if (childIdx === 5) {
+            {
+              _x = x * 2 + 1;
+              _y = y * 2;
+              _z = z * 2 + 1;
+            }
+          } else if (childIdx === 6) {
+            {
+              _x = x * 2;
+              _y = y * 2 + 1;
+              _z = z * 2 + 1;
+            }
+          } else if (childIdx === 7) {
+            {
+              _x = x * 2 + 1;
+              _y = y * 2 + 1;
+              _z = z * 2 + 1;
+            }
+          }
+          nodeAddTriangle(
+            childNode,
+            level + 1,
+            _x,
+            _y,
+            _z,
+            overflowTri2,
+            triangles,
+            nodes
+          );
+        }
+      }
     }
     triangleIdxs.length = 0;
   }
   if (filterDown) {
-    nodeAddTriangleToChildren(
-      node,
-      level,
-      x,
-      y,
-      z,
-      triangle,
-      overlap.bitMask,
-      triangles,
-      nodes
-    );
+    // nodeAddTriangleToChildren(
+    //   node,
+    //   level,
+    //   x,
+    //   y,
+    //   z,
+    //   triangle,
+    //   overlap.bitMask,
+    //   triangles,
+    //   nodes
+    // );
+
+    for (var childIdxBBBB = 0; childIdxBBBB < 8; childIdxBBBB++) {
+      var overlapsChildBBB = (overlap.bitMask & (1 << childIdxBBBB)) > 0;
+      if (overlapsChildBBB) {
+        var childNodeBBBB = nodes[childIdxBBBB + node.firstChildNodeIdx];
+        var _xBBBB, _yBBBB, _zBBBB;
+        if (childIdxBBBB === 0) {
+          {
+            _xBBBB = x * 2;
+            _yBBBB = y * 2;
+            _zBBBB = z * 2;
+          }
+        } else if (childIdxBBBB === 1) {
+          {
+            _xBBBB = x * 2 + 1;
+            _yBBBB = y * 2;
+            _zBBBB = z * 2;
+          }
+        } else if (childIdxBBBB === 2) {
+          {
+            _xBBBB = x * 2;
+            _yBBBB = y * 2 + 1;
+            _zBBBB = z * 2;
+          }
+        } else if (childIdxBBBB === 3) {
+          {
+            _xBBBB = x * 2 + 1;
+            _yBBBB = y * 2 + 1;
+            _zBBBB = z * 2;
+          }
+        } else if (childIdxBBBB === 4) {
+          {
+            _xBBBB = x * 2;
+            _yBBBB = y * 2;
+            _zBBBB = z * 2 + 1;
+          }
+        } else if (childIdxBBBB === 5) {
+          {
+            _xBBBB = x * 2 + 1;
+            _yBBBB = y * 2;
+            _zBBBB = z * 2 + 1;
+          }
+        } else if (childIdxBBBB === 6) {
+          {
+            _xBBBB = x * 2;
+            _yBBBB = y * 2 + 1;
+            _zBBBB = z * 2 + 1;
+          }
+        } else if (childIdxBBBB === 7) {
+          {
+            _xBBBB = x * 2 + 1;
+            _yBBBB = y * 2 + 1;
+            _zBBBB = z * 2 + 1;
+          }
+        }
+        nodeAddTriangle(
+          childNodeBBBB,
+          level + 1,
+          _xBBBB,
+          _yBBBB,
+          _zBBBB,
+          triangle,
+          triangles,
+          nodes
+        );
+      }
+    }
   } else {
     triangleIdxs.push(triangle.index);
   }
