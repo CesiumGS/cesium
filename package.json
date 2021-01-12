@@ -45,7 +45,7 @@
     "bluebird": "^3.4.6",
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
-    "eslint": "^7.17.0",
+    "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-es": "^4.1.0",
     "eslint-plugin-html": "^6.0.0",
