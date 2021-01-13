@@ -6,7 +6,7 @@
 
 - Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
 
-### 1.77 - 2020-01-04
+### 1.77 - 2021-01-04
 
 ##### Additions :tada:
 
