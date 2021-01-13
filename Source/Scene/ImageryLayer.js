@@ -724,6 +724,9 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     imageryBounds,
     clippedRectangleScratch
   );
+  if (!defined(clippedImageryRectangle)) {
+    return false;
+  }
 
   var imageryTileXYToRectangle;
   if (useWebMercatorT) {
