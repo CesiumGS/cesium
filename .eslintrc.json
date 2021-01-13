@@ -8,9 +8,6 @@
         "html",
         "es"
     ],
-    "parserOptions": {
-        "ecmaVersion": 6
-    },
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
         "es/no-modules": "off",
