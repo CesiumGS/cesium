@@ -726,7 +726,8 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
       new Node(),
       new Node()
     );
-    for (var triidx of triangleIdxs) {
+    for (let i = 0; i < triangleIdxs.length; i++) {
+      let triidx = triangleIdxs[i];
       var overflowTri2 = triangles[triidx];
       var overflowOverlap2 = getOverlap(
         aabbCenterX,

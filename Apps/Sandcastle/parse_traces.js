@@ -1,27 +1,58 @@
-//requiring path and fs modules
-const path = require("path");
-const fs = require("fs");
-const directoryPath = path.join(__dirname, "traces");
+import path from "path";
+import fs from "fs";
+const name = path.resolve(path.dirname(""));
+const directoryPath = path.join(name, "traces");
+
+const methodNamesWeCareAbout = [
+  "nodeAddTriangle",
+  "getOverlap",
+  "TrianglePicking",
+  "computeVertices",
+];
+
 fs.readdir(directoryPath, function (err, files) {
   if (err) {
     return console.log("Unable to scan directory: " + err);
   }
-  let fileObjects = files.map((file) => {
-    const reg = new RegExp("(\\d+).json").exec(file);
-    const ts = parseInt(reg[1]);
-    return {
-      name: file,
-      ts,
-    };
-  });
+
+  let fileObjects = files
+    .filter((f) => f.endsWith(".json"))
+    .map((file) => {
+      const reg = new RegExp("(\\d+).json").exec(file);
+      const ts = parseInt(reg[1]);
+      return {
+        name: file,
+        ts,
+      };
+    });
   let sortedFileObjects = fileObjects.sort((a, b) => a.ts - b.ts);
 
   sortedFileObjects.forEach(function (file) {
     // Do whatever you want to do with the file
     const timestamp = new Date(file.ts).toLocaleString();
+    let relevantLines = "";
     var data = fs.readFileSync("traces/" + file.name, "utf8");
-    if (err) throw err;
-    obj = JSON.parse(data);
+    let logs;
+    try {
+      logs = fs.readFileSync(
+        "traces/" + file.name.replace(".json", ".txt"),
+        "utf8"
+      );
+    } catch (err) {}
+    if (logs) {
+      const logLines = logs
+        .split("\n")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 2);
+      relevantLines = logLines
+        .filter((l) =>
+          methodNamesWeCareAbout.some((rel) =>
+            l.toLowerCase().includes(rel.toLowerCase())
+          )
+        )
+        .join("\n");
+    }
+    const obj = JSON.parse(data);
 
     function ms(v) {
       return `${Math.floor(v)}ms`;
@@ -80,5 +111,6 @@ fs.readdir(directoryPath, function (err, files) {
       ts: timestamp,
       ...maxMinAvg(samples.items),
     });
+    console.log(relevantLines);
   });
 });
