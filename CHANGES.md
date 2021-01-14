@@ -10,6 +10,10 @@
 
 - Added `Cartesian2.cross`. [#9305](https://github.com/CesiumGS/cesium/pull/9305)
 
+##### Fixes :wrench:
+
+- Fixed `sampleTerrain` and `sampleTerrainMostDetailed` not working for `ArcGISTiledElevationTerrainProvider`. [#9286](https://github.com/CesiumGS/cesium/pull/9286)
+
 ### 1.77 - 2021-01-04
 
 ##### Additions :tada:

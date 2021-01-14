@@ -100,15 +100,14 @@ function doSampling(terrainProvider, level, positions) {
 }
 
 /**
- * Calls [interpolateHeight]{@link TerrainData.prototype.interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
+ * Calls {@link TerrainData#interpolateHeight} on a given {@link TerrainData} for a given {@link Cartographic} and
  *  will assign the height property if the return value is not undefined.
  *
- * If the return value is false; it's suggesting that
- *  you should call [createMesh]{@link TerrainData.prototype.createMesh} first.
+ * If the return value is false; it's suggesting that you should call {@link TerrainData#createMesh} first.
  * @param {Cartographic} position The position to interpolate for and assign the height value to
  * @param {TerrainData} terrainData
  * @param {Rectangle} rectangle
- * @return {boolean} If the height was actually interpolated and assigned
+ * @returns {Boolean} If the height was actually interpolated and assigned
  * @private
  */
 function interpolateAndAssignHeight(position, terrainData, rectangle) {
@@ -126,9 +125,6 @@ function interpolateAndAssignHeight(position, terrainData, rectangle) {
   position.height = height;
   return true;
 }
-
-// I'm guessing we always want no terrain exaggeration when calling sample terrain directly
-var defaultTerrainExaggeration = 1;
 
 function createInterpolateFunction(tileRequest) {
   var tilePositions = tileRequest.positions;
@@ -167,9 +163,10 @@ function createInterpolateFunction(tileRequest) {
         x: tileRequest.x,
         y: tileRequest.y,
         level: tileRequest.level,
-        exaggeration: defaultTerrainExaggeration,
+        // interpolateHeight will divide away the exaggeration - so passing in 1 is fine; it doesn't really matter
+        exaggeration: 1,
         // don't throttle this mesh creation because we've asked to sample these points;
-        //  so sample them! I don't care how many tiles that is!
+        //  so sample them! We don't care how many tiles that is!
         throttle: false,
       })
       .then(function () {

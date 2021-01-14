@@ -1,13 +1,9 @@
-import {
-  Cartographic,
-  RequestScheduler,
-  Resource,
-} from "../../Source/Cesium.js";
-import {
-  CesiumTerrainProvider,
-  ArcGISTiledElevationTerrainProvider,
-} from "../../Source/Cesium.js";
+import { ArcGISTiledElevationTerrainProvider } from "../../Source/Cesium.js";
+import { Cartographic } from "../../Source/Cesium.js";
+import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
+import { RequestScheduler } from "../../Source/Cesium.js";
+import { Resource } from "../../Source/Cesium.js";
 import { sampleTerrain } from "../../Source/Cesium.js";
 
 describe("Core/sampleTerrain", function () {
@@ -107,7 +103,7 @@ describe("Core/sampleTerrain", function () {
     });
   });
 
-  describe("with terrain providers", () => {
+  describe("with terrain providers", function () {
     beforeEach(function () {
       RequestScheduler.clearForSpecs();
     });
@@ -118,7 +114,7 @@ describe("Core/sampleTerrain", function () {
     });
 
     function spyOnTerrainDataCreateMesh(terrainProvider) {
-      // do some sneaky spying so we can check out many times createMesh is called
+      // do some sneaky spying so we can check how many times createMesh is called
       var originalRequestTileGeometry = terrainProvider.requestTileGeometry;
       spyOn(terrainProvider, "requestTileGeometry").and.callFake(function (
         x,
@@ -126,7 +122,7 @@ describe("Core/sampleTerrain", function () {
         level,
         request
       ) {
-        // all the original functioN!
+        // Call the original function!
         return originalRequestTileGeometry
           .call(terrainProvider, x, y, level, request)
           .then(function (tile) {
@@ -161,6 +157,10 @@ describe("Core/sampleTerrain", function () {
       );
     }
 
+    function endsWith(value, suffix) {
+      return value.indexOf(suffix, value.length - suffix.length) >= 0;
+    }
+
     function patchXHRLoad(proxySpec) {
       Resource._Implementations.loadWithXhr = function (
         url,
@@ -171,43 +171,49 @@ describe("Core/sampleTerrain", function () {
         deferred,
         overrideMimeType
       ) {
-        var sourceUrl = new URL(url, "https://google.com");
-        var sourceUrlPath =
-          sourceUrl.pathname + sourceUrl.search + sourceUrl.hash;
+        // find a key (source path) path in the spec which matches (ends with) the requested url
+        var availablePaths = Object.keys(proxySpec);
+        var proxiedUrl = null;
 
-        if (!Object.keys(proxySpec).includes(sourceUrlPath)) {
-          var msg =
-            "Unexpected XHR load to url: " +
-            sourceUrlPath +
-            " (from url: " +
-            url +
-            "); spec includes: " +
-            Object.keys(proxySpec).join(", ");
-          console.error(msg);
-          throw new Error(msg);
+        for (var i = 0; i < availablePaths.length; i++) {
+          var srcPath = availablePaths[i];
+          if (endsWith(url, srcPath)) {
+            proxiedUrl = proxySpec[availablePaths[i]];
+            break;
+          }
         }
-        var targetUrl = proxySpec[sourceUrlPath];
+
+        // it's a whitelist - meaning you have to proxy every request explicitly
+        if (!proxiedUrl) {
+          throw new Error(
+            "Unexpected XHR load to url: " +
+              url +
+              "; spec includes: " +
+              availablePaths.join(", ")
+          );
+        }
+
+        // make a real request to the proxied path for the matching source path
         return Resource._DefaultImplementations.loadWithXhr(
-          targetUrl,
+          proxiedUrl,
           responseType,
           method,
           data,
           headers,
-          deferred
+          deferred,
+          overrideMimeType
         );
       };
     }
 
-    it("should work for Cesium World Terrain", () => {
+    it("should work for Cesium World Terrain", function () {
       patchXHRLoad({
-        "/fake/url/layer.json": "Data/Terrain/assets_cesium_com/layer.json",
-        "/fake/url/9/759/335.terrain?v=1.2.0":
-          "Data/Terrain/assets_cesium_com/9_759_335.terrain",
+        "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
+        "/9/759/335.terrain?v=1.2.0":
+          "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
       });
       var terrainProvider = new CesiumTerrainProvider({
-        url: "/fake/url",
-        requestVertexNormals: false,
-        requestWaterMask: false,
+        url: "made/up/url",
       });
 
       spyOnTerrainDataCreateMesh(terrainProvider);
@@ -231,7 +237,7 @@ describe("Core/sampleTerrain", function () {
         positionA,
         positionB,
         positionC,
-      ]).then(() => {
+      ]).then(function () {
         expect(positionA.height).toBeCloseTo(7780, 0);
         expect(positionB.height).toBeCloseTo(7780, 0);
         expect(positionC.height).toBeCloseTo(7780, 0);
@@ -241,17 +247,16 @@ describe("Core/sampleTerrain", function () {
       });
     });
 
-    it("should work for ArcGIS terrain", () => {
+    it("should work for ArcGIS terrain", function () {
       patchXHRLoad({
-        "/fake/url/?f=pjson": "Data/Terrain/elevation3d_arcgis_com/root.json",
-        "/fake/url/tilemap/10/384/640/128/128":
-          "Data/Terrain/elevation3d_arcgis_com/tilemap_10_384_640_128_128.json",
-        "/fake/url/tile/9/214/379":
-          "Data/Terrain/elevation3d_arcgis_com/tile_9_214_379.tile",
+        "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
+        "/tilemap/10/384/640/128/128":
+          "Data/ArcGIS/9_214_379/tilemap_10_384_640_128_128.json",
+        "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
       });
 
       var terrainProvider = new ArcGISTiledElevationTerrainProvider({
-        url: "/fake/url",
+        url: "made/up/url",
       });
 
       spyOnTerrainDataCreateMesh(terrainProvider);
@@ -274,7 +279,7 @@ describe("Core/sampleTerrain", function () {
         positionA,
         positionB,
         positionC,
-      ]).then(() => {
+      ]).then(function () {
         // 3 very similar positions
         expect(positionA.height).toBeCloseTo(7681, 0);
         expect(positionB.height).toBeCloseTo(7681, 0);
