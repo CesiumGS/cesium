@@ -646,8 +646,10 @@ function resolveHref(href, sourceResource, uriResolver) {
   }
 
   if (!defined(resource)) {
-    resource = sourceResource.getDerivedResource({
-      url: href,
+    var baseUri = new Uri(sourceResource.getUrlComponent());
+    var uri = new Uri(href);
+    resource = new Resource({
+      url: uri.resolve(baseUri),
     });
   }
 
