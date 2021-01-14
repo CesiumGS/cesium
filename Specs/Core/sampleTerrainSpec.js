@@ -2,6 +2,7 @@ import { ArcGISTiledElevationTerrainProvider } from "../../Source/Cesium.js";
 import { Cartographic } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { sampleTerrain } from "../../Source/Cesium.js";
@@ -138,18 +139,18 @@ describe("Core/sampleTerrain", function () {
       numberOfTilesRequested,
       wasFirstTileMeshCreated
     ) {
-      // all came from a single tile
+      // assert how many tiles were requested
       expect(terrainProvider.requestTileGeometry.calls.count()).toEqual(
         numberOfTilesRequested
       );
 
-      // get the return terrain data for our spies
+      // get the first tile that was requested
       return (
         terrainProvider.requestTileGeometry.calls
           .first()
-          // return value was the promise of the TerrainData
+          // the return value was the promise of the tile, so wait for that
           .returnValue.then(function (terrainData) {
-            // make sure the mesh was only created once!
+            // assert if the mesh was created or not for this tile
             expect(terrainData.createMesh.calls.count()).toEqual(
               wasFirstTileMeshCreated ? 1 : 0
             );
@@ -173,7 +174,7 @@ describe("Core/sampleTerrain", function () {
       ) {
         // find a key (source path) path in the spec which matches (ends with) the requested url
         var availablePaths = Object.keys(proxySpec);
-        var proxiedUrl = null;
+        var proxiedUrl;
 
         for (var i = 0; i < availablePaths.length; i++) {
           var srcPath = availablePaths[i];
@@ -184,7 +185,7 @@ describe("Core/sampleTerrain", function () {
         }
 
         // it's a whitelist - meaning you have to proxy every request explicitly
-        if (!proxiedUrl) {
+        if (!defined(proxiedUrl)) {
           throw new Error(
             "Unexpected XHR load to url: " +
               url +
