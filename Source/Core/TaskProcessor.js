@@ -195,13 +195,16 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  *
  * @param {String} workerName The name of the worker.  This is expected to be a script
  *                            in the Workers folder.
- * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
+ * @param {Number} [maximumActiveTasks=Number.POSITIVE_INFINITY] The maximum number of active tasks.  Once exceeded,
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
 function TaskProcessor(workerName, maximumActiveTasks) {
   this._workerName = workerName;
-  this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
+  this._maximumActiveTasks = defaultValue(
+    maximumActiveTasks,
+    Number.POSITIVE_INFINITY
+  );
   this._activeTasks = 0;
   this._deferreds = {};
   this._nextID = 0;
