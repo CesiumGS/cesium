@@ -698,20 +698,20 @@ var maxTrianglesPerNode = 100;
 // how many axis of the current triangle are within the node's axis-aligned-bounding-box
 var smallOverlapCount = 3;
 
-// var childIdxLevelTraversalBitMasks = new Uint8Array([
-//   0b000, // x       y       z
-//   0b001, // x + 1   y       z
-//   0b010, // x       y + 1   z
-//   0b011, // x + 1   y + 1   z
-//   0b100, // x       y       z + 1
-//   0b101, // x + 1   y       z + 1
-//   0b011, // x       y + 1   z + 1
-//   0b111, // x + 1   y + 1   z + 1
-// ]);
-//
-// var xMask = 0b001;
-// var yMask = 0b010;
-// var zMask = 0b100;
+var childIdxLevelTraversalBitMasks = new Uint8Array([
+  0, // 0b000   x       y       z
+  1, // 0b001   x + 1   y       z
+  2, // 0b010   x       y + 1   z
+  3, // 0b011   x + 1   y + 1   z
+  4, // 0b100   x       y       z + 1
+  5, // 0b101   x + 1   y       z + 1
+  3, // 0b011   x       y + 1   z + 1
+  7, // 0b111   x + 1   y + 1   z + 1
+]);
+
+var xMask = 1; // 0b001
+var yMask = 2; // 0b010
+var zMask = 4; // 0b100
 
 function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
   var sizeAtLevel = 1.0 / Math.pow(2, level);
@@ -760,32 +760,44 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
         scratchOverlap1
       );
 
-      nodeAddTriangleToChildren(
-        node,
-        level,
-        x,
-        y,
-        z,
-        overflowTri2,
-        overflowOverlap2.bitMask,
-        triangles,
-        nodes
-      );
+      for (var childIdx = 0; childIdx < 8; childIdx++) {
+        var overlapsChild = (overflowOverlap2.bitMask & (1 << childIdx)) > 0;
+        if (overlapsChild) {
+          var childNode = nodes[childIdx + node.firstChildNodeIdx];
+          var mask = childIdxLevelTraversalBitMasks[childIdx];
+          nodeAddTriangle(
+            childNode,
+            level + 1,
+            x * 2 + ((mask & xMask) > 0 ? 1 : 0),
+            x * 2 + ((mask & yMask) > 0 ? 1 : 0),
+            x * 2 + ((mask & zMask) > 0 ? 1 : 0),
+            triangle,
+            triangles,
+            nodes
+          );
+        }
+      }
     }
     triangleIdxs.length = 0;
   }
   if (filterDown) {
-    nodeAddTriangleToChildren(
-      node,
-      level,
-      x,
-      y,
-      z,
-      triangle,
-      overlap.bitMask,
-      triangles,
-      nodes
-    );
+    for (var childIdx2 = 0; childIdx2 < 8; childIdx2++) {
+      var overlapsChild2 = (overlap.bitMask & (1 << childIdx2)) > 0;
+      if (overlapsChild2) {
+        var childNode2 = nodes[childIdx2 + node.firstChildNodeIdx];
+        var mask2 = childIdxLevelTraversalBitMasks[childIdx2];
+        nodeAddTriangle(
+          childNode2,
+          level + 1,
+          x * 2 + ((mask2 & xMask) > 0 ? 1 : 0),
+          x * 2 + ((mask2 & yMask) > 0 ? 1 : 0),
+          x * 2 + ((mask2 & zMask) > 0 ? 1 : 0),
+          triangle,
+          triangles,
+          nodes
+        );
+      }
+    }
   } else {
     triangleIdxs.push(triangle.index);
   }
