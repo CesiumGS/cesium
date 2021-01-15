@@ -693,25 +693,25 @@ function nodeAddTriangleToChildren(
  */
 
 // If the triangle is fairly small, recurse downwards to each of the child nodes it overlaps.
-var maxLevels = 10;
+var maxLevels = 5;
 var maxTrianglesPerNode = 100;
 // how many axis of the current triangle are within the node's axis-aligned-bounding-box
 var smallOverlapCount = 3;
 
-var childIdxLevelTraversalBitMasks = new Uint8Array([
-  0, // 0b000   x       y       z
-  1, // 0b001   x + 1   y       z
-  2, // 0b010   x       y + 1   z
-  3, // 0b011   x + 1   y + 1   z
-  4, // 0b100   x       y       z + 1
-  5, // 0b101   x + 1   y       z + 1
-  3, // 0b011   x       y + 1   z + 1
-  7, // 0b111   x + 1   y + 1   z + 1
-]);
-
-var xMask = 1; // 0b001
-var yMask = 2; // 0b010
-var zMask = 4; // 0b100
+// var childIdxLevelTraversalBitMasks = new Uint8Array([
+//   0, // 0b000   x       y       z
+//   1, // 0b001   x + 1   y       z
+//   2, // 0b010   x       y + 1   z
+//   3, // 0b011   x + 1   y + 1   z
+//   4, // 0b100   x       y       z + 1
+//   5, // 0b101   x + 1   y       z + 1
+//   3, // 0b011   x       y + 1   z + 1
+//   7, // 0b111   x + 1   y + 1   z + 1
+// ]);
+//
+// var xMask = 1; // 0b001
+// var yMask = 2; // 0b010
+// var zMask = 4; // 0b100
 
 function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
   var sizeAtLevel = 1.0 / Math.pow(2, level);
@@ -760,44 +760,32 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
         scratchOverlap1
       );
 
-      for (var childIdx = 0; childIdx < 8; childIdx++) {
-        var overlapsChild = (overflowOverlap2.bitMask & (1 << childIdx)) > 0;
-        if (overlapsChild) {
-          var childNode = nodes[childIdx + node.firstChildNodeIdx];
-          var mask = childIdxLevelTraversalBitMasks[childIdx];
-          nodeAddTriangle(
-            childNode,
-            level + 1,
-            x * 2 + ((mask & xMask) > 0 ? 1 : 0),
-            x * 2 + ((mask & yMask) > 0 ? 1 : 0),
-            x * 2 + ((mask & zMask) > 0 ? 1 : 0),
-            triangle,
-            triangles,
-            nodes
-          );
-        }
-      }
+      nodeAddTriangleToChildren(
+        node,
+        level,
+        x,
+        y,
+        z,
+        overflowTri2,
+        overflowOverlap2.bitMask,
+        triangles,
+        nodes
+      );
     }
     triangleIdxs.length = 0;
   }
   if (filterDown) {
-    for (var childIdx2 = 0; childIdx2 < 8; childIdx2++) {
-      var overlapsChild2 = (overlap.bitMask & (1 << childIdx2)) > 0;
-      if (overlapsChild2) {
-        var childNode2 = nodes[childIdx2 + node.firstChildNodeIdx];
-        var mask2 = childIdxLevelTraversalBitMasks[childIdx2];
-        nodeAddTriangle(
-          childNode2,
-          level + 1,
-          x * 2 + ((mask2 & xMask) > 0 ? 1 : 0),
-          x * 2 + ((mask2 & yMask) > 0 ? 1 : 0),
-          x * 2 + ((mask2 & zMask) > 0 ? 1 : 0),
-          triangle,
-          triangles,
-          nodes
-        );
-      }
-    }
+    nodeAddTriangleToChildren(
+      node,
+      level,
+      x,
+      y,
+      z,
+      triangle,
+      overlap.bitMask,
+      triangles,
+      nodes
+    );
   } else {
     triangleIdxs.push(triangle.index);
   }
@@ -939,13 +927,11 @@ TrianglePicking.prototype.addTriangles = function (
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
   //>>includeEnd('debug');
-
-  console.time("creating octree");
+  console.time("creating actual octree");
   for (var x = 0; x < triangles.length; x++) {
     nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
   }
-  console.timeEnd("creating octree");
-
+  console.timeEnd("creating actual octree");
   console.time("creating packed");
   var packedNodeSpace = 3;
   var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
@@ -964,6 +950,36 @@ TrianglePicking.prototype.addTriangles = function (
   var packedTriangles = new Int32Array(triangleSets);
 
   console.timeEnd("creating packed");
+
+  console.timeEnd("creating octree");
+
+  // function logNode(node, nodes, level, idx, treeNode) {
+  //   // console.log(`node at ${level}/${idx} has ${node.triangles.length}`);
+  //   treeNode.triangles = node.triangles.length;
+  //   let firstChildNodeIdx = node.firstChildNodeIdx;
+  //   if (firstChildNodeIdx !== -1) {
+  //     for (var _df = firstChildNodeIdx; _df < firstChildNodeIdx + 8; _df++) {
+  //       var _n = nodes[_df];
+  //       var childTreeNode = {triangles: 0, children: []};
+  //       treeNode.children.push(childTreeNode);
+  //       logNode(_n, nodes, level + 1, firstChildNodeIdx - _df, childTreeNode);
+  //     }
+  //   }
+  // }
+  //
+  // var tree = {triangles: 0, children: []};
+  // logNode(nodes[0], nodes, 0, 0, tree);
+  // console.log(tree);
+
+  // var _l = 0;
+  // for (var asdf = 0; asdf < nodes.length; asdf++) {
+  //   n = nodes[asdf];
+  //   console.log(`node at ${_l} has ${n.triangles.length}`);
+  //   for (var _df = n.firstChildNodeIdx; _df < n.firstChildNodeIdx + 8; df++) {
+  //     var _n = nodes[_df];
+  //     console.log(`node at ${_l} has ${_n.triangles.length}`);
+  //   }
+  // }
 
   this._packedTriangles = packedTriangles;
   this._packedNodes = packedNodes;
