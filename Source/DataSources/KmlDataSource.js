@@ -434,8 +434,10 @@ function applyBasePath(div, elementType, attributeName, sourceResource) {
   for (var i = 0; i < elements.length; i++) {
     var element = elements[i];
     var value = element.getAttribute(attributeName);
-    var resource = resolveHref(value, sourceResource);
-    element.setAttribute(attributeName, resource.url);
+    if (defined(value)) {
+      var resource = resolveHref(value, sourceResource);
+      element.setAttribute(attributeName, resource.url);
+    }
   }
 }
 
