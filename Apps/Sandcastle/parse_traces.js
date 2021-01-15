@@ -10,7 +10,16 @@ const methodNamesWeCareAbout = [
   "computeVertices",
 ];
 
-const isLastOnly = Array.from(process.argv).includes("--last");
+const isLastOnlyArg = Array.from(process.argv).find((arg) =>
+  arg.toLowerCase().includes("--last")
+);
+
+const isLastOnly = !!isLastOnlyArg;
+const isLastOnlyValue = isLastOnlyArg
+  .replace("--last", "")
+  .replace("=", "")
+  .trim();
+const lastCount = isLastOnlyValue ? parseInt(isLastOnlyValue) : 1;
 
 fs.readdir(directoryPath, function (err, files) {
   if (err) {
@@ -30,7 +39,9 @@ fs.readdir(directoryPath, function (err, files) {
   let sortedFileObjects = fileObjects.sort((a, b) => a.ts - b.ts);
 
   if (isLastOnly) {
-    sortedFileObjects = [sortedFileObjects.pop()];
+    sortedFileObjects = sortedFileObjects.slice(
+      sortedFileObjects.length - lastCount
+    );
   }
 
   sortedFileObjects.forEach(function (file) {
