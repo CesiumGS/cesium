@@ -10,6 +10,8 @@ const methodNamesWeCareAbout = [
   "computeVertices",
 ];
 
+const isLastOnly = Array.from(process.argv).includes("--last");
+
 fs.readdir(directoryPath, function (err, files) {
   if (err) {
     return console.log("Unable to scan directory: " + err);
@@ -26,6 +28,10 @@ fs.readdir(directoryPath, function (err, files) {
       };
     });
   let sortedFileObjects = fileObjects.sort((a, b) => a.ts - b.ts);
+
+  if (isLastOnly) {
+    sortedFileObjects = [sortedFileObjects.pop()];
+  }
 
   sortedFileObjects.forEach(function (file) {
     // Do whatever you want to do with the file

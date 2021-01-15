@@ -44,6 +44,11 @@
           requestVertexNormals: true,
         });
 
+        var terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+        });
+
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: worldTerrain,
         });
@@ -66,6 +71,12 @@
               onselect: function () {
                 viewer.terrainProvider = worldTerrain;
                 viewer.scene.globe.enableLighting = true;
+              },
+            },
+            {
+              text: "ArcGIS",
+              onselect: function () {
+                viewer.terrainProvider = terrainProvider;
               },
             },
             {

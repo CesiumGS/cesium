@@ -275,7 +275,7 @@ GlobeSurfaceTile.prototype.pick = function (
   var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
   var doNewPick = useNewPicking && canNewPick;
 
-  var time = false;
+  var time = true;
 
   var newPickedValue;
   if (canNewPick) {
