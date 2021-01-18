@@ -623,7 +623,7 @@ function resolveHref(href, sourceResource, uriResolver) {
     return undefined;
   }
 
-  var resource;
+  var resource, baseUri, uri;
   if (defined(uriResolver)) {
     // To resolve issues with KML sources defined in Windows style paths.
     href = href.replace(/\\/g, "/");
@@ -634,8 +634,8 @@ function resolveHref(href, sourceResource, uriResolver) {
       });
     } else {
       // Needed for multiple levels of KML files in a KMZ
-      var baseUri = new Uri(sourceResource.getUrlComponent());
-      var uri = new Uri(href);
+      baseUri = new Uri(sourceResource.getUrlComponent());
+      uri = new Uri(href);
       blob = uriResolver[uri.resolve(baseUri)];
       if (defined(blob)) {
         resource = new Resource({
@@ -646,8 +646,8 @@ function resolveHref(href, sourceResource, uriResolver) {
   }
 
   if (!defined(resource)) {
-    var baseUri = new Uri(sourceResource.getUrlComponent());
-    var uri = new Uri(href);
+    baseUri = new Uri(sourceResource.getUrlComponent());
+    uri = new Uri(href);
     resource = new Resource({
       url: uri.resolve(baseUri),
     });
