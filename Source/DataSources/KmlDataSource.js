@@ -649,7 +649,7 @@ function resolveHref(href, sourceResource, uriResolver) {
     baseUri = new Uri(sourceResource.getUrlComponent());
     uri = new Uri(href);
     resource = new Resource({
-      url: uri.resolve(baseUri),
+      url: uri.resolve(baseUri).toString(),
     });
   }
 
