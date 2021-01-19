@@ -934,12 +934,13 @@ function ScreenSpaceEventHandler(element) {
   registerListeners(this);
 }
 
+// TODO: document callback signature for each type of event
 /**
  * Set a function to be executed on an input event.
  *
  * @param {Function} action Function to be executed when the input event occurs.
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
@@ -966,8 +967,8 @@ ScreenSpaceEventHandler.prototype.setInputAction = function (
 /**
  * Returns the function to be executed on an input event.
  *
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
  * @returns {Function} The function to be executed on an input event.
@@ -989,8 +990,8 @@ ScreenSpaceEventHandler.prototype.getInputAction = function (type, modifier) {
 /**
  * Removes the function to be executed on an input event.
  *
- * @param {Number} type The ScreenSpaceEventType of input event.
- * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+ * @param {ScreenSpaceEventType} type The ScreenSpaceEventType of input event.
+ * @param {KeyboardEventModifier} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
  * event occurs.
  *
  * @see ScreenSpaceEventHandler#getInputAction
