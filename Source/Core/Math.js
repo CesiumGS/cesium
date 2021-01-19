@@ -205,6 +205,7 @@ CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
  * @param {Number} value The value to return the sign of.
  * @returns {Number} The sign of value.
  */
+// eslint-disable-next-line es/no-math-sign
 CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
   value = +value; // coerce to number
   if (value === 0 || value !== value) {
@@ -291,6 +292,7 @@ CesiumMath.normalize = function (value, rangeMinimum, rangeMaximum) {
  * @param {Number} value The number whose hyperbolic sine is to be returned.
  * @returns {Number} The hyperbolic sine of <code>value</code>.
  */
+// eslint-disable-next-line es/no-math-sinh
 CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
   return (Math.exp(value) - Math.exp(-value)) / 2.0;
 });
@@ -315,6 +317,7 @@ CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
  * @param {Number} value The number whose hyperbolic cosine is to be returned.
  * @returns {Number} The hyperbolic cosine of <code>value</code>.
  */
+// eslint-disable-next-line es/no-math-cosh
 CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
   return (Math.exp(value) + Math.exp(-value)) / 2.0;
 });
@@ -986,6 +989,7 @@ CesiumMath.logBase = function (number, base) {
  * @param {Number} [number] The number.
  * @returns {Number} The result.
  */
+// eslint-disable-next-line es/no-math-cbrt
 CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
   var result = Math.pow(Math.abs(number), 1.0 / 3.0);
   return number < 0.0 ? -result : result;
@@ -998,6 +1002,7 @@ CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
  * @param {Number} number The number.
  * @returns {Number} The result.
  */
+// eslint-disable-next-line es/no-math-log2
 CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
   return Math.log(number) * Math.LOG2E;
 });
