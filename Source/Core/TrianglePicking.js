@@ -515,14 +515,6 @@ function nodeIntersectTriangles(
   }
 }
 
-var c = 6;
-var idxAABBMinX = 0;
-var idxAABBMaxX = 1;
-var idxAABBMinY = 2;
-var idxAABBMaxY = 3;
-var idxAABBMinZ = 4;
-var idxAABBMaxZ = 5;
-
 /**
  * @typedef {Object} Overlap
  * @property {Number} bitMask
@@ -541,8 +533,7 @@ function getOverlap(
   nodeAabbCenterX,
   nodeAabbCenterY,
   nodeAabbCenterZ,
-  triangleIdx,
-  triangles,
+  triangle,
   result
 ) {
   // 000 = child 0
@@ -557,26 +548,26 @@ function getOverlap(
   var bitMask = 255; // 11111111
   var bitCount = 8;
 
-  if (triangles[triangleIdx * c + idxAABBMinX] > nodeAabbCenterX) {
+  if (triangle.aabbMinX > nodeAabbCenterX) {
     bitMask &= 170; // 10101010
     bitCount /= 2;
-  } else if (triangles[triangleIdx * c + idxAABBMaxX] < nodeAabbCenterX) {
+  } else if (triangle.aabbMaxX < nodeAabbCenterX) {
     bitMask &= 85; // 01010101
     bitCount /= 2;
   }
 
-  if (triangles[triangleIdx * c + idxAABBMinY] > nodeAabbCenterY) {
+  if (triangle.aabbMinY > nodeAabbCenterY) {
     bitMask &= 204; // 11001100
     bitCount /= 2;
-  } else if (triangles[triangleIdx * c + idxAABBMaxY] < nodeAabbCenterY) {
+  } else if (triangle.aabbMaxY < nodeAabbCenterY) {
     bitMask &= 51; // 00110011
     bitCount /= 2;
   }
 
-  if (triangles[triangleIdx * c + idxAABBMinZ] > nodeAabbCenterZ) {
+  if (triangle.aabbMinZ > nodeAabbCenterZ) {
     bitMask &= 240; // 11110000
     bitCount /= 2;
-  } else if (triangles[triangleIdx * c + idxAABBMaxZ] < nodeAabbCenterZ) {
+  } else if (triangle.aabbMaxZ < nodeAabbCenterZ) {
     bitMask &= 15; // 00001111
     bitCount /= 2;
   }
@@ -607,7 +598,7 @@ function nodeAddTriangleToChildren(
   x,
   y,
   z,
-  triangleIdx,
+  triangle,
   overlapMask,
   triangles,
   nodes
@@ -680,7 +671,7 @@ function nodeAddTriangleToChildren(
         _x,
         _y,
         _z,
-        triangleIdx,
+        triangle,
         triangles,
         nodes
       );
@@ -718,7 +709,7 @@ var smallOverlapCount = 3;
 // var yMask = 2; // 0b010
 // var zMask = 4; // 0b100
 
-function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
+function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
   var sizeAtLevel = 1.0 / Math.pow(2, level);
   var aabbCenterX = (x + 0.5) * sizeAtLevel - 0.5;
   var aabbCenterY = (y + 0.5) * sizeAtLevel - 0.5;
@@ -727,8 +718,7 @@ function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
     aabbCenterX,
     aabbCenterY,
     aabbCenterZ,
-    triangleIdx,
-    triangles,
+    triangle,
     scratchOverlap0
   );
   var triangleIdxs = node.triangles;
@@ -757,14 +747,13 @@ function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
     );
     for (var i = 0; i < triangleIdxs.length; i++) {
       var triidx = triangleIdxs[i];
-      // var overflowTri2 = triangles[triidx];
+      var overflowTri2 = triangles[triidx];
       // todo don't need overlap count here
       var overflowOverlap2 = getOverlap(
         aabbCenterX,
         aabbCenterY,
         aabbCenterZ,
-        triidx,
-        triangles,
+        overflowTri2,
         scratchOverlap1
       );
 
@@ -774,7 +763,7 @@ function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
         x,
         y,
         z,
-        triidx,
+        overflowTri2,
         overflowOverlap2.bitMask,
         triangles,
         nodes
@@ -789,13 +778,13 @@ function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
       x,
       y,
       z,
-      triangleIdx,
+      triangle,
       overlap.bitMask,
       triangles,
       nodes
     );
   } else {
-    triangleIdxs.push(triangleIdx);
+    triangleIdxs.push(triangle.index);
   }
 }
 
@@ -1102,19 +1091,14 @@ TrianglePicking.clone = function (trianglePicking) {
  */
 export default TrianglePicking;
 
-/**
- *
- * @param {Float32Array} triangles
- * @return {{_packedNodes: Int32Array, _packedTriangles: Int32Array}}
- */
 TrianglePicking.createPackedOctree = function (triangles) {
   var rootNode = new Node(0, 0, 0, 0);
   var nodes = [rootNode];
-  var triangleCount = triangles.length / 6;
+
   //>>includeStart('debug', pragmas.debug);
   console.time("creating actual octree");
-  for (var x = 0; x < triangleCount; x++) {
-    nodeAddTriangle(rootNode, 0, 0, 0, 0, x, triangles, nodes);
+  for (var x = 0; x < triangles.length; x++) {
+    nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
   }
   console.timeEnd("creating actual octree");
 
