@@ -692,7 +692,7 @@ function nodeAddTriangleToChildren(
 var maxLevels = 5;
 var maxTrianglesPerNode = 100;
 // how many axis of the current triangle are within the node's axis-aligned-bounding-box
-var smallOverlapCount = 3;
+var smallOverlapCount = 2;
 
 // var childIdxLevelTraversalBitMasks = new Uint8Array([
 //   0, // 0b000   x       y       z
