@@ -58,7 +58,7 @@ function parseFont(label) {
     div.style.font = label._font;
     document.body.appendChild(div);
 
-    var lineHeight = Number.parseFloat(getCSSValue(div, "line-height"));
+    var lineHeight = parseFloat(getCSSValue(div, "line-height"));
     if (isNaN(lineHeight)) {
       // line-height isn't a number, i.e. 'normal'; apply default line-spacing
       lineHeight = undefined;
