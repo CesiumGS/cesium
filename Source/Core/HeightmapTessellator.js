@@ -44,6 +44,52 @@ var matrix4Scratch = new Matrix4();
 var minimumScratch = new Cartesian3();
 var maximumScratch = new Cartesian3();
 
+function createTriangles(positions, invTransform, width, triangleIndexEnd) {
+  var scratchV0 = new Cartesian3();
+  var scratchV1 = new Cartesian3();
+  var scratchV2 = new Cartesian3();
+  var triangles = [];
+  for (var triIdx2 = 0; triIdx2 < triangleIndexEnd; triIdx2++) {
+    var trianglesPerRow = (width - 1) * 2;
+    var base =
+      width * Math.floor(triIdx2 / trianglesPerRow) +
+      Math.floor((triIdx2 % trianglesPerRow) / 2);
+    var isEven = triIdx2 % 2 === 0;
+    // isEven: TL, BL, TR
+    // isOdd: TR, BL, BR
+    var idx0 = base + (isEven ? 0 : 1);
+    var idx1 = base + width;
+    var idx2 = base + 1 + (isEven ? 0 : width);
+    Cartesian3.clone(positions[idx0], scratchV0);
+    Cartesian3.clone(positions[idx1], scratchV1);
+    Cartesian3.clone(positions[idx2], scratchV2);
+
+    // triangleVerticesCallback(triIdx2, scratchV0, scratchV1, scratchV2);
+
+    var v0Local2 = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
+    var v1Local2 = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
+    var v2Local2 = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
+
+    // Get local space AABBs for triangle
+    var triAabbMinX2 = Math.min(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMaxX2 = Math.max(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMinY2 = Math.min(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMaxY2 = Math.max(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
+    var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
+    triangles.push({
+      index: triIdx2,
+      aabbMinX: triAabbMinX2,
+      aabbMaxX: triAabbMaxX2,
+      aabbMinY: triAabbMinY2,
+      aabbMaxY: triAabbMaxY2,
+      aabbMinZ: triAabbMinZ2,
+      aabbMaxZ: triAabbMaxZ2,
+    });
+  }
+  return triangles;
+}
+
 /**
  * Fills an array of vertices from a heightmap image.
  *
@@ -133,6 +179,9 @@ HeightmapTessellator.computeVertices = function (options) {
   // so it employs a lot of inlining and unrolling as an optimization.
   // In particular, the functionality of Ellipsoid.cartographicToCartesian
   // is inlined.
+
+  console.time("creating octree");
+  console.time("setup stuff");
 
   var cos = Math.cos;
   var sin = Math.sin;
@@ -454,10 +503,20 @@ HeightmapTessellator.computeVertices = function (options) {
     }
   }
 
+  console.timeEnd("setup stuff");
+  console.time("creating bounding sphere");
+
   var boundingSphere3D = BoundingSphere.fromPoints(positions);
+
+  console.timeEnd("creating bounding sphere");
+
   var orientedBoundingBox;
-  var trianglePicking;
+  // var trianglePicking;
+  var octree;
+
   if (defined(rectangle)) {
+    console.time("creating oriented bounding box");
+
     orientedBoundingBox = OrientedBoundingBox.fromRectangle(
       rectangle,
       minimumHeight,
@@ -465,40 +524,61 @@ HeightmapTessellator.computeVertices = function (options) {
       ellipsoid
     );
 
-    trianglePicking = new TrianglePicking({
-      orientedBoundingBox: orientedBoundingBox,
-      triangleVerticesCallback: function (triIdx, v0, v1, v2) {
-        var trianglesPerRow = (width - 1) * 2;
-        var base =
-          width * Math.floor(triIdx / trianglesPerRow) +
-          Math.floor((triIdx % trianglesPerRow) / 2);
-        var isEven = triIdx % 2 === 0;
-        // isEven: TL, BL, TR
-        // isOdd: TR, BL, BR
-        var idx0 = base + (isEven ? 0 : 1);
-        var idx1 = base + width;
-        var idx2 = base + 1 + (isEven ? 0 : width);
-        Cartesian3.clone(positions[idx0], v0);
-        Cartesian3.clone(positions[idx1], v1);
-        Cartesian3.clone(positions[idx2], v2);
-      },
-    });
-    trianglePicking.addTriangles(0, gridTriangleCount);
+    var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
+    var invTransform = Matrix4.inverse(transform, new Matrix4());
 
-    // Unset to avoid error when transferring back from worker (can't serialize functions)
-    trianglePicking.triangleVerticesCallback = undefined;
+    console.timeEnd("creating oriented bounding box");
+    console.time("making triangles");
+
+    var triangles = createTriangles(
+      positions,
+      invTransform,
+      width,
+      gridTriangleCount
+    );
+    console.timeEnd("making triangles");
+
+    octree = TrianglePicking.createPackedOctree(triangles);
+    octree._orientedBoundingBox = orientedBoundingBox;
+
+    // trianglePicking = new TrianglePicking({
+    //   orientedBoundingBox: orientedBoundingBox,
+    //   triangleVerticesCallback: function (triIdx, v0, v1, v2) {
+    //     // TODO bleh - inline
+    //     var trianglesPerRow = (width - 1) * 2;
+    //     var base =
+    //       width * Math.floor(triIdx / trianglesPerRow) +
+    //       Math.floor((triIdx % trianglesPerRow) / 2);
+    //     var isEven = triIdx % 2 === 0;
+    //     // isEven: TL, BL, TR
+    //     // isOdd: TR, BL, BR
+    //     var idx0 = base + (isEven ? 0 : 1);
+    //     var idx1 = base + width;
+    //     var idx2 = base + 1 + (isEven ? 0 : width);
+    //     Cartesian3.clone(positions[idx0], v0);
+    //     Cartesian3.clone(positions[idx1], v1);
+    //     Cartesian3.clone(positions[idx2], v2);
+    //   },
+    // });
+    // trianglePicking.addTriangles(0, gridTriangleCount);
+    //
+    // // Unset to avoid error when transferring back from worker (can't serialize functions)
+    // trianglePicking.triangleVerticesCallback = undefined;
   }
 
   var occludeePointInScaledSpace;
   if (hasRelativeToCenter) {
+    console.time("creating occluder");
     var occluder = new EllipsoidalOccluder(ellipsoid);
     occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(
       relativeToCenter,
       positions,
       minimumHeight
     );
+    console.timeEnd("creating occluder");
   }
 
+  console.time("terrain encoding");
   var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
   var encoding = new TerrainEncoding(
     aaBox,
@@ -523,6 +603,9 @@ HeightmapTessellator.computeVertices = function (options) {
     );
   }
 
+  console.timeEnd("terrain encoding");
+  console.timeEnd("creating octree");
+
   return {
     vertices: vertices,
     maximumHeight: maximumHeight,
@@ -531,7 +614,7 @@ HeightmapTessellator.computeVertices = function (options) {
     boundingSphere3D: boundingSphere3D,
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
-    trianglePicking: trianglePicking,
+    trianglePicking: octree,
   };
 };
 export default HeightmapTessellator;

@@ -505,6 +505,8 @@ function nodeIntersectTriangles(
     var v0 = scratchV0;
     var v1 = scratchV1;
     var v2 = scratchV2;
+    // TODO what if we put the ray back into local-space straight away - rather than converting every triangle back into world-space
+    //  then we wouldn't need the callback on the client side - only the space transform
     triangleVerticesCallback(triIndex, v0, v1, v2);
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
 
@@ -752,6 +754,7 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
     for (let i = 0; i < triangleIdxs.length; i++) {
       var triidx = triangleIdxs[i];
       var overflowTri2 = triangles[triidx];
+      // todo don't need overlap count here
       var overflowOverlap2 = getOverlap(
         aabbCenterX,
         aabbCenterY,
@@ -897,8 +900,10 @@ TrianglePicking.prototype.addTriangles = function (
   var i = 0;
   for (var triIdx2 = triangleIndex; triIdx2 < triangleIndexEnd; triIdx2++) {
     i++;
+    // TODO bleh
     triangleVerticesCallback(triIdx2, scratchV0, scratchV1, scratchV2);
 
+    // TODO inline
     var v0Local2 = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
     var v1Local2 = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
     var v2Local2 = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
@@ -911,6 +916,7 @@ TrianglePicking.prototype.addTriangles = function (
     var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
     var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
 
+    // TODO packed array buffer instead
     var triangle2 = new Triangle(
       triIdx2,
       triAabbMinX2,
@@ -928,6 +934,10 @@ TrianglePicking.prototype.addTriangles = function (
   Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
   //>>includeEnd('debug');
   console.time("creating actual octree");
+  // TODO given the triangle count - we can prefill
+  //  to a certain depth
+  //  like over 300 triangles? we no point filling them in levels 1->3 because they're most likely going to be subdivided
+  //  therefore put it straight into it's level 4 node
   for (var x = 0; x < triangles.length; x++) {
     nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
   }
@@ -943,15 +953,13 @@ TrianglePicking.prototype.addTriangles = function (
     packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
     // the number of triangles this node contains
     packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
-    // the index of the first triangle in thee packed triangles
+    // the index of the first triangle in the packed triangles
     packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
     triangleSets.push(...n.triangles);
   }
   var packedTriangles = new Int32Array(triangleSets);
 
   console.timeEnd("creating packed");
-
-  console.timeEnd("creating octree");
 
   // function logNode(node, nodes, level, idx, treeNode) {
   //   // console.log(`node at ${level}/${idx} has ${node.triangles.length}`);
@@ -1088,3 +1096,38 @@ TrianglePicking.clone = function (trianglePicking) {
  * @param {Cartesian3} v2 The third vertex
  */
 export default TrianglePicking;
+
+TrianglePicking.createPackedOctree = function (triangles) {
+  var rootNode = new Node(0, 0, 0, 0);
+  var nodes = [rootNode];
+
+  //>>includeStart('debug', pragmas.debug);
+  console.time("creating actual octree");
+  for (var x = 0; x < triangles.length; x++) {
+    nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
+  }
+  console.timeEnd("creating actual octree");
+
+  console.time("creating packed");
+  var packedNodeSpace = 3;
+  var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
+  var triangleSets = [];
+  var n;
+  for (var w = 0; w < nodes.length; w++) {
+    n = nodes[w];
+    // a reference to the packed node index (*3)
+    packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
+    // the number of triangles this node contains
+    packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
+    // the index of the first triangle in thee packed triangles
+    packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
+    triangleSets.push(...n.triangles);
+  }
+  var packedTriangles = new Int32Array(triangleSets);
+  console.timeEnd("creating packed");
+
+  return {
+    _packedTriangles: packedTriangles,
+    _packedNodes: packedNodes,
+  };
+};

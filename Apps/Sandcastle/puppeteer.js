@@ -1,22 +1,17 @@
-// import { PuppeteerNode } from "puppeteer/lib/cjs/puppeteer/node/Puppeteer.js";
-// import Launcher from "puppeteer/lib/cjs/puppeteer/node/Launcher.js";
 import puppeteer from "puppeteer";
-// import { BrowserRunner } from "puppeteer/lib/cjs/puppeteer/node/BrowserRunner.js";
-// import { Browser } from "puppeteer/lib/cjs/puppeteer/common/Browser.js";
 import fs from "fs";
+import shell from "shelljs";
 
 (async () => {
   process.argv;
-  // const launcher = new SpecialPuppeteer({
-  //   projectRoot:
-  //     "/Users/danielleone/Development/Projects/DanielLeone/cesium-daniel/node_modules/puppeteer",
-  //   productName: undefined,
-  //   preferredRevision: "818858",
-
   const now = Date.now();
-  const path = `traces/cesium_trace_${now}.json`;
 
-  const logPath = `traces/cesium_trace_${now}.txt`;
+  let commit = shell.exec("git rev-parse --short HEAD");
+  commit = `${commit}`.trim();
+
+  const path = `traces/cesium_trace_${commit}__${now}.json`;
+
+  const logPath = `traces/cesium_trace_${commit}__${now}.txt`;
 
   const access = fs.createWriteStream(logPath);
 
