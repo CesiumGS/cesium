@@ -1095,6 +1095,8 @@ TrianglePicking.createPackedOctree = function (triangles) {
   var rootNode = new Node(0, 0, 0, 0);
   var nodes = [rootNode];
 
+  var i;
+
   //>>includeStart('debug', pragmas.debug);
   console.time("creating actual octree");
   for (var x = 0; x < triangles.length; x++) {
@@ -1115,7 +1117,12 @@ TrianglePicking.createPackedOctree = function (triangles) {
     packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
     // the index of the first triangle in thee packed triangles
     packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-    triangleSets = triangleSets.concat(n.triangles);
+    // TODO keep a counter of the total triangle count during octree creation - so we can go straight
+    //  to the packedTriangles typed array here - instead of triangleSets
+    for (i = 0; i < n.triangles.length; i++) {
+      // this for loop was actually 10% faster than .push(...items) and 120% faster than .concat(items)
+      triangleSets.push(n.triangles[i]);
+    }
   }
   var packedTriangles = new Int32Array(triangleSets);
   console.timeEnd("creating packed");
