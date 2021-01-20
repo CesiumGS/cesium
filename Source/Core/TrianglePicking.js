@@ -111,14 +111,8 @@ function rayCubeIntersect(ray) {
 }
 
 function onTheFlyNodeAABB(level, x, y, z) {
-  // TODO only need the centre at this point!
-  // var dimAtLevel = Math.pow(2, level);
-  // var sizeAtLevel = 1.0 / dimAtLevel;
   var sizeAtLevel = 1.0 / Math.pow(2, level);
   return {
-    x,
-    y,
-    z,
     aabbMinX: x * sizeAtLevel - 0.5,
     aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
     aabbCenterX: (x + 0.5) * sizeAtLevel - 0.5,
@@ -304,7 +298,7 @@ function nodeRayIntersect(
     return result;
   }
 
-  const onTheFlyAABB = onTheFlyNodeAABB(level, x, y, z);
+  var onTheFlyAABB = onTheFlyNodeAABB(level, x, y, z);
   // recurse the node tree
   //  check if the node AABB contains the ray
   //  if so, recurse one layer down into the correct child
@@ -751,7 +745,7 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
       new Node(),
       new Node()
     );
-    for (let i = 0; i < triangleIdxs.length; i++) {
+    for (var i = 0; i < triangleIdxs.length; i++) {
       var triidx = triangleIdxs[i];
       var overflowTri2 = triangles[triidx];
       // todo don't need overlap count here
@@ -955,7 +949,7 @@ TrianglePicking.prototype.addTriangles = function (
     packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
     // the index of the first triangle in the packed triangles
     packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-    triangleSets.push(...n.triangles);
+    triangleSets = triangleSets.concat(n.triangles);
   }
   var packedTriangles = new Int32Array(triangleSets);
 
@@ -1121,7 +1115,7 @@ TrianglePicking.createPackedOctree = function (triangles) {
     packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
     // the index of the first triangle in thee packed triangles
     packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-    triangleSets.push(...n.triangles);
+    triangleSets = triangleSets.concat(n.triangles);
   }
   var packedTriangles = new Int32Array(triangleSets);
   console.timeEnd("creating packed");

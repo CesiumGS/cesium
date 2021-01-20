@@ -152,28 +152,22 @@ var scratchV0 = new Cartesian3();
 var scratchV1 = new Cartesian3();
 var scratchV2 = new Cartesian3();
 
-function cartesianToStr(c) {
-  return `new Cartesian3(
-            ${c.x},
-            ${c.y},
-            ${c.z}
-          )`;
-}
+// function cartesianToStr(c) {
+//   return `new Cartesian3(
+//             ${c.x},
+//             ${c.y},
+//             ${c.z}
+//           )`;
+// }
 
-function rayToStr(ray) {
-  return `new Ray(
-          ${cartesianToStr(ray.origin)},
-          ${cartesianToStr(ray.direction)}
-        )`;
-}
+// function rayToStr(ray) {
+//   return `new Ray(
+//           ${cartesianToStr(ray.origin)},
+//           ${cartesianToStr(ray.direction)}
+//         )`;
+// }
 
-function debugLog(
-  self,
-  quadTreeTile,
-  ray,
-  newPickedValue,
-  oldPickedValue = null
-) {
+function debugLog(self, quadTreeTile, ray, newPickedValue, oldPickedValue) {
   var newCart;
   if (newPickedValue) {
     newCart = self.boundingVolumeSourceTile.tilingScheme.ellipsoid.cartesianToCartographic(
@@ -203,19 +197,19 @@ function debugLog(
     height = newCart.height;
   }
 
-  console.log(`return pick(
-        ArcGISTerrainType,
-        {
-          level: ${quadTreeTile ? quadTreeTile.level : null},
-          x: ${quadTreeTile ? quadTreeTile.x : null},
-          y: ${quadTreeTile ? quadTreeTile.y : null},
-        },
-        ${rayToStr(ray)},
-        ${CesiumMath.toDegrees(lat)},
-        ${CesiumMath.toDegrees(lon)},
-        ${height}
-      );
-`);
+  //   console.log(`return pick(
+  //         ArcGISTerrainType,
+  //         {
+  //           level: ${quadTreeTile ? quadTreeTile.level : null},
+  //           x: ${quadTreeTile ? quadTreeTile.x : null},
+  //           y: ${quadTreeTile ? quadTreeTile.y : null},
+  //         },
+  //         ${rayToStr(ray)},
+  //         ${CesiumMath.toDegrees(lat)},
+  //         ${CesiumMath.toDegrees(lon)},
+  //         ${height}
+  //       );
+  // `);
 }
 GlobeSurfaceTile.prototype.pick = function (
   ray,
@@ -279,13 +273,13 @@ GlobeSurfaceTile.prototype.pick = function (
 
   var newPickedValue;
   if (canNewPick) {
-    if (time) console.time(`new pick`);
+    if (time) console.time("new pick");
     newPickedValue = newPick();
-    if (time) console.timeEnd(`new pick`);
+    if (time) console.timeEnd("new pick");
   }
-  if (time) console.time(`old pick`);
+  if (time) console.time("old pick");
   var oldPickedValue = oldPick();
-  if (time) console.timeEnd(`old pick`);
+  if (time) console.timeEnd("old pick");
 
   if (doNewPick) {
     pickedValue = newPickedValue;
@@ -306,7 +300,7 @@ GlobeSurfaceTile.prototype.pick = function (
   }
 
   if (doNewPick && newPickedValue && doLog) {
-    debugLog(this, quadTreeTile, ray, newPickedValue);
+    debugLog(this, quadTreeTile, ray, newPickedValue, null);
   }
 
   return pickedValue;

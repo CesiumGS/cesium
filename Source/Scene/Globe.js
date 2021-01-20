@@ -759,7 +759,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Globe.prototype.getHeight = function (cartographic, mode, doLog = false) {
+Globe.prototype.getHeight = function (cartographic, mode, doLog) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartographic)) {
     throw new DeveloperError("cartographic is required");

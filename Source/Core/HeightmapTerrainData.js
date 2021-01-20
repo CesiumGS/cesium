@@ -311,7 +311,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       TrianglePicking.clone(result.trianglePicking)
     );
 
-    that._mesh._url = `${x}/${y}/${level}/`;
+    // that._mesh._url = `${x}/${y}/${level}/`;
     // Free memory received from server after mesh is created.
     that._mesh._buffer = that._buffer;
     return that._mesh;
