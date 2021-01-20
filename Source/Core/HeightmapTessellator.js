@@ -44,6 +44,57 @@ var matrix4Scratch = new Matrix4();
 var minimumScratch = new Cartesian3();
 var maximumScratch = new Cartesian3();
 
+function createPackedTriangles(
+  positions,
+  invTransform,
+  width,
+  triangleIndexEnd
+) {
+  var scratchV0 = new Cartesian3();
+  var scratchV1 = new Cartesian3();
+  var scratchV2 = new Cartesian3();
+
+  var triangles = new Float32Array(triangleIndexEnd * 6);
+
+  for (var triIdx2 = 0; triIdx2 < triangleIndexEnd; triIdx2++) {
+    var trianglesPerRow = (width - 1) * 2;
+    var base =
+      width * Math.floor(triIdx2 / trianglesPerRow) +
+      Math.floor((triIdx2 % trianglesPerRow) / 2);
+    var isEven = triIdx2 % 2 === 0;
+    // isEven: TL, BL, TR
+    // isOdd: TR, BL, BR
+    var idx0 = base + (isEven ? 0 : 1);
+    var idx1 = base + width;
+    var idx2 = base + 1 + (isEven ? 0 : width);
+    Cartesian3.clone(positions[idx0], scratchV0);
+    Cartesian3.clone(positions[idx1], scratchV1);
+    Cartesian3.clone(positions[idx2], scratchV2);
+
+    // triangleVerticesCallback(triIdx2, scratchV0, scratchV1, scratchV2);
+
+    var v0Local2 = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
+    var v1Local2 = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
+    var v2Local2 = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
+
+    // Get local space AABBs for triangle
+    var triAabbMinX2 = Math.min(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMaxX2 = Math.max(v0Local2.x, v1Local2.x, v2Local2.x);
+    var triAabbMinY2 = Math.min(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMaxY2 = Math.max(v0Local2.y, v1Local2.y, v2Local2.y);
+    var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
+    var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
+
+    triangles[triIdx2 * 6 + 0] = triAabbMinX2;
+    triangles[triIdx2 * 6 + 1] = triAabbMaxX2;
+    triangles[triIdx2 * 6 + 2] = triAabbMinY2;
+    triangles[triIdx2 * 6 + 3] = triAabbMaxY2;
+    triangles[triIdx2 * 6 + 4] = triAabbMinZ2;
+    triangles[triIdx2 * 6 + 5] = triAabbMaxZ2;
+  }
+  return triangles;
+}
+
 function createTriangles(positions, invTransform, width, triangleIndexEnd) {
   var scratchV0 = new Cartesian3();
   var scratchV1 = new Cartesian3();
@@ -528,17 +579,27 @@ HeightmapTessellator.computeVertices = function (options) {
     var invTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");
-    console.time("making triangles");
+    // console.time("making triangles");
+    //
+    // var triangles = createTriangles(
+    //   positions,
+    //   invTransform,
+    //   width,
+    //   gridTriangleCount
+    // );
+    // console.timeEnd("making triangles");
 
-    var triangles = createTriangles(
+    console.time("making packed triangles");
+
+    var packedTriangles = createPackedTriangles(
       positions,
       invTransform,
       width,
       gridTriangleCount
     );
-    console.timeEnd("making triangles");
+    console.timeEnd("making packed triangles");
 
-    octree = TrianglePicking.createPackedOctree(triangles);
+    octree = TrianglePicking.createPackedOctree(packedTriangles);
     octree._orientedBoundingBox = orientedBoundingBox;
 
     // trianglePicking = new TrianglePicking({

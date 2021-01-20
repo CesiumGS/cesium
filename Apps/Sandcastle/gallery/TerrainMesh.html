@@ -71,74 +71,24 @@
               document.body.classList.add("we-are-done");
             }
             logViewer();
-          }, 1000);
+          }, 300);
         }
 
         logViewer();
 
-        // set lighting to true
         viewer.scene.globe.enableLighting = true;
-
-        Sandcastle.addDefaultToolbarMenu(
-          [
-            {
-              text: "Mount Everest",
-              onselect: function () {
-                lookAtMtEverest();
-              },
-            },
-            {
-              text: "Half Dome",
-              onselect: function () {
-                var target = new Cesium.Cartesian3(
-                  -2489625.0836225147,
-                  -4393941.44443024,
-                  3882535.9454173897
-                );
-                var offset = new Cesium.Cartesian3(
-                  -6857.40902037546,
-                  412.3284835694358,
-                  2147.5545426812023
-                );
-                viewer.camera.lookAt(target, offset);
-                viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-              },
-            },
-            {
-              text: "San Francisco Bay",
-              onselect: function () {
-                var target = new Cesium.Cartesian3(
-                  -2708814.85583248,
-                  -4254159.450845907,
-                  3891403.9457429945
-                );
-                var offset = new Cesium.Cartesian3(
-                  70642.66030209465,
-                  -31661.517948317807,
-                  35505.179997143336
-                );
-                viewer.camera.lookAt(target, offset);
-                viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-              },
-            },
-          ],
-          "zoomButtons"
+        var target = new Cesium.Cartesian3(
+          300770.50872389384,
+          5634912.131394585,
+          2978152.2865545116
         );
-
-        function lookAtMtEverest() {
-          var target = new Cesium.Cartesian3(
-            300770.50872389384,
-            5634912.131394585,
-            2978152.2865545116
-          );
-          var offset = new Cesium.Cartesian3(
-            6344.974098678562,
-            -793.3419798081741,
-            2499.9508860763162
-          );
-          viewer.camera.lookAt(target, offset);
-          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        }
+        var offset = new Cesium.Cartesian3(
+          6344.974098678562,
+          -793.3419798081741,
+          2499.9508860763162
+        );
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         //Sandcastle_End
         Sandcastle.finishedLoading();
