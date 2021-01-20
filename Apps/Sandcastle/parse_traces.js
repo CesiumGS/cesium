@@ -72,7 +72,7 @@ fs.readdir(directoryPath, function (err, files) {
     const obj = JSON.parse(data);
 
     function ms(v) {
-      return `${Math.floor(v)}ms`;
+      return Math.floor(v);
     }
 
     function maxMinAvg(arr) {
@@ -97,37 +97,62 @@ fs.readdir(directoryPath, function (err, files) {
       }; //changed from original post
     }
 
-    let begin,
-      end,
-      samples = {
-        name: "creating octree",
-        items: [],
-      };
-    for (const event of obj.traceEvents) {
-      if (event.name === samples.name && event.ph === "b") {
-        begin = event;
-        if (end) {
-          throw new Error("whoops!");
-        }
-      }
-      if (event.name === samples.name && event.ph === "e") {
-        end = event;
-        if (!begin) {
-          throw new Error("whoops!");
-        }
+    const measurements = {};
 
-        const time = end.ts - begin.ts;
-        end = null;
-        begin = null;
-        samples.items.push(time / 1000);
+    for (const event of obj.traceEvents) {
+      const isTimingEvent =
+        event.cat === "blink.console" &&
+        event.scope === "blink.console" &&
+        ["b", "e"].includes(event.ph);
+      if (!isTimingEvent) {
+        continue;
+      }
+
+      const name = event.name;
+      if (!measurements[name]) {
+        measurements[name] = {
+          name: name,
+          samples: [],
+          begin: null,
+        };
+      }
+      const eventSamples = measurements[name];
+
+      const isBeginEvent = event.ph === "b";
+      const isEndEvent = event.ph === "e";
+
+      if (!isEndEvent && !isBeginEvent) {
+        throw new Error(`either begin or end event found: ${event}`);
+      }
+      if (isEndEvent && !eventSamples.begin) {
+        throw new Error("end event before begin event");
+      }
+
+      if (isEndEvent) {
+        const endTimestamp = event.ts;
+        const beginTimestamp = eventSamples.begin;
+        const time = endTimestamp - beginTimestamp;
+        eventSamples.samples.push(time / 1000);
+        eventSamples.begin = null;
+      }
+
+      if (isBeginEvent) {
+        eventSamples.begin = event.ts;
       }
     }
 
-    console.table({
-      event: samples.name,
-      ts: timestamp,
-      ...maxMinAvg(samples.items),
-    });
+    const tableData = [];
+
+    for (const value of Object.values(measurements)) {
+      tableData.push({
+        event: value.name,
+        ts: timestamp,
+        ...maxMinAvg(value.samples),
+      });
+    }
+    tableData.sort((a, b) => b.sum - a.sum);
+
+    console.table(tableData);
     console.log(relevantLines);
   });
 });
