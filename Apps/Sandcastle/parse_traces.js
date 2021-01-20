@@ -13,6 +13,9 @@ const methodNamesWeCareAbout = [
 const isLastOnlyArg = Array.from(process.argv).find((arg) =>
   arg.toLowerCase().includes("--last")
 );
+const isIncludeLogsArg = Array.from(process.argv).find((arg) =>
+  arg.toLowerCase().includes("--logs")
+);
 
 const isLastOnly = !!isLastOnlyArg;
 const isLastOnlyValue = isLastOnlyArg
@@ -20,6 +23,8 @@ const isLastOnlyValue = isLastOnlyArg
   .replace("=", "")
   .trim();
 const lastCount = isLastOnlyValue ? parseInt(isLastOnlyValue) : 1;
+
+const isIncludeLogs = !!isIncludeLogsArg;
 
 fs.readdir(directoryPath, function (err, files) {
   if (err) {
@@ -153,6 +158,8 @@ fs.readdir(directoryPath, function (err, files) {
     tableData.sort((a, b) => b.sum - a.sum);
 
     console.table(tableData);
-    console.log(relevantLines);
+    if (isIncludeLogs) {
+      console.log(relevantLines);
+    }
   });
 });
