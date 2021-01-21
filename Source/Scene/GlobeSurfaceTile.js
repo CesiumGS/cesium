@@ -130,28 +130,6 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
   },
 });
 
-var scratchCartographic = new Cartographic();
-
-function getPosition(encoding, mode, projection, vertices, index, result) {
-  encoding.decodePosition(vertices, index, result);
-
-  if (defined(mode) && mode !== SceneMode.SCENE3D) {
-    var ellipsoid = projection.ellipsoid;
-    var positionCart = ellipsoid.cartesianToCartographic(
-      result,
-      scratchCartographic
-    );
-    projection.project(positionCart, result);
-    Cartesian3.fromElements(result.z, result.x, result.y, result);
-  }
-
-  return result;
-}
-
-var scratchV0 = new Cartesian3();
-var scratchV1 = new Cartesian3();
-var scratchV2 = new Cartesian3();
-
 // function cartesianToStr(c) {
 //   return `new Cartesian3(
 //             ${c.x},
@@ -216,94 +194,57 @@ GlobeSurfaceTile.prototype.pick = function (
   mode,
   projection,
   cullBackFaces,
-  result,
-  useNewPicking,
-  quadTreeTile,
-  doLog
+  result
 ) {
   var mesh = this.renderedMesh;
   if (!defined(mesh)) {
     return undefined;
   }
 
-  function newPick() {
-    return mesh.trianglePicking.rayIntersect(ray, cullBackFaces, result);
-  }
+  var value = mesh.pickRay(ray, cullBackFaces, mode, projection);
+  return Cartesian3.clone(value, result);
 
-  function oldPick() {
-    var vertices = mesh.vertices;
-    var indices = mesh.indices;
-    var encoding = mesh.encoding;
-    var indicesLength = indices.length;
-
-    var minT = Number.MAX_VALUE;
-
-    for (var i = 0; i < indicesLength; i += 3) {
-      var i0 = indices[i];
-      var i1 = indices[i + 1];
-      var i2 = indices[i + 2];
-
-      var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-      var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-      var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
-
-      var t = IntersectionTests.rayTriangleParametric(
-        ray,
-        v0,
-        v1,
-        v2,
-        cullBackFaces
-      );
-      if (defined(t) && t < minT && t >= 0.0) {
-        minT = t;
-      }
-    }
-    return minT !== Number.MAX_VALUE
-      ? Ray.getPoint(ray, minT, result)
-      : undefined;
-  }
-
-  var pickedValue;
-
-  useNewPicking = defaultValue(useNewPicking, true);
-  var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
-  var doNewPick = useNewPicking && canNewPick;
-
-  var time = true;
-
-  var newPickedValue;
-  if (canNewPick) {
-    if (time) console.time("new pick");
-    newPickedValue = newPick();
-    if (time) console.timeEnd("new pick");
-  }
-  if (time) console.time("old pick");
-  var oldPickedValue = oldPick();
-  if (time) console.timeEnd("old pick");
-
-  if (doNewPick) {
-    pickedValue = newPickedValue;
-  } else {
-    pickedValue = oldPickedValue;
-  }
-
-  if (!Cartesian3.equals(newPickedValue, oldPickedValue) && canNewPick) {
-    console.error(
-      "pick results were different",
-      "new",
-      newPickedValue,
-      "old",
-      oldPickedValue
-    );
-    debugLog(this, quadTreeTile, ray, newPickedValue, oldPickedValue);
-    // debugger;
-  }
-
-  if (doNewPick && newPickedValue && doLog) {
-    debugLog(this, quadTreeTile, ray, newPickedValue, null);
-  }
-
-  return pickedValue;
+  // var pickedValue;
+  //
+  // useNewPicking = defaultValue(useNewPicking, true);
+  // var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
+  // var doNewPick = useNewPicking && canNewPick;
+  //
+  // var time = true;
+  //
+  // var newPickedValue;
+  // if (canNewPick) {
+  //   if (time) console.time("new pick");
+  //   newPickedValue = newPick();
+  //   if (time) console.timeEnd("new pick");
+  // }
+  // if (time) console.time("old pick");
+  // var oldPickedValue = oldPick();
+  // if (time) console.timeEnd("old pick");
+  //
+  // if (doNewPick) {
+  //   pickedValue = newPickedValue;
+  // } else {
+  //   pickedValue = oldPickedValue;
+  // }
+  //
+  // if (!Cartesian3.equals(newPickedValue, oldPickedValue) && canNewPick) {
+  //   console.error(
+  //     "pick results were different",
+  //     "new",
+  //     newPickedValue,
+  //     "old",
+  //     oldPickedValue
+  //   );
+  //   debugLog(this, quadTreeTile, ray, newPickedValue, oldPickedValue);
+  //   // debugger;
+  // }
+  //
+  // if (doNewPick && newPickedValue && doLog) {
+  //   debugLog(this, quadTreeTile, ray, newPickedValue, null);
+  // }
+  //
+  // return pickedValue;
 };
 
 GlobeSurfaceTile.prototype.freeResources = function () {
@@ -362,6 +303,7 @@ GlobeSurfaceTile.processStateMachine = function (
   terrainOnly
 ) {
   GlobeSurfaceTile.initialize(tile, terrainProvider, imageryLayerCollection);
+
   var surfaceTile = tile.data;
 
   if (tile.state === QuadtreeTileLoadState.LOADING) {

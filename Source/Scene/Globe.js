@@ -862,14 +862,11 @@ Globe.prototype.getHeight = function (cartographic, mode, doLog) {
   }
 
   var intersection = tile.data.pick(
-    ray, // ray
-    mode, //SceneMode.SCENE3D,  // mode
+    ray,
+    mode,
     undefined, // projection
     false, // cullBackFaces
-    scratchGetHeightIntersection, // result
-    true, // useNewPicking
-    tile, // quadTreeTile
-    doLog // log
+    scratchGetHeightIntersection
   );
   if (!defined(intersection)) {
     return undefined;

@@ -102,6 +102,31 @@ fs.readdir(directoryPath, function (err, files) {
       }; //changed from original post
     }
 
+    // {
+    //   "args": {},
+    //   "cat": "devtools.timeline,disabled-by-default-v8.gc",
+    //   "dur": 3,
+    //   "name": "V8.GC_STOP_THE_WORLD",
+    //   "ph": "X",
+    //   "pid": 43656,
+    //   "tdur": 3,
+    //   "tid": 76035,
+    //   "ts": 151218196413,
+    //   "tts": 14835
+    // }
+    //
+    // {
+    //   "args": {},
+    //   "cat": "devtools.timeline,disabled-by-default-v8.gc",
+    //   "dur": 5,
+    //   "name": "V8.GC_STOP_THE_WORLD",
+    //   "ph": "X",
+    //   "pid": 43656,
+    //   "tdur": 4,
+    //   "tid": 76035,
+    //   "ts": 151218196701,
+    //   "tts": 15123
+    // }
     const measurements = {};
 
     for (const event of obj.traceEvents) {
