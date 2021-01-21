@@ -265,6 +265,17 @@ function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
   return indices;
 }
 
+// TODO deduplicate with height map
+function createTriangleVerticesCallback(vertices, indices, encoding) {
+  function triangleVerticesCallback(triIdx, v0, v1, v2) {
+    encoding.decodePosition(vertices, indices[triIdx * 3], v0);
+    encoding.decodePosition(vertices, indices[triIdx * 3 + 1], v1);
+    encoding.decodePosition(vertices, indices[triIdx * 3 + 2], v2);
+  }
+
+  return triangleVerticesCallback;
+}
+
 var createMeshTaskName = "createVerticesFromQuantizedTerrainMesh";
 var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
 var createMeshTaskProcessorThrottle = new TaskProcessor(
@@ -370,7 +381,15 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
     );
     var stride = result.vertexStride;
     var terrainEncoding = TerrainEncoding.clone(result.encoding);
-    var trianglePicking = TrianglePicking.clone(result.trianglePicking);
+
+    var trianglePicking = new TrianglePicking(
+      result.packedOctree,
+      createTriangleVerticesCallback(
+        vertices,
+        indicesTypedArray,
+        terrainEncoding
+      )
+    );
 
     // Clone complex result objects because the transfer from the web worker
     // has stripped them down to JSON-style objects.

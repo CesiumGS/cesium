@@ -3,7 +3,6 @@ import Check from "./Check.js";
 import defined from "./defined.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Matrix4 from "./Matrix4.js";
-import OrientedBoundingBox from "./OrientedBoundingBox.js";
 import Ray from "./Ray.js";
 
 // For heightmap: https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20160007698.pdf
@@ -239,7 +238,13 @@ var scratchV2 = new Cartesian3();
  * and recurse over children that might have a closer intersection.
  * Adapted from https://daeken.svbtle.com/a-stupidly-simple-fast-octree-traversal-for-ray-intersection
  *
- * @param {Node} node
+ * @param packedNodeIdx
+ * @param packedNodes
+ * @param packedTriangleSets
+ * @param level
+ * @param x
+ * @param y
+ * @param z
  * @param {Ray} ray
  * @param {Ray} transformedRay
  * @param {Number} t
@@ -249,11 +254,9 @@ var scratchV2 = new Cartesian3();
  * @returns {TraversalResult}
  */
 function nodeRayIntersect(
-  node,
   packedNodeIdx,
   packedNodes,
   packedTriangleSets,
-  nodes,
   level,
   x,
   y,
@@ -278,7 +281,6 @@ function nodeRayIntersect(
   // }
 
   nodeIntersectTriangles(
-    node,
     packedNodes[packedNodeIdx],
     packedNodes[packedNodeIdx + 1],
     packedNodes[packedNodeIdx + 2],
@@ -417,11 +419,9 @@ function nodeRayIntersect(
     //   }
     // }
     nodeRayIntersect(
-      child,
       childNodeIdx,
       packedNodes,
       packedTriangleSets,
-      nodes,
       level + 1,
       _x,
       _y,
@@ -470,14 +470,12 @@ function nodeRayIntersect(
 }
 
 /**
- * @param {Node} node
  * @param {Ray} ray
  * @param {Boolean} cullBackFaces
  * @param {TrianglePicking~TriangleVerticesCallback} triangleVerticesCallback
  * @param {TraversalResult} result
  */
 function nodeIntersectTriangles(
-  node,
   firstChildNodeIdx,
   triangleCount,
   triangleSetIdx,
@@ -487,15 +485,8 @@ function nodeIntersectTriangles(
   triangleVerticesCallback,
   result
 ) {
-  // var triangleCount = node.triangles.length;
-  // console.assert(newTriangleCount === triangleCount);
-  // triangleCount = newTriangleCount;
   for (var i = 0; i < triangleCount; i++) {
-    // var triIndex = node.triangles[i];
     var triIndex = packedTriangleSets[triangleSetIdx + i];
-    // console.assert(triIndex === newtriIndex);
-    // triIndex = newtriIndex;
-
     var v0 = scratchV0;
     var v1 = scratchV1;
     var v2 = scratchV2;
@@ -503,23 +494,12 @@ function nodeIntersectTriangles(
     //  then we wouldn't need the callback on the client side - only the space transform
     triangleVerticesCallback(triIndex, v0, v1, v2);
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
-
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
       result.triangleIndex = triIndex;
-      // result.level = node.level;
-      // result.x = node.x;
-      // result.y = node.y;
-      // result.z = node.z;
     }
   }
 }
-
-/**
- * @typedef {Object} Overlap
- * @property {Number} bitMask
- * @property {Number} bitCount
- */
 
 /**
  * @param {Number} nodeAabbCenterX
@@ -829,168 +809,30 @@ function nodeAddTriangle(node, level, x, y, z, triangle, triangles, nodes) {
 //   });
 // }
 
-var scratchTransform = new Matrix4();
-
 /**
  * @constructor
- * @param {Object} options
- * @param {OrientedBoundingBox} options.orientedBoundingBox
- * @param {TrianglePicking~TriangleVerticesCallback} [options.triangleVerticesCallback]
+ * @param {{packedNodes: Float32Array, packedTriangles: Float32Array, inverseTransform: Matrix4}} packedOctree
+ * @param {Function} triangleVerticesCallback
  */
-function TrianglePicking(options) {
+function TrianglePicking(packedOctree, triangleVerticesCallback) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
-    "options.orientedBoundingBox",
-    options.orientedBoundingBox
+    "packedOctree.inverseTransform",
+    packedOctree.inverseTransform
   );
-  //>>includeEnd('debug');
-
-  this._triangleVerticesCallback = options.triangleVerticesCallback;
-  this._orientedBoundingBox = OrientedBoundingBox.clone(
-    options.orientedBoundingBox
+  Check.typeOf.object("packedOctree.packedNodes", packedOctree.packedNodes);
+  Check.typeOf.object(
+    "packedOctree.packedTriangles",
+    packedOctree.packedTriangles
   );
-  var transform = OrientedBoundingBox.toTransformation(
-    this._orientedBoundingBox,
-    scratchTransform
-  );
-  this._invTransform = Matrix4.inverse(transform, new Matrix4());
-  this._rootNode = new Node(0, 0, 0, 0);
-  this._nodes = [this._rootNode];
-}
-
-Object.defineProperties(TrianglePicking.prototype, {
-  /**
-   * Gets or set the function for retrieving the triangle vertices from a triangle index.
-   * @memberof TrianglePicking.prototype
-   * @type {TrianglePicking~TriangleVerticesCallback}
-   */
-  triangleVerticesCallback: {
-    get: function () {
-      return this._triangleVerticesCallback;
-    },
-    set: function (value) {
-      this._triangleVerticesCallback = value;
-    },
-  },
-});
-
-/**
- * @param {Number} triangleIndex
- * @param {Number} triangleCount
- */
-TrianglePicking.prototype.addTriangles = function (
-  triangleIndex,
-  triangleCount
-) {
-  console.time("creating triangles");
-  var rootNode = this._rootNode;
-  var invTransform = this._invTransform;
-  var nodes = this._nodes;
-  var triangleIndexEnd = triangleIndex + triangleCount;
-  var triangleVerticesCallback = this._triangleVerticesCallback;
-
-  var triangles = [];
-
-  var i = 0;
-  for (var triIdx2 = triangleIndex; triIdx2 < triangleIndexEnd; triIdx2++) {
-    i++;
-    // TODO bleh
-    triangleVerticesCallback(triIdx2, scratchV0, scratchV1, scratchV2);
-
-    // TODO inline
-    var v0Local2 = Matrix4.multiplyByPoint(invTransform, scratchV0, scratchV0);
-    var v1Local2 = Matrix4.multiplyByPoint(invTransform, scratchV1, scratchV1);
-    var v2Local2 = Matrix4.multiplyByPoint(invTransform, scratchV2, scratchV2);
-
-    // Get local space AABBs for triangle
-    var triAabbMinX2 = Math.min(v0Local2.x, v1Local2.x, v2Local2.x);
-    var triAabbMaxX2 = Math.max(v0Local2.x, v1Local2.x, v2Local2.x);
-    var triAabbMinY2 = Math.min(v0Local2.y, v1Local2.y, v2Local2.y);
-    var triAabbMaxY2 = Math.max(v0Local2.y, v1Local2.y, v2Local2.y);
-    var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
-    var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
-
-    // TODO packed array buffer instead
-    var triangle2 = new Triangle(
-      triIdx2,
-      triAabbMinX2,
-      triAabbMaxX2,
-      triAabbMinY2,
-      triAabbMaxY2,
-      triAabbMinZ2,
-      triAabbMaxZ2
-    );
-    triangles.push(triangle2);
-  }
-  console.timeEnd("creating triangles");
-
-  //>>includeStart('debug', pragmas.debug);
   Check.typeOf.func("triangleVerticesCallback", triangleVerticesCallback);
   //>>includeEnd('debug');
-  console.time("creating actual octree");
-  // TODO given the triangle count - we can prefill
-  //  to a certain depth
-  //  like over 300 triangles? we no point filling them in levels 1->3 because they're most likely going to be subdivided
-  //  therefore put it straight into it's level 4 node
-  for (var x = 0; x < triangles.length; x++) {
-    nodeAddTriangle(rootNode, 0, 0, 0, 0, triangles[x], triangles, nodes);
-  }
-  console.timeEnd("creating actual octree");
-  console.time("creating packed");
-  var packedNodeSpace = 3;
-  var packedNodes = new Int32Array(nodes.length * packedNodeSpace);
-  var triangleSets = [];
-  var n;
-  for (var w = 0; w < nodes.length; w++) {
-    n = nodes[w];
-    // a reference to the packed node index (*3)
-    packedNodes[w * packedNodeSpace] = n.firstChildNodeIdx;
-    // the number of triangles this node contains
-    packedNodes[w * packedNodeSpace + 1] = n.triangles.length;
-    // the index of the first triangle in the packed triangles
-    packedNodes[w * packedNodeSpace + 2] = triangleSets.length;
-    triangleSets = triangleSets.concat(n.triangles);
-  }
-  var packedTriangles = new Int32Array(triangleSets);
 
-  console.timeEnd("creating packed");
-
-  // function logNode(node, nodes, level, idx, treeNode) {
-  //   // console.log(`node at ${level}/${idx} has ${node.triangles.length}`);
-  //   treeNode.triangles = node.triangles.length;
-  //   let firstChildNodeIdx = node.firstChildNodeIdx;
-  //   if (firstChildNodeIdx !== -1) {
-  //     for (var _df = firstChildNodeIdx; _df < firstChildNodeIdx + 8; _df++) {
-  //       var _n = nodes[_df];
-  //       var childTreeNode = {triangles: 0, children: []};
-  //       treeNode.children.push(childTreeNode);
-  //       logNode(_n, nodes, level + 1, firstChildNodeIdx - _df, childTreeNode);
-  //     }
-  //   }
-  // }
-  //
-  // var tree = {triangles: 0, children: []};
-  // logNode(nodes[0], nodes, 0, 0, tree);
-  // console.log(tree);
-
-  // var _l = 0;
-  // for (var asdf = 0; asdf < nodes.length; asdf++) {
-  //   n = nodes[asdf];
-  //   console.log(`node at ${_l} has ${n.triangles.length}`);
-  //   for (var _df = n.firstChildNodeIdx; _df < n.firstChildNodeIdx + 8; df++) {
-  //     var _n = nodes[_df];
-  //     console.log(`node at ${_l} has ${_n.triangles.length}`);
-  //   }
-  // }
-
-  this._packedTriangles = packedTriangles;
-  this._packedNodes = packedNodes;
-  // printDebugInfo(this);
-  // null these properties out so they don't get copied across the worker thead.
-  //  instead we'll use their array buffer variants
-  this._rootNode = null;
-  this._nodes = null;
-};
+  this._inverseTransform = Matrix4.unpack(packedOctree.inverseTransform);
+  this._packedNodes = packedOctree.packedNodes;
+  this._packedTriangles = packedOctree.packedTriangles;
+  this._triangleVerticesCallback = triangleVerticesCallback;
+}
 
 var scratchTraversalResult = new TraversalResult();
 var scratchTransformedRay = new Ray();
@@ -1005,10 +847,7 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   if (!defined(result)) {
     result = new Cartesian3();
   }
-  var invTransform = this._invTransform;
-  var rootNode = null; //this._rootNode;
-  var nodes = this._nodes;
-
+  var invTransform = this._inverseTransform;
   var packedTriangleSets = this._packedTriangles;
   var packedNodes = this._packedNodes;
 
@@ -1033,11 +872,9 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   }
 
   traversalResult = nodeRayIntersect(
-    rootNode,
     0,
     packedNodes,
     packedTriangleSets,
-    nodes,
     0,
     0,
     0,
@@ -1061,37 +898,12 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
 };
 
 /**
- * @param {TrianglePicking} trianglePicking
- */
-TrianglePicking.clone = function (trianglePicking) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("trianglePicking", trianglePicking);
-  //>>includeEnd('debug');
-
-  var result = new TrianglePicking({
-    orientedBoundingBox: trianglePicking._orientedBoundingBox,
-    triangleVerticesCallback: trianglePicking.triangleVerticesCallback,
-  });
-
-  result._rootNode = trianglePicking._rootNode;
-  result._nodes = trianglePicking._nodes;
-  result._packedTriangles = trianglePicking._packedTriangles;
-  result._packedNodes = trianglePicking._packedNodes;
-  return result;
-};
-
-/**
- * A function that gets the three vertices from a triangle index
  *
- * @callback TrianglePicking~TriangleVerticesCallback
- * @param {Number} triangleIndex The triangle index
- * @param {Cartesian3} v0 The first vertex
- * @param {Cartesian3} v1 The second vertex
- * @param {Cartesian3} v2 The third vertex
+ * @param { Array<{index: number}>} triangles
+ * @param {Matrix4 }inverseTransform
+ * @return {{packedNodes: Int32Array, inverseTransform: Array<number>, packedTriangles: Int32Array}}
  */
-export default TrianglePicking;
-
-TrianglePicking.createPackedOctree = function (triangles) {
+TrianglePicking.createPackedOctree = function (triangles, inverseTransform) {
   var rootNode = new Node(0, 0, 0, 0);
   var nodes = [rootNode];
 
@@ -1128,7 +940,19 @@ TrianglePicking.createPackedOctree = function (triangles) {
   console.timeEnd("creating packed");
 
   return {
-    _packedTriangles: packedTriangles,
-    _packedNodes: packedNodes,
+    packedTriangles: packedTriangles,
+    packedNodes: packedNodes,
+    inverseTransform: Matrix4.pack(inverseTransform, [], 0),
   };
 };
+
+/**
+ * A function that gets the three vertices from a triangle index
+ *
+ * @callback TrianglePicking~TriangleVerticesCallback
+ * @param {Number} triangleIndex The triangle index
+ * @param {Cartesian3} v0 The first vertex
+ * @param {Cartesian3} v1 The second vertex
+ * @param {Cartesian3} v2 The third vertex
+ */
+export default TrianglePicking;

@@ -163,23 +163,9 @@ function TerrainMesh(
    */
   this.northIndicesWestToEast = northIndicesWestToEast;
 
-  // TODO: remove defined
-  if (defined(trianglePicking)) {
-    /**
-     * Acceleration structure for triangle picking.
-     * @type {TrianglePicking}
-     */
-    var that = this;
-    trianglePicking.triangleVerticesCallback = function (triIdx, v0, v1, v2) {
-      var idx0 = that.indices[triIdx * 3 + 0];
-      var idx1 = that.indices[triIdx * 3 + 1];
-      var idx2 = that.indices[triIdx * 3 + 2];
-
-      that.encoding.decodePosition(that.vertices, idx0, v0);
-      that.encoding.decodePosition(that.vertices, idx1, v1);
-      that.encoding.decodePosition(that.vertices, idx2, v2);
-    };
-    this.trianglePicking = trianglePicking;
-  }
+  /**
+   * TODO - add a method here rather than a public property
+   */
+  this.trianglePicking = trianglePicking;
 }
 export default TerrainMesh;

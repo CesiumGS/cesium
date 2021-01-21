@@ -186,6 +186,17 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
   },
 });
 
+// TODO deduplicate with quantised mesh
+function createTriangleVerticesCallback(vertices, indices, encoding) {
+  function triangleVerticesCallback(triIdx, v0, v1, v2) {
+    encoding.decodePosition(vertices, indices[triIdx * 3], v0);
+    encoding.decodePosition(vertices, indices[triIdx * 3 + 1], v1);
+    encoding.decodePosition(vertices, indices[triIdx * 3 + 2], v2);
+  }
+
+  return triangleVerticesCallback;
+}
+
 var createMeshTaskName = "createVerticesFromHeightmap";
 var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
 var createMeshTaskProcessorThrottle = new TaskProcessor(
@@ -288,11 +299,21 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
 
     var vertexCountWithoutSkirts = result.gridWidth * result.gridHeight;
 
-    // Clone complex result objects because the transfer from the web worker
-    // has stripped them down to JSON-style objects.
+    var encoding = TerrainEncoding.clone(result.encoding);
+    var vertices = new Float32Array(result.vertices);
+
+    var trianglePicking = new TrianglePicking(
+      result.packedOctree,
+      createTriangleVerticesCallback(
+        vertices,
+        indicesAndEdges.indices,
+        encoding
+      )
+    );
+
     that._mesh = new TerrainMesh(
       center,
-      new Float32Array(result.vertices),
+      vertices,
       indicesAndEdges.indices,
       indicesAndEdges.indexCountWithoutSkirts,
       vertexCountWithoutSkirts,
@@ -302,13 +323,13 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       Cartesian3.clone(result.occludeePointInScaledSpace),
       result.numberOfAttributes,
       OrientedBoundingBox.clone(result.orientedBoundingBox),
-      TerrainEncoding.clone(result.encoding),
+      encoding,
       exaggeration,
       indicesAndEdges.westIndicesSouthToNorth,
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
       indicesAndEdges.northIndicesWestToEast,
-      TrianglePicking.clone(result.trianglePicking)
+      trianglePicking
     );
 
     // that._mesh._url = `${x}/${y}/${level}/`;
