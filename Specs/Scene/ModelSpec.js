@@ -1910,6 +1910,47 @@ describe(
       animBoxesModel.show = false;
     });
 
+    it("animates with an explicit animation time", function () {
+      const time = JulianDate.fromDate(
+        new Date("January 1, 2014 12:00:00 UTC")
+      );
+      const animations = animBoxesModel.activeAnimations;
+      let animationTime = 0;
+      const a = animations.add({
+        name: "animation_1",
+        animationTime: function (duration) {
+          return animationTime / duration;
+        },
+      });
+
+      const spyUpdate = jasmine.createSpy("listener");
+      a.update.addEventListener(spyUpdate);
+
+      animBoxesModel.show = true;
+      scene.renderForSpecs(time);
+      animationTime = 0.5;
+      scene.renderForSpecs(JulianDate.addSeconds(time, 1.0, new JulianDate()));
+      scene.renderForSpecs(JulianDate.addSeconds(time, 2.0, new JulianDate()));
+      animationTime = 1.7;
+      scene.renderForSpecs(JulianDate.addSeconds(time, 3.0, new JulianDate()));
+
+      expect(spyUpdate.calls.count()).toEqual(3);
+      expect(spyUpdate.calls.argsFor(0)[2]).toEqualEpsilon(
+        0.0,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(1)[2]).toEqualEpsilon(
+        0.5,
+        CesiumMath.EPSILON14
+      );
+      expect(spyUpdate.calls.argsFor(2)[2]).toEqualEpsilon(
+        1.7,
+        CesiumMath.EPSILON14
+      );
+      expect(animations.remove(a)).toEqual(true);
+      animBoxesModel.show = false;
+    });
+
     it("animates with a multiplier", function () {
       const time = JulianDate.fromDate(
         new Date("January 1, 2014 12:00:00 UTC")

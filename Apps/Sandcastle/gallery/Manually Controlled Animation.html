@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Manually control a model's animations." />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        const viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
+
+        //Make sure viewer is at the desired time.
+        const start = Cesium.JulianDate.fromDate(new Date(2018, 11, 12, 15));
+        const totalSeconds = 30;
+        const stop = Cesium.JulianDate.addSeconds(
+          start,
+          totalSeconds,
+          new Cesium.JulianDate()
+        );
+        viewer.clock.startTime = start.clone();
+        viewer.clock.stopTime = stop.clone();
+        viewer.clock.currentTime = start.clone();
+        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        viewer.timeline.zoomTo(start, stop);
+
+        // Create a path for our model by lerping between two positions.
+        const position = new Cesium.SampledPositionProperty();
+        const distance = new Cesium.SampledProperty(Number);
+        const startPosition = new Cesium.Cartesian3(
+          -2379556.799372864,
+          -4665528.205030263,
+          3628013.106599678
+        );
+        const endPosition = new Cesium.Cartesian3(
+          -2379603.7074103747,
+          -4665623.48990283,
+          3627860.82704567
+        );
+        // A velocity vector property will give us the entity's speed and direction at any given time.
+        const velocityVectorProperty = new Cesium.VelocityVectorProperty(
+          position,
+          false
+        );
+        const velocityVector = new Cesium.Cartesian3();
+
+        const numberOfSamples = 100;
+        let prevLocation = startPosition;
+        let totalDistance = 0;
+        for (let i = 0; i <= numberOfSamples; ++i) {
+          const factor = i / numberOfSamples;
+          const time = Cesium.JulianDate.addSeconds(
+            start,
+            factor * totalSeconds,
+            new Cesium.JulianDate()
+          );
+
+          // Lerp using a non-linear factor so that the model accelerates.
+          const locationFactor = Math.pow(factor, 2);
+          const location = Cesium.Cartesian3.lerp(
+            startPosition,
+            endPosition,
+            locationFactor,
+            new Cesium.Cartesian3()
+          );
+          position.addSample(time, location);
+          distance.addSample(
+            time,
+            (totalDistance += Cesium.Cartesian3.distance(
+              location,
+              prevLocation
+            ))
+          );
+          prevLocation = location;
+        }
+
+        function updateSpeedLabel(time, result) {
+          velocityVectorProperty.getValue(time, velocityVector);
+          const metersPerSecond = Cesium.Cartesian3.magnitude(velocityVector);
+          const kmPerHour = Math.round(metersPerSecond * 3.6);
+
+          return `${kmPerHour} km/hr`;
+        }
+
+        // Add our model.
+        const modelPrimitive = viewer.scene.primitives.add(
+          Cesium.Model.fromGltf({
+            url: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+            scale: 4,
+          })
+        );
+        const modelLabel = viewer.entities.add({
+          position: position,
+          orientation: new Cesium.VelocityOrientationProperty(position), // Automatically set the model's orientation to the direction it's facing.
+          label: {
+            text: new Cesium.CallbackProperty(updateSpeedLabel, false),
+            font: "20px sans-serif",
+            showBackground: true,
+            distanceDisplayCondition: new Cesium.DistanceDisplayCondition(
+              0.0,
+              100.0
+            ),
+            eyeOffset: new Cesium.Cartesian3(0, 7.2, 0),
+          },
+        });
+
+        modelPrimitive.readyPromise.then(function (model) {
+          model.activeAnimations.addAll({
+            loop: Cesium.ModelAnimationLoop.REPEAT,
+            animationTime: function (duration) {
+              return distance.getValue(viewer.clock.currentTime) / duration;
+            },
+            multiplier: 0.25,
+          });
+          const rot = new Cesium.Matrix3();
+          viewer.scene.preUpdate.addEventListener(function () {
+            const time = viewer.clock.currentTime;
+            const pos = position.getValue(time);
+            const vel = velocityVectorProperty.getValue(time);
+            Cesium.Cartesian3.normalize(vel, vel);
+            Cesium.Transforms.rotationMatrixFromPositionVelocity(
+              pos,
+              vel,
+              viewer.scene.globe.ellipsoid,
+              rot
+            );
+            Cesium.Matrix4.fromRotationTranslation(rot, pos, model.modelMatrix);
+          });
+        });
+        viewer.trackedEntity = modelLabel;
+        modelLabel.viewFrom = new Cesium.Cartesian3(-20.0, -7.0, 4.0);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
