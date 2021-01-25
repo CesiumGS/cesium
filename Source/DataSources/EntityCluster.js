@@ -68,7 +68,7 @@ function EntityCluster(options) {
   this._clusterEvent = new Event();
 
   /**
-   * Determines if billboards in this collection will be shown.
+   * Determines if entities in this collection will be shown.
    *
    * @type {Boolean}
    * @default true

@@ -650,7 +650,7 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
-    it("does not renders label if show is false", function () {
+    it("does not render label if show is false", function () {
       labels.add({
         position: Cartesian3.ZERO,
         text: solidBox,
@@ -663,7 +663,6 @@ describe(
       expect(scene).toRender([255, 255, 255, 255]);
 
       labels.show = false;
-
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
