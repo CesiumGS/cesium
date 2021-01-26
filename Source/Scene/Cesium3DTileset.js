@@ -34,6 +34,7 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import ImplicitTileset from "./ImplicitTileset.js";
 import LabelCollection from "./LabelCollection.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
@@ -1724,7 +1725,16 @@ Cesium3DTileset.prototype.loadTileset = function (
       var length = children.length;
       for (var i = 0; i < length; ++i) {
         var childHeader = children[i];
-        var childTile = new Cesium3DTile(this, resource, childHeader, tile);
+        var childTile;
+        if (hasExtension(childHeader, "3DTILES_implicit_tiling")) {
+          var implicitTileset = new ImplicitTileset(
+            childHeader,
+            childHeader.extensions
+          );
+          childTile = implicitTileset.makeRootTile(this, resource, tile);
+        } else {
+          childTile = new Cesium3DTile(this, resource, childHeader, tile);
+        }
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);

@@ -77,5 +77,14 @@ var Cesium3DTileContentFactory = {
       byteOffset
     );
   },
+  subt: function (tileset, tile, resource, arrayBuffer, byteOffset) {
+    return new Implicit3DTileContent(
+      tileset,
+      tile,
+      resource,
+      arrayBuffer,
+      byteOffset
+    );
+  },
 };
 export default Cesium3DTileContentFactory;
