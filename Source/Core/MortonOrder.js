@@ -6,8 +6,6 @@ import DeveloperError from "./DeveloperError.js";
  * Morton Order (aka Z-Order Curve) helper functions.
  * @see {@link https://en.wikipedia.org/wiki/Z-order_curve}
  * @see {@link http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN}
- *
- * @exports MortonOrder
  */
 var MortonOrder = {};
 
