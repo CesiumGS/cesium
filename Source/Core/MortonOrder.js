@@ -5,15 +5,24 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Morton Order (aka Z-Order Curve) helper functions.
  * @see {@link https://en.wikipedia.org/wiki/Z-order_curve}
- * @see {@link http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN}
  *
  * @namespace MortonOrder
  */
 var MortonOrder = {};
 
 /**
+ * Inserts 0 between the bits in a number. This is the opposite of removeSpacingBetweenBits.
+ * For example:
+ * input: 6
+ * input (binary): 110
+ * output (binary): 10100
+ *                   ^ ^  (added)
+ * output: 20
+ *
  * @private
- * @param {Number} v
+ * @param {Number} v A 16-bit unsigned integer
+ * @returns {Number} A 32-bit unsigned integer with 0 inserted between input bits
+ * @see {@link http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN}
  */
 function insertSpacingBetweenBits(v) {
   v = (v | (v << 8)) & 0x00ff00ff;
@@ -24,8 +33,18 @@ function insertSpacingBetweenBits(v) {
 }
 
 /**
+ * Removes every other bit in a number. This is the opposite of insertSpacingBetweenBits.
+ * For example:
+ * input: 20
+ * input (binary): 10100
+ *                  ^ ^  (removed)
+ * output (binary): 110
+ * output: 6
+ *
  * @private
- * @param {Number} v
+ * @param {Number} v A 32-bit unsigned integer
+ * @returns {Number} A 16-bit unsigned integer with every other input bit removed
+ * @see {@link http://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN}
  */
 function removeSpacingBetweenBits(v) {
   v = v & 0x55555555;
