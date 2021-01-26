@@ -1,5 +1,5 @@
-import Check from "../Core/Check";
-import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme";
+import Check from "../Core/Check.js";
+import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -10,6 +10,7 @@ export default function ImplicitTileCoordinates(options) {
   Check.typeOf.number("options.z", options.z);
   //>>includeEnd('debug');
 
+  this.subdivisionScheme = options.subdivisionScheme;
   this.level = options.level;
   this.x = options.x;
   this.y = options.y;

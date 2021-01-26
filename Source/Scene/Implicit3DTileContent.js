@@ -1,5 +1,6 @@
-import Check from "../Core/Check";
-import defaultValue from "../Core/defaultValue";
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
+import ImplicitSubtree from "./ImplicitSubtree.js";
 
 export default function Implicit3DTileContent(
   tileset,

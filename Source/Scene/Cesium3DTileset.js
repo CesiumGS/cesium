@@ -11,6 +11,7 @@ import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import Event from "../Core/Event.js";
+import has3DTilesExtension from "../Core/has3DTilesExtension.js";
 import JulianDate from "../Core/JulianDate.js";
 import ManagedArray from "../Core/ManagedArray.js";
 import CesiumMath from "../Core/Math.js";
@@ -1703,7 +1704,16 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
-  var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
+  var rootTile;
+  if (has3DTilesExtension(tilesetJson.root, "3DTILES_implicit_tiling")) {
+    var implicitTileset = new ImplicitTileset(
+      tilesetJson.root,
+      tilesetJson.root.extensions
+    );
+    rootTile = implicitTileset.makeRootTile(this, resource, tile);
+  } else {
+    rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
+  }
 
   // If there is a parentTile, add the root of the currently loading tileset
   // to parentTile's children, and update its _depth.
@@ -1726,7 +1736,7 @@ Cesium3DTileset.prototype.loadTileset = function (
       for (var i = 0; i < length; ++i) {
         var childHeader = children[i];
         var childTile;
-        if (hasExtension(childHeader, "3DTILES_implicit_tiling")) {
+        if (has3DTilesExtension(childHeader, "3DTILES_implicit_tiling")) {
           var implicitTileset = new ImplicitTileset(
             childHeader,
             childHeader.extensions

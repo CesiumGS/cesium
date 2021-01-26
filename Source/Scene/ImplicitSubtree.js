@@ -1,10 +1,8 @@
-import { parse } from "yargs";
-import Check from "../Core/Check";
-import defined from "../Core/defined";
-import DeveloperError from "../Core/DeveloperError";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray";
-import RuntimeError from "../Core/RuntimeError";
-import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream";
+import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 
 var subtreeMagic = 0x74627573;
 

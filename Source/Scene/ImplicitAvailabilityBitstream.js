@@ -1,6 +1,6 @@
-import Check from "../Core/Check";
-import defined from "../Core/defined";
-import DeveloperError from "../Core/DeveloperError";
+import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * An availability bitstream for use in an {@link ImplicitSubtree}

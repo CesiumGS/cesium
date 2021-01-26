@@ -1,9 +1,11 @@
-import defined from "../Core/defined";
-import Cesium3DTile from "./Cesium3DTile";
-import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme";
-import ImplicitTileCoordinates from "./ImplicitTileCoordinates";
+import defined from "../Core/defined.js";
+import Cesium3DTile from "./Cesium3DTile.js";
+import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
+import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
+import ImplicitTemplateUri from "./ImplicitTemplateUri.js";
 
 export default function ImplicitTileset(tileJson, extensionJson) {
+  this._tileJson = tileJson;
   this.geometricError = tileJson.geometricError;
 
   // TODO: parse this?
@@ -11,7 +13,7 @@ export default function ImplicitTileset(tileJson, extensionJson) {
   this.boundingVolume = tileJson.boundingVolume;
   this.refine = tileJson.refine;
 
-  var extension = tileJson.extensions["3DTILES_implicit_tiling"];
+  var extension = extensionJson["3DTILES_implicit_tiling"];
   this.subdivisionScheme =
     extension.subdivisionScheme.toUpperCase() === "OCTREE"
       ? ImplicitSubdivisionScheme.OCTREE
@@ -38,11 +40,11 @@ ImplicitTileset.prototype.makeRootTile = function (
 
   var contentJson = {
     content: {
-      uri: this.contentUriTemplate.substitute(rootCoordinates),
+      uri: this.subtreeUriTemplate.substitute(rootCoordinates),
     },
   };
 
-  var tileJson = Object.assign({}, this.tileJson, content);
+  var tileJson = Object.assign({}, this._tileJson, contentJson);
   var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
   tile.implicitCoordinates = rootCoordinates;
   return tile;
