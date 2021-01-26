@@ -187,7 +187,7 @@ MortonOrder.decode3D = function (mortonIndex, result) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("mortonIndex", mortonIndex);
   if (mortonIndex < 0 || mortonIndex > 1073741823) {
-    throw new DeveloperError("input must be 30-bit unsigned integer");
+    throw new DeveloperError("input must be a 30-bit unsigned integer");
   }
   //>>includeEnd('debug');
 
