@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.78 - 2021-02-01
+
+##### Additions :tada:
+
+- `TaskProcessor` now accepts an absolute URL in addition to a worker name as it's first parameter. This makes it possible to use custom web workers with Cesium's task processing system without copying them to Cesium's Workers directory.
+
 ### 1.77 - 2021-01-04
 
 ##### Additions :tada:
