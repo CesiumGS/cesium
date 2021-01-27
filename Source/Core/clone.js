@@ -16,6 +16,19 @@ function clone(object, deep) {
 
   deep = defaultValue(deep, false);
 
+  if (Array.isArray(object)) {
+    var array = object.slice();
+    var length = array.length;
+    for (var i = 0; i < length; ++i) {
+      var value = array[i];
+      if (deep) {
+        value = clone(array[i], deep);
+      }
+      array[i] = value;
+    }
+    return array;
+  }
+
   var result = new object.constructor();
   for (var propertyName in object) {
     if (object.hasOwnProperty(propertyName)) {
