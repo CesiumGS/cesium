@@ -1,13 +1,16 @@
 import Check from "../Core/Check.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.subdivisionScheme", options.subdivisionScheme);
   Check.typeOf.number("options.level", options.level);
-  Check.typeOf.number("options.x", options.z);
+  Check.typeOf.number("options.x", options.x);
   Check.typeOf.number("options.y", options.y);
-  Check.typeOf.number("options.z", options.z);
+  if (options.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    Check.typeOf.number("options.z", options.z);
+  }
   //>>includeEnd('debug');
 
   this.subdivisionScheme = options.subdivisionScheme;
@@ -17,15 +20,30 @@ export default function ImplicitTileCoordinates(options) {
 
   if (options.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
     this.z = options.z;
-  } else {
-    // TODO: undefined or always 0?
-    this.z = undefined;
   }
 }
 
+/**
+ * Given the (level, x, y, [z]) coordinates of the parent, compute the
+ * coordinates of the child.
+ * @param {Number} childIndex The index of the child in the parents.children
+ * array. This must be in [0, 4) for quadtrees and [0, 8) for octrees.
+ * @return {ImplicitTileCoordinates} The tile coordinates of the child
+ */
 ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   childIndex
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  var branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
+    this.subdivisionScheme
+  );
+  if (childIndex < 0 || branchingFactor <= childIndex) {
+    throw new DeveloperError(
+      "childIndex must be at least 0 and less than" + branchingFactor
+    );
+  }
+  //>>includeEnd('debug');
+
   var level = this.level + 1;
 
   // TODO: This also can be done using bitwise operations. The offsets are the last

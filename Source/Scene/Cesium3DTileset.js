@@ -1704,16 +1704,7 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
-  var rootTile;
-  if (has3DTilesExtension(tilesetJson.root, "3DTILES_implicit_tiling")) {
-    var implicitTileset = new ImplicitTileset(
-      tilesetJson.root,
-      tilesetJson.root.extensions
-    );
-    rootTile = implicitTileset.makeRootTile(this, resource, tile);
-  } else {
-    rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
-  }
+  var rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
 
   // If there is a parentTile, add the root of the currently loading tileset
   // to parentTile's children, and update its _depth.
@@ -1735,16 +1726,7 @@ Cesium3DTileset.prototype.loadTileset = function (
       var length = children.length;
       for (var i = 0; i < length; ++i) {
         var childHeader = children[i];
-        var childTile;
-        if (has3DTilesExtension(childHeader, "3DTILES_implicit_tiling")) {
-          var implicitTileset = new ImplicitTileset(
-            childHeader,
-            childHeader.extensions
-          );
-          childTile = implicitTileset.makeRootTile(this, resource, tile);
-        } else {
-          childTile = new Cesium3DTile(this, resource, childHeader, tile);
-        }
+        var childTile = makeTile(tileset, resource, childHeader, tile);
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);
@@ -1758,6 +1740,20 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   return rootTile;
 };
+
+function makeTile(tileset, resource, tileHeader, parentTile) {
+  if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+    var implicitTileset = new ImplicitTileset(
+      tileset,
+      resource,
+      tileHeader,
+      tileHeader.extensions
+    );
+    return implicitTileset.makeRootPlaceholderTile(parentTile);
+  } else {
+    return new Cesium3DTile(tileset, resource, tileHeader, parentTile);
+  }
+}
 
 var scratchPositionNormal = new Cartesian3();
 var scratchCartographic = new Cartographic();

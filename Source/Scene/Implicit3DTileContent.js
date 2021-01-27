@@ -1,5 +1,8 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 
 export default function Implicit3DTileContent(
@@ -18,35 +21,42 @@ export default function Implicit3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
+
+  initialize(this, arrayBuffer, byteOffset);
 }
 
 function initialize(content, arrayBuffer, byteOffset) {
   // Parse the subtree file
   byteOffset = defaultValue(byteOffset, 0);
   var uint8Array = new Uint8Array(arrayBuffer, byteOffset);
-  var subtree = new ImplicitSubtree(uint8Array, this._implicitTileset);
+  var subtree = new ImplicitSubtree(uint8Array, content._implicitTileset);
+
+  var implicitTileset = content._implicitTileset;
 
   // Parse the tiles inside this immediate subtree
-  // TODO: maybe this should return an object rather than an array?
-  var results = this.transcodeSubtreeTiles(subtree, parentTile);
-  var rootTile = results[0];
-  var bottomRow = results[1];
+  var parentTile = content._tile.parent;
+  var results = implicitTileset.transcodeSubtreeTiles(subtree, parentTile);
 
   // Replace the parent's children with the new root tile.
-  parentTile.children = [rootTile];
+  if (defined(parentTile)) {
+    parentTile.children = [results.rootTile];
+  } else {
+    // The placeholder tile was the root, so replace the tileset's root
+    content._tileset._root = results.rootTile;
+    //content._tileset.root = results.rootTile;
+  }
 
-  // for child subtrees, make new placeholder tiles with implicit contents
-  var childSubtrees = this._implicitTileset.listChildSubtrees(
+  // for each child subtree, make new placeholder tiles
+  var childSubtrees = implicitTileset.listChildSubtrees(
     subtree,
-    bottomRow
+    results.bottomRow
   );
   for (var i = 0; i < childSubtrees.length; i++) {
     var pair = childSubtrees[i];
     var leafTile = pair[0];
     var childIndex = pair[1];
 
-    var implicitChildTile = this.makePlaceholderTile(
-      subtree,
+    var implicitChildTile = implicitTileset.makePlaceholderChildSubtree(
       leafTile,
       childIndex
     );

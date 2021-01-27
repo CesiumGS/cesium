@@ -3,6 +3,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
+import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 var subtreeMagic = 0x74627573;
 
@@ -10,7 +11,7 @@ var subtreeMagic = 0x74627573;
  * An object representing a single subtree in an implicit tileset
  * including availability and metadata.
  * @param {Uint8Array} subtreeView The contents of a subtree file in a Uint8Array.
- * @param {ImplicitTileset} implicitTileset the implicit tileset for retrieving information such as subdivision scheme
+ * @param {implicitTIleset} implicitTileset The implicit tileset. This includes information about the size of subtrees
  */
 export default function ImplicitSubtree(subtreeView, implicitTileset) {
   this._subtreeJson = undefined;
@@ -19,13 +20,10 @@ export default function ImplicitSubtree(subtreeView, implicitTileset) {
   this._tileAvailability = undefined;
   this._contentAvailability = undefined;
   this._childSubtreeAvailability = undefined;
+  this._subdivisionScheme = implicitTileset.subdivisionScheme;
+  this._branchingFactor = implicitTileset.branchingFactor;
 
   parseSubtreeBinary(this, subtreeView, implicitTileset);
-
-  throw new Error("Not implemented yet!");
-  //this._tileAvailability = new ImplicitAvailabilityBitstream(???);
-  //this._contentAvailability = new ImplicitAvailabilityBitstream(???);
-  //this._childSubtreeAvailability = new ImplicitAvailabilityBitstream(???);
 }
 
 /**
@@ -55,8 +53,6 @@ ImplicitSubtree.prototype.getChildSubtreeAvailabilityBit = function (index) {
   return this._childSubtreeAvailability.getBit(index);
 };
 
-// Not sure if these should go here or elsewhere ==============================
-
 /**
  * Get the index of the first node at the given level within this subtree.
  * e.g. for a quadtree:
@@ -66,25 +62,32 @@ ImplicitSubtree.prototype.getChildSubtreeAvailabilityBit = function (index) {
  * @param {Number} level The 0-indexed level number relative to the root of the subtree
  * @return {Number} The first index at the desired level
  */
-ImplicitSubtree.prototype.getStartOfLevel = function (level) {
-  throw new Error("Not implemented yet!");
+ImplicitSubtree.prototype.getLevelOffset = function (level) {
+  var branchingFactor = this._branchingFactor;
+  return (Math.pow(branchingFactor, level) - 1) / (branchingFactor - 1);
 };
 
 /**
- * Get the index of the child's parent within this subtree.
- * e.g. for a quadtree, node 3's parent is node 0.
+ * Get the morton index of a tile's parent. This is equivalent to
+ * chopping off the last 2 (quadtree) or 3 (octree) bits of the morton
+ * index.
  * @param {Number} childIndex the index of the child within the subtree
- * @return {Number|undefined} The index of the child's parent node or undefined if childIndex was 0
+ * @return {Number} The index of the child's parent node
  */
-ImplicitSubtree.prototype.getParentIndex = function (childIndex) {
-  throw new Error("Not implemented yet!");
+ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
+  var bitsPerLevel = 2;
+  if (this._subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    bitsPerLevel = 3;
+  }
+
+  return mortonIndex >> bitsPerLevel;
 };
 
 function parseSubtreeBinary(subtree, subtreeView, implicitTileset) {
   // Parse the header
   var littleEndian = true;
   var byteOffset = 0;
-  var subtreeReader = new DataView(subtreeBuffer);
+  var subtreeReader = new DataView(subtreeView.buffer);
   var magic = subtreeReader.getUint32(byteOffset, littleEndian);
   byteOffset += 4;
   var version = subtreeReader.getUint32(byteOffset, littleEndian);
@@ -113,22 +116,35 @@ function parseSubtreeBinary(subtree, subtreeView, implicitTileset) {
     getStringFromTypedArray(subtreeView, byteOffset, jsonByteLength)
   );
   byteOffset += jsonByteLength;
-  var subtreeBinary = subtreeView.subarray(byteOffset, binaryByteLength);
+  var subtreeBinary = subtreeView.subarray(
+    byteOffset,
+    byteOffset + binaryByteLength
+  );
 
   var bufferViews = parseBufferViews(subtreeJson, subtreeBinary);
   subtree._bufferViews = bufferViews;
 
+  var branchingFactor = implicitTileset.branchingFactor;
+  var subtreeLevels = implicitTileset.subtreeLevels;
+  var tileAvailabilityBits =
+    (Math.pow(branchingFactor, subtreeLevels) - 1) / (branchingFactor - 1);
+  var childSubtreeBits = Math.pow(branchingFactor, subtreeLevels);
+
   subtree._tileAvailability = parseAvailability(
     subtreeJson.tileAvailability,
-    bufferViews
+    bufferViews,
+    tileAvailabilityBits
   );
   subtree._contentAvailability = parseAvailability(
     subtreeJson.contentAvailability,
-    bufferViews
+    bufferViews,
+    // content availability has the same length as tile availability.
+    tileAvailabilityBits
   );
   subtree._childSubtreeAvailability = parseAvailability(
     subtreeJson.childSubtreeAvailability,
-    bufferViews
+    bufferViews,
+    childSubtreeBits
   );
 }
 
@@ -183,9 +199,10 @@ function parseBufferViews(subtreeJson, subtreeBinary) {
     var bufferView = subtreeBinary.subarray(start, end);
     bufferViews.push(bufferView);
   }
+  return bufferViews;
 }
 
-function parseAvailability(availabilityJson, bufferViews) {
+function parseAvailability(availabilityJson, bufferViews, lengthBits) {
   if (defined(availabilityJson.constant)) {
     //>>includeStart('debug', pragmas.debug);
     if (availabilityJson.constant < 0 || availabilityJson.constant > 1) {
@@ -195,12 +212,13 @@ function parseAvailability(availabilityJson, bufferViews) {
 
     return new ImplicitAvailabilityBitstream({
       constant: Boolean(availabilityJson.constant),
+      lengthBits: lengthBits,
     });
   }
 
   if (defined(availabilityJson.bufferView)) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.number(availabilityJson.bufferView);
+    Check.typeOf.number("availability.bufferView", availabilityJson.bufferView);
     //>>includeEnd('debug');
 
     var bufferView = bufferViews[availabilityJson.bufferView];
@@ -213,6 +231,7 @@ function parseAvailability(availabilityJson, bufferViews) {
 
     return new ImplicitAvailabilityBitstream({
       bitstream: bufferView,
+      lengthBits: lengthBits,
     });
   }
 
