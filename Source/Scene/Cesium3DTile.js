@@ -533,7 +533,9 @@ Object.defineProperties(Cesium3DTile.prototype, {
       return (
         (this.contentReady &&
           !this.hasEmptyContent &&
-          !this.hasTilesetContent) ||
+          !this.hasTilesetContent &&
+          // TODO: look for all occurrences of hasTilesetContent
+          !this.hasImplicitContent) ||
         (defined(this._expiredContent) && !this.contentFailed)
       );
     },

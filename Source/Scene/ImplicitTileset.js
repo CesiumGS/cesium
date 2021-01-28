@@ -6,6 +6,7 @@ import ImplicitTemplateUri from "./ImplicitTemplateUri.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
+// TODO: Mark everything as private
 export default function ImplicitTileset(
   tileset,
   resource,
@@ -59,6 +60,7 @@ ImplicitTileset.prototype.makeRootPlaceholderTile = function (parentTile) {
     },
   };
 
+  // TODO: use combine.js
   var tileJson = Object.assign({}, this._tileJson, contentJson);
   var tile = new Cesium3DTile(
     this._tileset,
@@ -103,6 +105,7 @@ ImplicitTileset.prototype.transcodeSubtreeTiles = function (
   }
   //>>includeEnd('debug');
 
+  // TODO:
   var rootTile = this.deriveChildTile(
     subtree,
     parentOfRootTile,
@@ -216,6 +219,7 @@ ImplicitTileset.prototype.deriveChildTile = function (
   return childTile;
 };
 
+// TODO: Check terrain code for this.
 var ones = new Cartesian3(1, 1, 1);
 var scratchNumberOfTiles = new Cartesian3();
 var scratchCoordinatesVector = new Cartesian3();
@@ -314,11 +318,9 @@ ImplicitTileset.prototype.deriveBoundingVolume = function (
         corner.z + dimensions.z,
       ],
     };
-  } else if (defined(boundingVolume.box)) {
-    throw new DeveloperError("Not implemented yet!");
-  } else {
-    throw new DeveloperError("Only region and box are supported");
   }
+  //box
+  throw new DeveloperError("Not implemented yet!");
 };
 
 /**

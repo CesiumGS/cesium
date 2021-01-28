@@ -1,5 +1,6 @@
 import defined from "./defined.js";
 
+// TODO: Move to Scene
 export default function has3DTilesExtension(json, extensionName) {
   return (
     defined(json) &&

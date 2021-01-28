@@ -6,14 +6,12 @@ export default function ImplicitTemplateUri(uri) {
   Check.typeOf.string("uri", uri);
   //>>includeEnd('debug');
 
-  // TODO: sanitize input. Make sure there is one occurrence of
-  // {level}, {x}, {y}, and if relevant, {z}.
-  // This will require the subdivision scheme.
   this._uri = uri;
 }
 
 ImplicitTemplateUri.prototype.substitute = function (implicitCoordinates) {
   var uri = this._uri;
+  // TODO: use global replace? try /\{x\}/g
   uri = uri.replace("{level}", implicitCoordinates.level);
   uri = uri.replace("{x}", implicitCoordinates.x);
   uri = uri.replace("{y}", implicitCoordinates.y);

@@ -23,6 +23,33 @@ export default function ImplicitTileCoordinates(options) {
   }
 }
 
+Object.defineProperties(ImplicitTileCoordinates.prototype, {
+  /**
+   * An index in the range of [0, branchingFactor) that indicates
+   * which child of the parent cell these coordinates correspond to.
+   *
+   * This is the last 3 bits of the morton index of the tile, but it can
+   * be computed more directly by concatenating the bits [z0] y0 x0
+   * @type {Number}
+   * @readonly
+   */
+  childIndex: {
+    get: function () {
+      var childIndex = 0;
+      childIndex |= this.x & 1;
+      childIndex |= (this.y & 1) << 1;
+      if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+        childIndex |= (this.z & 1) << 2;
+      }
+
+      return childIndex;
+    },
+  },
+
+  // TODO: Add get mortonIndex once the mortonOrder branch is available
+  // TODO: Also add a fromMortonIndex function.
+});
+
 /**
  * Given the (level, x, y, [z]) coordinates of the parent, compute the
  * coordinates of the child.

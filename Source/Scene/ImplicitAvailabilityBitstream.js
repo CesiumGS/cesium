@@ -42,7 +42,7 @@ export default function ImplicitAvailabilityBitstream(options) {
  */
 ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
   //>>includeStart('debug', pragmas.debug);
-  if (index < 0 || index > this._lengthBits) {
+  if (index < 0 || index >= this._lengthBits) {
     throw new DeveloperError("Bit index out of bounds.");
   }
   //>>includeEnd('debug');
@@ -55,5 +55,5 @@ ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
   var byteIndex = index >> 3;
   var bitIndex = index % 8;
 
-  return new Boolean((this._bitstream[byteIndex] >> bitIndex) & 1);
+  return ((this._bitstream[byteIndex] >> bitIndex) & 1) === 1;
 };

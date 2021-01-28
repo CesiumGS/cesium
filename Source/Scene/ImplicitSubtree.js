@@ -5,7 +5,10 @@ import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
+// TODO: Comment that this is 'subt'
 var subtreeMagic = 0x74627573;
+
+// TODO: either remove some DeveloperErrors or change to RuntimeError.
 
 /**
  * An object representing a single subtree in an implicit tileset
@@ -83,6 +86,12 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
   return mortonIndex >> bitsPerLevel;
 };
 
+// This needs to be split into phases:
+// 1. split into JSON + binary
+// 2. figure out which buffers are internal/external
+// 3. Figure out which buffers are actually needed
+// 4. Fetch the external buffers we need
+// 5. _then_ finish parsing availability.
 function parseSubtreeBinary(subtree, subtreeView, implicitTileset) {
   // Parse the header
   var littleEndian = true;
@@ -149,6 +158,7 @@ function parseSubtreeBinary(subtree, subtreeView, implicitTileset) {
 }
 
 function parseBufferViews(subtreeJson, subtreeBinary) {
+  // TODO: don't validate, short circuit once an internal buffer is found
   var internalBufferIndex = undefined;
   for (var i = 0; i < subtreeJson.buffers.length; i++) {
     var bufferHeader = subtreeJson.buffers[i];
