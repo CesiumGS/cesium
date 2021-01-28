@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import MortonOrder from "../Core/MortonOrder.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 export default function ImplicitTileCoordinates(options) {
@@ -46,8 +47,14 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
     },
   },
 
-  // TODO: Add get mortonIndex once the mortonOrder branch is available
-  // TODO: Also add a fromMortonIndex function.
+  mortonIndex: {
+    get: function () {
+      if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+        return MortonOrder.encode3D(this.x, this.y, this.z);
+      }
+      return MortonOrder.encode2D(this.x, this.y);
+    },
+  },
 });
 
 /**
@@ -96,4 +103,43 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
       y: y,
     });
   }
+};
+
+var scratchCoordinatesArray = [0, 0, 0];
+/**
+ * Given a level number, morton index, and whether the tileset is an
+ * octree/quadtree, compute the (level, x, y, [z]) coordinates
+ * @param {ImplicitSubdivisionScheme} subdivisionScheme
+ * @param {Number} level The level of the tree
+ * @param {Number} mortonIndex The morton index of the tile.
+ * @return {ImplicitTileCoordinates} The coordinates of the tile with the given
+ * Morton index
+ */
+ImplicitTileCoordinates.fromMortonIndex = function (
+  subdivisionScheme,
+  level,
+  mortonIndex
+) {
+  var coordinatesArray;
+  if (subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    coordinatesArray = MortonOrder.decode3D(
+      mortonIndex,
+      scratchCoordinatesArray
+    );
+    return new ImplicitTileCoordinates({
+      subdivisionScheme: subdivisionScheme,
+      level: level,
+      x: coordinatesArray[0],
+      y: coordinatesArray[1],
+      z: coordinatesArray[2],
+    });
+  }
+
+  coordinatesArray = MortonOrder.decode2D(mortonIndex, scratchCoordinatesArray);
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: subdivisionScheme,
+    level: level,
+    x: coordinatesArray[0],
+    y: coordinatesArray[1],
+  });
 };

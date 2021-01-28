@@ -176,4 +176,71 @@ fdescribe("Scene/ImplicitTileCoordinates", function () {
     // interleaving the last bit of z, x, y gives 0b101 = 5
     expect(coordinates.childIndex).toEqual(5);
   });
+
+  it("computes the morton index for quadtree coordinates", function () {
+    var coordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+      level: 4,
+      x: 5,
+      y: 11,
+    });
+
+    // x = 5 =  0b0101
+    // y = 11 = 0b1011
+    // interleave(y, x) = 0b10011011 = 155
+    expect(coordinates.mortonIndex).toEqual(155);
+  });
+
+  it("computes the morton index for octree coordinates", function () {
+    var coordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 4,
+      x: 7,
+      y: 15,
+      z: 32,
+    });
+
+    // x = 7 =  0b000111
+    // y = 15 = 0b001111
+    // z = 32 = 0b100000
+    // interleave(z, y, x) = 0b100000010011011011 = 132315
+    expect(coordinates.mortonIndex).toEqual(132315);
+  });
+
+  it("constructs quadtree coordinates from morton index", function () {
+    // 42 = 0b101010
+    // deinterleave2D(42) = [0b111, 0b000] = [7, 0] = [y, x]
+    var coordinates = ImplicitTileCoordinates.fromMortonIndex(
+      ImplicitSubdivisionScheme.QUADTREE,
+      3,
+      42
+    );
+    var expected = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+      level: 3,
+      x: 0,
+      y: 7,
+    });
+
+    expect(coordinates).toEqual(expected);
+  });
+
+  it("constructs octree coordinates from morton index", function () {
+    // 43 = 0b101011
+    // deinterleave3D(43) = [0b10, 0b01, 0b11] = [2, 1, 3] = [z, y, x]
+    var coordinates = ImplicitTileCoordinates.fromMortonIndex(
+      ImplicitSubdivisionScheme.OCTREE,
+      2,
+      43
+    );
+    var expected = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 2,
+      x: 3,
+      y: 1,
+      z: 2,
+    });
+
+    expect(coordinates).toEqual(expected);
+  });
 });
