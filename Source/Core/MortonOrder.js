@@ -121,6 +121,10 @@ MortonOrder.encode2D = function (x, y) {
   }
   //>>includeEnd('debug');
 
+  // Note: JavaScript bitwise operations return signed 32-bit integers, so the
+  // final result needs to be reintepreted as an unsigned integer using >>> 0.
+  // This is not needed for encode3D because the result is guaranteed to be at most
+  // 30 bits and thus will always be interpreted as an unsigned value.
   return (insertOneSpacing(x) | (insertOneSpacing(y) << 1)) >>> 0;
 };
 
