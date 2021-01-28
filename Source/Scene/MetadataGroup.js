@@ -1,9 +1,13 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import MetadataEntity from "./MetadataEntity.js";
 
 /**
  * Metadata about a group of content.
+ * <p>
+ * Implements the {@link MetadataEntity} interface.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.id The ID of the group.
@@ -33,9 +37,52 @@ function MetadataGroup(options) {
   this._extras = clone(group.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
 }
 
+/**
+ * Returns whether this property exists.
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @returns {Boolean} Whether this property exists.
+ */
+MetadataGroup.hasProperty = function (id) {
+  return MetadataEntity.hasProperty(this, id);
+};
+
+/**
+ * Returns an array of property IDs.
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The property IDs.
+ */
+MetadataGroup.getPropertyIds = function (results) {
+  return MetadataEntity.getPropertyIds(this, results);
+};
+
+/**
+ * Returns a copy of the value of the property with the given ID.
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ */
+MetadataGroup.getProperty = function (id) {
+  return MetadataEntity.getProperty(this, id);
+};
+
+/**
+ * Sets the value of the property with the given ID.
+ * <p>
+ * If a property with the given ID doesn't exist, it is created.
+ * </p>
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @param {*} value The value of the property that will be copied.
+ */
+MetadataGroup.setProperty = function (id, value) {
+  MetadataEntity.setProperty(this, id, value);
+};
+
 Object.defineProperties(MetadataGroup.prototype, {
   /**
-   * The class that group metadata conform to.
+   * The class that properties conform to.
    *
    * @memberof MetadataGroup.prototype
    * @type {MetadataClass}
@@ -49,7 +96,7 @@ Object.defineProperties(MetadataGroup.prototype, {
   },
 
   /**
-   * A dictionary containing group properties.
+   * A dictionary containing properties.
    *
    * @memberof MetadataGroup.prototype
    * @type {Object}

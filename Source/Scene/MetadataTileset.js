@@ -1,9 +1,13 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import MetadataEntity from "./MetadataEntity.js";
 
 /**
  * Metadata about the tileset.
+ * <p>
+ * Implements the {@link MetadataEntity} interface.
+ * </p>
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.tileset The tileset metadata JSON object.
@@ -29,9 +33,52 @@ function MetadataTileset(options) {
   this._extras = clone(tileset.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
 }
 
+/**
+ * Returns whether this property exists.
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @returns {Boolean} Whether this property exists.
+ */
+MetadataTileset.hasProperty = function (id) {
+  return MetadataEntity.hasProperty(this, id);
+};
+
+/**
+ * Returns an array of property IDs.
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The property IDs.
+ */
+MetadataTileset.getPropertyIds = function (results) {
+  return MetadataEntity.getPropertyIds(this, results);
+};
+
+/**
+ * Returns a copy of the value of the property with the given ID.
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ */
+MetadataTileset.getProperty = function (id) {
+  return MetadataEntity.getProperty(this, id);
+};
+
+/**
+ * Sets the value of the property with the given ID.
+ * <p>
+ * If a property with the given ID doesn't exist, it is created.
+ * </p>
+ *
+ * @param {String} id The case-sensitive ID of the property.
+ * @param {*} value The value of the property that will be copied.
+ */
+MetadataTileset.setProperty = function (id, value) {
+  MetadataEntity.setProperty(this, id, value);
+};
+
 Object.defineProperties(MetadataTileset.prototype, {
   /**
-   * The class that tileset metadata conform to.
+   * The class that properties conforms to.
    *
    * @memberof MetadataTileset.prototype
    * @type {MetadataClass}
@@ -45,7 +92,7 @@ Object.defineProperties(MetadataTileset.prototype, {
   },
 
   /**
-   * A dictionary containing tileset properties.
+   * A dictionary containing properties.
    *
    * @memberof MetadataTileset.prototype
    * @type {Object}
