@@ -84,49 +84,6 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   },
 
   /**
-   * Gets the minimum element in the queue.
-   * If the queue is empty, the result is undefined.
-   *
-   * @param {*|undefined} element
-   */
-  minimum: {
-    get: function () {
-      var length = this._length;
-      if (length === 0) {
-        return undefined;
-      }
-
-      // The minimum element is always the root
-      return this._array[0];
-    },
-  },
-
-  /**
-   * Gets the maximum element in the queue.
-   * If the queue is empty, the result is undefined.
-   *
-   * @param {*|undefined} element
-   */
-  maximum: {
-    get: function () {
-      var length = this._length;
-      if (length === 0) {
-        return undefined;
-      }
-
-      // If the root has no children, the maximum is the root.
-      // If the root has one child, the maximum is the child.
-      if (length <= 2) {
-        return this._array[length - 1];
-      }
-
-      // Otherwise, the maximum is the larger of the root's two children.
-      var that = this;
-      return this._array[greaterThan(that, 1, 2) ? 1 : 2];
-    },
-  },
-
-  /**
    * Gets the internal array.
    *
    * @memberof DoubleEndedPriorityQueue.prototype
@@ -397,6 +354,46 @@ DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
   that._array[length - 1] = undefined;
 
   return maximumElement;
+};
+
+/**
+ * Gets the minimum element in the queue.
+ * If the queue is empty, the result is undefined.
+ *
+ * @param {*|undefined} element
+ */
+
+DoubleEndedPriorityQueue.prototype.getMinimum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  // The minimum element is always the root
+  return this._array[0];
+};
+
+/**
+ * Gets the maximum element in the queue.
+ * If the queue is empty, the result is undefined.
+ *
+ * @param {*|undefined} element
+ */
+DoubleEndedPriorityQueue.prototype.getMaximum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  // If the root has no children, the maximum is the root.
+  // If the root has one child, the maximum is the child.
+  if (length <= 2) {
+    return this._array[length - 1];
+  }
+
+  // Otherwise, the maximum is the larger of the root's two children.
+  var that = this;
+  return this._array[greaterThan(that, 1, 2) ? 1 : 2];
 };
 
 /**

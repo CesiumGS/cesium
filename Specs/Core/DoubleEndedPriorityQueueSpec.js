@@ -47,8 +47,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     // The comparator is flipped, so 2 is considered the minimum and 1 is considered the maximum
     expect(queue.length).toEqual(2);
-    expect(queue.minimum).toEqual(2);
-    expect(queue.maximum).toEqual(1);
+    expect(queue.getMinimum()).toEqual(2);
+    expect(queue.getMaximum()).toEqual(1);
   });
 
   it("checks state of default empty queue", function () {
@@ -59,8 +59,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(0);
     expect(queue.maximumLength).toBeUndefined();
     expect(queue.internalArray.length).toEqual(0);
-    expect(queue.minimum).toBeUndefined();
-    expect(queue.maximum).toBeUndefined();
+    expect(queue.getMinimum()).toBeUndefined();
+    expect(queue.getMaximum()).toBeUndefined();
   });
 
   it("inserts one element into queue", function () {
@@ -72,8 +72,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(1);
     expect(queue.internalArray.length).toEqual(1);
-    expect(queue.minimum).toEqual(1);
-    expect(queue.maximum).toEqual(1);
+    expect(queue.getMinimum()).toEqual(1);
+    expect(queue.getMaximum()).toEqual(1);
   });
 
   it("inserts two elements into queue", function () {
@@ -86,8 +86,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(2);
     expect(queue.internalArray.length).toEqual(2);
-    expect(queue.minimum).toEqual(1);
-    expect(queue.maximum).toEqual(2);
+    expect(queue.getMinimum()).toEqual(1);
+    expect(queue.getMaximum()).toEqual(2);
   });
 
   it("inserts three elements into queue", function () {
@@ -101,8 +101,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(3);
     expect(queue.internalArray.length).toEqual(3);
-    expect(queue.minimum).toEqual(1);
-    expect(queue.maximum).toEqual(3);
+    expect(queue.getMinimum()).toEqual(1);
+    expect(queue.getMaximum()).toEqual(3);
   });
 
   it("inserts four elements into queue", function () {
@@ -117,8 +117,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(4);
     expect(queue.internalArray.length).toEqual(4);
-    expect(queue.minimum).toEqual(1);
-    expect(queue.maximum).toEqual(4);
+    expect(queue.getMinimum()).toEqual(1);
+    expect(queue.getMaximum()).toEqual(4);
   });
 
   it("insert removes and returns minimum element when the queue is full", function () {
@@ -133,8 +133,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(1);
     expect(queue.maximumLength).toEqual(1);
     expect(queue.internalArray.length).toEqual(1);
-    expect(queue.minimum).toEqual(2);
-    expect(queue.maximum).toEqual(2);
+    expect(queue.getMinimum()).toEqual(2);
+    expect(queue.getMaximum()).toEqual(2);
     expect(nothing).toBeUndefined();
     expect(removed).toEqual(1);
   });
@@ -159,7 +159,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(2);
     expect(queue.maximumLength).toEqual(2);
     expect(queue.internalArray.length).toEqual(2);
-    expect(queue.minimum.id).toEqual(0);
+    expect(queue.getMinimum().id).toEqual(0);
     expect(result1).toBeUndefined();
     expect(result2).toBeUndefined();
     expect(result3).toEqual(obj3);
@@ -179,7 +179,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(2);
     expect(minimumValue).toEqual(1);
-    expect(queue.minimum).toEqual(2);
+    expect(queue.getMinimum()).toEqual(2);
     // check that the element was dereferenced
     expect(queue.internalArray[2]).toBeUndefined();
   });
@@ -206,7 +206,7 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(2);
     expect(maximumValue).toEqual(3);
-    expect(queue.maximum).toEqual(2);
+    expect(queue.getMaximum()).toEqual(2);
     // check that the element was dereferenced
     expect(queue.internalArray[2]).toBeUndefined();
   });
@@ -233,8 +233,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(clone.length).toEqual(queue.length);
     expect(clone.maximumLength).toEqual(queue.maximumLength);
     expect(clone.comparator).toEqual(queue.comparator);
-    expect(clone.maximum).toEqual(queue.maximum);
-    expect(clone.minimum).toEqual(queue.minimum);
+    expect(clone.getMaximum()).toEqual(queue.getMaximum());
+    expect(clone.getMinimum()).toEqual(queue.getMinimum());
   });
 
   it("resets queue", function () {
@@ -246,8 +246,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     queue.reset();
 
     expect(queue.length).toEqual(0);
-    expect(queue.minimum).toBeUndefined();
-    expect(queue.maximum).toBeUndefined();
+    expect(queue.getMinimum()).toBeUndefined();
+    expect(queue.getMaximum()).toBeUndefined();
     // check that the elements were dereferenced
     expect(queue.internalArray.length).toEqual(0);
   });
@@ -261,8 +261,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     queue.reset();
 
     expect(queue.length).toEqual(0);
-    expect(queue.minimum).toBeUndefined();
-    expect(queue.maximum).toBeUndefined();
+    expect(queue.getMinimum()).toBeUndefined();
+    expect(queue.getMaximum()).toBeUndefined();
     // check that the element was dereferenced but the array stayed the same size
     expect(queue.internalArray.length).toEqual(1);
     expect(queue.internalArray[0]).toBeUndefined();
@@ -279,8 +279,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(0);
     expect(queue.maximumLength).toEqual(0);
     expect(queue.internalArray.length).toEqual(0);
-    expect(queue.minimum).toBeUndefined();
-    expect(queue.maximum).toBeUndefined();
+    expect(queue.getMinimum()).toBeUndefined();
+    expect(queue.getMaximum()).toBeUndefined();
   });
 
   it("creates queue with maximum length of one", function () {
@@ -295,8 +295,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(1);
     expect(queue.maximumLength).toEqual(1);
     expect(queue.internalArray.length).toEqual(1);
-    expect(queue.minimum).toEqual(2);
-    expect(queue.maximum).toEqual(2);
+    expect(queue.getMinimum()).toEqual(2);
+    expect(queue.getMaximum()).toEqual(2);
   });
 
   it("throws when maximum length is set to less than zero", function () {
@@ -323,8 +323,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
 
     expect(queue.length).toEqual(3);
     expect(queue.maximumLength).toBeUndefined();
-    expect(queue.minimum).toEqual(1);
-    expect(queue.maximum).toEqual(3);
+    expect(queue.getMinimum()).toEqual(1);
+    expect(queue.getMaximum()).toEqual(3);
   });
 
   it("sets maximum length to less than current length", function () {
@@ -342,8 +342,8 @@ describe("Core/DoubleEndedPriorityQueue", function () {
     expect(queue.length).toEqual(maximumLength);
     expect(queue.maximumLength).toEqual(maximumLength);
     expect(queue.internalArray.length).toEqual(maximumLength);
-    expect(queue.minimum).toEqual(maximumLength);
-    expect(queue.maximum).toEqual(maximumLength * 2 - 1);
+    expect(queue.getMinimum()).toEqual(maximumLength);
+    expect(queue.getMaximum()).toEqual(maximumLength * 2 - 1);
   });
 
   function isValidQueue(queue) {
