@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import MetadataProperty from "./MetadataProperty.js";
 
 /**
@@ -27,17 +28,23 @@ function MetadataClass(options) {
   //>>includeEnd('debug');
 
   var properties = {};
+  var propertiesBySemantic = {};
   for (var propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      properties[propertyId] = new MetadataProperty({
+      var property = new MetadataProperty({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,
       });
+      properties[propertyId] = property;
+      if (defined(property.semantic)) {
+        propertiesBySemantic[property.semantic] = property;
+      }
     }
   }
 
   this._properties = properties;
+  this._propertiesBySemantic = propertiesBySemantic;
   this._id = id;
   this._name = classDefinition.name;
   this._description = classDefinition.description;
@@ -56,6 +63,20 @@ Object.defineProperties(MetadataClass.prototype, {
   properties: {
     get: function () {
       return this._properties;
+    },
+  },
+
+  /**
+   * A dictionary mapping semantics to class properties.
+   *
+   * @memberof MetadataClass.prototype
+   * @type {Object.<String, MetadataProperty>}
+   * @readonly
+   * @private
+   */
+  propertiesBySemantic: {
+    get: function () {
+      return this._propertiesBySemantic;
     },
   },
 

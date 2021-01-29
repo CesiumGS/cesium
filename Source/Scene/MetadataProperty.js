@@ -40,7 +40,7 @@ function MetadataProperty(options) {
   this._type = MetadataType[property.type];
   this._enumType = enumType;
   this._componentType = MetadataComponentType[property.componentType];
-  this._componentCount = defaultValue(property.componentCount, 1);
+  this._componentCount = property.componentCount;
   this._normalized = defaultValue(property.normalized, false);
   this._max = clone(property.max, true); // Clone so that this object doesn't hold on to a reference to the JSON
   this._min = clone(property.min, true); // Clone so that this object doesn't hold on to a reference to the JSON
@@ -136,7 +136,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   },
 
   /**
-   * The number of components per element.
+   * The number of components per element. Only defined when type is a fixed size ARRAY.
    *
    * @memberof MetadataProperty.prototype
    * @type {Number}
