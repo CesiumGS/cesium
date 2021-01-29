@@ -1,4 +1,4 @@
-import defined from "./defined.js";
+import defined from "../Core/defined.js";
 
 // TODO: Move to Scene
 export default function has3DTilesExtension(json, extensionName) {
