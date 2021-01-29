@@ -2,6 +2,10 @@
 
 ### 1.78 - 2021-02-01
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.url` has been deprecated and will be removed in Cesium 1.79. Instead, use `Cesium3DTileset.resource.url` to retrieve the url value.
+
 ##### Additions :tada:
 
 - `TaskProcessor` now accepts an absolute URL in addition to a worker name as it's first parameter. This makes it possible to use custom web workers with Cesium's task processing system without copying them to Cesium's Workers directory.
