@@ -1,3 +1,4 @@
+import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import defined from "./defined.js";
 
@@ -174,7 +175,7 @@ function pushUp(that, index) {
   if (index === 0) {
     return;
   }
-  var onMinLevel = Math.floor(Math.log2(index + 1)) % 2 === 0;
+  var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
   var parentIndex = Math.floor((index - 1) / 2);
   var lessThanParent = lessThan(that, index, parentIndex);
 
@@ -200,7 +201,7 @@ function pushUp(that, index) {
 
 function pushDown(that, index) {
   var length = that._length;
-  var onMinLevel = Math.floor(Math.log2(index + 1)) % 2 === 0;
+  var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
 
   // Loop as long as there is a left child.
   var leftChildIndex;
