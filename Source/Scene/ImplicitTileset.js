@@ -20,7 +20,10 @@ export default function ImplicitTileset(
   this.geometricError = tileJson.geometricError;
 
   //>>includeStart('debug', pragmas.debug);
-  if (defined(tileJson.boundingVolume.sphere)) {
+  if (
+    !defined(tileJson.boundingVolume.box) &&
+    !defined(tileJson.boundingVolume.region)
+  ) {
     throw new DeveloperError(
       "Only box and region are supported for implicit tiling"
     );

@@ -1,7 +1,8 @@
 import {
+  combine,
   ImplicitSubdivisionScheme,
-  ImplicitTemplateUri,
   ImplicitTileset,
+  Resource,
 } from "../../Source/Cesium.js";
 
 fdescribe("Scene/ImplicitTileset", function () {
@@ -27,11 +28,15 @@ fdescribe("Scene/ImplicitTileset", function () {
       },
     },
   };
-  var contentUriTemplate = new ImplicitTemplateUri(contentUriPattern);
-  var subtreeUriTemplate = new ImplicitTemplateUri(subtreeUriPattern);
+  var contentUriTemplate = new Resource(contentUriPattern);
+  var subtreeUriTemplate = new Resource(subtreeUriPattern);
 
   it("gathers information from both tile JSON and extension", function () {
+    var tileset = {};
+    var resource = "https://example.com";
     var implicitTileset = new ImplicitTileset(
+      tileset,
+      resource,
       implicitTileJson,
       implicitTileJson.extensions
     );
@@ -55,9 +60,11 @@ fdescribe("Scene/ImplicitTileset", function () {
         sphere: [0, 0, 0, 100],
       },
     };
-    var tileJson = Object.assign({}, implicitTileJson, sphereJson);
+    var tileJson = combine(sphereJson, implicitTileJson);
+    var tileset = {};
+    var resource = "https://example.com";
     expect(function () {
-      new ImplicitTileset(tileJson, tileJson.extensions);
+      new ImplicitTileset(tileset, resource, tileJson, tileJson.extensions);
     }).toThrowDeveloperError();
   });
 });
