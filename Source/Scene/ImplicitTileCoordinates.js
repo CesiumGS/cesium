@@ -105,6 +105,23 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   }
 };
 
+/**
+ * Get a dictionary of values for templating into an implicit template URI.
+ * @return {Object} An object suitable for use with {@link Resource#getDerivedResource}
+ */
+ImplicitTileCoordinates.prototype.getTemplateValues = function () {
+  var values = {
+    level: this.level,
+    x: this.x,
+    y: this.y,
+  };
+  if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    values.z = this.z;
+  }
+
+  return values;
+};
+
 var scratchCoordinatesArray = [0, 0, 0];
 /**
  * Given a level number, morton index, and whether the tileset is an

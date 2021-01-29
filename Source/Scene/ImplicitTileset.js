@@ -1,12 +1,13 @@
+import Cartesian3 from "../Core/Cartesian3.js";
+import combine from "../Core/combine.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
+import Resource from "../Core/Resource.js";
 import Cesium3DTile from "./Cesium3DTile.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
-import ImplicitTemplateUri from "./ImplicitTemplateUri.js";
-import Cartesian3 from "../Core/Cartesian3.js";
-import DeveloperError from "../Core/DeveloperError.js";
 
-// TODO: Mark everything as private
+// TODO: Document these and make sure they're all @private
 export default function ImplicitTileset(
   tileset,
   resource,
@@ -26,24 +27,30 @@ export default function ImplicitTileset(
   }
   //>>includeEnd('debug');
 
-  // TODO: parse this?
+  // TODO: parse these, it'll be more useful.
   this.boundingVolume = tileJson.boundingVolume;
   this.refine = tileJson.refine;
-  this.contentUriTemplate = new ImplicitTemplateUri(tileJson.content.uri);
+  this.contentUriTemplate = new Resource({ url: tileJson.content.uri });
 
   var extension = extensionJson["3DTILES_implicit_tiling"];
+
+  /**
+   * @type {ImplicitSubdivisionScheme}
+   */
   this.subdivisionScheme =
     extension.subdivisionScheme.toUpperCase() === "OCTREE"
       ? ImplicitSubdivisionScheme.OCTREE
       : ImplicitSubdivisionScheme.QUADTREE;
+
   this.branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
     this.subdivisionScheme
   );
   this.subtreeLevels = extension.subtreeLevels;
   this.maximumLevel = extension.maximumLevel;
-  this.subtreeUriTemplate = new ImplicitTemplateUri(extension.subtrees.uri);
+  this.subtreeUriTemplate = new Resource({ url: extension.subtrees.uri });
 }
 
+//TODO: Move these functions out of ImplicitTileset
 ImplicitTileset.prototype.makeRootPlaceholderTile = function (parentTile) {
   var rootCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: this.subdivisionScheme,
@@ -56,12 +63,13 @@ ImplicitTileset.prototype.makeRootPlaceholderTile = function (parentTile) {
 
   var contentJson = {
     content: {
-      uri: this.subtreeUriTemplate.substitute(rootCoordinates),
+      uri: this.subtreeUriTemplate.getDerivedResource({
+        templateValues: rootCoordinates.getTemplateValues(),
+      }).url,
     },
   };
 
-  // TODO: use combine.js
-  var tileJson = Object.assign({}, this._tileJson, contentJson);
+  var tileJson = combine(contentJson, this._tileJson);
   var tile = new Cesium3DTile(
     this._tileset,
     this._resource,
@@ -196,7 +204,9 @@ ImplicitTileset.prototype.deriveChildTile = function (
   var content;
   if (subtree.getContentAvailabilityBit(childBitIndex)) {
     content = {
-      uri: this.contentUriTemplate.substitute(implicitCoordinates),
+      uri: this.contentUriTemplate.getDerivedResource({
+        templateValues: implicitCoordinates.getTemplateValues(),
+      }).url,
     };
   }
 
@@ -344,7 +354,9 @@ ImplicitTileset.prototype.makePlaceholderChildSubtree = function (
     geometricError: this.geometricError / (1 << implicitCoordinates.level),
     refine: this.refine,
     content: {
-      uri: this.subtreeUriTemplate.substitute(implicitCoordinates),
+      uri: this.subtreeUriTemplate.getDerivedResource({
+        templateValues: implicitCoordinates.getTemplateValues(),
+      }).url,
     },
   };
 

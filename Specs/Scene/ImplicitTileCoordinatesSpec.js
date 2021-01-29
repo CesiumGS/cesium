@@ -243,4 +243,34 @@ fdescribe("Scene/ImplicitTileCoordinates", function () {
 
     expect(coordinates).toEqual(expected);
   });
+
+  it("computes quadtree template values", function () {
+    var coordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+      level: 4,
+      x: 3,
+      y: 2,
+    });
+    expect(coordinates.getTemplateValues()).toEqual({
+      level: 4,
+      x: 3,
+      y: 2,
+    });
+  });
+
+  it("computes octree template values", function () {
+    var coordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.OCTREE,
+      level: 4,
+      x: 3,
+      y: 2,
+      z: 1,
+    });
+    expect(coordinates.getTemplateValues()).toEqual({
+      level: 4,
+      x: 3,
+      y: 2,
+      z: 1,
+    });
+  });
 });

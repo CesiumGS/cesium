@@ -60,12 +60,4 @@ fdescribe("Scene/ImplicitTileset", function () {
       new ImplicitTileset(tileJson, tileJson.extensions);
     }).toThrowDeveloperError();
   });
-
-  it("makes a root tile", function () {
-    fail();
-  });
-
-  it("derives children tiles", function () {
-    fail();
-  });
 });

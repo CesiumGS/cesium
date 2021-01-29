@@ -110,7 +110,8 @@ function initialize(content, arrayBuffer, byteOffset) {
   var implicitTileset = content._implicitTileset;
 
   // Parse the tiles inside this immediate subtree
-  var parentTile = content._tile.parent;
+  var placeholderTile = content._tile;
+  var parentTile = placeholderTile.parent;
   var childIndex = content._implicitCoordinates.childIndex;
   var results = implicitTileset.transcodeSubtreeTiles(
     subtree,
@@ -120,14 +121,16 @@ function initialize(content, arrayBuffer, byteOffset) {
 
   // Replace the parent's children with the new root tile.
   if (defined(parentTile)) {
-    // TODO: Determine which way is the best:
+    // TODO: Which implementation works best?
     // 1. replace parentTile.children[index of content._tile] with the new tile
     // 2. replace parentTile.content with a newly constructed content (e.g. B3DM)
     // 3. just keep parent and child like external tilesets do
     // 4. just push the new tile to parent.children
-    //parentTile.children.push(results.rootTile);
-    //parentTile.children.remove
-    //parentTile.children = [results.rootTile];
+
+    // Replace the placeholder tile with the child tile
+    // This is method 1
+    var index = parentTile.children.indexOf(placeholderTile);
+    parentTile.children[index] = results.rootTile;
   } else {
     // If the placeholder tile was the root, keep the placeholder tile
     // and place the new root tile as the only child. This is cleaner than
