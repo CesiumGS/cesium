@@ -5,6 +5,7 @@ import RequestType from "../Core/RequestType.js";
 import Pass from "../Renderer/Pass.js";
 import Axis from "./Axis.js";
 import Model from "./Model.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf|3DTILES_content_gltf} extension.
