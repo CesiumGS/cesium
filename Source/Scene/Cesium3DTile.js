@@ -253,6 +253,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.hasTilesetContent = false;
 
   /**
+   * When <code>true</code>, the tile's content is an implicit tileset.
+   * <p>
+   * This is <code>false</code> until the tile's implicit content is loaded.
+   * </p>
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasImplicitContent = false;
+
+  /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
    *
    * See {@link Cesium3DTilesetCache}
@@ -534,7 +547,6 @@ Object.defineProperties(Cesium3DTile.prototype, {
         (this.contentReady &&
           !this.hasEmptyContent &&
           !this.hasTilesetContent &&
-          // TODO: look for all occurrences of hasTilesetContent
           !this.hasImplicitContent) ||
         (defined(this._expiredContent) && !this.contentFailed)
       );
@@ -859,7 +871,8 @@ function getPriorityReverseScreenSpaceError(tileset, tile) {
     defined(parent) &&
     (!tileset._skipLevelOfDetail ||
       tile._screenSpaceError === 0.0 ||
-      parent.hasTilesetContent);
+      parent.hasTilesetContent ||
+      parent.hasImplicitContent);
   var screenSpaceError = useParentScreenSpaceError
     ? parent._screenSpaceError
     : tile._screenSpaceError;
@@ -1045,6 +1058,12 @@ Cesium3DTile.prototype.requestContent = function () {
         that.hasTilesetContent = true;
       }
 
+      // Implicit tiling subtree files use the content factory, but we need
+      // to mark them as implicit
+      if (magic === "subt") {
+        that.hasImplicitContent = true;
+      }
+
       if (expired) {
         that.expireDate = undefined;
       }
@@ -1090,7 +1109,11 @@ Cesium3DTile.prototype.requestContent = function () {
  * @private
  */
 Cesium3DTile.prototype.unloadContent = function () {
-  if (this.hasEmptyContent || this.hasTilesetContent) {
+  if (
+    this.hasEmptyContent ||
+    this.hasTilesetContent ||
+    this.hasImplicitContent
+  ) {
     return;
   }
 
@@ -1508,7 +1531,8 @@ function applyDebugSettings(tile, tileset, frameState, passOptions) {
   var hasContentBoundingVolume =
     defined(tile._header.content) &&
     defined(tile._header.content.boundingVolume);
-  var empty = tile.hasEmptyContent || tile.hasTilesetContent;
+  var empty =
+    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent;
 
   var showVolume =
     tileset.debugShowBoundingVolume ||
