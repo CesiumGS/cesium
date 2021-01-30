@@ -1,5 +1,6 @@
 import clone from "../Core/clone";
 import defined from "../Core/defined";
+import DeveloperError from "../Core/DeveloperError";
 
 /**
  * An entity containing metadata.
