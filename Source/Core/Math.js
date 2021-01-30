@@ -528,6 +528,11 @@ CesiumMath.negativePiToPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  if (angle >= -CesiumMath.PI && angle <= CesiumMath.PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
   return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
 };
 
@@ -543,6 +548,11 @@ CesiumMath.zeroToTwoPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  if (angle >= 0 && angle <= CesiumMath.TWO_PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
   var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
   if (
     Math.abs(mod) < CesiumMath.EPSILON14 &&
@@ -568,7 +578,19 @@ CesiumMath.mod = function (m, n) {
   if (!defined(n)) {
     throw new DeveloperError("n is required.");
   }
+  if (n === 0.0) {
+    throw new DeveloperError("divisor cannot be 0.");
+  }
   //>>includeEnd('debug');
+  if (
+    CesiumMath.sign(m) === CesiumMath.sign(n) &&
+    m * CesiumMath.sign(m) < n * CesiumMath.sign(n)
+  ) {
+    // Early exit if the input does not need to be modded. This avoids
+    // unnecessary math which could introduce floating point error.
+    return m;
+  }
+
   return ((m % n) + n) % n;
 };
 
