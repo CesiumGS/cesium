@@ -725,6 +725,35 @@ ImageryLayer.prototype._createTileImagerySkeletons = function (
     clippedRectangleScratch
   );
   if (!defined(clippedImageryRectangle)) {
+    var rr = Rectangle.intersection(
+      tile.rectangle,
+      imageryBounds,
+      tileImageryBoundsScratch
+    );
+    var nwTileCoordinates = imageryTilingScheme.positionToTileXY(
+      Rectangle.northwest(rr),
+      imageryLevel
+    );
+    var nwTileRectangle = imageryTilingScheme.tileXYToRectangle(
+      nwTileCoordinates.x,
+      nwTileCoordinates.y,
+      imageryLevel
+    );
+    var seTileCoordinates = imageryTilingScheme.positionToTileXY(
+      Rectangle.southeast(rr),
+      imageryLevel
+    );
+    var seTileRectangle = imageryTilingScheme.tileXYToRectangle(
+      seTileCoordinates.x,
+      seTileCoordinates.y,
+      imageryLevel
+    );
+    var clipImageryRectangle = Rectangle.intersection(
+      seTileRectangle,
+      imageryBounds,
+      clippedRectangleScratch
+    );
+
     return false;
   }
 

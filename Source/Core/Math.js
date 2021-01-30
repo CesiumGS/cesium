@@ -525,6 +525,9 @@ CesiumMath.negativePiToPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  // if (angle >= -CesiumMath.PI && angle <= CesiumMath.PI) {
+  //   return angle;
+  // }
   return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
 };
 
@@ -540,6 +543,9 @@ CesiumMath.zeroToTwoPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  // if (angle >= 0 && angle <= CesiumMath.TWO_PI) {
+  //   return angle;
+  // }
   var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
   if (
     Math.abs(mod) < CesiumMath.EPSILON14 &&
