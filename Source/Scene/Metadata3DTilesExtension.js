@@ -2,6 +2,10 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import MetadataClass from "./MetadataClass.js";
+import MetadataEnum from "./MetadataEnum.js";
+import MetadataGroup from "./MetadataGroup.js";
+import MetadataTileset from "./MetadataTileset.js";
 
 /**
  * An object containing metadata about a 3D Tileset.

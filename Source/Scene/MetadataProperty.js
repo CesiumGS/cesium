@@ -3,7 +3,6 @@ import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataComponentType from "./MetadataComponentType.js";
-import MetadataEnum from "./MetadataEnum.js";
 import MetadataType from "./MetadataType.js";
 
 /**

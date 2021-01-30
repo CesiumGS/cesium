@@ -24,7 +24,7 @@ function MetadataEnumValue(options) {
   this._value = value.value;
   this._name = value.name;
   this._description = value.description;
-  this._extras = clone(enumDefinition.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = clone(value.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
 }
 
 Object.defineProperties(MetadataEnumValue.prototype, {

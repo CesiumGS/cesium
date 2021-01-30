@@ -1,6 +1,7 @@
-import clone from "../Core/clone";
-import defined from "../Core/defined";
-import DeveloperError from "../Core/DeveloperError";
+import clone from "../Core/clone.js";
+import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * An entity containing metadata.

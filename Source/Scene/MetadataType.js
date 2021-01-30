@@ -1,5 +1,6 @@
-import MetadataComponentType from "./MetadataComponentType";
-import MetadataEnumType from "./MetadataEnumType";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
+import MetadataComponentType from "./MetadataComponentType.js";
+import MetadataEnumType from "./MetadataEnumType.js";
 
 /**
  * An enum of metadata types.
