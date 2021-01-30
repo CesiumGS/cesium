@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
-import MetadataEnumType from "../Core/MetadataEnumType.js";
-import MetadataEnumValue from "../Core/MetadataEnumValue.js";
+import MetadataEnumType from "./MetadataEnumType.js";
+import MetadataEnumValue from "./MetadataEnumValue.js";
 
 /**
  * A metadata enum.

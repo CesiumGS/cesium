@@ -18,7 +18,7 @@ function MetadataEnumValue(options) {
   var value = options.value;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.value", value);
+  Check.typeOf.object("options.value", value);
   //>>includeEnd('debug');
 
   this._value = value.value;

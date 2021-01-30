@@ -258,3 +258,5 @@ MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
     }
   }
 };
+
+export default MetadataEntity;
