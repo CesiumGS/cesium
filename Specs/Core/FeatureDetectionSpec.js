@@ -17,6 +17,16 @@ describe("Core/FeatureDetection", function () {
     expect(typeof supportsTypedArrays).toEqual("boolean");
   });
 
+  it("detects BingInt64Array support", function () {
+    var supportsBigInt64Array = FeatureDetection.supportsBigInt64Array();
+    expect(typeof supportsBigInt64Array).toEqual("boolean");
+  });
+
+  it("detects BingUint64Array support", function () {
+    var supportsBingUint64Array = FeatureDetection.supportsBingUint64Array();
+    expect(typeof supportsBingUint64Array).toEqual("boolean");
+  });
+
   it("detects web assembly support", function () {
     var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
     expect(typeof supportsWebAssembly).toEqual("boolean");

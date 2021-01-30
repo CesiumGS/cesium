@@ -3,11 +3,11 @@ import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import MetadataComponentType from "./MetadataComponentType.js";
 import MetadataEntity from "./MetadataEntity.js";
-import MetadataEnumType from "./MetadataEnumType.js";
 import MetadataOffsetType from "./MetadataOffsetType.js";
 import MetadataType from "./MetadataType.js";
 
@@ -377,6 +377,30 @@ function requiresUnpackForSetter(index, property, value) {
   return false;
 }
 
+function createTypedArray(valueType, bufferView, length) {
+  if (valueType === MetadataComponentType.INT64) {
+    if (!FeatureDetection.supportsBigInt64Array()) {
+      throw new RuntimeError("INT64 type is not supported on this platform");
+    }
+    // eslint-disable-next-line no-undef
+    return new BigInt64Array(bufferView.buffer, bufferView.byteOffset, length);
+  } else if (valueType === MetadataComponentType.UINT64) {
+    if (!FeatureDetection.supportsBigUint64Array()) {
+      throw new RuntimeError("UINT64 type is not supported on this platform");
+    }
+    // eslint-disable-next-line no-undef
+    return new BigUint64Array(bufferView.buffer, bufferView.byteOffset, length);
+  }
+
+  var componentDatatype = getComponentDatatype(valueType);
+  return ComponentDatatype.createArrayBufferView(
+    componentDatatype,
+    bufferView.buffer,
+    bufferView.byteOffset,
+    length
+  );
+}
+
 function unpackValues(table, property) {
   var i;
   var count = table._count;
@@ -428,21 +452,43 @@ function unpackProperty(table, property) {
   table.values = undefined;
 }
 
-function initializeProperty(count, property, classProperty, bufferViews) {
-  // TODO: use BigUint64Array on platforms where it's supported
-  if (property.offsetType === MetadataOffsetType.UINT64) {
-    throw new RuntimeError("offsetType of UINT64 is not supported");
+function getValueType(classProperty) {
+  var type = classProperty.type;
+  var componentType = classProperty.componentType;
+  var enumType = classProperty.enumType;
+
+  if (type === MetadataType.ARRAY) {
+    type = componentType;
   }
-  if (classProperty.enumType === MetadataEnumType.UINT64) {
-    throw new RuntimeError("enumType of UINT64 is not supported");
-  }
-  if (classProperty.componentType === MetadataComponentType.UINT64) {
-    throw new RuntimeError("componentType of UINT64 is not supported");
-  }
-  if (classProperty.type === MetadataType.UINT64) {
-    throw new RuntimeError("type of UINT64 is not supported");
+  if (type === MetadataType.ENUM) {
+    type = enumType;
   }
 
+  return type;
+}
+
+function getComponentDatatype(type) {
+  switch (type) {
+    case MetadataType.INT8:
+      return ComponentDatatype.BYTE;
+    case MetadataType.UINT8:
+      return ComponentDatatype.UNSIGNED_BYTE;
+    case MetadataType.INT16:
+      return ComponentDatatype.SHORT;
+    case MetadataType.UINT16:
+      return ComponentDatatype.UNSIGNED_SHORT;
+    case MetadataType.INT32:
+      return ComponentDatatype.INT;
+    case MetadataType.UINT32:
+      return ComponentDatatype.UNSIGNED_INT;
+    case MetadataType.FLOAT32:
+      return ComponentDatatype.FLOAT;
+    case MetadataType.FLOAT64:
+      return ComponentDatatype.DOUBLE;
+  }
+}
+
+function initializeProperty(count, property, classProperty, bufferViews) {
   var i;
 
   var isArray = classProperty.type === MetadataType.ARRAY;
@@ -458,16 +504,12 @@ function initializeProperty(count, property, classProperty, bufferViews) {
     MetadataOffsetType[property.offsetType],
     MetadataOffsetType.UINT32
   );
-  var offsetComponentDatatype = MetadataOffsetType.getComponentDatatype(
-    offsetType
-  );
 
   var arrayOffsets;
   if (isVariableSizeArray) {
-    arrayOffsets = ComponentDatatype.createArrayBufferView(
-      offsetComponentDatatype,
-      bufferViews[property.arrayOffsetBufferView].buffer,
-      bufferViews[property.arrayOffsetBufferView].byteOffset,
+    arrayOffsets = createTypedArray(
+      offsetType,
+      bufferViews[property.arrayOffsetBufferView],
       count + 1
     );
   }
@@ -486,43 +528,37 @@ function initializeProperty(count, property, classProperty, bufferViews) {
 
   var stringOffsets;
   if (hasStrings) {
-    stringOffsets = ComponentDatatype.createArrayBufferView(
-      offsetComponentDatatype,
-      bufferViews[property.stringOffsetBufferView].buffer,
-      bufferViews[property.stringOffsetBufferView].byteOffset,
+    stringOffsets = createTypedArray(
+      offsetType,
+      bufferViews[property.stringOffsetBufferView],
       componentCount + 1
     );
   }
 
-  var componentDatatype;
+  var valueType;
   if (hasStrings || hasBooleans) {
     // STRING and BOOLEAN types need to be parsed differently than other types
-    componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
+    valueType = MetadataType.UINT8;
   } else {
-    componentDatatype = MetadataType.getComponentDatatype(
-      classProperty.type,
-      classProperty.componentType,
-      classProperty.enumType
-    );
+    valueType = getValueType(classProperty);
   }
 
-  var typedArrayCount;
+  var valueCount;
   if (hasStrings) {
-    typedArrayCount = 0;
+    valueCount = 0;
     for (i = 0; i < componentCount; ++i) {
-      typedArrayCount += stringOffsets[i + 1] - stringOffsets[i];
+      valueCount += stringOffsets[i + 1] - stringOffsets[i];
     }
   } else if (hasBooleans) {
-    typedArrayCount = Math.ceil(componentCount / 8);
+    valueCount = Math.ceil(componentCount / 8);
   } else {
-    typedArrayCount = componentCount;
+    valueCount = componentCount;
   }
 
-  var values = ComponentDatatype.createArrayBufferView(
-    componentDatatype,
-    bufferViews[property.bufferView].buffer,
-    bufferViews[property.bufferView].byteOffset,
-    typedArrayCount
+  var values = createTypedArray(
+    valueType,
+    bufferViews[property.bufferView],
+    valueCount
   );
 
   return new MetadataTableProperty(
