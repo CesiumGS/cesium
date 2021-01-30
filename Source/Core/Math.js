@@ -582,10 +582,7 @@ CesiumMath.mod = function (m, n) {
     throw new DeveloperError("divisor cannot be 0.");
   }
   //>>includeEnd('debug');
-  if (
-    CesiumMath.sign(m) === CesiumMath.sign(n) &&
-    m * CesiumMath.sign(m) < n * CesiumMath.sign(n)
-  ) {
+  if (CesiumMath.sign(m) === CesiumMath.sign(n) && Math.abs(m) < Math.abs(n)) {
     // Early exit if the input does not need to be modded. This avoids
     // unnecessary math which could introduce floating point error.
     return m;
