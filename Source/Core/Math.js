@@ -785,7 +785,7 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
 };
 
 /**
- * Determines if a positive integer is a power of two.
+ * Determines if a non-negative integer is a power of two.
  * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
  *
  * @param {Number} n The integer to test in the range [0, (2^32)-1].
@@ -808,7 +808,7 @@ CesiumMath.isPowerOfTwo = function (n) {
 };
 
 /**
- * Computes the next power-of-two integer greater than or equal to the provided positive integer.
+ * Computes the next power-of-two integer greater than or equal to the provided non-negative integer.
  * The maximum allowed input is 2^31 due to 32-bit bitwise operator limitation in Javascript.
  *
  * @param {Number} n The integer to test in the range [0, 2^31].
@@ -840,7 +840,7 @@ CesiumMath.nextPowerOfTwo = function (n) {
 };
 
 /**
- * Computes the previous power-of-two integer less than or equal to the provided positive integer.
+ * Computes the previous power-of-two integer less than or equal to the provided non-negative integer.
  * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
  *
  * @param {Number} n The integer to test in the range [0, (2^32)-1].
