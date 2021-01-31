@@ -1718,6 +1718,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
     this._basePath += "?v=" + tilesetVersion;
+    resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
 
