@@ -122,15 +122,13 @@ describe("Core/EllipsoidGeodesic", function () {
   });
 
   it("computes distance very close to equator", function () {
-    // See issue #9248
+    // See https://github.com/CesiumGS/cesium/issues/9248
+
     var ellipsoid = new Ellipsoid(6, 6, 3);
 
-    var start = new Cartographic(
-      -0.00007666666351724416,
-      -1.0177775506062248e-12
-    );
+    var start = new Cartographic(-CesiumMath.EPSILON10, CesiumMath.EPSILON10);
 
-    var end = new Cartographic(0.005225266485504501, -4.177992510444177e-30);
+    var end = new Cartographic(+CesiumMath.EPSILON10, CesiumMath.EPSILON10);
 
     var geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
     expect(geodesic.surfaceDistance).not.toBeNaN();
