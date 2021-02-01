@@ -1,6 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import destroyObject from "../Core/destroyObject.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 
@@ -111,11 +111,10 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
 function initialize(content, arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
   var uint8Array = new Uint8Array(arrayBuffer);
-  var jsonString = getStringFromTypedArray(uint8Array, byteOffset);
   var tilesetJson;
 
   try {
-    tilesetJson = JSON.parse(jsonString);
+    tilesetJson = getJsonFromTypedArray(uint8Array, byteOffset);
   } catch (error) {
     content._readyPromise.reject(new RuntimeError("Invalid tile content."));
     return;

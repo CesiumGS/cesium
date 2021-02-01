@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
-import getStringFromTypedArray from "./getStringFromTypedArray.js";
+import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import IndexDatatype from "./IndexDatatype.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -710,12 +710,11 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     ) {
       var stringLength = view.getUint32(pos, true);
       if (stringLength > 0) {
-        var jsonString = getStringFromTypedArray(
+        var metadata = getJsonFromTypedArray(
           new Uint8Array(buffer),
           pos + Uint32Array.BYTES_PER_ELEMENT,
           stringLength
         );
-        var metadata = JSON.parse(jsonString);
         var availableTiles = metadata.available;
         if (defined(availableTiles)) {
           for (var offset = 0; offset < availableTiles.length; ++offset) {
