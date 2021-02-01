@@ -178,18 +178,18 @@ function initialize(content, arrayBuffer, byteOffset) {
  *
  * @private
  * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Needed to construct the Cesium3DTile
- * @param {Resource} resource The base resource. Needed to construct the Cesium3DTile
+ * @param {Resource} baseResource The base resource. Needed to construct the Cesium3DTile.
  * @param {Object} tileHeader The JSON for the Cesium3DTile
  * @param {Cesium3DTile|undefined} parentTile The parent of the new Cesum3DTile (if defined)
  * @return {Cesium3DTile} A newly created tile that serves as a lazy placeholder for the implicit tileset.
  */
 Implicit3DTileContent.makeRootPlaceholderTile = function (
   tileset,
-  resource,
+  baseResource,
   tileHeader,
   parentTile
 ) {
-  var implicitTileset = new ImplicitTileset(tileHeader);
+  var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
   var rootCoordinates = new ImplicitTileCoordinates({
     subdivisionScheme: implicitTileset.subdivisionScheme,
     level: 0,
@@ -208,7 +208,7 @@ Implicit3DTileContent.makeRootPlaceholderTile = function (
   };
 
   var tileJson = combine(contentJson, tileHeader);
-  var tile = new Cesium3DTile(tileset, resource, tileJson, parentTile);
+  var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = rootCoordinates;
   return tile;
@@ -360,7 +360,7 @@ function deriveChildTile(
 
   var childTile = new Cesium3DTile(
     implicitContent._tileset,
-    implicitContent._resource,
+    implicitTileset.baseResource,
     tileJson,
     parentTile
   );
@@ -442,7 +442,7 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
 
   var tile = new Cesium3DTile(
     content._tileset,
-    content._resource,
+    implicitTileset.baseResource,
     tileJson,
     parentTile
   );

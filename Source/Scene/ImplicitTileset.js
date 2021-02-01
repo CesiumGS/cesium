@@ -11,9 +11,10 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * locating resources, details from the implicit root tile (bounding volume,
  * geometricError, etc.). and details about the subtrees (e.g. subtreeLevels,
  * subdivisionScheme).
+ * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  */
-export default function ImplicitTileset(tileJson) {
+export default function ImplicitTileset(baseResource, tileJson) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object(
@@ -21,6 +22,15 @@ export default function ImplicitTileset(tileJson) {
     extension
   );
   //>>includeEnd('debug');
+
+  /**
+   * The base resource for the tileset. This is stored here as it is needed
+   * later when expanding Implicit3DTileContents so tile URLs are relative
+   * to the tileset, not the subtree file.
+   * @type {Resource}
+   * @readonly
+   */
+  this.baseResource = baseResource;
 
   /**
    * The geometric error of the root tile

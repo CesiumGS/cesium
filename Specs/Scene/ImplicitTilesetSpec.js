@@ -28,11 +28,12 @@ fdescribe("Scene/ImplicitTileset", function () {
       },
     },
   };
+  var baseResource = new Resource("https://example.com/tileset.json");
   var contentUriTemplate = new Resource(contentUriPattern);
   var subtreeUriTemplate = new Resource(subtreeUriPattern);
 
   it("gathers information from both tile JSON and extension", function () {
-    var implicitTileset = new ImplicitTileset(implicitTileJson);
+    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
     expect(implicitTileset.subtreeLevels).toEqual(3);
     expect(implicitTileset.maximumLevel).toEqual(4);
     expect(implicitTileset.subdivisionScheme).toEqual(
@@ -55,7 +56,7 @@ fdescribe("Scene/ImplicitTileset", function () {
     };
     var tileJson = combine(sphereJson, implicitTileJson);
     expect(function () {
-      new ImplicitTileset(tileJson);
+      new ImplicitTileset(baseResource, tileJson);
     }).toThrowDeveloperError();
   });
 });
