@@ -363,7 +363,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path,
       });
-      expect(tileset.url).toEqual(path);
+      expect(tileset.resource.url).toEqual(path);
     });
 
     it("url and tilesetUrl set up correctly given path with query string", function () {
@@ -372,7 +372,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path + param,
       });
-      expect(tileset.url).toEqual(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
     it("resolves readyPromise", function () {
@@ -402,7 +402,7 @@ describe(
 
         expect(tileset._geometricError).toEqual(240.0);
         expect(tileset.root).toBeDefined();
-        expect(tileset.url).toEqual(tilesetUrl);
+        expect(tileset.resource.url).toEqual(tilesetUrl);
       });
     });
 

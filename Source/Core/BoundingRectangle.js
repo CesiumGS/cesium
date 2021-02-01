@@ -294,7 +294,7 @@ BoundingRectangle.expand = function (rectangle, point, result) {
  *
  * @param {BoundingRectangle} left A rectangle to check for intersection.
  * @param {BoundingRectangle} right The other rectangle to check for intersection.
- * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+ * @returns {Intersect} <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
  */
 BoundingRectangle.intersect = function (left, right) {
   //>>includeStart('debug', pragmas.debug);
@@ -354,7 +354,7 @@ BoundingRectangle.prototype.clone = function (result) {
  * Determines if this rectangle intersects with another.
  *
  * @param {BoundingRectangle} right A rectangle to check for intersection.
- * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
+ * @returns {Intersect} <code>Intersect.INTERSECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
  */
 BoundingRectangle.prototype.intersect = function (right) {
   return BoundingRectangle.intersect(this, right);
