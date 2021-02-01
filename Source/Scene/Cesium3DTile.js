@@ -8,6 +8,7 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import Intersect from "../Core/Intersect.js";
@@ -939,11 +940,10 @@ function createPriorityFunction(tile) {
 function getJsonContent(arrayBuffer, byteOffset) {
   byteOffset = defaultValue(byteOffset, 0);
   var uint8Array = new Uint8Array(arrayBuffer);
-  var jsonString = getStringFromTypedArray(uint8Array, byteOffset);
   var json;
 
   try {
-    json = JSON.parse(jsonString);
+    json = getJsonFromTypedArray(uint8Array);
   } catch (error) {
     throw new RuntimeError("Invalid tile content.");
   }
