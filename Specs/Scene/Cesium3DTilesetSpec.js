@@ -5,7 +5,7 @@ import { Color } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { getStringFromTypedArray } from "../../Source/Cesium.js";
+import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
@@ -103,6 +103,8 @@ describe(
       "Data/Cesium3DTiles/Instanced/InstancedRedMaterial/tileset.json";
     var instancedAnimationUrl =
       "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
+
+    var gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
 
     // 1 tile where each feature is a different source color
     var colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -219,6 +221,10 @@ describe(
 
     function viewPointCloud() {
       setZoom(5.0);
+    }
+
+    function viewGltfContent() {
+      setZoom(100.0);
     }
 
     function isSelected(tileset, tile) {
@@ -363,7 +369,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path,
       });
-      expect(tileset.url).toEqual(path);
+      expect(tileset.resource.url).toEqual(path);
     });
 
     it("url and tilesetUrl set up correctly given path with query string", function () {
@@ -372,7 +378,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path + param,
       });
-      expect(tileset.url).toEqual(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
     it("resolves readyPromise", function () {
@@ -402,7 +408,7 @@ describe(
 
         expect(tileset._geometricError).toEqual(240.0);
         expect(tileset.root).toBeDefined();
-        expect(tileset.url).toEqual(tilesetUrl);
+        expect(tileset.resource.url).toEqual(tilesetUrl);
       });
     });
 
@@ -1920,6 +1926,11 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
+    it("debugColorizeTiles for glTF", function () {
+      viewGltfContent();
+      return checkDebugColorizeTiles(gltfContentUrl);
+    });
+
     it("debugWireframe", function () {
       return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function (
         tileset
@@ -2531,6 +2542,24 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
+    it("renders glTF tileset when back face culling is disabled", function () {
+      var setViewOptions = {
+        destination: new Cartesian3(
+          1215012.6853779217,
+          -4736313.101374343,
+          4081603.4657718465
+        ),
+        orientation: new HeadingPitchRoll(
+          6.283185307179584,
+          -0.49999825387267993,
+          6.283185307179586
+        ),
+        endTransform: Matrix4.IDENTITY,
+      };
+
+      return testBackFaceCulling(gltfContentUrl, setViewOptions);
+    });
+
     it("renders i3dm tileset when back face culling is disabled", function () {
       var setViewOptions = {
         destination: new Cartesian3(
@@ -2607,6 +2636,21 @@ describe(
       );
     });
 
+    it("applies show style to a tileset with glTF content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
+          var hideStyle = new Cesium3DTileStyle({ show: "false" });
+          tileset.style = hideStyle;
+          expect(tileset.style).toBe(hideStyle);
+          expect(scene).toRender([0, 0, 0, 255]);
+
+          tileset.style = new Cesium3DTileStyle({ show: "true" });
+          expect(scene).notToRender([0, 0, 0, 255]);
+        }
+      );
+    });
+
     function expectColorStyle(tileset) {
       var color;
       expect(scene).toRenderAndCall(function (rgba) {
@@ -2666,6 +2710,15 @@ describe(
     it("applies color style to tileset without features", function () {
       return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(
         function (tileset) {
+          expectColorStyle(tileset);
+        }
+      );
+    });
+
+    it("applies color style to tileset with glTF content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+        function (tileset) {
+          viewGltfContent();
           expectColorStyle(tileset);
         }
       );
@@ -3799,11 +3852,10 @@ describe(
 
     function modifySubtreeBuffer(arrayBuffer) {
       var uint8Array = new Uint8Array(arrayBuffer);
-      var jsonString = getStringFromTypedArray(uint8Array);
-      var json = JSON.parse(jsonString);
+      var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      jsonString = JSON.stringify(json);
+      var jsonString = JSON.stringify(json);
       var length = jsonString.length;
       uint8Array = new Uint8Array(length);
       for (var i = 0; i < length; i++) {

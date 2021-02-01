@@ -16,6 +16,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -622,6 +623,7 @@ function Model(options) {
   this._geometryByteLength = 0;
   this._texturesByteLength = 0;
   this._trianglesLength = 0;
+  this._pointsLength = 0;
 
   // Hold references for shader reconstruction.
   // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
@@ -1028,6 +1030,17 @@ Object.defineProperties(Model.prototype, {
   trianglesLength: {
     get: function () {
       return this._trianglesLength;
+    },
+  },
+
+  /**
+   * Gets the model's point count.
+   *
+   * @private
+   */
+  pointsLength: {
+    get: function () {
+      return this._pointsLength;
     },
   },
 
@@ -1480,8 +1493,8 @@ Model.fromGltf = function (options) {
           cachedGltf.makeReady(parsedGltf);
         } else {
           // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
+          var json = getJsonFromTypedArray(array);
+          cachedGltf.makeReady(json);
         }
 
         var resourceCredits = model._resourceCredits;
@@ -3818,6 +3831,10 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       primitive,
       count
     );
+
+    if (primitive.mode === PrimitiveType.POINTS) {
+      model._pointsLength += count;
+    }
 
     var um = uniformMaps[primitive.material];
     var uniformMap = um.uniformMap;

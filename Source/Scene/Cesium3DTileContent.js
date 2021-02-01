@@ -13,7 +13,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  * @alias Cesium3DTileContent
  * @constructor
  */
-function Cesium3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
+function Cesium3DTileContent() {
   /**
    * Gets or sets if any feature's property changed.  Used to
    * optimized applying a style when a feature's property changed.

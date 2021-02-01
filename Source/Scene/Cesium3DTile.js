@@ -8,7 +8,9 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
+import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -972,6 +974,20 @@ function createPriorityFunction(tile) {
   };
 }
 
+function getJsonContent(arrayBuffer, byteOffset) {
+  byteOffset = defaultValue(byteOffset, 0);
+  var uint8Array = new Uint8Array(arrayBuffer);
+  var json;
+
+  try {
+    json = getJsonFromTypedArray(uint8Array);
+  } catch (error) {
+    throw new RuntimeError("Invalid tile content.");
+  }
+
+  return json;
+}
+
 /**
  * Requests the tile's content.
  * <p>
@@ -1029,14 +1045,20 @@ Cesium3DTile.prototype.requestContent = function () {
       }
       var uint8Array = new Uint8Array(arrayBuffer);
       var magic = getMagic(uint8Array);
-      var contentFactory = Cesium3DTileContentFactory[magic];
+
+      var contentIdentifer = magic;
+      if (magic === "glTF") {
+        contentIdentifer = "glb";
+      }
+
+      var contentFactory = Cesium3DTileContentFactory[contentIdentifer];
       var content;
 
       // Vector and Geometry tile rendering do not support the skip LOD optimization.
       tileset._disableSkipLevelOfDetail =
         tileset._disableSkipLevelOfDetail ||
-        magic === "vctr" ||
-        magic === "geom";
+        contentIdentifer === "vctr" ||
+        contentIdentifer === "geom";
 
       if (defined(contentFactory)) {
         content = contentFactory(
@@ -1047,15 +1069,30 @@ Cesium3DTile.prototype.requestContent = function () {
           0
         );
       } else {
-        // The content may be json instead
-        content = Cesium3DTileContentFactory.json(
-          tileset,
-          that,
-          that._contentResource,
-          arrayBuffer,
-          0
-        );
-        that.hasTilesetContent = true;
+        var json = getJsonContent(arrayBuffer, 0);
+        if (defined(json.geometricError)) {
+          // Most likely a tileset JSON
+          content = Cesium3DTileContentFactory.json(
+            tileset,
+            that,
+            that._contentResource,
+            json
+          );
+          that.hasTilesetContent = true;
+        } else if (defined(json.asset)) {
+          // Most likely a glTF. Tileset JSON also has an "asset" property
+          // so this check needs to happen second
+          content = Cesium3DTileContentFactory.gltf(
+            tileset,
+            that,
+            that._contentResource,
+            json
+          );
+        }
+      }
+
+      if (!defined(content)) {
+        throw new RuntimeError("Invalid tile content.");
       }
 
       // Implicit tiling subtree files use the content factory, but we need

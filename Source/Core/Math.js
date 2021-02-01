@@ -528,6 +528,11 @@ CesiumMath.negativePiToPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  if (angle >= -CesiumMath.PI && angle <= CesiumMath.PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
   return CesiumMath.zeroToTwoPi(angle + CesiumMath.PI) - CesiumMath.PI;
 };
 
@@ -543,6 +548,11 @@ CesiumMath.zeroToTwoPi = function (angle) {
     throw new DeveloperError("angle is required.");
   }
   //>>includeEnd('debug');
+  if (angle >= 0 && angle <= CesiumMath.TWO_PI) {
+    // Early exit if the input is already inside the range. This avoids
+    // unnecessary math which could introduce floating point error.
+    return angle;
+  }
   var mod = CesiumMath.mod(angle, CesiumMath.TWO_PI);
   if (
     Math.abs(mod) < CesiumMath.EPSILON14 &&
@@ -568,7 +578,16 @@ CesiumMath.mod = function (m, n) {
   if (!defined(n)) {
     throw new DeveloperError("n is required.");
   }
+  if (n === 0.0) {
+    throw new DeveloperError("divisor cannot be 0.");
+  }
   //>>includeEnd('debug');
+  if (CesiumMath.sign(m) === CesiumMath.sign(n) && Math.abs(m) < Math.abs(n)) {
+    // Early exit if the input does not need to be modded. This avoids
+    // unnecessary math which could introduce floating point error.
+    return m;
+  }
+
   return ((m % n) + n) % n;
 };
 
@@ -788,12 +807,13 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
 };
 
 /**
- * Determines if a positive integer is a power of two.
+ * Determines if a non-negative integer is a power of two.
+ * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
  *
- * @param {Number} n The positive integer to test.
+ * @param {Number} n The integer to test in the range [0, (2^32)-1].
  * @returns {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
  *
- * @exception {DeveloperError} A number greater than or equal to 0 is required.
+ * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
  *
  * @example
  * var t = Cesium.Math.isPowerOfTwo(16); // true
@@ -801,10 +821,8 @@ CesiumMath.incrementWrap = function (n, maximumValue, minimumValue) {
  */
 CesiumMath.isPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
-  if (typeof n !== "number" || n < 0) {
-    throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
-    );
+  if (typeof n !== "number" || n < 0 || n > 4294967295) {
+    throw new DeveloperError("A number between 0 and (2^32)-1 is required.");
   }
   //>>includeEnd('debug');
 
@@ -812,12 +830,13 @@ CesiumMath.isPowerOfTwo = function (n) {
 };
 
 /**
- * Computes the next power-of-two integer greater than or equal to the provided positive integer.
+ * Computes the next power-of-two integer greater than or equal to the provided non-negative integer.
+ * The maximum allowed input is 2^31 due to 32-bit bitwise operator limitation in Javascript.
  *
- * @param {Number} n The positive integer to test.
+ * @param {Number} n The integer to test in the range [0, 2^31].
  * @returns {Number} The next power-of-two integer.
  *
- * @exception {DeveloperError} A number greater than or equal to 0 is required.
+ * @exception {DeveloperError} A number between 0 and 2^31 is required.
  *
  * @example
  * var n = Cesium.Math.nextPowerOfTwo(29); // 32
@@ -825,10 +844,8 @@ CesiumMath.isPowerOfTwo = function (n) {
  */
 CesiumMath.nextPowerOfTwo = function (n) {
   //>>includeStart('debug', pragmas.debug);
-  if (typeof n !== "number" || n < 0) {
-    throw new DeveloperError(
-      "A number greater than or equal to 0 is required."
-    );
+  if (typeof n !== "number" || n < 0 || n > 2147483648) {
+    throw new DeveloperError("A number between 0 and 2^31 is required.");
   }
   //>>includeEnd('debug');
 
@@ -840,6 +857,39 @@ CesiumMath.nextPowerOfTwo = function (n) {
   n |= n >> 8;
   n |= n >> 16;
   ++n;
+
+  return n;
+};
+
+/**
+ * Computes the previous power-of-two integer less than or equal to the provided non-negative integer.
+ * The maximum allowed input is (2^32)-1 due to 32-bit bitwise operator limitation in Javascript.
+ *
+ * @param {Number} n The integer to test in the range [0, (2^32)-1].
+ * @returns {Number} The previous power-of-two integer.
+ *
+ * @exception {DeveloperError} A number between 0 and (2^32)-1 is required.
+ *
+ * @example
+ * var n = Cesium.Math.previousPowerOfTwo(29); // 16
+ * var m = Cesium.Math.previousPowerOfTwo(32); // 32
+ */
+CesiumMath.previousPowerOfTwo = function (n) {
+  //>>includeStart('debug', pragmas.debug);
+  if (typeof n !== "number" || n < 0 || n > 4294967295) {
+    throw new DeveloperError("A number between 0 and (2^32)-1 is required.");
+  }
+  //>>includeEnd('debug');
+
+  n |= n >> 1;
+  n |= n >> 2;
+  n |= n >> 4;
+  n |= n >> 8;
+  n |= n >> 16;
+  n |= n >> 32;
+
+  // The previous bitwise operations implicitly convert to signed 32-bit. Use `>>>` to convert to unsigned
+  n = (n >>> 0) - (n >>> 1);
 
   return n;
 };

@@ -352,6 +352,22 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("does not render billboard if show is false", function () {
+      billboards.add({
+        position: Cartesian3.ZERO,
+        image: greenImage,
+        width: 2.0,
+        height: 2.0,
+        sizeInMeters: true,
+      });
+
+      camera.position = new Cartesian3(2.0, 0.0, 0.0);
+      expect(scene).toRender([0, 255, 0, 255]);
+
+      billboards.show = false;
+      expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it("throws scaleByDistance with nearDistance === farDistance", function () {
       var b = billboards.add();
       var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
