@@ -9,7 +9,13 @@
 ##### Additions :tada:
 
 - Added `BillboardCollection.show`, `EntityCluster.show`, `LabelCollection.show`, `PointPrimitiveCollection.show`, and `PolylineCollection.show` for a convenient way to control show of the entire collection [#9307](https://github.com/CesiumGS/cesium/pull/9307)
-- `TaskProcessor` now accepts an absolute URL in addition to a worker name as it's first parameter. This makes it possible to use custom web workers with Cesium's task processing system without copying them to Cesium's Workers directory.
+- `TaskProcessor` now accepts an absolute URL in addition to a worker name as it's first parameter. This makes it possible to use custom web workers with Cesium's task processing system without copying them to Cesium's Workers directory. [9338](https://github.com/CesiumGS/cesium/pull/9338)
+- Added `Cartesian2.cross` which computes the magnitude of the cross product of two vectors whose Z values are implicitly 0. [9305](https://github.com/CesiumGS/cesium/pull/9305)
+- Added `Math.previousPowerOfTwo`. [9310](https://github.com/CesiumGS/cesium/pull/9310)
+
+##### Fixes :wrench:
+
+- Fixed an issue with `CesiumMath.mod` introducing a small amount of floating point error even when the input did not need to be altered. [9354](https://github.com/CesiumGS/cesium/pull/9354)
 
 ### 1.77 - 2021-01-04
 
