@@ -5,7 +5,7 @@ import { Color } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { getStringFromTypedArray } from "../../Source/Cesium.js";
+import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
@@ -369,7 +369,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path,
       });
-      expect(tileset.url).toEqual(path);
+      expect(tileset.resource.url).toEqual(path);
     });
 
     it("url and tilesetUrl set up correctly given path with query string", function () {
@@ -378,7 +378,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path + param,
       });
-      expect(tileset.url).toEqual(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
     it("resolves readyPromise", function () {
@@ -408,7 +408,7 @@ describe(
 
         expect(tileset._geometricError).toEqual(240.0);
         expect(tileset.root).toBeDefined();
-        expect(tileset.url).toEqual(tilesetUrl);
+        expect(tileset.resource.url).toEqual(tilesetUrl);
       });
     });
 
@@ -3852,11 +3852,10 @@ describe(
 
     function modifySubtreeBuffer(arrayBuffer) {
       var uint8Array = new Uint8Array(arrayBuffer);
-      var jsonString = getStringFromTypedArray(uint8Array);
-      var json = JSON.parse(jsonString);
+      var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      jsonString = JSON.stringify(json);
+      var jsonString = JSON.stringify(json);
       var length = jsonString.length;
       uint8Array = new Uint8Array(length);
       for (var i = 0; i < length; i++) {
