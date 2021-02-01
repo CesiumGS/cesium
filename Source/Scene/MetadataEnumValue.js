@@ -1,24 +1,19 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
 
 /**
  * A metadata enum value.
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.value The enum value JSON object.
+ * @param {Object} value The enum value JSON object.
  *
  * @alias MetadataEnumValue
  * @constructor
  *
  * @private
  */
-function MetadataEnumValue(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var value = options.value;
-
+function MetadataEnumValue(value) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.value", value);
+  Check.typeOf.object("value", value);
   //>>includeEnd('debug');
 
   this._value = value.value;

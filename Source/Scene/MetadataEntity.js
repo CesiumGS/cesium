@@ -1,3 +1,4 @@
+import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -121,6 +122,11 @@ MetadataEntity.prototype.setPropertyBySemantic = function (semantic, value) {
  * @private
  */
 MetadataEntity.hasProperty = function (entity, propertyId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
   if (defined(entity.properties) && defined(entity.properties[propertyId])) {
     return true;
   }
@@ -146,6 +152,10 @@ MetadataEntity.hasProperty = function (entity, propertyId) {
  * @private
  */
 MetadataEntity.getPropertyIds = function (entity, results) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  //>>includeEnd('debug');
+
   results = defined(results) ? results : [];
   results.length = 0;
 
@@ -187,6 +197,11 @@ MetadataEntity.getPropertyIds = function (entity, results) {
  * @private
  */
 MetadataEntity.getProperty = function (entity, propertyId) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
   if (defined(entity.properties) && defined(entity.properties[propertyId])) {
     return clone(entity.properties[propertyId], true);
   }
@@ -215,6 +230,12 @@ MetadataEntity.getProperty = function (entity, propertyId) {
  * @private
  */
 MetadataEntity.setProperty = function (entity, propertyId, value) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  Check.typeOf.string("propertyId", propertyId);
+  Check.defined("value", value);
+  //>>includeEnd('debug');
+
   if (!defined(entity.properties)) {
     entity.properties = {};
   }
@@ -232,6 +253,11 @@ MetadataEntity.setProperty = function (entity, propertyId, value) {
  * @private
  */
 MetadataEntity.getPropertyBySemantic = function (entity, semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
   if (defined(entity.class)) {
     var property = entity.class.propertiesBySemantic[semantic];
     if (defined(property)) {
@@ -251,6 +277,11 @@ MetadataEntity.getPropertyBySemantic = function (entity, semantic) {
  * @private
  */
 MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("entity", entity);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
   if (defined(entity.class)) {
     var property = entity.class.propertiesBySemantic[semantic];
     if (defined(property)) {

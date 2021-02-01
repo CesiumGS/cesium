@@ -27,13 +27,16 @@ function MetadataEnum(options) {
   //>>includeEnd('debug');
 
   var values = enumDefinition.values.map(function (value) {
-    return new MetadataEnumValue({
-      value: value,
-    });
+    return new MetadataEnumValue(value);
   });
 
+  var valueType = defaultValue(
+    MetadataEnumType[enumDefinition.valueType],
+    MetadataEnumType.INT32
+  );
+
   this._values = values;
-  this._valueType = MetadataEnumType[enumDefinition.valueType];
+  this._valueType = valueType;
   this._id = id;
   this._name = enumDefinition.name;
   this._description = enumDefinition.description;

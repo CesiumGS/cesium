@@ -3,6 +3,7 @@ import clone from "../Core/clone.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -28,7 +29,7 @@ function MetadataTableProperty(
  * A table containing binary metadata about a collection of entities.
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.count The number of entities in the table.
+ * @param {Number} options.count The number of entities in the table.
  * @param {Object} options.properties A dictionary containing properties.
  * @param {MetadataClass} options.class The class that properties conforms to.
  * @param {Object} options.bufferViews An object mapping bufferView IDs to Uint8Array objects
@@ -36,16 +37,19 @@ function MetadataTableProperty(
  * @alias MetadataTable
  * @constructor
  *
+ * @exception {RuntimeError} INT64 type is not supported on this platform
+ * @exception {RuntimeError} UINT64 type is not supported on this platform
+ *
  * @private
  */
 function MetadataTable(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.count", options.count);
-  Check.typeOf.string("options.properties", options.properties);
+  Check.typeOf.number("options.count", options.count);
+  Check.typeOf.object("options.properties", options.properties);
   Check.typeOf.string("options.class", options.class);
-  Check.typeOf.string("options.bufferViews", options.bufferViews);
+  Check.typeOf.object("options.bufferViews", options.bufferViews);
   //>>includeEnd('debug');
 
   var properties = {};
@@ -69,9 +73,23 @@ function MetadataTable(options) {
 
 Object.defineProperties(MetadataTable.prototype, {
   /**
+   * The number of entities in the table.
+   *
+   * @memberof MetadataTable.prototype
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  count: {
+    get: function () {
+      return this._count;
+    },
+  },
+
+  /**
    * The class that properties conforms to.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof MetadataTable.prototype
    * @type {MetadataClass}
    * @readonly
    * @private
@@ -85,7 +103,7 @@ Object.defineProperties(MetadataTable.prototype, {
   /**
    * A dictionary containing properties.
    *
-   * @memberof MetadataTileset.prototype
+   * @memberof MetadataTable.prototype
    * @type {Object}
    * @readonly
    * @private
@@ -122,8 +140,15 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
+  //>>includeStart('debug', pragmas.debug);
+  checkIndex(this, index);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
   var property = this._properties[propertyId];
 
   if (defined(property)) {
@@ -180,9 +205,19 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
  * @param {*} value The value of the property that will be copied.
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
+ * @exception {DeveloperError} value does not match type
+ * @exception {DeveloperError} value is out of range for type
+ * @exception {DeveloperError} Array length does not match componentCount
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
-  // TODO: out of bounds checking, type checking
+  //>>includeStart('debug', pragmas.debug);
+  checkIndex(this, index);
+  checkType(this, propertyId, value);
+  Check.typeOf.string("propertyId", propertyId);
+  //>>includeEnd('debug');
+
   // TODO: Cesium3DTileBatchTable let you create new properties if propertyId doesn't exist, this does not
   var property = this._properties[propertyId];
 
@@ -234,8 +269,14 @@ MetadataTable.prototype.setProperty = function (index, propertyId, value) {
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
  */
 MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
   var property = this._class.propertiesBySemantic[semantic];
   if (defined(property)) {
     return this.getProperty(index, property.id);
@@ -249,17 +290,173 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
  * @param {Number} index The index of the entity.
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
+ *
+ * @exception {DeveloperError} index is required and between zero and count - 1
+ * @exception {DeveloperError} value does not match type
+ * @exception {DeveloperError} value is out of range for type
+ * @exception {DeveloperError} Array length does not match componentCount
  */
 MetadataTable.prototype.setPropertyBySemantic = function (
   index,
   semantic,
   value
 ) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("semantic", semantic);
+  //>>includeEnd('debug');
+
   var property = this._class.propertiesBySemantic[semantic];
   if (defined(property)) {
     this.setProperty(index, property.id, value);
   }
 };
+
+function getValueType(classProperty) {
+  var type = classProperty.type;
+  var componentType = classProperty.componentType;
+  var enumType = classProperty.enumType;
+
+  if (type === MetadataType.ARRAY) {
+    type = componentType;
+  }
+  if (type === MetadataType.ENUM) {
+    type = enumType;
+  }
+
+  return type;
+}
+
+function throwTypeError(type, value) {
+  throw new DeveloperError("value " + value + " does not match type " + type);
+}
+
+function throwOutOfRangeError(type, value) {
+  throw new DeveloperError(
+    "value " + value + " is out of range for type " + type
+  );
+}
+
+function checkNumber(type, value) {
+  if (typeof value !== "number" && typeof value !== "bigint") {
+    throwTypeError(type, value);
+  }
+
+  switch (type) {
+    case MetadataType.INT8:
+      if (value < -128 || value > 127) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.UINT8:
+      if (value < 0 || value > 255) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.INT16:
+      if (value < -32768 || value > 32767) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.UINT16:
+      if (value < 0 || value > 65535) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.INT32:
+      if (value < -2147483648 || value > 2147483647) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.UINT32:
+      if (value < 0 || value > 4294967295) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.INT64:
+      if (
+        // eslint-disable-next-line
+        value < BigInt(-9223372036854775808) ||
+        // eslint-disable-next-line
+        value > BigInt(9223372036854775807)
+      ) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.UINT64:
+      // eslint-disable-next-line
+      if (value < 0 || value > BigInt(18446744073709551615)) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+    case MetadataType.FLOAT32:
+      if (
+        isFinite(value) &&
+        (value < -340282346638528859811704183484516925440.0 ||
+          value > 340282346638528859811704183484516925440.0)
+      ) {
+        throwOutOfRangeError(type, value);
+      }
+      break;
+  }
+}
+
+function checkValue(type, value) {
+  switch (type) {
+    case MetadataType.INT8:
+    case MetadataType.UINT8:
+    case MetadataType.INT16:
+    case MetadataType.UINT16:
+    case MetadataType.INT32:
+    case MetadataType.UINT32:
+    case MetadataType.INT64:
+    case MetadataType.UINT64:
+    case MetadataType.FLOAT32:
+    case MetadataType.FLOAT64:
+      checkNumber(type, value);
+      break;
+    case MetadataType.BOOLEAN:
+      if (typeof value !== "boolean") {
+        throwTypeError(type, value);
+      }
+      break;
+    case MetadataType.STRING:
+      if (typeof value !== "string") {
+        throwTypeError(type, value);
+      }
+      break;
+  }
+}
+
+function checkType(table, propertyId, value) {
+  var classProperty = table._class.properties[propertyId];
+  if (classProperty.type === MetadataType.ARRAY) {
+    if (!Array.isArray(value)) {
+      throwTypeError(classProperty.type, value);
+    }
+    var length = value.length;
+    if (
+      defined(classProperty.componentCount) &&
+      classProperty.componentCount !== length
+    ) {
+      throw new DeveloperError("Array length does not match componentCount");
+    }
+    for (var i = 0; i < length; ++i) {
+      checkValue(getValueType(classProperty), value[i]);
+    }
+  } else {
+    checkValue(getValueType(classProperty), value);
+  }
+}
+
+function checkIndex(table, index) {
+  var count = table._count;
+  if (!defined(index) || index < 0 || index >= count) {
+    var maximumIndex = count - 1;
+    throw new DeveloperError(
+      "index is required and between zero and count - 1 (" + maximumIndex + ")."
+    );
+  }
+}
 
 function getReader(property) {
   var classProperty = property.classProperty;
@@ -377,30 +574,6 @@ function requiresUnpackForSetter(index, property, value) {
   return false;
 }
 
-function createTypedArray(valueType, bufferView, length) {
-  if (valueType === MetadataComponentType.INT64) {
-    if (!FeatureDetection.supportsBigInt64Array()) {
-      throw new RuntimeError("INT64 type is not supported on this platform");
-    }
-    // eslint-disable-next-line no-undef
-    return new BigInt64Array(bufferView.buffer, bufferView.byteOffset, length);
-  } else if (valueType === MetadataComponentType.UINT64) {
-    if (!FeatureDetection.supportsBigUint64Array()) {
-      throw new RuntimeError("UINT64 type is not supported on this platform");
-    }
-    // eslint-disable-next-line no-undef
-    return new BigUint64Array(bufferView.buffer, bufferView.byteOffset, length);
-  }
-
-  var componentDatatype = getComponentDatatype(valueType);
-  return ComponentDatatype.createArrayBufferView(
-    componentDatatype,
-    bufferView.buffer,
-    bufferView.byteOffset,
-    length
-  );
-}
-
 function unpackValues(table, property) {
   var i;
   var count = table._count;
@@ -452,19 +625,28 @@ function unpackProperty(table, property) {
   table.values = undefined;
 }
 
-function getValueType(classProperty) {
-  var type = classProperty.type;
-  var componentType = classProperty.componentType;
-  var enumType = classProperty.enumType;
-
-  if (type === MetadataType.ARRAY) {
-    type = componentType;
+function createTypedArray(valueType, bufferView, length) {
+  if (valueType === MetadataComponentType.INT64) {
+    if (!FeatureDetection.supportsBigInt64Array()) {
+      throw new RuntimeError("INT64 type is not supported on this platform");
+    }
+    // eslint-disable-next-line no-undef
+    return new BigInt64Array(bufferView.buffer, bufferView.byteOffset, length);
+  } else if (valueType === MetadataComponentType.UINT64) {
+    if (!FeatureDetection.supportsBigUint64Array()) {
+      throw new RuntimeError("UINT64 type is not supported on this platform");
+    }
+    // eslint-disable-next-line no-undef
+    return new BigUint64Array(bufferView.buffer, bufferView.byteOffset, length);
   }
-  if (type === MetadataType.ENUM) {
-    type = enumType;
-  }
 
-  return type;
+  var componentDatatype = getComponentDatatype(valueType);
+  return ComponentDatatype.createArrayBufferView(
+    componentDatatype,
+    bufferView.buffer,
+    bufferView.byteOffset,
+    length
+  );
 }
 
 function getComponentDatatype(type) {

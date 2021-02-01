@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
@@ -29,8 +30,12 @@ function MetadataGroup(options) {
   Check.typeOf.object("options.group", group);
   //>>includeEnd('debug');
 
+  var properties = defined(group.properties)
+    ? clone(group.properties, true) // Clone so that this object doesn't hold on to a reference to the JSON
+    : {};
+
   this._class = options.class;
-  this._properties = clone(group.properties, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._properties = properties;
   this._id = id;
   this._name = group.name;
   this._description = group.description;
@@ -86,7 +91,7 @@ MetadataGroup.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataGroup.getPropertyBySemantic = function (semantic) {
+MetadataGroup.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(this, semantic);
 };
 
@@ -96,8 +101,8 @@ MetadataGroup.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataGroup.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setProperty(this, semantic, value);
+MetadataGroup.prototype.setPropertyBySemantic = function (semantic, value) {
+  MetadataEntity.setPropertyBySemantic(this, semantic, value);
 };
 
 Object.defineProperties(MetadataGroup.prototype, {

@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
+import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
 
 /**
@@ -23,11 +24,15 @@ function MetadataTileset(options) {
   var tileset = options.tileset;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.string("options.tileset", tileset);
+  Check.typeOf.object("options.tileset", tileset);
   //>>includeEnd('debug');
 
+  var properties = defined(tileset.properties)
+    ? clone(tileset.properties, true) // Clone so that this object doesn't hold on to a reference to the JSON
+    : {};
+
   this._class = options.class;
-  this._properties = clone(tileset.properties, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._properties = properties;
   this._name = tileset.name;
   this._description = tileset.description;
   this._extras = clone(tileset.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
@@ -82,7 +87,7 @@ MetadataTileset.prototype.setProperty = function (propertyId, value) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
  */
-MetadataTileset.getPropertyBySemantic = function (semantic) {
+MetadataTileset.prototype.getPropertyBySemantic = function (semantic) {
   return MetadataEntity.getPropertyBySemantic(this, semantic);
 };
 
@@ -92,8 +97,8 @@ MetadataTileset.getPropertyBySemantic = function (semantic) {
  * @param {String} semantic The case-sensitive semantic of the property.
  * @param {*} value The value of the property that will be copied.
  */
-MetadataTileset.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setProperty(this, semantic, value);
+MetadataTileset.prototype.setPropertyBySemantic = function (semantic, value) {
+  MetadataEntity.setPropertyBySemantic(this, semantic, value);
 };
 
 Object.defineProperties(MetadataTileset.prototype, {

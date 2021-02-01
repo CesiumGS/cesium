@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
@@ -13,25 +12,21 @@ import MetadataTileset from "./MetadataTileset.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
  *
- * @param {Object} options Object with the following properties:
- * @param {Object} options.extension The extension JSON object.
+ * @param {Object} extension The extension JSON object
  *
  * @alias Metadata3DTilesExtension
  * @constructor
  *
  * @private
  */
-function Metadata3DTilesExtension(options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var extension = options.extension;
-
+function Metadata3DTilesExtension(extension) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("extension", extension);
   //>>includeEnd('debug');
 
   var enums = {};
   for (var enumId in extension.enums) {
-    if (extension.enums.properties.hasOwnProperty(enumId)) {
+    if (extension.enums.hasOwnProperty(enumId)) {
       enums[enumId] = new MetadataEnum({
         id: enumId,
         enum: extension.enums[enumId],
@@ -41,7 +36,7 @@ function Metadata3DTilesExtension(options) {
 
   var classes = {};
   for (var classId in extension.classes) {
-    if (extension.classes.properties.hasOwnProperty(classId)) {
+    if (extension.classes.hasOwnProperty(classId)) {
       classes[classId] = new MetadataClass({
         id: classId,
         class: extension.classes[classId],
@@ -52,7 +47,7 @@ function Metadata3DTilesExtension(options) {
 
   var groups = {};
   for (var groupId in extension.groups) {
-    if (extension.groups.properties.hasOwnProperty(groupId)) {
+    if (extension.groups.hasOwnProperty(groupId)) {
       var group = extension.groups[groupId];
       groups[groupId] = new MetadataGroup({
         id: groupId,
