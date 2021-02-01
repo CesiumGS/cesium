@@ -1726,7 +1726,7 @@ Cesium3DTileset.prototype.loadTileset = function (
       var length = children.length;
       for (var i = 0; i < length; ++i) {
         var childHeader = children[i];
-        var childTile = makeTile(tileset, resource, childHeader, tile);
+        var childTile = makeTile(this, resource, childHeader, tile);
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);

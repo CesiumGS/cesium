@@ -321,7 +321,7 @@ function deriveChildTile(
 ) {
   var implicitTileset = implicitContent._implicitTileset;
   var implicitCoordinates;
-  if (!defined(parentTile)) {
+  if (!defined(parentTile) || !defined(parentTile.implicitCoordinates)) {
     implicitCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
       level: 0,
