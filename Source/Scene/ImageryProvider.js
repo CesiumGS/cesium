@@ -11,6 +11,7 @@ import Resource from "../Core/Resource.js";
  *
  * @alias ImageryProvider
  * @constructor
+ * @abstract
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
