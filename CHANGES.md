@@ -2,6 +2,10 @@
 
 ### 1.78 - 2021-02-01
 
+##### Deprecated :hourglass_flowing_sand:
+
+- `Cesium3DTileset.url` has been deprecated and will be removed in Cesium 1.79. Instead, use `Cesium3DTileset.resource.url` to retrieve the url value.
+
 ##### Additions :tada:
 
 - Added `BillboardCollection.show`, `EntityCluster.show`, `LabelCollection.show`, `PointPrimitiveCollection.show`, and `PolylineCollection.show` for a convenient way to control show of the entire collection [#9307](https://github.com/CesiumGS/cesium/pull/9307)
