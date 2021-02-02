@@ -1105,7 +1105,7 @@ describe("Core/Cartesian4", function () {
     function testFloatOutOfRange(float) {
       var packedFloat = Cartesian4.packFloat(float);
       var unpackedFloat = Cartesian4.unpackFloat(packedFloat);
-      expect(unpackedFloat).toEqual(Math.sign(float) * Infinity);
+      expect(unpackedFloat).toEqual(CesiumMath.sign(float) * Infinity);
     }
 
     testFloat(0.0);
