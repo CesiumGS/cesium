@@ -10,6 +10,7 @@ import CesiumMath from "../Core/Math.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import PerInstanceColorAppearance from "./PerInstanceColorAppearance.js";
 import Primitive from "./Primitive.js";
+import defined from "../Core/defined.js";
 
 var scratchU = new Cartesian3();
 var scratchV = new Cartesian3();
@@ -172,6 +173,72 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
     this._orientedBoundingBox,
     this._boundingSphere
   );
+};
+
+/**
+ * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
+ * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
+ * coordinates are given to select the descendant tile and compute its position
+ * and dimensions.
+ *
+ * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
+ * is used. Quadtrees are always divided at the midpoint of the the horizontal
+ * dimensions, i.e. (x, y), leaving the z axis unchanged.
+ *
+ * This computes the child volume directly from the root bounding volume rather
+ * than recursively subdividing to minimize floating point error.
+ *
+ * @param {Number} level The level of the descendant tile relative to
+ * @param {Number} x The x coordinate of the child tile
+ * @param {Number} y The y coordinate of the child tile
+ * @param {Number|undefined} z The z coordinate of the child volume (octree only)
+ * @return {TileOrientedBoundingBox} A new TileBoundingRegion with the given x, y, z coordinates
+ */
+TileOrientedBoundingBox.prototype.deriveVolume = function (level, x, y, z) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (defined(z)) {
+    Check.typeOf.number("z", z);
+  }
+  //>>includeEnd('debug');
+
+  var rootCenter = this._orientedBoundingBox.center;
+  var rootHalfAxes = this._orientedBoundingBox.halfAxes;
+
+  if (level === 0) {
+    return new TileOrientedBoundingBox(
+      this._orientedBoundingBox.center,
+      this._orientedBoundingBox.halfAxes
+    );
+  }
+
+  var tileScale = Math.pow(2, -level);
+  var modelSpaceX = -1 + (2 * x + 1) * tileScale;
+  var modelSpaceY = -1 + (2 * y + 1) * tileScale;
+
+  var modelSpaceZ = 0;
+  var scaleFactors = Cartesian3.fromElements(
+    tileScale,
+    tileScale,
+    1,
+    scratchCartesian
+  );
+
+  if (defined(z)) {
+    modelSpaceZ = -1 + (2 * z + 1) * tileScale;
+    scaleFactors.z = tileScale;
+  }
+
+  var center = new Cartesian3(modelSpaceX, modelSpaceY, modelSpaceZ);
+  center = Matrix3.multiplyByVector(rootHalfAxes, center, new Cartesian3());
+  center = Cartesian3.add(center, rootCenter, center);
+
+  var halfAxes = Matrix3.clone(rootHalfAxes);
+  halfAxes = Matrix3.multiplyByScale(halfAxes, scaleFactors, halfAxes);
+
+  return new TileOrientedBoundingBox(center, halfAxes);
 };
 
 /**

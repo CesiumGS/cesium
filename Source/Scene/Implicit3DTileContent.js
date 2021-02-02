@@ -1,8 +1,11 @@
+import { TileOrientedBoundingBox } from "../Cesium.js";
+import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTile from "./Cesium3DTile.js";
@@ -403,8 +406,24 @@ function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
     };
   } else {
     // box
-    // TODO: Implement TileOrientedBoundingBox.derive
-    throw new DeveloperError("Not implemented yet!");
+    var parameters = boundingVolume.box;
+    var center = Cartesian3.unpack(parameters);
+    var halfAxes = Matrix3.unpack(parameters, 3);
+    var boundingBox = new TileOrientedBoundingBox(center, halfAxes);
+    var derivedBox = boundingBox.deriveVolume(
+      implicitCoordinates.level,
+      implicitCoordinates.x,
+      implicitCoordinates.y,
+      implicitCoordinates.z
+    );
+
+    var childBox = new Array(12);
+    Cartesian3.pack(derivedBox.boundingVolume.center, childBox);
+    Matrix3.pack(derivedBox.boundingVolume.halfAxes, childBox, 3);
+
+    return {
+      box: childBox,
+    };
   }
 }
 
