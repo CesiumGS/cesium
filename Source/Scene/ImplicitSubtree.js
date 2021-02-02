@@ -44,29 +44,29 @@ Object.defineProperties(ImplicitSubtree.prototype, {
 });
 
 /**
- * Get the i-th bit of the subtree's `tileAvailability` bitstream.
+ * Check if a specific tile is available
  * @param {Number} index the index of the desired tile
  * @return {Boolean} the value of the i-th bit
  */
-ImplicitSubtree.prototype.getTileAvailabilityBit = function (index) {
+ImplicitSubtree.prototype.tileIsAvailable = function (index) {
   return this._tileAvailability.getBit(index);
 };
 
 /**
- * Get the i-th bit of the subtree's `contentAvailability` bitstream.
+ * Check if a specific tile's content is available
  * @param {Number} index the index of the desired tile
  * @return {Boolean} the value of the i-th bit
  */
-ImplicitSubtree.prototype.getContentAvailabilityBit = function (index) {
+ImplicitSubtree.prototype.contentIsAvailable = function (index) {
   return this._contentAvailability.getBit(index);
 };
 
 /**
- * Get the i-th bit of the subtree's `childSubtreeAvailability` bitstream.
+ * Check if a child subtree is available
  * @param {Number} index the index of the desired child subtree
  * @return {Boolean} the value of the i-th bit
  */
-ImplicitSubtree.prototype.getChildSubtreeAvailabilityBit = function (index) {
+ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
   return this._childSubtreeAvailability.getBit(index);
 };
 

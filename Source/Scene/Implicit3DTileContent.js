@@ -270,7 +270,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
 
     for (var j = 0; j < branchingFactor; j++) {
       var index = i * branchingFactor + j;
-      if (subtree.getChildSubtreeAvailabilityBit(index)) {
+      if (subtree.childSubtreeIsAvailable(index)) {
         results.push({
           tile: leafTile,
           childIndex: j,
@@ -305,7 +305,7 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
   var rootBitIndex = 0;
 
   //>>includeStart('debug', pragmas.debug);
-  if (!subtree.getTileAvailabilityBit(rootBitIndex)) {
+  if (!subtree.tileIsAvailable(rootBitIndex)) {
     throw new DeveloperError("A subtree must have at least 1 available tile");
   }
   //>>includeEnd('debug');
@@ -335,7 +335,7 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
     ) {
       var childBitIndex = levelOffset + childMortonIndex;
 
-      if (!subtree.getTileAvailabilityBit(childBitIndex)) {
+      if (!subtree.tileIsAvailable(childBitIndex)) {
         currentRow.push(undefined);
         continue;
       }
@@ -404,7 +404,7 @@ function deriveChildTile(
   }
 
   var contentJson;
-  if (subtree.getContentAvailabilityBit(childBitIndex)) {
+  if (subtree.contentIsAvailable(childBitIndex)) {
     contentJson = {
       uri: implicitTileset.contentUriTemplate.getDerivedResource({
         templateValues: implicitCoordinates.getTemplateValues(),
