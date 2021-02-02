@@ -3,6 +3,7 @@ export * from "./Core/index.js"
 export * from "./DataSources/index.js"
 export * from "./Renderer/index.js"
 export * from "./Scene/index.js"
+// Compiled from /ShadersGlsl
 export * from "./Shaders/index.js"
 
 export { default as Autolinker } from './ThirdParty/Autolinker.js';
