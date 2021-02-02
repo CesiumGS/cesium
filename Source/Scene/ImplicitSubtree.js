@@ -17,7 +17,7 @@ export default function ImplicitSubtree(
   subtreeView,
   implicitTileset
 ) {
-  this._resource = undefined;
+  this._resource = resource;
   this._subtreeJson = undefined;
   this._bufferViews = undefined;
   this._tileAvailability = undefined;
