@@ -1,0 +1,88 @@
+{
+  "name": "cesium",
+  "version": "1.78.0",
+  "description": "CesiumJS is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
+  "homepage": "http://cesium.com/cesiumjs/",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
+  },
+  "contributors": [
+    {
+      "name": "CesiumJS community",
+      "url": "https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTORS.md"
+    }
+  ],
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CesiumGS/cesium.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CesiumGS/cesium/issues",
+    "email": "cesium-dev@googlegroups.com"
+  },
+  "main": "index.cjs",
+  "module": "./Source/Cesium.js",
+  "types": "./Source/Cesium.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": "./index.cjs",
+      "import": "./Source/Cesium.js"
+    }
+  },
+  "type": "module",
+  "devDependencies": {
+    "globby": "^11.0.2",
+    "rollup": "^2.38.4",
+    "rollup-plugin-external-globals": "^0.6.1",
+    "rollup-plugin-strip-pragma": "^1.0.0"
+  },
+  "scripts": {
+    "serve": "npx browser-sync",
+    "convertToModules": "gulp convertToModules",
+    "start": "node server.cjs",
+    "startPublic": "node server.cjs --public",
+    "build": "npx gulp build",
+    "build-watch": "gulp build-watch",
+    "build-ts": "gulp build-ts",
+    "buildApps": "gulp buildApps",
+    "clean": "gulp clean",
+    "cloc": "gulp cloc",
+    "combine": "gulp combine",
+    "combineRelease": "gulp combineRelease",
+    "coverage": "gulp coverage",
+    "generateDocumentation": "gulp generateDocumentation",
+    "generateDocumentation-watch": "gulp generateDocumentation-watch",
+    "eslint": "eslint \"./**/*.js\" \"./**/*.html\" --cache --quiet",
+    "makeZipFile": "gulp makeZipFile",
+    "minify": "gulp minify",
+    "minifyRelease": "gulp minifyRelease",
+    "release": "gulp release",
+    "build-specs": "gulp build-specs",
+    "test": "gulp test",
+    "test-all": "gulp test --all",
+    "test-webgl": "gulp test --include WebGL",
+    "test-non-webgl": "gulp test --exclude WebGL",
+    "test-webgl-validation": "gulp test --webglValidation",
+    "test-webgl-stub": "gulp test --webglStub",
+    "test-release": "gulp test --release",
+    "deploy-s3": "gulp deploy-s3",
+    "deploy-status": "gulp deploy-status",
+    "deploy-set-version": "gulp deploy-set-version",
+    "prettier": "prettier --write \"**/*\"",
+    "prettier-check": "prettier --check \"**/*\"",
+    "pretty-quick": "pretty-quick"
+  },
+  "dependencies": {
+    "stream-to-promise": "^3.0.0"
+  }
+}
