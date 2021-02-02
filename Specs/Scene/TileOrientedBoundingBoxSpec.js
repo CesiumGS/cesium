@@ -157,7 +157,7 @@ fdescribe("Scene/TileOrientedBoundingBox", function () {
 
   it("deriveVolume works correctly when order of operations matters", function () {
     var tile = new TileOrientedBoundingBox(
-      new Cartesian3(1, 2, 0),
+      new Cartesian3(1, 2, 3),
       // permutes the axes so halfX is in the +y direction, halfY is in the +z
       // direction, and halfZ is in the +x direction
       new Matrix3(0, 4, 0, 0, 0, 2, 1, 0, 0)

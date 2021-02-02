@@ -124,13 +124,42 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
   },
 });
 
+/**
+ * Initialize the implicit content by parsing the subtree resource and setting
+ * up a promise chain to expand the immediate subtree.
+ * @private
+ * @param {Implicit3DTileContent} content The implicit content
+ * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing a subtree binary
+ * @param {Number} byteOffset The byte offset into the arrayBuffer
+ */
 function initialize(content, arrayBuffer, byteOffset) {
   // Parse the subtree file
   byteOffset = defaultValue(byteOffset, 0);
   var uint8Array = new Uint8Array(arrayBuffer, byteOffset);
-  // TODO: this is going to need a readyPromise...
-  var subtree = new ImplicitSubtree(uint8Array, content._implicitTileset);
+  var subtree = new ImplicitSubtree(
+    content._resource,
+    uint8Array,
+    content._implicitTileset
+  );
+  subtree.readyPromise
+    .then(function () {
+      expandSubtree(content, subtree);
+      content._readyPromise.resolve();
+    })
+    .otherwise(function (error) {
+      content._readyPromise.reject(error);
+    });
+}
 
+/**
+ * Expand a single subtree, modifying the {@link Cesium3DTileset} it belongs
+ * to. This also creates placeholder tiles for the child subtrees to be lazily
+ * expanded as needed.
+ * @private
+ * @param {Implicit3DTileContent} content The content
+ * @param {ImplicitSubtree} subtree The parsed subtree
+ */
+function expandSubtree(content, subtree) {
   // Parse the tiles inside this immediate subtree
   var placeholderTile = content._tile;
   var parentTile = placeholderTile.parent;
@@ -159,15 +188,12 @@ function initialize(content, arrayBuffer, byteOffset) {
   // for each child subtree, make new placeholder tiles
   var childSubtrees = listChildSubtrees(content, subtree, results.bottomRow);
   for (var i = 0; i < childSubtrees.length; i++) {
-    // TODO: use an object not a pair
-    var pair = childSubtrees[i];
-    var leafTile = pair[0];
-    var childIndex = pair[1];
-
+    var subtreeLocator = childSubtrees[i];
+    var leafTile = subtreeLocator.tile;
     var implicitChildTile = makePlaceholderChildSubtree(
       content,
       leafTile,
-      childIndex
+      subtreeLocator.childIndex
     );
     leafTile.children.push(implicitChildTile);
   }
@@ -217,6 +243,22 @@ Implicit3DTileContent.makeRootPlaceholderTile = function (
   return tile;
 };
 
+/**
+ * A pair of (tile, childIndex) used for finding child subtrees.
+ * @private
+ * @typedef {Object} ChildSubtreeLocator
+ * @property {Cesium3DTile} tile One of the tiles in the bottommost row of the subtree.
+ * @property {Number} childIndex The relative index of the child subtree compared to tile
+ */
+
+/**
+ * Determine what child subtrees exist and return a list of information
+ * @private
+ * @param {Implicit3DTileContent} content The implicit content
+ * @param {ImplicitSubtree} subtree The subtree for looking up availability
+ * @param {(Cesium3DTile|undefined)[]} bottomRow The bottom row of tiles in a transcoded subtree
+ * @return {ChildSubtreeLocator[]} A list of identifiers for the child subtrees.
+ */
 function listChildSubtrees(content, subtree, bottomRow) {
   var results = [];
   var branchingFactor = content._implicitTileset.branchingFactor;
@@ -229,13 +271,36 @@ function listChildSubtrees(content, subtree, bottomRow) {
     for (var j = 0; j < branchingFactor; j++) {
       var index = i * branchingFactor + j;
       if (subtree.getChildSubtreeAvailabilityBit(index)) {
-        results.push([leafTile, j]);
+        results.push({
+          tile: leafTile,
+          childIndex: j,
+        });
       }
     }
   }
   return results;
 }
 
+/**
+ * Results of transcodeSubtreeTiles
+ * @private
+ * @typedef {Object} TranscodedSubtree
+ * @property {Cesium3DTile} rootTile The transcoded root tile of the subtree
+ * @property {(Cesium3DTile|undefined)[]} bottomRow The bottom row of transcoded tiles. This is helpful for processing child subtrees
+ */
+
+/**
+ * Transcode the implicitly-defined tiles within this subtree and generate
+ * explicit {@link Cesium3DTile} objects. This function only transcode tiles,
+ * child subtrees are handled separately.
+ *
+ * @private
+ * @param {Implicit3DTileContent} content The implicit content
+ * @param {ImplicitSubtree} subtree The subtree to get availability information
+ * @param {Cesium3DTile} parentOfRootTile The parent of the root tile, used for constructing the subtree root tile
+ * @param {Number} childIndex The index of the root tile relative to parentOfRootTile
+ * @return {TranscodedSubtree}
+ */
 function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
   var rootBitIndex = 0;
 
@@ -245,7 +310,6 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
   }
   //>>includeEnd('debug');
 
-  // TODO: Consider treating the root tile differently so we don't
   var rootTile = deriveChildTile(
     content,
     subtree,
