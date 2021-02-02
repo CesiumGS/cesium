@@ -30,9 +30,9 @@ function MetadataTableProperty(
  *
  * @param {Object} options Object with the following properties:
  * @param {Number} options.count The number of entities in the table.
- * @param {Object} options.properties A dictionary containing properties.
- * @param {MetadataClass} options.class The class that properties conforms to.
- * @param {Object} options.bufferViews An object mapping bufferView IDs to Uint8Array objects
+ * @param {Object} [options.properties] A dictionary containing properties.
+ * @param {MetadataClass} [options.class] The class that properties conforms to.
+ * @param {Object} [options.bufferViews] An object mapping bufferView IDs to Uint8Array objects
  *
  * @alias MetadataTable
  * @constructor
@@ -47,9 +47,6 @@ function MetadataTable(options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.number("options.count", options.count);
-  Check.typeOf.object("options.properties", options.properties);
-  Check.typeOf.string("options.class", options.class);
-  Check.typeOf.object("options.bufferViews", options.bufferViews);
   //>>includeEnd('debug');
 
   var properties = {};
@@ -214,16 +211,18 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
   checkIndex(this, index);
-  checkType(this, propertyId, value);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  // TODO: Cesium3DTileBatchTable let you create new properties if propertyId doesn't exist, this does not
   var property = this._properties[propertyId];
 
   if (!defined(property)) {
     return;
   }
+
+  //>>includeStart('debug', pragmas.debug);
+  checkType(this, propertyId, value);
+  //>>includeEnd('debug');
 
   if (requiresUnpackForSetter(index, property, value)) {
     unpackProperty(this, property);
@@ -277,9 +276,11 @@ MetadataTable.prototype.getPropertyBySemantic = function (index, semantic) {
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  var property = this._class.propertiesBySemantic[semantic];
-  if (defined(property)) {
-    return this.getProperty(index, property.id);
+  if (defined(this._class)) {
+    var property = this._class.propertiesBySemantic[semantic];
+    if (defined(property)) {
+      return this.getProperty(index, property.id);
+    }
   }
   return undefined;
 };
@@ -305,9 +306,11 @@ MetadataTable.prototype.setPropertyBySemantic = function (
   Check.typeOf.string("semantic", semantic);
   //>>includeEnd('debug');
 
-  var property = this._class.propertiesBySemantic[semantic];
-  if (defined(property)) {
-    this.setProperty(index, property.id, value);
+  if (defined(this._class)) {
+    var property = this._class.propertiesBySemantic[semantic];
+    if (defined(property)) {
+      this.setProperty(index, property.id, value);
+    }
   }
 };
 
@@ -630,14 +633,20 @@ function createTypedArray(valueType, bufferView, length) {
     if (!FeatureDetection.supportsBigInt64Array()) {
       throw new RuntimeError("INT64 type is not supported on this platform");
     }
-    // eslint-disable-next-line no-undef
-    return new BigInt64Array(bufferView.buffer, bufferView.byteOffset, length);
+    return new BigInt64Array( // eslint-disable-line
+      bufferView.buffer,
+      bufferView.byteOffset,
+      length * BigInt64Array.BYTES_PER_ELEMENT // eslint-disable-line
+    );
   } else if (valueType === MetadataComponentType.UINT64) {
     if (!FeatureDetection.supportsBigUint64Array()) {
       throw new RuntimeError("UINT64 type is not supported on this platform");
     }
-    // eslint-disable-next-line no-undef
-    return new BigUint64Array(bufferView.buffer, bufferView.byteOffset, length);
+    return new BigUint64Array( // eslint-disable-line
+      bufferView.buffer,
+      bufferView.byteOffset,
+      length * BigUint64Array.BYTES_PER_ELEMENT // eslint-disable-line
+    );
   }
 
   var componentDatatype = getComponentDatatype(valueType);
