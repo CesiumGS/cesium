@@ -5,7 +5,7 @@ import { Color } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { getStringFromTypedArray } from "../../Source/Cesium.js";
+import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
@@ -3799,11 +3799,10 @@ describe(
 
     function modifySubtreeBuffer(arrayBuffer) {
       var uint8Array = new Uint8Array(arrayBuffer);
-      var jsonString = getStringFromTypedArray(uint8Array);
-      var json = JSON.parse(jsonString);
+      var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      jsonString = JSON.stringify(json);
+      var jsonString = JSON.stringify(json);
       var length = jsonString.length;
       uint8Array = new Uint8Array(length);
       for (var i = 0; i < length; i++) {
