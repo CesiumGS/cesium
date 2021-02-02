@@ -1,40 +1,40 @@
-/*eslint-env node*/
-"use strict";
+// /*eslint-env node*/
+// "use strict";
 
 var fs = require("fs");
 var path = require("path");
 var os = require("os");
-var child_process = require("child_process");
-var crypto = require("crypto");
-var zlib = require("zlib");
-var readline = require("readline");
-var request = require("request");
+// var child_process = require("child_process");
+// var crypto = require("crypto");
+// var zlib = require("zlib");
+// var readline = require("readline");
+// var request = require("request");
 
 var globby = require("globby");
-var gulpTap = require("gulp-tap");
-var gulpUglify = require("gulp-uglify");
-var open = require("open");
-var rimraf = require("rimraf");
-var glslStripComments = require("glsl-strip-comments");
-var mkdirp = require("mkdirp");
-var mergeStream = require("merge-stream");
+// var gulpTap = require("gulp-tap");
+// var gulpUglify = require("gulp-uglify");
+// var open = require("open");
+// var rimraf = require("rimraf");
+// var glslStripComments = require("glsl-strip-comments");
+// var mkdirp = require("mkdirp");
+// var mergeStream = require("merge-stream");
 var streamToPromise = require("stream-to-promise");
 var gulp = require("gulp");
-var gulpInsert = require("gulp-insert");
-var gulpZip = require("gulp-zip");
-var gulpRename = require("gulp-rename");
-var gulpReplace = require("gulp-replace");
-var Promise = require("bluebird");
-var Karma = require("karma");
-var yargs = require("yargs");
-var AWS = require("aws-sdk");
-var mime = require("mime");
+// var gulpInsert = require("gulp-insert");
+// var gulpZip = require("gulp-zip");
+// var gulpRename = require("gulp-rename");
+// var gulpReplace = require("gulp-replace");
+// var Promise = require("bluebird");
+// var Karma = require("karma");
+// var yargs = require("yargs");
+// var AWS = require("aws-sdk");
+// var mime = require("mime");
 var rollup = require("rollup");
 var rollupPluginStripPragma = require("rollup-plugin-strip-pragma");
 var rollupPluginExternalGlobals = require("rollup-plugin-external-globals");
-var rollupPluginUglify = require("rollup-plugin-uglify");
-var cleanCSS = require("gulp-clean-css");
-var typescript = require("typescript");
+// var rollupPluginUglify = require("rollup-plugin-uglify");
+// var cleanCSS = require("gulp-clean-css");
+// var typescript = require("typescript");
 
 var packageJson = require("./package.json");
 var version = packageJson.version;
@@ -57,12 +57,12 @@ var minifyShaders =
   taskName === "makeZipFile" ||
   taskName === "buildApps";
 
-var verbose = yargs.argv.verbose;
+// var verbose = yargs.argv.verbose;
 
-var concurrency = yargs.argv.concurrency;
-if (!concurrency) {
-  concurrency = os.cpus().length;
-}
+// var concurrency = yargs.argv.concurrency;
+// if (!concurrency) {
+//   concurrency = os.cpus().length;
+// }
 
 var sourceFiles = [
   "Source/**/*.js",
@@ -132,13 +132,13 @@ function rollupWarning(message) {
   console.log(message);
 }
 
-var copyrightHeader = fs.readFileSync(
-  path.join("Source", "copyrightHeader.js"),
-  "utf8"
-);
+// var copyrightHeader = fs.readFileSync(
+//   path.join("Source", "copyrightHeader.js"),
+//   "utf8"
+// );
 
 function createWorkers() {
-  rimraf.sync("Build/createWorkers");
+  // rimraf.sync("Build/createWorkers");
 
   globby
     .sync([
@@ -146,9 +146,9 @@ function createWorkers() {
       "!Source/Workers/cesiumWorkerBootstrapper.js",
       "!Source/Workers/transferTypedArrayTest.js",
     ])
-    .forEach(function (file) {
-      rimraf.sync(file);
-    });
+    // .forEach(function (file) {
+    //   rimraf.sync(file);
+    // });
 
   var workers = globby.sync(["Source/WorkersES6/**"]);
 
@@ -170,13 +170,13 @@ function createWorkers() {
         gulp.src("Build/createWorkers/**").pipe(gulp.dest("Source/Workers"))
       );
     })
-    .then(function () {
-      rimraf.sync("Build/createWorkers");
-    });
+    // .then(function () {
+    //   rimraf.sync("Build/createWorkers");
+    // });
 }
 
 gulp.task("build", function () {
-  mkdirp.sync("Build");
+  // mkdirp.sync("Build");
   fs.writeFileSync(
     "Build/package.json",
     JSON.stringify({
@@ -188,7 +188,11 @@ gulp.task("build", function () {
   createCesiumJs();
   createSpecList();
   createJsHintOptions();
-  return Promise.join(createWorkers(), createGalleryList());
+  return createWorkers()
+  // return Promise.join(
+  //   createWorkers(),
+  //   createGalleryList()
+  // );
 });
 
 gulp.task("build-watch", function () {
@@ -1401,9 +1405,9 @@ export default "' +
   });
 
   // delete any left over JS files from old shaders
-  Object.keys(leftOverJsFiles).forEach(function (filepath) {
-    rimraf.sync(filepath);
-  });
+  // Object.keys(leftOverJsFiles).forEach(function (filepath) {
+  //   rimraf.sync(filepath);
+  // });
 
   var generateBuiltinContents = function (contents, builtins, path) {
     for (var i = 0; i < builtins.length; i++) {
