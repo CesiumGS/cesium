@@ -531,8 +531,25 @@ describe("Scene/MetadataTileset", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
+    var buildingClass = new MetadataClass({
+      id: "building",
+      class: {
+        properties: {
+          height: {
+            type: "FLOAT32",
+            semantic: "_HEIGHT",
+          },
+        },
+      },
+    });
+
     var tilesetMetadata = new MetadataTileset({
-      tileset: {},
+      class: buildingClass,
+      tileset: {
+        properties: {
+          height: 10.0,
+        },
+      },
     });
 
     expect(function () {

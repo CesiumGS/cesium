@@ -1,8 +1,8 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
-import MetadataEnumType from "./MetadataEnumType.js";
 import MetadataEnumValue from "./MetadataEnumValue.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * A metadata enum.
@@ -26,16 +26,22 @@ function MetadataEnum(options) {
   Check.typeOf.object("options.enum", enumDefinition);
   //>>includeEnd('debug');
 
+  var namesByValue = {};
+  var valuesByName = {};
   var values = enumDefinition.values.map(function (value) {
+    namesByValue[value.value] = value.name;
+    valuesByName[value.name] = value.value;
     return new MetadataEnumValue(value);
   });
 
   var valueType = defaultValue(
-    MetadataEnumType[enumDefinition.valueType],
-    MetadataEnumType.INT32
+    MetadataType[enumDefinition.valueType],
+    MetadataType.INT32
   );
 
   this._values = values;
+  this._namesByValue = namesByValue;
+  this._valuesByName = valuesByName;
   this._valueType = valueType;
   this._id = id;
   this._name = enumDefinition.name;
@@ -59,10 +65,38 @@ Object.defineProperties(MetadataEnum.prototype, {
   },
 
   /**
+   * A dictionary mapping enum integer values to names.
+   *
+   * @memberof MetadataEnum.prototype
+   * @type {Object.<Number, String>}
+   * @readonly
+   * @private
+   */
+  namesByValue: {
+    get: function () {
+      return this._namesByValue;
+    },
+  },
+
+  /**
+   * A dictionary mapping enum names to integer values.
+   *
+   * @memberof MetadataEnum.prototype
+   * @type {Object.<String, Number>}
+   * @readonly
+   * @private
+   */
+  valuesByName: {
+    get: function () {
+      return this._valuesByName;
+    },
+  },
+
+  /**
    * The enum value type.
    *
    * @memberof MetadataEnum.prototype
-   * @type {MetadataEnumType}
+   * @type {MetadataType}
    * @readonly
    * @private
    */

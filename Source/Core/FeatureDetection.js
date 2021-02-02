@@ -335,7 +335,7 @@ FeatureDetection.supportsFullscreen = function () {
  *
  * @returns {Boolean} true if the browser supports typed arrays, false if not.
  *
- * @see {@link https://262.ecma-international.org/6.0/#sec-typedarray-objects/|Typed Array Specification}
+ * @see {@link https://262.ecma-international.org/6.0/#sec-typedarray-objects|Typed Array Specification}
  */
 FeatureDetection.supportsTypedArrays = function () {
   return typeof ArrayBuffer !== "undefined";
@@ -346,10 +346,10 @@ FeatureDetection.supportsTypedArrays = function () {
  *
  * @returns {Boolean} true if the browser supports BigInt64Array typed arrays, false if not.
  *
- * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects/|Typed Array Specification}
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
 FeatureDetection.supportsBigInt64Array = function () {
-  return defined(typedArrayTypes.BigInt64Array);
+  return typeof BigInt64Array !== "undefined";
 };
 
 /**
@@ -357,10 +357,21 @@ FeatureDetection.supportsBigInt64Array = function () {
  *
  * @returns {Boolean} true if the browser supports BigUint64Array typed arrays, false if not.
  *
- * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects/|Typed Array Specification}
+ * @see {@link https://tc39.es/ecma262/#sec-typedarray-objects|Typed Array Specification}
  */
 FeatureDetection.supportsBigUint64Array = function () {
-  return defined(typedArrayTypes.BigUint64Array);
+  return typeof BigUint64Array !== "undefined";
+};
+
+/**
+ * Detects whether the current browser supports BigInt.
+ *
+ * @returns {Boolean} true if the browser supports BigInt, false if not.
+ *
+ * @see {@link https://tc39.es/ecma262/#sec-bigint-objects|BigInt Specification}
+ */
+FeatureDetection.supportsBigInt = function () {
+  return typeof BigInt !== "undefined";
 };
 
 /**

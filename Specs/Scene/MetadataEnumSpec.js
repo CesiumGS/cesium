@@ -1,5 +1,5 @@
 import { MetadataEnum } from "../../Source/Cesium.js";
-import { MetadataEnumType } from "../../Source/Cesium.js";
+import { MetadataType } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEnum", function () {
   it("creates enum with default values", function () {
@@ -26,7 +26,7 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.values[0].name).toBe("RED");
     expect(colorEnum.values[1].name).toBe("GREEN");
     expect(colorEnum.values[2].name).toBe("BLUE");
-    expect(colorEnum.valueType).toBe(MetadataEnumType.INT32);
+    expect(colorEnum.valueType).toBe(MetadataType.INT32);
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBeUndefined();
     expect(colorEnum.description).toBeUndefined();
@@ -45,7 +45,7 @@ describe("Scene/MetadataEnum", function () {
         name: "Color",
         description: "Common colors",
         extras: extras,
-        valueType: MetadataEnumType.UINT64,
+        valueType: MetadataType.UINT64,
         values: [
           {
             name: "RED",
@@ -66,7 +66,7 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.values[0].name).toBe("RED");
     expect(colorEnum.values[1].name).toBe("GREEN");
     expect(colorEnum.values[2].name).toBe("BLUE");
-    expect(colorEnum.valueType).toBe(MetadataEnumType.UINT64);
+    expect(colorEnum.valueType).toBe(MetadataType.UINT64);
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBe("Color");
     expect(colorEnum.description).toBe("Common colors");

@@ -64,6 +64,9 @@ MetadataGroup.prototype.getPropertyIds = function (results) {
 
 /**
  * Returns a copy of the value of the property with the given ID.
+ * <p>
+ * If the property is normalized the normalized value is returned.
+ * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
@@ -74,6 +77,9 @@ MetadataGroup.prototype.getProperty = function (propertyId) {
 
 /**
  * Sets the value of the property with the given ID.
+ * <p>
+ * If the property is normalized a normalized value must be provided to this function.
+ * </p>
  * <p>
  * If a property with the given ID doesn't exist, it is created.
  * </p>

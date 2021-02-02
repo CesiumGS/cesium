@@ -17,14 +17,19 @@ describe("Core/FeatureDetection", function () {
     expect(typeof supportsTypedArrays).toEqual("boolean");
   });
 
-  it("detects BingInt64Array support", function () {
+  it("detects BigInt64Array support", function () {
     var supportsBigInt64Array = FeatureDetection.supportsBigInt64Array();
     expect(typeof supportsBigInt64Array).toEqual("boolean");
   });
 
-  it("detects BingUint64Array support", function () {
-    var supportsBingUint64Array = FeatureDetection.supportsBingUint64Array();
-    expect(typeof supportsBingUint64Array).toEqual("boolean");
+  it("detects BigUint64Array support", function () {
+    var supportsBigUint64Array = FeatureDetection.supportsBigUint64Array();
+    expect(typeof supportsBigUint64Array).toEqual("boolean");
+  });
+
+  it("detects BigInt support", function () {
+    var supportsBigInt = FeatureDetection.supportsBigInt();
+    expect(typeof supportsBigInt).toEqual("boolean");
   });
 
   it("detects web assembly support", function () {

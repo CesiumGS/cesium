@@ -565,9 +565,26 @@ describe("Scene/MetadataGroup", function () {
   });
 
   it("setPropertyBySemantic throws without value", function () {
-    var groupMetadata = new MetadataGroup({
+    var buildingClass = new MetadataClass({
       id: "building",
-      group: {},
+      class: {
+        properties: {
+          height: {
+            type: "FLOAT32",
+            semantic: "_HEIGHT",
+          },
+        },
+      },
+    });
+
+    var groupMetadata = new MetadataGroup({
+      class: buildingClass,
+      id: "building",
+      group: {
+        properties: {
+          height: 10.0,
+        },
+      },
     });
 
     expect(function () {

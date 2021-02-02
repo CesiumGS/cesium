@@ -1,8 +1,7 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import MetadataType from "./MetadataType.js";
 
 /**
  * An entity containing metadata.
@@ -19,7 +18,7 @@ function MetadataEntity() {}
 
 Object.defineProperties(MetadataEntity.prototype, {
   /**
-   * The class that properties conforms to.
+   * The class that properties conform to.
    *
    * @memberof MetadataEntity.prototype
    * @type {MetadataClass}
@@ -71,6 +70,9 @@ MetadataEntity.prototype.getPropertyIds = function (results) {
 
 /**
  * Returns a copy of the value of the property with the given ID.
+ * <p>
+ * If the property is normalized the normalized value is returned.
+ * </p>
  *
  * @param {String} propertyId The case-sensitive ID of the property.
  * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
@@ -81,6 +83,9 @@ MetadataEntity.prototype.getProperty = function (propertyId) {
 
 /**
  * Sets the value of the property with the given ID.
+ * <p>
+ * If the property is normalized a normalized value must be provided to this function.
+ * </p>
  * <p>
  * If a property with the given ID doesn't exist, it is created.
  * </p>
@@ -127,19 +132,11 @@ MetadataEntity.hasProperty = function (entity, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  if (defined(entity.properties) && defined(entity.properties[propertyId])) {
+  if (defined(entity.properties[propertyId])) {
     return true;
   }
 
-  if (
-    defined(entity.class) &&
-    defined(entity.class.properties[propertyId]) &&
-    defined(entity.class.properties[propertyId].default)
-  ) {
-    return true;
-  }
-
-  return false;
+  return defined(getDefault(entity.class, propertyId));
 };
 
 /**
@@ -160,7 +157,7 @@ MetadataEntity.getPropertyIds = function (entity, results) {
   results.length = 0;
 
   // Add entity properties
-  var properties = defaultValue(entity.properties, defaultValue.EMPTY_OBJECT);
+  var properties = entity.properties;
   for (var propertyId in properties) {
     if (
       properties.hasOwnProperty(propertyId) &&
@@ -189,6 +186,9 @@ MetadataEntity.getPropertyIds = function (entity, results) {
 
 /**
  * Returns a copy of the value of the property with the given ID.
+ * <p>
+ * If the property is normalized the normalized value is returned.
+ * </p>
  *
  * @param {MetadataEntity} entity The entity.
  * @param {String} propertyId The case-sensitive ID of the property.
@@ -202,23 +202,28 @@ MetadataEntity.getProperty = function (entity, propertyId) {
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  if (defined(entity.properties) && defined(entity.properties[propertyId])) {
-    return clone(entity.properties[propertyId], true);
+  var value = entity.properties[propertyId];
+
+  if (!defined(value)) {
+    value = getDefault(entity.class, propertyId);
   }
 
-  if (
-    defined(entity.class) &&
-    defined(entity.class.properties[propertyId]) &&
-    defined(entity.class.properties[propertyId].default)
-  ) {
-    return clone(entity.class.properties[propertyId].default, true);
+  if (!defined(value)) {
+    return undefined;
   }
 
-  return undefined;
+  if (Array.isArray(value)) {
+    value = value.slice(); // clone
+  }
+
+  return MetadataEntity.normalize(entity.class, propertyId, value);
 };
 
 /**
  * Sets the value of the property with the given ID.
+ * <p>
+ * If the property is normalized a normalized value must be provided to this function.
+ * </p>
  * <p>
  * If a property with the given ID doesn't exist, it is created.
  * </p>
@@ -236,11 +241,13 @@ MetadataEntity.setProperty = function (entity, propertyId, value) {
   Check.defined("value", value);
   //>>includeEnd('debug');
 
-  if (!defined(entity.properties)) {
-    entity.properties = {};
+  if (Array.isArray(value)) {
+    value = value.slice(); // clone
   }
 
-  entity.properties[propertyId] = clone(value, true);
+  value = MetadataEntity.unnormalize(entity.class, propertyId, value);
+
+  entity.properties[propertyId] = value;
 };
 
 /**
@@ -289,5 +296,76 @@ MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
     }
   }
 };
+
+/**
+ * Normalizes integer property values. If the property is not normalized
+ * the value is returned unmodified.
+ *
+ * @param {MetadataClass} classDefinition The class.
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {*} value The integer value.
+ * @returns {*} The normalized value.
+ *
+ * @private
+ */
+MetadataEntity.normalize = function (classDefinition, propertyId, value) {
+  return normalize(classDefinition, propertyId, value, MetadataType.normalize);
+};
+
+/**
+ * Unnormalizes integer property values. If the property is not normalized
+ * the value is returned unmodified.
+ *
+ * @param {MetadataClass} classDefinition The class.
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {*} value The normalized value.
+ * @returns {*} The integer value.
+ *
+ * @private
+ */
+MetadataEntity.unnormalize = function (classDefinition, propertyId, value) {
+  return normalize(
+    classDefinition,
+    propertyId,
+    value,
+    MetadataType.unnormalize
+  );
+};
+
+function getDefault(classDefinition, propertyId) {
+  if (defined(classDefinition)) {
+    var classProperty = classDefinition.properties[propertyId];
+    if (defined(classProperty)) {
+      return classProperty.default;
+    }
+  }
+}
+
+function normalize(classDefinition, propertyId, value, normalizeFunction) {
+  var type;
+  var valueType;
+
+  var normalized = false;
+  if (defined(classDefinition)) {
+    var classProperty = classDefinition.properties[propertyId];
+    if (defined(classProperty)) {
+      type = classProperty.type;
+      valueType = classProperty.valueType;
+      normalized = classProperty.normalized;
+    }
+  }
+
+  if (normalized) {
+    if (type === MetadataType.ARRAY) {
+      var length = value.length;
+      for (var i = 0; i < length; ++i) {
+        value[i] = normalizeFunction(value[i], valueType);
+      }
+    } else {
+      value = normalizeFunction(value, valueType);
+    }
+  }
+  return value;
+}
 
 export default MetadataEntity;

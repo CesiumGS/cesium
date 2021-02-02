@@ -1,5 +1,11 @@
 # Change Log
 
+### 3d-tiles-next
+
+##### Additions :tada:
+
+- Added `FeatureDetection.supportsBigInt64Array`, `FeatureDetection.supportsBigUint64Array` and `FeatureDetection.supportsBigInt`.
+
 ### 1.78 - 2021-02-01
 
 ##### Deprecated :hourglass_flowing_sand:
