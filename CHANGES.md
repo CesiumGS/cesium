@@ -23,10 +23,6 @@
 
 - `Cesium3DTileset.url` has been deprecated and will be removed in Cesium 1.79. Instead, use `Cesium3DTileset.resource.url` to retrieve the url value.
 
-##### Deprecated :hourglass_flowing_sand:
-
-- `Cesium3DTileset.url` has been deprecated and will be removed in Cesium 1.79. Instead, use `Cesium3DTileset.resource.url` to retrieve the url value.
-
 ### 1.77 - 2021-01-04
 
 ##### Additions :tada:
