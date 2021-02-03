@@ -103,7 +103,7 @@
 
     // if we're not dealing with white space, we can compute metrics
     if (!isSpace) {
-        //Calculate leading only when more than 2 characters
+        //Calculate leading only when more than 1 characters
         if(textstring.length > 1) {
             // for text lead values, we meaure a multiline text container.
             var leadDiv = document.createElement("div");
