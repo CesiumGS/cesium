@@ -16,6 +16,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -1480,8 +1481,8 @@ Model.fromGltf = function (options) {
           cachedGltf.makeReady(parsedGltf);
         } else {
           // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
+          var json = getJsonFromTypedArray(array);
+          cachedGltf.makeReady(json);
         }
 
         var resourceCredits = model._resourceCredits;
