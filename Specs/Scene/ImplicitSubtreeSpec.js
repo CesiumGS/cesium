@@ -5,52 +5,39 @@ import {
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
-describe("Scene/ImplicitSubtree", function () {
-  function availabilityToBooleanArray(availabilityDescriptor, length) {
+fdescribe("Scene/ImplicitSubtree", function () {
+  function availabilityToBooleanArray(availability) {
     if (typeof availabilityDescriptor === "number") {
-      var constant = availabilityDescriptor === "1";
-      var repeated = new Array(length);
-      for (var i = 0; i < length; i++) {
+      var constant = availability.descriptor === 1;
+      var repeated = new Array(availability.lengthBits);
+      for (var i = 0; i < availability.lengthBits; i++) {
         repeated[i] = constant;
       }
       return repeated;
     }
     {
-      return availabilityDescriptor.split("").map(function (x) {
+      return availability.descriptor.split("").map(function (x) {
         return x === "1";
       });
     }
   }
 
-  function expectTileAvailability(subtree, availabilityDescriptor, length) {
-    var expectedAvailability = availabilityToBooleanArray(
-      availabilityDescriptor,
-      length
-    );
+  function expectTileAvailability(subtree, availability) {
+    var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < length; i++) {
       expect(subtree.tileIsAvailable(i)).toEqual(expectedAvailability[i]);
     }
   }
 
-  function expectContentAvailability(subtree, availabilityDescriptor, length) {
-    var expectedAvailability = availabilityToBooleanArray(
-      availabilityDescriptor,
-      length
-    );
+  function expectContentAvailability(subtree, availability) {
+    var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < length; i++) {
       expect(subtree.contentIsAvailable(i)).toEqual(expectedAvailability[i]);
     }
   }
 
-  function expectChildSubtreeAvailability(
-    subtree,
-    availabilityDescriptor,
-    length
-  ) {
-    var expectedAvailability = availabilityToBooleanArray(
-      availabilityDescriptor,
-      length
-    );
+  function expectChildSubtreeAvailability(subtree, availability) {
+    var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < length; i++) {
       expect(subtree.childSubtreeIsAvailable(i)).toEqual(
         expectedAvailability[i]
@@ -64,42 +51,60 @@ describe("Scene/ImplicitSubtree", function () {
   var subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
-  var implicitQuadtree = new ImplicitTileset(tilesetResource, {});
+  var implicitQuadtree = new ImplicitTileset(tilesetResource, {
+    geometricError: 500,
+    refine: "ADD",
+    boundingVolume: {
+      region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+    },
+    content: {
+      uri: "https://example.com/{level}/{x}/{y}.b3dm",
+    },
+    extensions: {
+      "3DTILES_implicit_tiling": {
+        subdivisionScheme: "QUADTREE",
+        subtreeLevels: 2,
+        maximumLevel: 1,
+        subtrees: {
+          uri: "https://example.com/{level}/{x}/{y}.subtree",
+        },
+      },
+    },
+  });
   //var implicitOctree = new ImplicitSubtree(tilesetResource, {});
 
   it("gets availability from internal buffer", function () {
     var subtreeDescription = {
-      internal: {
-        tileAvailability: "11010",
-        contentAvailability: "11000",
-        childSubtreeAvailability: "1111000010100000",
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: "11000",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: true,
       },
     };
-    var subtreeArray = ImplicitTilingTester.generateSubtreeBuffer(
+
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
     var subtree = new ImplicitSubtree(
       subtreeResource,
-      subtreeArray,
+      results.subtreeBuffer,
       implicitQuadtree
     );
-    var tileBits = subtreeDescription.internal.tileAvailability.length;
-    expectTileAvailability(
-      subtree,
-      subtreeDescription.internal.tileAvailability,
-      tileBits
-    );
-    expectContentAvailability(
-      subtree,
-      subtreeDescription.internal.contentAvailability,
-      tileBits
-    );
-    var subtreeBits =
-      subtreeDescription.internal.childSubtreeAvailability.length;
+    expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+    expectContentAvailability(subtree, subtreeDescription.contentAvailability);
     expectChildSubtreeAvailability(
       subtree,
-      subtreeDescription.internal.childSubtreeAvailability,
-      subtreeBits
+      subtreeDescription.childSubtreeAvailability
     );
   });
 
@@ -118,7 +123,7 @@ describe("Scene/ImplicitSubtree", function () {
     // TODO: Mock the resources
 
     var subtree = new ImplicitSubtree(subtreeResource, subtreeData.buffer);
-    var tileBits = subtreeDescription.internal.tileAvailability.length;
+    var tileBits = subtreeDescription.isInternal.tileAvailability.length;
     expectTileAvailability(
       subtree,
       subtreeDescription.external.tileAvailability,

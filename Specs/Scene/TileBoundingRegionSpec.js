@@ -6,7 +6,7 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
-import { Plane } from "../../Source/Cesikium.js";
+import { Plane } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { SceneMode } from "../../Source/Cesium.js";
 import { TileBoundingRegion } from "../../Source/Cesium.js";

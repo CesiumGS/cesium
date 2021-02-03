@@ -1,13 +1,85 @@
+import { defined } from "../Source/Cesium.js";
+import concatTypedArrays from "./concatTypedArrays.js";
+
 export default function ImplicitTilingTester() {}
 
-ImplicitTilingTester.prototype.generateSubtreeBuffer = function (
-  subtreeDescription
-) {};
+ImplicitTilingTester.generateSubtreeBuffers = function (subtreeDescription) {
+  // This will be populated by makeBufferViews() and makeBuffers()
+  var subtreeJson = {
+    buffers: [],
+    bufferViews: [],
+    tileAvailability: {},
+    contentAvailability: {},
+    childSubtreeAvailability: {},
+  };
 
-/*
+  var bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
+  var buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);
+  var jsonChunk = makeJsonChunk(subtreeJson);
+  var binaryChunk = buffersU8.internal;
+  var header = makeSubtreeHeader(jsonChunk.length, binaryChunk.length);
+  var subtreeBuffer = concatTypedArrays([header, jsonChunk, binaryChunk]);
+
+  return {
+    subtreeBuffer: subtreeBuffer,
+    externalBuffer: buffersU8.external,
+  };
+};
+
+function makeBufferViews(subtreeDescription, subtreeJson) {
+  var parsedAvailability = [
+    parseAvailability("tileAvailability", subtreeDescription.tileAvailability),
+    parseAvailability(
+      "contentAvailability",
+      subtreeDescription.contentAvailability
+    ),
+    parseAvailability(
+      "childSubtreeAvailability",
+      subtreeDescription.childSubtreeAvailability
+    ),
+  ];
+
+  var bufferViewsU8 = {
+    internal: [],
+    external: [],
+  };
+  var bufferViewCount = 0;
+  for (var i = 0; i < parsedAvailability.length; i++) {
+    var parsed = parsedAvailability[i];
+    if (defined(parsed.constant)) {
+      subtreeJson[parsed.name] = {
+        constant: parsed.constant,
+      };
+    } else {
+      var bufferViewId = bufferViewCount;
+      bufferViewCount++;
+
+      var bufferViewJson = {
+        buffer: undefined,
+        byteOffset: undefined,
+        byteLength: parsed.byteLength,
+      };
+      subtreeJson.bufferViews.push(bufferViewJson);
+      subtreeJson[parsed.name] = {
+        bufferView: bufferViewId,
+      };
+
+      var location = parsed.isInternal ? "internal" : "external";
+      bufferViewsU8[location].push({
+        bufferView: parsed.bitstream,
+        // save a reference to the object so we can update the offsets and
+        // lengths later.
+        json: bufferViewJson,
+      });
+    }
+  }
+
+  return bufferViewsU8;
+}
+
 function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
   var buffer = new ArrayBuffer(24);
-  var dataView = new DataView(this.header.buffer);
+  var dataView = new DataView(buffer);
   // ASCII 'subt' as a little-endian uint32_t
   var MAGIC = 0x74627573;
   var littleEndian = true;
@@ -19,12 +91,12 @@ function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
   dataView.setUint32(8, jsonByteLength, littleEndian);
   dataView.setUint32(16, binaryByteLength, littleEndian);
 
-  return buffer;
+  return new Uint8Array(buffer);
 }
 
 function makeJsonChunk(json) {
   var jsonString = JSON.stringify(json);
-  // To keep unit tests simple, this assumes ASCII characters. However, UTF-8 
+  // To keep unit tests simple, this assumes ASCII characters. However, UTF-8
   // characters are allowed in general.
   var jsonByteLength = jsonString.length;
   var paddedLength = jsonByteLength;
@@ -38,139 +110,104 @@ function makeJsonChunk(json) {
     buffer[i] = jsonString.charCodeAt(i);
   }
 
-  for (i = jsonByteLength; j < paddedLength; j++) {
-    buffer[i] = ' '.charCodeAt(0);
+  for (i = jsonByteLength; i < paddedLength; i++) {
+    buffer[i] = " ".charCodeAt(0);
   }
 
-  return {
-    buffer: buffer,
-    byteLength: paddedLength
-  }
+  return buffer;
 }
 
-function parseAvailability(name, descriptor) {
-  if (typeof descriptor === 'number') {
+function parseAvailability(name, availability) {
+  var parsed = parseAvailabilityDescriptor(availability.descriptor);
+  parsed.name = name;
+  parsed.isInternal = availability.isInternal;
+
+  return parsed;
+}
+
+function parseAvailabilityDescriptor(descriptor) {
+  if (typeof descriptor === "number") {
     return {
-      name,
-      constant: descriptor
-    }
+      constant: descriptor,
+    };
   }
 
-  const bits = descriptor.split('').map(x => Number(x));
-  let byteLength = Math.ceil(bits.length / 8);
-  const byteLengthWithoutPadding = byteLength;
+  var bits = descriptor.split("").map(function (x) {
+    return Number(x);
+  });
+  var byteLength = Math.ceil(bits.length / 8);
+  var byteLengthWithPadding = byteLength;
 
   // Add padding if needed
-  if (byteLength % 8 !== 0) {
-    byteLength += 8 - (byteLength % 8);
+  if (byteLengthWithPadding % 8 !== 0) {
+    byteLengthWithPadding += 8 - (byteLengthWithPadding % 8);
   }
 
-  const bitstream = new Uint8Array(byteLength);
-  for (const [i, bit] of bits.entries()) {
-    const byte = i >> 3;
-    const bitIndex = i % 8;
+  var bitstream = new Uint8Array(byteLength);
+  for (var i = 0; i < bits.length; i++) {
+    var bit = bits[i];
+    var byte = i >> 3;
+    var bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
   }
 
   return {
-    name,
-    byteLength,
-    byteLengthWithoutPadding,
-    bitstream
-  }
+    byteLength: byteLength,
+    byteLengthWithPadding: byteLengthWithPadding,
+    bitstream: bitstream,
+  };
 }
 
-class SubtreeBinary {
-  constructor(availabilityJson) {
-    this.tileAvailability = parseAvailability('tileAvailability', availabilityJson.tileAvailability);
-    this.contentAvailability = parseAvailability('contentAvailability', availabilityJson.contentAvailability);
-    this.childSubtreeAvailability = parseAvailability('childSubtreeAvailability', availabilityJson.childSubtreeAvailability);
-    this.subtreeJson = undefined;
-    // Buffer containing the JSON
-    this.jsonChunk = undefined;
-    this.bitstreams = undefined;
-    this.header = new Uint8Array(24);
+function makeBuffers(bufferViewsU8, subtreeJson) {
+  console.log(bufferViewsU8);
+  var bufferCount = 0;
+  var byteLength = 0;
+  var typedArrays = [];
+  var i;
+  var bufferView;
+  for (i = 0; i < bufferViewsU8.internal.length; i++) {
+    bufferView = bufferViewsU8.internal[i];
+    typedArrays.push(bufferView.bufferView);
+    bufferView.json.buffer = bufferCount;
+    bufferView.json.byteOffset = byteLength;
 
-    this.combineAvailability();
-    this.makeHeader();
+    byteLength += bufferView.bufferView.length;
   }
 
-  combineAvailability() {
-    const bufferJson = {
-      byteLength: 0
-    }
-    const bufferViewJsons = []
+  // An internal buffer typed array will always be returned, even if length
+  // 0. However, don't add json for an unused buffer.
+  var internalBufferU8 = concatTypedArrays(typedArrays);
+  if (typedArrays.length > 0) {
+    subtreeJson.buffers.push({
+      byteLength: byteLength,
+    });
 
-    const subtreeJson = {
-      buffers: [bufferJson],
-      bufferViews: bufferViewJsons,
-    };
-
-    const bitstreams = []
-
-    let numBufferViews = 0;
-    const availabilities = [
-      this.tileAvailability,
-      this.contentAvailability,
-      this.childSubtreeAvailability
-    ];
-    for (const availability of availabilities) {
-      if (availability.constant !== undefined) {
-        subtreeJson[availability.name] = {
-          constant: availability.constant
-        };
-      } else {
-        subtreeJson[availability.name] = {
-          bufferView: numBufferViews
-        }
-
-        bufferViewJsons.push({
-          buffer: 0,
-          byteOffset: bufferJson.byteLength,
-          byteLength: availability.byteLengthWithoutPadding
-        });
-
-        bitstreams.push(availability.bitstream);
-
-        bufferJson.byteLength += availability.byteLength;
-        numBufferViews++;
-      }
-    }
-  
-
-    let jsonString = JSON.stringify(subtreeJson);
-    let jsonLength = Buffer.byteLength(jsonString, 'utf-8');
-    while (jsonLength % 8 !== 0) {
-      jsonString += ' ';
-      jsonLength += 1;
-    }
-
-    this.subtreeJson = subtreeJson;
-    this.jsonChunk = Buffer.from(jsonString, 'utf-8');
-    this.bitstreams = bitstreams;
+    bufferCount += 1;
   }
 
-  get jsonByteLength() {
-    return this.jsonChunk.length;
+  // Reset counts
+  byteLength = 0;
+  typedArrays = [];
+  for (i = 0; i < bufferViewsU8.external.length; i++) {
+    bufferView = bufferViewsU8.external[i];
+    typedArrays.push(bufferView.bufferView);
+    bufferView.json.buffer = bufferCount;
+    bufferView.json.byteOffset = byteLength;
+
+    byteLength += bufferView.bufferView.length;
   }
 
-  get binaryByteLength() {
-    return this.subtreeJson.buffers[0].byteLength;
+  var externalBufferU8 = concatTypedArrays(typedArrays);
+  if (typedArrays.length > 0) {
+    subtreeJson.buffers.push({
+      // dummy URI, unit tests should mock any requests.
+      uri: "external.bin",
+      byteLength: byteLength,
+    });
   }
 
-  writeFile(fname) {
-    const buffers = [this.header, this.jsonChunk, ...this.bitstreams];
-    fs.writeFileSync(fname, Buffer.concat(buffers));
-  }
+  return {
+    internal: internalBufferU8,
+    external: externalBufferU8,
+  };
 }
-
-function main() {
-  const [inFile, outFile] = process.argv.slice(2);
-  const availabilityJson = JSON.parse(fs.readFileSync(inFile));
-
-  const subtree = new SubtreeBinary(availabilityJson);
-  subtree.writeFile(outFile);
-}
-
-main();
-*/
