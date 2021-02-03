@@ -1,9 +1,9 @@
 import { ImplicitAvailabilityBitstream } from "../../Source/Cesium.js";
 
-fdescribe("Scene/ImplicitAvailabilityBitstream", function () {
+describe("Scene/ImplicitAvailabilityBitstream", function () {
   it("throws on missing lengthBits", function () {
     expect(function () {
-      new ImplicitAvailabilityBitstream({});
+      return new ImplicitAvailabilityBitstream({});
     }).toThrowDeveloperError();
   });
 

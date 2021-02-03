@@ -4,6 +4,7 @@ import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
@@ -342,12 +343,12 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
 
       var parentMortonIndex = subtree.getParentMortonIndex(childMortonIndex);
       var parentTile = parentRow[parentMortonIndex];
-      var childIndex = childMortonIndex % implicitTileset.branchingFactor;
+      var childChildIndex = childMortonIndex % implicitTileset.branchingFactor;
       var childTile = deriveChildTile(
         content,
         subtree,
         parentTile,
-        childIndex,
+        childChildIndex,
         childBitIndex
       );
       parentTile.children.push(childTile);
@@ -444,8 +445,9 @@ function deriveChildTile(
  */
 function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
   var boundingVolume = implicitTileset.boundingVolume;
+  var parameters;
   if (defined(boundingVolume.region)) {
-    var parameters = boundingVolume.region;
+    parameters = boundingVolume.region;
     var rectangle = Rectangle.unpack(parameters);
 
     var boundingRegion = new TileBoundingRegion({
@@ -468,27 +470,27 @@ function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
     return {
       region: childRegion,
     };
-  } else {
-    // box
-    var parameters = boundingVolume.box;
-    var center = Cartesian3.unpack(parameters);
-    var halfAxes = Matrix3.unpack(parameters, 3);
-    var boundingBox = new TileOrientedBoundingBox(center, halfAxes);
-    var derivedBox = boundingBox.deriveVolume(
-      implicitCoordinates.level,
-      implicitCoordinates.x,
-      implicitCoordinates.y,
-      implicitCoordinates.z
-    );
-
-    var childBox = new Array(12);
-    Cartesian3.pack(derivedBox.boundingVolume.center, childBox);
-    Matrix3.pack(derivedBox.boundingVolume.halfAxes, childBox, 3);
-
-    return {
-      box: childBox,
-    };
   }
+
+  // box
+  parameters = boundingVolume.box;
+  var center = Cartesian3.unpack(parameters);
+  var halfAxes = Matrix3.unpack(parameters, 3);
+  var boundingBox = new TileOrientedBoundingBox(center, halfAxes);
+  var derivedBox = boundingBox.deriveVolume(
+    implicitCoordinates.level,
+    implicitCoordinates.x,
+    implicitCoordinates.y,
+    implicitCoordinates.z
+  );
+
+  var childBox = new Array(12);
+  Cartesian3.pack(derivedBox.boundingVolume.center, childBox);
+  Matrix3.pack(derivedBox.boundingVolume.halfAxes, childBox, 3);
+
+  return {
+    box: childBox,
+  };
 }
 
 /**

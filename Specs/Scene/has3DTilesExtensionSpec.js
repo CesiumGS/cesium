@@ -1,6 +1,6 @@
 import { has3DTilesExtension } from "../../Source/Cesium.js";
 
-fdescribe("Scene/has3DTilesExtension", function () {
+describe("Scene/has3DTilesExtension", function () {
   it("detects the presence of an extension", function () {
     expect(
       has3DTilesExtension(

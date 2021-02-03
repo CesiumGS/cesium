@@ -1773,9 +1773,9 @@ function makeTile(tileset, resource, tileHeader, parentTile) {
       tileHeader,
       parentTile
     );
-  } else {
-    return new Cesium3DTile(tileset, resource, tileHeader, parentTile);
   }
+
+  return new Cesium3DTile(tileset, resource, tileHeader, parentTile);
 }
 
 var scratchPositionNormal = new Cartesian3();

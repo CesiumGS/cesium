@@ -5,7 +5,7 @@ import {
   Resource,
 } from "../../Source/Cesium.js";
 
-fdescribe("Scene/ImplicitTileset", function () {
+describe("Scene/ImplicitTileset", function () {
   var contentUriPattern = "https://example.com/{level}/{x}/{y}.b3dm";
   var subtreeUriPattern = "https://example.com/{level}/{x}/{y}.subtree";
   var implicitTileJson = {
@@ -56,7 +56,7 @@ fdescribe("Scene/ImplicitTileset", function () {
     };
     var tileJson = combine(sphereJson, implicitTileJson);
     expect(function () {
-      new ImplicitTileset(baseResource, tileJson);
+      return new ImplicitTileset(baseResource, tileJson);
     }).toThrowDeveloperError();
   });
 });

@@ -3,7 +3,7 @@ import {
   ImplicitTileCoordinates,
 } from "../../Source/Cesium.js";
 
-fdescribe("Scene/ImplicitTileCoordinates", function () {
+describe("Scene/ImplicitTileCoordinates", function () {
   it("constructs quadtree", function () {
     var coordinates = new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,

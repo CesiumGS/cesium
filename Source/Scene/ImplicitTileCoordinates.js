@@ -94,15 +94,15 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
       y: y,
       z: z,
     });
-  } else {
-    // Quadtree
-    return new ImplicitTileCoordinates({
-      subdivisionScheme: this.subdivisionScheme,
-      level: level,
-      x: x,
-      y: y,
-    });
   }
+
+  // Quadtree
+  return new ImplicitTileCoordinates({
+    subdivisionScheme: this.subdivisionScheme,
+    level: level,
+    x: x,
+    y: y,
+  });
 };
 
 /**

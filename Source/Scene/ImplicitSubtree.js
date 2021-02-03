@@ -125,11 +125,8 @@ function initialize(subtree, subtreeView, implicitTileset) {
   markActiveBufferViews(subtreeJson, bufferViewHeaders);
 
   requestActiveBuffers(bufferHeaders, chunks.binary)
-    .then(function (bufferViewsU8) {
-      var bufferViewsU8 = parseActiveBufferViews(
-        bufferViewHeaders,
-        bufferViewsU8
-      );
+    .then(function (buffersU8) {
+      var bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
       parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
       subtree._readyPromise.resolve(subtree);
     })
@@ -155,7 +152,6 @@ function initialize(subtree, subtreeView, implicitTileset) {
 function parseSubtreeChunks(subtreeView) {
   // Parse the header
   var littleEndian = true;
-  var byteOffset = 0;
   var subtreeReader = new DataView(subtreeView.buffer);
   // Skip to the chunk lengths
   var byteOffset = 8;
@@ -304,26 +300,30 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  */
 function requestActiveBuffers(bufferHeaders, internalBuffer) {
   var promises = [];
-  var buffersU8 = {};
   for (var i = 0; i < bufferHeaders.length; i++) {
     var bufferHeader = bufferHeaders[i];
     if (!bufferHeader.isActive) {
-      continue;
-    }
-
-    if (bufferHeader.isExternal) {
+      promises.push(when.resolve(undefined));
+    } else if (bufferHeader.isExternal) {
       var resource = this._resource.getDerivedResource({
         url: bufferHeader.uri,
       });
       var promise = resource.fetchArrayBuffer().then(function (arrayBuffer) {
-        buffers[i] = new Uint8Array(arrayBuffer);
+        return new Uint8Array(arrayBuffer);
       });
       promises.push(promise);
     } else {
-      buffersU8[i] = internalBuffer;
+      promises.push(when.resolve(internalBuffer));
     }
   }
-  return when.all(promises).then(function () {
+  return when.all(promises).then(function (bufferResults) {
+    var buffersU8 = {};
+    for (var i = 0; i < bufferResults.length; i++) {
+      var result = bufferResults[i];
+      if (defined(result)) {
+        buffersU8[i] = result;
+      }
+    }
     return buffersU8;
   });
 }

@@ -23,7 +23,7 @@ export default function ImplicitAvailabilityBitstream(options) {
   } else {
     //>>includeStart('debug', pragmas.debug);
     var expectedLength = Math.ceil(this._lengthBits / 8);
-    if (options.bitstream.length != expectedLength) {
+    if (options.bitstream.length !== expectedLength) {
       throw new DeveloperError(
         "options.bitstream.length must have ceil(options.lengthBits / 8) bytes."
       );

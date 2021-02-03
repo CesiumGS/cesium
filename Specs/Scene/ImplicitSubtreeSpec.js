@@ -1,4 +1,4 @@
-import { ImplicitSubtree } from "../../Source/Cesium.js";
+//import { ImplicitSubtree } from "../../Source/Cesium.js";
 
 describe("Scene/ImplicitSubtree", function () {
   it("parses subtree binary file", function () {
