@@ -28,7 +28,6 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
 import QuadtreePrimitive from "./QuadtreePrimitive.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
-import getTimestamp from "../Core/getTimestamp.js";
 
 /**
  * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -704,10 +703,7 @@ Globe.prototype.pickWorldCoordinates = function (
       scene.mode,
       scene.mapProjection,
       cullBackFaces,
-      result,
-      this.useNewPicking,
-      sphereIntersections[i].boundingVolumeSourceTile,
-      false
+      result
     );
     if (defined(intersection)) {
       break;
@@ -759,7 +755,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @param {Cartographic} cartographic The cartographic for which to find the height.
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Globe.prototype.getHeight = function (cartographic, mode, doLog) {
+Globe.prototype.getHeight = function (cartographic, mode) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartographic)) {
     throw new DeveloperError("cartographic is required");

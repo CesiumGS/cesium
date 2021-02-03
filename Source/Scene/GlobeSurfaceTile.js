@@ -1,14 +1,10 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartesian4 from "../Core/Cartesian4.js";
-import Cartographic from "../Core/Cartographic.js";
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
-import IntersectionTests from "../Core/IntersectionTests.js";
 import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import PixelFormat from "../Core/PixelFormat.js";
-import Ray from "../Core/Ray.js";
 import Request from "../Core/Request.js";
 import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
@@ -25,9 +21,7 @@ import VertexArray from "../Renderer/VertexArray.js";
 import when from "../ThirdParty/when.js";
 import ImageryState from "./ImageryState.js";
 import QuadtreeTileLoadState from "./QuadtreeTileLoadState.js";
-import SceneMode from "./SceneMode.js";
 import TerrainState from "./TerrainState.js";
-import CesiumMath from "../Core/Math.js";
 
 /**
  * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -130,65 +124,6 @@ Object.defineProperties(GlobeSurfaceTile.prototype, {
   },
 });
 
-// function cartesianToStr(c) {
-//   return `new Cartesian3(
-//             ${c.x},
-//             ${c.y},
-//             ${c.z}
-//           )`;
-// }
-
-// function rayToStr(ray) {
-//   return `new Ray(
-//           ${cartesianToStr(ray.origin)},
-//           ${cartesianToStr(ray.direction)}
-//         )`;
-// }
-
-function debugLog(self, quadTreeTile, ray, newPickedValue, oldPickedValue) {
-  var newCart;
-  if (newPickedValue) {
-    newCart = self.boundingVolumeSourceTile.tilingScheme.ellipsoid.cartesianToCartographic(
-      newPickedValue
-    );
-  }
-
-  var oldCart;
-  if (oldPickedValue) {
-    oldCart = self.boundingVolumeSourceTile.tilingScheme.ellipsoid.cartesianToCartographic(
-      oldPickedValue
-    );
-  }
-
-  var lat = 0,
-    lon = 0,
-    height = 0;
-  if (!newCart && oldCart) {
-    lat = oldCart.latitude;
-    lon = oldCart.longitude;
-    height = oldCart.height;
-  }
-
-  if (newCart) {
-    lat = newCart.latitude;
-    lon = newCart.longitude;
-    height = newCart.height;
-  }
-
-  //   console.log(`return pick(
-  //         ArcGISTerrainType,
-  //         {
-  //           level: ${quadTreeTile ? quadTreeTile.level : null},
-  //           x: ${quadTreeTile ? quadTreeTile.x : null},
-  //           y: ${quadTreeTile ? quadTreeTile.y : null},
-  //         },
-  //         ${rayToStr(ray)},
-  //         ${CesiumMath.toDegrees(lat)},
-  //         ${CesiumMath.toDegrees(lon)},
-  //         ${height}
-  //       );
-  // `);
-}
 GlobeSurfaceTile.prototype.pick = function (
   ray,
   mode,
@@ -200,51 +135,8 @@ GlobeSurfaceTile.prototype.pick = function (
   if (!defined(mesh)) {
     return undefined;
   }
-
   var value = mesh.pickRay(ray, cullBackFaces, mode, projection);
   return Cartesian3.clone(value, result);
-
-  // var pickedValue;
-  //
-  // useNewPicking = defaultValue(useNewPicking, true);
-  // var canNewPick = mode === SceneMode.SCENE3D && defined(mesh.trianglePicking);
-  // var doNewPick = useNewPicking && canNewPick;
-  //
-  // var time = true;
-  //
-  // var newPickedValue;
-  // if (canNewPick) {
-  //   if (time) console.time("new pick");
-  //   newPickedValue = newPick();
-  //   if (time) console.timeEnd("new pick");
-  // }
-  // if (time) console.time("old pick");
-  // var oldPickedValue = oldPick();
-  // if (time) console.timeEnd("old pick");
-  //
-  // if (doNewPick) {
-  //   pickedValue = newPickedValue;
-  // } else {
-  //   pickedValue = oldPickedValue;
-  // }
-  //
-  // if (!Cartesian3.equals(newPickedValue, oldPickedValue) && canNewPick) {
-  //   console.error(
-  //     "pick results were different",
-  //     "new",
-  //     newPickedValue,
-  //     "old",
-  //     oldPickedValue
-  //   );
-  //   debugLog(this, quadTreeTile, ray, newPickedValue, oldPickedValue);
-  //   // debugger;
-  // }
-  //
-  // if (doNewPick && newPickedValue && doLog) {
-  //   debugLog(this, quadTreeTile, ray, newPickedValue, null);
-  // }
-  //
-  // return pickedValue;
 };
 
 GlobeSurfaceTile.prototype.freeResources = function () {
