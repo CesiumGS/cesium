@@ -265,11 +265,20 @@ TerrainMesh.prototype.pickRay = function (
     return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT) : undefined;
   }
 
-  console.time("old pick");
-  var oldPickValue = oldPick(this);
-  console.timeEnd("old pick");
+  var doOldPick = false;
 
-  if (canNewPick && !Cartesian3.equals(newPickValue, oldPickValue)) {
+  var oldPickValue;
+  if (doOldPick) {
+    console.time("old pick");
+    oldPickValue = oldPick(this);
+    console.timeEnd("old pick");
+  }
+
+  if (
+    doOldPick &&
+    canNewPick &&
+    !Cartesian3.equals(newPickValue, oldPickValue)
+  ) {
     console.error("pick values are different");
   }
   return newPickValue || oldPickValue;
