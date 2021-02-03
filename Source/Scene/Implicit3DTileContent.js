@@ -264,7 +264,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
   var results = [];
   var branchingFactor = content._implicitTileset.branchingFactor;
   for (var i = 0; i < bottomRow.length; i++) {
-    var leafTile = (bottomRow = bottomRow[i]);
+    var leafTile = bottomRow[i];
     if (!defined(leafTile)) {
       continue;
     }
