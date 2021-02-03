@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.79 - 2021-03-01
+
+##### Fixes :wrench:
+
+- Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
+
 ### 1.78 - 2021-02-01
 
 ##### Additions :tada:
@@ -16,10 +22,6 @@
 ##### Deprecated :hourglass_flowing_sand:
 
 - `Cesium3DTileset.url` has been deprecated and will be removed in Cesium 1.79. Instead, use `Cesium3DTileset.resource.url` to retrieve the url value.
-
-##### Fixes :wrench:
-
-- Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
 
 ##### Deprecated :hourglass_flowing_sand:
 
