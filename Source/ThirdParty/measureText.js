@@ -98,25 +98,30 @@
         isSpace = !(/\S/.test(textstring));
         metrics.fontsize = fontSize;
 
-    // for text lead values, we meaure a multiline text container.
-    var leadDiv = document.createElement("div");
-    leadDiv.style.position = "absolute";
-    leadDiv.style.opacity = 0;
-    leadDiv.style.font = fontStyle + " " + fontWeight + " " + fontSize + "px " + fontFamily;
-    leadDiv.innerHTML = textstring + "<br/>" + textstring;
-    document.body.appendChild(leadDiv);
-
     // make some initial guess at the text leading (using the standard TeX ratio)
     metrics.leading = 1.2 * fontSize;
 
-    // then we try to get the real value from the browser
-    var leadDivHeight = getCSSValue(leadDiv,"height");
-    leadDivHeight = leadDivHeight.replace("px","");
-    if (leadDivHeight >= fontSize * 2) { metrics.leading = (leadDivHeight/2) | 0; }
-    document.body.removeChild(leadDiv);
-
     // if we're not dealing with white space, we can compute metrics
     if (!isSpace) {
+        //Calculate leading only when more than 2 characters
+        if(textstring.length > 1) {
+            // for text lead values, we meaure a multiline text container.
+            var leadDiv = document.createElement("div");
+            leadDiv.style.position = "absolute";
+            leadDiv.style.opacity = 0;
+            leadDiv.style.font = fontStyle + " " + fontWeight + " " + fontSize + "px " + fontFamily;
+            leadDiv.innerHTML = textstring + "<br/>" + textstring;
+            document.body.appendChild(leadDiv);
+
+            // then we try to get the real value from the browser
+            var leadDivHeight = getCSSValue(leadDiv, "height");
+            leadDivHeight = leadDivHeight.replace("px", "");
+            if (leadDivHeight >= fontSize * 2) {
+              metrics.leading = (leadDivHeight / 2) | 0;
+            }
+            document.body.removeChild(leadDiv);
+        }
+
         // Have characters, so measure the text
         var canvas = document.createElement("canvas");
         var padding = 100;
