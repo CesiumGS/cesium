@@ -88,7 +88,7 @@ ImplicitSubtree.prototype.getLevelOffset = function (level) {
  * Get the morton index of a tile's parent. This is equivalent to
  * chopping off the last 2 (quadtree) or 3 (octree) bits of the morton
  * index.
- * @param {Number} childIndex the index of the child within the subtree
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @return {Number} The index of the child's parent node
  */
 ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {

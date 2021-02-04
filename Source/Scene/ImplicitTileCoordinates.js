@@ -79,6 +79,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
   /**
    * An index in the range of [0, branchingFactor) that indicates
    * which child of the parent cell these coordinates correspond to.
+   * This can be viewed as a morton index within the parent tile.
    *
    * This is the last 3 bits of the morton index of the tile, but it can
    * be computed more directly by concatenating the bits [z0] y0 x0
@@ -117,8 +118,7 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
 /**
  * Given the (level, x, y, [z]) coordinates of the parent, compute the
  * coordinates of the child.
- * @param {Number} childIndex The index of the child in the parents.children
- * array. This must be in [0, 4) for quadtrees and [0, 8) for octrees.
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @return {ImplicitTileCoordinates} The tile coordinates of the child
  */
 ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (

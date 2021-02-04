@@ -249,7 +249,7 @@ Implicit3DTileContent.makeRootPlaceholderTile = function (
  * @private
  * @typedef {Object} ChildSubtreeLocator
  * @property {Cesium3DTile} tile One of the tiles in the bottommost row of the subtree.
- * @property {Number} childIndex The relative index of the child subtree compared to tile
+ * @property {Number} childIndex The morton index of the child tile relative to its parent
  */
 
 /**
@@ -299,7 +299,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ImplicitSubtree} subtree The subtree to get availability information
  * @param {Cesium3DTile} parentOfRootTile The parent of the root tile, used for constructing the subtree root tile
- * @param {Number} childIndex The index of the root tile relative to parentOfRootTile
+ * @param {Number} childIndex The morton index of the root tile relative to parentOfRootTile
  * @return {TranscodedSubtree}
  */
 function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
@@ -376,7 +376,7 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
  * @param {Implicit3DTileContent} implicitContent The implicit content
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
  * @param {Cesium3DTile|undefined} parentTile The parent of the new child tile
- * @param {Number} childIndex The index of the child within the parentTile.children array.
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @param {Number} childBitIndex The index of the child tile within the tile's availability information.
  * @return {Cesium3DTile} the new child tile.
  */
@@ -499,7 +499,7 @@ function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
  * @private
  * @param {Implicit3DTileContent} content The content object.
  * @param {Cesium3DTile} parentTile The parent of the new child subtree.
- * @param {Number} childIndex The index i in the parentTile.children array.
+ * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @return {Cesium3DTile} The new placeholder tile
  */
 function makePlaceholderChildSubtree(content, parentTile, childIndex) {
