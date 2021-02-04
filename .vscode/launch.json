@@ -12,13 +12,6 @@
             "runtimeExecutable": "npm",
             "runtimeArgs": ["run-script", "start"],
             "noDebug": true
-        },
-        {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Picking",
-            "url": "http://localhost:8080/Apps/Sandcastle/index.html?src=High%20Dynamic%20Range.html",
-            "webRoot": "${workspaceFolder}"
-        },
+        }
     ]
 }

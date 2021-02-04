@@ -17,6 +17,7 @@ import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
 import TrianglePicking from "./TrianglePicking.js";
+import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -185,17 +186,6 @@ Object.defineProperties(HeightmapTerrainData.prototype, {
   },
 });
 
-// TODO deduplicate with quantised mesh
-function createTriangleVerticesCallback(vertices, indices, encoding) {
-  function triangleVerticesCallback(triIdx, v0, v1, v2) {
-    encoding.decodePosition(vertices, indices[triIdx * 3], v0);
-    encoding.decodePosition(vertices, indices[triIdx * 3 + 1], v1);
-    encoding.decodePosition(vertices, indices[triIdx * 3 + 2], v2);
-  }
-
-  return triangleVerticesCallback;
-}
-
 var createMeshTaskName = "createVerticesFromHeightmap";
 var createMeshTaskProcessorNoThrottle = new TaskProcessor(createMeshTaskName);
 var createMeshTaskProcessorThrottle = new TaskProcessor(
@@ -279,10 +269,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
   }
 
   var that = this;
-  var start = window.performance.now();
   return when(verticesPromise, function (result) {
-    var end = window.performance.now();
-    // console.log(`receive mesh: ${(end - start).toPrecision(6)}ms`);
     var indicesAndEdges;
     if (that._skirtHeight > 0.0) {
       indicesAndEdges = TerrainProvider.getRegularGridAndSkirtIndicesAndEdgeIndices(
@@ -332,7 +319,7 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     );
 
     // Free memory received from server after mesh is created.
-    that._mesh._buffer = undefined;
+    that._buffer = undefined;
     return that._mesh;
   });
 };

@@ -15,6 +15,7 @@ import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TrianglePicking from "./TrianglePicking.js";
+import createTriangleVerticesCallback from "./createTriangleVerticesCallback";
 
 /**
  * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -263,17 +264,6 @@ function sortIndicesIfNecessary(indices, sortFunction, vertexCount) {
     return IndexDatatype.createTypedArray(vertexCount, arrayScratch);
   }
   return indices;
-}
-
-// TODO deduplicate with height map
-function createTriangleVerticesCallback(vertices, indices, encoding) {
-  function triangleVerticesCallback(triIdx, v0, v1, v2) {
-    encoding.decodePosition(vertices, indices[triIdx * 3], v0);
-    encoding.decodePosition(vertices, indices[triIdx * 3 + 1], v1);
-    encoding.decodePosition(vertices, indices[triIdx * 3 + 2], v2);
-  }
-
-  return triangleVerticesCallback;
 }
 
 var createMeshTaskName = "createVerticesFromQuantizedTerrainMesh";
