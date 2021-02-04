@@ -1909,7 +1909,7 @@ function requestContent(tileset, tile) {
   }
 
   if (expired) {
-    if (tile.hasTilesetContent) {
+    if (tile.hasTilesetContent || tile.hasImplicitContent) {
       destroySubtree(tileset, tile);
     } else {
       statistics.decrementLoadCounts(tile.content);
@@ -2054,7 +2054,7 @@ function handleTileSuccess(tileset, tile) {
   return function () {
     --tileset._statistics.numberOfTilesProcessing;
 
-    if (!tile.hasTilesetContent) {
+    if (!tile.hasTilesetContent || tile.hasImplicitContent) {
       // RESEARCH_IDEA: ability to unload tiles (without content) for an
       // external tileset when all the tiles are unloaded.
       tileset._statistics.incrementLoadCounts(tile.content);
@@ -2215,7 +2215,7 @@ function updateTileDebugLabels(tileset, frameState) {
     }
     for (i = 0; i < emptyLength; ++i) {
       tile = emptyTiles[i];
-      if (tile.hasTilesetContent) {
+      if (tile.hasTilesetContent || tile.hasImplicitContent) {
         addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
       }
     }

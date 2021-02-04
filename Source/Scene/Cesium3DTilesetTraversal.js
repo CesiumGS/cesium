@@ -411,7 +411,9 @@ function updateTileAncestorContentLinks(tile, frameState) {
 }
 
 function hasEmptyContent(tile) {
-  return tile.hasEmptyContent || tile.hasTilesetContent;
+  return (
+    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent
+  );
 }
 
 function hasUnloadedContent(tile) {
@@ -551,7 +553,7 @@ function canTraverse(tileset, tile) {
   if (tile.children.length === 0) {
     return false;
   }
-  if (tile.hasTilesetContent) {
+  if (tile.hasTilesetContent || tile.hasImplicitContent) {
     // Traverse external tileset to visit its root tile
     // Don't traverse if the subtree is expired because it will be destroyed
     return !tile.contentExpired;
