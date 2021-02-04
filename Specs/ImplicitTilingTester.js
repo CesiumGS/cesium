@@ -39,6 +39,15 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     ),
   ];
 
+  // Some additional buffer in the subtree file (e.g. for metadata)
+  // Technically this will add an extraneous key 'other' to the
+  // subtree JSON, but that will be ignored by ImplicitSubtree
+  if (defined(subtreeDescription.other)) {
+    parsedAvailability.push(
+      parseAvailability("other", subtreeDescription.other)
+    );
+  }
+
   var bufferViewsU8 = {
     internal: [],
     external: [],

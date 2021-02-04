@@ -124,7 +124,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
   // This way we can avoid fetching buffers that will not be used.
   markActiveBufferViews(subtreeJson, bufferViewHeaders);
 
-  requestActiveBuffers(bufferHeaders, chunks.binary)
+  requestActiveBuffers(subtree, bufferHeaders, chunks.binary)
     .then(function (buffersU8) {
       var bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
       parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
@@ -293,19 +293,20 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  * The internal buffer (the subtree's binary chunk) is also stored in this
  * dictionary if it is marked active.
  * @private
+ * @param {ImplicitSubtree} subtree The subtree
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @param {Uint8Array} internalBuffer The binary chunk of the JSON file
  * @return {Promise<Object>} A promise resolving to the dictionary of active
  * buffers
  */
-function requestActiveBuffers(bufferHeaders, internalBuffer) {
+function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   var promises = [];
   for (var i = 0; i < bufferHeaders.length; i++) {
     var bufferHeader = bufferHeaders[i];
     if (!bufferHeader.isActive) {
       promises.push(when.resolve(undefined));
     } else if (bufferHeader.isExternal) {
-      var resource = this._resource.getDerivedResource({
+      var resource = subtree._resource.getDerivedResource({
         url: bufferHeader.uri,
       });
       var promise = resource.fetchArrayBuffer().then(function (arrayBuffer) {

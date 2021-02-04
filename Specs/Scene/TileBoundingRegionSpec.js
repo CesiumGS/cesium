@@ -334,7 +334,7 @@ describe("Scene/TileBoundingRegion", function () {
     expect(result.maximumHeight).toEqual(expected.maximumHeight);
   });
 
-  it("handles the IDL", function () {
+  it("deriveVolume handles the IDL", function () {
     var tile = new TileBoundingRegion({
       rectangle: Rectangle.fromDegrees(90, -45, -90, 45),
       minimumHeight: 0,
