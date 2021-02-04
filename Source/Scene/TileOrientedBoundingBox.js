@@ -232,7 +232,7 @@ TileOrientedBoundingBox.prototype.deriveVolume = function (level, x, y, z) {
   }
 
   var center = new Cartesian3(modelSpaceX, modelSpaceY, modelSpaceZ);
-  center = Matrix3.multiplyByVector(rootHalfAxes, center, new Cartesian3());
+  center = Matrix3.multiplyByVector(rootHalfAxes, center, center);
   center = Cartesian3.add(center, rootCenter, center);
 
   var halfAxes = Matrix3.clone(rootHalfAxes);

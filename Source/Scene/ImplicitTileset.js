@@ -50,7 +50,6 @@ export default function ImplicitTileset(baseResource, tileJson) {
   }
   //>>includeEnd('debug');
 
-  // TODO: parse these, it'll be more useful.
   this.boundingVolume = tileJson.boundingVolume;
   this.refine = tileJson.refine;
 

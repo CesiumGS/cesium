@@ -324,6 +324,7 @@ function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
   if (
     !defined(parent) ||
     parent.hasTilesetContent ||
+    parent.hasImplicitContent ||
     parent.refine !== Cesium3DTileRefine.ADD
   ) {
     return false;
@@ -344,7 +345,7 @@ function updateTileVisibility(tileset, tile, frameState) {
   }
 
   var hasChildren = tile.children.length > 0;
-  if (tile.hasTilesetContent && hasChildren) {
+  if ((tile.hasTilesetContent || tile.hasImplicitContent) && hasChildren) {
     // Use the root tile's visibility instead of this tile's visibility.
     // The root tile may be culled by the children bounds optimization in which
     // case this tile should also be culled.
