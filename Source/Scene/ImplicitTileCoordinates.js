@@ -3,6 +3,28 @@ import DeveloperError from "../Core/DeveloperError.js";
 import MortonOrder from "../Core/MortonOrder.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
+/**
+ * The coordinates for a tile in an implicit tileset. The coordinates
+ * are (level, x, y) for quadtrees or (level, x, y, z) for quadtrees.
+ *
+ * Level numbers are 0-indexed and start at the root of the implicit tileset
+ * (the tile with the <code>3DTILES_implicit_tiling</code> extension).
+ *
+ * For box bounding volumes, x, y, z increase along the +x, +y, and +z
+ * directions defined by the half axes
+ *
+ * For region bounding volumes, x increases in the +longitude direction, y
+ * increases in the +latitude direction, and z increases in the +height
+ * direction
+ *
+ * @private
+ * @param {Object} options An object with the following properties:
+ * @param {ImplicitSubdivisionScheme} options.subdivisionScheme Whether the coordinates are for a quadtree or octree
+ * @param {Number} options.level The level of a tile relative to the tile with the extension.
+ * @param {Number} options.x The x coordinate of the tile
+ * @param {Number} options.y The y coordinate of the tile
+ * @param {Number} [options.z] THe z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
+ */
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.subdivisionScheme", options.subdivisionScheme);
@@ -14,12 +36,41 @@ export default function ImplicitTileCoordinates(options) {
   }
   //>>includeEnd('debug');
 
+  /**
+   * Whether the tileset is a quadtree or octree
+   * @type {ImplicitSubdivisionScheme}
+   * @readonly
+   */
   this.subdivisionScheme = options.subdivisionScheme;
+
+  /**
+   * Level of this tile, relative to the tile with the
+   * <code>3DTILES_implicit_tiling</code> extension. Level numbers start at 0.
+   * @type {Number}
+   * @readonly
+   */
   this.level = options.level;
+
+  /**
+   * X coordinate of this tile
+   * @type {Number}
+   * @readonly
+   */
   this.x = options.x;
+
+  /**
+   * Y coordinate of this tile
+   * @type {Number}
+   * @readonly
+   */
   this.y = options.y;
 
   if (options.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
+    /**
+     * Z coordinate of this tile. Only defined for octrees.
+     * @type {Number}
+     * @readonly
+     */
     this.z = options.z;
   }
 }
@@ -47,6 +98,12 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
     },
   },
 
+  /**
+   * Get the Morton index for this tile within the current LOD by interleaving
+   * the bits of the x, y and z coordinates.
+   * @type {Number}
+   * @readonly
+   */
   mortonIndex: {
     get: function () {
       if (this.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
@@ -79,9 +136,6 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   //>>includeEnd('debug');
 
   var level = this.level + 1;
-
-  // TODO: This also can be done using bitwise operations. The offsets are the last
-  // 2-3 bits
   var x = 2 * this.x + (childIndex % 2);
   var y = 2 * this.y + (Math.floor(childIndex / 2) % 2);
 

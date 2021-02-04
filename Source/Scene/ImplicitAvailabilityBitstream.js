@@ -3,7 +3,9 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 
 /**
- * An availability bitstream for use in an {@link ImplicitSubtree}
+ * An availability bitstream for use in an {@link ImplicitSubtree}. This handles
+ * both Uint8Array bitstreams and constant values.
+ * @private
  * @param {Object} options An object with the following properties:
  * @param {Number} options.lengthBits The length of the bitstream in bits.
  * @param {Boolean} [options.constant] A number indicating a value of all the bits if they are all the same.

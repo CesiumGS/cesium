@@ -5,7 +5,7 @@ import {
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
-fdescribe("Scene/ImplicitSubtree", function () {
+describe("Scene/ImplicitSubtree", function () {
   function availabilityToBooleanArray(availability) {
     if (typeof availabilityDescriptor === "number") {
       var constant = availability.descriptor === 1;
