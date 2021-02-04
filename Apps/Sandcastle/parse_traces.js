@@ -155,7 +155,8 @@ fs.readdir(directoryPath, function (err, files) {
         throw new Error(`either begin or end event found: ${event}`);
       }
       if (isEndEvent && !eventSamples.begin) {
-        throw new Error("end event before begin event");
+        console.warn("end event before begin event");
+        continue;
       }
 
       if (isEndEvent) {
