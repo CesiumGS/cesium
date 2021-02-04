@@ -28,6 +28,8 @@ ImplicitTilingTester.generateSubtreeBuffers = function (subtreeDescription) {
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
   var parsedAvailability = [
+    // NOTE: The code below assumes tile availability is
+    // listed before content availability.
     parseAvailability("tileAvailability", subtreeDescription.tileAvailability),
     parseAvailability(
       "contentAvailability",
@@ -55,7 +57,11 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
   var bufferViewCount = 0;
   for (var i = 0; i < parsedAvailability.length; i++) {
     var parsed = parsedAvailability[i];
-    if (defined(parsed.constant)) {
+    if (parsed.name === "contentAvailability" && parsed.shareBuffer) {
+      subtreeJson.contentAvailability = {
+        bufferView: subtreeJson.tileAvailability.bufferView,
+      };
+    } else if (defined(parsed.constant)) {
       subtreeJson[parsed.name] = {
         constant: parsed.constant,
       };
@@ -130,6 +136,7 @@ function parseAvailability(name, availability) {
   var parsed = parseAvailabilityDescriptor(availability.descriptor);
   parsed.name = name;
   parsed.isInternal = availability.isInternal;
+  parsed.shareBuffer = availability.shareBuffer;
 
   return parsed;
 }

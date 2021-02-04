@@ -176,7 +176,47 @@ describe("Scene/ImplicitSubtree", function () {
   });
 
   it("tile and content availability can share the same buffer", function () {
-    fail();
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: false,
+      },
+      contentAvailability: {
+        shareBuffer: true,
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: false,
+      },
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: false,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      when.resolve(results.externalBuffer)
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise.then(function () {
+      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectContentAvailability(
+        subtree,
+        subtreeDescription.contentAvailability
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        subtreeDescription.childSubtreeAvailability
+      );
+    });
   });
 
   it("external buffer is fetched if it is used for availability", function () {
