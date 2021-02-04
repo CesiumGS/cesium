@@ -1,6 +1,6 @@
 import RequestScheduler from "../Source/Core/RequestScheduler.js";
 import Resource from "../Source/Core/Resource.js";
-import when from "../Source/ThirdParty/when.js";
+import { defined } from "../Source/Cesium.js";
 
 export function resetXHRPatch() {
   RequestScheduler.clearForSpecs();
@@ -8,11 +8,14 @@ export function resetXHRPatch() {
     Resource._DefaultImplementations.loadWithXhr;
 }
 
+function endsWith(value, suffix) {
+  return value.indexOf(suffix, value.length - suffix.length) >= 0;
+}
+
 export function patchXHRLoad(proxySpec) {
   // reset everything first; just in case
   resetXHRPatch();
 
-  // override the method - basically add a proxy
   Resource._Implementations.loadWithXhr = function (
     url,
     responseType,
@@ -22,90 +25,37 @@ export function patchXHRLoad(proxySpec) {
     deferred,
     overrideMimeType
   ) {
-    var sourceUrl = new URL(url, "https://google.com");
-    var sourceUrlPath = sourceUrl.pathname + sourceUrl.search + sourceUrl.hash;
+    // find a key (source path) path in the spec which matches (ends with) the requested url
+    var availablePaths = Object.keys(proxySpec);
+    var proxiedUrl;
 
-    if (!Object.keys(proxySpec).includes(sourceUrlPath)) {
-      var msg =
-        "Unexpected XHR load to url: " +
-        sourceUrlPath +
-        " (from url: " +
-        url +
-        "); spec includes: " +
-        Object.keys(proxySpec).join(", ");
-      console.error(msg);
-      throw new Error(msg);
+    for (var i = 0; i < availablePaths.length; i++) {
+      var srcPath = availablePaths[i];
+      if (endsWith(url, srcPath)) {
+        proxiedUrl = proxySpec[availablePaths[i]];
+        break;
+      }
     }
-    var targetUrl = proxySpec[sourceUrlPath];
+
+    // it's a whitelist - meaning you have to proxy every request explicitly
+    if (!defined(proxiedUrl)) {
+      throw new Error(
+        "Unexpected XHR load to url: " +
+          url +
+          "; spec includes: " +
+          availablePaths.join(", ")
+      );
+    }
+
+    // make a real request to the proxied path for the matching source path
     return Resource._DefaultImplementations.loadWithXhr(
-      targetUrl,
+      proxiedUrl,
       responseType,
       method,
       data,
       headers,
-      deferred
-    );
-  };
-}
-
-function cacheToDisk(
-  targetUrlPrefixStr,
-  targetUrlStr,
-  response,
-  cacheToDiskPrefix
-) {
-  var targetPrefixUrl = new URL(targetUrlPrefixStr, "https://google.com");
-  var targetUrl = new URL(targetUrlStr, "https://google.com");
-
-  // strip the prefix from the target url
-  // create file system path from the disk prefix + the remainder
-
-  // var sourceUrlPath = sourceUrl.pathname + sourceUrl.search + sourceUrl.hash;
-  console.log(
-    "saving resource to disk",
-    targetPrefixUrl,
-    targetUrl,
-    cacheToDiskPrefix
-  );
-}
-
-export function setupXHRCache(targetUrlPrefix, cachePathPrefix) {
-  // reset everything first; just in case
-  resetXHRPatch();
-
-  // override the method - basically add a proxy
-  Resource._Implementations.loadWithXhr = function (
-    url,
-    responseType,
-    method,
-    data,
-    headers,
-    deferred,
-    overrideMimeType
-  ) {
-    var wrappedDeferred = when.defer();
-    var xhr = Resource._DefaultImplementations.loadWithXhr(
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      wrappedDeferred,
+      deferred,
       overrideMimeType
     );
-
-    wrappedDeferred.promise.then(
-      function (response) {
-        // slip in a little bit of code to cache the response!
-        //  otherwise business as usual
-        cacheToDisk(targetUrlPrefix, url, response, cachePathPrefix);
-        deferred.resolve(response);
-      },
-      function (err) {
-        deferred.reject(err);
-      }
-    );
-
-    return xhr;
   };
 }

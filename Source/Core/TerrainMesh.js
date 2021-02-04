@@ -57,7 +57,8 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  trianglePicking
+  trianglePicking,
+  url
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -175,6 +176,7 @@ function TerrainMesh(
    * @private
    */
   this._trianglePicking = trianglePicking;
+  this._url = url;
 }
 
 var scratchCartographic = new Cartographic();

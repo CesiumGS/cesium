@@ -1,7 +1,8 @@
 import MockImageryProvider from "../MockImageryProvider.js";
 import MockTerrainProvider from "../MockTerrainProvider.js";
 import TerrainTileProcessor from "../TerrainTileProcessor.js";
-import { Cartesian3 } from "../../Source/Cesium.js";
+import { Cartesian3, SceneMode } from "../../Source/Cesium.js";
+import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { Cartesian4 } from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
@@ -15,6 +16,7 @@ import { QuadtreeTileLoadState } from "../../Source/Cesium.js";
 import { TerrainState } from "../../Source/Cesium.js";
 import createScene from "../createScene.js";
 import { when } from "../../Source/Cesium.js";
+import { patchXHRLoad, resetXHRPatch } from "../patchXHRLoad.js";
 
 describe("Scene/GlobeSurfaceTile", function () {
   var frameState;
@@ -487,4 +489,90 @@ describe("Scene/GlobeSurfaceTile", function () {
       });
     });
   });
+
+  describe(
+    "new picking",
+    function () {
+      var frameState;
+      var imageryLayerCollection;
+      var processor;
+
+      var scene;
+
+      beforeAll(function () {
+        scene = createScene();
+      });
+
+      afterAll(function () {
+        scene.destroyForSpecs();
+      });
+
+      beforeEach(function () {
+        frameState = {
+          context: {
+            cache: {},
+          },
+        };
+
+        imageryLayerCollection = new ImageryLayerCollection();
+
+        patchXHRLoad({
+          "/layer.json": "Data/CesiumTerrainTileJson/9_759_335/layer.json",
+          "/9/759/335.terrain?v=1.2.0":
+            "Data/CesiumTerrainTileJson/9_759_335/9_759_335.terrain",
+        });
+
+        var terrainProvider = new CesiumTerrainProvider({
+          url: "made/up/url",
+        });
+
+        processor = new TerrainTileProcessor(
+          frameState,
+          terrainProvider,
+          imageryLayerCollection
+        );
+        processor.mockWebGL();
+        processor.frameState = scene.frameState;
+      });
+
+      afterEach(function () {
+        resetXHRPatch();
+      });
+
+      it("should pick a few points on a CWT tile", function () {
+        var tile = new QuadtreeTile({
+          tilingScheme: new GeographicTilingScheme({
+            numberOfLevelZeroTilesX: 2,
+            numberOfLevelZeroTilesY: 1,
+            ellipsoid: Ellipsoid.WGS84,
+          }),
+          level: 9,
+          x: 759,
+          y: 176,
+        });
+
+        return processor.process([tile]).then(function () {
+          var direction = new Cartesian3(
+            0.04604903643932318,
+            0.8821324224085892,
+            0.46874500059047475
+          );
+          var origin = new Cartesian3(0, 0, -20029.056425910585);
+          var ray = new Ray(origin, direction);
+          var cullBackFaces = false;
+          var pickResult = tile.data.pick(
+            ray,
+            SceneMode.SCENE3D,
+            undefined,
+            cullBackFaces
+          );
+          expect(pickResult).toBeDefined();
+          expect(pickResult.x).toBeCloseTo(294215.31248307973, 10);
+          expect(pickResult.y).toBeCloseTo(5636097.655428245, 10);
+          expect(pickResult.z).toBeCloseTo(2974864.3764763945, 10);
+        });
+      });
+    },
+    "WebGL"
+  );
 });
