@@ -126,34 +126,6 @@ function onTheFlyNodeAABB(level, x, y, z) {
 
 /**
  * @constructor
- * @param {Number} index
- * @param {Number} aabbMinX
- * @param {Number} aabbMaxX
- * @param {Number} aabbMinY
- * @param {Number} aabbMaxY
- * @param {Number} aabbMinZ
- * @param {Number} aabbMaxZ
- */
-function Triangle(
-  index,
-  aabbMinX,
-  aabbMaxX,
-  aabbMinY,
-  aabbMaxY,
-  aabbMinZ,
-  aabbMaxZ
-) {
-  this.index = index;
-  this.aabbMinX = aabbMinX;
-  this.aabbMaxX = aabbMaxX;
-  this.aabbMinY = aabbMinY;
-  this.aabbMaxY = aabbMaxY;
-  this.aabbMinZ = aabbMinZ;
-  this.aabbMaxZ = aabbMaxZ;
-}
-
-/**
- * @constructor
  * @param {Number} level
  * @param {Number} x
  * @param {Number} y
@@ -770,47 +742,6 @@ function nodeAddTriangle(node, level, x, y, z, triangleIdx, triangles, nodes) {
     triangleIdxs.push(triangleIdx);
   }
 }
-
-/**
- * @param {TrianglePicking} that
- */
-// function printDebugInfo(that) {
-//   var rootNode = that._rootNode;
-//
-//   var triCount = 0;
-//   var triCountLeaf = 0;
-//   var nodeCount = 0;
-//   var nodeCountLeaf = 0;
-//
-//   function accumTriCount(node) {
-//     // var isLeaf = !children || !node.children.length;
-//     var isLeaf = node.firstChildNodeIdx === -1;
-//
-//     var triCountNode = node.triangles.length;
-//     if (triCountNode > 0) {
-//       triCount += triCountNode;
-//       triCountLeaf += isLeaf ? triCountNode : 0;
-//       nodeCount += 1;
-//       nodeCountLeaf += isLeaf ? 1 : 0;
-//     }
-//
-//     var firstChildIdx = node.firstChildNodeIdx;
-//     if (firstChildIdx !== -1) {
-//       for (var i = 0; i < 8; i++) {
-//         accumTriCount(that._nodes[firstChildIdx + i]);
-//       }
-//     }
-//   }
-//
-//   accumTriCount(rootNode);
-//   console.log(rootNode);
-//   console.table({
-//     tri_count : triCount,
-//     node_count : nodeCount,
-//     ratio : triCount / nodeCount,
-//     ratioLeaf : triCountLeaf / nodeCountLeaf
-//   });
-// }
 
 /**
  * @constructor

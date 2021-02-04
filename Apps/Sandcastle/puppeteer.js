@@ -40,6 +40,8 @@ const cesiumWorldTerrainUrl =
     headless: false,
     defaultViewport: false,
     dumpio: true,
+    product: "chrome",
+    // product: "firefox",
     args: [
       `--window-size=${1800},${1800}`,
       `--js-flags=--trace-opt --trace-deopt`,
