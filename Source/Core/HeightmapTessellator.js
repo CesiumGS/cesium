@@ -576,28 +576,28 @@ HeightmapTessellator.computeVertices = function (options) {
     var inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");
-    console.time("making triangles");
-
-    var triangles = createTrianglesFromHeightmap(
-      positions,
-      inverseTransform,
-      width,
-      gridTriangleCount
-    );
-    console.timeEnd("making triangles");
-
-    // console.time("making packed triangles");
+    // console.time("making triangles");
     //
-    // var packedTriangles = createPackedTriangles(
+    // var triangles = createTrianglesFromHeightmap(
     //   positions,
     //   inverseTransform,
     //   width,
     //   gridTriangleCount
     // );
-    // console.timeEnd("making packed triangles");
+    // console.timeEnd("making triangles");
+
+    console.time("making packed triangles");
+
+    var packedTriangles = createPackedTriangles(
+      positions,
+      inverseTransform,
+      width,
+      gridTriangleCount
+    );
+    console.timeEnd("making packed triangles");
 
     packedOctree = TrianglePicking.createPackedOctree(
-      triangles,
+      packedTriangles,
       inverseTransform
     );
   }
