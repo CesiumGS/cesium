@@ -73,7 +73,9 @@ function isVisible(tile) {
 }
 
 function hasEmptyContent(tile) {
-  return tile.hasEmptyContent || tile.hasTilesetContent;
+  return (
+    tile.hasEmptyContent || tile.hasTilesetContent || tile.hasImplicitContent
+  );
 }
 
 function hasUnloadedContent(tile) {

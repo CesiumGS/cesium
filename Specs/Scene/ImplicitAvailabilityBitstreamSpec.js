@@ -48,4 +48,13 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
       bitstream.getBit(10);
     }).toThrowDeveloperError();
   });
+
+  it("stores availableCount", function () {
+    var bitstream = new ImplicitAvailabilityBitstream({
+      lengthBits: 10,
+      availableCount: 3,
+      bitstream: new Uint8Array([0x07, 0x00]),
+    });
+    expect(bitstream.availableCount).toEqual(3);
+  });
 });

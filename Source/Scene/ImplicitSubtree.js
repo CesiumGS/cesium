@@ -431,6 +431,7 @@ function parseAvailabilityBitstream(
     return new ImplicitAvailabilityBitstream({
       constant: Boolean(availabilityJson.constant),
       lengthBits: lengthBits,
+      availableCount: availabilityJson.availableCount,
     });
   }
 
@@ -440,6 +441,7 @@ function parseAvailabilityBitstream(
     return new ImplicitAvailabilityBitstream({
       bitstream: bufferView,
       lengthBits: lengthBits,
+      availableCount: availabilityJson.availableCount,
     });
   }
 }
