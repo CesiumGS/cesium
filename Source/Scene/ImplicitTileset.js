@@ -50,7 +50,19 @@ export default function ImplicitTileset(baseResource, tileJson) {
   }
   //>>includeEnd('debug');
 
+  /**
+   * The JSON representation of a bounding volume. This is either a box or a
+   * region.
+   * @type {Object}
+   * @readonly
+   */
   this.boundingVolume = tileJson.boundingVolume;
+
+  /**
+   * The refine strategy as a string, either 'ADD' or 'REPLACE'
+   * @type {String}
+   * @readonly
+   */
   this.refine = tileJson.refine;
 
   /**
