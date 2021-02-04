@@ -210,7 +210,7 @@ function expandSubtree(content, subtree) {
  * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Needed to construct the Cesium3DTile
  * @param {Resource} baseResource The base resource. Needed to construct the Cesium3DTile.
  * @param {Object} tileHeader The JSON for the Cesium3DTile
- * @param {Cesium3DTile|undefined} parentTile The parent of the new Cesum3DTile (if defined)
+ * @param {Cesium3DTile} [parentTile] The parent of the new Cesum3DTile (if defined)
  * @return {Cesium3DTile} A newly created tile that serves as a lazy placeholder for the implicit tileset.
  */
 Implicit3DTileContent.makeRootPlaceholderTile = function (
@@ -257,7 +257,7 @@ Implicit3DTileContent.makeRootPlaceholderTile = function (
  * @private
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ImplicitSubtree} subtree The subtree for looking up availability
- * @param {(Cesium3DTile|undefined)[]} bottomRow The bottom row of tiles in a transcoded subtree
+ * @param {Array<Cesium3DTile|undefined>} bottomRow The bottom row of tiles in a transcoded subtree
  * @return {ChildSubtreeLocator[]} A list of identifiers for the child subtrees.
  */
 function listChildSubtrees(content, subtree, bottomRow) {
@@ -287,7 +287,7 @@ function listChildSubtrees(content, subtree, bottomRow) {
  * @private
  * @typedef {Object} TranscodedSubtree
  * @property {Cesium3DTile} rootTile The transcoded root tile of the subtree
- * @property {(Cesium3DTile|undefined)[]} bottomRow The bottom row of transcoded tiles. This is helpful for processing child subtrees
+ * @property {Array<Cesium3DTile|undefined>} bottomRow The bottom row of transcoded tiles. This is helpful for processing child subtrees
  */
 
 /**
@@ -373,6 +373,7 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
  * This creates a real tile for rendering, not a placeholder tile like some of
  * the other methods of ImplicitTileset.
  *
+ * @private
  * @param {Implicit3DTileContent} implicitContent The implicit content
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
  * @param {Cesium3DTile|undefined} parentTile The parent of the new child tile
@@ -539,6 +540,7 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
+ * @private
  */
 Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -547,6 +549,7 @@ Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
+ * @private
  */
 Implicit3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;
