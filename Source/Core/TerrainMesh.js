@@ -35,6 +35,7 @@ import Cartographic from "./Cartographic.js";
  * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
  * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
  * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+ * @param {TrianglePicking} trianglePicking The triangle picking instance to use.
  *
  * @private
  */
@@ -169,9 +170,11 @@ function TerrainMesh(
   this.northIndicesWestToEast = northIndicesWestToEast;
 
   /**
-   * TODO - add a method here rather than a public property
+   * Used when calling {@link TerrainMesh#getPickRay}
+   * @type {TrianglePicking}
+   * @private
    */
-  this.trianglePicking = trianglePicking;
+  this._trianglePicking = trianglePicking;
 }
 
 var scratchCartographic = new Cartographic();
@@ -204,7 +207,7 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
 }
 
 /**
- *
+ * Gives the point on the mesh where the give ray intersects
  * @param ray
  * @param cullBackFaces
  * @param mode
@@ -217,11 +220,11 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection
 ) {
-  var canNewPick = mode === SceneMode.SCENE3D && defined(this.trianglePicking);
+  var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
   var newPickValue;
   if (canNewPick) {
     console.time("new pick");
-    newPickValue = this.trianglePicking.rayIntersect(ray, cullBackFaces);
+    newPickValue = this._trianglePicking.rayIntersect(ray, cullBackFaces);
     console.timeEnd("new pick");
   }
 

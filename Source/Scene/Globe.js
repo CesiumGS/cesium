@@ -696,7 +696,6 @@ Globe.prototype.pickWorldCoordinates = function (
 
   var intersection;
   length = sphereIntersections.length;
-
   for (i = 0; i < length; ++i) {
     intersection = sphereIntersections[i].pick(
       ray,
@@ -753,6 +752,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * Get the height of the surface at a given cartographic.
  *
  * @param {Cartographic} cartographic The cartographic for which to find the height.
+ * @param {SceneMode} mode the SceneMode in use
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
 Globe.prototype.getHeight = function (cartographic, mode) {
@@ -860,8 +860,8 @@ Globe.prototype.getHeight = function (cartographic, mode) {
   var intersection = tile.data.pick(
     ray,
     mode,
-    undefined, // projection
-    false, // cullBackFaces
+    undefined,
+    false,
     scratchGetHeightIntersection
   );
   if (!defined(intersection)) {
