@@ -221,11 +221,11 @@ describe("Scene/Implicit3DTileContent", function () {
       ];
       var templateUri = implicitTileset.subtreeUriTemplate;
       var subtreeRootTile = mockParentTile.children[0];
-      var bottomRow = [];
-      preOrder(subtreeRootTile, 2, 2, bottomRow);
+      var tiles = [];
+      preOrder(subtreeRootTile, 2, 2, tiles);
 
-      expect(expectedCoordinates.length).toEqual(bottomRow.length);
-      for (var i = 0; i < bottomRow.length; i++) {
+      expect(expectedCoordinates.length).toEqual(tiles.length);
+      for (var i = 0; i < tiles.length; i++) {
         var expected = expectedCoordinates[i];
         var coordinates = new ImplicitTileCoordinates({
           subdivisionScheme: implicitTileset.subdivisionScheme,
@@ -236,7 +236,12 @@ describe("Scene/Implicit3DTileContent", function () {
         var expectedResource = templateUri.getDerivedResource({
           templateValues: coordinates.getTemplateValues(),
         });
-        expect(bottomRow[i]._contentResource.url).toEqual(expectedResource.url);
+        var placeholderTile = tiles[i];
+        expect(placeholderTile._contentResource.url).toEqual(
+          expectedResource.url
+        );
+        expect(placeholderTile.implicitTileset).toBeDefined();
+        expect(placeholderTile.implicitCoordinates).toBeDefined();
       }
     });
   });
