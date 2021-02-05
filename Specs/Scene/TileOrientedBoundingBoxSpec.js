@@ -155,15 +155,15 @@ describe("Scene/TileOrientedBoundingBox", function () {
     expect(result.boundingVolume.halfAxes).toEqual(expectedHalfAxes);
   });
 
-  it("deriveVolume works correctly when order of operations matters", function () {
+  it("deriveVolume handles complex", function () {
     var tile = new TileOrientedBoundingBox(
       new Cartesian3(1, 2, 3),
       // permutes the axes so halfX is in the +y direction, halfY is in the +z
       // direction, and halfZ is in the +x direction
-      new Matrix3(0, 4, 0, 0, 0, 2, 1, 0, 0)
+      new Matrix3(0, 0, 1, 4, 0, 0, 0, 2, 0)
     );
     var expectedCenter = new Cartesian3(1.25, 1, 1.5);
-    var expectedHalfAxes = new Matrix3(0, 1, 0, 0, 0, 0.5, 0.25, 0, 0);
+    var expectedHalfAxes = new Matrix3(0, 0, 0.25, 1, 0, 0, 0, 0.5, 0);
     var result = tile.deriveVolume(2, 1, 0, 2);
     expect(result.boundingVolume.center).toEqual(expectedCenter);
     expect(result.boundingVolume.halfAxes).toEqual(expectedHalfAxes);
