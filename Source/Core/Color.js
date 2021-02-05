@@ -379,6 +379,9 @@ Color.fromCssColorString = function (color, result) {
     result = new Color();
   }
 
+  // Remove all whitespaces from the color string
+  color = color.replace(/\s/g, "");
+
   var namedColor = Color[color.toUpperCase()];
   if (defined(namedColor)) {
     Color.clone(namedColor, result);
@@ -538,10 +541,10 @@ Color.equals = function (left, right) {
   return (
     left === right || //
     (defined(left) && //
-    defined(right) && //
-    left.red === right.red && //
-    left.green === right.green && //
-    left.blue === right.blue && //
+      defined(right) && //
+      left.red === right.red && //
+      left.green === right.green && //
+      left.blue === right.blue && //
       left.alpha === right.alpha)
   );
 };
@@ -589,9 +592,9 @@ Color.prototype.equalsEpsilon = function (other, epsilon) {
   return (
     this === other || //
     (defined(other) && //
-    Math.abs(this.red - other.red) <= epsilon && //
-    Math.abs(this.green - other.green) <= epsilon && //
-    Math.abs(this.blue - other.blue) <= epsilon && //
+      Math.abs(this.red - other.red) <= epsilon && //
+      Math.abs(this.green - other.green) <= epsilon && //
+      Math.abs(this.blue - other.blue) <= epsilon && //
       Math.abs(this.alpha - other.alpha) <= epsilon)
   );
 };
@@ -630,6 +633,34 @@ Color.prototype.toCssColorString = function () {
     return "rgb(" + red + "," + green + "," + blue + ")";
   }
   return "rgba(" + red + "," + green + "," + blue + "," + this.alpha + ")";
+};
+
+/**
+ * Creates a string containing CSS hex string color value for this color.
+ *
+ * @returns {String} The CSS hex string equivalent of this color.
+ */
+Color.prototype.toCssHexString = function () {
+  var r = Color.floatToByte(this.red).toString(16);
+  if (r.length < 2) {
+    r = "0" + r;
+  }
+  var g = Color.floatToByte(this.green).toString(16);
+  if (g.length < 2) {
+    g = "0" + g;
+  }
+  var b = Color.floatToByte(this.blue).toString(16);
+  if (b.length < 2) {
+    b = "0" + b;
+  }
+  if (this.alpha < 1) {
+    var hexAlpha = Color.floatToByte(this.alpha).toString(16);
+    if (hexAlpha.length < 2) {
+      hexAlpha = "0" + hexAlpha;
+    }
+    return "#" + r + g + b + hexAlpha;
+  }
+  return "#" + r + g + b;
 };
 
 /**

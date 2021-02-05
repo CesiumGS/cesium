@@ -25,8 +25,10 @@ PolylinePipeline.numberOfPointsRhumbLine = function (p0, p1, granularity) {
   var radiansDistanceSquared =
     Math.pow(p0.longitude - p1.longitude, 2) +
     Math.pow(p0.latitude - p1.latitude, 2);
-  return Math.ceil(
-    Math.sqrt(radiansDistanceSquared / (granularity * granularity))
+
+  return Math.max(
+    1,
+    Math.ceil(Math.sqrt(radiansDistanceSquared / (granularity * granularity)))
   );
 };
 

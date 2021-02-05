@@ -125,10 +125,13 @@ describe("DataSources/SampledProperty", function () {
     var listener = jasmine.createSpy("listener");
     property.definitionChanged.addEventListener(listener);
 
-    property.removeSample(times[1]);
+    var result = property.removeSample(new JulianDate(4, 0));
+    expect(result).toEqual(false);
+
+    result = property.removeSample(times[1]);
 
     expect(listener).toHaveBeenCalledWith(property);
-
+    expect(result).toEqual(true);
     expect(property._times.length).toEqual(2);
     expect(property._values.length).toEqual(2);
 
@@ -718,6 +721,17 @@ describe("DataSources/SampledProperty", function () {
 
     right.addSample(time, 5);
     expect(left.equals(right)).toEqual(true);
+  });
+
+  it("equals works when samples differ with quaternion", function () {
+    var left = new SampledProperty(Quaternion);
+    var right = new SampledProperty(Quaternion);
+    expect(left.equals(right)).toEqual(true);
+
+    var time = JulianDate.now();
+    left.addSample(time, new Quaternion(1, 2, 3, 4));
+    right.addSample(time, new Quaternion(1, 2, 3, 5));
+    expect(left.equals(right)).toEqual(false);
   });
 
   it("equals works when derivatives differ", function () {

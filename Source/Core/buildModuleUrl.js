@@ -94,6 +94,7 @@ var implementation;
  * @function
  *
  * @param {String} relativeUrl The relative path.
+ * @returns {String} The absolutely URL representation of the provided path.
  *
  * @example
  * var viewer = new Cesium.Viewer("cesiumContainer", {

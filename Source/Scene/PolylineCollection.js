@@ -80,6 +80,7 @@ var attributeLocations = {
  * @param {Object} [options] Object with the following properties:
  * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
  * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+ * @param {Boolean} [options.show=true] Determines if the polylines in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many polylines, to
  * many collections with only a few polylines each.  Organize collections so that polylines
@@ -115,6 +116,14 @@ var attributeLocations = {
  */
 function PolylineCollection(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  /**
+   * Determines if polylines in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
@@ -414,7 +423,7 @@ var scratchNearFarCartesian2 = new Cartesian2();
 PolylineCollection.prototype.update = function (frameState) {
   removePolylines(this);
 
-  if (this._polylines.length === 0) {
+  if (this._polylines.length === 0 || !this.show) {
     return;
   }
 

@@ -20,32 +20,17 @@ import SceneFramebuffer from "./SceneFramebuffer.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMap from "./ShadowMap.js";
 
+function CommandExtent() {
+  this.command = undefined;
+  this.near = undefined;
+  this.far = undefined;
+}
+
 /**
  * @private
  */
 function View(scene, camera, viewport) {
   var context = scene.context;
-
-  var frustumCommandsList = [];
-
-  // Initial guess at frustums.
-  var near = camera.frustum.near;
-  var far = camera.frustum.far;
-  var farToNearRatio = scene.logarithmicDepthBuffer
-    ? scene.logarithmicDepthFarToNearRatio
-    : scene.farToNearRatio;
-
-  var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-  updateFrustums(
-    near,
-    far,
-    farToNearRatio,
-    numFrustums,
-    scene.logarithmicDepthBuffer,
-    frustumCommandsList,
-    false,
-    undefined
-  );
 
   var globeDepth;
   if (context.depthTexture) {
@@ -75,9 +60,12 @@ function View(scene, camera, viewport) {
   this.oit = oit;
   this.pickDepths = [];
   this.debugGlobeDepths = [];
-  this.frustumCommandsList = frustumCommandsList;
+  this.frustumCommandsList = [];
   this.debugFrustumStatistics = undefined;
-  this.updateFrustums = false;
+
+  // Array of all commands that get rendered into frustums along with their near / far values.
+  // Acts similar to a ManagedArray.
+  this._commandExtents = [];
 }
 
 var scratchPosition0 = new Cartesian3();
@@ -129,16 +117,40 @@ View.prototype.checkForCameraUpdates = function (scene) {
   return false;
 };
 
-function updateFrustums(
-  near,
-  far,
-  farToNearRatio,
-  numFrustums,
-  logDepth,
-  frustumCommandsList,
-  is2D,
-  nearToFarDistance2D
-) {
+function updateFrustums(view, scene, near, far) {
+  var frameState = scene.frameState;
+  var camera = frameState.camera;
+  var farToNearRatio = frameState.useLogDepth
+    ? scene.logarithmicDepthFarToNearRatio
+    : scene.farToNearRatio;
+  var is2D = scene.mode === SceneMode.SCENE2D;
+  var nearToFarDistance2D = scene.nearToFarDistance2D;
+
+  // Extend the far plane slightly further to prevent geometry clipping against the far plane.
+  far *= 1.0 + CesiumMath.EPSILON2;
+
+  // The computed near plane must be between the user defined near and far planes.
+  // The computed far plane must between the user defined far and computed near.
+  // This will handle the case where the computed near plane is further than the user defined far plane.
+  near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+  far = Math.max(Math.min(far, camera.frustum.far), near);
+
+  var numFrustums;
+  if (is2D) {
+    // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+    // the camera is moved to just before the frustum and the frustum depth is scaled
+    // to be in [1.0, nearToFarDistance2D].
+    far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+    near = Math.min(near, far);
+    numFrustums = Math.ceil(
+      Math.max(1.0, far - near) / scene.nearToFarDistance2D
+    );
+  } else {
+    // The multifrustum for 3D/CV is non-uniformly distributed.
+    numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+  }
+
+  var frustumCommandsList = view.frustumCommandsList;
   frustumCommandsList.length = numFrustums;
   for (var m = 0; m < numFrustums; ++m) {
     var curNear;
@@ -152,12 +164,8 @@ function updateFrustums(
       curFar = Math.min(far, curNear + nearToFarDistance2D);
     } else {
       curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-      curFar = farToNearRatio * curNear;
-      if (!logDepth) {
-        curFar = Math.min(far, curFar);
-      }
+      curFar = Math.min(far, farToNearRatio * curNear);
     }
-
     var frustumCommands = frustumCommandsList[m];
     if (!defined(frustumCommands)) {
       frustumCommands = frustumCommandsList[m] = new FrustumCommands(
@@ -171,7 +179,7 @@ function updateFrustums(
   }
 }
 
-function insertIntoBin(scene, view, command, distance) {
+function insertIntoBin(view, scene, command, commandNear, commandFar) {
   if (scene.debugShowFrustums) {
     command.debugOverlappingFrustums = 0;
   }
@@ -184,11 +192,11 @@ function insertIntoBin(scene, view, command, distance) {
     var curNear = frustumCommands.near;
     var curFar = frustumCommands.far;
 
-    if (distance.start > curFar) {
+    if (commandNear > curFar) {
       continue;
     }
 
-    if (distance.stop < curNear) {
+    if (commandFar < curNear) {
       break;
     }
 
@@ -219,7 +227,7 @@ function insertIntoBin(scene, view, command, distance) {
 }
 
 var scratchCullingVolume = new CullingVolume();
-var distances = new Interval();
+var scratchNearFarInterval = new Interval();
 
 View.prototype.createPotentiallyVisibleSet = function (scene) {
   var frameState = scene.frameState;
@@ -250,12 +258,15 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
   computeList.length = 0;
   overlayList.length = 0;
 
-  var near = Number.MAX_VALUE;
+  var commandExtents = this._commandExtents;
+  var commandExtentCapacity = commandExtents.length;
+  var commandExtentCount = 0;
+
+  var near = +Number.MAX_VALUE;
   var far = -Number.MAX_VALUE;
-  var undefBV = false;
 
   var shadowsEnabled = frameState.shadowState.shadowsEnabled;
-  var shadowNear = Number.MAX_VALUE;
+  var shadowNear = +Number.MAX_VALUE;
   var shadowFar = -Number.MAX_VALUE;
   var shadowClosestObjectSize = Number.MAX_VALUE;
 
@@ -280,19 +291,24 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     } else if (pass === Pass.OVERLAY) {
       overlayList.push(command);
     } else {
+      var commandNear;
+      var commandFar;
+
       var boundingVolume = command.boundingVolume;
       if (defined(boundingVolume)) {
         if (!scene.isVisible(command, cullingVolume, occluder)) {
           continue;
         }
 
-        distances = boundingVolume.computePlaneDistances(
+        var nearFarInterval = boundingVolume.computePlaneDistances(
           position,
           direction,
-          distances
+          scratchNearFarInterval
         );
-        near = Math.min(near, distances.start);
-        far = Math.max(far, distances.stop);
+        commandNear = nearFarInterval.start;
+        commandFar = nearFarInterval.stop;
+        near = Math.min(near, commandNear);
+        far = Math.max(far, commandFar);
 
         // Compute a tight near and far plane for commands that receive shadows. This helps compute
         // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
@@ -302,51 +318,47 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
         if (
           shadowsEnabled &&
           command.receiveShadows &&
-          distances.start < ShadowMap.MAXIMUM_DISTANCE &&
-          !(
-            pass === Pass.GLOBE &&
-            distances.start < -100.0 &&
-            distances.stop > 100.0
-          )
+          commandNear < ShadowMap.MAXIMUM_DISTANCE &&
+          !(pass === Pass.GLOBE && commandNear < -100.0 && commandFar > 100.0)
         ) {
           // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
-          var size = distances.stop - distances.start;
-          if (pass !== Pass.GLOBE && distances.start < 100.0) {
+          var size = commandFar - commandNear;
+          if (pass !== Pass.GLOBE && commandNear < 100.0) {
             shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
           }
-          shadowNear = Math.min(shadowNear, distances.start);
-          shadowFar = Math.max(shadowFar, distances.stop);
+          shadowNear = Math.min(shadowNear, commandNear);
+          shadowFar = Math.max(shadowFar, commandFar);
         }
-      } else {
+      } else if (command instanceof ClearCommand) {
         // Clear commands don't need a bounding volume - just add the clear to all frustums.
-        // If another command has no bounding volume, though, we need to use the camera's
+        commandNear = camera.frustum.near;
+        commandFar = camera.frustum.far;
+      } else {
+        // If command has no bounding volume we need to use the camera's
         // worst-case near and far planes to avoid clipping something important.
-        distances.start = camera.frustum.near;
-        distances.stop = camera.frustum.far;
-        undefBV = undefBV || !(command instanceof ClearCommand);
+        commandNear = camera.frustum.near;
+        commandFar = camera.frustum.far;
+        near = Math.min(near, commandNear);
+        far = Math.max(far, commandFar);
       }
 
-      insertIntoBin(scene, this, command, distances);
+      var extent = commandExtents[commandExtentCount];
+      if (!defined(extent)) {
+        extent = commandExtents[commandExtentCount] = new CommandExtent();
+      }
+      extent.command = command;
+      extent.near = commandNear;
+      extent.far = commandFar;
+      commandExtentCount++;
     }
   }
 
-  if (undefBV) {
-    near = camera.frustum.near;
-    far = camera.frustum.far;
-  } else {
-    // The computed near plane must be between the user defined near and far planes.
-    // The computed far plane must between the user defined far and computed near.
-    // This will handle the case where the computed near plane is further than the user defined far plane.
-    near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
-    far = Math.max(Math.min(far, camera.frustum.far), near);
-
-    if (shadowsEnabled) {
-      shadowNear = Math.min(
-        Math.max(shadowNear, camera.frustum.near),
-        camera.frustum.far
-      );
-      shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
-    }
+  if (shadowsEnabled) {
+    shadowNear = Math.min(
+      Math.max(shadowNear, camera.frustum.near),
+      camera.frustum.far
+    );
+    shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
   }
 
   // Use the computed near and far for shadows
@@ -356,57 +368,31 @@ View.prototype.createPotentiallyVisibleSet = function (scene) {
     frameState.shadowState.closestObjectSize = shadowClosestObjectSize;
   }
 
-  // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
-  // last frame, else compute the new frustums and sort them by frustum again.
-  var is2D = scene.mode === SceneMode.SCENE2D;
-  var logDepth = frameState.useLogDepth;
-  var farToNearRatio = logDepth
-    ? scene.logarithmicDepthFarToNearRatio
-    : scene.farToNearRatio;
-  var numFrustums;
+  updateFrustums(this, scene, near, far);
 
-  if (is2D) {
-    // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
-    // the camera is moved to just before the frustum and the frustum depth is scaled
-    // to be in [1.0, nearToFarDistance2D].
-    far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
-    near = Math.min(near, far);
-    numFrustums = Math.ceil(
-      Math.max(1.0, far - near) / scene.nearToFarDistance2D
-    );
-  } else {
-    // The multifrustum for 3D/CV is non-uniformly distributed.
-    numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+  var c;
+  var ce;
+
+  for (c = 0; c < commandExtentCount; c++) {
+    ce = commandExtents[c];
+    insertIntoBin(this, scene, ce.command, ce.near, ce.far);
   }
 
-  if (
-    this.updateFrustums ||
-    (near !== Number.MAX_VALUE &&
-      (numFrustums !== numberOfFrustums ||
-        (frustumCommandsList.length !== 0 &&
-          (near < frustumCommandsList[0].near ||
-            (far > frustumCommandsList[numberOfFrustums - 1].far &&
-              (logDepth ||
-                !CesiumMath.equalsEpsilon(
-                  far,
-                  frustumCommandsList[numberOfFrustums - 1].far,
-                  CesiumMath.EPSILON8
-                )))))))
-  ) {
-    this.updateFrustums = false;
-    updateFrustums(
-      near,
-      far,
-      farToNearRatio,
-      numFrustums,
-      logDepth,
-      frustumCommandsList,
-      is2D,
-      scene.nearToFarDistance2D
-    );
-    this.createPotentiallyVisibleSet(scene);
+  // Dereference old commands
+  if (commandExtentCount < commandExtentCapacity) {
+    for (c = commandExtentCount; c < commandExtentCapacity; c++) {
+      ce = commandExtents[c];
+      if (!defined(ce.command)) {
+        // If the command is undefined, it's assumed that all
+        // subsequent commmands were set to undefined as well,
+        // so no need to loop over them all
+        break;
+      }
+      ce.command = undefined;
+    }
   }
 
+  var numFrustums = frustumCommandsList.length;
   var frustumSplits = frameState.frustumSplits;
   frustumSplits.length = numFrustums + 1;
   for (var j = 0; j < numFrustums; ++j) {

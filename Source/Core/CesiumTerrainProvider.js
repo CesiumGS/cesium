@@ -9,7 +9,7 @@ import DeveloperError from "./DeveloperError.js";
 import Event from "./Event.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import WebMercatorTilingScheme from "./WebMercatorTilingScheme.js";
-import getStringFromTypedArray from "./getStringFromTypedArray.js";
+import getJsonFromTypedArray from "./getJsonFromTypedArray.js";
 import HeightmapTerrainData from "./HeightmapTerrainData.js";
 import IndexDatatype from "./IndexDatatype.js";
 import OrientedBoundingBox from "./OrientedBoundingBox.js";
@@ -34,7 +34,6 @@ function LayerInformation(layer) {
   this.availabilityLevels = layer.availabilityLevels;
   this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
-  this.availabilityTilesLoaded = layer.availabilityTilesLoaded;
   this.availabilityPromiseCache = {};
 }
 
@@ -711,12 +710,11 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     ) {
       var stringLength = view.getUint32(pos, true);
       if (stringLength > 0) {
-        var jsonString = getStringFromTypedArray(
+        var metadata = getJsonFromTypedArray(
           new Uint8Array(buffer),
           pos + Uint32Array.BYTES_PER_ELEMENT,
           stringLength
         );
-        var metadata = JSON.parse(jsonString);
         var availableTiles = metadata.available;
         if (defined(availableTiles)) {
           for (var offset = 0; offset < availableTiles.length; ++offset) {
@@ -1278,7 +1276,7 @@ function checkLayer(provider, x, y, level, layer, topLayer) {
           // For cutout terrain, if this isn't the top layer the availability tiles
           //  may never get loaded, so request it here.
           var request = new Request({
-            throttle: true,
+            throttle: false,
             throttleByServer: true,
             type: RequestType.TERRAIN,
           });

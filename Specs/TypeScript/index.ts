@@ -11,6 +11,7 @@ import {
   CheckerboardMaterialProperty,
   CircleGeometry,
   CircleOutlineGeometry,
+  Color,
   ColorMaterialProperty,
   CompositeMaterialProperty,
   CompositePositionProperty,
@@ -96,20 +97,27 @@ import {
   WallOutlineGeometry,
   WebMapServiceImageryProvider,
   WebMapTileServiceImageryProvider,
+  writeTextToCanvas,
 } from "cesium";
 
 // Verify ImageryProvider instances conform to the expected interface
 let imageryProvider: ImageryProvider;
 imageryProvider = new WebMapServiceImageryProvider({ url: "", layers: "0" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
 imageryProvider = new ArcGisMapServerImageryProvider({ url: "" });
-imageryProvider = new BingMapsImageryProvider({ url: "" });
+imageryProvider = new BingMapsImageryProvider({ url: "", key: "" });
 imageryProvider = new OpenStreetMapImageryProvider({ url: "" });
 imageryProvider = new TileMapServiceImageryProvider({ url: "" });
-imageryProvider = new GridImageryProvider({ url: "" });
+imageryProvider = new GridImageryProvider({
+  tileWidth: 256,
+  tileHeight: 256,
+  color: new Color(1.0, 1.0, 1.0, 0.4),
+});
 imageryProvider = new IonImageryProvider({ assetId: 2 });
-imageryProvider = new MapboxImageryProvider({ mapId: "" });
-imageryProvider = new MapboxStyleImageryProvider({ styleId: "" });
+imageryProvider = new MapboxImageryProvider({ mapId: "", accessToken: "" });
+imageryProvider = new MapboxStyleImageryProvider({
+  styleId: "",
+  accessToken: "",
+});
 imageryProvider = new SingleTileImageryProvider({ url: "" });
 imageryProvider = new TileCoordinatesImageryProvider();
 imageryProvider = new UrlTemplateImageryProvider({ url: "" });
@@ -377,3 +385,5 @@ geometryInstance = new GeometryInstance({
     positions: [],
   }),
 });
+
+const canvas: HTMLCanvasElement | undefined = writeTextToCanvas("test");

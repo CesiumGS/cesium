@@ -84,7 +84,7 @@ var scratchEncode = {
  * Encodes a {@link Cartesian3} with 64-bit floating-point components as two {@link Cartesian3}
  * values that, when converted to 32-bit floating-point and added, approximate the original input.
  * <p>
- * The fixed-point encoding follows {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+ * The fixed-point encoding follows {@link https://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
  * </p>
  *
  * @param {Cartesian3} cartesian The cartesian to encode.

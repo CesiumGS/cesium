@@ -287,7 +287,9 @@ describe(
         result
       ) {
         result = originalShallowClone(command, result);
-        result.execute = function () {};
+        result.execute = function () {
+          result.uniformMap.debugShowCommandsColor();
+        };
         return result;
       });
 
@@ -640,6 +642,32 @@ describe(
       it("renders a globe with a ElevationRamp", function () {
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.globe.material = Material.fromType("ElevationRamp");
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(
+          Cartesian3.normalize(s.camera.position, new Cartesian3()),
+          new Cartesian3()
+        );
+
+        // To avoid Jasmine's spec has no expectations error
+        expect(true).toEqual(true);
+
+        return expect(s).toRenderAndCall(function () {
+          return pollToPromise(function () {
+            render(s.frameState, s.globe);
+            return !jasmine.matchersUtil.equals(s._context.readPixels(), [
+              0,
+              0,
+              0,
+              0,
+            ]);
+          });
+        });
+      });
+
+      it("renders a globe with an ElevationBand", function () {
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.globe.material = Material.fromType("ElevationBand");
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(
@@ -2267,6 +2295,7 @@ describe(
 
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba).not.toEqual(opaqueColor);
+          scene.destroyForSpecs();
         });
       });
     });
@@ -2317,6 +2346,7 @@ describe(
       return updateGlobeUntilDone(scene).then(function () {
         expect(scene).toRenderAndCall(function (rgba) {
           expect(rgba[0]).toBeGreaterThan(0);
+          scene.destroyForSpecs();
         });
       });
     });
@@ -2366,6 +2396,7 @@ describe(
 
       return updateGlobeUntilDone(scene).then(function () {
         expect(scene).toPickPrimitive(primitive);
+        scene.destroyForSpecs();
       });
     });
   },

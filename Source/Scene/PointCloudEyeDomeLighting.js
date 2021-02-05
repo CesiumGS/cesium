@@ -99,7 +99,10 @@ function createFramebuffer(processor, context) {
 var distanceAndEdlStrengthScratch = new Cartesian2();
 
 function createCommands(processor, context) {
-  var blendFS = PointCloudEyeDomeLightingShader;
+  var blendFS = new ShaderSource({
+    defines: ["LOG_DEPTH_WRITE"],
+    sources: [PointCloudEyeDomeLightingShader],
+  });
 
   var blendUniformMap = {
     u_pointCloud_colorGBuffer: function () {

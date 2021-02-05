@@ -3,7 +3,6 @@ import ArcGisMapServerImageryProvider from "../../Scene/ArcGisMapServerImageryPr
 import createWorldImagery from "../../Scene/createWorldImagery.js";
 import IonImageryProvider from "../../Scene/IonImageryProvider.js";
 import IonWorldImageryStyle from "../../Scene/IonWorldImageryStyle.js";
-import MapboxStyleImageryProvider from "../../Scene/MapboxStyleImageryProvider.js";
 import OpenStreetMapImageryProvider from "../../Scene/OpenStreetMapImageryProvider.js";
 import TileMapServiceImageryProvider from "../../Scene/TileMapServiceImageryProvider.js";
 import ProviderViewModel from "../BaseLayerPicker/ProviderViewModel.js";
@@ -52,54 +51,6 @@ function createDefaultImageryProviderViewModels() {
       creationFunction: function () {
         return createWorldImagery({
           style: IonWorldImageryStyle.ROAD,
-        });
-      },
-    })
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
-      name: "Mapbox Satellite",
-      tooltip: "Mapbox satellite imagery https://www.mapbox.com/maps/",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/mapboxSatellite.png"
-      ),
-      category: "Other",
-      creationFunction: function () {
-        return new MapboxStyleImageryProvider({
-          styleId: "satellite-v9",
-        });
-      },
-    })
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
-      name: "Mapbox Streets",
-      tooltip: "Mapbox streets imagery https://www.mapbox.com/maps/",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/mapboxTerrain.png"
-      ),
-      category: "Other",
-      creationFunction: function () {
-        return new MapboxStyleImageryProvider({
-          styleId: "satellite-streets-v11",
-        });
-      },
-    })
-  );
-
-  providerViewModels.push(
-    new ProviderViewModel({
-      name: "Mapbox Streets Classic",
-      tooltip: "Mapbox streets basic imagery https://www.mapbox.com/maps/",
-      iconUrl: buildModuleUrl(
-        "Widgets/Images/ImageryProviders/mapboxStreets.png"
-      ),
-      category: "Other",
-      creationFunction: function () {
-        return new MapboxStyleImageryProvider({
-          styleId: "streets-v11",
         });
       },
     })

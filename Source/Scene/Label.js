@@ -58,11 +58,18 @@ function parseFont(label) {
     div.style.font = label._font;
     document.body.appendChild(div);
 
+    var lineHeight = parseFloat(getCSSValue(div, "line-height"));
+    if (isNaN(lineHeight)) {
+      // line-height isn't a number, i.e. 'normal'; apply default line-spacing
+      lineHeight = undefined;
+    }
+
     fontInfo = {
       family: getCSSValue(div, "font-family"),
       size: getCSSValue(div, "font-size").replace("px", ""),
       style: getCSSValue(div, "font-style"),
       weight: getCSSValue(div, "font-weight"),
+      lineHeight: lineHeight,
     };
 
     document.body.removeChild(div);
@@ -75,6 +82,7 @@ function parseFont(label) {
   label._fontSize = fontInfo.size;
   label._fontStyle = fontInfo.style;
   label._fontWeight = fontInfo.weight;
+  label._lineHeight = fontInfo.lineHeight;
 }
 
 /**

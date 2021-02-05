@@ -1,4 +1,3 @@
-import BingMapsApi from "../Core/BingMapsApi.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
@@ -23,9 +22,8 @@ import ImageryProvider from "./ImageryProvider.js";
  * Initialization options for the BingMapsImageryProvider constructor
  *
  * @property {Resource|String} url The url of the Bing Maps server hosting the imagery.
- * @property {String} [key] The Bing Maps key for your application, which can be
+ * @property {String} key The Bing Maps key for your application, which can be
  *        created at {@link https://www.bingmapsportal.com/}.
- *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
  * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
  *        By default, tiles are loaded using the same protocol as the page.
  * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
@@ -69,10 +67,14 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 function BingMapsImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var accessKey = options.key;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
     throw new DeveloperError("options.url is required.");
+  }
+  if (!defined(accessKey)) {
+    throw new DeveloperError("options.key is required.");
   }
   //>>includeEnd('debug');
 
@@ -162,7 +164,7 @@ function BingMapsImageryProvider(options) {
    */
   this.defaultMagnificationFilter = undefined;
 
-  this._key = BingMapsApi.getKey(options.key);
+  this._key = accessKey;
   this._resource = Resource.createIfNeeded(options.url);
   this._resource.appendForwardSlash();
   this._tileProtocol = options.tileProtocol;
