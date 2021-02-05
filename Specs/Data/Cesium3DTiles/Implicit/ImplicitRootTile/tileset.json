@@ -29,9 +29,9 @@
         "subtreeLevels": 2,
         "maximumLevel": 5,
         "subtrees": {
-          "uri": "subtrees/{level}/{x}/{y}.subtree"
+          "uri": "subtrees/{level}/{x}/{y}/{z}.subtree"
         }
       }
     }
-  },
+  }
 }
