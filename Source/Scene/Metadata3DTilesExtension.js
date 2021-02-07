@@ -1,9 +1,8 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defined from "../Core/defined.js";
-import MetadataClass from "./MetadataClass.js";
-import MetadataEnum from "./MetadataEnum.js";
 import MetadataGroup from "./MetadataGroup.js";
+import MetadataSchema from "./MetadataSchema.js";
 import MetadataTileset from "./MetadataTileset.js";
 
 /**
@@ -24,25 +23,9 @@ function Metadata3DTilesExtension(extension) {
   Check.typeOf.object("extension", extension);
   //>>includeEnd('debug');
 
-  var enums = {};
-  for (var enumId in extension.enums) {
-    if (extension.enums.hasOwnProperty(enumId)) {
-      enums[enumId] = new MetadataEnum({
-        id: enumId,
-        enum: extension.enums[enumId],
-      });
-    }
-  }
-
-  var classes = {};
-  for (var classId in extension.classes) {
-    if (extension.classes.hasOwnProperty(classId)) {
-      classes[classId] = new MetadataClass({
-        id: classId,
-        class: extension.classes[classId],
-        enums: enums,
-      });
-    }
+  var schema;
+  if (defined(extension.schema)) {
+    schema = new MetadataSchema(extension.schema);
   }
 
   var groups = {};
@@ -52,7 +35,7 @@ function Metadata3DTilesExtension(extension) {
       groups[groupId] = new MetadataGroup({
         id: groupId,
         group: extension.groups[groupId],
-        class: classes[group.class],
+        class: schema.classes[group.class],
       });
     }
   }
@@ -61,12 +44,11 @@ function Metadata3DTilesExtension(extension) {
   if (defined(extension.tileset)) {
     tileset = new MetadataTileset({
       tileset: extension.tileset,
-      class: classes[extension.tileset.class],
+      class: schema.classes[extension.tileset.class],
     });
   }
 
-  this._classes = classes;
-  this._enums = enums;
+  this._schema = schema;
   this._groups = groups;
   this._tileset = tileset;
   this._statistics = clone(extension.statistics, true); // Clone so that this object doesn't hold on to a reference to the JSON
@@ -75,16 +57,16 @@ function Metadata3DTilesExtension(extension) {
 
 Object.defineProperties(Metadata3DTilesExtension.prototype, {
   /**
-   * Class definitions used by metadata in the tileset.
+   * Schema containing classes and enums.
    *
    * @memberof Metadata3DTilesExtension.prototype
-   * @type {Object.<String, MetadataClass>}
+   * @type {MetadataSchema}
    * @readonly
    * @private
    */
-  classes: {
+  schema: {
     get: function () {
-      return this._classes;
+      return this._schema;
     },
   },
 
