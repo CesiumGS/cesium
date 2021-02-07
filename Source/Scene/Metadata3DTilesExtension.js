@@ -1,5 +1,6 @@
 import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataGroup from "./MetadataGroup.js";
 import MetadataSchema from "./MetadataSchema.js";
@@ -11,19 +12,25 @@ import MetadataTileset from "./MetadataTileset.js";
  * See the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0|3DTILES_metadata Extension} for 3D Tiles.
  * </p>
  *
- * @param {Object} extension The extension JSON object
+ * @param {Object} options Object with the following properties:
+ * @param {String} options.extension The extension JSON object.
+ * @param {MetadataSchema} [options.externalSchema] The schema pointed to from schemaUri.
  *
  * @alias Metadata3DTilesExtension
  * @constructor
  *
  * @private
  */
-function Metadata3DTilesExtension(extension) {
+function Metadata3DTilesExtension(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var extension = options.extension;
+  var externalSchema = options.externalSchema;
+
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("extension", extension);
+  Check.typeOf.object("options.extension", extension);
   //>>includeEnd('debug');
 
-  var schema;
+  var schema = externalSchema;
   if (defined(extension.schema)) {
     schema = new MetadataSchema(extension.schema);
   }
