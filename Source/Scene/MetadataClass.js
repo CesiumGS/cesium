@@ -2,7 +2,7 @@ import Check from "../Core/Check.js";
 import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import MetadataProperty from "./MetadataProperty.js";
+import MetadataClassProperty from "./MetadataClassProperty.js";
 
 /**
  * A metadata class.
@@ -31,7 +31,7 @@ function MetadataClass(options) {
   var propertiesBySemantic = {};
   for (var propertyId in classDefinition.properties) {
     if (classDefinition.properties.hasOwnProperty(propertyId)) {
-      var property = new MetadataProperty({
+      var property = new MetadataClassProperty({
         id: propertyId,
         property: classDefinition.properties[propertyId],
         enums: options.enums,
@@ -56,7 +56,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * The class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<String, MetadataProperty>}
+   * @type {Object.<String, MetadataClassProperty>}
    * @readonly
    * @private
    */
@@ -70,7 +70,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * A dictionary mapping semantics to class properties.
    *
    * @memberof MetadataClass.prototype
-   * @type {Object.<String, MetadataProperty>}
+   * @type {Object.<String, MetadataClassProperty>}
    * @readonly
    * @private
    */

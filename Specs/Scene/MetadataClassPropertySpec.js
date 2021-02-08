@@ -1,10 +1,10 @@
-import { MetadataProperty } from "../../Source/Cesium.js";
+import { MetadataClassProperty } from "../../Source/Cesium.js";
 import { MetadataEnum } from "../../Source/Cesium.js";
 import { MetadataType } from "../../Source/Cesium.js";
 
-describe("Scene/MetadataProperty", function () {
+describe("Scene/MetadataClassProperty", function () {
   it("creates property with default values", function () {
-    var property = new MetadataProperty({
+    var property = new MetadataClassProperty({
       id: "height",
       property: {
         type: "FLOAT32",
@@ -36,7 +36,7 @@ describe("Scene/MetadataProperty", function () {
       coordinates: [0, 1, 2],
     };
 
-    var property = new MetadataProperty({
+    var property = new MetadataClassProperty({
       id: "position",
       property: {
         name: "Position",
@@ -94,7 +94,7 @@ describe("Scene/MetadataProperty", function () {
       color: colorEnum,
     };
 
-    var property = new MetadataProperty({
+    var property = new MetadataClassProperty({
       id: "color",
       property: {
         type: "ENUM",
@@ -110,7 +110,7 @@ describe("Scene/MetadataProperty", function () {
 
   it("constructor throws without id", function () {
     expect(function () {
-      return new MetadataProperty({
+      return new MetadataClassProperty({
         property: {
           type: "FLOAT32",
         },
@@ -120,7 +120,7 @@ describe("Scene/MetadataProperty", function () {
 
   it("constructor throws without property", function () {
     expect(function () {
-      return new MetadataProperty({
+      return new MetadataClassProperty({
         id: "propertyId",
       });
     }).toThrowDeveloperError();

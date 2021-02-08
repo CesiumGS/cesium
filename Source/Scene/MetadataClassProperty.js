@@ -12,12 +12,12 @@ import MetadataType from "./MetadataType.js";
  * @param {Object} options.property The property JSON object.
  * @param {Object.<String, MetadataEnum>} [options.enums] A dictionary of enums.
  *
- * @alias MetadataProperty
+ * @alias MetadataClassProperty
  * @constructor
  *
  * @private
  */
-function MetadataProperty(options) {
+function MetadataClassProperty(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var id = options.id;
   var property = options.property;
@@ -66,11 +66,11 @@ function MetadataProperty(options) {
   this._extras = clone(property.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
 }
 
-Object.defineProperties(MetadataProperty.prototype, {
+Object.defineProperties(MetadataClassProperty.prototype, {
   /**
    * The ID of the property.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -84,7 +84,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The name of the property.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -98,7 +98,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The description of the property.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -112,7 +112,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The type of the property.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
    * @private
@@ -126,7 +126,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The enum type of the property. Only defined when type or componentType is ENUM.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {MetadataEnum}
    * @readonly
    * @private
@@ -140,7 +140,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The component type of the property. Only defined when type is ARRAY.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
    * @private
@@ -154,7 +154,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The data type of property values.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
    * @private
@@ -168,7 +168,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * The number of components per element. Only defined when type is a fixed size ARRAY.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Number}
    * @readonly
    * @private
@@ -182,7 +182,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * Whether the property is normalized.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
    * @private
@@ -196,7 +196,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * An array storing the maximum value of each component. Only defined when type or componentType is a numeric type.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Number[]}
    * @readonly
    * @private
@@ -210,7 +210,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * An array storing the minimum value of each component. Only defined when type or componentType is a numeric type.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Number[]}
    * @readonly
    * @private
@@ -224,7 +224,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * A default value to use when an entity's property value is not defined.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Boolean|Number|String|Array}
    * @readonly
    * @private
@@ -238,7 +238,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * Whether the property is optional.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {Boolean}
    * @readonly
    * @private
@@ -252,7 +252,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * An identifier that describes how this property should be interpreted.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {String}
    * @readonly
    * @private
@@ -266,7 +266,7 @@ Object.defineProperties(MetadataProperty.prototype, {
   /**
    * Extras in the JSON object.
    *
-   * @memberof MetadataProperty.prototype
+   * @memberof MetadataClassProperty.prototype
    * @type {*}
    * @readonly
    * @private
@@ -289,4 +289,4 @@ function getValueType(type, componentType, enumType) {
   return type;
 }
 
-export default MetadataProperty;
+export default MetadataClassProperty;
