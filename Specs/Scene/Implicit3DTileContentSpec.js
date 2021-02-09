@@ -8,7 +8,6 @@ import {
   Matrix3,
   Matrix4,
   Resource,
-  TileOrientedBoundingBox,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -301,10 +300,7 @@ describe("Scene/Implicit3DTileContent", function () {
         [2, 0, 3],
         [2, 1, 3],
       ];
-      var rootBoundingVolume = new TileOrientedBoundingBox(
-        new Cartesian3(),
-        new Matrix3(256, 0, 0, 0, 256, 0, 0, 0, 256)
-      );
+      var rootBoundingVolume = [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256];
 
       var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
@@ -313,12 +309,19 @@ describe("Scene/Implicit3DTileContent", function () {
       expect(expectedCoordinates.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {
         var coordinates = expectedCoordinates[i];
-        var expectedBounds = rootBoundingVolume.deriveVolume(
+
+        var boundingBox = tiles[i].boundingVolume.boundingVolume;
+        var childBox = new Array(12);
+        Cartesian3.pack(boundingBox.center, childBox);
+        Matrix3.pack(boundingBox.halfAxes, childBox, 3);
+
+        var expectedBounds = Implicit3DTileContent._deriveBoundingBox(
+          rootBoundingVolume,
           coordinates[0],
           coordinates[1],
           coordinates[2]
         );
-        expect(tiles[i].boundingVolume).toEqual(expectedBounds);
+        expect(childBox).toEqual(expectedBounds);
       }
     });
   });
