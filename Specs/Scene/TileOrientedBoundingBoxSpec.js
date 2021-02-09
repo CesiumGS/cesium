@@ -155,7 +155,7 @@ describe("Scene/TileOrientedBoundingBox", function () {
     expect(result.boundingVolume.halfAxes).toEqual(expectedHalfAxes);
   });
 
-  it("deriveVolume handles complex", function () {
+  it("deriveVolume handles rotation and non-uniform scaling correctly", function () {
     var tile = new TileOrientedBoundingBox(
       new Cartesian3(1, 2, 3),
       // permutes the axes so halfX is in the +y direction, halfY is in the +z

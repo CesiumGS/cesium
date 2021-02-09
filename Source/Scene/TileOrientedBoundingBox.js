@@ -180,13 +180,15 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
  * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
  * coordinates are given to select the descendant tile and compute its position
  * and dimensions.
- *
+ * <p>
  * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
  * is used. Quadtrees are always divided at the midpoint of the the horizontal
  * dimensions, i.e. (x, y), leaving the z axis unchanged.
- *
+ * </p>
+ * <p>
  * This computes the child volume directly from the root bounding volume rather
  * than recursively subdividing to minimize floating point error.
+ * </p>
  *
  * @param {Number} level The level of the descendant tile relative to
  * @param {Number} x The x coordinate of the child tile
