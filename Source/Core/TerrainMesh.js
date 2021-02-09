@@ -270,7 +270,7 @@ TerrainMesh.prototype.pickRay = function (
     return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT) : undefined;
   }
 
-  var doOldPick = false;
+  var doOldPick = true;
 
   var oldPickValue;
   if (doOldPick) {
@@ -285,6 +285,8 @@ TerrainMesh.prototype.pickRay = function (
     !Cartesian3.equals(newPickValue, oldPickValue)
   ) {
     console.error("pick values are different");
+    oldPick(this);
+    this._trianglePicking.rayIntersect(ray, cullBackFaces);
   }
   return newPickValue || oldPickValue;
 };

@@ -59,3 +59,14 @@ export function patchXHRLoad(proxySpec) {
     );
   };
 }
+
+export function patchXHRLoadForArcGISTerrainDataSet() {
+  patchXHRLoad({
+    "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
+    "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
+    "/tilemap/10/384/640/128/128":
+      "Data/ArcGIS/9_214_379/tilemap_10_384_640_128_128.json",
+    "/tilemap/9/128/256/128/128":
+      "Data/ArcGIS/9_214_379/tilemap_9_128_256_128_128.json",
+  });
+}

@@ -218,9 +218,9 @@
           viewer.entities.resumeEvents();
         }
 
-        function createGrid(rectangleHalfSize) {
-          var gridWidth = 41;
-          var gridHeight = 41;
+        function createGrid(rectangleHalfSize, gridWidth, gridHeight) {
+          gridWidth = gridWidth || 41;
+          gridHeight = gridHeight || 41;
           var everestLatitude = Cesium.Math.toRadians(27.988257);
           var everestLongitude = Cesium.Math.toRadians(86.925145);
           var e = new Cesium.Rectangle(
@@ -300,6 +300,25 @@
               sampleTerrainSuccess
             );
             lookAtMtEverest();
+          },
+          "sampleButtons"
+        );
+
+        Sandcastle.addToolbarButton(
+          "Pick all the things",
+          function () {
+            var terrainSamplePositions = createGrid(0.0005);
+            for (var i = 0; i < terrainSamplePositions.length; i++) {
+              var position = terrainSamplePositions[i];
+              Cesium.Math.toRadians();
+            }
+            Cesium.when(
+              Cesium.sampleTerrain(
+                viewer.terrainProvider,
+                terrainSamplePositions
+              ),
+              sampleTerrainSuccess
+            );
           },
           "sampleButtons"
         );

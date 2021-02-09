@@ -3,7 +3,11 @@ import { Cartographic } from "../../Source/Cesium.js";
 import { CesiumTerrainProvider } from "../../Source/Cesium.js";
 import { createWorldTerrain } from "../../Source/Cesium.js";
 import { sampleTerrain } from "../../Source/Cesium.js";
-import { patchXHRLoad, resetXHRPatch } from "../patchXHRLoad.js";
+import {
+  patchXHRLoad,
+  patchXHRLoadForArcGISTerrainDataSet,
+  resetXHRPatch,
+} from "../patchXHRLoad.js";
 
 describe("Core/sampleTerrain", function () {
   var worldTerrain;
@@ -193,12 +197,7 @@ describe("Core/sampleTerrain", function () {
     });
 
     it("should work for ArcGIS terrain", function () {
-      patchXHRLoad({
-        "/?f=pjson": "Data/ArcGIS/9_214_379/root.json",
-        "/tilemap/10/384/640/128/128":
-          "Data/ArcGIS/9_214_379/tilemap_10_384_640_128_128.json",
-        "/tile/9/214/379": "Data/ArcGIS/9_214_379/tile_9_214_379.tile",
-      });
+      patchXHRLoadForArcGISTerrainDataSet();
 
       var terrainProvider = new ArcGISTiledElevationTerrainProvider({
         url: "made/up/url",
