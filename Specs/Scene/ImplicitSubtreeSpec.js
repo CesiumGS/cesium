@@ -154,9 +154,10 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(results.externalBuffer)
-    );
+    var fetchExternal = spyOn(
+      Resource.prototype,
+      "fetchArrayBuffer"
+    ).and.returnValue(when.resolve(results.externalBuffer));
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
@@ -172,6 +173,8 @@ describe("Scene/ImplicitSubtree", function () {
         subtree,
         subtreeDescription.childSubtreeAvailability
       );
+
+      expect(fetchExternal.calls.count()).toEqual(1);
     });
   });
 
@@ -247,9 +250,10 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(results.externalBuffer)
-    );
+    var fetchExternal = spyOn(
+      Resource.prototype,
+      "fetchArrayBuffer"
+    ).and.returnValue(when.resolve(results.externalBuffer));
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
@@ -265,6 +269,7 @@ describe("Scene/ImplicitSubtree", function () {
         subtree,
         subtreeDescription.childSubtreeAvailability
       );
+      expect(fetchExternal.calls.count()).toEqual(1);
     });
   });
 
@@ -300,7 +305,7 @@ describe("Scene/ImplicitSubtree", function () {
       implicitQuadtree
     );
     return subtree.readyPromise.then(function () {
-      expect(fetchExternal).toHaveBeenCalled();
+      expect(fetchExternal.calls.count()).toEqual(1);
     });
   });
 
@@ -361,16 +366,13 @@ describe("Scene/ImplicitSubtree", function () {
     var expectedContentAvailability = {
       descriptor: 0,
       lengthBits: 5,
-      isInternal: false,
+      isInternal: true,
     };
 
     var results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
 
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
-      when.resolve(results.externalBuffer)
-    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
