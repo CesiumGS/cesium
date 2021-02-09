@@ -297,3 +297,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yang Puxiao](https://github.com/puxiao)
 - [Ivan Ludvig](https://github.com/IvanLudvig)
 - [Yuki Noda](https://github.com/yukinoda)
+- [Mark Williams](https://github.com/markw65)

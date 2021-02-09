@@ -3200,8 +3200,11 @@ describe("DataSources/KmlDataSource", function () {
     ).then(function (dataSource) {
       var entities = dataSource.entities.values;
       expect(entities.length).toEqual(1);
-      expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023)
+      expect(
+        entities[0].position.getValue(Iso8601.MINIMUM_VALUE)
+      ).toEqualEpsilon(
+        new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023),
+        CesiumMath.EPSILON13
       );
     });
   });
@@ -3222,8 +3225,11 @@ describe("DataSources/KmlDataSource", function () {
     ).then(function (moonDataSource) {
       var entities = moonDataSource.entities.values;
       expect(entities.length).toEqual(1);
-      expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-        new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544)
+      expect(
+        entities[0].position.getValue(Iso8601.MINIMUM_VALUE)
+      ).toEqualEpsilon(
+        new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544),
+        CesiumMath.EPSILON13
       );
     });
   });
@@ -3480,8 +3486,9 @@ describe("DataSources/KmlDataSource", function () {
     ).then(function (moonDataSource) {
       var entity = moonDataSource.entities.values[0];
       var moonPoint = entity.polygon.hierarchy.getValue().positions[0];
-      expect(moonPoint).toEqual(
-        new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544)
+      expect(moonPoint).toEqualEpsilon(
+        new Cartesian3(58080.7702560248, 25945.04756005268, 1736235.0758562544),
+        CesiumMath.EPSILON13
       );
     });
   });
@@ -3510,8 +3517,9 @@ describe("DataSources/KmlDataSource", function () {
     ).then(function (dataSource) {
       var entity = dataSource.entities.values[0];
       var earthPoint = entity.polygon.hierarchy.getValue().positions[0];
-      expect(earthPoint).toEqual(
-        new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023)
+      expect(earthPoint).toEqualEpsilon(
+        new Cartesian3(213935.5635247161, 95566.36983235707, 6352461.425213023),
+        CesiumMath.EPSILON13
       );
     });
   });
