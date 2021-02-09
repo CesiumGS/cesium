@@ -8,9 +8,6 @@ ImplicitTilingTester.generateSubtreeBuffers = function (subtreeDescription) {
   var subtreeJson = {
     buffers: [],
     bufferViews: [],
-    tileAvailability: {},
-    contentAvailability: {},
-    childSubtreeAvailability: {},
   };
 
   var bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
@@ -32,14 +29,19 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     // listed before content availability.
     parseAvailability("tileAvailability", subtreeDescription.tileAvailability),
     parseAvailability(
-      "contentAvailability",
-      subtreeDescription.contentAvailability
-    ),
-    parseAvailability(
       "childSubtreeAvailability",
       subtreeDescription.childSubtreeAvailability
     ),
   ];
+
+  if (defined(subtreeDescription.contentAvailability)) {
+    parsedAvailability.push(
+      parseAvailability(
+        "contentAvailability",
+        subtreeDescription.contentAvailability
+      )
+    );
+  }
 
   // Some additional buffer in the subtree file (e.g. for metadata)
   // Technically this will add an extraneous key 'other' to the

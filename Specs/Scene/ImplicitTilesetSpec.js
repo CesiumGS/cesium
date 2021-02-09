@@ -57,6 +57,6 @@ describe("Scene/ImplicitTileset", function () {
     var tileJson = combine(sphereJson, implicitTileJson);
     expect(function () {
       return new ImplicitTileset(baseResource, tileJson);
-    }).toThrowDeveloperError();
+    }).toThrowRuntimeError();
   });
 });

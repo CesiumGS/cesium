@@ -24,21 +24,21 @@ describe("Scene/ImplicitSubtree", function () {
 
   function expectTileAvailability(subtree, availability) {
     var expectedAvailability = availabilityToBooleanArray(availability);
-    for (var i = 0; i < length; i++) {
+    for (var i = 0; i < availability.lengthBits; i++) {
       expect(subtree.tileIsAvailable(i)).toEqual(expectedAvailability[i]);
     }
   }
 
   function expectContentAvailability(subtree, availability) {
     var expectedAvailability = availabilityToBooleanArray(availability);
-    for (var i = 0; i < length; i++) {
+    for (var i = 0; i < availability.lengthBits; i++) {
       expect(subtree.contentIsAvailable(i)).toEqual(expectedAvailability[i]);
     }
   }
 
   function expectChildSubtreeAvailability(subtree, availability) {
     var expectedAvailability = availabilityToBooleanArray(availability);
-    for (var i = 0; i < length; i++) {
+    for (var i = 0; i < availability.lengthBits; i++) {
       expect(subtree.childSubtreeIsAvailable(i)).toEqual(
         expectedAvailability[i]
       );
@@ -90,10 +90,6 @@ describe("Scene/ImplicitSubtree", function () {
         },
       },
     },
-  });
-
-  it("handles typed arrays with a byte offset", function () {
-    fail();
   });
 
   it("gets availability from internal buffer", function () {
@@ -164,6 +160,55 @@ describe("Scene/ImplicitSubtree", function () {
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise.then(function () {
+      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectContentAvailability(
+        subtree,
+        subtreeDescription.contentAvailability
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        subtreeDescription.childSubtreeAvailability
+      );
+    });
+  });
+
+  it("handles typed arrays with a byte offset", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: "11000",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+
+    // Put the subtree buffer in a larger buffer so the byteOffset is not 0
+    var paddingLength = 8;
+    var biggerBuffer = new Uint8Array(
+      results.subtreeBuffer.length + paddingLength
+    );
+    biggerBuffer.set(results.subtreeBuffer, paddingLength);
+    var subtreeView = new Uint8Array(biggerBuffer.buffer, paddingLength);
+
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      subtreeView,
       implicitQuadtree
     );
     return subtree.readyPromise.then(function () {
@@ -301,7 +346,44 @@ describe("Scene/ImplicitSubtree", function () {
   });
 
   it("missing contentAvailability is interpreted as 0s", function () {
-    fail();
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "11010",
+        lengthBits: 5,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: "1111000010100000",
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+    var expectedContentAvailability = {
+      descriptor: 0,
+      lengthBits: 5,
+      isInternal: false,
+    };
+
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      when.resolve(results.externalBuffer)
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise.then(function () {
+      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectContentAvailability(subtree, expectedContentAvailability);
+      expectChildSubtreeAvailability(
+        subtree,
+        subtreeDescription.childSubtreeAvailability
+      );
+    });
   });
 
   it("availability works for quadtrees", function () {

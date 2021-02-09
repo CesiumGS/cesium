@@ -1,3 +1,4 @@
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import when from "../ThirdParty/when.js";
@@ -132,6 +133,16 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
 function initialize(subtree, subtreeView, implicitTileset) {
   var chunks = parseSubtreeChunks(subtreeView);
   var subtreeJson = chunks.json;
+
+  // if no contentAvailability is specified, no tile in the subtree has
+  // content
+  var defaultContentAvailability = {
+    constant: 0,
+  };
+  subtreeJson.contentAvailability = defaultValue(
+    subtreeJson.contentAvailability,
+    defaultContentAvailability
+  );
 
   var bufferHeaders = preprocessBuffers(subtreeJson.buffers);
   var bufferViewHeaders = preprocessBufferViews(
@@ -409,6 +420,7 @@ function parseAvailability(
     bufferViewsU8,
     tileAvailabilityBits
   );
+
   subtree._contentAvailability = parseAvailabilityBitstream(
     subtreeJson.contentAvailability,
     bufferViewsU8,
