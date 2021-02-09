@@ -28,7 +28,8 @@ var ImplicitSubdivisionScheme = {
 /**
  * Get the branching factor for the given subdivision scheme
  * @param {ImplicitSubdivisionScheme} subdivisionScheme The subdivision scheme
- * @return {Number} The branching factor, either 4 for QUADTREE or 8 for OCTREE
+ * @returns {Number} The branching factor, either 4 for QUADTREE or 8 for OCTREE
+ * @private
  */
 ImplicitSubdivisionScheme.getBranchingFactor = function (subdivisionScheme) {
   switch (subdivisionScheme) {

@@ -2056,7 +2056,7 @@ function handleTileSuccess(tileset, tile) {
   return function () {
     --tileset._statistics.numberOfTilesProcessing;
 
-    if (!tile.hasTilesetContent || tile.hasImplicitContent) {
+    if (!tile.hasTilesetContent && !tile.hasImplicitContent) {
       // RESEARCH_IDEA: ability to unload tiles (without content) for an
       // external tileset when all the tiles are unloaded.
       tileset._statistics.incrementLoadCounts(tile.content);

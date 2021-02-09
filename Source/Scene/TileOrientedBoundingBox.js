@@ -192,7 +192,9 @@ TileOrientedBoundingBox.prototype.update = function (center, halfAxes) {
  * @param {Number} x The x coordinate of the child tile
  * @param {Number} y The y coordinate of the child tile
  * @param {Number|undefined} z The z coordinate of the child volume (octree only)
- * @return {TileOrientedBoundingBox} A new TileBoundingRegion with the given x, y, z coordinates
+ * @returns {TileOrientedBoundingBox} A new TileBoundingRegion with the given x, y, z coordinates
+ *
+ * @private
  */
 TileOrientedBoundingBox.prototype.deriveVolume = function (level, x, y, z) {
   //>>includeStart('debug', pragmas.debug);

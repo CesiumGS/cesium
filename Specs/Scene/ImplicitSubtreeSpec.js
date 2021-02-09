@@ -300,6 +300,10 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
+  it("missing contentAvailability is interpreted as 0s", function () {
+    fail();
+  });
+
   it("availability works for quadtrees", function () {
     var subtreeDescription = {
       tileAvailability: {

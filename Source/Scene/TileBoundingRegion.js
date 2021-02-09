@@ -437,7 +437,9 @@ TileBoundingRegion.prototype.intersectPlane = function (plane) {
  * @param {Number} x The x coordinate of the child tile
  * @param {Number} y The y coordinate of the child tile
  * @param {Number|undefined} z The z coordinate of the child volume (octree only)
- * @return {TileBoundingRegion} A new TileBoundingRegion with the given x, y, z coordinates
+ * @returns {TileBoundingRegion} A new TileBoundingRegion with the given x, y, z coordinates
+ *
+ * @private
  */
 TileBoundingRegion.prototype.deriveVolume = function (level, x, y, z) {
   //>>includeStart('debug', pragmas.debug);

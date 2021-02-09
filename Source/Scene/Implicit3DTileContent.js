@@ -139,7 +139,7 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
  *
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ArrayBuffer} arrayBuffer The ArrayBuffer containing a subtree binary
- * @param {Number} byteOffset The byte offset into the arrayBuffer
+ * @param {Number} [byteOffset=0] The byte offset into the arrayBuffer
  * @private
  */
 function initialize(content, arrayBuffer, byteOffset) {

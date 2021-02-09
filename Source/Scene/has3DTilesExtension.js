@@ -6,7 +6,8 @@ import defined from "../Core/defined.js";
  * tileset, a tile, or other 3D Tiles concept.
  * @param {Object} json The JSON object
  * @param {String} extensionName The name of the extension, e.g. '3DTILES_implicit_tiling'
- * @return {Boolean} True if the extension is present
+ * @returns {Boolean} True if the extension is present
+ * @private
  */
 export default function has3DTilesExtension(json, extensionName) {
   return (
