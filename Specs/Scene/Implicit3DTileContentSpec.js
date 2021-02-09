@@ -10,6 +10,7 @@ import {
   Resource,
   TileOrientedBoundingBox,
 } from "../../Source/Cesium.js";
+import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
 
 describe("Scene/Implicit3DTileContent", function () {
@@ -332,6 +333,136 @@ describe("Scene/Implicit3DTileContent", function () {
     );
     return content.readyPromise.then(function () {
       expect(mockPlaceholderTile.children.length).toEqual(1);
+    });
+  });
+
+  describe("_deriveBoundingBox", function () {
+    var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
+    var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
+    it("throws if rootBox is undefined", function () {
+      expect(function () {
+        deriveBoundingBox(undefined, 0, 0, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if level is undefined", function () {
+      expect(function () {
+        deriveBoundingBox(simpleBoundingBox, undefined, 0, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if x is undefined", function () {
+      expect(function () {
+        deriveBoundingBox(simpleBoundingBox, 1, undefined, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if y is undefined", function () {
+      expect(function () {
+        deriveBoundingBox(simpleBoundingBox, 1, 0, undefined);
+      }).toThrowDeveloperError();
+    });
+
+    it("subdivides like a quadtree if z is not given", function () {
+      var tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
+      var expected = [0, 1.5, 0, 1, 0, 0, 0, 0.5, 0, 0, 0, 1];
+      var result = deriveBoundingBox(tile, 2, 1, 0);
+      expect(result).toEqual(expected);
+    });
+
+    it("subdivides like an octree if z is given", function () {
+      var tile = [1, 3, 0, 4, 0, 0, 0, 2, 0, 0, 0, 1];
+      var expected = [0, 1.5, 0.25, 1, 0, 0, 0, 0.5, 0, 0, 0, 0.25];
+      var result = deriveBoundingBox(tile, 2, 1, 0, 2);
+      expect(result).toEqual(expected);
+    });
+
+    it("handles rotation and non-uniform scaling correctly", function () {
+      var tile = [1, 2, 3, 0, 4, 0, 0, 0, 2, 1, 0, 0];
+      var expected = [1.25, 1, 1.5, 0, 1, 0, 0, 0, 0.5, 0.25, 0, 0];
+      var result = deriveBoundingBox(tile, 2, 1, 0, 2);
+      expect(result).toEqual(expected);
+    });
+  });
+
+  describe("_deriveBoundingRegion", function () {
+    var deriveBoundingRegion = Implicit3DTileContent._deriveBoundingRegion;
+    var simpleRegion = [
+      0,
+      0,
+      CesiumMath.PI_OVER_FOUR,
+      CesiumMath.PI_OVER_FOUR,
+      0,
+      100,
+    ];
+    it("throws if rootRegion is undefined", function () {
+      expect(function () {
+        deriveBoundingRegion(undefined, 1, 0, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if level is undefined", function () {
+      expect(function () {
+        deriveBoundingRegion(simpleRegion, undefined, 0, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if x is undefined", function () {
+      expect(function () {
+        deriveBoundingRegion(simpleRegion, 1, undefined, 0);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws if y is undefined", function () {
+      expect(function () {
+        deriveBoundingRegion(simpleRegion, 1, 0, undefined);
+      }).toThrowDeveloperError();
+    });
+
+    function makeRectangle(
+      westDegrees,
+      southDegrees,
+      eastDegrees,
+      northDegrees,
+      minimumHeight,
+      maximumHeight
+    ) {
+      return [
+        CesiumMath.toRadians(westDegrees),
+        CesiumMath.toRadians(southDegrees),
+        CesiumMath.toRadians(eastDegrees),
+        CesiumMath.toRadians(northDegrees),
+        minimumHeight,
+        maximumHeight,
+      ];
+    }
+
+    it("subdivides like a quadtree if z is not given", function () {
+      // 4x4 degree rectangle so the subdivisions at level 2 will
+      // be 1 degree each
+      var tile = makeRectangle(-1, -2, 3, 2, 0, 20);
+      var expected = makeRectangle(0, 1, 1, 2, 0, 20);
+
+      var result = deriveBoundingRegion(tile, 2, 1, 3);
+      expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+    });
+
+    it("deriveVolume subdivides like an octree if z is given", function () {
+      // 4x4 degree rectangle so the subdivisions at level 2 will
+      // be 1 degree each
+      var tile = makeRectangle(-1, -2, 3, 2, 0, 20);
+      var expected = makeRectangle(0, 1, 1, 2, 10, 15);
+
+      var result = deriveBoundingRegion(tile, 2, 1, 3, 2);
+      expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+    });
+
+    it("handles the IDL", function () {
+      var tile = makeRectangle(90, -45, -90, 45, 0, 20);
+      var expected = makeRectangle(180, -45, -90, 0, 0, 20);
+
+      var result = deriveBoundingRegion(tile, 1, 1, 0);
+      expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
     });
   });
 });

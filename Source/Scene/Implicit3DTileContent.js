@@ -542,6 +542,8 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
   }
 
   var rectangle = Rectangle.unpack(rootRegion, 0, scratchRectangle);
+  var rootMinimumHeight = rootRegion[4];
+  var rootMaximumHeight = rootRegion[5];
   var tileScale = Math.pow(2, -level);
 
   var childWidth = tileScale * rectangle.width;
@@ -553,10 +555,10 @@ function deriveBoundingRegion(rootRegion, level, x, y, z) {
   var north = CesiumMath.negativePiToPi(south + childHeight);
 
   // Height is only subdivided for octrees; It remains constant for quadtrees.
-  var minimumHeight = this.minimumHeight;
-  var maximumHeight = this.maximumHeight;
+  var minimumHeight = rootMinimumHeight;
+  var maximumHeight = rootMaximumHeight;
   if (defined(z)) {
-    var childThickness = tileScale * (this.maximumHeight - this.minimumHeight);
+    var childThickness = tileScale * (rootMaximumHeight - rootMinimumHeight);
     minimumHeight += z * childThickness;
     maximumHeight = minimumHeight + childThickness;
   }
