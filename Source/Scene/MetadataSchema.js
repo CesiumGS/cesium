@@ -65,7 +65,7 @@ Object.defineProperties(MetadataSchema.prototype, {
    * Enums defined in the schema.
    *
    * @memberof MetadataSchema.prototype
-   * @type {Object.<String, MetadataEnum}
+   * @type {Object.<String, MetadataEnum>}
    * @readonly
    * @private
    */

@@ -81,7 +81,7 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
    * Metadata about groups of content.
    *
    * @memberof Metadata3DTilesExtension.prototype
-   * @type {Object.<String, MetadataGroup}
+   * @type {Object.<String, MetadataGroup>}
    * @readonly
    * @private
    */
