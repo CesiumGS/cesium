@@ -1,11 +1,9 @@
 import BoundingSphere from "../Core/BoundingSphere.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
-import CesiumMath from "../Core/Math.js";
 import Check from "../Core/Check.js";
 import ColorGeometryInstanceAttribute from "../Core/ColorGeometryInstanceAttribute.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import GeometryInstance from "../Core/GeometryInstance.js";
 import IntersectionTests from "../Core/IntersectionTests.js";
@@ -417,75 +415,6 @@ TileBoundingRegion.prototype.intersectPlane = function (plane) {
   Check.defined("plane", plane);
   //>>includeEnd('debug');
   return this._orientedBoundingBox.intersectPlane(plane);
-};
-
-/**
- * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
- * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
- * coordinates are given to select the descendant tile and compute its position
- * and dimensions.
- * <p>
- * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
- * is used. Quadtrees are always divided at the midpoint of the the horizontal
- * dimensions, i.e. (mid_longitude, mid_latitude), leaving the height values
- * unchanged.
- * </p>
- * <p>
- * This computes the child volume directly from the root bounding volume rather
- * than recursively subdividing to minimize floating point error.
- * </p>
- *
- * @param {Number} level The level of the descendant tile relative to
- * @param {Number} x The x coordinate of the child tile
- * @param {Number} y The y coordinate of the child tile
- * @param {Number|undefined} z The z coordinate of the child volume (octree only)
- * @returns {TileBoundingRegion} A new TileBoundingRegion with the given x, y, z coordinates
- *
- * @private
- */
-TileBoundingRegion.prototype.deriveVolume = function (level, x, y, z) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.number("level", level);
-  Check.typeOf.number("x", x);
-  Check.typeOf.number("y", y);
-  if (defined(z)) {
-    Check.typeOf.number("z", z);
-  }
-  //>>includeEnd('debug');
-
-  if (level === 0) {
-    return new TileBoundingRegion({
-      rectangle: this.rectangle.clone(),
-      minimumHeight: this.minimumHeight,
-      maximumHeight: this.maximumHeight,
-    });
-  }
-
-  var rectangle = this.rectangle;
-  var tileScale = Math.pow(2, -level);
-
-  var childWidth = tileScale * rectangle.width;
-  var west = CesiumMath.negativePiToPi(rectangle.west + x * childWidth);
-  var east = CesiumMath.negativePiToPi(west + childWidth);
-
-  var childHeight = tileScale * rectangle.height;
-  var south = CesiumMath.negativePiToPi(rectangle.south + y * childHeight);
-  var north = CesiumMath.negativePiToPi(south + childHeight);
-
-  // Height is only subdivided for octrees; It remains constant for quadtrees.
-  var minimumHeight = this.minimumHeight;
-  var maximumHeight = this.maximumHeight;
-  if (defined(z)) {
-    var childThickness = tileScale * (this.maximumHeight - this.minimumHeight);
-    minimumHeight += z * childThickness;
-    maximumHeight = minimumHeight + childThickness;
-  }
-
-  return new TileBoundingRegion({
-    rectangle: new Rectangle(west, south, east, north),
-    minimumHeight: minimumHeight,
-    maximumHeight: maximumHeight,
-  });
 };
 
 /**

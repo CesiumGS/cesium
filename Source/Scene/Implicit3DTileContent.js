@@ -3,12 +3,11 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import CesiumMath from "../Core/Math.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import TileBoundingRegion from "./TileBoundingRegion.js";
-import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -397,53 +396,172 @@ function deriveChildTile(
  * @private
  */
 function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
-  var boundingVolume = implicitTileset.boundingVolume;
-  var parameters;
-  if (defined(boundingVolume.region)) {
-    parameters = boundingVolume.region;
-    var rectangle = Rectangle.unpack(parameters);
-
-    var boundingRegion = new TileBoundingRegion({
-      rectangle: rectangle,
-      minimumHeight: parameters[4],
-      maximumHeight: parameters[5],
-    });
-    var derivedRegion = boundingRegion.deriveVolume(
+  var rootBoundingVolume = implicitTileset.boundingVolume;
+  if (defined(rootBoundingVolume.region)) {
+    var childRegion = deriveBoundingRegion(
+      rootBoundingVolume.region,
       implicitCoordinates.level,
       implicitCoordinates.x,
       implicitCoordinates.y,
       implicitCoordinates.z
     );
 
-    var childRegion = new Array(6);
-    Rectangle.pack(derivedRegion.rectangle, childRegion);
-    childRegion[4] = derivedRegion.minimumHeight;
-    childRegion[5] = derivedRegion.maximumHeight;
-
     return {
       region: childRegion,
     };
   }
 
-  // box
-  parameters = boundingVolume.box;
-  var center = Cartesian3.unpack(parameters);
-  var halfAxes = Matrix3.unpack(parameters, 3);
-  var boundingBox = new TileOrientedBoundingBox(center, halfAxes);
-  var derivedBox = boundingBox.deriveVolume(
+  var childBox = deriveBoundingBox(
+    rootBoundingVolume.box,
     implicitCoordinates.level,
     implicitCoordinates.x,
     implicitCoordinates.y,
     implicitCoordinates.z
   );
 
-  var childBox = new Array(12);
-  Cartesian3.pack(derivedBox.boundingVolume.center, childBox);
-  Matrix3.pack(derivedBox.boundingVolume.halfAxes, childBox, 3);
-
   return {
     box: childBox,
   };
+}
+
+var scratchScaleFactors = new Cartesian3();
+var scratchRootCenter = new Cartesian3();
+var scratchCenter = new Cartesian3();
+/**
+ * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
+ * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
+ * coordinates are given to select the descendant tile and compute its position
+ * and dimensions.
+ * <p>
+ * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
+ * is used. Quadtrees are always divided at the midpoint of the the horizontal
+ * dimensions, i.e. (x, y), leaving the z axis unchanged.
+ * </p>
+ * <p>
+ * This computes the child volume directly from the root bounding volume rather
+ * than recursively subdividing to minimize floating point error.
+ * </p>
+ *
+ * @param {Number[]} rootBox An array of 12 numbers representing the bounding box of the root tile
+ * @param {Number} level The level of the descendant tile relative to the root implicit tile
+ * @param {Number} x The x coordinate of the descendant tile
+ * @param {Number} y The y coordinate of the descendant tile
+ * @param {Number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {Number[]} An array of 12 numbers representing the bounding box of the descendant tile.
+ * @private
+ */
+function deriveBoundingBox(rootBox, level, x, y, z) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("rootBox", rootBox);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (defined(z)) {
+    Check.typeOf.number("z", z);
+  }
+  //>>includeEnd('debug');
+
+  var rootCenter = Cartesian3.unpack(rootBox, 0, scratchRootCenter);
+  var rootHalfAxes = Matrix3.unpack(rootBox, 3);
+
+  if (level === 0) {
+    return rootBox;
+  }
+
+  var tileScale = Math.pow(2, -level);
+  var modelSpaceX = -1 + (2 * x + 1) * tileScale;
+  var modelSpaceY = -1 + (2 * y + 1) * tileScale;
+
+  var modelSpaceZ = 0;
+  var scaleFactors = Cartesian3.fromElements(
+    tileScale,
+    tileScale,
+    1,
+    scratchScaleFactors
+  );
+
+  if (defined(z)) {
+    modelSpaceZ = -1 + (2 * z + 1) * tileScale;
+    scaleFactors.z = tileScale;
+  }
+
+  var center = Cartesian3.fromElements(
+    modelSpaceX,
+    modelSpaceY,
+    modelSpaceZ,
+    scratchCenter
+  );
+  center = Matrix3.multiplyByVector(rootHalfAxes, center, scratchCenter);
+  center = Cartesian3.add(center, rootCenter, scratchCenter);
+
+  var halfAxes = Matrix3.clone(rootHalfAxes);
+  halfAxes = Matrix3.multiplyByScale(halfAxes, scaleFactors, halfAxes);
+
+  var childBox = new Array(12);
+  Cartesian3.pack(center, childBox);
+  Matrix3.pack(halfAxes, childBox, 3);
+  return childBox;
+}
+
+var scratchRectangle = new Rectangle();
+/**
+ * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
+ * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
+ * coordinates are given to select the descendant tile and compute its position
+ * and dimensions.
+ * <p>
+ * If z is present, octree subdivision is used. Otherwise, quadtree subdivision
+ * is used. Quadtrees are always divided at the midpoint of the the horizontal
+ * dimensions, i.e. (mid_longitude, mid_latitude), leaving the height values
+ * unchanged.
+ * </p>
+ * <p>
+ * This computes the child volume directly from the root bounding volume rather
+ * than recursively subdividing to minimize floating point error.
+ * </p>
+ * @param {Number[]} rootRegion An array of 6 numbers representing the root implicit tile
+ * @param {Number} level The level of the descendant tile relative to the root implicit tile
+ * @param {Number} x The x coordinate of the descendant tile
+ * @param {Number} y The x coordinate of the descendant tile
+ * @param {Number} [z] The z coordinate of the descendant tile (octree only)
+ * @returns {Number[]} An array of 6 numbers representing the bounding region of the descendant tile
+ */
+function deriveBoundingRegion(rootRegion, level, x, y, z) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("regionParameters", rootRegion);
+  Check.typeOf.number("level", level);
+  Check.typeOf.number("x", x);
+  Check.typeOf.number("y", y);
+  if (defined(z)) {
+    Check.typeOf.number("z", z);
+  }
+  //>>includeEnd('debug');
+
+  if (level === 0) {
+    return rootRegion;
+  }
+
+  var rectangle = Rectangle.unpack(rootRegion, 0, scratchRectangle);
+  var tileScale = Math.pow(2, -level);
+
+  var childWidth = tileScale * rectangle.width;
+  var west = CesiumMath.negativePiToPi(rectangle.west + x * childWidth);
+  var east = CesiumMath.negativePiToPi(west + childWidth);
+
+  var childHeight = tileScale * rectangle.height;
+  var south = CesiumMath.negativePiToPi(rectangle.south + y * childHeight);
+  var north = CesiumMath.negativePiToPi(south + childHeight);
+
+  // Height is only subdivided for octrees; It remains constant for quadtrees.
+  var minimumHeight = this.minimumHeight;
+  var maximumHeight = this.maximumHeight;
+  if (defined(z)) {
+    var childThickness = tileScale * (this.maximumHeight - this.minimumHeight);
+    minimumHeight += z * childThickness;
+    maximumHeight = minimumHeight + childThickness;
+  }
+
+  return [west, south, east, north, minimumHeight, maximumHeight];
 }
 
 /**
@@ -541,3 +659,6 @@ Implicit3DTileContent.prototype.isDestroyed = function () {
 Implicit3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
+
+Implicit3DTileContent._deriveBoundingBox = deriveBoundingBox;
+Implicit3DTileContent._deriveBoundingRegion = deriveBoundingRegion;
