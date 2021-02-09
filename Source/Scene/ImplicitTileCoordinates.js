@@ -20,13 +20,16 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * direction
  * </p>
  *
- * @private
+ * @alias ImplicitTileCoordinates
+ * @constructor
+ *
  * @param {Object} options An object with the following properties:
  * @param {ImplicitSubdivisionScheme} options.subdivisionScheme Whether the coordinates are for a quadtree or octree
  * @param {Number} options.level The level of a tile relative to the tile with the extension.
  * @param {Number} options.x The x coordinate of the tile
  * @param {Number} options.y The y coordinate of the tile
  * @param {Number} [options.z] The z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
+ * @private
  */
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -88,9 +91,11 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * An index in the range of [0, branchingFactor) that indicates
    * which child of the parent cell these coordinates correspond to.
    * This can be viewed as a morton index within the parent tile.
-   *
+   * <p>
    * This is the last 3 bits of the morton index of the tile, but it can
    * be computed more directly by concatenating the bits [z0] y0 x0
+   * </p>
+   *
    * @private
    * @type {Number}
    * @readonly
@@ -128,9 +133,10 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
 /**
  * Given the (level, x, y, [z]) coordinates of the parent, compute the
  * coordinates of the child.
- * @private
+ *
  * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @return {ImplicitTileCoordinates} The tile coordinates of the child
+ * @returns {ImplicitTileCoordinates} The tile coordinates of the child
+ * @private
  */
 ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   childIndex
@@ -172,8 +178,9 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
 
 /**
  * Get a dictionary of values for templating into an implicit template URI.
+ *
+ * @returns {Object} An object suitable for use with {@link Resource#getDerivedResource}
  * @private
- * @return {Object} An object suitable for use with {@link Resource#getDerivedResource}
  */
 ImplicitTileCoordinates.prototype.getTemplateValues = function () {
   var values = {
@@ -192,12 +199,12 @@ var scratchCoordinatesArray = [0, 0, 0];
 /**
  * Given a level number, morton index, and whether the tileset is an
  * octree/quadtree, compute the (level, x, y, [z]) coordinates
- * @private
+ *
  * @param {ImplicitSubdivisionScheme} subdivisionScheme
  * @param {Number} level The level of the tree
  * @param {Number} mortonIndex The morton index of the tile.
- * @return {ImplicitTileCoordinates} The coordinates of the tile with the given
- * Morton index
+ * @returns {ImplicitTileCoordinates} The coordinates of the tile with the given Morton index
+ * @private
  */
 ImplicitTileCoordinates.fromMortonIndex = function (
   subdivisionScheme,

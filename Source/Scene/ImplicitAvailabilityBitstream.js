@@ -6,12 +6,15 @@ import DeveloperError from "../Core/DeveloperError.js";
  * An availability bitstream for use in an {@link ImplicitSubtree}. This handles
  * both Uint8Array bitstreams and constant values.
  *
- * @private
+ * @alias ImplicitAvailabilityBitstream
+ * @constructor
+ *
  * @param {Object} options An object with the following properties:
  * @param {Number} options.lengthBits The length of the bitstream in bits
  * @param {Boolean} [options.constant] A single boolean value indicating the value of all the bits in the bitstream if they are all the same
  * @param {Uint8Array} [options.bitstream] An array of bytes storing the bitstream in binary
  * @param {Number} [options.availableCount] A number indicating how many 1 bits are found in the bitstream
+ * @private
  */
 export default function ImplicitAvailabilityBitstream(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -50,8 +53,10 @@ Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
 /**
  * Get a bit from the availability bitstream as a Boolean. If the bitstream
  * is a constant, the constant value is returned instead.
+ *
  * @param {Number} index The integer index of the bit.
- * @return {Boolean} The value of the bit
+ * @returns {Boolean} The value of the bit
+ * @private
  */
 ImplicitAvailabilityBitstream.prototype.getBit = function (index) {
   //>>includeStart('debug', pragmas.debug);

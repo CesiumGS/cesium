@@ -1767,12 +1767,14 @@ Cesium3DTileset.prototype.loadTileset = function (
  * Make a {@link Cesium3DTile} for a specific tile. If the tile has the
  * 3DTILES_implicit_tiling extension, it creates a placeholder tile instead
  * for lazy evaluation of the implicit tileset.
- * @private
+ *
  * @param {Cesium3DTileset} tileset The tileset
  * @param {Resource} resource The base resource for the tileset
  * @param {Object} tileHeader The JSON header for the tile
  * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
  * @returns {Cesium3DTile} The newly created tile
+ *
+ * @private
  */
 function makeTile(tileset, resource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {

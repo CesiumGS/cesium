@@ -8,10 +8,13 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * An object representing a single subtree in an implicit tileset
  * including availability.
  *
- * @private
+ * @alias ImplicitSubtree
+ * @constructor
+ *
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
+ * @private
  */
 export default function ImplicitSubtree(
   resource,
@@ -36,9 +39,9 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    * A promise that resolves once all necessary availability buffers
    * are loaded.
    *
-   * @private
    * @type {Promise}
    * @readonly
+   * @private
    */
   readyPromise: {
     get: function () {
@@ -50,9 +53,9 @@ Object.defineProperties(ImplicitSubtree.prototype, {
 /**
  * Check if a specific tile is available
  *
- * @private
  * @param {Number} index the index of the desired tile
- * @return {Boolean} the value of the i-th bit
+ * @returns {Boolean} the value of the i-th bit
+ * @private
  */
 ImplicitSubtree.prototype.tileIsAvailable = function (index) {
   return this._tileAvailability.getBit(index);
@@ -61,9 +64,9 @@ ImplicitSubtree.prototype.tileIsAvailable = function (index) {
 /**
  * Check if a specific tile's content is available
  *
- * @private
  * @param {Number} index the index of the desired tile
- * @return {Boolean} the value of the i-th bit
+ * @returns {Boolean} the value of the i-th bit
+ * @private
  */
 ImplicitSubtree.prototype.contentIsAvailable = function (index) {
   return this._contentAvailability.getBit(index);
@@ -72,9 +75,9 @@ ImplicitSubtree.prototype.contentIsAvailable = function (index) {
 /**
  * Check if a child subtree is available
  *
- * @private
  * @param {Number} index the index of the desired child subtree
- * @return {Boolean} the value of the i-th bit
+ * @returns {Boolean} the value of the i-th bit
+ * @private
  */
 ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
   return this._childSubtreeAvailability.getBit(index);
@@ -83,13 +86,15 @@ ImplicitSubtree.prototype.childSubtreeIsAvailable = function (index) {
 /**
  * Get the index of the first node at the given level within this subtree.
  * e.g. for a quadtree:
- * - Level 0 starts at index 0
- * - Level 1 starts at index 1
- * - Level 2 starts at index 5
+ * <ul>
+ * <li>Level 0 starts at index 0</li>
+ * <li>Level 1 starts at index 1</li>
+ * <li>Level 2 starts at index 5</li>
+ * </ul>
  *
- * @private
  * @param {Number} level The 0-indexed level number relative to the root of the subtree
- * @return {Number} The first index at the desired level
+ * @returns {Number} The first index at the desired level
+ * @private
  */
 ImplicitSubtree.prototype.getLevelOffset = function (level) {
   var branchingFactor = this._branchingFactor;
@@ -101,9 +106,9 @@ ImplicitSubtree.prototype.getLevelOffset = function (level) {
  * chopping off the last 2 (quadtree) or 3 (octree) bits of the morton
  * index.
  *
- * @private
  * @param {Number} childIndex The morton index of the child tile relative to its parent
- * @return {Number} The index of the child's parent node
+ * @returns {Number} The index of the child's parent node
+ * @private
  */
 ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
   var bitsPerLevel = 2;
@@ -119,10 +124,10 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
  * external buffers that are used by the implicit tileset. When finishes,
  * it resolves/rejects subtree.readyPromise.
  *
- * @private
  * @param {ImplicitSubtree} subtree The subtree
  * @param {Uint8Array} subtreeView The contents of the subtree binary
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
+ * @private
  */
 function initialize(subtree, subtreeView, implicitTileset) {
   var chunks = parseSubtreeChunks(subtreeView);
@@ -152,18 +157,18 @@ function initialize(subtree, subtreeView, implicitTileset) {
 /**
  * A helper object for storing the two parts of the subtree binary
  *
- * @private
  * @typedef {Object} SubtreeChunks
  * @property {Object} json The json chunk of the subtree
  * @property {Uint8Array} binary The binary chunk of the subtree. This represents the internal buffer.
+ * @private
  */
 
 /**
  * Given the binary contents of a subtree, split into JSON and binary chunks
  *
- * @private
  * @param {Uint8Array} subtreeView The subtree binary
- * @return {SubtreeChunks} An object containing the JSON and binary chunks.
+ * @returns {SubtreeChunks} An object containing the JSON and binary chunks.
+ * @private
  */
 function parseSubtreeChunks(subtreeView) {
   // Parse the header
@@ -202,12 +207,12 @@ function parseSubtreeChunks(subtreeView) {
  * Buffers are assumed inactive until explicitly marked active. This is used
  * to avoid fetching unneeded buffers.
  *
- * @private
  * @typedef {Object} BufferHeader
  * @property {Boolean} isExternal True if this is an external buffer
  * @property {Boolean} isActive Whether this buffer is currently used.
  * @property {String} [uri] The URI of the buffer (external buffers only)
  * @property {Number} byteLength The byte length of the buffer, including any padding contained within.
+ * @private
  */
 
 /**
@@ -215,9 +220,9 @@ function parseSubtreeChunks(subtreeView) {
  * isExternal and isActive fields for easier parsing later. This modifies
  * the objects in place.
  *
- * @private
  * @param {Object[]} bufferHeaders The JSON from subtreeJson.buffers.
- * @return {BufferHeader[]} The same array of headers with additional fields.
+ * @returns {BufferHeader[]} The same array of headers with additional fields.
+ * @private
  */
 function preprocessBuffers(bufferHeaders) {
   for (var i = 0; i < bufferHeaders.length; i++) {
@@ -233,23 +238,23 @@ function preprocessBuffers(bufferHeaders) {
  * A buffer header is the JSON header from the subtree JSON chunk plus
  * the isActive flag and a reference to the header for the underlying buffer
  *
- * @private
  * @typedef {Object} BufferViewHeader
  * @property {BufferHeader} bufferHeader A reference to the header for the underlying buffer
  * @property {Boolean} isActive Whether this bufferView is currently used.
  * @property {Number} buffer The index of the underlying buffer.
  * @property {Number} byteOffset The start byte of the bufferView within the buffer.
  * @property {Number} byteLength The length of the bufferView. No padding is included in this length.
+ * @private
  */
 
 /**
  * Iterate the list of buffer views from the subtree JSON and add the
  * isActive flag. Also save a reference to the bufferHeader
  *
- * @private
  * @param {Object[]} bufferViewHeaders The JSON from subtree.bufferViews
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
- * @return {BufferViewHeader[]} The same array of bufferView headers with additional fields
+ * @returns {BufferViewHeader[]} The same array of bufferView headers with additional fields
+ * @private
  */
 function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
   for (var i = 0; i < bufferViewHeaders.length; i++) {
@@ -272,9 +277,9 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  *
  * This function modifies the buffer view headers' isActive flags in place.
  *
- * @private
  * @param {Object[]} subtreeJson The JSON chunk from the subtree
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
+ * @private
  */
 function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
   var header;
@@ -304,18 +309,20 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  * Go through the list of buffers and gather all the active ones into a
  * a dictionary. Since external buffers are allowed, this sometimes involves
  * fetching separate binary files. Consequently, this method returns a promise.
- *
+ * <p>
  * The results are put into a dictionary object. The keys are indices of
  * buffers, and the values are Uint8Arrays of the contents. Only buffers
  * marked with the isActive flag are fetched.
- *
+ * </p>
+ * <p>
  * The internal buffer (the subtree's binary chunk) is also stored in this
  * dictionary if it is marked active.
- * @private
+ * </p>
  * @param {ImplicitSubtree} subtree The subtree
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @param {Uint8Array} internalBuffer The binary chunk of the JSON file
- * @return {Promise<Object>} A promise resolving to the dictionary of active buffers
+ * @returns {Promise<Object>} A promise resolving to the dictionary of active buffers
+ * @private
  */
 function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
   var promises = [];
@@ -350,10 +357,11 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
 /**
  * Go through the list of buffer views, and if they are marked as active,
  * extract a subarray from one of the active buffers.
- * @private
+ *
  * @param {BufferViewHeader[]} bufferViewHeaders
  * @param {Object} buffersU8 A dictionary of buffer index to a Uint8Array of its contents.
- * @return {Object} A dictionary of buffer view index to a Uint8Array of its contents.
+ * @returns {Object} A dictionary of buffer view index to a Uint8Array of its contents.
+ * @private
  */
 function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
   var bufferViewsU8 = {};
@@ -375,11 +383,12 @@ function parseActiveBufferViews(bufferViewHeaders, buffersU8) {
 
 /**
  * Parse the three availability bitstreams and store them in the subtree
- * @private
+ *
  * @param {ImplicitSubtree} subtree The subtree to modify
  * @param {Object} subtreeJson The subtree JSON
  * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to
  * @param {Object} bufferViewsU8 A dictionary of buffer view index to a Uint8Array of its contents.
+ * @private
  */
 function parseAvailability(
   subtree,
@@ -416,11 +425,11 @@ function parseAvailability(
  * in-memory representation using an {@link ImplicitAvailabilityBitstream}
  * object. This handles both constants and bitstreams from a bufferView.
  *
- * @private
  * @param {Object} availabilityJson A JSON object representing the availability
  * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @param {Number} lengthBits The length of the availability bitstream in bits
- * @return {ImplicitAvailabilityBitstream} The parsed bitstream object
+ * @returns {ImplicitAvailabilityBitstream} The parsed bitstream object
+ * @private
  */
 function parseAvailabilityBitstream(
   availabilityJson,

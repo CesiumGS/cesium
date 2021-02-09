@@ -2,6 +2,8 @@ import DeveloperError from "../Core/DeveloperError.js";
 
 /**
  * The subdivision scheme for an implicit tileset.
+ *
+ * @enum {String}
  * @private
  */
 var ImplicitSubdivisionScheme = {
