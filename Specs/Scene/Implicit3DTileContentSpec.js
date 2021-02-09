@@ -78,17 +78,8 @@ describe("Scene/Implicit3DTileContent", function () {
       gatherTilesPreorder(tile.children[i], minLevel, maxLevel, result);
     }
   }
-
-  var mockParentTile;
   var mockPlaceholderTile;
   beforeEach(function () {
-    mockParentTile = new Cesium3DTile(mockTileset, tilesetResource, {
-      geometricError: 400,
-      boundingVolume: {
-        box: [0, 0, 0, 256, 0, 0, 0, 256, 0, 0, 0, 256],
-      },
-      children: [],
-    });
     mockPlaceholderTile = new Cesium3DTile(mockTileset, tilesetResource, {
       geometricError: 400,
       boundingVolume: {
@@ -97,9 +88,6 @@ describe("Scene/Implicit3DTileContent", function () {
     });
     mockPlaceholderTile.implicitCoordinates = rootCoordinates;
     mockPlaceholderTile.implicitTileset = implicitTileset;
-
-    mockParentTile.children.push(mockPlaceholderTile);
-    mockPlaceholderTile.parent = mockParentTile;
   });
 
   it("expands subtree", function () {
@@ -113,7 +101,7 @@ describe("Scene/Implicit3DTileContent", function () {
     return content.readyPromise.then(function () {
       var expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
       var tiles = [];
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       expect(expectedChildrenCounts.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {
@@ -145,7 +133,7 @@ describe("Scene/Implicit3DTileContent", function () {
         [2, 1, 3],
       ];
       var tiles = [];
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
         var expected = expectedCoordinates[i];
@@ -176,7 +164,7 @@ describe("Scene/Implicit3DTileContent", function () {
       ];
       var contentAvailability = [false, true, true];
       var templateUri = implicitTileset.contentUriTemplate;
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
       expect(expectedCoordinates.length).toEqual(tiles.length);
@@ -220,7 +208,7 @@ describe("Scene/Implicit3DTileContent", function () {
         [2, 1, 3],
       ];
       var templateUri = implicitTileset.subtreeUriTemplate;
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
@@ -259,7 +247,7 @@ describe("Scene/Implicit3DTileContent", function () {
         ? Cesium3DTileRefine.ADD
         : Cesium3DTileRefine.REPLACE;
     return content.readyPromise.then(function () {
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
@@ -278,7 +266,7 @@ describe("Scene/Implicit3DTileContent", function () {
     );
     var rootGeometricError = implicitTileset.geometricError;
     return content.readyPromise.then(function () {
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
@@ -317,7 +305,7 @@ describe("Scene/Implicit3DTileContent", function () {
         new Matrix3(256, 0, 0, 0, 256, 0, 0, 0, 256)
       );
 
-      var subtreeRootTile = mockParentTile.children[0];
+      var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
@@ -334,8 +322,7 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
-  it("puts the root tile inside the placeholder tile if no parent is given", function () {
-    mockPlaceholderTile.parent = undefined;
+  it("puts the root tile inside the placeholder tile", function () {
     var content = new Implicit3DTileContent(
       mockTileset,
       mockPlaceholderTile,
@@ -345,22 +332,6 @@ describe("Scene/Implicit3DTileContent", function () {
     );
     return content.readyPromise.then(function () {
       expect(mockPlaceholderTile.children.length).toEqual(1);
-    });
-  });
-
-  it("replaces the placeholder tile if a parent is given", function () {
-    var content = new Implicit3DTileContent(
-      mockTileset,
-      mockPlaceholderTile,
-      tilesetResource,
-      quadtreeBuffer,
-      0
-    );
-    return content.readyPromise.then(function () {
-      var index = mockParentTile.children.indexOf(mockPlaceholderTile);
-      expect(index).toEqual(-1);
-      expect(mockParentTile.children.length).toEqual(1);
-      expect(mockPlaceholderTile.children.length).toEqual(0);
     });
   });
 });
