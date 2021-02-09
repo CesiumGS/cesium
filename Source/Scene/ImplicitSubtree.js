@@ -6,12 +6,12 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 /**
  * An object representing a single subtree in an implicit tileset
- * including availability and metadata.
+ * including availability.
  *
  * @private
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
- * @param {implicitTIleset} implicitTileset The implicit tileset. This includes information about the size of subtrees
+ * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
  */
 export default function ImplicitSubtree(
   resource,

@@ -6,16 +6,19 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 /**
  * The coordinates for a tile in an implicit tileset. The coordinates
  * are (level, x, y) for quadtrees or (level, x, y, z) for quadtrees.
- *
+ * <p>
  * Level numbers are 0-indexed and start at the root of the implicit tileset
  * (the tile with the <code>3DTILES_implicit_tiling</code> extension).
- *
+ * </p>
+ * <p>
  * For box bounding volumes, x, y, z increase along the +x, +y, and +z
  * directions defined by the half axes
- *
+ * </p>
+ * <p>
  * For region bounding volumes, x increases in the +longitude direction, y
  * increases in the +latitude direction, and z increases in the +height
  * direction
+ * </p>
  *
  * @private
  * @param {Object} options An object with the following properties:
@@ -23,7 +26,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @param {Number} options.level The level of a tile relative to the tile with the extension.
  * @param {Number} options.x The x coordinate of the tile
  * @param {Number} options.y The y coordinate of the tile
- * @param {Number} [options.z] THe z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
+ * @param {Number} [options.z] The z coordinate of the tile. Only required when options.subdivisionScheme is ImplicitSubdivisionScheme.OCTREE
  */
 export default function ImplicitTileCoordinates(options) {
   //>>includeStart('debug', pragmas.debug);

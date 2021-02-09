@@ -22,13 +22,16 @@ import TileBoundingRegion from "./TileBoundingRegion.js";
  * updates the tileset tree with more tiles. However, unlike external tilesets,
  * child subtrees are represented as additional placeholder nodes with
  * Implicit3DTileContent.
+ * <p>
+ * Implements the {@link Cesium3DTileContent} interface.
+ * </p>
  *
  * @private
  * @param {Cesium3DTileset} tileset The tileset this content belongs to
  * @param {Cesium3DTile} tile The tile this content belongs to.
  * @param {Resource} resource The resource for the tileset
  * @param {ArrayBuffer} arrayBuffer The array buffer that stores the content payload
- * @param {Number} byteOffset The offset into the array buffer
+ * @param {Number} [byteOffset=0] The offset into the array buffer
  */
 export default function Implicit3DTileContent(
   tileset,
@@ -283,7 +286,8 @@ function listChildSubtrees(content, subtree, bottomRow) {
 }
 
 /**
- * Results of transcodeSubtreeTiles
+ * Results of transcodeSubtreeTiles, containing the root tile of the
+ * subtree and the bottom row of nodes for further processing.
  * @private
  * @typedef {Object} TranscodedSubtree
  * @property {Cesium3DTile} rootTile The transcoded root tile of the subtree
@@ -299,8 +303,8 @@ function listChildSubtrees(content, subtree, bottomRow) {
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ImplicitSubtree} subtree The subtree to get availability information
  * @param {Cesium3DTile} parentOfRootTile The parent of the root tile, used for constructing the subtree root tile
- * @param {Number} childIndex The morton index of the root tile relative to parentOfRootTile
- * @return {TranscodedSubtree}
+ * @param {Number} childIndex The Morton index of the root tile relative to parentOfRootTile
+ * @return {TranscodedSubtree} The newly created subtree of tiles
  */
 function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
   var rootBitIndex = 0;

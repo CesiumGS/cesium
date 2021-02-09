@@ -341,12 +341,12 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.priorityDeferred = false;
 
   /**
-   * For implicit tiling, An ImplicitTileset object will be attached to the
+   * For implicit tiling, an ImplicitTileset object will be attached to the
    * tile with the <code>3DTILES_implicit_tiling</code> extension. This way
    * the {@link Implicit3DTileContent} can access the tile later once the
    * content is fetched.
    *
-   * @type {implicitTileset}
+   * @type {ImplicitTileset}
    *
    * @private
    */
