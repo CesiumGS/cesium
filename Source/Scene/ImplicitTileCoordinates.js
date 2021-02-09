@@ -44,44 +44,50 @@ export default function ImplicitTileCoordinates(options) {
 
   /**
    * Whether the tileset is a quadtree or octree
-   * @private
+   *
    * @type {ImplicitSubdivisionScheme}
    * @readonly
+   * @private
    */
   this.subdivisionScheme = options.subdivisionScheme;
 
   /**
    * Level of this tile, relative to the tile with the
    * <code>3DTILES_implicit_tiling</code> extension. Level numbers start at 0.
-   * @private
+   *
    * @type {Number}
    * @readonly
+   * @private
    */
   this.level = options.level;
 
   /**
    * X coordinate of this tile
-   * @private
+   *
    * @type {Number}
    * @readonly
+   * @private
    */
   this.x = options.x;
 
   /**
    * Y coordinate of this tile
-   * @private
+   *
    * @type {Number}
    * @readonly
+   * @private
    */
   this.y = options.y;
 
+  /**
+   * Z coordinate of this tile. Only defined for octrees.
+   *
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  this.z = undefined;
   if (options.subdivisionScheme === ImplicitSubdivisionScheme.OCTREE) {
-    /**
-     * Z coordinate of this tile. Only defined for octrees.
-     * @private
-     * @type {Number}
-     * @readonly
-     */
     this.z = options.z;
   }
 }
@@ -96,9 +102,9 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
    * be computed more directly by concatenating the bits [z0] y0 x0
    * </p>
    *
-   * @private
    * @type {Number}
    * @readonly
+   * @private
    */
   childIndex: {
     get: function () {
@@ -116,9 +122,10 @@ Object.defineProperties(ImplicitTileCoordinates.prototype, {
   /**
    * Get the Morton index for this tile within the current LOD by interleaving
    * the bits of the x, y and z coordinates.
-   * @private
+   *
    * @type {Number}
    * @readonly
+   * @private
    */
   mortonIndex: {
     get: function () {
@@ -147,7 +154,7 @@ ImplicitTileCoordinates.prototype.deriveChildCoordinates = function (
   );
   if (childIndex < 0 || branchingFactor <= childIndex) {
     throw new DeveloperError(
-      "childIndex must be at least 0 and less than" + branchingFactor
+      "childIndex must be at least 0 and less than " + branchingFactor
     );
   }
   //>>includeEnd('debug');

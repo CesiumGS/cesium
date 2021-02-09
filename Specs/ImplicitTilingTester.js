@@ -175,7 +175,6 @@ function parseAvailabilityDescriptor(descriptor) {
 }
 
 function makeBuffers(bufferViewsU8, subtreeJson) {
-  console.log(bufferViewsU8);
   var bufferCount = 0;
   var byteLength = 0;
   var typedArrays = [];

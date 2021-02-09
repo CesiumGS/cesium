@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * An availability bitstream for use in an {@link ImplicitSubtree}. This handles
@@ -29,14 +30,12 @@ export default function ImplicitAvailabilityBitstream(options) {
   if (defined(options.constant)) {
     this._constant = options.constant;
   } else {
-    //>>includeStart('debug', pragmas.debug);
     var expectedLength = Math.ceil(this._lengthBits / 8);
     if (options.bitstream.length !== expectedLength) {
-      throw new DeveloperError(
+      throw new RuntimeError(
         "options.bitstream.length must have ceil(options.lengthBits / 8) bytes."
       );
     }
-    //>>includeEnd('debug');
 
     this._bitstream = options.bitstream;
   }

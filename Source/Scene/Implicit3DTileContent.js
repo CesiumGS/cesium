@@ -1,11 +1,10 @@
-import { TileOrientedBoundingBox } from "../Cesium.js";
+import TileOrientedBoundingBox from "../Cesium.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
 import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
@@ -45,6 +44,7 @@ export default function Implicit3DTileContent(
 ) {
   //>>includeStart('debug', pragmas.debug);
   Check.defined("tile.implicitTileset", tile.implicitTileset);
+  Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
   //>>includeEnd('debug');
 
   this._implicitTileset = tile.implicitTileset;
@@ -53,6 +53,8 @@ export default function Implicit3DTileContent(
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
+
+  this.featurePropertiesDirty = false;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -237,11 +239,12 @@ Implicit3DTileContent.makeRootPlaceholderTile = function (
     z: 0,
   });
 
+  var contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
+    templateValues: rootCoordinates.getTemplateValues(),
+  }).url;
   var contentJson = {
     content: {
-      uri: implicitTileset.subtreeUriTemplate.getDerivedResource({
-        templateValues: rootCoordinates.getTemplateValues(),
-      }).url,
+      uri: contentUri,
     },
   };
 
@@ -316,13 +319,6 @@ function listChildSubtrees(content, subtree, bottomRow) {
  */
 function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
   var rootBitIndex = 0;
-
-  //>>includeStart('debug', pragmas.debug);
-  if (!subtree.tileIsAvailable(rootBitIndex)) {
-    throw new DeveloperError("A subtree must have at least 1 available tile");
-  }
-  //>>includeEnd('debug');
-
   var rootTile = deriveChildTile(
     content,
     subtree,
@@ -420,10 +416,13 @@ function deriveChildTile(
 
   var contentJson;
   if (subtree.contentIsAvailable(childBitIndex)) {
-    contentJson = {
-      uri: implicitTileset.contentUriTemplate.getDerivedResource({
+    var childContentUri = implicitTileset.contentUriTemplate.getDerivedResource(
+      {
         templateValues: implicitCoordinates.getTemplateValues(),
-      }).url,
+      }
+    ).url;
+    contentJson = {
+      uri: childContentUri,
     };
   }
 
@@ -431,11 +430,12 @@ function deriveChildTile(
     implicitTileset,
     implicitCoordinates
   );
+  var childGeometricError =
+    implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
+
   var tileJson = {
     boundingVolume: boundingVolume,
-    // geometricError / 2^level
-    geometricError:
-      implicitTileset.geometricError / (1 << implicitCoordinates.level),
+    geometricError: childGeometricError,
     refine: implicitTileset.refine,
     content: contentJson,
   };
@@ -524,20 +524,21 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
     childIndex
   );
 
-  var boundingVolume = deriveBoundingVolume(
+  var childBoundingVolume = deriveBoundingVolume(
     implicitTileset,
     implicitCoordinates
   );
+  var childGeometricError =
+    implicitTileset.geometricError / Math.pow(2, implicitCoordinates.level);
+  var childContentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
+    templateValues: implicitCoordinates.getTemplateValues(),
+  }).url;
   var tileJson = {
-    boundingVolume: boundingVolume,
-    // geometricError / 2^level
-    geometricError:
-      implicitTileset.geometricError / (1 << implicitCoordinates.level),
+    boundingVolume: childBoundingVolume,
+    geometricError: childGeometricError,
     refine: implicitTileset.refine,
     content: {
-      uri: implicitTileset.subtreeUriTemplate.getDerivedResource({
-        templateValues: implicitCoordinates.getTemplateValues(),
-      }).url,
+      uri: childContentUri,
     },
   };
 

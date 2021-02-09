@@ -68,14 +68,14 @@ describe("Scene/Implicit3DTileContent", function () {
     z: 0,
   });
 
-  function preOrder(tile, minLevel, maxLevel, result) {
+  function gatherTilesPreorder(tile, minLevel, maxLevel, result) {
     var level = tile.implicitCoordinates.level;
     if (minLevel <= level && level <= maxLevel) {
       result.push(tile);
     }
 
     for (var i = 0; i < tile.children.length; i++) {
-      preOrder(tile.children[i], minLevel, maxLevel, result);
+      gatherTilesPreorder(tile.children[i], minLevel, maxLevel, result);
     }
   }
 
@@ -114,7 +114,7 @@ describe("Scene/Implicit3DTileContent", function () {
       var expectedChildrenCounts = [2, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0];
       var tiles = [];
       var subtreeRootTile = mockParentTile.children[0];
-      preOrder(subtreeRootTile, 0, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       expect(expectedChildrenCounts.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {
         expect(tiles[i].children.length).toEqual(expectedChildrenCounts[i]);
@@ -146,7 +146,7 @@ describe("Scene/Implicit3DTileContent", function () {
       ];
       var tiles = [];
       var subtreeRootTile = mockParentTile.children[0];
-      preOrder(subtreeRootTile, 0, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
         var expected = expectedCoordinates[i];
         var coordinates = new ImplicitTileCoordinates({
@@ -178,7 +178,7 @@ describe("Scene/Implicit3DTileContent", function () {
       var templateUri = implicitTileset.contentUriTemplate;
       var subtreeRootTile = mockParentTile.children[0];
       var tiles = [];
-      preOrder(subtreeRootTile, 0, 1, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
       expect(expectedCoordinates.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {
         var expected = expectedCoordinates[i];
@@ -222,7 +222,7 @@ describe("Scene/Implicit3DTileContent", function () {
       var templateUri = implicitTileset.subtreeUriTemplate;
       var subtreeRootTile = mockParentTile.children[0];
       var tiles = [];
-      preOrder(subtreeRootTile, 2, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 2, 2, tiles);
 
       expect(expectedCoordinates.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {
@@ -261,7 +261,7 @@ describe("Scene/Implicit3DTileContent", function () {
     return content.readyPromise.then(function () {
       var subtreeRootTile = mockParentTile.children[0];
       var tiles = [];
-      preOrder(subtreeRootTile, 0, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
         expect(tiles[i].refine).toEqual(refine);
       }
@@ -280,7 +280,7 @@ describe("Scene/Implicit3DTileContent", function () {
     return content.readyPromise.then(function () {
       var subtreeRootTile = mockParentTile.children[0];
       var tiles = [];
-      preOrder(subtreeRootTile, 0, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
       for (var i = 0; i < tiles.length; i++) {
         var level = tiles[i].implicitCoordinates.level;
         expect(tiles[i].geometricError).toEqual(
@@ -319,7 +319,7 @@ describe("Scene/Implicit3DTileContent", function () {
 
       var subtreeRootTile = mockParentTile.children[0];
       var tiles = [];
-      preOrder(subtreeRootTile, 0, 2, tiles);
+      gatherTilesPreorder(subtreeRootTile, 0, 2, tiles);
 
       expect(expectedCoordinates.length).toEqual(tiles.length);
       for (var i = 0; i < tiles.length; i++) {

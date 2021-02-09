@@ -12,6 +12,7 @@ var ImplicitSubdivisionScheme = {
    * of the x and y dimensions of the bounding box
    * @type {String}
    * @constant
+   * @private
    */
   QUADTREE: "QUADTREE",
   /**
@@ -19,6 +20,7 @@ var ImplicitSubdivisionScheme = {
    * of the x, y, and z dimensions of the bounding box.
    * @type {String}
    * @constant
+   * @private
    */
   OCTREE: "OCTREE",
 };

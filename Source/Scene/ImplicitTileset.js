@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Resource from "../Core/Resource.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 /**
@@ -11,9 +11,12 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * geometricError, etc.). and details about the subtrees (e.g. subtreeLevels,
  * subdivisionScheme).
  *
- * @private
+ * @alias ImplicitTileset
+ * @constructor
+ *
  * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
+ * @private
  */
 export default function ImplicitTileset(baseResource, tileJson) {
   var extension = tileJson.extensions["3DTILES_implicit_tiling"];
@@ -29,48 +32,46 @@ export default function ImplicitTileset(baseResource, tileJson) {
    * later when expanding Implicit3DTileContents so tile URLs are relative
    * to the tileset, not the subtree file.
    *
-   * @private
    * @type {Resource}
    * @readonly
+   * @private
    */
   this.baseResource = baseResource;
 
   /**
    * The geometric error of the root tile
    *
-   * @private
    * @type {Number}
    * @readonly
+   * @private
    */
   this.geometricError = tileJson.geometricError;
 
-  //>>includeStart('debug', pragmas.debug);
   if (
     !defined(tileJson.boundingVolume.box) &&
     !defined(tileJson.boundingVolume.region)
   ) {
-    throw new DeveloperError(
+    throw new RuntimeError(
       "Only box and region are supported for implicit tiling"
     );
   }
-  //>>includeEnd('debug');
 
   /**
    * The JSON representation of a bounding volume. This is either a box or a
    * region.
    *
-   * @private
    * @type {Object}
    * @readonly
+   * @private
    */
   this.boundingVolume = tileJson.boundingVolume;
 
   /**
    * The refine strategy as a string, either 'ADD' or 'REPLACE'
    *
-   * @private
    * @type {String}
    * @readonly
+   * @private
    */
   this.refine = tileJson.refine;
 
@@ -78,9 +79,9 @@ export default function ImplicitTileset(baseResource, tileJson) {
    * Template URI for the subtree resources, e.g.
    * <code>https://example.com/{level}/{x}/{y}.subtree</code>
    *
-   * @private
    * @type {Resource}
    * @readonly
+   * @private
    */
   this.subtreeUriTemplate = new Resource({ url: extension.subtrees.uri });
 
@@ -88,31 +89,29 @@ export default function ImplicitTileset(baseResource, tileJson) {
    * Template URI for locating content resources, e.g.
    * <code>https://example.com/{level}/{x}/{y}.b3dm</code>
    *
-   * @private
    * @type {Resource}
    * @readonly
+   * @private
    */
   this.contentUriTemplate = new Resource({ url: tileJson.content.uri });
 
   /**
    * The subdivision scheme for this implicit tileset; either OCTREE or QUADTREE
    *
-   * @private
    * @type {ImplicitSubdivisionScheme}
    * @readonly
+   * @private
    */
   this.subdivisionScheme =
-    extension.subdivisionScheme.toUpperCase() === "OCTREE"
-      ? ImplicitSubdivisionScheme.OCTREE
-      : ImplicitSubdivisionScheme.QUADTREE;
+    ImplicitSubdivisionScheme[extension.subdivisionScheme];
 
   /**
    * The branching factor for this tileset. Either 4 for quadtrees or 8 for
    * octrees.
    *
-   * @private
    * @type {Number}
    * @readonly
+   * @private
    */
   this.branchingFactor = ImplicitSubdivisionScheme.getBranchingFactor(
     this.subdivisionScheme
@@ -122,18 +121,18 @@ export default function ImplicitTileset(baseResource, tileJson) {
    * How many distinct levels within each subtree. For example, a quadtree
    * with subtreeLevels = 2 will have 5 nodes per quadtree (1 root + 4 children)
    *
-   * @private
    * @type {Number}
    * @readonly
+   * @private
    */
   this.subtreeLevels = extension.subtreeLevels;
 
   /**
    * The deepest level of any available tile in the entire tileset.
    *
-   * @private
    * @type {Number}
    * @readonly
+   * @private
    */
   this.maximumLevel = extension.maximumLevel;
 }

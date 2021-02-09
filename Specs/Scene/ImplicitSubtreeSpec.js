@@ -92,6 +92,10 @@ describe("Scene/ImplicitSubtree", function () {
     },
   });
 
+  it("handles typed arrays with a byte offset", function () {
+    fail();
+  });
+
   it("gets availability from internal buffer", function () {
     var subtreeDescription = {
       tileAvailability: {

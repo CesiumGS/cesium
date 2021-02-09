@@ -1,5 +1,5 @@
 import defined from "../Core/defined.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import when from "../ThirdParty/when.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
@@ -45,7 +45,7 @@ Object.defineProperties(ImplicitSubtree.prototype, {
    */
   readyPromise: {
     get: function () {
-      return this._readyPromise;
+      return this._readyPromise.promise;
     },
   },
 });
@@ -173,7 +173,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
 function parseSubtreeChunks(subtreeView) {
   // Parse the header
   var littleEndian = true;
-  var subtreeReader = new DataView(subtreeView.buffer);
+  var subtreeReader = new DataView(subtreeView.buffer, subtreeView.byteOffset);
   // Skip to the chunk lengths
   var byteOffset = 8;
 
@@ -185,8 +185,10 @@ function parseSubtreeChunks(subtreeView) {
   var binaryByteLength = subtreeReader.getUint32(byteOffset, littleEndian);
   byteOffset += 8;
 
-  var subtreeJson = JSON.parse(
-    getStringFromTypedArray(subtreeView, byteOffset, jsonByteLength)
+  var subtreeJson = getJsonFromTypedArray(
+    subtreeView,
+    byteOffset,
+    jsonByteLength
   );
   byteOffset += jsonByteLength;
   var subtreeBinary = subtreeView.subarray(
