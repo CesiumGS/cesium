@@ -278,6 +278,124 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 });
 
+/**
+ * Validates whether the given value conforms to the property.
+ *
+ * @param {*} value The value.
+ * @returns {String|undefined} An error message if the value does not conform to the property, otherwise undefined.
+ */
+MetadataClassProperty.prototype.validate = function (value) {
+  var message;
+  var type = this._type;
+  if (type === MetadataType.ARRAY) {
+    if (!Array.isArray(value)) {
+      return getTypeErrorMessage(value, type);
+    }
+    var length = value.length;
+    if (defined(this._componentCount) && this._componentCount !== length) {
+      return "Array length does not match componentCount";
+    }
+    for (var i = 0; i < length; ++i) {
+      message = checkValue(this, value[i]);
+      if (defined(message)) {
+        return message;
+      }
+    }
+  } else {
+    message = checkValue(this, value);
+    if (defined(message)) {
+      return message;
+    }
+  }
+};
+
+function getTypeErrorMessage(value, type) {
+  return "value " + value + " does not match type " + type;
+}
+
+function getOutOfRangeErrorMessage(value, type, normalized) {
+  var errorMessage = "value " + value + " is out of range for type " + type;
+  if (normalized) {
+    errorMessage += " (normalized)";
+  }
+  return errorMessage;
+}
+
+function checkInRange(value, type, normalized) {
+  if (normalized) {
+    var min = MetadataType.isUnsignedIntegerType(type) ? 0.0 : -1.0;
+    var max = 1.0;
+    if (value < min || value > max) {
+      return getOutOfRangeErrorMessage(value, type, normalized);
+    }
+    return;
+  }
+
+  if (
+    value < MetadataType.getMinimum(type) ||
+    value > MetadataType.getMaximum(type)
+  ) {
+    return getOutOfRangeErrorMessage(value, type, normalized);
+  }
+}
+
+function checkValue(classProperty, value) {
+  var javascriptType = typeof value;
+
+  var enumType = classProperty._enumType;
+  if (defined(enumType)) {
+    if (javascriptType !== "string" || !defined(enumType.valuesByName[value])) {
+      return "value " + value + " is not a valid enum name for " + enumType.id;
+    }
+    return;
+  }
+
+  var valueType = classProperty._valueType;
+  var normalized = classProperty._normalized;
+
+  switch (valueType) {
+    case MetadataType.INT8:
+    case MetadataType.UINT8:
+    case MetadataType.INT16:
+    case MetadataType.UINT16:
+    case MetadataType.INT32:
+    case MetadataType.UINT32:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      return checkInRange(value, valueType, normalized);
+    case MetadataType.INT64:
+    case MetadataType.UINT64:
+      if (javascriptType !== "number" && javascriptType !== "bigint") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      return checkInRange(value, valueType, normalized);
+    case MetadataType.FLOAT32:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      if (isFinite(value)) {
+        return checkInRange(value, valueType, normalized);
+      }
+      break;
+    case MetadataType.FLOAT64:
+      if (javascriptType !== "number") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      break;
+    case MetadataType.BOOLEAN:
+      if (javascriptType !== "boolean") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      break;
+    case MetadataType.STRING:
+      if (javascriptType !== "string") {
+        return getTypeErrorMessage(value, valueType);
+      }
+      break;
+  }
+}
+
 function getValueType(type, componentType, enumType) {
   if (type === MetadataType.ARRAY) {
     type = componentType;
