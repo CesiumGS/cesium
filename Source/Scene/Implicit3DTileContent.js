@@ -1,18 +1,15 @@
-import TileOrientedBoundingBox from "../Cesium.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
-import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
-import Cesium3DTile from "./Cesium3DTile.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
-import ImplicitTileset from "./ImplicitTileset.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
+import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
 /**
  * A specialized {@link Cesium3DTileContent} that lazily evaluates an implicit
@@ -211,51 +208,6 @@ function expandSubtree(content, subtree) {
 }
 
 /**
- * Create a placeholder tile whose content will resolve to an
- * Implicit3DTileContent. This also creates the ImplicitTileset and attaches
- * it to the newly created Cesium3DTile since it is not needed until the content
- * is fetched.
- *
- * @param {Cesium3DTileset} tileset The tileset this implicit tileset belongs to. Needed to construct the Cesium3DTile
- * @param {Resource} baseResource The base resource. Needed to construct the Cesium3DTile.
- * @param {Object} tileHeader The JSON for the Cesium3DTile
- * @param {Cesium3DTile} [parentTile] The parent of the new Cesum3DTile (if defined)
- * @returns {Cesium3DTile} A newly created tile that serves as a lazy placeholder for the implicit tileset.
- * @private
- */
-Implicit3DTileContent.makeRootPlaceholderTile = function (
-  tileset,
-  baseResource,
-  tileHeader,
-  parentTile
-) {
-  var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
-  var rootCoordinates = new ImplicitTileCoordinates({
-    subdivisionScheme: implicitTileset.subdivisionScheme,
-    level: 0,
-    x: 0,
-    y: 0,
-    // The constructor will only use this for octrees.
-    z: 0,
-  });
-
-  var contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
-    templateValues: rootCoordinates.getTemplateValues(),
-  }).url;
-  var contentJson = {
-    content: {
-      uri: contentUri,
-    },
-  };
-
-  var tileJson = combine(contentJson, tileHeader);
-  var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
-  tile.implicitTileset = implicitTileset;
-  tile.implicitCoordinates = rootCoordinates;
-  return tile;
-};
-
-/**
  * A pair of (tile, childIndex) used for finding child subtrees.
  *
  * @typedef {Object} ChildSubtreeLocator
@@ -440,8 +392,8 @@ function deriveChildTile(
     content: contentJson,
   };
 
-  var childTile = new Cesium3DTile(
-    implicitContent._tileset,
+  var childTile = makeTile(
+    implicitContent,
     implicitTileset.baseResource,
     tileJson,
     parentTile
@@ -542,8 +494,8 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
     },
   };
 
-  var tile = new Cesium3DTile(
-    content._tileset,
+  var tile = makeTile(
+    content,
     implicitTileset.baseResource,
     tileJson,
     parentTile
@@ -551,6 +503,22 @@ function makePlaceholderChildSubtree(content, parentTile, childIndex) {
   tile.implicitTileset = implicitTileset;
   tile.implicitCoordinates = implicitCoordinates;
   return tile;
+}
+
+/**
+ * Make a {@link Cesium3DTile}. This uses the content's tile's constructor instead
+ * of importing Cesium3DTile. This is to avoid a circular dependency between
+ * this file and Cesium3DTile.js
+ * @param {Implicit3DTileContent} content The implicit content
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {Object} tileJson The JSON header for the tile
+ * @param {Cesium3DTile} parentTile The parent of the new tile
+ * @returns {Cesium3DTile} The newly created tile.
+ * @private
+ */
+function makeTile(content, baseResource, tileJson, parentTile) {
+  var Cesium3DTile = content._tile.constructor;
+  return new Cesium3DTile(content._tileset, baseResource, tileJson, parentTile);
 }
 
 /**

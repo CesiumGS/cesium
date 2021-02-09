@@ -3,6 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -35,7 +36,8 @@ import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
-import Implicit3DTileContent from "./Implicit3DTileContent.js";
+import ImplicitTileset from "./ImplicitTileset.js";
+import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
@@ -1769,26 +1771,42 @@ Cesium3DTileset.prototype.loadTileset = function (
  * for lazy evaluation of the implicit tileset.
  *
  * @param {Cesium3DTileset} tileset The tileset
- * @param {Resource} resource The base resource for the tileset
+ * @param {Resource} baseResource The base resource for the tileset
  * @param {Object} tileHeader The JSON header for the tile
  * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
  * @returns {Cesium3DTile} The newly created tile
  *
  * @private
  */
-function makeTile(tileset, resource, tileHeader, parentTile) {
+function makeTile(tileset, baseResource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+    var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
+    var rootCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitTileset.subdivisionScheme,
+      level: 0,
+      x: 0,
+      y: 0,
+      // The constructor will only use this for octrees.
+      z: 0,
+    });
+
     // Create a placeholder Cesium3DTile that has an ImplicitTileset
     // object and whose content will resolve to an Implicit3DTileContent
-    return Implicit3DTileContent.makeRootPlaceholderTile(
-      tileset,
-      resource,
-      tileHeader,
-      parentTile
-    );
+    var contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
+      templateValues: rootCoordinates.getTemplateValues(),
+    }).url;
+    var contentJson = {
+      content: {
+        uri: contentUri,
+      },
+    };
+    var tileJson = combine(contentJson, tileHeader);
+    var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+    tile.implicitTileset = implicitTileset;
+    tile.implicitCoordinates = rootCoordinates;
   }
 
-  return new Cesium3DTile(tileset, resource, tileHeader, parentTile);
+  return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
 }
 
 var scratchPositionNormal = new Cartesian3();
