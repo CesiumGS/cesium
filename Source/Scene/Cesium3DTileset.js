@@ -1804,6 +1804,7 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
     tile.implicitTileset = implicitTileset;
     tile.implicitCoordinates = rootCoordinates;
+    return tile;
   }
 
   return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);

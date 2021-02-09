@@ -7,7 +7,6 @@ import Matrix3 from "../Core/Matrix3.js";
 import Rectangle from "../Core/Rectangle.js";
 import when from "../ThirdParty/when.js";
 import ImplicitSubtree from "./ImplicitSubtree.js";
-import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 
@@ -159,39 +158,29 @@ function initialize(content, arrayBuffer, byteOffset) {
 }
 
 /**
- * Expand a single subtree, modifying the {@link Cesium3DTileset} it belongs
- * to. This also creates placeholder tiles for the child subtrees to be lazily
- * expanded as needed.
+ * Expand a single subtree placeholder tile. This transcodes the subtree into
+ * a tree of {@link Cesium3DTile}. The root of this tree is stored in
+ * the placeholder tile's children array. This method also creates placeholder
+ * tiles for the child subtrees to be lazily expanded as needed.
  *
  * @param {Implicit3DTileContent} content The content
  * @param {ImplicitSubtree} subtree The parsed subtree
  * @private
  */
 function expandSubtree(content, subtree) {
-  // Parse the tiles inside this immediate subtree
   var placeholderTile = content._tile;
-  var parentTile = placeholderTile.parent;
+
+  // Parse the tiles inside this immediate subtree
   var childIndex = content._implicitCoordinates.childIndex;
-  var results = transcodeSubtreeTiles(content, subtree, parentTile, childIndex);
+  var results = transcodeSubtreeTiles(
+    content,
+    subtree,
+    placeholderTile,
+    childIndex
+  );
 
-  // Replace the parent's children with the new root tile.
-  if (defined(parentTile)) {
-    // TODO: Which implementation works best?
-    // 1. replace parentTile.children[index of content._tile] with the new tile
-    // 2. replace parentTile.content with a newly constructed content (e.g. B3DM)
-    // 3. just keep parent and child like external tilesets do
-    // 4. just push the new tile to parent.children
-
-    // Replace the placeholder tile with the child tile
-    // This is method 1
-    var index = parentTile.children.indexOf(placeholderTile);
-    parentTile.children[index] = results.rootTile;
-  } else {
-    // If the placeholder tile was the root, keep the placeholder tile
-    // and place the new root tile as the only child. This is cleaner than
-    // trying to update the placeholder tile in place.
-    content._tile.children = [results.rootTile];
-  }
+  // Link the new subtree to the existing placeholder tile.
+  placeholderTile.children.push(results.rootTile);
 
   // for each child subtree, make new placeholder tiles
   var childSubtrees = listChildSubtrees(content, subtree, results.bottomRow);
@@ -264,19 +253,21 @@ function listChildSubtrees(content, subtree, bottomRow) {
  *
  * @param {Implicit3DTileContent} content The implicit content
  * @param {ImplicitSubtree} subtree The subtree to get availability information
- * @param {Cesium3DTile} parentOfRootTile The parent of the root tile, used for constructing the subtree root tile
+ * @param {Cesium3DTile} placeholderTile The placeholder tile, used for constructing the subtree root tile
  * @param {Number} childIndex The Morton index of the root tile relative to parentOfRootTile
  * @returns {TranscodedSubtree} The newly created subtree of tiles
  * @private
  */
-function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
+function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
   var rootBitIndex = 0;
+  var rootParentIsPlaceholder = true;
   var rootTile = deriveChildTile(
     content,
     subtree,
-    parentOfRootTile,
+    placeholderTile,
     childIndex,
-    rootBitIndex
+    rootBitIndex,
+    rootParentIsPlaceholder
   );
 
   // Sliding window over the levels of the tree.
@@ -339,6 +330,7 @@ function transcodeSubtreeTiles(content, subtree, parentOfRootTile, childIndex) {
  * @param {Cesium3DTile|undefined} parentTile The parent of the new child tile
  * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @param {Number} childBitIndex The index of the child tile within the tile's availability information.
+ * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
  * @returns {Cesium3DTile} the new child tile.
  * @private
  */
@@ -347,19 +339,13 @@ function deriveChildTile(
   subtree,
   parentTile,
   childIndex,
-  childBitIndex
+  childBitIndex,
+  parentIsPlaceholderTile
 ) {
   var implicitTileset = implicitContent._implicitTileset;
   var implicitCoordinates;
-  if (!defined(parentTile) || !defined(parentTile.implicitCoordinates)) {
-    implicitCoordinates = new ImplicitTileCoordinates({
-      subdivisionScheme: implicitTileset.subdivisionScheme,
-      level: 0,
-      x: 0,
-      y: 0,
-      // The constructor will only use this for octrees.
-      z: 0,
-    });
+  if (defaultValue(parentIsPlaceholderTile, false)) {
+    implicitCoordinates = parentTile.implicitCoordinates;
   } else {
     implicitCoordinates = parentTile.implicitCoordinates.deriveChildCoordinates(
       childIndex
