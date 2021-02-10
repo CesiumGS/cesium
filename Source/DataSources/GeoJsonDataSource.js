@@ -273,17 +273,28 @@ function processGeometryCollection(
 }
 
 function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
+  var imageUrl = options.imageUrl;
+  var imageScale = options.imageScale;
+
   var symbol = options.markerSymbol;
   var color = options.markerColor;
   var size = options.markerSize;
 
   var properties = geoJson.properties;
   if (defined(properties)) {
+    var url = properties["image-url"];
+    if (defined(url)) {
+      imageUrl = url;
+    }
+    var scale = properties["image-scale"];
+    if (defined(scale)) {
+      imageScale = scale;
+    }
+
     var cssColor = properties["marker-color"];
     if (defined(cssColor)) {
       color = Color.fromCssColorString(cssColor);
     }
-
     size = defaultValue(sizes[properties["marker-size"]], size);
     var markerSymbol = properties["marker-symbol"];
     if (defined(markerSymbol)) {
@@ -291,23 +302,25 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
     }
   }
 
-  var canvasOrPromise;
-  if (defined(symbol)) {
+  var billboardImage;
+  if (defined(imageUrl)) {
+    billboardImage = imageUrl;
+  } else if (defined(symbol)) {
     if (symbol.length === 1) {
-      canvasOrPromise = dataSource._pinBuilder.fromText(
+      billboardImage = dataSource._pinBuilder.fromText(
         symbol.toUpperCase(),
         color,
         size
       );
     } else {
-      canvasOrPromise = dataSource._pinBuilder.fromMakiIconId(
+      billboardImage = dataSource._pinBuilder.fromMakiIconId(
         symbol,
         color,
         size
       );
     }
   } else {
-    canvasOrPromise = dataSource._pinBuilder.fromColor(color, size);
+    billboardImage = dataSource._pinBuilder.fromColor(color, size);
   }
 
   var billboard = new BillboardGraphics();
@@ -326,7 +339,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   entity.billboard = billboard;
   entity.position = new ConstantPositionProperty(crsFunction(coordinates));
 
-  var promise = when(canvasOrPromise)
+  var promise = when(billboardImage)
     .then(function (image) {
       billboard.image = new ConstantProperty(image);
     })
