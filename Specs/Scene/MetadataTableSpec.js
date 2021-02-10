@@ -133,6 +133,15 @@ describe("Scene/MetadataTable", function () {
     var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
     var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
 
+    var extras = {
+      gain: 0.5,
+      offset: 0.1,
+    };
+
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
     var enums = {
       myEnum: {
         values: [
@@ -189,6 +198,8 @@ describe("Scene/MetadataTable", function () {
 
         var property = {
           bufferView: valuesBufferView,
+          extras: extras,
+          extensions: extensions,
         };
 
         properties[propertyId] = property;
@@ -281,6 +292,11 @@ describe("Scene/MetadataTable", function () {
     expect(Object.keys(metadataTable.class.properties).sort()).toEqual(
       expectedPropertyNames
     );
+
+    expect(metadataTable.properties.height.extras).toBeDefined();
+    expect(metadataTable.properties.height.extensions).toBeDefined();
+    expect(metadataTable.properties.name.extras).toBeDefined();
+    expect(metadataTable.properties.name.extensions).toBeDefined();
   });
 
   it("constructor throws without count", function () {

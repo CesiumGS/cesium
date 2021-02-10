@@ -33,6 +33,7 @@ function MetadataTileset(options) {
   this._name = tileset.name;
   this._description = tileset.description;
   this._extras = tileset.extras;
+  this._extensions = tileset.extensions;
 }
 
 /**
@@ -172,6 +173,20 @@ Object.defineProperties(MetadataTileset.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataClass.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });

@@ -14,6 +14,7 @@ describe("Scene/MetadataGroup", function () {
     expect(groupMetadata.name).toBeUndefined();
     expect(groupMetadata.description).toBeUndefined();
     expect(groupMetadata.extras).toBeUndefined();
+    expect(groupMetadata.extensions).toBeUndefined();
   });
 
   it("creates group metadata", function () {
@@ -34,6 +35,10 @@ describe("Scene/MetadataGroup", function () {
       other: 0,
     };
 
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
     var properties = {
       position: [0.0, 0.0, 0.0],
     };
@@ -45,6 +50,7 @@ describe("Scene/MetadataGroup", function () {
         name: "Building",
         description: "Building Metadata",
         extras: extras,
+        extensions: extensions,
         properties: properties,
       },
     });
@@ -54,6 +60,7 @@ describe("Scene/MetadataGroup", function () {
     expect(groupMetadata.name).toBe("Building");
     expect(groupMetadata.description).toBe("Building Metadata");
     expect(groupMetadata.extras).toBe(extras);
+    expect(groupMetadata.extensions).toBe(extensions);
     expect(groupMetadata.properties).toBe(properties);
   });
 

@@ -46,6 +46,7 @@ function MetadataEnum(options) {
   this._name = enumDefinition.name;
   this._description = enumDefinition.description;
   this._extras = enumDefinition.extras;
+  this._extensions = enumDefinition.extensions;
 }
 
 Object.defineProperties(MetadataEnum.prototype, {
@@ -158,6 +159,20 @@ Object.defineProperties(MetadataEnum.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataEnum.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });

@@ -31,12 +31,16 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.name).toBeUndefined();
     expect(colorEnum.description).toBeUndefined();
     expect(colorEnum.extras).toBeUndefined();
+    expect(colorEnum.extensions).toBeUndefined();
   });
 
   it("creates enum", function () {
     var extras = {
       gain: 0.5,
       offset: 0.1,
+    };
+    var extensions = {
+      EXT_other_extension: {},
     };
 
     var colorEnum = new MetadataEnum({
@@ -45,6 +49,7 @@ describe("Scene/MetadataEnum", function () {
         name: "Color",
         description: "Common colors",
         extras: extras,
+        extensions: extensions,
         valueType: MetadataType.UINT64,
         values: [
           {
@@ -71,6 +76,7 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.name).toBe("Color");
     expect(colorEnum.description).toBe("Common colors");
     expect(colorEnum.extras).toBe(extras);
+    expect(colorEnum.extensions).toBe(extensions);
   });
 
   it("constructor throws without id", function () {

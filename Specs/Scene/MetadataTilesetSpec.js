@@ -31,6 +31,10 @@ describe("Scene/MetadataTileset", function () {
       other: 0,
     };
 
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
     var properties = {
       neighborhoods: ["A", "B", "C"],
     };
@@ -41,6 +45,7 @@ describe("Scene/MetadataTileset", function () {
         name: "City",
         description: "City Metadata",
         extras: extras,
+        extensions: extensions,
         properties: properties,
       },
     });
@@ -49,6 +54,7 @@ describe("Scene/MetadataTileset", function () {
     expect(tilesetMetadata.name).toBe("City");
     expect(tilesetMetadata.description).toBe("City Metadata");
     expect(tilesetMetadata.extras).toBe(extras);
+    expect(tilesetMetadata.extensions).toBe(extensions);
     expect(tilesetMetadata.properties).toBe(properties);
   });
 

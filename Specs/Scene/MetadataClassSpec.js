@@ -15,6 +15,7 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.name).toBeUndefined();
     expect(buildingClass.description).toBeUndefined();
     expect(buildingClass.extras).toBeUndefined();
+    expect(buildingClass.extensions).toBeUndefined();
   });
 
   it("creates class", function () {
@@ -23,6 +24,9 @@ describe("Scene/MetadataClass", function () {
         name: "city",
       },
     };
+    var extensions = {
+      EXT_other_extension: {},
+    };
 
     var buildingClass = new MetadataClass({
       id: "building",
@@ -30,6 +34,7 @@ describe("Scene/MetadataClass", function () {
         name: "Building",
         description: "Building Class",
         extras: extras,
+        extensions: extensions,
         properties: {
           height: {
             type: "FLOAT32",
@@ -52,6 +57,7 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.name).toBe("Building");
     expect(buildingClass.description).toBe("Building Class");
     expect(buildingClass.extras).toBe(extras);
+    expect(buildingClass.extensions).toBe(extensions);
 
     var properties = buildingClass.properties;
     var heightProperty = properties.height;

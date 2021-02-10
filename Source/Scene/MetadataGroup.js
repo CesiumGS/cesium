@@ -37,6 +37,7 @@ function MetadataGroup(options) {
   this._name = group.name;
   this._description = group.description;
   this._extras = group.extras;
+  this._extensions = group.extensions;
 }
 
 /**
@@ -190,6 +191,20 @@ Object.defineProperties(MetadataGroup.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataGroup.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });

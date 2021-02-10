@@ -12,6 +12,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
     expect(metadata.tileset).toBeUndefined();
     expect(metadata.statistics).toBeUndefined();
     expect(metadata.extras).toBeUndefined();
+    expect(metadata.extensions).toBeUndefined();
   });
 
   var schema = {
@@ -59,6 +60,10 @@ describe("Scene/Metadata3DTilesExtension", function () {
       description: "Extra",
     };
 
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
     var extension = {
       schema: schema,
       groups: {
@@ -83,6 +88,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
       },
       statistics: statistics,
       extras: extras,
+      extensions: extensions,
     };
 
     var metadata = new Metadata3DTilesExtension({
@@ -111,6 +117,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
 
     expect(metadata.statistics).toBe(statistics);
     expect(metadata.extras).toBe(extras);
+    expect(metadata.extensions).toBe(extensions);
   });
 
   it("creates 3D Tiles metadata with external schema", function () {

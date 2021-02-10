@@ -43,6 +43,7 @@ function MetadataSchema(schema) {
   this._name = schema.name;
   this._description = schema.description;
   this._extras = schema.extras;
+  this._extensions = schema.extensions;
 }
 
 Object.defineProperties(MetadataSchema.prototype, {
@@ -113,6 +114,20 @@ Object.defineProperties(MetadataSchema.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataSchema.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });

@@ -27,6 +27,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.optional).toBe(false);
     expect(property.semantic).toBeUndefined();
     expect(property.extras).toBeUndefined();
+    expect(property.extensions).toBeUndefined();
   });
 
   it("creates property", function () {
@@ -35,6 +36,9 @@ describe("Scene/MetadataClassProperty", function () {
     var propertyDefault = [0, 0, 0];
     var extras = {
       coordinates: [0, 1, 2],
+    };
+    var extensions = {
+      EXT_other_extension: {},
     };
 
     var property = new MetadataClassProperty({
@@ -52,6 +56,7 @@ describe("Scene/MetadataClassProperty", function () {
         optional: false,
         semantic: "_POSITION",
         extras: extras,
+        extensions: extensions,
       },
     });
 
@@ -70,6 +75,7 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.optional).toBe(false);
     expect(property.semantic).toBe("_POSITION");
     expect(property.extras).toBe(extras);
+    expect(property.extensions).toBe(extensions);
   });
 
   it("creates enum property", function () {

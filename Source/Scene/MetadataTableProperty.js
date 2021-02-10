@@ -146,7 +146,39 @@ function MetadataTableProperty(options) {
   this._getValue = getValueFunction;
   this._setValue = setValueFunction;
   this._unpackedValues = undefined;
+  this._extras = property.extras;
+  this._extensions = property.extensions;
 }
+
+Object.defineProperties(MetadataTableProperty.prototype, {
+  /**
+   * Extras in the JSON object.
+   *
+   * @memberof MetadataTableProperty.prototype
+   * @type {*}
+   * @readonly
+   * @private
+   */
+  extras: {
+    get: function () {
+      return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataTableProperty.prototype
+   * @type {*}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
+    },
+  },
+});
 
 /**
  * Returns a copy of the value at the given index.

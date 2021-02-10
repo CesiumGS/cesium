@@ -55,6 +55,7 @@ function MetadataClassProperty(options) {
   this._optional = defaultValue(property.optional, false);
   this._semantic = property.semantic;
   this._extras = property.extras;
+  this._extensions = property.extensions;
 }
 
 Object.defineProperties(MetadataClassProperty.prototype, {
@@ -265,6 +266,20 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof MetadataClassProperty.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });

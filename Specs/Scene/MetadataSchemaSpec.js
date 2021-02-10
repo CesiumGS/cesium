@@ -16,6 +16,10 @@ describe("Scene/MetadataSchema", function () {
       description: "Extra",
     };
 
+    var extensions = {
+      EXT_other_extension: {},
+    };
+
     var schema = new MetadataSchema({
       enums: {
         color: {
@@ -88,6 +92,7 @@ describe("Scene/MetadataSchema", function () {
       name: "My Schema",
       description: "My Schema Description",
       extras: extras,
+      extensions: extensions,
     });
 
     var cityClass = schema.classes.city;
@@ -112,6 +117,7 @@ describe("Scene/MetadataSchema", function () {
     expect(schema.description).toBe("My Schema Description");
 
     expect(schema.extras).toBe(extras);
+    expect(schema.extensions).toBe(extensions);
   });
 
   it("constructor throws without schema", function () {

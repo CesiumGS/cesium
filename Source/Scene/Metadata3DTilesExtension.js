@@ -59,6 +59,7 @@ function Metadata3DTilesExtension(options) {
   this._tileset = tileset;
   this._statistics = extension.statistics;
   this._extras = extension.extras;
+  this._extensions = extension.extensions;
 }
 
 Object.defineProperties(Metadata3DTilesExtension.prototype, {
@@ -133,6 +134,20 @@ Object.defineProperties(Metadata3DTilesExtension.prototype, {
   extras: {
     get: function () {
       return this._extras;
+    },
+  },
+
+  /**
+   * Extensions in the JSON object.
+   *
+   * @memberof Metadata3DTilesExtension.prototype
+   * @type {Object}
+   * @readonly
+   * @private
+   */
+  extensions: {
+    get: function () {
+      return this._extensions;
     },
   },
 });
