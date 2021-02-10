@@ -8,7 +8,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * An ImplicitTileset is a simple struct that stores information about the
  * structure of a single implicit tileset. This includes template URIs for
  * locating resources, details from the implicit root tile (bounding volume,
- * geometricError, etc.). and details about the subtrees (e.g. subtreeLevels,
+ * geometricError, etc.), and details about the subtrees (e.g. subtreeLevels,
  * subdivisionScheme).
  *
  * @alias ImplicitTileset
