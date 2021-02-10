@@ -122,7 +122,7 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
 
 /**
  * Parse all relevant information out of the subtree. This fetches any
- * external buffers that are used by the implicit tileset. When finishes,
+ * external buffers that are used by the implicit tileset. When finished,
  * it resolves/rejects subtree.readyPromise.
  *
  * @param {ImplicitSubtree} subtree The subtree
@@ -333,7 +333,7 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
  * </p>
  * @param {ImplicitSubtree} subtree The subtree
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
- * @param {Uint8Array} internalBuffer The binary chunk of the JSON file
+ * @param {Uint8Array} internalBuffer The binary chunk of the subtree file
  * @returns {Promise<Object>} A promise resolving to the dictionary of active buffers
  * @private
  */
@@ -458,13 +458,11 @@ function parseAvailabilityBitstream(
     });
   }
 
-  if (defined(availabilityJson.bufferView)) {
-    var bufferView = bufferViewsU8[availabilityJson.bufferView];
+  var bufferView = bufferViewsU8[availabilityJson.bufferView];
 
-    return new ImplicitAvailabilityBitstream({
-      bitstream: bufferView,
-      lengthBits: lengthBits,
-      availableCount: availabilityJson.availableCount,
-    });
-  }
+  return new ImplicitAvailabilityBitstream({
+    bitstream: bufferView,
+    lengthBits: lengthBits,
+    availableCount: availabilityJson.availableCount,
+  });
 }

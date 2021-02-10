@@ -16,7 +16,7 @@ var ImplicitSubdivisionScheme = {
    */
   QUADTREE: "QUADTREE",
   /**
-   * An octree divides a parent tile into four children, split at the midpoint
+   * An octree divides a parent tile into eight children, split at the midpoint
    * of the x, y, and z dimensions of the bounding box.
    * @type {String}
    * @constant

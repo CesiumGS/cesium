@@ -326,11 +326,11 @@ function transcodeSubtreeTiles(content, subtree, placeholderTile, childIndex) {
  *
  * @param {Implicit3DTileContent} implicitContent The implicit content
  * @param {ImplicitSubtree} subtree The subtree the child tile belongs to
- * @param {Cesium3DTile|undefined} parentTile The parent of the new child tile
+ * @param {Cesium3DTile} parentTile The parent of the new child tile
  * @param {Number} childIndex The morton index of the child tile relative to its parent
  * @param {Number} childBitIndex The index of the child tile within the tile's availability information.
- * @param {Boolean} parentIsPlaceholderTile True if parentTile is a placeholder tile. This is true for the root of each subtree.
- * @returns {Cesium3DTile} the new child tile.
+ * @param {Boolean} [parentIsPlaceholderTile=false] True if parentTile is a placeholder tile. This is true for the root of each subtree.
+ * @returns {Cesium3DTile} The new child tile.
  * @private
  */
 function deriveChildTile(
@@ -427,6 +427,7 @@ function deriveBoundingVolume(implicitTileset, implicitCoordinates) {
 var scratchScaleFactors = new Cartesian3();
 var scratchRootCenter = new Cartesian3();
 var scratchCenter = new Cartesian3();
+var scratchHalfAxes = new Matrix3();
 /**
  * Derive a bounding volume for a descendant tile (child, grandchild, etc.),
  * assuming a quadtree or octree implicit tiling scheme. The (level, x, y, [z])
@@ -461,12 +462,12 @@ function deriveBoundingBox(rootBox, level, x, y, z) {
   }
   //>>includeEnd('debug');
 
-  var rootCenter = Cartesian3.unpack(rootBox, 0, scratchRootCenter);
-  var rootHalfAxes = Matrix3.unpack(rootBox, 3);
-
   if (level === 0) {
     return rootBox;
   }
+
+  var rootCenter = Cartesian3.unpack(rootBox, 0, scratchRootCenter);
+  var rootHalfAxes = Matrix3.unpack(rootBox, 3, scratchHalfAxes);
 
   var tileScale = Math.pow(2, -level);
   var modelSpaceX = -1 + (2 * x + 1) * tileScale;
@@ -529,7 +530,7 @@ var scratchRectangle = new Rectangle();
  */
 function deriveBoundingRegion(rootRegion, level, x, y, z) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("regionParameters", rootRegion);
+  Check.typeOf.object("rootRegion", rootRegion);
   Check.typeOf.number("level", level);
   Check.typeOf.number("x", x);
   Check.typeOf.number("y", y);
@@ -629,7 +630,7 @@ function makeTile(content, baseResource, tileJson, parentTile) {
 }
 
 /**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+ * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>false</code> since a tile of this type does not have any features.
  * @private
  */
@@ -638,7 +639,7 @@ Implicit3DTileContent.prototype.hasProperty = function (batchId, name) {
 };
 
 /**
- * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
+ * Part of the {@link Cesium3DTileContent} interface.  <code>Implicit3DTileContent</code>
  * always returns <code>undefined</code> since a tile of this type does not have any features.
  * @private
  */

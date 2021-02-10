@@ -1096,7 +1096,7 @@ Cesium3DTile.prototype.requestContent = function () {
 
       // Implicit tiling subtree files use the content factory, but we need
       // to mark them as implicit
-      if (magic === "subt") {
+      if (contentIdentifer === "subt") {
         that.hasImplicitContent = true;
       }
 
