@@ -1,10 +1,7 @@
-import { defined } from "../../Source/Cesium.js";
 import { defaultValue } from "../../Source/Cesium.js";
 import { FeatureDetection } from "../../Source/Cesium.js";
-import { MetadataClass } from "../../Source/Cesium.js";
-import { MetadataEnum } from "../../Source/Cesium.js";
 import { MetadataTable } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {
   if (
@@ -16,243 +13,24 @@ describe("Scene/MetadataTable", function () {
     return;
   }
 
-  function createBuffer(values, type) {
-    var typedArray;
-    switch (type) {
-      case MetadataType.INT8:
-        typedArray = new Int8Array(values);
-        break;
-      case MetadataType.UINT8:
-        typedArray = new Uint8Array(values);
-        break;
-      case MetadataType.INT16:
-        typedArray = new Int16Array(values);
-        break;
-      case MetadataType.UINT16:
-        typedArray = new Uint16Array(values);
-        break;
-      case MetadataType.INT32:
-        typedArray = new Int32Array(values);
-        break;
-      case MetadataType.UINT32:
-        typedArray = new Uint32Array(values);
-        break;
-      case MetadataType.INT64:
-        typedArray = new BigInt64Array(values); // eslint-disable-line
-        break;
-      case MetadataType.UINT64:
-        typedArray = new BigUint64Array(values); // eslint-disable-line
-        break;
-      case MetadataType.FLOAT32:
-        typedArray = new Float32Array(values);
-        break;
-      case MetadataType.FLOAT64:
-        typedArray = new Float64Array(values);
-        break;
-      case MetadataType.STRING:
-        var encoder = new TextEncoder();
-        typedArray = encoder.encode(values.join(""));
-        break;
-      case MetadataType.BOOLEAN:
-        var length = Math.ceil(values.length / 8);
-        typedArray = new Uint8Array(length); // Initialized as 0's
-        for (var i = 0; i < values.length; ++i) {
-          var byteIndex = i >> 3;
-          var bitIndex = i % 8;
-          if (values[i]) {
-            typedArray[byteIndex] |= 1 << bitIndex;
-          }
-        }
-        break;
-    }
-
-    return new Uint8Array(typedArray.buffer);
-  }
-
-  function flatten(values) {
-    return [].concat.apply([], values);
-  }
-
-  function createValuesBuffer(values, classProperty) {
-    var valueType = classProperty.valueType;
-    var enumType = classProperty.enumType;
-    var flattenedValues = flatten(values);
-
-    if (defined(enumType)) {
-      var length = flattenedValues.length;
-      for (var i = 0; i < length; ++i) {
-        flattenedValues[i] = enumType.valuesByName[flattenedValues[i]];
-      }
-    }
-
-    return createBuffer(flattenedValues, valueType);
-  }
-
-  function createStringOffsetBuffer(values, offsetType) {
-    var encoder = new TextEncoder();
-    var strings = flatten(values);
-    var length = strings.length;
-    var offsets = new Array(length + 1);
-    var offset = 0;
-    for (var i = 0; i < length; ++i) {
-      offsets[i] = offset;
-      offset += encoder.encode(strings[i]).length;
-    }
-    offsets[length] = offset;
-    offsetType = defaultValue(offsetType, MetadataType.UINT32);
-    return createBuffer(offsets, offsetType);
-  }
-
-  function createArrayOffsetBuffer(values, offsetType) {
-    var length = values.length;
-    var offsets = new Array(length + 1);
-    var offset = 0;
-    for (var i = 0; i < length; ++i) {
-      offsets[i] = offset;
-      offset += values[i].length;
-    }
-    offsets[length] = offset;
-    offsetType = defaultValue(offsetType, MetadataType.UINT32);
-    return createBuffer(offsets, offsetType);
-  }
-
-  function addPadding(uint8Array) {
-    // This tests that MetadataTable uses the Uint8Array's byteOffset properly
-    var paddingBytes = 8;
-    var padded = new Uint8Array(paddingBytes + uint8Array.length);
-    padded.set(uint8Array, paddingBytes);
-    return new Uint8Array(padded.buffer, paddingBytes, uint8Array.length);
-  }
-
-  function createTable(options) {
-    options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-    var propertiesJson = options.properties;
-    var propertyValues = options.propertyValues;
-    var offsetType = options.offsetType;
-    var disableBigIntSupport = options.disableBigIntSupport;
-    var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
-    var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
-
-    var extras = {
-      gain: 0.5,
-      offset: 0.1,
-    };
-
-    var extensions = {
-      EXT_other_extension: {},
-    };
-
-    var enums = {
-      myEnum: {
-        values: [
-          {
-            value: 0,
-            name: "ValueA",
-          },
-          {
-            value: 1,
-            name: "ValueB",
-          },
-          {
-            value: 999,
-            name: "Other",
-          },
-        ],
-      },
-    };
-
-    var enumDefinitions = {};
-    for (var enumId in enums) {
-      if (enums.hasOwnProperty(enumId)) {
-        enumDefinitions[enumId] = new MetadataEnum({
-          id: enumId,
-          enum: enums[enumId],
-        });
-      }
-    }
-
-    var classDefinition = new MetadataClass({
-      id: "classId",
-      class: {
-        properties: propertiesJson,
-      },
-      enums: enumDefinitions,
-    });
-
-    var properties = {};
-    var bufferViews = {};
-    var bufferViewIndex = 0;
-    var count = 0;
-
-    for (var propertyId in propertyValues) {
-      if (propertyValues.hasOwnProperty(propertyId)) {
-        var classProperty = classDefinition.properties[propertyId];
-        var values = propertyValues[propertyId];
-        count = values.length;
-
-        var valuesBuffer = addPadding(
-          createValuesBuffer(values, classProperty)
-        );
-        var valuesBufferView = bufferViewIndex++;
-        bufferViews[valuesBufferView] = valuesBuffer;
-
-        var property = {
-          bufferView: valuesBufferView,
-          extras: extras,
-          extensions: extensions,
-        };
-
-        properties[propertyId] = property;
-
-        if (defined(offsetType)) {
-          property.offsetType = offsetType;
-        }
-
-        if (
-          classProperty.type === MetadataType.ARRAY &&
-          !defined(classProperty.componentCount)
-        ) {
-          var arrayOffsetBuffer = addPadding(
-            createArrayOffsetBuffer(values, offsetType)
-          );
-          var arrayOffsetBufferView = bufferViewIndex++;
-          bufferViews[arrayOffsetBufferView] = arrayOffsetBuffer;
-          property.arrayOffsetBufferView = arrayOffsetBufferView;
-        }
-
-        if (
-          classProperty.type === MetadataType.STRING ||
-          classProperty.componentType === MetadataType.STRING
-        ) {
-          var stringOffsetBuffer = addPadding(
-            createStringOffsetBuffer(values, offsetType)
-          );
-          var stringOffsetBufferView = bufferViewIndex++;
-          bufferViews[stringOffsetBufferView] = stringOffsetBuffer;
-          property.stringOffsetBufferView = stringOffsetBufferView;
-        }
-      }
-    }
-
-    if (disableBigIntSupport) {
-      spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
-    }
-
-    if (disableBigInt64ArraySupport) {
-      spyOn(FeatureDetection, "supportsBigInt64Array").and.returnValue(false);
-    }
-
-    if (disableBigUint64ArraySupport) {
-      spyOn(FeatureDetection, "supportsBigUint64Array").and.returnValue(false);
-    }
-
-    return new MetadataTable({
-      count: count,
-      properties: properties,
-      class: classDefinition,
-      bufferViews: bufferViews,
-    });
-  }
+  var enums = {
+    myEnum: {
+      values: [
+        {
+          value: 0,
+          name: "ValueA",
+        },
+        {
+          value: 1,
+          name: "ValueB",
+        },
+        {
+          value: 999,
+          name: "Other",
+        },
+      ],
+    },
+  };
 
   it("creates metadata table with default values", function () {
     var metadataTable = new MetadataTable({
@@ -278,7 +56,7 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -292,11 +70,6 @@ describe("Scene/MetadataTable", function () {
     expect(Object.keys(metadataTable.class.properties).sort()).toEqual(
       expectedPropertyNames
     );
-
-    expect(metadataTable.properties.height.extras).toBeDefined();
-    expect(metadataTable.properties.height.extensions).toBeDefined();
-    expect(metadataTable.properties.name.extras).toBeDefined();
-    expect(metadataTable.properties.name.extensions).toBeDefined();
   });
 
   it("constructor throws without count", function () {
@@ -329,7 +102,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -346,7 +119,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -369,7 +142,7 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -407,7 +180,7 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -430,7 +203,7 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -452,7 +225,7 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -480,7 +253,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -516,7 +289,7 @@ describe("Scene/MetadataTable", function () {
       propertyUint64: originalValues,
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
       disableBigUint64ArraySupport: disableBigUint64ArraySupport,
@@ -569,7 +342,7 @@ describe("Scene/MetadataTable", function () {
       propertyInt64: originalValues,
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
       disableBigInt64ArraySupport: disableBigInt64ArraySupport,
@@ -666,9 +439,10 @@ describe("Scene/MetadataTable", function () {
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -808,9 +582,10 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -914,9 +689,10 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -956,9 +732,10 @@ describe("Scene/MetadataTable", function () {
       name: ["A", "B"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     var value = metadataTable.getProperty(0, "position");
@@ -977,7 +754,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -996,7 +773,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1015,7 +792,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1049,7 +826,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1146,9 +923,10 @@ describe("Scene/MetadataTable", function () {
       propertyEnum: ["ValueA", "ValueB", "Other", "ValueA", "ValueA"],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -1348,9 +1126,10 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -1489,9 +1268,10 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -1630,9 +1410,10 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -1663,7 +1444,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       position: [[1.0, 2.0, 3.0]],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1688,7 +1469,7 @@ describe("Scene/MetadataTable", function () {
       propertyFloat64: [0.0, 0.0],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1727,7 +1508,7 @@ describe("Scene/MetadataTable", function () {
       propertyFloat64: [10.0],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1748,7 +1529,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1767,7 +1548,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1786,7 +1567,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1805,7 +1586,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1888,7 +1669,7 @@ describe("Scene/MetadataTable", function () {
       propertyUint64: [0.0, 0.2, 1.0],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1940,7 +1721,7 @@ describe("Scene/MetadataTable", function () {
       ],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -1989,9 +1770,10 @@ describe("Scene/MetadataTable", function () {
       propertyBoolean: [true, false, false],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
+      enums: enums,
     });
 
     for (var propertyId in propertyValues) {
@@ -2025,7 +1807,7 @@ describe("Scene/MetadataTable", function () {
       propertyUint8: [0],
     };
 
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2063,7 +1845,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2081,7 +1863,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2099,7 +1881,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2119,7 +1901,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2139,7 +1921,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2174,7 +1956,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2193,7 +1975,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2212,7 +1994,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2232,7 +2014,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2252,7 +2034,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
@@ -2272,7 +2054,7 @@ describe("Scene/MetadataTable", function () {
     var propertyValues = {
       height: [1.0, 2.0],
     };
-    var metadataTable = createTable({
+    var metadataTable = MetadataTester.createTable({
       properties: properties,
       propertyValues: propertyValues,
     });
