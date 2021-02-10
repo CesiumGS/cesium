@@ -35,8 +35,6 @@ function MetadataTableProperty(options) {
   Check.typeOf.object("options.bufferViews", bufferViews);
   //>>includeEnd('debug');
 
-  var i;
-
   var isArray = classProperty.type === MetadataType.ARRAY;
   var isVariableSizeArray = isArray && !defined(classProperty.componentCount);
 
@@ -62,10 +60,7 @@ function MetadataTableProperty(options) {
 
   var componentCount;
   if (isVariableSizeArray) {
-    componentCount = 0;
-    for (i = 0; i < count; ++i) {
-      componentCount += arrayOffsets.get(i + 1) - arrayOffsets.get(i);
-    }
+    componentCount = arrayOffsets.get(count) - arrayOffsets.get(0);
   } else if (isArray) {
     componentCount = count * classProperty.componentCount;
   } else {
@@ -88,10 +83,7 @@ function MetadataTableProperty(options) {
 
   var valueCount;
   if (hasStrings) {
-    valueCount = 0;
-    for (i = 0; i < componentCount; ++i) {
-      valueCount += stringOffsets.get(i + 1) - stringOffsets.get(i);
-    }
+    valueCount = stringOffsets.get(componentCount) - stringOffsets.get(0);
   } else if (hasBooleans) {
     valueCount = Math.ceil(componentCount / 8);
   } else {

@@ -283,7 +283,8 @@ function checkIndex(table, index) {
   if (!defined(index) || index < 0 || index >= count) {
     var maximumIndex = count - 1;
     throw new DeveloperError(
-      "index is required and between zero and count - 1 (" + maximumIndex + ")."
+      "index is required and between zero and count - 1. Actual value: " +
+        maximumIndex
     );
   }
 }
