@@ -285,6 +285,32 @@ Object.defineProperties(MetadataClassProperty.prototype, {
 });
 
 /**
+ * Normalizes integer property values. If the property is not normalized
+ * the value is returned unmodified.
+ *
+ * @param {*} value The integer value or array of integer values.
+ * @returns {*} The normalized value or array of normalized values.
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.normalize = function (value) {
+  return normalize(this, value, MetadataType.normalize);
+};
+
+/**
+ * Unnormalizes integer property values. If the property is not normalized
+ * the value is returned unmodified.
+ *
+ * @param {*} value The normalized value or array of normalized values.
+ * @returns {*} The integer value or array of integer values.
+ *
+ * @private
+ */
+MetadataClassProperty.prototype.unnormalize = function (value) {
+  return normalize(this, value, MetadataType.unnormalize);
+};
+
+/**
  * Validates whether the given value conforms to the property.
  *
  * @param {*} value The value.
@@ -400,6 +426,24 @@ function checkValue(classProperty, value) {
       }
       break;
   }
+}
+
+function normalize(classProperty, value, normalizeFunction) {
+  var type = classProperty.type;
+  var valueType = classProperty.valueType;
+  var normalized = classProperty.normalized;
+
+  if (normalized) {
+    if (type === MetadataType.ARRAY) {
+      var length = value.length;
+      for (var i = 0; i < length; ++i) {
+        value[i] = normalizeFunction(value[i], valueType);
+      }
+    } else {
+      value = normalizeFunction(value, valueType);
+    }
+  }
+  return value;
 }
 
 function getValueType(type, componentType, enumType) {

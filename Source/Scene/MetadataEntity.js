@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import MetadataType from "./MetadataType.js";
 
 /**
  * An entity containing metadata.
@@ -136,7 +135,14 @@ MetadataEntity.hasProperty = function (entity, propertyId) {
     return true;
   }
 
-  return defined(getDefault(entity.class, propertyId));
+  if (defined(entity.class)) {
+    var classProperty = entity.class.properties[propertyId];
+    if (defined(classProperty) && defined(classProperty.default)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -204,8 +210,13 @@ MetadataEntity.getProperty = function (entity, propertyId) {
 
   var value = entity.properties[propertyId];
 
-  if (!defined(value)) {
-    value = getDefault(entity.class, propertyId);
+  var classProperty;
+  if (defined(entity.class)) {
+    classProperty = entity.class.properties[propertyId];
+  }
+
+  if (!defined(value) && defined(classProperty)) {
+    value = classProperty.default;
   }
 
   if (!defined(value)) {
@@ -216,7 +227,11 @@ MetadataEntity.getProperty = function (entity, propertyId) {
     value = value.slice(); // clone
   }
 
-  return MetadataEntity.normalize(entity.class, propertyId, value);
+  if (defined(classProperty)) {
+    value = classProperty.normalize(value);
+  }
+
+  return value;
 };
 
 /**
@@ -245,7 +260,12 @@ MetadataEntity.setProperty = function (entity, propertyId, value) {
     value = value.slice(); // clone
   }
 
-  value = MetadataEntity.unnormalize(entity.class, propertyId, value);
+  if (defined(entity.class)) {
+    var classProperty = entity.class.properties[propertyId];
+    if (defined(classProperty)) {
+      value = classProperty.unnormalize(value);
+    }
+  }
 
   entity.properties[propertyId] = value;
 };
@@ -296,76 +316,5 @@ MetadataEntity.setPropertyBySemantic = function (entity, semantic, value) {
     }
   }
 };
-
-/**
- * Normalizes integer property values. If the property is not normalized
- * the value is returned unmodified.
- *
- * @param {MetadataClass} classDefinition The class.
- * @param {String} propertyId The case-sensitive ID of the property.
- * @param {*} value The integer value.
- * @returns {*} The normalized value.
- *
- * @private
- */
-MetadataEntity.normalize = function (classDefinition, propertyId, value) {
-  return normalize(classDefinition, propertyId, value, MetadataType.normalize);
-};
-
-/**
- * Unnormalizes integer property values. If the property is not normalized
- * the value is returned unmodified.
- *
- * @param {MetadataClass} classDefinition The class.
- * @param {String} propertyId The case-sensitive ID of the property.
- * @param {*} value The normalized value.
- * @returns {*} The integer value.
- *
- * @private
- */
-MetadataEntity.unnormalize = function (classDefinition, propertyId, value) {
-  return normalize(
-    classDefinition,
-    propertyId,
-    value,
-    MetadataType.unnormalize
-  );
-};
-
-function getDefault(classDefinition, propertyId) {
-  if (defined(classDefinition)) {
-    var classProperty = classDefinition.properties[propertyId];
-    if (defined(classProperty)) {
-      return classProperty.default;
-    }
-  }
-}
-
-function normalize(classDefinition, propertyId, value, normalizeFunction) {
-  var type;
-  var valueType;
-
-  var normalized = false;
-  if (defined(classDefinition)) {
-    var classProperty = classDefinition.properties[propertyId];
-    if (defined(classProperty)) {
-      type = classProperty.type;
-      valueType = classProperty.valueType;
-      normalized = classProperty.normalized;
-    }
-  }
-
-  if (normalized) {
-    if (type === MetadataType.ARRAY) {
-      var length = value.length;
-      for (var i = 0; i < length; ++i) {
-        value[i] = normalizeFunction(value[i], valueType);
-      }
-    } else {
-      value = normalizeFunction(value, valueType);
-    }
-  }
-  return value;
-}
 
 export default MetadataEntity;

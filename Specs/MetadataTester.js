@@ -8,6 +8,27 @@ import { MetadataType } from "../../Source/Cesium.js";
 
 function MetadataTester() {}
 
+MetadataTester.createProperty = function (options) {
+  var properties = {
+    propertyId: options.property,
+  };
+  var propertyValues = {
+    propertyId: options.values,
+  };
+
+  var table = MetadataTester.createTable({
+    properties: properties,
+    propertyValues: propertyValues,
+    offsetType: options.offsetType,
+    enums: options.enums,
+    disableBigIntSupport: options.disableBigIntSupport,
+    disableBigInt64ArraySupport: options.disableBigInt64ArraySupport,
+    disableBigUint64ArraySupport: options.disableBigUint64ArraySupport,
+  });
+
+  return table.properties.propertyId;
+};
+
 MetadataTester.createTable = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var propertiesJson = options.properties;

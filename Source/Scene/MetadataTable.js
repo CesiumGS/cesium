@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import MetadataEntity from "./MetadataEntity.js";
 import MetadataTableProperty from "./MetadataTableProperty.js";
 import MetadataType from "./MetadataType.js";
@@ -141,24 +140,19 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  */
 MetadataTable.prototype.getProperty = function (index, propertyId) {
   //>>includeStart('debug', pragmas.debug);
-  checkIndex(this, index);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
-  var value;
-
   var property = this._properties[propertyId];
+
+  var value;
   if (defined(property)) {
     value = property.get(index);
   } else {
     value = getDefault(this._class, propertyId);
   }
 
-  if (!defined(value)) {
-    return undefined;
-  }
-
-  return MetadataEntity.normalize(this._class, propertyId, value);
+  return value;
 };
 
 /**
@@ -191,27 +185,13 @@ MetadataTable.prototype.getProperty = function (index, propertyId) {
  */
 MetadataTable.prototype.setProperty = function (index, propertyId, value) {
   //>>includeStart('debug', pragmas.debug);
-  checkIndex(this, index);
   Check.typeOf.string("propertyId", propertyId);
   //>>includeEnd('debug');
 
   var property = this._properties[propertyId];
-
-  if (!defined(property)) {
-    return;
+  if (defined(property)) {
+    property.set(index, value);
   }
-
-  //>>includeStart('debug', pragmas.debug);
-  var classProperty = this._class.properties[propertyId];
-  var errorMessage = classProperty.validate(value);
-  if (defined(errorMessage)) {
-    throw new DeveloperError(errorMessage);
-  }
-  //>>includeEnd('debug');
-
-  value = MetadataEntity.unnormalize(this._class, propertyId, value);
-
-  property.set(index, value);
 };
 
 /**
@@ -270,22 +250,14 @@ function getDefault(classDefinition, propertyId) {
   if (defined(classDefinition)) {
     var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty) && defined(classProperty.default)) {
+      var value;
       if (classProperty.type === MetadataType.ARRAY) {
-        return classProperty.default.slice(); // clone
+        value = classProperty.default.slice(); // clone
+      } else {
+        value = classProperty.default;
       }
-      return classProperty.default;
+      return classProperty.normalize(value);
     }
-  }
-}
-
-function checkIndex(table, index) {
-  var count = table._count;
-  if (!defined(index) || index < 0 || index >= count) {
-    var maximumIndex = count - 1;
-    throw new DeveloperError(
-      "index is required and between zero and count - 1. Actual value: " +
-        maximumIndex
-    );
   }
 }
 

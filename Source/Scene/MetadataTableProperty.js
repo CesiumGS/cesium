@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import oneTimeWarning from "../Core/oneTimeWarning.js";
@@ -181,42 +182,12 @@ Object.defineProperties(MetadataTableProperty.prototype, {
  * @private
  */
 MetadataTableProperty.prototype.get = function (index) {
-  if (requiresUnpackForGet(this)) {
-    unpackProperty(this);
-  }
+  //>>includeStart('debug', pragmas.debug);
+  checkIndex(this, index);
+  //>>includeEnd('debug');
 
-  var classProperty = this._classProperty;
-
-  if (defined(this._unpackedValues)) {
-    var value = this._unpackedValues[index];
-    if (classProperty.type === MetadataType.ARRAY) {
-      return value.slice(); // clone
-    }
-    return value;
-  }
-
-  if (classProperty.type !== MetadataType.ARRAY) {
-    return this._getValue(index);
-  }
-
-  var offset;
-  var length;
-
-  var componentCount = classProperty.componentCount;
-  if (defined(componentCount)) {
-    offset = index * componentCount;
-    length = componentCount;
-  } else {
-    offset = this._arrayOffsets.get(index);
-    length = this._arrayOffsets.get(index + 1) - offset;
-  }
-
-  var values = new Array(length);
-  for (var i = 0; i < length; ++i) {
-    values[i] = this._getValue(offset + i);
-  }
-
-  return values;
+  var value = get(this, index);
+  return this._classProperty.normalize(value);
 };
 
 /**
@@ -228,17 +199,83 @@ MetadataTableProperty.prototype.get = function (index) {
  * @private
  */
 MetadataTableProperty.prototype.set = function (index, value) {
-  if (requiresUnpackForSet(this, index, value)) {
-    unpackProperty(this);
-  }
-
   var classProperty = this._classProperty;
 
-  if (defined(this._unpackedValues)) {
+  //>>includeStart('debug', pragmas.debug);
+  checkIndex(this, index);
+  var errorMessage = classProperty.validate(value);
+  if (defined(errorMessage)) {
+    throw new DeveloperError(errorMessage);
+  }
+  //>>includeEnd('debug');
+
+  value = classProperty.unnormalize(value);
+
+  set(this, index, value);
+};
+
+function checkIndex(table, index) {
+  var count = table._count;
+  if (!defined(index) || index < 0 || index >= count) {
+    var maximumIndex = count - 1;
+    throw new DeveloperError(
+      "index is required and between zero and count - 1. Actual value: " +
+        maximumIndex
+    );
+  }
+}
+
+function get(property, index) {
+  if (requiresUnpackForGet(property)) {
+    unpackProperty(property);
+  }
+
+  var classProperty = property._classProperty;
+
+  if (defined(property._unpackedValues)) {
+    var value = property._unpackedValues[index];
+    if (classProperty.type === MetadataType.ARRAY) {
+      return value.slice(); // clone
+    }
+    return value;
+  }
+
+  if (classProperty.type !== MetadataType.ARRAY) {
+    return property._getValue(index);
+  }
+
+  var offset;
+  var length;
+
+  var componentCount = classProperty.componentCount;
+  if (defined(componentCount)) {
+    offset = index * componentCount;
+    length = componentCount;
+  } else {
+    offset = property._arrayOffsets.get(index);
+    length = property._arrayOffsets.get(index + 1) - offset;
+  }
+
+  var values = new Array(length);
+  for (var i = 0; i < length; ++i) {
+    values[i] = property._getValue(offset + i);
+  }
+
+  return values;
+}
+
+function set(property, index, value) {
+  if (requiresUnpackForSet(property, index, value)) {
+    unpackProperty(property);
+  }
+
+  var classProperty = property._classProperty;
+
+  if (defined(property._unpackedValues)) {
     if (classProperty.type === MetadataType.ARRAY) {
       value = value.slice(); // clone
     }
-    this._unpackedValues[index] = value;
+    property._unpackedValues[index] = value;
     return;
   }
 
@@ -246,7 +283,7 @@ MetadataTableProperty.prototype.set = function (index, value) {
   // property has strings. No need to handle these cases below.
 
   if (classProperty.type !== MetadataType.ARRAY) {
-    this._setValue(index, value);
+    property._setValue(index, value);
     return;
   }
 
@@ -258,14 +295,14 @@ MetadataTableProperty.prototype.set = function (index, value) {
     offset = index * componentCount;
     length = componentCount;
   } else {
-    offset = this._arrayOffsets.get(index);
-    length = this._arrayOffsets.get(index + 1) - offset;
+    offset = property._arrayOffsets.get(index);
+    length = property._arrayOffsets.get(index + 1) - offset;
   }
 
   for (var i = 0; i < length; ++i) {
-    this._setValue(offset + i, value[i]);
+    property._setValue(offset + i, value[i]);
   }
-};
+}
 
 function getString(index, values, stringOffsets) {
   var stringByteOffset = stringOffsets.get(index);
