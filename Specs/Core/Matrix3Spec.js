@@ -392,8 +392,9 @@ describe("Core/Matrix3", function () {
   });
 
   it("fromRotationX works without a result parameter", function () {
-    var matrix = Matrix3.fromRotationX(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    var expected = new Matrix3(1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0);
+    var matrix = Matrix3.fromRotationX(CesiumMath.toRadians(90.0));
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("fromRotationX works with a result parameter", function () {
@@ -411,8 +412,9 @@ describe("Core/Matrix3", function () {
   });
 
   it("fromRotationY works without a result parameter", function () {
-    var matrix = Matrix3.fromRotationY(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    var expected = new Matrix3(0.0, 0.0, 1.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0);
+    var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0));
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("fromRotationY works with a result parameter", function () {
@@ -430,8 +432,9 @@ describe("Core/Matrix3", function () {
   });
 
   it("fromRotationZ works without a result parameter", function () {
-    var matrix = Matrix3.fromRotationZ(0.0);
-    expect(matrix).toEqual(Matrix3.IDENTITY);
+    var expected = new Matrix3(0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+    var matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0));
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON15);
   });
 
   it("fromRotationZ works with a result parameter", function () {
