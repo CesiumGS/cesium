@@ -525,6 +525,7 @@ var scratchRectangle = new Rectangle();
  * @param {Number} y The x coordinate of the descendant tile
  * @param {Number} [z] The z coordinate of the descendant tile (octree only)
  * @returns {Number[]} An array of 6 numbers representing the bounding region of the descendant tile
+ * @private
  */
 function deriveBoundingRegion(rootRegion, level, x, y, z) {
   //>>includeStart('debug', pragmas.debug);
@@ -662,5 +663,6 @@ Implicit3DTileContent.prototype.destroy = function () {
   return destroyObject(this);
 };
 
+// Exposed for testing
 Implicit3DTileContent._deriveBoundingBox = deriveBoundingBox;
 Implicit3DTileContent._deriveBoundingRegion = deriveBoundingRegion;
