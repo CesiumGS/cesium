@@ -491,9 +491,9 @@ Matrix3.fromRotationX = function (angle, result) {
       0.0,
       0.0,
       cosAngle,
-      -sinAngle,
-      0.0,
       sinAngle,
+      0.0,
+      -sinAngle,
       cosAngle
     );
   }
@@ -536,11 +536,11 @@ Matrix3.fromRotationY = function (angle, result) {
     return new Matrix3(
       cosAngle,
       0.0,
-      sinAngle,
+      -sinAngle,
       0.0,
       1.0,
       0.0,
-      -sinAngle,
+      sinAngle,
       0.0,
       cosAngle
     );
@@ -583,9 +583,9 @@ Matrix3.fromRotationZ = function (angle, result) {
   if (!defined(result)) {
     return new Matrix3(
       cosAngle,
-      -sinAngle,
-      0.0,
       sinAngle,
+      0.0,
+      -sinAngle,
       cosAngle,
       0.0,
       0.0,
