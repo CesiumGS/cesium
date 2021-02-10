@@ -39,6 +39,8 @@ var crsNames = {
 
 var crsLinkHrefs = {};
 var crsLinkTypes = {};
+var defaultImageUrl;
+var defaultImageScale = 1.0;
 var defaultMarkerSize = 48;
 var defaultMarkerSymbol;
 var defaultMarkerColor = Color.ROYALBLUE;
@@ -342,6 +344,7 @@ function createPoint(dataSource, geoJson, crsFunction, coordinates, options) {
   var promise = when(billboardImage)
     .then(function (image) {
       billboard.image = new ConstantProperty(image);
+      billboard.scale = imageScale;
     })
     .otherwise(function () {
       billboard.image = new ConstantProperty(
@@ -576,6 +579,8 @@ function processTopology(dataSource, geoJson, geometry, crsFunction, options) {
  * Initialization options for the `load` method.
  *
  * @property {String} [sourceUri] Overrides the url to use for resolving relative links.
+ * @property {String} [imageUrl=GeoJsonDataSource.imageUrl] The default image for each point created.
+ * @property {Number} [imageScale=GeoJsonDataSource.imageScale] The default scale of the image for each point.
  * @property {Number} [markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
  * @property {String} [markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
  * @property {Color} [markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -637,6 +642,33 @@ GeoJsonDataSource.load = function (data, options) {
 };
 
 Object.defineProperties(GeoJsonDataSource, {
+  /**
+   * Gets or sets the default image url for each point.
+   * @memberof GeoJsonDataSource
+   * @type {String}
+   */
+  imageUrl: {
+    get: function () {
+      return defaultImageUrl;
+    },
+    set: function (value) {
+      defaultImageUrl = value;
+    },
+  },
+  /**
+   * Gets or sets the default image scale for each point.
+   * @memberof GeoJsonDataSource
+   * @type {Number}
+   * @default 1.0
+   */
+  imageScale: {
+    get: function () {
+      return defaultImageScale;
+    },
+    set: function (value) {
+      defaultImageScale = value;
+    },
+  },
   /**
    * Gets or sets the default size of the map pin created for each point, in pixels.
    * @memberof GeoJsonDataSource
@@ -910,6 +942,8 @@ Object.defineProperties(GeoJsonDataSource.prototype, {
  * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
  * @param {GeoJsonDataSource.describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
  *                                                                                which converts the properties into an html description.
+ * @param {String} [options.imageUrl=GeoJsonDataSource.imageUrl] The default image url to be used for each point.
+ * @param {Number} [options.imageScale=GeoJsonDataSource.imageScale] The default scale of the image for each point.
  * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
  * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
  * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -958,6 +992,8 @@ GeoJsonDataSource.prototype.load = function (data, options) {
 
   options = {
     describe: defaultValue(options.describe, defaultDescribeProperty),
+    imageUrl: defaultValue(options.imageUrl, defaultImageUrl),
+    imageScale: defaultValue(options.imageScale, defaultImageScale),
     markerSize: defaultValue(options.markerSize, defaultMarkerSize),
     markerSymbol: defaultValue(options.markerSymbol, defaultMarkerSymbol),
     markerColor: defaultValue(options.markerColor, defaultMarkerColor),
