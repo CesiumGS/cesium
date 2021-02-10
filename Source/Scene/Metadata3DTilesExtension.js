@@ -29,7 +29,11 @@ function Metadata3DTilesExtension(options) {
   Check.typeOf.object("options.extension", extension);
   //>>includeEnd('debug');
 
+  // The calling code is responsible for fetching the external schema JSON
+  // pointed at by the schemaUri property. This keeps metadata parsing
+  // synchronous and allows the calling code to maintain a schema cache.
   var schema = externalSchema;
+
   if (defined(extension.schema)) {
     schema = new MetadataSchema(extension.schema);
   }
