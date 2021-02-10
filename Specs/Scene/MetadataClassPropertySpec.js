@@ -106,7 +106,7 @@ describe("Scene/MetadataClassProperty", function () {
 
     expect(property.type).toBe(MetadataType.ENUM);
     expect(property.enumType).toBe(colorEnum);
-    expect(property.valueType).toBe(MetadataType.INT32); // default enum valueType
+    expect(property.valueType).toBe(MetadataType.UINT16); // default enum valueType
   });
 
   it("constructor throws without id", function () {
@@ -182,7 +182,7 @@ describe("Scene/MetadataClassProperty", function () {
             name: "ValueB",
           },
           {
-            value: -999,
+            value: 999,
             name: "Other",
           },
         ],

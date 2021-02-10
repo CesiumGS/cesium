@@ -154,7 +154,7 @@ describe("Scene/MetadataTable", function () {
             name: "ValueB",
           },
           {
-            value: -999,
+            value: 999,
             name: "Other",
           },
         ],

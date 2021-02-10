@@ -26,7 +26,7 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.values[0].name).toBe("RED");
     expect(colorEnum.values[1].name).toBe("GREEN");
     expect(colorEnum.values[2].name).toBe("BLUE");
-    expect(colorEnum.valueType).toBe(MetadataType.INT32);
+    expect(colorEnum.valueType).toBe(MetadataType.UINT16);
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBeUndefined();
     expect(colorEnum.description).toBeUndefined();

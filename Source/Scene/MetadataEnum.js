@@ -35,7 +35,7 @@ function MetadataEnum(options) {
 
   var valueType = defaultValue(
     MetadataType[enumDefinition.valueType],
-    MetadataType.INT32
+    MetadataType.UINT16
   );
 
   this._values = values;
