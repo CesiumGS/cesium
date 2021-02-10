@@ -93,7 +93,10 @@ export default function ImplicitTileset(baseResource, tileJson) {
    * @readonly
    * @private
    */
-  this.contentUriTemplate = new Resource({ url: tileJson.content.uri });
+  this.contentUriTemplate = undefined;
+  if (defined(tileJson.content)) {
+    this.contentUriTemplate = new Resource({ url: tileJson.content.uri });
+  }
 
   /**
    * The subdivision scheme for this implicit tileset; either OCTREE or QUADTREE

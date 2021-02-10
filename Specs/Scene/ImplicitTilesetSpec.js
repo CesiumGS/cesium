@@ -1,4 +1,5 @@
 import {
+  clone,
   combine,
   ImplicitSubdivisionScheme,
   ImplicitTileset,
@@ -46,6 +47,13 @@ describe("Scene/ImplicitTileset", function () {
     expect(implicitTileset.geometricError).toEqual(500);
     expect(implicitTileset.contentUriTemplate).toEqual(contentUriTemplate);
     expect(implicitTileset.subtreeUriTemplate).toEqual(subtreeUriTemplate);
+  });
+
+  it("allows undefined content URI", function () {
+    var noContentJson = clone(implicitTileJson);
+    delete noContentJson.content;
+    var implicitTileset = new ImplicitTileset(baseResource, noContentJson);
+    expect(implicitTileset.contentUriTemplate).not.toBeDefined();
   });
 
   it("rejects bounding spheres", function () {
