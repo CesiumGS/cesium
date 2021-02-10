@@ -208,7 +208,9 @@ MetadataType.isUnsignedIntegerType = function (type) {
  * Normalizes signed integers to the range [-1.0, 1.0] and unsigned integers to
  * the range [0.0, 1.0].
  * <p>
- * value may be a BigInt for the INT64 and UINT64 types.
+ * value may be a BigInt for the INT64 and UINT64 types. The value is converted
+ * to a 64-bit floating point number during normalization which may result in
+ * small precision differences.
  * </p>
  *
  * @param {Number|BigInt} value The integer value.
