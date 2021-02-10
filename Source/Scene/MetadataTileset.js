@@ -36,75 +36,6 @@ function MetadataTileset(options) {
   this._extensions = tileset.extensions;
 }
 
-/**
- * Returns whether this property exists.
- *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {Boolean} Whether this property exists.
- */
-MetadataTileset.prototype.hasProperty = function (propertyId) {
-  return MetadataEntity.hasProperty(this, propertyId);
-};
-
-/**
- * Returns an array of property IDs.
- *
- * @param {String[]} [results] An array into which to store the results.
- * @returns {String[]} The property IDs.
- */
-MetadataTileset.prototype.getPropertyIds = function (results) {
-  return MetadataEntity.getPropertyIds(this, results);
-};
-
-/**
- * Returns a copy of the value of the property with the given ID.
- * <p>
- * If the property is normalized the normalized value is returned.
- * </p>
- *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
- */
-MetadataTileset.prototype.getProperty = function (propertyId) {
-  return MetadataEntity.getProperty(this, propertyId);
-};
-
-/**
- * Sets the value of the property with the given ID.
- * <p>
- * If the property is normalized a normalized value must be provided to this function.
- * </p>
- * <p>
- * If a property with the given ID doesn't exist, it is created.
- * </p>
- *
- * @param {String} propertyId The case-sensitive ID of the property.
- * @param {*} value The value of the property that will be copied.
- */
-MetadataTileset.prototype.setProperty = function (propertyId, value) {
-  MetadataEntity.setProperty(this, propertyId, value);
-};
-
-/**
- * Returns a copy of the value of the property with the given semantic.
- *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
- */
-MetadataTileset.prototype.getPropertyBySemantic = function (semantic) {
-  return MetadataEntity.getPropertyBySemantic(this, semantic);
-};
-
-/**
- * Sets the value of the property with the given semantic.
- *
- * @param {String} semantic The case-sensitive semantic of the property.
- * @param {*} value The value of the property that will be copied.
- */
-MetadataTileset.prototype.setPropertyBySemantic = function (semantic, value) {
-  MetadataEntity.setPropertyBySemantic(this, semantic, value);
-};
-
 Object.defineProperties(MetadataTileset.prototype, {
   /**
    * The class that properties conform to.
@@ -190,5 +121,74 @@ Object.defineProperties(MetadataTileset.prototype, {
     },
   },
 });
+
+/**
+ * Returns whether this property exists.
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @returns {Boolean} Whether this property exists.
+ */
+MetadataTileset.prototype.hasProperty = function (propertyId) {
+  return MetadataEntity.hasProperty(this, propertyId);
+};
+
+/**
+ * Returns an array of property IDs.
+ *
+ * @param {String[]} [results] An array into which to store the results.
+ * @returns {String[]} The property IDs.
+ */
+MetadataTileset.prototype.getPropertyIds = function (results) {
+  return MetadataEntity.getPropertyIds(this, results);
+};
+
+/**
+ * Returns a copy of the value of the property with the given ID.
+ * <p>
+ * If the property is normalized the normalized value is returned.
+ * </p>
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ */
+MetadataTileset.prototype.getProperty = function (propertyId) {
+  return MetadataEntity.getProperty(this, propertyId);
+};
+
+/**
+ * Sets the value of the property with the given ID.
+ * <p>
+ * If the property is normalized a normalized value must be provided to this function.
+ * </p>
+ * <p>
+ * If a property with the given ID doesn't exist, it is created.
+ * </p>
+ *
+ * @param {String} propertyId The case-sensitive ID of the property.
+ * @param {*} value The value of the property that will be copied.
+ */
+MetadataTileset.prototype.setProperty = function (propertyId, value) {
+  MetadataEntity.setProperty(this, propertyId, value);
+};
+
+/**
+ * Returns a copy of the value of the property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
+ */
+MetadataTileset.prototype.getPropertyBySemantic = function (semantic) {
+  return MetadataEntity.getPropertyBySemantic(this, semantic);
+};
+
+/**
+ * Sets the value of the property with the given semantic.
+ *
+ * @param {String} semantic The case-sensitive semantic of the property.
+ * @param {*} value The value of the property that will be copied.
+ */
+MetadataTileset.prototype.setPropertyBySemantic = function (semantic, value) {
+  MetadataEntity.setPropertyBySemantic(this, semantic, value);
+};
 
 export default MetadataTileset;
