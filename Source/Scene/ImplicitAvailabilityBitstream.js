@@ -33,7 +33,13 @@ export default function ImplicitAvailabilityBitstream(options) {
     var expectedLength = Math.ceil(this._lengthBits / 8);
     if (options.bitstream.length !== expectedLength) {
       throw new RuntimeError(
-        "options.bitstream.length must have ceil(options.lengthBits / 8) bytes."
+        "Availability bitstream must be exactly " +
+          expectedLength +
+          " bytes long to store " +
+          this._lengthBits +
+          " bits. Actual bitstream was " +
+          options.bitstream.length +
+          " bytes long."
       );
     }
 
