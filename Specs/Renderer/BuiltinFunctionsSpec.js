@@ -316,7 +316,9 @@ describe(
     it("has czm_decompressTextureCoordinates", function () {
       var fs =
         "void main() { " +
-        "  gl_FragColor = vec4(czm_decompressTextureCoordinates(8386559.0) == vec2(0.4998779, 0.4998779)); " +
+        "  vec2 tmp = czm_decompressTextureCoordinates(8386559.0); " +
+        "  bool ok = all(lessThanEqual(abs(tmp - vec2(0.4998779, 0.4998779)), vec2(.00000005)));" +
+        "  gl_FragColor = vec4(ok); " +
         "}";
       expect({
         context: context,
