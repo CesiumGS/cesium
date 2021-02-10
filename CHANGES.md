@@ -2,6 +2,10 @@
 
 ### 1.79 - 2021-03-01
 
+##### Additions :tada:
+
+- Added `imageUrl` and `imageScale` to `GeoJsonDataSource` which allows points to specify an image. [#9373](https://github.com/CesiumGS/cesium/pull/9373)
+
 ##### Fixes :wrench:
 
 - Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
