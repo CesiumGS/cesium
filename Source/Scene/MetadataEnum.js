@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import MetadataEnumValue from "./MetadataEnumValue.js";
 import MetadataType from "./MetadataType.js";
@@ -46,7 +45,7 @@ function MetadataEnum(options) {
   this._id = id;
   this._name = enumDefinition.name;
   this._description = enumDefinition.description;
-  this._extras = clone(enumDefinition.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = enumDefinition.extras;
 }
 
 Object.defineProperties(MetadataEnum.prototype, {

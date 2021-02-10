@@ -111,8 +111,7 @@ describe("Scene/MetadataSchema", function () {
     expect(schema.name).toBe("My Schema");
     expect(schema.description).toBe("My Schema Description");
 
-    expect(schema.extras).toEqual(extras);
-    expect(schema.extras).not.toBe(extras); // Extras are cloned
+    expect(schema.extras).toBe(extras);
   });
 
   it("constructor throws without schema", function () {

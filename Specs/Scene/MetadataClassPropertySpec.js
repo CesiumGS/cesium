@@ -64,18 +64,12 @@ describe("Scene/MetadataClassProperty", function () {
     expect(property.valueType).toBe(MetadataType.INT16);
     expect(property.componentCount).toBe(3);
     expect(property.normalized).toBe(true);
-    expect(property.max).toEqual(max);
-    expect(property.min).toEqual(min);
-    expect(property.default).toEqual(propertyDefault);
+    expect(property.max).toBe(max);
+    expect(property.min).toBe(min);
+    expect(property.default).toBe(propertyDefault);
     expect(property.optional).toBe(false);
     expect(property.semantic).toBe("_POSITION");
-    expect(property.extras).toEqual(extras);
-
-    // Check that JSON properties get cloned
-    expect(property.max).not.toBe(max);
-    expect(property.min).not.toBe(min);
-    expect(property.default).not.toBe(propertyDefault);
-    expect(property.extras).not.toBe(extras);
+    expect(property.extras).toBe(extras);
   });
 
   it("creates enum property", function () {

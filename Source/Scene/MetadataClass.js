@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataClassProperty from "./MetadataClassProperty.js";
@@ -48,7 +47,7 @@ function MetadataClass(options) {
   this._id = id;
   this._name = classDefinition.name;
   this._description = classDefinition.description;
-  this._extras = clone(classDefinition.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = classDefinition.extras;
 }
 
 Object.defineProperties(MetadataClass.prototype, {

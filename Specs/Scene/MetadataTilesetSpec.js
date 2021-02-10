@@ -48,10 +48,8 @@ describe("Scene/MetadataTileset", function () {
     expect(tilesetMetadata.class).toBe(cityClass);
     expect(tilesetMetadata.name).toBe("City");
     expect(tilesetMetadata.description).toBe("City Metadata");
-    expect(tilesetMetadata.extras).toEqual(extras);
-    expect(tilesetMetadata.extras).not.toBe(extras); // Extras is cloned
-    expect(tilesetMetadata.properties).toEqual(properties);
-    expect(tilesetMetadata.properties).not.toBe(properties); // Properties is cloned
+    expect(tilesetMetadata.extras).toBe(extras);
+    expect(tilesetMetadata.properties).toBe(properties);
   });
 
   it("constructor throws without tileset", function () {

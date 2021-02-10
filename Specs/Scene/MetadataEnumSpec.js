@@ -70,8 +70,7 @@ describe("Scene/MetadataEnum", function () {
     expect(colorEnum.id).toBe("color");
     expect(colorEnum.name).toBe("Color");
     expect(colorEnum.description).toBe("Common colors");
-    expect(colorEnum.extras).toEqual(extras);
-    expect(colorEnum.extras).not.toBe(extras); // Extras is cloned
+    expect(colorEnum.extras).toBe(extras);
   });
 
   it("constructor throws without id", function () {

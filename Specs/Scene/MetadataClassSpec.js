@@ -51,8 +51,7 @@ describe("Scene/MetadataClass", function () {
     expect(buildingClass.id).toBe("building");
     expect(buildingClass.name).toBe("Building");
     expect(buildingClass.description).toBe("Building Class");
-    expect(buildingClass.extras).toEqual(extras);
-    expect(buildingClass.extras).not.toBe(extras); // Extras is cloned
+    expect(buildingClass.extras).toBe(extras);
 
     var properties = buildingClass.properties;
     var heightProperty = properties.height;

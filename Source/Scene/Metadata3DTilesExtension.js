@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataGroup from "./MetadataGroup.js";
@@ -58,8 +57,8 @@ function Metadata3DTilesExtension(options) {
   this._schema = schema;
   this._groups = groups;
   this._tileset = tileset;
-  this._statistics = clone(extension.statistics, true); // Clone so that this object doesn't hold on to a reference to the JSON
-  this._extras = clone(extension.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._statistics = extension.statistics;
+  this._extras = extension.extras;
 }
 
 Object.defineProperties(Metadata3DTilesExtension.prototype, {

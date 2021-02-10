@@ -109,11 +109,8 @@ describe("Scene/Metadata3DTilesExtension", function () {
     expect(neighborhoodB.class).toBe(neighborhoodClass);
     expect(neighborhoodB.properties.color).toBe("GREEN");
 
-    expect(metadata.statistics).toEqual(statistics);
-    expect(metadata.statistics).not.toBe(statistics); // Statistics are cloned
-
-    expect(metadata.extras).toEqual(extras);
-    expect(metadata.extras).not.toBe(extras); // Extras are cloned
+    expect(metadata.statistics).toBe(statistics);
+    expect(metadata.extras).toBe(extras);
   });
 
   it("creates 3D Tiles metadata with external schema", function () {

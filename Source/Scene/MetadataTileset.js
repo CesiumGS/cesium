@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataEntity from "./MetadataEntity.js";
@@ -27,15 +26,13 @@ function MetadataTileset(options) {
   Check.typeOf.object("options.tileset", tileset);
   //>>includeEnd('debug');
 
-  var properties = defined(tileset.properties)
-    ? clone(tileset.properties, true) // Clone so that this object doesn't hold on to a reference to the JSON
-    : {};
+  var properties = defined(tileset.properties) ? tileset.properties : {};
 
   this._class = options.class;
   this._properties = properties;
   this._name = tileset.name;
   this._description = tileset.description;
-  this._extras = clone(tileset.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = tileset.extras;
 }
 
 /**

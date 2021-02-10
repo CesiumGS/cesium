@@ -53,10 +53,8 @@ describe("Scene/MetadataGroup", function () {
     expect(groupMetadata.class).toBe(buildingClass);
     expect(groupMetadata.name).toBe("Building");
     expect(groupMetadata.description).toBe("Building Metadata");
-    expect(groupMetadata.extras).toEqual(extras);
-    expect(groupMetadata.extras).not.toBe(extras); // Extras is cloned
-    expect(groupMetadata.properties).toEqual(properties);
-    expect(groupMetadata.properties).not.toBe(properties); // Properties is cloned
+    expect(groupMetadata.extras).toBe(extras);
+    expect(groupMetadata.properties).toBe(properties);
   });
 
   it("constructor throws without id", function () {

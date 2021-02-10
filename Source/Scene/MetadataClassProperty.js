@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataType from "./MetadataType.js";
@@ -41,14 +40,6 @@ function MetadataClassProperty(options) {
     MetadataType.isIntegerType(valueType) &&
     defaultValue(property.normalized, false);
 
-  var propertyDefault = property.default;
-  if (Array.isArray(propertyDefault)) {
-    propertyDefault = propertyDefault.slice(); // Clone so that this object doesn't hold on to a reference to the JSON
-  }
-
-  var min = defined(property.min) ? property.min.slice() : undefined; // Clone so that this object doesn't hold on to a reference to the JSON
-  var max = defined(property.max) ? property.max.slice() : undefined; // Clone so that this object doesn't hold on to a reference to the JSON
-
   this._id = id;
   this._name = property.name;
   this._description = property.description;
@@ -58,12 +49,12 @@ function MetadataClassProperty(options) {
   this._valueType = valueType;
   this._componentCount = property.componentCount;
   this._normalized = normalized;
-  this._min = min;
-  this._max = max;
-  this._default = propertyDefault;
+  this._min = property.min;
+  this._max = property.max;
+  this._default = property.default;
   this._optional = defaultValue(property.optional, false);
   this._semantic = property.semantic;
-  this._extras = clone(property.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = property.extras;
 }
 
 Object.defineProperties(MetadataClassProperty.prototype, {

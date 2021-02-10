@@ -17,8 +17,7 @@ describe("Scene/MetadataEnumValue", function () {
     expect(enumValue.name).toBe("RED");
     expect(enumValue.description).toBe("Red color");
     expect(enumValue.value).toBe(0);
-    expect(enumValue.extras).toEqual(extras);
-    expect(enumValue.extras).not.toBe(extras); // Extras is cloned
+    expect(enumValue.extras).toBe(extras);
   });
 
   it("constructor throws without value", function () {

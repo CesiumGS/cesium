@@ -1,5 +1,4 @@
 import Check from "../Core/Check.js";
-import clone from "../Core/clone.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
 
@@ -43,7 +42,7 @@ function MetadataSchema(schema) {
   this._enums = enums;
   this._name = schema.name;
   this._description = schema.description;
-  this._extras = clone(schema.extras, true); // Clone so that this object doesn't hold on to a reference to the JSON
+  this._extras = schema.extras;
 }
 
 Object.defineProperties(MetadataSchema.prototype, {
