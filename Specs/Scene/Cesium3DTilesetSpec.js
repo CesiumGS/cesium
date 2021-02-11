@@ -157,6 +157,11 @@ describe(
     var pointCloudBatchedUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
 
+    var implicitRootUrl =
+      "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
+    var implicitChildUrl =
+      "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
+
     beforeAll(function () {
       scene = createScene();
     });
@@ -4797,6 +4802,44 @@ describe(
           scene.renderForSpecs();
           expect(tileset.statistics.selected).toBe(selectedLength);
           expect(tileset.statistics.numberOfPendingRequests).toBe(0);
+        }
+      );
+    });
+
+    it("detects and initializes an implicit tileset in root tile", function () {
+      viewNothing();
+      return Cesium3DTilesTester.loadTileset(scene, implicitRootUrl).then(
+        function (tileset) {
+          var implicitTile = tileset.root;
+          expect(
+            implicitTile._contentResource.url.endsWith(
+              "subtrees/0/0/0/0.subtree"
+            )
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
+          expect(implicitTile.implicitCoordinates.z).toEqual(0);
+        }
+      );
+    });
+
+    it("detects and initializes an implicit tileset in child tile", function () {
+      viewNothing();
+      return Cesium3DTilesTester.loadTileset(scene, implicitChildUrl).then(
+        function (tileset) {
+          var parentTile = tileset.root;
+          var implicitTile = parentTile.children[0];
+          expect(
+            implicitTile._contentResource.url.endsWith("subtrees/0/0/0.subtree")
+          ).toEqual(true);
+          expect(implicitTile.implicitTileset).toBeDefined();
+          expect(implicitTile.implicitCoordinates).toBeDefined();
+          expect(implicitTile.implicitCoordinates.level).toEqual(0);
+          expect(implicitTile.implicitCoordinates.x).toEqual(0);
+          expect(implicitTile.implicitCoordinates.y).toEqual(0);
         }
       );
     });

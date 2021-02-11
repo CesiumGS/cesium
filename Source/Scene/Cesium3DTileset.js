@@ -3,6 +3,7 @@ import Cartesian2 from "../Core/Cartesian2.js";
 import Cartesian3 from "../Core/Cartesian3.js";
 import Cartographic from "../Core/Cartographic.js";
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
@@ -34,6 +35,9 @@ import Cesium3DTilesetHeatmap from "./Cesium3DTilesetHeatmap.js";
 import Cesium3DTilesetStatistics from "./Cesium3DTilesetStatistics.js";
 import Cesium3DTileStyleEngine from "./Cesium3DTileStyleEngine.js";
 import ClippingPlaneCollection from "./ClippingPlaneCollection.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
+import ImplicitTileset from "./ImplicitTileset.js";
+import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
@@ -1724,7 +1728,7 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
   // Get the basePath relative to the external tileset.
-  var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
+  var rootTile = makeTile(this, resource, tilesetJson.root, parentTile);
 
   // If there is a parentTile, add the root of the currently loading tileset
   // to parentTile's children, and update its _depth.
@@ -1746,7 +1750,7 @@ Cesium3DTileset.prototype.loadTileset = function (
       var length = children.length;
       for (var i = 0; i < length; ++i) {
         var childHeader = children[i];
-        var childTile = new Cesium3DTile(this, resource, childHeader, tile);
+        var childTile = makeTile(this, resource, childHeader, tile);
         tile.children.push(childTile);
         childTile._depth = tile._depth + 1;
         stack.push(childTile);
@@ -1760,6 +1764,51 @@ Cesium3DTileset.prototype.loadTileset = function (
 
   return rootTile;
 };
+
+/**
+ * Make a {@link Cesium3DTile} for a specific tile. If the tile has the
+ * 3DTILES_implicit_tiling extension, it creates a placeholder tile instead
+ * for lazy evaluation of the implicit tileset.
+ *
+ * @param {Cesium3DTileset} tileset The tileset
+ * @param {Resource} baseResource The base resource for the tileset
+ * @param {Object} tileHeader The JSON header for the tile
+ * @param {Cesium3DTile} [parentTile] The parent tile of the new tile
+ * @returns {Cesium3DTile} The newly created tile
+ *
+ * @private
+ */
+function makeTile(tileset, baseResource, tileHeader, parentTile) {
+  if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
+    var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
+    var rootCoordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: implicitTileset.subdivisionScheme,
+      level: 0,
+      x: 0,
+      y: 0,
+      // The constructor will only use this for octrees.
+      z: 0,
+    });
+
+    // Create a placeholder Cesium3DTile that has an ImplicitTileset
+    // object and whose content will resolve to an Implicit3DTileContent
+    var contentUri = implicitTileset.subtreeUriTemplate.getDerivedResource({
+      templateValues: rootCoordinates.getTemplateValues(),
+    }).url;
+    var contentJson = {
+      content: {
+        uri: contentUri,
+      },
+    };
+    var tileJson = combine(contentJson, tileHeader);
+    var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
+    tile.implicitTileset = implicitTileset;
+    tile.implicitCoordinates = rootCoordinates;
+    return tile;
+  }
+
+  return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+}
 
 var scratchPositionNormal = new Cartesian3();
 var scratchCartographic = new Cartographic();
@@ -1881,7 +1930,7 @@ function requestContent(tileset, tile) {
   }
 
   if (expired) {
-    if (tile.hasTilesetContent) {
+    if (tile.hasTilesetContent || tile.hasImplicitContent) {
       destroySubtree(tileset, tile);
     } else {
       statistics.decrementLoadCounts(tile.content);
@@ -2026,7 +2075,7 @@ function handleTileSuccess(tileset, tile) {
   return function () {
     --tileset._statistics.numberOfTilesProcessing;
 
-    if (!tile.hasTilesetContent) {
+    if (!tile.hasTilesetContent && !tile.hasImplicitContent) {
       // RESEARCH_IDEA: ability to unload tiles (without content) for an
       // external tileset when all the tiles are unloaded.
       tileset._statistics.incrementLoadCounts(tile.content);
@@ -2187,7 +2236,7 @@ function updateTileDebugLabels(tileset, frameState) {
     }
     for (i = 0; i < emptyLength; ++i) {
       tile = emptyTiles[i];
-      if (tile.hasTilesetContent) {
+      if (tile.hasTilesetContent || tile.hasImplicitContent) {
         addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
       }
     }

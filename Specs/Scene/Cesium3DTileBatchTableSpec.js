@@ -12,6 +12,7 @@ import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
 import { Cesium3DTileStyle } from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
+import concatTypedArrays from "../concatTypedArrays.js";
 
 describe(
   "Scene/Cesium3DTileBatchTable",
@@ -489,27 +490,6 @@ describe(
         return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
       }).toThrowRuntimeError();
     });
-
-    function concatTypedArrays(arrays) {
-      var i;
-      var length = arrays.length;
-
-      var byteLength = 0;
-      for (i = 0; i < length; ++i) {
-        byteLength += arrays[i].byteLength;
-      }
-      var buffer = new Uint8Array(byteLength);
-
-      var byteOffset = 0;
-      for (i = 0; i < length; ++i) {
-        var data = new Uint8Array(arrays[i].buffer);
-        byteLength = data.length;
-        for (var j = 0; j < byteLength; ++j) {
-          buffer[byteOffset++] = data[j];
-        }
-      }
-      return buffer;
-    }
 
     it("getProperty and setProperty work for binary properties", function () {
       var propertyScalarBinary = new Float64Array([0, 1]);
