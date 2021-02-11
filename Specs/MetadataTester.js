@@ -1,10 +1,10 @@
-import { defined } from "../../Source/Cesium.js";
-import { defaultValue } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { MetadataClass } from "../../Source/Cesium.js";
-import { MetadataEnum } from "../../Source/Cesium.js";
-import { MetadataTable } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import { defined } from "../Source/Cesium.js";
+import { defaultValue } from "../Source/Cesium.js";
+import { FeatureDetection } from "../Source/Cesium.js";
+import { MetadataClass } from "../Source/Cesium.js";
+import { MetadataEnum } from "../Source/Cesium.js";
+import { MetadataTable } from "../Source/Cesium.js";
+import { MetadataType } from "../Source/Cesium.js";
 
 function MetadataTester() {}
 
