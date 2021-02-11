@@ -1,14 +1,8 @@
-import { FeatureDetection } from "../../Source/Cesium.js";
 import { MetadataTable } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTable", function () {
-  if (
-    !FeatureDetection.supportsBigInt64Array() ||
-    !FeatureDetection.supportsBigUint64Array() ||
-    !FeatureDetection.supportsBigInt() ||
-    typeof TextEncoder === "undefined"
-  ) {
+  if (!MetadataTester.isSupported()) {
     return;
   }
 

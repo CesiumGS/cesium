@@ -8,6 +8,15 @@ import { MetadataType } from "../Source/Cesium.js";
 
 function MetadataTester() {}
 
+MetadataTester.isSupported = function () {
+  return (
+    FeatureDetection.supportsBigInt64Array() &&
+    FeatureDetection.supportsBigUint64Array() &&
+    FeatureDetection.supportsBigInt() &&
+    typeof TextEncoder !== "undefined"
+  );
+};
+
 MetadataTester.createProperty = function (options) {
   var properties = {
     propertyId: options.property,

@@ -1,16 +1,10 @@
 import { defaultValue } from "../../Source/Cesium.js";
-import { FeatureDetection } from "../../Source/Cesium.js";
 import { MetadataTableProperty } from "../../Source/Cesium.js";
 import MetadataClassProperty from "../../Source/Scene/MetadataClassProperty.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTableProperty", function () {
-  if (
-    !FeatureDetection.supportsBigInt64Array() ||
-    !FeatureDetection.supportsBigUint64Array() ||
-    !FeatureDetection.supportsBigInt() ||
-    typeof TextEncoder === "undefined"
-  ) {
+  if (!MetadataTester.isSupported()) {
     return;
   }
 
