@@ -429,9 +429,9 @@ function checkValue(classProperty, value) {
 }
 
 function normalize(classProperty, value, normalizeFunction) {
-  var type = classProperty.type;
-  var valueType = classProperty.valueType;
-  var normalized = classProperty.normalized;
+  var type = classProperty._type;
+  var valueType = classProperty._valueType;
+  var normalized = classProperty._normalized;
 
   if (normalized) {
     if (type === MetadataType.ARRAY) {

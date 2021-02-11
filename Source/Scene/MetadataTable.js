@@ -250,11 +250,9 @@ function getDefault(classDefinition, propertyId) {
   if (defined(classDefinition)) {
     var classProperty = classDefinition.properties[propertyId];
     if (defined(classProperty) && defined(classProperty.default)) {
-      var value;
+      var value = classProperty.default;
       if (classProperty.type === MetadataType.ARRAY) {
-        value = classProperty.default.slice(); // clone
-      } else {
-        value = classProperty.default;
+        value = value.slice(); // clone
       }
       return classProperty.normalize(value);
     }

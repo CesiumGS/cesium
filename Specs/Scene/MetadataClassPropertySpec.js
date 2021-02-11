@@ -127,6 +127,206 @@ describe("Scene/MetadataClassProperty", function () {
     }).toThrowDeveloperError();
   });
 
+  it("normalize single values", function () {
+    var properties = {
+      propertyInt8: {
+        type: "INT8",
+        normalized: true,
+      },
+      propertyUint8: {
+        type: "UINT8",
+        normalized: true,
+      },
+      propertyInt16: {
+        type: "INT16",
+        normalized: true,
+      },
+      propertyUint16: {
+        type: "UINT16",
+        normalized: true,
+      },
+      propertyInt32: {
+        type: "INT32",
+        normalized: true,
+      },
+      propertyUint32: {
+        type: "UINT32",
+        normalized: true,
+      },
+      propertyInt64: {
+        type: "INT64",
+        normalized: true,
+      },
+      propertyUint64: {
+        type: "UINT64",
+        normalized: true,
+      },
+    };
+
+    var propertyValues = {
+      propertyInt8: [-128, 0, 127],
+      propertyUint8: [0, 51, 255],
+      propertyInt16: [-32768, 0, 32767],
+      propertyUint16: [0, 13107, 65535],
+      propertyInt32: [-2147483648, 0, 2147483647],
+      propertyUint32: [0, 858993459, 4294967295],
+      propertyInt64: [
+        BigInt("-9223372036854775808"), // eslint-disable-line
+        BigInt(0), // eslint-disable-line
+        BigInt("9223372036854775807"), // eslint-disable-line
+      ],
+      propertyUint64: [
+        BigInt(0), // eslint-disable-line
+        BigInt("3689348814741910323"), // eslint-disable-line
+        BigInt("18446744073709551615"), // eslint-disable-line
+      ],
+    };
+
+    var normalizedValues = {
+      propertyInt8: [-1.0, 0, 1.0],
+      propertyUint8: [0.0, 0.2, 1.0],
+      propertyInt16: [-1.0, 0, 1.0],
+      propertyUint16: [0.0, 0.2, 1.0],
+      propertyInt32: [-1.0, 0, 1.0],
+      propertyUint32: [0.0, 0.2, 1.0],
+      propertyInt64: [-1.0, 0, 1.0],
+      propertyUint64: [0.0, 0.2, 1.0],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = normalizedValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var normalizedValue = property.normalize(value);
+          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
+  it("normalize array values", function () {
+    var properties = {
+      propertyInt8: {
+        type: "ARRAY",
+        componentType: "INT8",
+        normalized: true,
+      },
+      propertyUint8: {
+        type: "ARRAY",
+        componentType: "UINT8",
+        componentCount: 2,
+        normalized: true,
+      },
+    };
+
+    var propertyValues = {
+      propertyInt8: [[-128, 0], [127], []],
+      propertyUint8: [
+        [0, 255],
+        [0, 51],
+        [255, 255],
+      ],
+    };
+
+    var normalizedValues = {
+      propertyInt8: [[-1.0, 0.0], [1.0], []],
+      propertyUint8: [
+        [0.0, 1.0],
+        [0.0, 0.2],
+        [1.0, 1.0],
+      ],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+        });
+        var length = normalizedValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var normalizedValue = property.normalize(value);
+          expect(normalizedValue).toEqual(normalizedValues[propertyId][i]);
+        }
+      }
+    }
+  });
+
+  it("does not normalize non integer types", function () {
+    var myEnum = new MetadataEnum({
+      id: "myEnum",
+      enum: {
+        values: [
+          {
+            value: 0,
+            name: "ValueA",
+          },
+          {
+            value: 1,
+            name: "ValueB",
+          },
+          {
+            value: 999,
+            name: "Other",
+          },
+        ],
+      },
+    });
+
+    var properties = {
+      propertyEnum: {
+        type: "ENUM",
+        enumType: "myEnum",
+        normalized: true,
+      },
+      propertyEnumArray: {
+        type: "ARRAY",
+        componentType: "ENUM",
+        enumType: "myEnum",
+        normalized: true,
+      },
+      propertyString: {
+        type: "STRING",
+        normalized: true,
+      },
+      propertyBoolean: {
+        type: "BOOLEAN",
+        normalized: true,
+      },
+    };
+
+    var propertyValues = {
+      propertyEnum: ["Other", "ValueA", "ValueB"],
+      propertyEnumArray: [["Other", "ValueA"], ["ValueB"], []],
+      propertyString: ["a", "bc", ""],
+      propertyBoolean: [true, false, false],
+    };
+
+    for (var propertyId in properties) {
+      if (properties.hasOwnProperty(propertyId)) {
+        var property = new MetadataClassProperty({
+          id: propertyId,
+          property: properties[propertyId],
+          enums: {
+            myEnum: myEnum,
+          },
+        });
+        var length = propertyValues[propertyId].length;
+        for (var i = 0; i < length; ++i) {
+          var value = propertyValues[propertyId][i];
+          var normalizeValue = property.normalize(value);
+          expect(normalizeValue).toEqual(value);
+        }
+      }
+    }
+  });
+
   it("validate returns undefined if the value is valid", function () {
     var property = new MetadataClassProperty({
       id: "position",
@@ -318,5 +518,36 @@ describe("Scene/MetadataClassProperty", function () {
         }
       }
     }
+  });
+
+  it("validate returns error message if value is outside the normalized range", function () {
+    var propertyInt8 = new MetadataClassProperty({
+      id: "property",
+      property: {
+        type: "INT8",
+        normalized: true,
+      },
+    });
+
+    var propertyUint8 = new MetadataClassProperty({
+      id: "property",
+      property: {
+        type: "UINT8",
+        normalized: true,
+      },
+    });
+
+    expect(propertyInt8.validate(-1.1)).toBe(
+      "value -1.1 is out of range for type INT8 (normalized)"
+    );
+    expect(propertyInt8.validate(1.1)).toBe(
+      "value 1.1 is out of range for type INT8 (normalized)"
+    );
+    expect(propertyUint8.validate(-0.1)).toBe(
+      "value -0.1 is out of range for type UINT8 (normalized)"
+    );
+    expect(propertyUint8.validate(1.1)).toBe(
+      "value 1.1 is out of range for type UINT8 (normalized)"
+    );
   });
 });

@@ -12,7 +12,7 @@ import MetadataType from "./MetadataType.js";
  * A binary property in a metadata table.
  *
  * @param {Object} options Object with the following properties:
- * @param {Number} options.count The number of entities in the table.
+ * @param {Number} options.count The number of elements in each property array.
  * @param {Object} options.property The property JSON object.
  * @param {MetadataClassProperty} options.classProperty The class property.
  * @param {Object} options.bufferViews An object mapping bufferView IDs to Uint8Array objects.
@@ -176,7 +176,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
 /**
  * Returns a copy of the value at the given index.
  *
- * @param {Number} index The index of the entity.
+ * @param {Number} index The index.
  * @returns {*} The value of the property.
  *
  * @private
@@ -193,7 +193,7 @@ MetadataTableProperty.prototype.get = function (index) {
 /**
  * Sets the value at the given index.
  *
- * @param {Number} index The index of the entity.
+ * @param {Number} index The index.
  * @param {*} value The value of the property.
  *
  * @private
