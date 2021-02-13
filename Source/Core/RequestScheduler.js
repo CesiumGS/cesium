@@ -104,6 +104,16 @@ RequestScheduler.debugShowStatistics = false;
  */
 RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
+/**
+ * Функция позволяющая прикладной стороне вставить свою логику для упрвления
+ * временем и очередностью запуска запросов.
+ * @param request запрос на внешний ресурс
+ * @param requestRun беспараметрическая функция, обеспечивающая запуск данного запроса
+ **/
+RequestScheduler.customScheduler = function (request, requestRun) {
+  requestRun();
+};
+
 Object.defineProperties(RequestScheduler, {
   /**
    * Returns the statistics used by the request scheduler.
@@ -212,10 +222,14 @@ function startRequest(request) {
   ++statistics.numberOfActiveRequests;
   ++statistics.numberOfActiveRequestsEver;
   ++numberOfActiveRequestsByServer[request.serverKey];
-  request
-    .requestFunction()
-    .then(getRequestReceivedFunction(request))
-    .otherwise(getRequestFailedFunction(request));
+  RequestScheduler.customScheduler(request, function () {
+    request
+      .requestFunction()
+      .then(getRequestReceivedFunction(request))
+      .otherwise(getRequestFailedFunction(request));
+
+    return promise;
+  });
   return promise;
 }
 

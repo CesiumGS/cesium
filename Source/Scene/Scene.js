@@ -2265,11 +2265,11 @@ var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
 var scratchOrthographicFrustum = new OrthographicFrustum();
 var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
-    function executeCommands(scene, passState) {
-        var camera = scene.camera;
-        var context = scene.context;
-        var frameState = scene.frameState;
-        var us = context.uniformState;
+function executeCommands(scene, passState) {
+  var camera = scene.camera;
+  var context = scene.context;
+  var frameState = scene.frameState;
+  var us = context.uniformState;
 
   us.updateCamera(camera);
 
@@ -2510,13 +2510,13 @@ var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
     ) {
       // Common/fastest path. Draw 3D Tiles and classification normally.
 
-	  // Draw 3D Tiles
-	  us.updatePass(Pass.CESIUM_3D_TILE);
-	  commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-	  length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-	  for (j = 0; j < length; ++j) {
-		  executeCommand(commands[j], scene, context, passState);
-	  }
+      // Draw 3D Tiles
+      us.updatePass(Pass.CESIUM_3D_TILE);
+      commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+      length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+      for (j = 0; j < length; ++j) {
+        executeCommand(commands[j], scene, context, passState);
+      }
 
       if (length > 0) {
         if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
@@ -3799,17 +3799,24 @@ function updateMostDetailedRayPicks(scene) {
 }
 
 /**Нужно в данный момент рендерить следующий кадр.**/
-Scene.prototype.shouldRenderFrame = function(){
-	var cameraChanged = this._view.checkForCameraUpdates(this);
-	return !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
-}
+Scene.prototype.shouldRenderFrame = function () {
+  var cameraChanged = this._view.checkForCameraUpdates(this);
+  return (
+    !this.requestRenderMode ||
+    this._renderRequested ||
+    cameraChanged ||
+    this._logDepthBufferDirty ||
+    this._hdrDirty ||
+    this.mode === SceneMode.MORPHING
+  );
+};
 
 /**
  * Update and render the scene. It is usually not necessary to call this function
  * directly because {@link CesiumWidget} or {@link Viewer} do it automatically.
  * @param {JulianDate} [time] The simulation time at which to render.
  */
-Scene.prototype.render = function(time) {
+Scene.prototype.render = function (time) {
   /**
    *
    * Pre passes update. Execute any pass invariant code that should run before the passes here.
@@ -3828,9 +3835,15 @@ Scene.prototype.render = function(time) {
 
   var shouldRender = this.shouldRenderFrame();
 
-  if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-	  var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-	  shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
+  if (
+    !shouldRender &&
+    defined(this.maximumRenderTimeChange) &&
+    defined(this._lastRenderTime)
+  ) {
+    var difference = Math.abs(
+      JulianDate.secondsDifference(this._lastRenderTime, time)
+    );
+    shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
   }
 
   if (shouldRender) {
@@ -4484,5 +4497,13 @@ Scene.prototype.destroy = function () {
   this._removeGlobeCallbacks.length = 0;
 
   return destroyObject(this);
+};
+
+/**
+ * Объект отвечающий за отправку запросов на сервисы для загрузки различных ресурсов
+ * @return RequestScheduler
+ **/
+Scene.prototype.getRequestScheduler = function () {
+  return RequestScheduler;
 };
 export default Scene;
