@@ -121,7 +121,7 @@ MetadataType.getMaximum = function (type) {
       }
       return Math.pow(2, 64) - 1;
     case MetadataType.FLOAT32:
-      // Maximum 32-bit floating point number. This value will be converted to the nearest 64-bit Number
+      // Maximum 32-bit floating point number
       return 340282346638528859811704183484516925440.0;
     case MetadataType.FLOAT64:
       return Number.MAX_VALUE;

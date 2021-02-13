@@ -127,10 +127,6 @@ MetadataTable.prototype.getPropertyIds = function (results) {
  * of integer precision. Values greater than 2^53 - 1 or less than -(2^53 - 1)
  * may lose precision when read.
  * </p>
- * <p>
- * If type or componentType is FLOAT32 there may also be precision
- * loss as FLOAT32 values are converted to 64-bit JavaScript numbers.
- * </p>
  *
  * @param {Number} index The index of the entity.
  * @param {String} propertyId The case-sensitive ID of the property.
