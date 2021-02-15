@@ -62,6 +62,7 @@ function ArcGISTiledElevationTerrainProvider(options) {
   this._width = undefined;
   this._height = undefined;
   this._encoding = undefined;
+  this._viewer = options.viewer;
   var token = options.token;
 
   this._hasAvailability = false;
@@ -381,6 +382,7 @@ ArcGISTiledElevationTerrainProvider.prototype.requestTileGeometry = function (
           : ALL_CHILDREN,
         structure: that._terrainDataStructure,
         encoding: that._encoding,
+        viewer: that._viewer,
       });
     })
     .otherwise(function (error) {

@@ -129,12 +129,19 @@ GlobeSurfaceTile.prototype.pick = function (
   mode,
   projection,
   cullBackFaces,
-  result
+  result,
+  showDetails
 ) {
   if (!defined(this.renderedMesh)) {
     return undefined;
   }
-  var value = this.renderedMesh.pickRay(ray, cullBackFaces, mode, projection);
+  var value = this.renderedMesh.pickRay(
+    ray,
+    cullBackFaces,
+    mode,
+    projection,
+    showDetails
+  );
   return Cartesian3.clone(value, result);
 };
 

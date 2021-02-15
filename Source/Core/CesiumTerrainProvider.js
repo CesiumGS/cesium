@@ -77,6 +77,8 @@ function CesiumTerrainProvider(options) {
   this._hasVertexNormals = false;
   this._ellipsoid = options.ellipsoid;
 
+  this._viewer = options.viewer;
+
   /**
    * Boolean flag that indicates if the client should request vertex normals from the server.
    * @type {Boolean}
@@ -792,6 +794,7 @@ function createQuantizedMeshTerrainData(provider, buffer, level, x, y, layer) {
     childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
     waterMask: waterMaskBuffer,
     credits: provider._tileCredits,
+    viewer: provider._viewer,
   });
 }
 

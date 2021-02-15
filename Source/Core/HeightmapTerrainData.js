@@ -153,6 +153,8 @@ function HeightmapTerrainData(options) {
       ? Float32Array
       : this._buffer.constructor;
   this._mesh = undefined;
+
+  this._viewer = options.viewer;
 }
 
 Object.defineProperties(HeightmapTerrainData.prototype, {
@@ -315,7 +317,9 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
       indicesAndEdges.southIndicesEastToWest,
       indicesAndEdges.eastIndicesNorthToSouth,
       indicesAndEdges.northIndicesWestToEast,
-      trianglePicking
+      trianglePicking,
+      null,
+      that._viewer
     );
 
     // Free memory received from server after mesh is created.

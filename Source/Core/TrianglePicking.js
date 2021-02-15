@@ -112,14 +112,14 @@ function rayCubeIntersect(ray) {
 function onTheFlyNodeAABB(level, x, y, z) {
   var sizeAtLevel = 1.0 / Math.pow(2, level);
   return {
-    // aabbMinX: x * sizeAtLevel - 0.5,
-    // aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
+    aabbMinX: x * sizeAtLevel - 0.5,
+    aabbMaxX: (x + 1) * sizeAtLevel - 0.5,
     aabbCenterX: (x + 0.5) * sizeAtLevel - 0.5,
-    // aabbMinY: y * sizeAtLevel - 0.5,
-    // aabbMaxY: (y + 1) * sizeAtLevel - 0.5,
+    aabbMinY: y * sizeAtLevel - 0.5,
+    aabbMaxY: (y + 1) * sizeAtLevel - 0.5,
     aabbCenterY: (y + 0.5) * sizeAtLevel - 0.5,
-    // aabbMinZ: z * sizeAtLevel - 0.5,
-    // aabbMaxZ: (z + 1) * sizeAtLevel - 0.5,
+    aabbMinZ: z * sizeAtLevel - 0.5,
+    aabbMaxZ: (z + 1) * sizeAtLevel - 0.5,
     aabbCenterZ: (z + 0.5) * sizeAtLevel - 0.5,
   };
 }
@@ -441,6 +441,7 @@ function nodeIntersectTriangles(
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
+      // don't need this?
       result.triangleIndex = triIndex;
     }
   }
@@ -755,6 +756,7 @@ function TrianglePicking(packedOctree, triangleVerticesCallback) {
   this._inverseTransform = Matrix4.unpack(packedOctree.inverseTransform);
   this._packedNodes = packedOctree.packedNodes;
   this._packedTriangles = packedOctree.packedTriangles;
+  this._triangles = packedOctree.triangles;
   this._triangleVerticesCallback = triangleVerticesCallback;
 }
 
@@ -767,7 +769,12 @@ var scratchTransformedRay = new Ray();
  * @param {Cartesian3} result
  * @returns {Cartesian3} result
  */
-TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
+TrianglePicking.prototype.rayIntersect = function (
+  ray,
+  cullBackFaces,
+  result,
+  showDetails
+) {
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -816,7 +823,11 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   }
 
   result = Ray.getPoint(ray, traversalResult.t, result);
-  return result;
+  return {
+    result: result,
+    transformedRay: transformedRay,
+    traversalResult: traversalResult,
+  };
 };
 
 /**
@@ -888,6 +899,7 @@ TrianglePicking.createPackedOctree = function (triangles, inverseTransform) {
   return {
     packedTriangles: packedTriangles,
     packedNodes: packedNodes,
+    triangles: triangles,
     inverseTransform: Matrix4.pack(inverseTransform, [], 0),
   };
 };

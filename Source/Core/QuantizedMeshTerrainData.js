@@ -143,6 +143,8 @@ function QuantizedMeshTerrainData(options) {
   }
   //>>includeEnd('debug');
 
+  this._viewer = options.viewer;
+
   this._quantizedVertices = options.quantizedVertices;
   this._encodedNormals = options.encodedNormals;
   this._indices = options.indices;
@@ -403,7 +405,8 @@ QuantizedMeshTerrainData.prototype.createMesh = function (options) {
       result.eastIndicesNorthToSouth,
       result.northIndicesWestToEast,
       trianglePicking,
-      url
+      url,
+      that._viewer
     );
 
     // Free memory received from server after mesh is created.
@@ -536,6 +539,8 @@ QuantizedMeshTerrainData.prototype.upsample = function (
     : shortestSkirt * 0.5;
   var credits = this._credits;
 
+  var viewer = this._viewer;
+
   return when(upsamplePromise).then(function (result) {
     var quantizedVertices = new Uint16Array(result.vertices);
     var indicesTypedArray = IndexDatatype.createTypedArray(
@@ -569,6 +574,7 @@ QuantizedMeshTerrainData.prototype.upsample = function (
       childTileMask: 0,
       credits: credits,
       createdByUpsampling: true,
+      viewer: viewer,
     });
   });
 };

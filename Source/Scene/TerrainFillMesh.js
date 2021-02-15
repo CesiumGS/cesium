@@ -1272,7 +1272,11 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
       westIndicesSouthToNorth,
       southIndicesEastToWest,
       eastIndicesNorthToSouth,
-      northIndicesWestToEast
+      northIndicesWestToEast,
+      null,
+      tileProvider &&
+        tileProvider.terrainProvider &&
+        tileProvider.terrainProvider._viewer
     );
   }
 
