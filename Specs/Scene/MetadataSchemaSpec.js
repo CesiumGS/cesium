@@ -8,6 +8,7 @@ describe("Scene/MetadataSchema", function () {
     expect(schema.enums).toEqual({});
     expect(schema.name).toBeUndefined();
     expect(schema.description).toBeUndefined();
+    expect(schema.version).toBeUndefined();
     expect(schema.extras).toBeUndefined();
   });
 
@@ -91,6 +92,7 @@ describe("Scene/MetadataSchema", function () {
       },
       name: "My Schema",
       description: "My Schema Description",
+      version: "3.1.0",
       extras: extras,
       extensions: extensions,
     });
@@ -115,6 +117,7 @@ describe("Scene/MetadataSchema", function () {
 
     expect(schema.name).toBe("My Schema");
     expect(schema.description).toBe("My Schema Description");
+    expect(schema.version).toBe("3.1.0");
 
     expect(schema.extras).toBe(extras);
     expect(schema.extensions).toBe(extensions);
