@@ -52,8 +52,6 @@ function Globe(ellipsoid) {
   this._surfaceShaderSet = new GlobeSurfaceShaderSet();
   this._material = undefined;
 
-  this.useNewPicking = true;
-
   this._surface = new QuadtreePrimitive({
     tileProvider: new GlobeSurfaceTileProvider({
       terrainProvider: terrainProvider,
@@ -624,8 +622,7 @@ Globe.prototype.pickWorldCoordinates = function (
   ray,
   scene,
   cullBackFaces,
-  result,
-  showDetails
+  result
 ) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(ray)) {
@@ -703,8 +700,7 @@ Globe.prototype.pickWorldCoordinates = function (
       scene.mode,
       scene.mapProjection,
       cullBackFaces,
-      result,
-      showDetails
+      result
     );
     if (defined(intersection)) {
       break;
@@ -728,8 +724,8 @@ var cartoScratch = new Cartographic();
  * var ray = viewer.camera.getPickRay(windowCoordinates);
  * var intersection = globe.pick(ray, scene);
  */
-Globe.prototype.pick = function (ray, scene, result, showDetails) {
-  result = this.pickWorldCoordinates(ray, scene, true, result, showDetails);
+Globe.prototype.pick = function (ray, scene, result) {
+  result = this.pickWorldCoordinates(ray, scene, true, result);
   if (defined(result) && scene.mode !== SceneMode.SCENE3D) {
     result = Cartesian3.fromElements(result.y, result.z, result.x, result);
     var carto = scene.mapProjection.unproject(result, cartoScratch);
@@ -757,7 +753,7 @@ function tileIfContainsCartographic(tile, cartographic) {
  * @param {SceneMode} mode the SceneMode in use
  * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
  */
-Globe.prototype.getHeight = function (cartographic, mode, showDetails) {
+Globe.prototype.getHeight = function (cartographic, mode) {
   //>>includeStart('debug', pragmas.debug);
   if (!defined(cartographic)) {
     throw new DeveloperError("cartographic is required");
@@ -864,8 +860,7 @@ Globe.prototype.getHeight = function (cartographic, mode, showDetails) {
     mode,
     undefined,
     false,
-    scratchGetHeightIntersection,
-    showDetails
+    scratchGetHeightIntersection
   );
   if (!defined(intersection)) {
     return undefined;

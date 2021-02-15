@@ -11,11 +11,6 @@ import GeometryInstance from "./GeometryInstance.js";
 import PolylineColorAppearance from "../Scene/PolylineColorAppearance.js";
 import ColorGeometryInstanceAttribute from "./ColorGeometryInstanceAttribute.js";
 import Color from "./Color.js";
-import PolygonGeometry from "./PolygonGeometry.js";
-import PolygonHierarchy from "./PolygonHierarchy.js";
-import CesiumMath from "./Math.js";
-import BoxGeometry from "./BoxGeometry.js";
-import VertexFormat from "./VertexFormat.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -68,9 +63,7 @@ function TerrainMesh(
   southIndicesEastToWest,
   eastIndicesNorthToSouth,
   northIndicesWestToEast,
-  trianglePicking,
-  url,
-  viewer
+  trianglePicking
 ) {
   /**
    * The center of the tile.  Vertex positions are specified relative to this center.
@@ -188,8 +181,6 @@ function TerrainMesh(
    * @private
    */
   this._trianglePicking = trianglePicking;
-  this._url = url;
-  this._viewer = viewer;
 }
 
 var scratchCartographic = new Cartographic();
@@ -221,90 +212,6 @@ function getPosition(encoding, mode, projection, vertices, index, result) {
   return result;
 }
 
-function addLine(viewer, ray, color) {
-  if (!viewer || !ray) {
-    return;
-  }
-  var primitive = new Primitive({
-    geometryInstances: new GeometryInstance({
-      geometry: new PolylineGeometry({
-        positions: [ray.origin, Ray.getPoint(ray, 100000)],
-        width: 2,
-        vertexFormat: PolylineColorAppearance.VERTEX_FORMAT,
-      }),
-      attributes: {
-        color: ColorGeometryInstanceAttribute.fromColor(color),
-      },
-    }),
-    appearance: new PolylineColorAppearance({
-      translucent: false,
-    }),
-  });
-  viewer.scene.primitives.add(primitive);
-}
-
-function addTriangle(viewer, v0, v1, v2) {
-  if (!viewer || !v0) {
-    return;
-  }
-
-  var pointA = Cartographic.fromCartesian(v0);
-
-  viewer.entities.add({
-    position: pointA,
-    ellipsoid: {
-      radii: new Cartesian3(100.0, 100.0, 100.0),
-      material: Color.RED,
-    },
-  });
-
-  // // 1. create a polygon from points
-  // var polygon = new PolygonGeometry({
-  //   polygonHierarchy: new PolygonHierarchy(
-  //     [v0, v1, v2]
-  //     // Cartesian3.fromDegreesArray([
-  //     //   -72.0, 40.0,
-  //     //   -70.0, 35.0,
-  //     //   -75.0, 30.0,
-  //     //   -70.0, 30.0,
-  //     //   -68.0, 40.0
-  //     // ])
-  //   ),
-  // });
-  // var geometry = PolygonGeometry.createGeometry(polygon);
-  //
-  // // var box = new BoxGeometry({
-  // //   vertexFormat: VertexFormat.POSITION_ONLY,
-  // //   maximum: new Cartesian3(minX, minY, minZ),
-  // //   minimum: new Cartesian3(maxX, maxY, maxZ),
-  // // });
-  // // var geometry = BoxGeometry.createGeometry(box);
-  //
-  // var primitive = new Primitive({
-  //   geometryInstances: new GeometryInstance({
-  //     geometry: geometry,
-  //     attributes: {
-  //       color: ColorGeometryInstanceAttribute.fromColor(Color.GREEN),
-  //     },
-  //   }),
-  //   // appearance: new PolylineColorAppearance({
-  //   //   translucent: false,
-  //   // }),
-  // });
-  // viewer.scene.primitives.add(primitive);
-
-  // viewer.entities.add({
-  //   name: "Red box with black outline",
-  //   position: Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
-  //   box: {
-  //     dimensions: new Cartesian3(400000.0, 300000.0, 500000.0),
-  //     material: Color.RED.withAlpha(0.5),
-  //     outline: true,
-  //     outlineColor: Color.BLACK,
-  //   },
-  // });
-}
-
 /**
  * Gives the point on the mesh where the give ray intersects
  * @param ray
@@ -317,48 +224,18 @@ TerrainMesh.prototype.pickRay = function (
   ray,
   cullBackFaces,
   mode,
-  projection,
-  showDeails
+  projection
 ) {
   var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
-  var newPickValue = undefined;
+  var newPickValue;
   if (canNewPick) {
-    // console.time("new pick");
-    var details = this._trianglePicking.rayIntersect(
+    console.time("new pick");
+    newPickValue = this._trianglePicking.rayIntersect(
       ray,
       cullBackFaces,
-      newPickValue,
-      showDeails
+      newPickValue
     );
-    if (details) {
-      newPickValue = details.result;
-    }
-    // console.timeEnd("new pick");
-
-    if (showDeails) {
-      addLine(this._viewer, ray, Color.RED);
-
-      if (details) {
-        addLine(this._viewer, details.transformedRay, Color.GREEN);
-
-        if (details && details.traversalResult) {
-          var v0 = new Cartesian3();
-          var v1 = new Cartesian3();
-          var v2 = new Cartesian3();
-          this._trianglePicking._triangleVerticesCallback(
-            details.traversalResult.triangleIndex,
-            v0,
-            v1,
-            v2
-          );
-          // var triangle = this._trianglePicking._triangles.slice(
-          //   details.traversalResult.triangleIndex,
-          //   details.traversalResult.triangleIndex + 6
-          // );
-          addTriangle(this._viewer, v0, v1, v2);
-        }
-      }
-    }
+    console.timeEnd("new pick");
   }
 
   /**
@@ -405,9 +282,9 @@ TerrainMesh.prototype.pickRay = function (
 
   var oldPickValue;
   if (doOldPick) {
-    // console.time("old pick");
+    console.time("old pick");
     oldPickValue = oldPick(this);
-    // console.timeEnd("old pick");
+    console.timeEnd("old pick");
   }
 
   if (

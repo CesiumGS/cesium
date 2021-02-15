@@ -769,12 +769,7 @@ var scratchTransformedRay = new Ray();
  * @param {Cartesian3} result
  * @returns {Cartesian3} result
  */
-TrianglePicking.prototype.rayIntersect = function (
-  ray,
-  cullBackFaces,
-  result,
-  showDetails
-) {
+TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -823,11 +818,7 @@ TrianglePicking.prototype.rayIntersect = function (
   }
 
   result = Ray.getPoint(ray, traversalResult.t, result);
-  return {
-    result: result,
-    transformedRay: transformedRay,
-    traversalResult: traversalResult,
-  };
+  return result;
 };
 
 /**
@@ -848,10 +839,10 @@ TrianglePicking.createPackedOctree = function (triangles, inverseTransform) {
 
   // we can build a more spread out octree
   //  for smaller tiles because it'll be quicker
-  var maxLevels = 8;
+  var maxLevels = 10;
   var maxTrianglesPerNode = 50;
   if (triangleCount > 5000) {
-    // for very large tiles, build a small octree because it's faster
+    // for very large tiles, build a small octree because it's faster and won't bottleneck this worker thread;
     //  and just eat the CPU time on the main thread
     maxLevels = 5;
     maxTrianglesPerNode = 100;

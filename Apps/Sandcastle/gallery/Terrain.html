@@ -39,22 +39,13 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: new Cesium.EllipsoidTerrainProvider({}),
-        });
-
         var worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
           requestVertexNormals: true,
-          viewer: viewer,
         });
 
-        viewer.terrainProvider = worldTerrain;
-
-        var terrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
-          url:
-            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-          viewer: viewer,
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: worldTerrain,
         });
 
         // set lighting to true
@@ -75,12 +66,6 @@
               onselect: function () {
                 viewer.terrainProvider = worldTerrain;
                 viewer.scene.globe.enableLighting = true;
-              },
-            },
-            {
-              text: "ArcGIS",
-              onselect: function () {
-                viewer.terrainProvider = terrainProvider;
               },
             },
             {
@@ -222,9 +207,9 @@
           viewer.entities.resumeEvents();
         }
 
-        function createGrid(rectangleHalfSize, gridWidth, gridHeight) {
-          gridWidth = gridWidth || 41;
-          gridHeight = gridHeight || 41;
+        function createGrid(rectangleHalfSize) {
+          var gridWidth = 41;
+          var gridHeight = 41;
           var everestLatitude = Cesium.Math.toRadians(27.988257);
           var everestLongitude = Cesium.Math.toRadians(86.925145);
           var e = new Cesium.Rectangle(
@@ -307,61 +292,6 @@
           },
           "sampleButtons"
         );
-
-        // Sandcastle.addToolbarButton(
-        //   "Pick all the things",
-        //   function () {
-        //     var terrainSamplePositions = createGrid(0.0005);
-        //     for (var i = 0; i < terrainSamplePositions.length; i++) {
-        //       var position = terrainSamplePositions[i];
-        //       Cesium.Math.toRadians();
-        //     }
-        //     Cesium.when(
-        //       Cesium.sampleTerrain(
-        //         viewer.terrainProvider,
-        //         terrainSamplePositions
-        //       ),
-        //       sampleTerrainSuccess
-        //     );
-        //   },
-        //   "sampleButtons"
-        // );
-
-        function singlePick(mousePosition) {
-          var scene = viewer.scene;
-          var camera = scene.camera;
-
-          var ray = camera.getPickRay(mousePosition);
-
-          var before = performance.now();
-          var pickPosition = scene.globe.pick(ray, scene, null, true);
-          var after = performance.now();
-
-          var foundPick = Cesium.defined(pickPosition);
-          console.log("Single pick at " + mousePosition);
-          console.log("Found: " + foundPick);
-          console.log("Time: " + (after - before));
-
-          viewer.entities.removeAll();
-
-          // if (foundPick) {
-          //   viewer.entities.add({
-          //     position: pickPosition,
-          //     ellipsoid: {
-          //       radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-          //       material: Cesium.Color.RED,
-          //     },
-          //   });
-          // }
-        }
-
-        Sandcastle.addToolbarButton("Pick Center", function () {
-          var x = viewer.canvas.clientWidth / 2.0;
-          var y = viewer.canvas.clientHeight / 2.0;
-
-          var position = Cesium.Cartesian2.fromElements(x, y);
-          singlePick(position);
-        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();

@@ -684,7 +684,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             y: 214,
           });
           return processor.process([tile]).then(function () {
-            var cullBackFaces = false;
+            var cullBackFaces = true;
             var pickResult = tile.data.pick(
               ray,
               SceneMode.SCENE3D,

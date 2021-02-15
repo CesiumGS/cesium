@@ -30,53 +30,6 @@ var scratchNormal = new Cartesian3();
 var scratchToENU = new Matrix4();
 var scratchFromENU = new Matrix4();
 
-function createTrianglesFromIndices(indices, positions, inverseTransform) {
-  var scratchV0 = new Cartesian3();
-  var scratchV1 = new Cartesian3();
-  var scratchV2 = new Cartesian3();
-  var triangleCount = indices.length / 3;
-  var triangles = [];
-  for (var i = 0; i < triangleCount; i++) {
-    var idx0 = indices[i * 3 + 0];
-    var idx1 = indices[i * 3 + 1];
-    var idx2 = indices[i * 3 + 2];
-
-    var v0Local2 = Matrix4.multiplyByPoint(
-      inverseTransform,
-      positions[idx0],
-      scratchV0
-    );
-    var v1Local2 = Matrix4.multiplyByPoint(
-      inverseTransform,
-      positions[idx1],
-      scratchV1
-    );
-    var v2Local2 = Matrix4.multiplyByPoint(
-      inverseTransform,
-      positions[idx2],
-      scratchV2
-    );
-
-    // Get local space AABBs for triangle
-    var triAabbMinX2 = Math.min(v0Local2.x, v1Local2.x, v2Local2.x);
-    var triAabbMaxX2 = Math.max(v0Local2.x, v1Local2.x, v2Local2.x);
-    var triAabbMinY2 = Math.min(v0Local2.y, v1Local2.y, v2Local2.y);
-    var triAabbMaxY2 = Math.max(v0Local2.y, v1Local2.y, v2Local2.y);
-    var triAabbMinZ2 = Math.min(v0Local2.z, v1Local2.z, v2Local2.z);
-    var triAabbMaxZ2 = Math.max(v0Local2.z, v1Local2.z, v2Local2.z);
-    triangles.push({
-      index: i,
-      aabbMinX: triAabbMinX2,
-      aabbMaxX: triAabbMaxX2,
-      aabbMinY: triAabbMinY2,
-      aabbMaxY: triAabbMaxY2,
-      aabbMinZ: triAabbMinZ2,
-      aabbMaxZ: triAabbMaxZ2,
-    });
-  }
-  return triangles;
-}
-
 function createPackedTrianglesFromIndices(indices, positions, invTrans) {
   var v0 = new Cartesian3();
   var v1 = new Cartesian3();
@@ -270,11 +223,6 @@ function createVerticesFromQuantizedTerrainMesh(
   var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
   var inverseTransform = Matrix4.inverse(transform, new Matrix4());
   console.timeEnd("setup stuff");
-  // var triangles = createTrianglesFromIndices(
-  //   parameters.indices,
-  //   positions,
-  //   inverseTransform
-  // );
   console.time("making packed triangles");
   var packedTriangles = createPackedTrianglesFromIndices(
     parameters.indices,
