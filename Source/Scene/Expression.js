@@ -267,6 +267,12 @@ var unaryFunctions = {
   fract: getEvaluateUnaryComponentwise(fract),
   length: length,
   normalize: normalize,
+  /**Сет из заведомо константных значений, подходит для быстрой фильтрации по большому набору значений**/
+  literalSet: function (funcName, valArray, astNode) {
+    let literalSet = new Set(valArray);
+    astNode.literalCache = literalSet; //Кешируем константное значение
+    return literalSet;
+  },
 };
 
 var binaryFunctions = {
@@ -277,6 +283,12 @@ var binaryFunctions = {
   distance: distance,
   dot: dot,
   cross: cross,
+  inSet: function (funcName, elem, itemsSet) {
+    return itemsSet.has(elem);
+  },
+  notInSet: function (funcName, elem, itemsSet) {
+    return !itemsSet.has(elem);
+  },
 };
 
 var ternaryFunctions = {
@@ -1085,8 +1097,12 @@ function evaluateTilesetTime(feature) {
 function getEvaluateUnaryFunction(call) {
   var evaluate = unaryFunctions[call];
   return function (feature) {
-    var left = this._left.evaluate(feature);
-    return evaluate(call, left);
+    if (this.literalCache) {
+      return this.literalCache; //Это выражение константа, можно не пересчитывать его для каждого объекта.
+    } else {
+      var left = this._left.evaluate(feature);
+      return evaluate(call, left, this); //Передаем сам узел AST, чтобы на уровне него можно было закешировать константые выражения и больше их не пересчитывать.
+    }
   };
 }
 
