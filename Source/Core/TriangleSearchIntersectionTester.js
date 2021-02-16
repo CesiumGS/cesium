@@ -34,7 +34,8 @@ TriangleSearchIntersectionTester.prototype.rayIntersect = function (
   ray,
   cullBackFaces,
   mode,
-  projection
+  projection,
+  traceDetails
 ) {
   var indicesLength = this._indices.length;
   var vertices = this._vertices;
@@ -64,6 +65,13 @@ TriangleSearchIntersectionTester.prototype.rayIntersect = function (
     );
     if (defined(t) && t < minT && t >= 0.0) {
       minT = t;
+      if (traceDetails) {
+        traceDetails.intersectedTriangle = [
+          Cartesian3.clone(v0),
+          Cartesian3.clone(v1),
+          Cartesian3.clone(v2),
+        ];
+      }
     }
   }
   return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT) : undefined;

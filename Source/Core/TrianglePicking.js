@@ -131,11 +131,11 @@ function onTheFlyNodeAABB(level, x, y, z) {
  * @param {Number} y
  * @param {Number} z
  */
-function Node() {
-  // this.level = level;
-  // this.x = x;
-  // this.y = y;
-  // this.z = z;
+function Node(x, y, z, level) {
+  this.level = level;
+  this.x = x;
+  this.y = y;
+  this.z = z;
   //
   // var dimAtLevel = Math.pow(2, level);
   // var sizeAtLevel = 1.0 / dimAtLevel;
@@ -203,8 +203,6 @@ TraversalResult.prototype.print = function () {
 
 var scratchV0 = new Cartesian3();
 var scratchV1 = new Cartesian3();
-var scratchV2 = new Cartesian3();
-
 /**
  * Find the closest intersection against the node's triangles, if there are any,
  * and recurse over children that might have a closer intersection.
@@ -238,7 +236,8 @@ function nodeRayIntersect(
   t,
   cullBackFaces,
   triangleVerticesCallback,
-  result
+  result,
+  traceDetails
 ) {
   var nodeFirstChildIdx = packedNodes[packedNodeIdx];
   nodeIntersectTriangles(
@@ -249,60 +248,26 @@ function nodeRayIntersect(
     ray,
     cullBackFaces,
     triangleVerticesCallback,
-    result
+    result,
+    traceDetails,
+    x,
+    y,
+    z,
+    level
   );
 
   var noChildren = nodeFirstChildIdx === -1;
   if (noChildren) {
     return result;
   }
-
-  var onTheFlyAABB = onTheFlyNodeAABB(level, x, y, z);
-
-  // recurse the node tree
-  //  check if the node AABB contains the ray
-  //  if so, recurse one layer down into the correct child
-
-  var dirX = transformedRay.direction.x;
-  var dirY = transformedRay.direction.y;
-  var dirZ = transformedRay.direction.z;
-
-  var originX = transformedRay.origin.x + t * dirX;
-  var originY = transformedRay.origin.y + t * dirY;
-  var originZ = transformedRay.origin.z + t * dirZ;
-
-  var sideX = originX >= onTheFlyAABB.aabbCenterX;
-  var sideY = originY >= onTheFlyAABB.aabbCenterY;
-  var sideZ = originZ >= onTheFlyAABB.aabbCenterZ;
-
-  var canCrossX = sideX !== dirX >= 0.0;
-  var canCrossY = sideY !== dirY >= 0.0;
-  var canCrossZ = sideZ !== dirZ >= 0.0;
-
-  var distX = canCrossX
-    ? (onTheFlyAABB.aabbCenterX - originX) / dirX
-    : invalidIntersection;
-  var distY = canCrossY
-    ? (onTheFlyAABB.aabbCenterY - originY) / dirY
-    : invalidIntersection;
-  var distZ = canCrossZ
-    ? (onTheFlyAABB.aabbCenterZ - originZ) / dirZ
-    : invalidIntersection;
-
-  var minDist = 0;
-  var childIdx =
-    (sideX ? 1 : 0) | ((sideY ? 1 : 0) << 1) | ((sideZ ? 1 : 0) << 2);
-
-  // There is a maximum of four possible child overlaps, but usually it's less than that.
-  // Start by checking the one that the ray is inside, then move to the next closest, etc.
-  for (var i = 0; i < 4; i++) {
-    // for each level, x doubles
-    var childXMin = x * 2;
-    var childXMax = x * 2 + 1;
-    var childYMin = y * 2;
-    var childYMax = y * 2 + 1;
-    var childZMin = z * 2;
-    var childZMax = z * 2 + 1;
+  var childXMin = x * 2;
+  var childXMax = x * 2 + 1;
+  var childYMin = y * 2;
+  var childYMax = y * 2 + 1;
+  var childZMin = z * 2;
+  var childZMax = z * 2 + 1;
+  for (var i = 0; i < 8; i++) {
+    var childIdx = i;
     var _x, _y, _z;
     switch (childIdx) {
       case 0: {
@@ -369,49 +334,18 @@ function nodeRayIntersect(
       _z,
       ray,
       transformedRay,
-      t + minDist,
+      t,
       cullBackFaces,
       triangleVerticesCallback,
-      result
+      result,
+      traceDetails
     );
-
-    minDist = Math.min(distX, distY, distZ);
-
-    var isPositionNotInsideAABB = !positionInsideAabb(
-      originX + minDist * dirX,
-      originY + minDist * dirY,
-      originZ + minDist * dirZ,
-      onTheFlyAABB.aabbMinX,
-      onTheFlyAABB.aabbMaxX,
-      onTheFlyAABB.aabbMinY,
-      onTheFlyAABB.aabbMaxY,
-      onTheFlyAABB.aabbMinZ,
-      onTheFlyAABB.aabbMaxZ
-    );
-    var isThereAlreadyACloserIntersection = t + minDist >= result.t;
-    var isNoMoreAxisToCheck = minDist === invalidIntersection;
-    if (
-      isNoMoreAxisToCheck ||
-      isThereAlreadyACloserIntersection ||
-      isPositionNotInsideAABB
-    ) {
-      break;
-    }
-
-    if (minDist === distX) {
-      distX = invalidIntersection;
-      childIdx ^= 1; // toggle X bit
-    } else if (minDist === distY) {
-      distY = invalidIntersection;
-      childIdx ^= 2; // toggle Y bit
-    } else if (minDist === distZ) {
-      distZ = invalidIntersection;
-      childIdx ^= 4; // toggle Z bit
-    }
   }
 
   return result;
 }
+
+var scratchV2 = new Cartesian3();
 
 /**
  * @param firstChildNodeIdx
@@ -431,7 +365,12 @@ function nodeIntersectTriangles(
   ray,
   cullBackFaces,
   triangleVerticesCallback,
-  result
+  result,
+  traceDetails,
+  x,
+  y,
+  z,
+  level
 ) {
   for (var i = 0; i < triangleCount; i++) {
     var triIndex = packedTriangleSets[triangleSetIdx + i];
@@ -440,7 +379,17 @@ function nodeIntersectTriangles(
     var v2 = scratchV2;
     // TODO what if we put the ray back into local-space straight away - rather than converting every triangle back into world-space
     //  then we wouldn't need the callback on the client side - only the space transform
-    triangleVerticesCallback(triIndex, v0, v1, v2);
+    triangleVerticesCallback(
+      triIndex,
+      v0,
+      v1,
+      v2,
+      traceDetails,
+      x,
+      y,
+      z,
+      level
+    );
     var triT = rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces);
     if (triT !== invalidIntersection && triT < result.t) {
       result.t = triT;
@@ -680,14 +629,22 @@ function nodeAddTriangle(
   if (subdivide) {
     node.firstChildNodeIdx = nodes.length;
     nodes.push(
-      new Node(),
-      new Node(),
-      new Node(),
-      new Node(),
-      new Node(),
-      new Node(),
-      new Node(),
-      new Node()
+      // 000
+      new Node(x * 2, y * 2, z * 2, level + 1),
+      // 001
+      new Node(x * 2 + 1, y * 2, z * 2, level + 1),
+      // 010
+      new Node(x * 2, y * 2 + 1, z * 2, level + 1),
+      // 011
+      new Node(x * 2 + 1, y * 2 + 1, z * 2, level + 1),
+      // 100
+      new Node(x * 2, y * 2, z * 2 + 1, level + 1),
+      // 101
+      new Node(x * 2 + 1, y * 2, z * 2 + 1, level + 1),
+      // 011
+      new Node(x * 2, y * 2 + 1, z * 2 + 1, level + 1),
+      // 111
+      new Node(x * 2 + 1, y * 2 + 1, z * 2 + 1, level + 1)
     );
     for (var i = 0; i < triangleIdxs.length; i++) {
       var triidx = triangleIdxs[i];
@@ -760,6 +717,7 @@ function TrianglePicking(packedOctree, triangleVerticesCallback) {
   this._packedNodes = packedOctree.packedNodes;
   this._packedTriangles = packedOctree.packedTriangles;
   this._triangles = packedOctree.triangles;
+  this._unpackedOctree = packedOctree.unpackedOctree;
   this._triangleVerticesCallback = triangleVerticesCallback;
 }
 
@@ -772,7 +730,12 @@ var scratchTransformedRay = new Ray();
  * @param {Cartesian3} result
  * @returns {Cartesian3} result
  */
-TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
+TrianglePicking.prototype.rayIntersect = function (
+  ray,
+  cullBackFaces,
+  result,
+  traceDetails
+) {
   if (!defined(result)) {
     result = new Cartesian3();
   }
@@ -813,7 +776,8 @@ TrianglePicking.prototype.rayIntersect = function (ray, cullBackFaces, result) {
     t,
     cullBackFaces,
     this._triangleVerticesCallback,
-    traversalResult
+    traversalResult,
+    traceDetails
   );
 
   if (traversalResult.t === invalidIntersection) {
@@ -894,6 +858,7 @@ TrianglePicking.createPackedOctree = function (triangles, inverseTransform) {
     packedTriangles: packedTriangles,
     packedNodes: packedNodes,
     triangles: triangles,
+    unpackedOctree: nodes,
     inverseTransform: Matrix4.pack(inverseTransform, [], 0),
   };
 };
@@ -906,5 +871,6 @@ TrianglePicking.createPackedOctree = function (triangles, inverseTransform) {
  * @param {Cartesian3} v0 The first vertex
  * @param {Cartesian3} v1 The second vertex
  * @param {Cartesian3} v2 The third vertex
+ * @param traceDetails
  */
 export default TrianglePicking;

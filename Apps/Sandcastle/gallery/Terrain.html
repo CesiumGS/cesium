@@ -312,7 +312,20 @@
           var ray = camera.getPickRay(movement.position);
           var pickPosition = scene.globe.pick(ray, scene);
 
+          window.showPickDetails = false;
+
           var details = window.lastPickDetails;
+          console.trace("details here");
+
+          var rayColor = Cesium.Color.WHITE;
+          if (
+            !Cesium.Cartesian3.equals(
+              details.newPickValue,
+              details.oldPickValue
+            )
+          ) {
+            rayColor = Cesium.Color.RED;
+          }
 
           if (details) {
             viewer.entities.removeAll();
@@ -320,7 +333,7 @@
               position: pickPosition,
               ellipsoid: {
                 radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
-                material: Cesium.Color.RED,
+                material: rayColor,
               },
             });
             var r = details.mesh.boundingSphere3D.radius;
@@ -343,6 +356,50 @@
                 color: Cesium.Color.GREEN,
               },
             });
+
+            var colorByLevel = {
+              0: Cesium.Color.RED,
+              1: Cesium.Color.ORANGE,
+              2: Cesium.Color.YELLOW,
+              3: Cesium.Color.GREEN,
+              4: Cesium.Color.AQUA,
+              5: Cesium.Color.BLUE,
+              6: Cesium.Color.PURPLE,
+              7: Cesium.Color.BEIGE,
+              8: Cesium.Color.BEIGE,
+              9: Cesium.Color.BEIGE,
+              10: Cesium.Color.BEIGE,
+            };
+
+            if (details.traceDetails && details.traceDetails.trianglesTested) {
+              var triangles = details.traceDetails.trianglesTested;
+              for (var i = 0; i < triangles.length; i++) {
+                var triangle = triangles[i];
+                viewer.entities.add({
+                  polygon: {
+                    hierarchy: triangle.positions,
+                    perPositionHeight: true,
+                    material: colorByLevel[triangle.level].withAlpha(0.5),
+                    outline: true,
+                    outlineColor: Cesium.Color.CYAN,
+                    outlineWidth: 10,
+                  },
+                });
+              }
+            }
+
+            if (details.traceDetails.intersectedTriangle) {
+              viewer.entities.add({
+                polygon: {
+                  hierarchy: details.traceDetails.intersectedTriangle,
+                  perPositionHeight: true,
+                  material: Cesium.Color.GOLD,
+                  outline: true,
+                  outlineColor: Cesium.Color.GOLD,
+                  outlineWidth: 10,
+                },
+              });
+            }
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

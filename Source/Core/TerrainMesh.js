@@ -198,33 +198,91 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection
 ) {
+  var trace = window.showPickDetails;
+
+  var traceDetails;
+  if (trace) {
+    traceDetails = {};
+  }
   var oldPickValue = this._defaultPickStrategy.rayIntersect(
     ray,
     cullBackFaces,
     mode,
-    projection
+    projection,
+    traceDetails
   );
+
+  /**/
+  if (traceDetails && oldPickValue) {
+    var triangleCount = this._trianglePicking._triangles.length / 6;
+    var triangleIdx = -1;
+    for (var idx = 0; idx < triangleCount; idx++) {
+      var v0 = new Cartesian3();
+      var v1 = new Cartesian3();
+      var v2 = new Cartesian3();
+      this._trianglePicking._triangleVerticesCallback(idx, v0, v1, v2);
+
+      var isV0Match = Cartesian3.equals(
+        traceDetails.intersectedTriangle[0],
+        v0
+      );
+      var isV1Match = Cartesian3.equals(
+        traceDetails.intersectedTriangle[1],
+        v1
+      );
+      var isV2Match = Cartesian3.equals(
+        traceDetails.intersectedTriangle[2],
+        v2
+      );
+
+      if (isV0Match && isV1Match && isV2Match) {
+        triangleIdx = idx;
+        break;
+      }
+    }
+
+    traceDetails.foundTriangleIdx = triangleIdx;
+    var foundNodes = this._trianglePicking._unpackedOctree.filter(function (u) {
+      return u.triangles.includes(triangleIdx);
+    });
+    traceDetails.foundNodes = foundNodes;
+  }
+
+  /**/
 
   var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
   var newPickValue;
   if (canNewPick) {
     // console.time("new pick");
-    newPickValue = this._trianglePicking.rayIntersect(ray, cullBackFaces);
+    newPickValue = this._trianglePicking.rayIntersect(
+      ray,
+      cullBackFaces,
+      null,
+      traceDetails
+    );
     // console.timeEnd("new pick");
   }
 
   // whoops
   if (canNewPick && !Cartesian3.equals(newPickValue, oldPickValue)) {
     console.error("pick values are different", newPickValue, oldPickValue);
+    window.mytraceDetails = traceDetails;
+    newPickValue = this._trianglePicking.rayIntersect(
+      ray,
+      cullBackFaces,
+      null,
+      null
+    );
   }
 
   // record details on the window
-  if (window && window.showPickDetails) {
-    window.showPickDetails = false;
+  if (trace) {
     window.lastPickDetails = {
       ray: ray,
-      value: newPickValue,
+      newPickValue: newPickValue,
+      oldPickValue: oldPickValue,
       mesh: this,
+      traceDetails: traceDetails,
     };
   }
 
