@@ -48,11 +48,19 @@
           terrainProvider: worldTerrain,
         });
 
+        window.viewer = viewer;
+
         // set lighting to true
         viewer.scene.globe.enableLighting = true;
 
         // setup alternative terrain providers
         var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+        var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
+          {
+            url:
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+          }
+        );
 
         var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
           url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
@@ -69,9 +77,9 @@
               },
             },
             {
-              text: "CesiumTerrainProvider - Cesium World Terrain - no effects",
+              text: "ArcGIS",
               onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain();
+                viewer.terrainProvider = arcGisTerrainProvider;
               },
             },
             {
@@ -292,6 +300,51 @@
           },
           "sampleButtons"
         );
+
+        var scene = viewer.scene;
+        var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+        handler.setInputAction(function (movement) {
+          window.showPickDetails = true;
+          var scene = viewer.scene;
+          var camera = scene.camera;
+
+          var ray = camera.getPickRay(movement.position);
+          var pickPosition = scene.globe.pick(ray, scene);
+
+          var details = window.lastPickDetails;
+
+          if (details) {
+            viewer.entities.removeAll();
+            viewer.entities.add({
+              position: pickPosition,
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+                material: Cesium.Color.RED,
+              },
+            });
+            var r = details.mesh.boundingSphere3D.radius;
+            var c = details.mesh.boundingSphere3D.center;
+            viewer.entities.add({
+              name: "Red sphere with black outline",
+              position: c,
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(r, r, r),
+                material: Cesium.Color.RED.withAlpha(0.1),
+                outline: true,
+                outlineColor: Cesium.Color.BLACK,
+              },
+            });
+            viewer.entities.add({
+              name: "ray",
+              position: c,
+              polyline: {
+                positions: [ray.origin, Cesium.Ray.getPoint(ray, 10000)],
+                color: Cesium.Color.GREEN,
+              },
+            });
+          }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //Sandcastle_End
         Sandcastle.finishedLoading();

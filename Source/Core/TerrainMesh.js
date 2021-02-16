@@ -1,16 +1,8 @@
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import IntersectionTests from "./IntersectionTests.js";
-import Ray from "./Ray.js";
 import SceneMode from "../Scene/SceneMode.js";
 import Cartesian3 from "./Cartesian3.js";
-import Cartographic from "./Cartographic.js";
-import PolylineGeometry from "./PolylineGeometry.js";
-import Primitive from "../Scene/Primitive.js";
-import GeometryInstance from "./GeometryInstance.js";
-import PolylineColorAppearance from "../Scene/PolylineColorAppearance.js";
-import ColorGeometryInstanceAttribute from "./ColorGeometryInstanceAttribute.js";
-import Color from "./Color.js";
+import TriangleSearchIntersectionTester from "./TriangleSearchIntersectionTester.js";
 
 /**
  * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -181,35 +173,15 @@ function TerrainMesh(
    * @private
    */
   this._trianglePicking = trianglePicking;
-}
 
-var scratchCartographic = new Cartographic();
-
-/**
- *
- * @param encoding
- * @param {SceneMode} mode
- * @param {GeographicProjection|WebMercatorProjection} projection
- * @param vertices
- * @param index
- * @param result
- * @return {*}
- */
-function getPosition(encoding, mode, projection, vertices, index, result) {
-  encoding.decodePosition(vertices, index, result);
-
-  if (defined(mode) && mode !== SceneMode.SCENE3D) {
-    // TODO why do we need to do this?....
-    var ellipsoid = projection.ellipsoid;
-    var positionCart = ellipsoid.cartesianToCartographic(
-      result,
-      scratchCartographic
-    );
-    projection.project(positionCart, result);
-    Cartesian3.fromElements(result.z, result.x, result.y, result);
+  this._defaultPickStrategy = new TriangleSearchIntersectionTester(
+    encoding,
+    indices,
+    vertices
+  );
+  if (!this._trianglePicking) {
+    this._trianglePicking = this._defaultPickStrategy;
   }
-
-  return result;
 }
 
 /**
@@ -226,74 +198,36 @@ TerrainMesh.prototype.pickRay = function (
   mode,
   projection
 ) {
+  var oldPickValue = this._defaultPickStrategy.rayIntersect(
+    ray,
+    cullBackFaces,
+    mode,
+    projection
+  );
+
   var canNewPick = mode === SceneMode.SCENE3D && defined(this._trianglePicking);
   var newPickValue;
   if (canNewPick) {
-    console.time("new pick");
-    newPickValue = this._trianglePicking.rayIntersect(
-      ray,
-      cullBackFaces,
-      newPickValue
-    );
-    console.timeEnd("new pick");
+    // console.time("new pick");
+    newPickValue = this._trianglePicking.rayIntersect(ray, cullBackFaces);
+    // console.timeEnd("new pick");
   }
 
-  /**
-   *
-   * @param {TerrainMesh} mesh
-   * @return {Cartesian3|*|undefined}
-   */
-  function oldPick(mesh) {
-    var vertices = mesh.vertices;
-    var indices = mesh.indices;
-    var encoding = mesh.encoding;
-    var indicesLength = indices.length;
-
-    var scratchV0 = new Cartesian3();
-    var scratchV1 = new Cartesian3();
-    var scratchV2 = new Cartesian3();
-
-    var minT = Number.MAX_VALUE;
-
-    for (var i = 0; i < indicesLength; i += 3) {
-      var i0 = indices[i];
-      var i1 = indices[i + 1];
-      var i2 = indices[i + 2];
-
-      var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
-      var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
-      var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
-
-      var t = IntersectionTests.rayTriangleParametric(
-        ray,
-        v0,
-        v1,
-        v2,
-        cullBackFaces
-      );
-      if (defined(t) && t < minT && t >= 0.0) {
-        minT = t;
-      }
-    }
-    return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT) : undefined;
-  }
-
-  var doOldPick = true;
-
-  var oldPickValue;
-  if (doOldPick) {
-    console.time("old pick");
-    oldPickValue = oldPick(this);
-    console.timeEnd("old pick");
-  }
-
-  if (
-    doOldPick &&
-    canNewPick &&
-    !Cartesian3.equals(newPickValue, oldPickValue)
-  ) {
+  // whoops
+  if (canNewPick && !Cartesian3.equals(newPickValue, oldPickValue)) {
     console.error("pick values are different", newPickValue, oldPickValue);
   }
+
+  // record details on the window
+  if (window && window.showPickDetails) {
+    window.showPickDetails = false;
+    window.lastPickDetails = {
+      ray: ray,
+      value: newPickValue,
+      mesh: this,
+    };
+  }
+
   return newPickValue || oldPickValue;
 };
 

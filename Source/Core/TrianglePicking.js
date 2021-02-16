@@ -377,20 +377,23 @@ function nodeRayIntersect(
 
     minDist = Math.min(distX, distY, distZ);
 
+    var isPositionNotInsideAABB = !positionInsideAabb(
+      originX + minDist * dirX,
+      originY + minDist * dirY,
+      originZ + minDist * dirZ,
+      onTheFlyAABB.aabbMinX,
+      onTheFlyAABB.aabbMaxX,
+      onTheFlyAABB.aabbMinY,
+      onTheFlyAABB.aabbMaxY,
+      onTheFlyAABB.aabbMinZ,
+      onTheFlyAABB.aabbMaxZ
+    );
+    var isThereAlreadyACloserIntersection = t + minDist >= result.t;
+    var isNoMoreAxisToCheck = minDist === invalidIntersection;
     if (
-      minDist === invalidIntersection || // no more axes to check
-      t + minDist >= result.t || // there is already a closer intersection
-      !positionInsideAabb(
-        originX + minDist * dirX,
-        originY + minDist * dirY,
-        originZ + minDist * dirZ,
-        onTheFlyAABB.aabbMinX,
-        onTheFlyAABB.aabbMaxX,
-        onTheFlyAABB.aabbMinY,
-        onTheFlyAABB.aabbMaxY,
-        onTheFlyAABB.aabbMinZ,
-        onTheFlyAABB.aabbMaxZ
-      )
+      isNoMoreAxisToCheck ||
+      isThereAlreadyACloserIntersection ||
+      isPositionNotInsideAABB
     ) {
       break;
     }

@@ -647,21 +647,26 @@ describe("Scene/GlobeSurfaceTile", function () {
       it("should do a lot more points", function () {
         // pick a point 10km above sea level (~4k above the terrain at this location)
         var position = {
-          height: 6800,
-          // height: ,
           longitude: 87.01176072534257,
           latitude: 27.952862605533163,
         };
-        var origin = new Cartesian3.fromDegrees(
+
+        var ray = new Ray();
+        var cartesian = Cartesian3.fromDegrees(
           position.longitude,
           position.latitude,
-          position.height
+          // calculating the normal requires ground level
+          0.0,
+          Ellipsoid.WGS84
         );
-        // point our ray straight towards the WGS84 globe
-        var direction = Ellipsoid.WGS84.geodeticSurfaceNormal(origin);
-
-        var ray = new Ray(origin, direction);
-        expect(ray).toBeDefined();
+        Ellipsoid.WGS84.geodeticSurfaceNormal(cartesian, ray.direction);
+        // Try to find the intersection point between the surface normal and z-axis.
+        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+        Ellipsoid.WGS84.getSurfaceNormalIntersectionWithZAxis(
+          cartesian,
+          11500.0,
+          ray.origin
+        );
 
         patchXHRLoadForArcGISTerrainDataSet();
         var terrainProvider = new ArcGISTiledElevationTerrainProvider({
@@ -684,7 +689,7 @@ describe("Scene/GlobeSurfaceTile", function () {
             y: 214,
           });
           return processor.process([tile]).then(function () {
-            var cullBackFaces = true;
+            var cullBackFaces = false;
             var pickResult = tile.data.pick(
               ray,
               SceneMode.SCENE3D,
@@ -695,6 +700,52 @@ describe("Scene/GlobeSurfaceTile", function () {
             expect(location.latitude).toBeCloseTo(27.952862605533163, 10);
             expect(location.longitude).toBeCloseTo(87.01176072534257, 10);
             expect(location.height).toBeCloseTo(6372, 0);
+          });
+        });
+      });
+
+      it("special point that returned null", function () {
+        patchXHRLoadForArcGISTerrainDataSet();
+
+        var ray = new Ray(
+          new Cartesian3(0, 0, -20055.701538655045),
+          new Cartesian3(
+            0.046566275697934596,
+            0.8817741083711048,
+            0.4693676637498234
+          )
+        );
+        var terrainProvider = new ArcGISTiledElevationTerrainProvider({
+          url: "made/up/url",
+        });
+
+        processor = new TerrainTileProcessor(
+          frameState,
+          terrainProvider,
+          imageryLayerCollection
+        );
+        processor.mockWebGL();
+        processor.frameState = scene.frameState;
+
+        return terrainProvider.readyPromise.then(function () {
+          var tile = new QuadtreeTile({
+            tilingScheme: terrainProvider.tilingScheme,
+            level: 9,
+            x: 379,
+            y: 214,
+          });
+          return processor.process([tile]).then(function () {
+            var cullBackFaces = false;
+            var pickResult = tile.data.pick(
+              ray,
+              SceneMode.SCENE3D,
+              undefined,
+              cullBackFaces
+            );
+            var location = pickResultToLocation(pickResult);
+            expect(location.latitude).toBeCloseTo(27.993258048265453, 10);
+            expect(location.longitude).toBeCloseTo(86.97703198692928, 10);
+            expect(location.height).toBeCloseTo(5560, 0);
           });
         });
       });
