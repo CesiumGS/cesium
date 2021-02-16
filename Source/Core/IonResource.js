@@ -235,10 +235,8 @@ function retryCallback(that, error) {
   // requests(since Image failures can not provide a status code)
   if (
     !defined(error) ||
-    (error.statusCode !== 401 && !(error.target instanceof Image))(
-      error.statusCode !== 401 &&
-        !(imageDefined && error.target instanceof Image)
-    )
+    (error.statusCode !== 401 &&
+      !(imageDefined && error.target instanceof Image))
   ) {
     return when.resolve(false);
   }
