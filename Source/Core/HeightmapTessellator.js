@@ -90,6 +90,103 @@ function createPackedTriangles(
   return triangles;
 }
 
+function Point(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
+function QuadtreeNode(level, topLeft, bottomRight) {
+  this.level = level;
+  // details about this node
+  this.topLeft = topLeft;
+  this.bottomRight = bottomRight;
+  this.maxHeight = 0;
+  this.minHeight = 0;
+
+  if (level < 5) {
+    this.topLeftTree = new QuadtreeNode(
+      level + 1,
+      new Point(topLeft.x, topLeft.y),
+      new Point(
+        (topLeft.x + bottomRight.x) / 2,
+        (topLeft.y + bottomRight.y) / 2
+      )
+    );
+    this.bottomLeftTree = new QuadtreeNode(
+      level + 1,
+      new Point(topLeft.x, (topLeft.y + bottomRight.y) / 2),
+      new Point((topLeft.x + bottomRight.x) / 2, bottomRight.y)
+    );
+
+    this.topRightTree = new QuadtreeNode(
+      level + 1,
+      new Point((topLeft.x + bottomRight.x) / 2, topLeft.y),
+      new Point(bottomRight.x, (topLeft.y + bottomRight.y) / 2)
+    );
+    this.bottomRightTree = new QuadtreeNode(
+      level + 1,
+      new Point(
+        (topLeft.x + bottomRight.x) / 2,
+        (topLeft.y + bottomRight.y) / 2
+      ),
+      new Point(bottomRight.x, bottomRight.y)
+    );
+  }
+}
+
+function createPackedQuadtree(
+  positions,
+  invTransform,
+  width,
+  triangleIndexEnd
+) {
+  var axisAlignedPositions = [];
+  var i;
+  for (i = 0; i < positions.length; i++) {
+    var position = positions[i];
+    var v0 = new Cartesian3();
+    Matrix4.multiplyByPoint(invTransform, position, v0);
+    axisAlignedPositions.push(v0);
+  }
+
+  var rootNode = new QuadtreeNode(
+    0,
+    new Point(-0.5, -0.5),
+    new Point(0.5, 0.5)
+  );
+  for (i = 0; i < axisAlignedPositions.length; i++) {
+    var pos = axisAlignedPositions[i];
+    var node = rootNode;
+    while (node) {
+      var topLeft = node.topLeft;
+      var botRight = node.bottomRight;
+
+      node.maxHeight = Math.max(pos.z, node.maxHeight);
+      node.minHeight = Math.min(pos.z, node.minHeight);
+
+      if ((topLeft.x + botRight.x) / 2 >= pos.x) {
+        if ((topLeft.y + botRight.y) / 2 >= pos.y) {
+          // Indicates topLeftTree
+          node = node.topLeftTree;
+        } else {
+          // Indicates botLeftTree
+          node = node.bottomLeftTree;
+        }
+      } else {
+        if ((topLeft.y + botRight.y) / 2 >= pos.y) {
+          // Indicates topRightTree
+          node = node.topRightTree;
+        } else {
+          // Indicates botRightTree
+          node = node.bottomRightTree;
+        }
+      }
+    }
+  }
+
+  return rootNode;
+}
+
 /**
  * Fills an array of vertices from a heightmap image.
  *
@@ -512,6 +609,8 @@ HeightmapTessellator.computeVertices = function (options) {
 
   var orientedBoundingBox;
   var packedOctree;
+  var quadtree;
+  var inverseTransform;
 
   if (defined(rectangle)) {
     console.time("creating oriented bounding box");
@@ -524,11 +623,10 @@ HeightmapTessellator.computeVertices = function (options) {
     );
 
     var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
-    var inverseTransform = Matrix4.inverse(transform, new Matrix4());
+    inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");
     console.time("making packed triangles");
-
     var packedTriangles = createPackedTriangles(
       positions,
       inverseTransform,
@@ -541,6 +639,15 @@ HeightmapTessellator.computeVertices = function (options) {
       packedTriangles,
       inverseTransform
     );
+
+    console.time("making packed quadtree");
+    quadtree = createPackedQuadtree(
+      positions,
+      inverseTransform,
+      width,
+      gridTriangleCount
+    );
+    console.timeEnd("making packed quadtree");
   }
 
   var occludeePointInScaledSpace;
@@ -592,6 +699,10 @@ HeightmapTessellator.computeVertices = function (options) {
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
     packedOctree: packedOctree,
+    packedQuadtree: {
+      inverseTransform: inverseTransform,
+      quadtree: quadtree,
+    },
   };
 };
 export default HeightmapTessellator;

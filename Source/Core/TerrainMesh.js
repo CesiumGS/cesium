@@ -213,7 +213,13 @@ TerrainMesh.prototype.pickRay = function (
   );
 
   /**/
-  if (traceDetails && oldPickValue) {
+  if (
+    traceDetails &&
+    oldPickValue &&
+    this._trianglePicking &&
+    this._trianglePicking._triangles &&
+    this._trianglePicking._unpackedOctree
+  ) {
     var triangleCount = this._trianglePicking._triangles.length / 6;
     var triangleIdx = -1;
     for (var idx = 0; idx < triangleCount; idx++) {
