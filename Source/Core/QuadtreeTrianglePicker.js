@@ -3,10 +3,12 @@ import defined from "./defined.js";
 import Matrix4 from "./Matrix4.js";
 import Ray from "./Ray.js";
 import IntersectionTests from "./IntersectionTests.js";
+import Rectangle from "./Rectangle.js";
 
 function QuadtreeTrianglePicker(packedQuadtree, triangleVerticesCallback) {
   this._inverseTransform = Matrix4.unpack(packedQuadtree.inverseTransform);
   this._transform = Matrix4.unpack(packedQuadtree.transform);
+  this._rectangle = Rectangle.unpack(packedQuadtree.rectangle);
   this._quadtree = packedQuadtree.quadtree;
   this._positions = packedQuadtree.positions;
   this._triangleVerticesCallback = triangleVerticesCallback;
@@ -101,6 +103,13 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   if (!defined(result)) {
     result = new Cartesian3();
   }
+
+  if (traceDetails) {
+    traceDetails.rectangle = this._rectangle;
+    traceDetails.transform = this._transform;
+    traceDetails.inverseTransform = this._inverseTransform;
+  }
+
   var invTransform = this._inverseTransform;
   var transformedRay = new Ray();
   transformedRay.origin = Matrix4.multiplyByPoint(

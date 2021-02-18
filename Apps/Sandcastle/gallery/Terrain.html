@@ -44,8 +44,15 @@
           requestVertexNormals: true,
         });
 
+        var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
+          {
+            url:
+              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+          }
+        );
+
         var viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: worldTerrain,
+          terrainProvider: arcGisTerrainProvider,
         });
 
         window.viewer = viewer;
@@ -55,65 +62,59 @@
 
         // setup alternative terrain providers
         var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
-        var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
-          {
-            url:
-              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-          }
-        );
 
         var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
           url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
           credit: "Terrain data courtesy VT MÄK",
         });
 
-        Sandcastle.addToolbarMenu(
-          [
-            {
-              text: "CesiumTerrainProvider - Cesium World Terrain",
-              onselect: function () {
-                viewer.terrainProvider = worldTerrain;
-                viewer.scene.globe.enableLighting = true;
-              },
-            },
-            {
-              text: "ArcGIS",
-              onselect: function () {
-                viewer.terrainProvider = arcGisTerrainProvider;
-              },
-            },
-            {
-              text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
-              onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain({
-                  requestVertexNormals: true,
-                });
-                viewer.scene.globe.enableLighting = true;
-              },
-            },
-            {
-              text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
-              onselect: function () {
-                viewer.terrainProvider = Cesium.createWorldTerrain({
-                  requestWaterMask: true,
-                });
-              },
-            },
-            {
-              text: "EllipsoidTerrainProvider",
-              onselect: function () {
-                viewer.terrainProvider = ellipsoidProvider;
-              },
-            },
-            {
-              text: "VRTheWorldTerrainProvider",
-              onselect: function () {
-                viewer.terrainProvider = vrTheWorldProvider;
-              },
-            },
-          ],
-          "terrainMenu"
-        );
+        // Sandcastle.addToolbarMenu(
+        //   [
+        //     {
+        //       text: "CesiumTerrainProvider - Cesium World Terrain",
+        //       onselect: function () {
+        //         viewer.terrainProvider = worldTerrain;
+        //         viewer.scene.globe.enableLighting = true;
+        //       },
+        //     },
+        //     {
+        //       text: "ArcGIS",
+        //       onselect: function () {
+        //         viewer.terrainProvider = arcGisTerrainProvider;
+        //       },
+        //     },
+        //     {
+        //       text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
+        //       onselect: function () {
+        //         viewer.terrainProvider = Cesium.createWorldTerrain({
+        //           requestVertexNormals: true,
+        //         });
+        //         viewer.scene.globe.enableLighting = true;
+        //       },
+        //     },
+        //     {
+        //       text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
+        //       onselect: function () {
+        //         viewer.terrainProvider = Cesium.createWorldTerrain({
+        //           requestWaterMask: true,
+        //         });
+        //       },
+        //     },
+        //     {
+        //       text: "EllipsoidTerrainProvider",
+        //       onselect: function () {
+        //         viewer.terrainProvider = ellipsoidProvider;
+        //       },
+        //     },
+        //     {
+        //       text: "VRTheWorldTerrainProvider",
+        //       onselect: function () {
+        //         viewer.terrainProvider = vrTheWorldProvider;
+        //       },
+        //     },
+        //   ],
+        //   "terrainMenu"
+        // );
 
         Sandcastle.addDefaultToolbarMenu(
           [
@@ -327,15 +328,118 @@
             rayColor = Cesium.Color.RED;
           }
 
+          function localToWorld(local) {
+            var transform = details.traceDetails.transform;
+            var inverseTransform = details.traceDetails.inverseTransform;
+            return Cesium.Matrix4.multiplyByPoint(
+              transform,
+              local,
+              new Cesium.Cartesian3()
+            );
+          }
+
+          function drawQuadTreeNode(node) {
+            var topLeft = node.topLeft;
+            var bottomRight = node.bottomRight;
+            var minHeight = node.minHeight;
+            var maxHeight = node.maxHeight;
+
+            var topLeftWorldSpace = localToWorld(
+              new Cesium.Cartesian3(topLeft.x, topLeft.y, 0)
+            );
+            var bottomRightWorldSpace = localToWorld(
+              new Cesium.Cartesian3(bottomRight.x, bottomRight.y, 0)
+            );
+
+            var minHeightWorldSpace = localToWorld(
+              new Cesium.Cartesian3(0, 0, minHeight)
+            );
+            var maxHeightWorldSpace = localToWorld(
+              new Cesium.Cartesian3(0, 0, maxHeight)
+            );
+
+            viewer.entities.add({
+              rectangle: {
+                coordinates: [
+                  topLeftWorldSpace.x,
+                  topLeftWorldSpace.y,
+                  bottomRightWorldSpace.x,
+                  bottomRightWorldSpace.y,
+                ],
+                material: Cesium.Color.GOLD.withAlpha(1),
+                rotation: Cesium.Math.toRadians(0),
+                extrudedHeight: maxHeightWorldSpace.z,
+                height: minHeightWorldSpace.z,
+                outline: true, // height must be set for outline to display
+                outlineColor: Cesium.Color.BLACK,
+              },
+            });
+          }
+
+          drawQuadTreeNode(details.mesh._trianglePicking._quadtree);
+
+          function addDot(local, color) {
+            var point = localToWorld(local);
+            viewer.entities.add({
+              position: point,
+              ellipsoid: {
+                radii: new Cesium.Cartesian3(50.0, 50.0, 50.0),
+                material: color,
+              },
+            });
+          }
+
           if (details) {
             viewer.entities.removeAll();
-            // viewer.entities.add({
-            //   position: pickPosition,
-            //   ellipsoid: {
-            //     radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
-            //     material: rayColor,
-            //   },
-            // });
+            debugger;
+
+            var positions = [
+              [-0.5, 0.5, 0.5],
+              [0.5, -0.5, 0.5],
+              [0.5, 0.5, -0.5],
+              [-0.5, -0.5, 0.5],
+              [-0.5, 0.5, -0.5],
+              [0.5, -0.5, -0.5],
+              [-0.5, -0.5, -0.5],
+              [0.5, 0.5, 0.5],
+            ];
+
+            for (var iii = 0; iii < positions.length; iii++) {
+              var pasdf = positions[iii];
+              addDot(
+                new Cesium.Cartesian3(pasdf[0], pasdf[1], pasdf[2]),
+                Cesium.Color.fromRandom()
+              );
+            }
+            //
+            //
+            // addDot(new Cesium.Cartesian3(-0.5, -0.5, -0.5), Cesium.Color.BLUE);
+            // addDot(new Cesium.Cartesian3(0.5, 0.5, 0.5), Cesium.Color.GREEN);
+            // addDot(new Cesium.Cartesian3(-0.5, 0.5, 0.5), Cesium.Color.YELLOW);
+            // addDot(
+            //   new Cesium.Cartesian3(0.5, 0.5, -0.5),
+            //   Cesium.Color.DARKORANGE
+            // );
+            // addDot(new Cesium.Cartesian3(-0.5, -0.5, 0.5), Cesium.Color.BROWN);
+            // addDot(new Cesium.Cartesian3(-0.5, 0.5, -0.5), Cesium.Color.YELLOW);
+            // addDot(
+            //   new Cesium.Cartesian3(-0.5, -0.5, 0.5),
+            //   Cesium.Color.GAINSBORO
+            // );
+            // addDot(new Cesium.Cartesian3(-0.5, 0.5, -0.5), Cesium.Color.GOLD);
+            // addDot(new Cesium.Cartesian3(0.5, -0.5, -0.5), Cesium.Color.CYAN);
+
+            viewer.entities.add({
+              rectangle: {
+                coordinates: details.traceDetails.rectangle,
+                material: Cesium.Color.GREEN.withAlpha(0.1),
+                rotation: Cesium.Math.toRadians(0),
+                extrudedHeight: 8000.0,
+                height: 0,
+                outline: true, // height must be set for outline to display
+                outlineColor: Cesium.Color.BLACK,
+              },
+            });
             var r = details.mesh.boundingSphere3D.radius;
             var c = details.mesh.boundingSphere3D.center;
             viewer.entities.add({

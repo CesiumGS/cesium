@@ -711,6 +711,7 @@ HeightmapTessellator.computeVertices = function (options) {
     packedOctree: packedOctree,
     packedQuadtree: {
       inverseTransform: inverseTransform,
+      rectangle: Rectangle.pack(rectangle, []),
       transform: transform,
       quadtree: quadtree,
       positions: packedPositions,
