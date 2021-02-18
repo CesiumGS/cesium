@@ -329,13 +329,13 @@
 
           if (details) {
             viewer.entities.removeAll();
-            viewer.entities.add({
-              position: pickPosition,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
-                material: rayColor,
-              },
-            });
+            // viewer.entities.add({
+            //   position: pickPosition,
+            //   ellipsoid: {
+            //     radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+            //     material: rayColor,
+            //   },
+            // });
             var r = details.mesh.boundingSphere3D.radius;
             var c = details.mesh.boundingSphere3D.center;
             viewer.entities.add({
@@ -383,6 +383,37 @@
                     outline: true,
                     outlineColor: Cesium.Color.CYAN,
                     outlineWidth: 10,
+                  },
+                });
+              }
+            }
+
+            // if (details.traceDetails && details.traceDetails.coolTriangles) {
+            //   var trianglesasdf = details.traceDetails.coolTriangles;
+            //   for (var asdf = 0; asdf < trianglesasdf.length; asdf++) {
+            //     var triangleasdf = trianglesasdf[asdf];
+            //     viewer.entities.add({
+            //       polygon: {
+            //         hierarchy: triangleasdf,
+            //         perPositionHeight: true,
+            //         material: Cesium.Color.PINK,
+            //         outline: true,
+            //         outlineColor: Cesium.Color.CYAN,
+            //         outlineWidth: 10,
+            //       },
+            //     });
+            //   }
+            // }
+
+            if (details.traceDetails && details.traceDetails.coolPoints) {
+              var trianglesasdf = details.traceDetails.coolPoints;
+              for (var asdf = 0; asdf < trianglesasdf.length; asdf++) {
+                var p = trianglesasdf[asdf];
+                viewer.entities.add({
+                  position: p,
+                  ellipsoid: {
+                    radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+                    material: Cesium.Color.BLUE,
                   },
                 });
               }

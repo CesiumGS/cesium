@@ -154,6 +154,7 @@ function createPackedQuadtree(
     new Point(-0.5, -0.5),
     new Point(0.5, 0.5)
   );
+
   for (i = 0; i < axisAlignedPositions.length; i++) {
     var pos = axisAlignedPositions[i];
     var node = rootNode;
@@ -610,7 +611,16 @@ HeightmapTessellator.computeVertices = function (options) {
   var orientedBoundingBox;
   var packedOctree;
   var quadtree;
+  var transform;
   var inverseTransform;
+
+  var packedPositions = new Float32Array(positions.length * 3);
+  for (var i = 0; i < positions.length; i++) {
+    var pos = positions[i];
+    packedPositions[i * 3] = pos.x;
+    packedPositions[i * 3 + 1] = pos.y;
+    packedPositions[i * 3 + 2] = pos.z;
+  }
 
   if (defined(rectangle)) {
     console.time("creating oriented bounding box");
@@ -622,7 +632,7 @@ HeightmapTessellator.computeVertices = function (options) {
       ellipsoid
     );
 
-    var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
+    transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");
@@ -701,7 +711,9 @@ HeightmapTessellator.computeVertices = function (options) {
     packedOctree: packedOctree,
     packedQuadtree: {
       inverseTransform: inverseTransform,
+      transform: transform,
       quadtree: quadtree,
+      positions: packedPositions,
     },
   };
 };
