@@ -242,7 +242,8 @@ function createBatchTableFromLegacyFeatureMetadata(content, featureTable) {
 
 function createBatchTableFromFeatureMetadata(content, featureTable) {
   var batchTableJson = {};
-  var batchTableBinary;
+  var batchTableBinaryChunks = [];
+  var batchTableBinaryOffset = 0;
   var properties = featureTable.properties;
   for (var id in properties) {
     if (properties.hasOwnProperty(id)) {
@@ -271,13 +272,18 @@ function createBatchTableFromFeatureMetadata(content, featureTable) {
 
       if (defined(componentDatatype) && defined(typedArray)) {
         batchTableJson[id] = {
-          byteOffset: typedArray.byteOffset,
+          byteOffset: batchTableBinaryOffset,
           componentType: ComponentDatatype.getName(componentDatatype),
           type: batchTableBinaryType,
         };
-        if (!defined(batchTableBinary)) {
-          batchTableBinary = new Uint8Array(typedArray.buffer);
-        }
+        batchTableBinaryChunks.push(
+          new Uint8Array(
+            typedArray.buffer,
+            typedArray.byteOffset,
+            typedArray.byteLength
+          )
+        );
+        batchTableBinaryOffset += typedArray.byteLength;
       } else {
         var jsonValues = property.getJsonValues();
         if (defined(jsonValues)) {
@@ -286,6 +292,14 @@ function createBatchTableFromFeatureMetadata(content, featureTable) {
       }
     }
   }
+
+  var batchTableBinary = new Uint8Array(batchTableBinaryOffset);
+  batchTableBinaryOffset = 0;
+  for (var i = 0; i < batchTableBinaryChunks.length; ++i) {
+    batchTableBinary.set(batchTableBinaryChunks[i], batchTableBinaryOffset);
+    batchTableBinaryOffset += batchTableBinaryChunks[i].byteLength;
+  }
+
   var elementCount = featureTable.elementCount;
   return new Cesium3DTileBatchTable(
     content,
