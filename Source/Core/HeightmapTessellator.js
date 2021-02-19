@@ -715,6 +715,8 @@ HeightmapTessellator.computeVertices = function (options) {
       transform: transform,
       quadtree: quadtree,
       positions: packedPositions,
+      width: width,
+      height: height,
     },
   };
 };

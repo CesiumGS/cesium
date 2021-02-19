@@ -33,11 +33,13 @@
     <div id="toolbar">
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
+      <div id="showQuadtreeLevel"></div>
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
         "use strict";
+
         //Sandcastle_Begin
         var worldTerrain = Cesium.createWorldTerrain({
           requestWaterMask: true,
@@ -51,256 +53,207 @@
           }
         );
 
+        var locationOptions = [
+          {
+            name: "Mount Everest",
+            target: new Cesium.Cartesian3(
+              300770.50872389384,
+              5634912.131394585,
+              2978152.2865545116
+            ),
+            offset: new Cesium.Cartesian3(
+              6344.974098678562,
+              -793.3419798081741,
+              2499.9508860763162
+            ),
+          },
+          {
+            name: "Half Dome",
+            target: new Cesium.Cartesian3(
+              -2489625.0836225147,
+              -4393941.44443024,
+              3882535.9454173897
+            ),
+            offset: new Cesium.Cartesian3(
+              -6857.40902037546,
+              412.3284835694358,
+              2147.5545426812023
+            ),
+          },
+          {
+            name: "San Francisco Bay",
+            target: new Cesium.Cartesian3(
+              -2708814.85583248,
+              -4254159.450845907,
+              3891403.9457429945
+            ),
+            offset: new Cesium.Cartesian3(
+              70642.66030209465,
+              -31661.517948317807,
+              35505.179997143336
+            ),
+          },
+        ];
+
         var viewer = new Cesium.Viewer("cesiumContainer", {
           terrainProvider: arcGisTerrainProvider,
         });
+        viewer.scene.globe.enableLighting = false;
+        viewer.scene.fog.enabled = false;
 
         window.viewer = viewer;
 
-        // set lighting to true
-        viewer.scene.globe.enableLighting = true;
+        var quadTreeDataSource = new Cesium.CustomDataSource("quadtree");
+        viewer.dataSources.add(quadTreeDataSource);
 
-        // setup alternative terrain providers
-        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+        var testedPointsDataSource = new Cesium.CustomDataSource(
+          "testedPoints"
+        );
+        viewer.dataSources.add(testedPointsDataSource);
 
-        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-          url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
-          credit: "Terrain data courtesy VT MÄK",
-        });
+        function localToWorld(transform, local) {
+          return Cesium.Matrix4.multiplyByPoint(
+            transform,
+            local,
+            new Cesium.Cartesian3()
+          );
+        }
 
-        // Sandcastle.addToolbarMenu(
-        //   [
-        //     {
-        //       text: "CesiumTerrainProvider - Cesium World Terrain",
-        //       onselect: function () {
-        //         viewer.terrainProvider = worldTerrain;
-        //         viewer.scene.globe.enableLighting = true;
-        //       },
-        //     },
-        //     {
-        //       text: "ArcGIS",
-        //       onselect: function () {
-        //         viewer.terrainProvider = arcGisTerrainProvider;
-        //       },
-        //     },
-        //     {
-        //       text: "CesiumTerrainProvider - Cesium World Terrain w/ Lighting",
-        //       onselect: function () {
-        //         viewer.terrainProvider = Cesium.createWorldTerrain({
-        //           requestVertexNormals: true,
-        //         });
-        //         viewer.scene.globe.enableLighting = true;
-        //       },
-        //     },
-        //     {
-        //       text: "CesiumTerrainProvider - Cesium World Terrain w/ Water",
-        //       onselect: function () {
-        //         viewer.terrainProvider = Cesium.createWorldTerrain({
-        //           requestWaterMask: true,
-        //         });
-        //       },
-        //     },
-        //     {
-        //       text: "EllipsoidTerrainProvider",
-        //       onselect: function () {
-        //         viewer.terrainProvider = ellipsoidProvider;
-        //       },
-        //     },
-        //     {
-        //       text: "VRTheWorldTerrainProvider",
-        //       onselect: function () {
-        //         viewer.terrainProvider = vrTheWorldProvider;
-        //       },
-        //     },
-        //   ],
-        //   "terrainMenu"
-        // );
+        function drawQuadTreeNode(transform, node, color) {
+          var topLeft = node.topLeft;
+          var bottomRight = node.bottomRight;
+          var minHeight = node.minHeight;
+          var maxHeight = node.maxHeight;
+
+          var topLeftWorldSpace = localToWorld(
+            transform,
+            new Cesium.Cartesian3(topLeft.x, topLeft.y, 0)
+          );
+          var bottomRightWorldSpace = localToWorld(
+            transform,
+            new Cesium.Cartesian3(bottomRight.x, bottomRight.y, 0)
+          );
+
+          var minHeightWorldSpace = localToWorld(
+            transform,
+            new Cesium.Cartesian3(0, 0, minHeight)
+          );
+          var maxHeightWorldSpace = localToWorld(
+            transform,
+            new Cesium.Cartesian3(0, 0, maxHeight)
+          );
+
+          var topLeftCartographic = Cesium.Cartographic.fromCartesian(
+            topLeftWorldSpace
+          );
+          var bottomRightCartographic = Cesium.Cartographic.fromCartesian(
+            bottomRightWorldSpace
+          );
+          var minHeightCartographic = Cesium.Cartographic.fromCartesian(
+            minHeightWorldSpace
+          );
+          var maxHeightCartographic = Cesium.Cartographic.fromCartesian(
+            maxHeightWorldSpace
+          );
+
+          var rect = new Cesium.Rectangle(
+            topLeftCartographic.longitude,
+            topLeftCartographic.latitude,
+            bottomRightCartographic.longitude,
+            bottomRightCartographic.latitude
+          );
+
+          quadTreeDataSource.entities.add({
+            rectangle: {
+              coordinates: rect,
+              material: color,
+              rotation: Cesium.Math.toRadians(0),
+              extrudedHeight: maxHeightCartographic.height,
+              height: minHeightCartographic.height,
+              outline: true, // height must be set for outline to display
+              outlineColor: Cesium.Color.BLACK,
+            },
+          });
+        }
+
+        function addDot(transform, local, color, radius) {
+          radius = radius || 50;
+          var point = localToWorld(transform, local);
+          viewer.entities.add({
+            position: point,
+            ellipsoid: {
+              radii: new Cesium.Cartesian3(50.0, 50.0, 50.0),
+              material: color,
+            },
+          });
+        }
 
         Sandcastle.addDefaultToolbarMenu(
-          [
-            {
-              text: "Mount Everest",
+          locationOptions.map(function (option) {
+            return {
+              text: option.name,
               onselect: function () {
-                lookAtMtEverest();
-              },
-            },
-            {
-              text: "Half Dome",
-              onselect: function () {
-                var target = new Cesium.Cartesian3(
-                  -2489625.0836225147,
-                  -4393941.44443024,
-                  3882535.9454173897
-                );
-                var offset = new Cesium.Cartesian3(
-                  -6857.40902037546,
-                  412.3284835694358,
-                  2147.5545426812023
-                );
-                viewer.camera.lookAt(target, offset);
+                viewer.camera.lookAt(option.target, option.offset);
                 viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
               },
-            },
-            {
-              text: "San Francisco Bay",
-              onselect: function () {
-                var target = new Cesium.Cartesian3(
-                  -2708814.85583248,
-                  -4254159.450845907,
-                  3891403.9457429945
-                );
-                var offset = new Cesium.Cartesian3(
-                  70642.66030209465,
-                  -31661.517948317807,
-                  35505.179997143336
-                );
-                viewer.camera.lookAt(target, offset);
-                viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-              },
-            },
-          ],
+            };
+          }),
           "zoomButtons"
         );
 
-        var terrainSamplePositions;
-
-        function lookAtMtEverest() {
-          var target = new Cesium.Cartesian3(
-            300770.50872389384,
-            5634912.131394585,
-            2978152.2865545116
-          );
-          var offset = new Cesium.Cartesian3(
-            6344.974098678562,
-            -793.3419798081741,
-            2499.9508860763162
-          );
-          viewer.camera.lookAt(target, offset);
-          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        function flatten(node) {
+          if (!node) {
+            return [];
+          }
+          return [node]
+            .concat(flatten(node.topLeftTree))
+            .concat(flatten(node.bottomLeftTree))
+            .concat(flatten(node.topRightTree))
+            .concat(flatten(node.bottomRightTree));
         }
 
-        function sampleTerrainSuccess(terrainSamplePositions) {
-          var ellipsoid = Cesium.Ellipsoid.WGS84;
+        function showQuadTreeAtLevel(level) {
+          if (window.lastPickDetails) {
+            var root = window.lastPickDetails.mesh._trianglePicking._quadtree;
+            var transform = window.lastPickDetails.traceDetails.transform;
 
-          //By default, Cesium does not obsure geometry
-          //behind terrain. Setting this flag enables that.
-          viewer.scene.globe.depthTestAgainstTerrain = true;
-
-          viewer.entities.suspendEvents();
-          viewer.entities.removeAll();
-
-          for (var i = 0; i < terrainSamplePositions.length; ++i) {
-            var position = terrainSamplePositions[i];
-
-            viewer.entities.add({
-              name: position.height.toFixed(1),
-              position: ellipsoid.cartographicToCartesian(position),
-              billboard: {
-                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                scale: 0.7,
-                image: "../images/facility.gif",
-              },
-              label: {
-                text: position.height.toFixed(1),
-                font: "10pt monospace",
-                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-                pixelOffset: new Cesium.Cartesian2(0, -14),
-                fillColor: Cesium.Color.BLACK,
-                outlineColor: Cesium.Color.BLACK,
-                showBackground: true,
-                backgroundColor: new Cesium.Color(0.9, 0.9, 0.9, 0.7),
-                backgroundPadding: new Cesium.Cartesian2(4, 3),
-              },
+            var nodes = flatten(root);
+            var nodesAtLevel = nodes.filter(function (n) {
+              return n.level === level;
             });
-          }
-          viewer.entities.resumeEvents();
-        }
 
-        function createGrid(rectangleHalfSize) {
-          var gridWidth = 41;
-          var gridHeight = 41;
-          var everestLatitude = Cesium.Math.toRadians(27.988257);
-          var everestLongitude = Cesium.Math.toRadians(86.925145);
-          var e = new Cesium.Rectangle(
-            everestLongitude - rectangleHalfSize,
-            everestLatitude - rectangleHalfSize,
-            everestLongitude + rectangleHalfSize,
-            everestLatitude + rectangleHalfSize
-          );
-          var terrainSamplePositions = [];
-          for (var y = 0; y < gridHeight; ++y) {
-            for (var x = 0; x < gridWidth; ++x) {
-              var longitude = Cesium.Math.lerp(
-                e.west,
-                e.east,
-                x / (gridWidth - 1)
-              );
-              var latitude = Cesium.Math.lerp(
-                e.south,
-                e.north,
-                y / (gridHeight - 1)
-              );
-              var position = new Cesium.Cartographic(longitude, latitude);
-              terrainSamplePositions.push(position);
+            quadTreeDataSource.entities.removeAll();
+            for (var i = 0; i < nodesAtLevel.length; i++) {
+              var n = nodesAtLevel[i];
+              var color = Cesium.Color.GREEN.withAlpha(0.1);
+              if (n.isHit) {
+                color = Cesium.Color.GOLD.withAlpha(0.1);
+              }
+              if (n.isSpecial) {
+                color = Cesium.Color.RED.withAlpha(0.1);
+              }
+              drawQuadTreeNode(transform, n, color);
             }
           }
-          return terrainSamplePositions;
         }
 
-        Sandcastle.addToggleButton(
-          "Enable Lighting",
-          viewer.scene.globe.enableLighting,
-          function (checked) {
-            viewer.scene.globe.enableLighting = checked;
-          }
-        );
+        function getShowAtLevelFn(level) {
+          return function () {
+            showQuadTreeAtLevel(level);
+          };
+        }
 
-        Sandcastle.addToggleButton(
-          "Enable fog",
-          viewer.scene.fog.enabled,
-          function (checked) {
-            viewer.scene.fog.enabled = checked;
-          }
-        );
+        var showQuadTreeOptions = [];
+        var optionLevel = 0;
+        while (optionLevel < 10) {
+          showQuadTreeOptions.push({
+            text: "Quadtree Level " + optionLevel,
+            onselect: getShowAtLevelFn(optionLevel),
+          });
+          optionLevel++;
+        }
 
-        Sandcastle.addToolbarButton(
-          "Sample Everest Terrain at Level 9",
-          function () {
-            var terrainSamplePositions = createGrid(0.005);
-            Cesium.when(
-              Cesium.sampleTerrain(
-                viewer.terrainProvider,
-                9,
-                terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
-            lookAtMtEverest();
-          },
-          "sampleButtons"
-        );
-
-        Sandcastle.addToolbarButton(
-          "Sample Most Detailed Everest Terrain",
-          function () {
-            if (!Cesium.defined(viewer.terrainProvider.availability)) {
-              window.alert(
-                "sampleTerrainMostDetailed is not supported for the selected terrain provider"
-              );
-              return;
-            }
-            var terrainSamplePositions = createGrid(0.0005);
-            Cesium.when(
-              Cesium.sampleTerrainMostDetailed(
-                viewer.terrainProvider,
-                terrainSamplePositions
-              ),
-              sampleTerrainSuccess
-            );
-            lookAtMtEverest();
-          },
-          "sampleButtons"
-        );
+        Sandcastle.addToolbarMenu(showQuadTreeOptions, "showQuadtreeLevel");
 
         var scene = viewer.scene;
         var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -318,104 +271,63 @@
           var details = window.lastPickDetails;
           console.trace("details here");
 
-          var rayColor = Cesium.Color.WHITE;
-          if (
-            !Cesium.Cartesian3.equals(
-              details.newPickValue,
-              details.oldPickValue
-            )
-          ) {
-            rayColor = Cesium.Color.RED;
-          }
-
-          function localToWorld(local) {
-            var transform = details.traceDetails.transform;
-            var inverseTransform = details.traceDetails.inverseTransform;
-            return Cesium.Matrix4.multiplyByPoint(
-              transform,
-              local,
-              new Cesium.Cartesian3()
-            );
-          }
-
-          function drawQuadTreeNode(node) {
-            var topLeft = node.topLeft;
-            var bottomRight = node.bottomRight;
-            var minHeight = node.minHeight;
-            var maxHeight = node.maxHeight;
-
-            var topLeftWorldSpace = localToWorld(
-              new Cesium.Cartesian3(topLeft.x, topLeft.y, 0)
-            );
-            var bottomRightWorldSpace = localToWorld(
-              new Cesium.Cartesian3(bottomRight.x, bottomRight.y, 0)
-            );
-
-            var minHeightWorldSpace = localToWorld(
-              new Cesium.Cartesian3(0, 0, minHeight)
-            );
-            var maxHeightWorldSpace = localToWorld(
-              new Cesium.Cartesian3(0, 0, maxHeight)
-            );
-
-            viewer.entities.add({
-              rectangle: {
-                coordinates: [
-                  topLeftWorldSpace.x,
-                  topLeftWorldSpace.y,
-                  bottomRightWorldSpace.x,
-                  bottomRightWorldSpace.y,
-                ],
-                material: Cesium.Color.GOLD.withAlpha(1),
-                rotation: Cesium.Math.toRadians(0),
-                extrudedHeight: maxHeightWorldSpace.z,
-                height: minHeightWorldSpace.z,
-                outline: true, // height must be set for outline to display
-                outlineColor: Cesium.Color.BLACK,
-              },
-            });
-          }
-
-          drawQuadTreeNode(details.mesh._trianglePicking._quadtree);
-
-          function addDot(local, color) {
-            var point = localToWorld(local);
-            viewer.entities.add({
-              position: point,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(50.0, 50.0, 50.0),
-                material: color,
-              },
-            });
-          }
-
           if (details) {
             viewer.entities.removeAll();
+
             debugger;
+            var transform = details.traceDetails.transform;
 
-            var positions = [
-              [-0.5, 0.5, 0.5],
-              [0.5, -0.5, 0.5],
-              [0.5, 0.5, -0.5],
-              [-0.5, -0.5, 0.5],
-              [-0.5, 0.5, -0.5],
-              [0.5, -0.5, -0.5],
-              [-0.5, -0.5, -0.5],
-              [0.5, 0.5, 0.5],
-            ];
+            // drawQuadTreeNode(transform, root, Cesium.Color.GOLD.withAlpha(0.1));
+            // drawQuadTreeNode(
+            //   transform,
+            //   root.topLeftTree,
+            //   Color.GREEN.withAlpha(0.1)
+            // );
+            // drawQuadTreeNode(
+            //   transform,
+            //   root.bottomLeftTree,
+            //   Color.ORANGE.withAlpha(0.1)
+            // );
+            // drawQuadTreeNode(
+            //   transform,
+            //   root.topRightTree,
+            //   Color.BLUE.withAlpha(0.1)
+            // );
+            // drawQuadTreeNode(
+            //   transform,
+            //   root.bottomRightTree,
+            //   Color.OLIVE.withAlpha(0.1)
+            // );
 
-            for (var iii = 0; iii < positions.length; iii++) {
-              var pasdf = positions[iii];
-              addDot(
-                new Cesium.Cartesian3(pasdf[0], pasdf[1], pasdf[2]),
-                Cesium.Color.fromRandom()
-              );
-            }
+            // var positions = [
+            //   [-0.5, 0.5, 0.5],
+            //   [0.5, -0.5, 0.5],
+            //   [0.5, 0.5, -0.5],
+            //   [-0.5, -0.5, 0.5],
+            //   [-0.5, 0.5, -0.5],
+            //   [0.5, -0.5, -0.5],
+            //   [-0.5, -0.5, -0.5],
+            //   [0.5, 0.5, 0.5],
+            // ];
+            //
+            // for (var iii = 0; iii < positions.length; iii++) {
+            //   var pasdf = positions[iii];
+            //   addDot(
+            //     new Cesium.Cartesian3(pasdf[0], pasdf[1], pasdf[2]),
+            //     Cesium.Color.fromRandom()
+            //   );
+            // }
             //
             //
-            // addDot(new Cesium.Cartesian3(-0.5, -0.5, -0.5), Cesium.Color.BLUE);
-            // addDot(new Cesium.Cartesian3(0.5, 0.5, 0.5), Cesium.Color.GREEN);
-            // addDot(new Cesium.Cartesian3(-0.5, 0.5, 0.5), Cesium.Color.YELLOW);
+
+            var C = Cesium.Color;
+            var Cartesian3 = Cesium.Cartesian3;
+
+            addDot(transform, new Cartesian3(-0.5, -0.5, -0.5), C.BLUE, 100);
+            addDot(transform, new Cartesian3(-0.4, -0.4, -0.4), C.GREEN, 100);
+            addDot(transform, new Cartesian3(0.4, 0.4, 0.4), C.GREEN, 100);
+            addDot(transform, new Cartesian3(0.5, 0.5, 0.5), C.YELLOW, 100);
+
             // addDot(
             //   new Cesium.Cartesian3(0.5, 0.5, -0.5),
             //   Cesium.Color.DARKORANGE
@@ -429,32 +341,32 @@
             // addDot(new Cesium.Cartesian3(-0.5, 0.5, -0.5), Cesium.Color.GOLD);
             // addDot(new Cesium.Cartesian3(0.5, -0.5, -0.5), Cesium.Color.CYAN);
 
-            viewer.entities.add({
-              rectangle: {
-                coordinates: details.traceDetails.rectangle,
-                material: Cesium.Color.GREEN.withAlpha(0.1),
-                rotation: Cesium.Math.toRadians(0),
-                extrudedHeight: 8000.0,
-                height: 0,
-                outline: true, // height must be set for outline to display
-                outlineColor: Cesium.Color.BLACK,
-              },
-            });
-            var r = details.mesh.boundingSphere3D.radius;
-            var c = details.mesh.boundingSphere3D.center;
-            viewer.entities.add({
-              name: "Red sphere with black outline",
-              position: c,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(r, r, r),
-                material: Cesium.Color.RED.withAlpha(0.1),
-                outline: true,
-                outlineColor: Cesium.Color.BLACK,
-              },
-            });
+            // viewer.entities.add({
+            //   rectangle: {
+            //     coordinates: details.traceDetails.rectangle,
+            //     material: Cesium.Color.GREEN.withAlpha(0.1),
+            //     rotation: Cesium.Math.toRadians(0),
+            //     extrudedHeight: 8000.0,
+            //     height: 0,
+            //     outline: true, // height must be set for outline to display
+            //     outlineColor: Cesium.Color.BLACK,
+            //   },
+            // });
+            // var r = details.mesh.boundingSphere3D.radius;
+            // var c = details.mesh.boundingSphere3D.center;
+            // viewer.entities.add({
+            //   name: "Red sphere with black outline",
+            //   position: c,
+            //   ellipsoid: {
+            //     radii: new Cesium.Cartesian3(r, r, r),
+            //     material: Cesium.Color.RED.withAlpha(0.1),
+            //     outline: true,
+            //     outlineColor: Cesium.Color.BLACK,
+            //   },
+            // });
             viewer.entities.add({
               name: "ray",
-              position: c,
+              position: Cesium.Cartesian3.ZERO,
               polyline: {
                 positions: [ray.origin, Cesium.Ray.getPoint(ray, 10000)],
                 color: Cesium.Color.GREEN,
@@ -510,10 +422,11 @@
             // }
 
             if (details.traceDetails && details.traceDetails.coolPoints) {
+              testedPointsDataSource.entities.removeAll();
               var trianglesasdf = details.traceDetails.coolPoints;
               for (var asdf = 0; asdf < trianglesasdf.length; asdf++) {
                 var p = trianglesasdf[asdf];
-                viewer.entities.add({
+                testedPointsDataSource.entities.add({
                   position: p,
                   ellipsoid: {
                     radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
