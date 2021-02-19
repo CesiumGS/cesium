@@ -14,6 +14,7 @@ function QuadtreeTrianglePicker(packedQuadtree, triangleVerticesCallback) {
   this._triangleVerticesCallback = triangleVerticesCallback;
   this._width = packedQuadtree.width;
   this._height = packedQuadtree.height;
+  this._skirtHeight = packedQuadtree.skirtHeight;
 }
 
 function rayIntersectsQuadtreeNode(ray, node) {
@@ -112,7 +113,7 @@ QuadtreeTrianglePicker.getPosition = function (positions, width, row, col) {
   return new Cartesian3(x, y, z);
 };
 
-function getDimensionBounds(level, width, x, y) {
+function getDimensionBounds(level, width, x, y, skirtHeight) {
   var numberOfQuadsAtThisLevel = Math.pow(2, level);
   var offsetX = x * numberOfQuadsAtThisLevel;
   var halfWidth = width / 2;
@@ -125,11 +126,19 @@ function getDimensionBounds(level, width, x, y) {
   var offsetY = y * numberOfQuadsAtThisLevel;
   var rowStart = numberOfPositionsInANodeAtThisLevel * offsetY + halfWidth;
   var rowEnd = rowStart + numberOfPositionsInANodeAtThisLevel;
+
+  // if (skirtHeight > 0.0) {
+  //   rowStart++;
+  //   rowEnd++;
+  //   columnStart++;
+  //   columnEnd++;
+  // }
+
   return {
-    rowStart: rowStart,
-    rowEnd: rowEnd,
-    columnStart: columnStart,
-    columnEnd: columnEnd,
+    rowStart: Math.floor(rowStart),
+    rowEnd: Math.floor(rowEnd),
+    columnStart: Math.floor(columnStart),
+    columnEnd: Math.floor(columnEnd),
   };
 }
 
@@ -138,9 +147,10 @@ QuadtreeTrianglePicker.getPositionsInSegment = function (
   width,
   x,
   y,
-  level
+  level,
+  skirtHeight
 ) {
-  var dimensionBounds = getDimensionBounds(level, width, x, y);
+  var dimensionBounds = getDimensionBounds(level, width, x, y, skirtHeight);
   var rowStart = dimensionBounds.rowStart;
   var rowEnd = dimensionBounds.rowEnd;
   var columnStart = dimensionBounds.columnStart;
@@ -157,7 +167,7 @@ QuadtreeTrianglePicker.getPositionsInSegment = function (
   return matchedPositions;
 };
 
-function loopThroughTrianglesForNode(node, positions, width, halfWidth) {
+function loopThroughTrianglesForNode(node, positions, width, skirtHeight) {
   var testedPoints = [];
   var testedTriangles = [];
 
@@ -165,7 +175,8 @@ function loopThroughTrianglesForNode(node, positions, width, halfWidth) {
     node.level,
     width,
     node.topLeft.x,
-    node.topLeft.y
+    node.topLeft.y,
+    skirtHeight
   );
   var rowStart = dimensionBounds.rowStart;
   var rowEnd = dimensionBounds.rowEnd;
@@ -328,7 +339,7 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
 
   // find all the quadtree nodes which intersects
 
-  var nodeToTrackTrianglesFor = quadtree.topLeftTree.topLeftTree;
+  var nodeToTrackTrianglesFor = quadtree.topLeftTree.topRightTree;
   if (traceDetails) {
     nodeToTrackTrianglesFor.isSpecial = true;
   }
@@ -375,9 +386,10 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   //   return n.node.level === 1;
   // });
 
-  var width = this._width - 1;
-  var height = this._height - 1;
+  var width = this._width;
+  var height = this._height;
   var positions = this._positions;
+  var skirtHeight = this._skirtHeight;
 
   var halfWidth = width / 2;
 
@@ -394,7 +406,7 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
         nodeToTrackTrianglesFor,
         positions,
         width,
-        halfWidth
+        skirtHeight
       );
       traceDetails.coolTriangles = loopResults.testedTriangles;
       traceDetails.coolPoints = loopResults.testedPoints;
@@ -418,16 +430,25 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
     firstPoints.push(getPos(0, 0));
     firstPoints.push(getPos(0, 1));
     firstPoints.push(getPos(0, 2));
-    firstPoints.push(getPos(0, 3));
-    firstPoints.push(getPos(0, 4));
-    firstPoints.push(getPos(0, 5));
-    firstPoints.push(getPos(0, 6));
-    firstPoints.push(getPos(0, 7));
-    firstPoints.push(getPos(0, 8));
-    firstPoints.push(getPos(0, 9));
-    firstPoints.push(getPos(0, 10));
-    firstPoints.push(getPos(0, width - 1));
-    firstPoints.push(getPos(0, width - 2));
+    // firstPoints.push(getPos(0, 3));
+
+    // firstPoints.push(getPos(0, 4));
+    // firstPoints.push(getPos(0, 5));
+    // firstPoints.push(getPos(0, 6));
+    // firstPoints.push(getPos(0, 7));
+    // firstPoints.push(getPos(0, 8));
+    // firstPoints.push(getPos(0, 9));
+    // firstPoints.push(getPos(0, 10));
+    // firstPoints.push(getPos(0, width - 1));
+    // firstPoints.push(getPos(0, width - 2));
+
+    firstPoints.push(getPos(1, 0));
+    firstPoints.push(getPos(1, 1));
+    firstPoints.push(getPos(1, 2));
+
+    firstPoints.push(getPos(2, 0));
+    firstPoints.push(getPos(2, 1));
+    firstPoints.push(getPos(2, 2));
 
     traceDetails.firstPointsInHeightmap = firstPoints;
   }

@@ -717,6 +717,7 @@ HeightmapTessellator.computeVertices = function (options) {
       positions: packedPositions,
       width: width,
       height: height,
+      skirtHeight: skirtHeight,
     },
   };
 };
