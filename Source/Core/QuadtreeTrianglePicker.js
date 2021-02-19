@@ -101,71 +101,151 @@ function flatten(node) {
     .concat(flatten(node.bottomRightTree));
 }
 
-function loopThroughTrianglesForNode(node, positions, width, halfWidth) {
-  var testedPoints = [];
-  var testedTriangles = [];
-  var numberOfQuadsAtThisLevel = Math.pow(2, node.level);
-  var offsetX = node.topLeft.x * numberOfQuadsAtThisLevel;
+QuadtreeTrianglePicker.getPosition = function (positions, width, row, col) {
+  var colIdx = col * 3;
+  var widthIdx = width * 3;
+
+  var x = positions[row * widthIdx + colIdx];
+  var y = positions[1 + (row * widthIdx + colIdx)];
+  var z = positions[2 + (row * widthIdx + colIdx)];
+
+  return new Cartesian3(x, y, z);
+};
+
+function getDimensionBounds(level, width, x, y) {
+  var numberOfQuadsAtThisLevel = Math.pow(2, level);
+  var offsetX = x * numberOfQuadsAtThisLevel;
+  var halfWidth = width / 2;
 
   var numberOfPositionsInANodeAtThisLevel = width / numberOfQuadsAtThisLevel;
 
   var columnStart = numberOfPositionsInANodeAtThisLevel * offsetX + halfWidth;
   var columnEnd = columnStart + numberOfPositionsInANodeAtThisLevel;
 
-  // y
-  var offsetY = node.topLeft.y * numberOfQuadsAtThisLevel;
+  var offsetY = y * numberOfQuadsAtThisLevel;
   var rowStart = numberOfPositionsInANodeAtThisLevel * offsetY + halfWidth;
   var rowEnd = rowStart + numberOfPositionsInANodeAtThisLevel;
+  return {
+    rowStart: rowStart,
+    rowEnd: rowEnd,
+    columnStart: columnStart,
+    columnEnd: columnEnd,
+  };
+}
+
+QuadtreeTrianglePicker.getPositionsInSegment = function (
+  positions,
+  width,
+  x,
+  y,
+  level
+) {
+  var dimensionBounds = getDimensionBounds(level, width, x, y);
+  var rowStart = dimensionBounds.rowStart;
+  var rowEnd = dimensionBounds.rowEnd;
+  var columnStart = dimensionBounds.columnStart;
+  var columnEnd = dimensionBounds.columnEnd;
+
+  var matchedPositions = [];
+
+  for (var row = rowStart; row < rowEnd; row++) {
+    for (var col = columnStart; col < columnEnd; col++) {
+      var pos = QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+      matchedPositions.push(pos);
+    }
+  }
+  return matchedPositions;
+};
+
+function loopThroughTrianglesForNode(node, positions, width, halfWidth) {
+  var testedPoints = [];
+  var testedTriangles = [];
+
+  var dimensionBounds = getDimensionBounds(
+    node.level,
+    width,
+    node.topLeft.x,
+    node.topLeft.y
+  );
+  var rowStart = dimensionBounds.rowStart;
+  var rowEnd = dimensionBounds.rowEnd;
+  var columnStart = dimensionBounds.columnStart;
+  var columnEnd = dimensionBounds.columnEnd;
+
+  function getPos(row, col) {
+    return QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+  }
 
   for (var row = rowStart; row < rowEnd; row++) {
     for (var col = columnStart; col < columnEnd; col++) {
       // find all triangles which have a vertex at this position
+      // var rowIdx = row * 3;
+      // var colIdx = col * 3;
+      // var widthIdx = width * 3;
 
-      var pos0X = positions[3 * (row * width + col - row - 1)];
-      var pos0Y = positions[1 + 3 * (row * width + col - row - 1)];
-      var pos0Z = positions[2 + 3 * (row * width + col - row - 1)];
+      // -1 row; -1 col
+      // var pos0X = positions[rowIdx * widthIdx + colIdx - rowIdx - 1];
+      // var pos0Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx - 1)];
+      // var pos0Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx - 1)];
+      //
+      // // -1 row; +0 col
+      // var pos1X = positions[rowIdx * widthIdx + colIdx - rowIdx];
+      // var pos1Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx)];
+      // var pos1Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx)];
+      //
+      // // -1 row; +1 col
+      // var pos2X = positions[rowIdx * widthIdx + colIdx - rowIdx + 1];
+      // var pos2Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx + 1)];
+      // var pos2Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx + 1)];
+      //
+      // // +0 row; -1 col
+      // var pos3X = positions[rowIdx * widthIdx + colIdx - 1];
+      // var pos3Y = positions[1 + (rowIdx * widthIdx + colIdx - 1)];
+      // var pos3Z = positions[2 + (rowIdx * widthIdx + colIdx - 1)];
+      //
+      // // +0 row; +0 col
+      // var pos4X = positions[rowIdx * widthIdx + colIdx];
+      // var pos4Y = positions[1 + (rowIdx * widthIdx + colIdx)];
+      // var pos4Z = positions[2 + (rowIdx * widthIdx + colIdx)];
+      //
+      // // +0 row; +1 col
+      // var pos5X = positions[rowIdx * widthIdx + colIdx + 1];
+      // var pos5Y = positions[1 + (rowIdx * widthIdx + colIdx + 1)];
+      // var pos5Z = positions[2 + (rowIdx * widthIdx + colIdx + 1)];
+      //
+      // // +0 row; -1 col
+      // var pos6X = positions[rowIdx * widthIdx + colIdx + rowIdx - 1];
+      // var pos6Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx - 1)];
+      // var pos6Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx - 1)];
+      //
+      // // +1 row; +0 col
+      // var pos7X = positions[rowIdx * widthIdx + colIdx + rowIdx];
+      // var pos7Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx)];
+      // var pos7Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx)];
+      //
+      // // +1 row; +1 col
+      // var pos8X = positions[rowIdx * widthIdx + colIdx + rowIdx + 1];
+      // var pos8Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx + 1)];
+      // var pos8Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx + 1)];
 
-      var pos1X = positions[3 * (row * width + col - row)];
-      var pos1Y = positions[1 + 3 * (row * width + col - row)];
-      var pos1Z = positions[2 + 3 * (row * width + col - row)];
-
-      var pos2X = positions[3 * (row * width + col - row + 1)];
-      var pos2Y = positions[1 + 3 * (row * width + col - row + 1)];
-      var pos2Z = positions[2 + 3 * (row * width + col - row + 1)];
-
-      var pos3X = positions[3 * (row * width + col - 1)];
-      var pos3Y = positions[1 + 3 * (row * width + col - 1)];
-      var pos3Z = positions[2 + 3 * (row * width + col - 1)];
-
-      var pos4X = positions[3 * (row * width + col)];
-      var pos4Y = positions[1 + 3 * (row * width + col)];
-      var pos4Z = positions[2 + 3 * (row * width + col)];
-
-      var pos5X = positions[3 * (row * width + col + 1)];
-      var pos5Y = positions[1 + 3 * (row * width + col + 1)];
-      var pos5Z = positions[2 + 3 * (row * width + col + 1)];
-
-      var pos6X = positions[3 * (row * width + col + row - 1)];
-      var pos6Y = positions[1 + 3 * (row * width + col + row - 1)];
-      var pos6Z = positions[2 + 3 * (row * width + col + row - 1)];
-
-      var pos7X = positions[3 * (row * width + col + row)];
-      var pos7Y = positions[1 + 3 * (row * width + col + row)];
-      var pos7Z = positions[2 + 3 * (row * width + col + row)];
-
-      var pos8X = positions[3 * (row * width + col + row + 1)];
-      var pos8Y = positions[1 + 3 * (row * width + col + row + 1)];
-      var pos8Z = positions[2 + 3 * (row * width + col + row + 1)];
-
-      var pos0 = new Cartesian3(pos0X, pos0Y, pos0Z);
-      var pos1 = new Cartesian3(pos1X, pos1Y, pos1Z);
-      var pos2 = new Cartesian3(pos2X, pos2Y, pos2Z);
-      var pos3 = new Cartesian3(pos3X, pos3Y, pos3Z);
-      var pos4 = new Cartesian3(pos4X, pos4Y, pos4Z);
-      var pos5 = new Cartesian3(pos5X, pos5Y, pos5Z);
-      var pos6 = new Cartesian3(pos6X, pos6Y, pos6Z);
-      var pos7 = new Cartesian3(pos7X, pos7Y, pos7Z);
-      var pos8 = new Cartesian3(pos8X, pos8Y, pos8Z);
+      // -1 row; -1 col
+      var pos0 = getPos(row - 1, col - 1);
+      // -1 row; +0 col
+      var pos1 = getPos(row - 1, col);
+      // -1 row; +1 col
+      var pos2 = getPos(row - 1, col + 1);
+      // +0 row; -1 col
+      var pos3 = getPos(row, col - 1);
+      // +0 row; +0 col
+      var pos4 = getPos(row, col);
+      // +0 row; +1 col
+      var pos5 = getPos(row, col + 1);
+      // +0 row; -1 col
+      var pos6 = getPos(row, col - 1);
+      // +1 row; +0 col
+      var pos7 = getPos(row + 1, col);
+      // +1 row; +1 col
+      var pos8 = getPos(row + 1, col + 1);
 
       var triangle0 = [pos0, pos1, pos3];
       var triangle1 = [pos1, pos2, pos4];
@@ -248,7 +328,10 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
 
   // find all the quadtree nodes which intersects
 
-  var nodeToTrackTrianglesFor = null;
+  var nodeToTrackTrianglesFor = quadtree.topLeftTree.topLeftTree;
+  if (traceDetails) {
+    nodeToTrackTrianglesFor.isSpecial = true;
+  }
 
   var queue = [quadtree];
   var intersections = [];
@@ -257,10 +340,10 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
     var intersection = rayIntersectsQuadtreeNode(transformedRay, n);
     if (intersection.intersection) {
       if (traceDetails) {
-        if (n.level === 2 && !nodeToTrackTrianglesFor) {
-          nodeToTrackTrianglesFor = n;
-          n.isSpecial = true;
-        }
+        // if (n.level === 2 && !nodeToTrackTrianglesFor) {
+        //   nodeToTrackTrianglesFor = n;
+        //   n.isSpecial = true;
+        // }
         // if we're tracking hit nodes - mark the hit nodes as hit
         n.isHit = true;
       }
@@ -316,6 +399,37 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
       traceDetails.coolTriangles = loopResults.testedTriangles;
       traceDetails.coolPoints = loopResults.testedPoints;
     }
+
+    function getPos(row, col) {
+      return QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+    }
+
+    // var firstPointIdx = 0;
+    var firstPoints = [];
+    // while (firstPointIdx < 10) {
+    //   var myRow = 0;
+    //   var myCol = firstPointIdx;
+    //   var posX = getPos(positions[3 * (myRow * width + myCol - myRow - 1)];
+    //   var posY = positions[1 + 3 * (myRow * width + myCol - myRow - 1)];
+    //   var posZ = positions[2 + 3 * (myRow * width + myCol - myRow - 1)];
+    //   var pos = new Cartesian3(posX, posY, posZ);
+    //   firstPointIdx++;
+    // }
+    firstPoints.push(getPos(0, 0));
+    firstPoints.push(getPos(0, 1));
+    firstPoints.push(getPos(0, 2));
+    firstPoints.push(getPos(0, 3));
+    firstPoints.push(getPos(0, 4));
+    firstPoints.push(getPos(0, 5));
+    firstPoints.push(getPos(0, 6));
+    firstPoints.push(getPos(0, 7));
+    firstPoints.push(getPos(0, 8));
+    firstPoints.push(getPos(0, 9));
+    firstPoints.push(getPos(0, 10));
+    firstPoints.push(getPos(0, width - 1));
+    firstPoints.push(getPos(0, width - 2));
+
+    traceDetails.firstPointsInHeightmap = firstPoints;
   }
 
   // for each intersected node - test every triangle which falls in that node

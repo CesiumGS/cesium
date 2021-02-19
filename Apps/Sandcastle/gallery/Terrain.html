@@ -188,6 +188,21 @@
           });
         }
 
+        function drawPointList(color, dataSource, points) {
+          if (points && points.length) {
+            for (var i = 0; i < points.length; i++) {
+              var p = points[i];
+              dataSource.entities.add({
+                position: p,
+                ellipsoid: {
+                  radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+                  material: color,
+                },
+              });
+            }
+          }
+        }
+
         Sandcastle.addDefaultToolbarMenu(
           locationOptions.map(function (option) {
             return {
@@ -421,20 +436,20 @@
             //   }
             // }
 
-            if (details.traceDetails && details.traceDetails.coolPoints) {
-              testedPointsDataSource.entities.removeAll();
-              var trianglesasdf = details.traceDetails.coolPoints;
-              for (var asdf = 0; asdf < trianglesasdf.length; asdf++) {
-                var p = trianglesasdf[asdf];
-                testedPointsDataSource.entities.add({
-                  position: p,
-                  ellipsoid: {
-                    radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
-                    material: Cesium.Color.BLUE,
-                  },
-                });
-              }
-            }
+            testedPointsDataSource.entities.removeAll();
+
+            drawPointList(
+              Cesium.Color.RED,
+              testedPointsDataSource,
+              details.traceDetails &&
+                details.traceDetails.firstPointsInHeightmap
+            );
+
+            drawPointList(
+              Cesium.Color.BLUE,
+              testedPointsDataSource,
+              details.traceDetails && details.traceDetails.coolPoints
+            );
 
             if (details.traceDetails.intersectedTriangle) {
               viewer.entities.add({
