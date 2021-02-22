@@ -7,7 +7,7 @@
 - Removed `Cesium3DTileset.url`, which was deprecated in v1.78. Use `Cesium3DTileset.resource.url` to retrieve the url value.
 - Removed `EasingFunction.QUADRACTIC_IN`, which was deprecated in v1.77. Use `EasingFunction.QUADRATIC_IN`.
 - Removed `EasingFunction.QUADRACTIC_OUT`, which was deprecated in v1.77. Use `EasingFunction.QUADRATIC_OUT`.
-- Removed `EasingFunction.QUADRACTIC_IN_OUT`, which was deprecated in v1.77. Use `EasingFunction.QUADRATIC_IN_OUT`. 
+- Removed `EasingFunction.QUADRACTIC_IN_OUT`, which was deprecated in v1.77. Use `EasingFunction.QUADRATIC_IN_OUT`.
 
 ##### Fixes :wrench:
 
