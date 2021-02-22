@@ -1,5 +1,4 @@
 import Tween from "../ThirdParty/Tween.js";
-import deprecationWarning from "./deprecationWarning.js";
 
 /**
  * Easing functions for use with TweenCollection.  These function are from
