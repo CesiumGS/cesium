@@ -633,6 +633,29 @@ HeightmapTessellator.computeVertices = function (options) {
     );
 
     transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
+    var a = 90;
+    // prettier-ignore
+    var xRotation = new Matrix4(
+      1,        0,       0,    0,
+      0,   cos(a),  sin(a),    0,
+      0,  -sin(a),  cos(a),    0,
+      0,        0,       0,    1
+    );
+    // prettier-ignore
+    var yRotation = new Matrix4(
+      cos(a),   0,  -sin(a),  0,
+      0,        1,        0,  0,
+      sin(a),  0,  cos(a),   0,
+      0,        0,        0,  1
+    );
+    // prettier-ignore
+    var zRotation = new Matrix4(
+      cos(a),  -sin(a),   0,  0,
+      sin(a),   cos(a),   0,  0,
+      0,             0,   1,  0,
+      0,             0,   0,  1
+    );
+    // transform = Matrix4.multiply(transform, zRotation, transform);
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");

@@ -111,6 +111,9 @@
         );
         viewer.dataSources.add(testedPointsDataSource);
 
+        var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
+        viewer.scene.primitives.add(axisPrimitiveCollection);
+
         function localToWorld(transform, local) {
           return Cesium.Matrix4.multiplyByPoint(
             transform,
@@ -197,6 +200,24 @@
                 ellipsoid: {
                   radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
                   material: color,
+                },
+              });
+            }
+          }
+        }
+
+        function drawTriangleList(color, dataSource, triangles) {
+          if (triangles && triangles.length) {
+            for (var i = 0; i < triangles.length; i++) {
+              var tri = triangles[i];
+              dataSource.entities.add({
+                polygon: {
+                  hierarchy: tri,
+                  perPositionHeight: true,
+                  material: color,
+                  outline: true,
+                  outlineColor: color,
+                  outlineWidth: 10,
                 },
               });
             }
@@ -292,93 +313,20 @@
             debugger;
             var transform = details.traceDetails.transform;
 
-            // drawQuadTreeNode(transform, root, Cesium.Color.GOLD.withAlpha(0.1));
-            // drawQuadTreeNode(
-            //   transform,
-            //   root.topLeftTree,
-            //   Color.GREEN.withAlpha(0.1)
-            // );
-            // drawQuadTreeNode(
-            //   transform,
-            //   root.bottomLeftTree,
-            //   Color.ORANGE.withAlpha(0.1)
-            // );
-            // drawQuadTreeNode(
-            //   transform,
-            //   root.topRightTree,
-            //   Color.BLUE.withAlpha(0.1)
-            // );
-            // drawQuadTreeNode(
-            //   transform,
-            //   root.bottomRightTree,
-            //   Color.OLIVE.withAlpha(0.1)
-            // );
-
-            // var positions = [
-            //   [-0.5, 0.5, 0.5],
-            //   [0.5, -0.5, 0.5],
-            //   [0.5, 0.5, -0.5],
-            //   [-0.5, -0.5, 0.5],
-            //   [-0.5, 0.5, -0.5],
-            //   [0.5, -0.5, -0.5],
-            //   [-0.5, -0.5, -0.5],
-            //   [0.5, 0.5, 0.5],
-            // ];
-            //
-            // for (var iii = 0; iii < positions.length; iii++) {
-            //   var pasdf = positions[iii];
-            //   addDot(
-            //     new Cesium.Cartesian3(pasdf[0], pasdf[1], pasdf[2]),
-            //     Cesium.Color.fromRandom()
-            //   );
-            // }
-            //
-            //
-
             var C = Cesium.Color;
             var Cartesian3 = Cesium.Cartesian3;
 
-            addDot(transform, new Cartesian3(-0.5, -0.5, -0.5), C.BLUE, 100);
-            addDot(transform, new Cartesian3(-0.4, -0.4, -0.4), C.GREEN, 100);
-            addDot(transform, new Cartesian3(0.4, 0.4, 0.4), C.GREEN, 100);
+            addDot(transform, new Cartesian3(-0.5, -0.5, 0.5), C.BLUE, 100);
             addDot(transform, new Cartesian3(0.5, 0.5, 0.5), C.YELLOW, 100);
 
-            // addDot(
-            //   new Cesium.Cartesian3(0.5, 0.5, -0.5),
-            //   Cesium.Color.DARKORANGE
-            // );
-            // addDot(new Cesium.Cartesian3(-0.5, -0.5, 0.5), Cesium.Color.BROWN);
-            // addDot(new Cesium.Cartesian3(-0.5, 0.5, -0.5), Cesium.Color.YELLOW);
-            // addDot(
-            //   new Cesium.Cartesian3(-0.5, -0.5, 0.5),
-            //   Cesium.Color.GAINSBORO
-            // );
-            // addDot(new Cesium.Cartesian3(-0.5, 0.5, -0.5), Cesium.Color.GOLD);
-            // addDot(new Cesium.Cartesian3(0.5, -0.5, -0.5), Cesium.Color.CYAN);
+            var axis = new Cesium.DebugModelMatrixPrimitive({
+              modelMatrix: transform,
+              length: 100000.0,
+              width: 2.0,
+            });
+            axisPrimitiveCollection.removeAll();
+            axisPrimitiveCollection.add(axis);
 
-            // viewer.entities.add({
-            //   rectangle: {
-            //     coordinates: details.traceDetails.rectangle,
-            //     material: Cesium.Color.GREEN.withAlpha(0.1),
-            //     rotation: Cesium.Math.toRadians(0),
-            //     extrudedHeight: 8000.0,
-            //     height: 0,
-            //     outline: true, // height must be set for outline to display
-            //     outlineColor: Cesium.Color.BLACK,
-            //   },
-            // });
-            // var r = details.mesh.boundingSphere3D.radius;
-            // var c = details.mesh.boundingSphere3D.center;
-            // viewer.entities.add({
-            //   name: "Red sphere with black outline",
-            //   position: c,
-            //   ellipsoid: {
-            //     radii: new Cesium.Cartesian3(r, r, r),
-            //     material: Cesium.Color.RED.withAlpha(0.1),
-            //     outline: true,
-            //     outlineColor: Cesium.Color.BLACK,
-            //   },
-            // });
             viewer.entities.add({
               name: "ray",
               position: Cesium.Cartesian3.ZERO,
@@ -387,54 +335,6 @@
                 color: Cesium.Color.GREEN,
               },
             });
-
-            var colorByLevel = {
-              0: Cesium.Color.RED,
-              1: Cesium.Color.ORANGE,
-              2: Cesium.Color.YELLOW,
-              3: Cesium.Color.GREEN,
-              4: Cesium.Color.AQUA,
-              5: Cesium.Color.BLUE,
-              6: Cesium.Color.PURPLE,
-              7: Cesium.Color.BEIGE,
-              8: Cesium.Color.BEIGE,
-              9: Cesium.Color.BEIGE,
-              10: Cesium.Color.BEIGE,
-            };
-
-            if (details.traceDetails && details.traceDetails.trianglesTested) {
-              var triangles = details.traceDetails.trianglesTested;
-              for (var i = 0; i < triangles.length; i++) {
-                var triangle = triangles[i];
-                viewer.entities.add({
-                  polygon: {
-                    hierarchy: triangle.positions,
-                    perPositionHeight: true,
-                    material: colorByLevel[triangle.level].withAlpha(0.5),
-                    outline: true,
-                    outlineColor: Cesium.Color.CYAN,
-                    outlineWidth: 10,
-                  },
-                });
-              }
-            }
-
-            // if (details.traceDetails && details.traceDetails.coolTriangles) {
-            //   var trianglesasdf = details.traceDetails.coolTriangles;
-            //   for (var asdf = 0; asdf < trianglesasdf.length; asdf++) {
-            //     var triangleasdf = trianglesasdf[asdf];
-            //     viewer.entities.add({
-            //       polygon: {
-            //         hierarchy: triangleasdf,
-            //         perPositionHeight: true,
-            //         material: Cesium.Color.PINK,
-            //         outline: true,
-            //         outlineColor: Cesium.Color.CYAN,
-            //         outlineWidth: 10,
-            //       },
-            //     });
-            //   }
-            // }
 
             testedPointsDataSource.entities.removeAll();
 
@@ -445,24 +345,26 @@
                 details.traceDetails.firstPointsInHeightmap
             );
 
-            drawPointList(
-              Cesium.Color.BLUE,
+            drawTriangleList(
+              Cesium.Color.ORANGE,
               testedPointsDataSource,
-              details.traceDetails && details.traceDetails.coolPoints
+              details.traceDetails && details.traceDetails.coolTriangles
             );
 
-            if (details.traceDetails.intersectedTriangle) {
-              viewer.entities.add({
-                polygon: {
-                  hierarchy: details.traceDetails.intersectedTriangle,
-                  perPositionHeight: true,
-                  material: Cesium.Color.GOLD,
-                  outline: true,
-                  outlineColor: Cesium.Color.GOLD,
-                  outlineWidth: 10,
-                },
-              });
-            }
+            drawTriangleList(
+              Cesium.Color.GOLD,
+              testedPointsDataSource,
+              details.traceDetails &&
+                details.traceDetails.intersectedTriangle && [
+                  details.traceDetails.intersectedTriangle,
+                ]
+            );
+
+            // drawPointList(
+            //   Cesium.Color.BLUE,
+            //   testedPointsDataSource,
+            //   details.traceDetails && details.traceDetails.coolPoints
+            // );
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

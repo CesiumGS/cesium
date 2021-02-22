@@ -79,7 +79,7 @@ function rayIntersectsAABB(ray, minX, minY, minZ, maxX, maxY, maxZ) {
 
 var invalidIntersection = Number.MAX_VALUE;
 
-function rayTriangleIntersect(ray, v0, v1, v2, cullBackFaces) {
+function rayTriIntersect(ray, v0, v1, v2, cullBackFaces) {
   var t = IntersectionTests.rayTriangleParametric(
     ray,
     v0,
@@ -102,13 +102,21 @@ function flatten(node) {
     .concat(flatten(node.bottomRightTree));
 }
 
-QuadtreeTrianglePicker.getPosition = function (positions, width, row, col) {
+QuadtreeTrianglePicker.getPosition = function (
+  positions,
+  width,
+  height,
+  row,
+  col
+) {
   var colIdx = col * 3;
   var widthIdx = width * 3;
 
-  var x = positions[row * widthIdx + colIdx];
-  var y = positions[1 + (row * widthIdx + colIdx)];
-  var z = positions[2 + (row * widthIdx + colIdx)];
+  var rowIdx = height - row;
+
+  var x = positions[rowIdx * widthIdx + colIdx];
+  var y = positions[1 + (rowIdx * widthIdx + colIdx)];
+  var z = positions[2 + (rowIdx * widthIdx + colIdx)];
 
   return new Cartesian3(x, y, z);
 };
@@ -145,6 +153,7 @@ function getDimensionBounds(level, width, x, y, skirtHeight) {
 QuadtreeTrianglePicker.getPositionsInSegment = function (
   positions,
   width,
+  height,
   x,
   y,
   level,
@@ -160,14 +169,28 @@ QuadtreeTrianglePicker.getPositionsInSegment = function (
 
   for (var row = rowStart; row < rowEnd; row++) {
     for (var col = columnStart; col < columnEnd; col++) {
-      var pos = QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+      var pos = QuadtreeTrianglePicker.getPosition(
+        positions,
+        width,
+        height,
+        row,
+        col
+      );
       matchedPositions.push(pos);
     }
   }
   return matchedPositions;
 };
 
-function loopThroughTrianglesForNode(node, positions, width, skirtHeight) {
+function loopThroughTrianglesForNode(
+  node,
+  positions,
+  ray,
+  cullBackFaces,
+  width,
+  height,
+  skirtHeight
+) {
   var testedPoints = [];
   var testedTriangles = [];
 
@@ -184,61 +207,19 @@ function loopThroughTrianglesForNode(node, positions, width, skirtHeight) {
   var columnEnd = dimensionBounds.columnEnd;
 
   function getPos(row, col) {
-    return QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+    return QuadtreeTrianglePicker.getPosition(
+      positions,
+      width,
+      height,
+      row,
+      col
+    );
   }
+
+  var minT = invalidIntersection;
 
   for (var row = rowStart; row < rowEnd; row++) {
     for (var col = columnStart; col < columnEnd; col++) {
-      // find all triangles which have a vertex at this position
-      // var rowIdx = row * 3;
-      // var colIdx = col * 3;
-      // var widthIdx = width * 3;
-
-      // -1 row; -1 col
-      // var pos0X = positions[rowIdx * widthIdx + colIdx - rowIdx - 1];
-      // var pos0Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx - 1)];
-      // var pos0Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx - 1)];
-      //
-      // // -1 row; +0 col
-      // var pos1X = positions[rowIdx * widthIdx + colIdx - rowIdx];
-      // var pos1Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx)];
-      // var pos1Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx)];
-      //
-      // // -1 row; +1 col
-      // var pos2X = positions[rowIdx * widthIdx + colIdx - rowIdx + 1];
-      // var pos2Y = positions[1 + (rowIdx * widthIdx + colIdx - rowIdx + 1)];
-      // var pos2Z = positions[2 + (rowIdx * widthIdx + colIdx - rowIdx + 1)];
-      //
-      // // +0 row; -1 col
-      // var pos3X = positions[rowIdx * widthIdx + colIdx - 1];
-      // var pos3Y = positions[1 + (rowIdx * widthIdx + colIdx - 1)];
-      // var pos3Z = positions[2 + (rowIdx * widthIdx + colIdx - 1)];
-      //
-      // // +0 row; +0 col
-      // var pos4X = positions[rowIdx * widthIdx + colIdx];
-      // var pos4Y = positions[1 + (rowIdx * widthIdx + colIdx)];
-      // var pos4Z = positions[2 + (rowIdx * widthIdx + colIdx)];
-      //
-      // // +0 row; +1 col
-      // var pos5X = positions[rowIdx * widthIdx + colIdx + 1];
-      // var pos5Y = positions[1 + (rowIdx * widthIdx + colIdx + 1)];
-      // var pos5Z = positions[2 + (rowIdx * widthIdx + colIdx + 1)];
-      //
-      // // +0 row; -1 col
-      // var pos6X = positions[rowIdx * widthIdx + colIdx + rowIdx - 1];
-      // var pos6Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx - 1)];
-      // var pos6Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx - 1)];
-      //
-      // // +1 row; +0 col
-      // var pos7X = positions[rowIdx * widthIdx + colIdx + rowIdx];
-      // var pos7Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx)];
-      // var pos7Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx)];
-      //
-      // // +1 row; +1 col
-      // var pos8X = positions[rowIdx * widthIdx + colIdx + rowIdx + 1];
-      // var pos8Y = positions[1 + (rowIdx * widthIdx + colIdx + rowIdx + 1)];
-      // var pos8Z = positions[2 + (rowIdx * widthIdx + colIdx + rowIdx + 1)];
-
       // -1 row; -1 col
       var pos0 = getPos(row - 1, col - 1);
       // -1 row; +0 col
@@ -258,32 +239,34 @@ function loopThroughTrianglesForNode(node, positions, width, skirtHeight) {
       // +1 row; +1 col
       var pos8 = getPos(row + 1, col + 1);
 
-      var triangle0 = [pos0, pos1, pos3];
-      var triangle1 = [pos1, pos2, pos4];
-      var triangle2 = [pos1, pos3, pos4];
-      var triangle3 = [pos2, pos4, pos5];
-      var triangle4 = [pos3, pos4, pos6];
-      var triangle5 = [pos4, pos5, pos7];
-      var triangle6 = [pos4, pos6, pos7];
-      var triangle7 = [pos5, pos7, pos8];
+      var tri0 = [pos0, pos1, pos3];
+      var tri1 = [pos1, pos2, pos4];
+      var tri2 = [pos1, pos3, pos4];
+      var tri3 = [pos2, pos4, pos5];
+      var tri4 = [pos3, pos4, pos6];
+      var tri5 = [pos4, pos5, pos7];
+      var tri6 = [pos4, pos6, pos7];
+      var tri7 = [pos5, pos7, pos8];
 
-      testedTriangles.push(
-        triangle0,
-        triangle1,
-        triangle2,
-        triangle3,
-        triangle4,
-        triangle5,
-        triangle6,
-        triangle7
-      );
+      var i0 = rayTriIntersect(ray, tri0[0], tri0[1], tri0[2], cullBackFaces);
+      var i1 = rayTriIntersect(ray, tri1[0], tri1[1], tri1[2], cullBackFaces);
+      var i2 = rayTriIntersect(ray, tri2[0], tri2[1], tri2[2], cullBackFaces);
+      var i3 = rayTriIntersect(ray, tri3[0], tri3[1], tri3[2], cullBackFaces);
+      var i4 = rayTriIntersect(ray, tri4[0], tri4[1], tri4[2], cullBackFaces);
+      var i5 = rayTriIntersect(ray, tri5[0], tri5[1], tri5[2], cullBackFaces);
+      var i6 = rayTriIntersect(ray, tri6[0], tri6[1], tri6[2], cullBackFaces);
+      var i7 = rayTriIntersect(ray, tri7[0], tri7[1], tri7[2], cullBackFaces);
+
+      minT = Math.min(minT, i0, i1, i2, i3, i4, i5, i6, i7, minT);
 
       testedPoints.push(pos4);
+      testedTriangles.push(tri0, tri1, tri2, tri3, tri4, tri5, tri6, tri7);
     }
   }
   return {
     testedTriangles: testedTriangles,
     testedPoints: testedPoints,
+    nodeMinT: minT,
   };
 }
 
@@ -339,7 +322,7 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
 
   // find all the quadtree nodes which intersects
 
-  var nodeToTrackTrianglesFor = quadtree.topLeftTree.topRightTree;
+  var nodeToTrackTrianglesFor = quadtree.topLeftTree.bottomRightTree;
   if (traceDetails) {
     nodeToTrackTrianglesFor.isSpecial = true;
   }
@@ -400,48 +383,37 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   // var testedPoints = [];
 
   if (traceDetails) {
+    traceDetails.coolPoints = [];
+    traceDetails.coolTriangles = [];
     traceDetails.nodeToTrackTrianglesFor = nodeToTrackTrianglesFor;
     if (nodeToTrackTrianglesFor) {
-      var loopResults = loopThroughTrianglesForNode(
-        nodeToTrackTrianglesFor,
-        positions,
-        width,
-        skirtHeight
-      );
-      traceDetails.coolTriangles = loopResults.testedTriangles;
-      traceDetails.coolPoints = loopResults.testedPoints;
+      // var loopResults = loopThroughTrianglesForNode(
+      //   nodeToTrackTrianglesFor,
+      //   positions,
+      //   ray,
+      //   cullBackFaces,
+      //   width,
+      //   skirtHeight
+      // );
+      // traceDetails.coolPoints = (traceDetails.coolPoints || []).concat(
+      //   loopResults.testedPoints
+      // );
     }
 
     function getPos(row, col) {
-      return QuadtreeTrianglePicker.getPosition(positions, width, row, col);
+      return QuadtreeTrianglePicker.getPosition(
+        positions,
+        width,
+        height,
+        row,
+        col
+      );
     }
 
-    // var firstPointIdx = 0;
     var firstPoints = [];
-    // while (firstPointIdx < 10) {
-    //   var myRow = 0;
-    //   var myCol = firstPointIdx;
-    //   var posX = getPos(positions[3 * (myRow * width + myCol - myRow - 1)];
-    //   var posY = positions[1 + 3 * (myRow * width + myCol - myRow - 1)];
-    //   var posZ = positions[2 + 3 * (myRow * width + myCol - myRow - 1)];
-    //   var pos = new Cartesian3(posX, posY, posZ);
-    //   firstPointIdx++;
-    // }
     firstPoints.push(getPos(0, 0));
     firstPoints.push(getPos(0, 1));
     firstPoints.push(getPos(0, 2));
-    // firstPoints.push(getPos(0, 3));
-
-    // firstPoints.push(getPos(0, 4));
-    // firstPoints.push(getPos(0, 5));
-    // firstPoints.push(getPos(0, 6));
-    // firstPoints.push(getPos(0, 7));
-    // firstPoints.push(getPos(0, 8));
-    // firstPoints.push(getPos(0, 9));
-    // firstPoints.push(getPos(0, 10));
-    // firstPoints.push(getPos(0, width - 1));
-    // firstPoints.push(getPos(0, width - 2));
-
     firstPoints.push(getPos(1, 0));
     firstPoints.push(getPos(1, 1));
     firstPoints.push(getPos(1, 2));
@@ -457,178 +429,24 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   for (var ii = 0; ii < sortedTests.length; ii++) {
     var test = sortedTests[ii];
 
-    var numberOfQuadsAtThisLevel = Math.pow(2, test.node.level);
-    var offsetX = test.node.topLeft.x * numberOfQuadsAtThisLevel;
+    var intersectionResult = loopThroughTrianglesForNode(
+      test.node,
+      positions,
+      ray,
+      cullBackFaces,
+      width,
+      height,
+      skirtHeight
+    );
+    minT = Math.min(intersectionResult.nodeMinT, minT);
 
-    var numberOfPositionsInANodeAtThisLevel = width / numberOfQuadsAtThisLevel;
-
-    var columnStart = numberOfPositionsInANodeAtThisLevel * offsetX + halfWidth;
-    var columnEnd = columnStart + numberOfPositionsInANodeAtThisLevel;
-
-    // y
-    var offsetY = test.node.topLeft.y * numberOfQuadsAtThisLevel;
-    var rowStart = numberOfPositionsInANodeAtThisLevel * offsetY + halfWidth;
-    var rowEnd = rowStart + numberOfPositionsInANodeAtThisLevel;
-
-    for (var row = rowStart; row < rowEnd; row++) {
-      for (var col = columnStart; col < columnEnd; col++) {
-        // find all triangles which have a vertex at this position
-
-        var pos0X = positions[3 * (row * width + col - row - 1)];
-        var pos0Y = positions[1 + 3 * (row * width + col - row - 1)];
-        var pos0Z = positions[2 + 3 * (row * width + col - row - 1)];
-
-        var pos1X = positions[3 * (row * width + col - row)];
-        var pos1Y = positions[1 + 3 * (row * width + col - row)];
-        var pos1Z = positions[2 + 3 * (row * width + col - row)];
-
-        var pos2X = positions[3 * (row * width + col - row + 1)];
-        var pos2Y = positions[1 + 3 * (row * width + col - row + 1)];
-        var pos2Z = positions[2 + 3 * (row * width + col - row + 1)];
-
-        var pos3X = positions[3 * (row * width + col - 1)];
-        var pos3Y = positions[1 + 3 * (row * width + col - 1)];
-        var pos3Z = positions[2 + 3 * (row * width + col - 1)];
-
-        var pos4X = positions[3 * (row * width + col)];
-        var pos4Y = positions[1 + 3 * (row * width + col)];
-        var pos4Z = positions[2 + 3 * (row * width + col)];
-
-        var pos5X = positions[3 * (row * width + col + 1)];
-        var pos5Y = positions[1 + 3 * (row * width + col + 1)];
-        var pos5Z = positions[2 + 3 * (row * width + col + 1)];
-
-        var pos6X = positions[3 * (row * width + col + row - 1)];
-        var pos6Y = positions[1 + 3 * (row * width + col + row - 1)];
-        var pos6Z = positions[2 + 3 * (row * width + col + row - 1)];
-
-        var pos7X = positions[3 * (row * width + col + row)];
-        var pos7Y = positions[1 + 3 * (row * width + col + row)];
-        var pos7Z = positions[2 + 3 * (row * width + col + row)];
-
-        var pos8X = positions[3 * (row * width + col + row + 1)];
-        var pos8Y = positions[1 + 3 * (row * width + col + row + 1)];
-        var pos8Z = positions[2 + 3 * (row * width + col + row + 1)];
-
-        var pos0 = new Cartesian3(pos0X, pos0Y, pos0Z);
-        var pos1 = new Cartesian3(pos1X, pos1Y, pos1Z);
-        var pos2 = new Cartesian3(pos2X, pos2Y, pos2Z);
-        var pos3 = new Cartesian3(pos3X, pos3Y, pos3Z);
-        var pos4 = new Cartesian3(pos4X, pos4Y, pos4Z);
-        var pos5 = new Cartesian3(pos5X, pos5Y, pos5Z);
-        var pos6 = new Cartesian3(pos6X, pos6Y, pos6Z);
-        var pos7 = new Cartesian3(pos7X, pos7Y, pos7Z);
-        var pos8 = new Cartesian3(pos8X, pos8Y, pos8Z);
-
-        var triangle0 = [pos0, pos1, pos3];
-        var triangle1 = [pos1, pos2, pos4];
-        var triangle2 = [pos1, pos3, pos4];
-        var triangle3 = [pos2, pos4, pos5];
-        var triangle4 = [pos3, pos4, pos6];
-        var triangle5 = [pos4, pos5, pos7];
-        var triangle6 = [pos4, pos6, pos7];
-        var triangle7 = [pos5, pos7, pos8];
-
-        // testedTriangles.push(
-        //   triangle0,
-        //   triangle1,
-        //   triangle2,
-        //   triangle3,
-        //   triangle4,
-        //   triangle5,
-        //   triangle6,
-        //   triangle7
-        // );
-        //
-        // testedPoints.push(pos4);
-        //
-        // if (traceDetails) {
-        //   traceDetails.coolTriangles = testedTriangles;
-        //   traceDetails.coolPoints = testedPoints;
-        // }
-
-        var intersects0 = rayTriangleIntersect(
-          ray,
-          triangle0[0],
-          triangle0[1],
-          triangle0[2],
-          cullBackFaces
-        );
-        var intersects1 = rayTriangleIntersect(
-          ray,
-          triangle1[0],
-          triangle1[1],
-          triangle1[2],
-          cullBackFaces
-        );
-        var intersects2 = rayTriangleIntersect(
-          ray,
-          triangle2[0],
-          triangle2[1],
-          triangle2[2],
-          cullBackFaces
-        );
-        var intersects3 = rayTriangleIntersect(
-          ray,
-          triangle3[0],
-          triangle3[1],
-          triangle3[2],
-          cullBackFaces
-        );
-        var intersects4 = rayTriangleIntersect(
-          ray,
-          triangle4[0],
-          triangle4[1],
-          triangle4[2],
-          cullBackFaces
-        );
-        var intersects5 = rayTriangleIntersect(
-          ray,
-          triangle5[0],
-          triangle5[1],
-          triangle5[2],
-          cullBackFaces
-        );
-        var intersects6 = rayTriangleIntersect(
-          ray,
-          triangle6[0],
-          triangle6[1],
-          triangle6[2],
-          cullBackFaces
-        );
-        var intersects7 = rayTriangleIntersect(
-          ray,
-          triangle7[0],
-          triangle7[1],
-          triangle7[2],
-          cullBackFaces
-        );
-
-        if (intersects0 !== invalidIntersection) {
-          minT = Math.min(intersects0, minT);
-        }
-        if (intersects1 !== invalidIntersection) {
-          minT = Math.min(intersects1, minT);
-        }
-        if (intersects2 !== invalidIntersection) {
-          minT = Math.min(intersects2, minT);
-        }
-        if (intersects3 !== invalidIntersection) {
-          minT = Math.min(intersects3, minT);
-        }
-        if (intersects4 !== invalidIntersection) {
-          minT = Math.min(intersects4, minT);
-        }
-        if (intersects5 !== invalidIntersection) {
-          minT = Math.min(intersects5, minT);
-        }
-        if (intersects6 !== invalidIntersection) {
-          minT = Math.min(intersects6, minT);
-        }
-        if (intersects7 !== invalidIntersection) {
-          minT = Math.min(intersects7, minT);
-        }
-      }
+    if (traceDetails) {
+      traceDetails.coolPoints = traceDetails.coolPoints.concat(
+        intersectionResult.testedPoints
+      );
+      traceDetails.coolTriangles = traceDetails.coolTriangles.concat(
+        intersectionResult.testedTriangles
+      );
     }
   }
 
