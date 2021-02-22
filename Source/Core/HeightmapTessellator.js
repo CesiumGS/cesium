@@ -100,8 +100,8 @@ function QuadtreeNode(level, topLeft, bottomRight) {
   // details about this node
   this.topLeft = topLeft;
   this.bottomRight = bottomRight;
-  this.maxHeight = 0;
-  this.minHeight = 0;
+  this.maxHeight = -1; // sufficiently lower than what should be the minimum height of about -0.5
+  this.minHeight = 1; // sufficiently higher than what should be the maximum height of about 0.5
 
   if (level < 5) {
     this.topLeftTree = new QuadtreeNode(
