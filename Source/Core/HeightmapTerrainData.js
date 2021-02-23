@@ -300,11 +300,13 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
 
     var quadtreeTrianglePicker = new QuadtreeTrianglePicker(
       result.packedQuadtree,
-      createTriangleVerticesCallback(
-        vertices,
-        indicesAndEdges.indices,
-        encoding
-      )
+      encoding,
+      vertices
+      // createTriangleVerticesCallback(
+      //   vertices,
+      //   indicesAndEdges.indices,
+      //   encoding
+      // )
     );
 
     that._mesh = new TerrainMesh(

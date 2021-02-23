@@ -5,13 +5,14 @@ import Ray from "./Ray.js";
 import IntersectionTests from "./IntersectionTests.js";
 import Rectangle from "./Rectangle.js";
 
-function QuadtreeTrianglePicker(packedQuadtree, triangleVerticesCallback) {
+function QuadtreeTrianglePicker(packedQuadtree, encoding, vertices) {
   this._inverseTransform = Matrix4.unpack(packedQuadtree.inverseTransform);
   this._transform = Matrix4.unpack(packedQuadtree.transform);
   this._rectangle = Rectangle.unpack(packedQuadtree.rectangle);
   this._quadtree = packedQuadtree.quadtree;
   this._positions = packedQuadtree.positions;
-  this._triangleVerticesCallback = triangleVerticesCallback;
+  this._encoding = encoding;
+  this._vertices = vertices;
   this._width = packedQuadtree.width;
   this._height = packedQuadtree.height;
   this._skirtHeight = packedQuadtree.skirtHeight;
@@ -107,99 +108,75 @@ QuadtreeTrianglePicker.getPosition = function (
   width,
   height,
   row,
-  col
+  col,
+  hasSkirting,
+  encoding,
+  vertices
 ) {
-  var colIdx = col * 3;
-  var widthIdx = width * 3;
+  // why invert the row here? IDK!
+  // first row becomes the last row and last row becomes the first
+  // TODO why is this so?
+  var rowInvert = height - row - 1;
+  var colIdx = col; // * 3;
+  var widthIdx = width; // * 3;
+  var baseIdx = rowInvert * widthIdx + colIdx;
 
-  var rowIdx = height - row;
-
-  var x = positions[rowIdx * widthIdx + colIdx];
-  var y = positions[1 + (rowIdx * widthIdx + colIdx)];
-  var z = positions[2 + (rowIdx * widthIdx + colIdx)];
+  var x = positions[baseIdx];
+  var y = positions[1 + baseIdx];
+  var z = positions[2 + baseIdx];
 
   return new Cartesian3(x, y, z);
 };
 
-function getDimensionBounds(level, width, x, y, skirtHeight) {
+QuadtreeTrianglePicker.getDimensionBounds = function (
+  level,
+  width,
+  height,
+  topLeftX,
+  topLeftY
+) {
   var numberOfQuadsAtThisLevel = Math.pow(2, level);
-  var offsetX = x * numberOfQuadsAtThisLevel;
+  var offsetX = topLeftX * numberOfQuadsAtThisLevel;
   var halfWidth = width / 2;
 
-  var numberOfPositionsInANodeAtThisLevel = width / numberOfQuadsAtThisLevel;
+  var pointsPerNodeX = width / numberOfQuadsAtThisLevel;
+  var columnStart = Math.max(0, pointsPerNodeX * offsetX + halfWidth - 1);
+  var columnEnd = Math.min(columnStart + pointsPerNodeX, width - 1);
 
-  var columnStart = numberOfPositionsInANodeAtThisLevel * offsetX + halfWidth;
-  var columnEnd = columnStart + numberOfPositionsInANodeAtThisLevel;
-
-  var offsetY = y * numberOfQuadsAtThisLevel;
-  var rowStart = numberOfPositionsInANodeAtThisLevel * offsetY + halfWidth;
-  var rowEnd = rowStart + numberOfPositionsInANodeAtThisLevel;
-
-  // if (skirtHeight > 0.0) {
-  //   rowStart++;
-  //   rowEnd++;
-  //   columnStart++;
-  //   columnEnd++;
-  // }
+  var offsetY = topLeftY * numberOfQuadsAtThisLevel;
+  var rowStart = Math.max(0, pointsPerNodeX * offsetY + halfWidth - 1);
+  var rowEnd = Math.min(rowStart + pointsPerNodeX, height - 1);
 
   return {
     rowStart: Math.floor(rowStart),
-    rowEnd: Math.floor(rowEnd),
+    rowEnd: Math.ceil(rowEnd),
     columnStart: Math.floor(columnStart),
-    columnEnd: Math.floor(columnEnd),
+    columnEnd: Math.ceil(columnEnd),
   };
-}
-
-QuadtreeTrianglePicker.getPositionsInSegment = function (
-  positions,
-  width,
-  height,
-  x,
-  y,
-  level,
-  skirtHeight
-) {
-  var dimensionBounds = getDimensionBounds(level, width, x, y, skirtHeight);
-  var rowStart = dimensionBounds.rowStart;
-  var rowEnd = dimensionBounds.rowEnd;
-  var columnStart = dimensionBounds.columnStart;
-  var columnEnd = dimensionBounds.columnEnd;
-
-  var matchedPositions = [];
-
-  for (var row = rowStart; row < rowEnd; row++) {
-    for (var col = columnStart; col < columnEnd; col++) {
-      var pos = QuadtreeTrianglePicker.getPosition(
-        positions,
-        width,
-        height,
-        row,
-        col
-      );
-      matchedPositions.push(pos);
-    }
-  }
-  return matchedPositions;
 };
 
-function loopThroughTrianglesForNode(
+QuadtreeTrianglePicker.getTrianglesWithinNode = function (
   node,
   positions,
   ray,
   cullBackFaces,
   width,
   height,
-  skirtHeight
+  hasSkirting,
+  encoding,
+  vertices
 ) {
   var testedPoints = [];
   var testedTriangles = [];
 
-  var dimensionBounds = getDimensionBounds(
+  var intersectedTriangle = null;
+
+  var dimensionBounds = QuadtreeTrianglePicker.getDimensionBounds(
     node.level,
     width,
+    height,
     node.topLeft.x,
-    node.topLeft.y,
-    skirtHeight
+    node.topLeft.y
   );
   var rowStart = dimensionBounds.rowStart;
   var rowEnd = dimensionBounds.rowEnd;
@@ -212,7 +189,10 @@ function loopThroughTrianglesForNode(
       width,
       height,
       row,
-      col
+      col,
+      hasSkirting,
+      encoding,
+      vertices
     );
   }
 
@@ -220,55 +200,45 @@ function loopThroughTrianglesForNode(
 
   for (var row = rowStart; row < rowEnd; row++) {
     for (var col = columnStart; col < columnEnd; col++) {
-      // -1 row; -1 col
-      var pos0 = getPos(row - 1, col - 1);
-      // -1 row; +0 col
-      var pos1 = getPos(row - 1, col);
-      // -1 row; +1 col
-      var pos2 = getPos(row - 1, col + 1);
-      // +0 row; -1 col
-      var pos3 = getPos(row, col - 1);
-      // +0 row; +0 col
-      var pos4 = getPos(row, col);
-      // +0 row; +1 col
-      var pos5 = getPos(row, col + 1);
-      // +0 row; -1 col
-      var pos6 = getPos(row, col - 1);
-      // +1 row; +0 col
-      var pos7 = getPos(row + 1, col);
-      // +1 row; +1 col
-      var pos8 = getPos(row + 1, col + 1);
+      // 0         1
+      // +---------+
+      // |X    T1  |
+      // |  X      |
+      // |    X    |
+      // |  T2  X  |
+      // |        X|
+      // +---------+
+      // 2         3
+      var pos0 = getPos(row, col);
+      var pos1 = getPos(row, col + 1);
+      var pos2 = getPos(row + 1, col);
+      var pos3 = getPos(row + 1, col + 1);
 
       var tri0 = [pos0, pos1, pos3];
-      var tri1 = [pos1, pos2, pos4];
-      var tri2 = [pos1, pos3, pos4];
-      var tri3 = [pos2, pos4, pos5];
-      var tri4 = [pos3, pos4, pos6];
-      var tri5 = [pos4, pos5, pos7];
-      var tri6 = [pos4, pos6, pos7];
-      var tri7 = [pos5, pos7, pos8];
+      var tri1 = [pos0, pos2, pos3];
 
       var i0 = rayTriIntersect(ray, tri0[0], tri0[1], tri0[2], cullBackFaces);
       var i1 = rayTriIntersect(ray, tri1[0], tri1[1], tri1[2], cullBackFaces);
-      var i2 = rayTriIntersect(ray, tri2[0], tri2[1], tri2[2], cullBackFaces);
-      var i3 = rayTriIntersect(ray, tri3[0], tri3[1], tri3[2], cullBackFaces);
-      var i4 = rayTriIntersect(ray, tri4[0], tri4[1], tri4[2], cullBackFaces);
-      var i5 = rayTriIntersect(ray, tri5[0], tri5[1], tri5[2], cullBackFaces);
-      var i6 = rayTriIntersect(ray, tri6[0], tri6[1], tri6[2], cullBackFaces);
-      var i7 = rayTriIntersect(ray, tri7[0], tri7[1], tri7[2], cullBackFaces);
 
-      minT = Math.min(minT, i0, i1, i2, i3, i4, i5, i6, i7, minT);
+      testedTriangles.push(tri0, tri1);
 
-      testedPoints.push(pos4);
-      testedTriangles.push(tri0, tri1, tri2, tri3, tri4, tri5, tri6, tri7);
+      if (i0 !== invalidIntersection && i0 < minT) {
+        intersectedTriangle = tri0;
+        minT = Math.min(minT, i0, i1);
+      }
+      if (i1 !== invalidIntersection && i1 < minT) {
+        intersectedTriangle = tri1;
+        minT = Math.min(minT, i0, i1);
+      }
     }
   }
   return {
     testedTriangles: testedTriangles,
     testedPoints: testedPoints,
     nodeMinT: minT,
+    intersectedTriangle: intersectedTriangle,
   };
-}
+};
 
 /**
  * @param {Ray} ray
@@ -369,12 +339,13 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   //   return n.node.level === 1;
   // });
 
+  var skirtHeight = this._skirtHeight;
+  var hasSkirting = skirtHeight > 0;
   var width = this._width;
   var height = this._height;
   var positions = this._positions;
-  var skirtHeight = this._skirtHeight;
-
-  var halfWidth = width / 2;
+  var encoding = this._encoding;
+  var vertices = this._vertices;
 
   /// closest intersection point
   var minT = invalidIntersection;
@@ -400,43 +371,46 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
       // );
     }
 
-    function getPos(row, col) {
-      return QuadtreeTrianglePicker.getPosition(
-        positions,
-        width,
-        height,
-        row,
-        col
-      );
-    }
-
-    var firstPoints = [];
-    firstPoints.push(getPos(0, 0));
-    firstPoints.push(getPos(0, 1));
-    firstPoints.push(getPos(0, 2));
-    firstPoints.push(getPos(1, 0));
-    firstPoints.push(getPos(1, 1));
-    firstPoints.push(getPos(1, 2));
-
-    firstPoints.push(getPos(2, 0));
-    firstPoints.push(getPos(2, 1));
-    firstPoints.push(getPos(2, 2));
-
-    traceDetails.firstPointsInHeightmap = firstPoints;
+    // function getPos(row, col) {
+    //   return QuadtreeTrianglePicker.getPosition(
+    //     positions,
+    //     width,
+    //     height,
+    //     row,
+    //     col,
+    //     hasSkirting
+    //   );
+    // }
+    //
+    // var firstPoints = [];
+    // firstPoints.push(getPos(0, 0));
+    // firstPoints.push(getPos(0, 1));
+    // firstPoints.push(getPos(0, 2));
+    // firstPoints.push(getPos(1, 0));
+    // firstPoints.push(getPos(1, 1));
+    // firstPoints.push(getPos(1, 2));
+    //
+    // firstPoints.push(getPos(2, 0));
+    // firstPoints.push(getPos(2, 1));
+    // firstPoints.push(getPos(2, 2));
+    //
+    // traceDetails.firstPointsInHeightmap = firstPoints;
   }
 
   // for each intersected node - test every triangle which falls in that node
   for (var ii = 0; ii < sortedTests.length; ii++) {
     var test = sortedTests[ii];
 
-    var intersectionResult = loopThroughTrianglesForNode(
+    var intersectionResult = QuadtreeTrianglePicker.getTrianglesWithinNode(
       test.node,
       positions,
       ray,
       cullBackFaces,
       width,
       height,
-      skirtHeight
+      hasSkirting,
+      encoding,
+      vertices
     );
     minT = Math.min(intersectionResult.nodeMinT, minT);
 
@@ -447,6 +421,15 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
       traceDetails.coolTriangles = traceDetails.coolTriangles.concat(
         intersectionResult.testedTriangles
       );
+    }
+
+    if (minT !== invalidIntersection) {
+      if (traceDetails) {
+        traceDetails.newIntersectedTriangle =
+          intersectionResult.intersectedTriangle;
+      }
+      // found our first intersection - we can bail early!
+      break;
     }
   }
 

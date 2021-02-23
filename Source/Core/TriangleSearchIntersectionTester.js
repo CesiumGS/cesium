@@ -66,7 +66,7 @@ TriangleSearchIntersectionTester.prototype.rayIntersect = function (
     if (defined(t) && t < minT && t >= 0.0) {
       minT = t;
       if (traceDetails) {
-        traceDetails.intersectedTriangle = [
+        traceDetails.oldIntersectedTriangle = [
           Cartesian3.clone(v0),
           Cartesian3.clone(v1),
           Cartesian3.clone(v2),

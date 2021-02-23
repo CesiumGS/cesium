@@ -614,7 +614,7 @@ HeightmapTessellator.computeVertices = function (options) {
   var transform;
   var inverseTransform;
 
-  var packedPositions = new Float32Array(positions.length * 3);
+  var packedPositions = new Float64Array(positions.length * 3);
   for (var i = 0; i < positions.length; i++) {
     var pos = positions[i];
     packedPositions[i * 3] = pos.x;

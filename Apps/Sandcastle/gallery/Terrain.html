@@ -103,6 +103,8 @@
 
         window.viewer = viewer;
 
+        var selectedQuadTreeAtLevel = 0;
+
         var quadTreeDataSource = new Cesium.CustomDataSource("quadtree");
         viewer.dataSources.add(quadTreeDataSource);
 
@@ -206,6 +208,16 @@
           }
         }
 
+        function isCartesianAlmostEqual(a, b) {
+          return (
+            a &&
+            b &&
+            Math.abs(a.x - b.x) < 0.1 &&
+            Math.abs(a.y - b.y) < 0.1 &&
+            Math.abs(a.z - b.z) < 0.1
+          );
+        }
+
         function drawTriangleList(color, dataSource, triangles) {
           if (triangles && triangles.length) {
             for (var i = 0; i < triangles.length; i++) {
@@ -275,7 +287,8 @@
 
         function getShowAtLevelFn(level) {
           return function () {
-            showQuadTreeAtLevel(level);
+            selectedQuadTreeAtLevel = level;
+            showQuadTreeAtLevel(selectedQuadTreeAtLevel);
           };
         }
 
@@ -338,33 +351,36 @@
 
             testedPointsDataSource.entities.removeAll();
 
-            drawPointList(
-              Cesium.Color.RED,
-              testedPointsDataSource,
+            var oldTriangle =
               details.traceDetails &&
-                details.traceDetails.firstPointsInHeightmap
-            );
-
-            drawTriangleList(
-              Cesium.Color.ORANGE,
-              testedPointsDataSource,
-              details.traceDetails && details.traceDetails.coolTriangles
-            );
-
-            drawTriangleList(
-              Cesium.Color.GOLD,
-              testedPointsDataSource,
+              details.traceDetails.oldIntersectedTriangle;
+            var newTriangle =
               details.traceDetails &&
-                details.traceDetails.intersectedTriangle && [
-                  details.traceDetails.intersectedTriangle,
-                ]
-            );
+              details.traceDetails.newIntersectedTriangle;
 
-            // drawPointList(
-            //   Cesium.Color.BLUE,
-            //   testedPointsDataSource,
-            //   details.traceDetails && details.traceDetails.coolPoints
-            // );
+            if (
+              oldTriangle &&
+              newTriangle &&
+              isCartesianAlmostEqual(oldTriangle, newTriangle)
+            ) {
+              drawTriangleList(Cesium.Color.GREEN, testedPointsDataSource, [
+                newTriangle,
+              ]);
+            } else {
+              drawTriangleList(
+                Cesium.Color.GOLD,
+                testedPointsDataSource,
+                oldTriangle && [oldTriangle]
+              );
+
+              drawTriangleList(
+                Cesium.Color.BLUE,
+                testedPointsDataSource,
+                newTriangle && [newTriangle]
+              );
+            }
+
+            showQuadTreeAtLevel(selectedQuadTreeAtLevel);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
