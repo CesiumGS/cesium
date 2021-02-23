@@ -609,18 +609,9 @@ HeightmapTessellator.computeVertices = function (options) {
   console.timeEnd("creating bounding sphere");
 
   var orientedBoundingBox;
-  var packedOctree;
   var quadtree;
   var transform;
   var inverseTransform;
-
-  var packedPositions = new Float64Array(positions.length * 3);
-  for (var i = 0; i < positions.length; i++) {
-    var pos = positions[i];
-    packedPositions[i * 3] = pos.x;
-    packedPositions[i * 3 + 1] = pos.y;
-    packedPositions[i * 3 + 2] = pos.z;
-  }
 
   if (defined(rectangle)) {
     console.time("creating oriented bounding box");
@@ -659,19 +650,6 @@ HeightmapTessellator.computeVertices = function (options) {
     inverseTransform = Matrix4.inverse(transform, new Matrix4());
 
     console.timeEnd("creating oriented bounding box");
-    console.time("making packed triangles");
-    var packedTriangles = createPackedTriangles(
-      positions,
-      inverseTransform,
-      width,
-      gridTriangleCount
-    );
-    console.timeEnd("making packed triangles");
-
-    packedOctree = TrianglePicking.createPackedOctree(
-      packedTriangles,
-      inverseTransform
-    );
 
     console.time("making packed quadtree");
     quadtree = createPackedQuadtree(
@@ -721,7 +699,6 @@ HeightmapTessellator.computeVertices = function (options) {
   }
 
   console.timeEnd("terrain encoding");
-  console.timeEnd("creating octree");
 
   return {
     vertices: vertices,
@@ -731,13 +708,11 @@ HeightmapTessellator.computeVertices = function (options) {
     boundingSphere3D: boundingSphere3D,
     orientedBoundingBox: orientedBoundingBox,
     occludeePointInScaledSpace: occludeePointInScaledSpace,
-    packedOctree: packedOctree,
     packedQuadtree: {
       inverseTransform: inverseTransform,
       rectangle: Rectangle.pack(rectangle, []),
       transform: transform,
       quadtree: quadtree,
-      positions: packedPositions,
       width: width,
       height: height,
       skirtHeight: skirtHeight,

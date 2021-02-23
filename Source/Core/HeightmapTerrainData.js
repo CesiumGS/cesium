@@ -289,24 +289,11 @@ HeightmapTerrainData.prototype.createMesh = function (options) {
     var encoding = TerrainEncoding.clone(result.encoding);
     var vertices = new Float32Array(result.vertices);
 
-    var trianglePicking = new TrianglePicking(
-      result.packedOctree,
-      createTriangleVerticesCallback(
-        vertices,
-        indicesAndEdges.indices,
-        encoding
-      )
-    );
-
     var quadtreeTrianglePicker = new QuadtreeTrianglePicker(
       result.packedQuadtree,
       encoding,
-      vertices
-      // createTriangleVerticesCallback(
-      //   vertices,
-      //   indicesAndEdges.indices,
-      //   encoding
-      // )
+      vertices,
+      indicesAndEdges.indices
     );
 
     that._mesh = new TerrainMesh(

@@ -239,13 +239,6 @@ TerrainMesh.prototype.pickRay = function (
   // whoops
   if (canNewPick && !isCartesianAlmostEqual(newPickValue, oldPickValue)) {
     console.error("pick values are different", newPickValue, oldPickValue);
-    // window.mytraceDetails = traceDetails;
-    // newPickValue = this._trianglePicking.rayIntersect(
-    //   ray,
-    //   cullBackFaces,
-    //   null,
-    //   null
-    // );
   }
 
   // record details on the window

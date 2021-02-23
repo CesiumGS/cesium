@@ -34,6 +34,7 @@
       <div id="terrainMenu"></div>
       <div id="zoomButtons"></div>
       <div id="showQuadtreeLevel"></div>
+      <div id="showTestedTriangles"></div>
       <div id="sampleButtons"></div>
     </div>
     <script id="cesium_sandcastle_script">
@@ -103,17 +104,26 @@
 
         window.viewer = viewer;
 
-        var selectedQuadTreeAtLevel = 0;
+        var selectedQuadTreeAtLevel = null;
+        var showTestedTriangles = false;
 
         var quadTreeDataSource = new Cesium.CustomDataSource("quadtree");
-        viewer.dataSources.add(quadTreeDataSource);
 
+        var intersectedTriangleDataSource = new Cesium.CustomDataSource(
+          "intersectedTriangleDataSource"
+        );
+        var testedTrianglesDataSource = new Cesium.CustomDataSource(
+          "testedTrianglesDataSource"
+        );
         var testedPointsDataSource = new Cesium.CustomDataSource(
           "testedPoints"
         );
-        viewer.dataSources.add(testedPointsDataSource);
-
         var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
+
+        viewer.dataSources.add(quadTreeDataSource);
+        viewer.dataSources.add(intersectedTriangleDataSource);
+        viewer.dataSources.add(testedTrianglesDataSource);
+        viewer.dataSources.add(testedPointsDataSource);
         viewer.scene.primitives.add(axisPrimitiveCollection);
 
         function localToWorld(transform, local) {
@@ -208,6 +218,22 @@
           }
         }
 
+        function sortCartesianList(values) {
+          return values.slice(0).sort(function (a, b) {
+            return a.x - b.x;
+          });
+        }
+
+        function isTriangleAlmostEqual(a, b) {
+          a = sortCartesianList(a);
+          b = sortCartesianList(b);
+          return (
+            isCartesianAlmostEqual(a[0], b[0]) &&
+            isCartesianAlmostEqual(a[1], b[1]) &&
+            isCartesianAlmostEqual(a[2], b[2])
+          );
+        }
+
         function isCartesianAlmostEqual(a, b) {
           return (
             a &&
@@ -260,6 +286,67 @@
             .concat(flatten(node.bottomRightTree));
         }
 
+        function showIntersectedTriangles() {
+          intersectedTriangleDataSource.entities.removeAll();
+          var oldTriangle =
+            window.lastPickDetails &&
+            window.lastPickDetails.traceDetails &&
+            window.lastPickDetails.traceDetails.oldIntersectedTriangle;
+          var newTriangle =
+            window.lastPickDetails &&
+            window.lastPickDetails.traceDetails &&
+            window.lastPickDetails.traceDetails.newIntersectedTriangle;
+
+          if (
+            oldTriangle &&
+            newTriangle &&
+            isTriangleAlmostEqual(oldTriangle, newTriangle)
+          ) {
+            drawTriangleList(
+              Cesium.Color.GREEN,
+              intersectedTriangleDataSource,
+              [newTriangle]
+            );
+          } else {
+            drawTriangleList(
+              Cesium.Color.GOLD,
+              intersectedTriangleDataSource,
+              oldTriangle && [oldTriangle]
+            );
+
+            drawTriangleList(
+              Cesium.Color.BLUE,
+              intersectedTriangleDataSource,
+              newTriangle && [newTriangle]
+            );
+          }
+        }
+
+        function setShowTestTriangles(value) {
+          testedTrianglesDataSource.entities.removeAll();
+          testedPointsDataSource.entities.removeAll();
+
+          if (value) {
+            var triangles =
+              (window.lastPickDetails &&
+                window.lastPickDetails.traceDetails &&
+                window.lastPickDetails.traceDetails.testedTriangles) ||
+              [];
+            drawTriangleList(
+              Cesium.Color.ORANGE,
+              testedTrianglesDataSource,
+              triangles
+            );
+
+            // var points =
+            //   (window.lastPickDetails &&
+            //     window.lastPickDetails.traceDetails &&
+            //     window.lastPickDetails.traceDetails.testedPoints) ||
+            //   [];
+            // drawPointList(Cesium.Color.PINK, testedPointsDataSource, points);
+          }
+        }
+
         function showQuadTreeAtLevel(level) {
           if (window.lastPickDetails) {
             var root = window.lastPickDetails.mesh._trianglePicking._quadtree;
@@ -292,9 +379,14 @@
           };
         }
 
-        var showQuadTreeOptions = [];
+        var showQuadTreeOptions = [
+          {
+            text: "Hide Quadtree",
+            onselect: getShowAtLevelFn(null),
+          },
+        ];
         var optionLevel = 0;
-        while (optionLevel < 10) {
+        while (optionLevel < 6) {
           showQuadTreeOptions.push({
             text: "Quadtree Level " + optionLevel,
             onselect: getShowAtLevelFn(optionLevel),
@@ -303,6 +395,25 @@
         }
 
         Sandcastle.addToolbarMenu(showQuadTreeOptions, "showQuadtreeLevel");
+        Sandcastle.addToolbarMenu(
+          [
+            {
+              text: "Hide Tested Triangles",
+              onselect: function () {
+                showTestedTriangles = false;
+                setShowTestTriangles(showTestedTriangles);
+              },
+            },
+            {
+              text: "Show Tested Triangles",
+              onselect: function () {
+                showTestedTriangles = true;
+                setShowTestTriangles(showTestedTriangles);
+              },
+            },
+          ],
+          "showTestedTriangles"
+        );
 
         var scene = viewer.scene;
         var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -326,12 +437,6 @@
             debugger;
             var transform = details.traceDetails.transform;
 
-            var C = Cesium.Color;
-            var Cartesian3 = Cesium.Cartesian3;
-
-            addDot(transform, new Cartesian3(-0.5, -0.5, 0.5), C.BLUE, 100);
-            addDot(transform, new Cartesian3(0.5, 0.5, 0.5), C.YELLOW, 100);
-
             var axis = new Cesium.DebugModelMatrixPrimitive({
               modelMatrix: transform,
               length: 100000.0,
@@ -349,37 +454,8 @@
               },
             });
 
-            testedPointsDataSource.entities.removeAll();
-
-            var oldTriangle =
-              details.traceDetails &&
-              details.traceDetails.oldIntersectedTriangle;
-            var newTriangle =
-              details.traceDetails &&
-              details.traceDetails.newIntersectedTriangle;
-
-            if (
-              oldTriangle &&
-              newTriangle &&
-              isCartesianAlmostEqual(oldTriangle, newTriangle)
-            ) {
-              drawTriangleList(Cesium.Color.GREEN, testedPointsDataSource, [
-                newTriangle,
-              ]);
-            } else {
-              drawTriangleList(
-                Cesium.Color.GOLD,
-                testedPointsDataSource,
-                oldTriangle && [oldTriangle]
-              );
-
-              drawTriangleList(
-                Cesium.Color.BLUE,
-                testedPointsDataSource,
-                newTriangle && [newTriangle]
-              );
-            }
-
+            setShowTestTriangles(showTestedTriangles);
+            showIntersectedTriangles();
             showQuadTreeAtLevel(selectedQuadTreeAtLevel);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
