@@ -29,10 +29,12 @@ describe("Scene/ImplicitSubtree", function () {
     }
   }
 
-  function expectContentAvailability(subtree, availability) {
+  function expectContentAvailability(subtree, availability, contentIndex) {
     var expectedAvailability = availabilityToBooleanArray(availability);
     for (var i = 0; i < availability.lengthBits; i++) {
-      expect(subtree.contentIsAvailable(i)).toEqual(expectedAvailability[i]);
+      expect(subtree.contentIsAvailable(i, contentIndex)).toEqual(
+        expectedAvailability[i]
+      );
     }
   }
 
@@ -465,6 +467,133 @@ describe("Scene/ImplicitSubtree", function () {
         subtree,
         subtreeDescription.childSubtreeAvailability
       );
+    });
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    var multipleContentsQuadtree = new ImplicitTileset(tilesetResource, {
+      geometricError: 500,
+      refine: "ADD",
+      boundingVolume: {
+        region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+      },
+      content: {
+        uri: "https://example.com/{level}/{x}/{y}.b3dm",
+      },
+      extensions: {
+        "3DTILES_implicit_tiling": {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 2,
+          maximumLevel: 1,
+          subtrees: {
+            uri: "https://example.com/{level}/{x}/{y}.subtree",
+          },
+        },
+        "3DTILES_multiple_contents": {
+          content: [
+            {
+              uri: "https://example.com/{level}/{x}/{y}.b3dm",
+            },
+            {
+              uri: "https://example.com/{level}/{x}/{y}.pnts",
+            },
+          ],
+        },
+      },
+    });
+
+    it("contentIsAvailable throws for out-of-bounds contentIndex", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        multipleContentsQuadtree
+      );
+      var outOfBounds = 100;
+      return subtree.readyPromise.then(function () {
+        expect(function () {
+          subtree.contentIsAvailble(0, outOfBounds);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("contentIsAvailable works for multiple contents", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+      };
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(
+        Resource.prototype,
+        "fetchArrayBuffer"
+      ).and.returnValue(when.resolve(results.externalBuffer));
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        multipleContentsQuadtree
+      );
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal.calls.count()).toEqual(1);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability[0],
+          0
+        );
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability[1],
+          1
+        );
+      });
     });
   });
 });

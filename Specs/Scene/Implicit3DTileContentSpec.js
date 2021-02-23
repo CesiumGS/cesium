@@ -404,6 +404,14 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
+  it("preserves additional tile properties", function () {
+    fail();
+  });
+
+  it("preserves additional content properties", function () {
+    fail();
+  });
+
   describe("_deriveBoundingBox", function () {
     var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
     var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -531,6 +539,21 @@ describe("Scene/Implicit3DTileContent", function () {
 
       var result = deriveBoundingRegion(tile, 1, 1, 0);
       expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+    });
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    it("one content is transcoded to a regular tile", function () {
+      // TODO: not sure yet if this is the desired behavior
+      fail();
+    });
+
+    it("multiple contents are transcoded to a tile + extension", function () {
+      fail();
+    });
+
+    it("passes extensions through to the tile", function () {
+      fail();
     });
   });
 });

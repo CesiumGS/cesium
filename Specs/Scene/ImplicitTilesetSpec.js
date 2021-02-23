@@ -17,6 +17,9 @@ describe("Scene/ImplicitTileset", function () {
     },
     content: {
       uri: contentUriPattern,
+      extras: {
+        author: "Cesium",
+      },
     },
     extensions: {
       "3DTILES_implicit_tiling": {
@@ -27,6 +30,9 @@ describe("Scene/ImplicitTileset", function () {
           uri: subtreeUriPattern,
         },
       },
+    },
+    extras: {
+      creationDate: "2021-02-22",
     },
   };
   var baseResource = new Resource("https://example.com/tileset.json");
@@ -45,15 +51,35 @@ describe("Scene/ImplicitTileset", function () {
     );
     expect(implicitTileset.refine).toEqual(implicitTileJson.refine);
     expect(implicitTileset.geometricError).toEqual(500);
-    expect(implicitTileset.contentUriTemplate).toEqual(contentUriTemplate);
+    expect(implicitTileset.contentUriTemplates).toEqual([contentUriTemplate]);
     expect(implicitTileset.subtreeUriTemplate).toEqual(subtreeUriTemplate);
+  });
+
+  it("stores a template of the tile JSON structure", function () {
+    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
+    var expected = {
+      extras: {
+        creationDate: "2021-02-22",
+      },
+    };
+    expect(implicitTileset.tileJson).toEqual(expected);
+  });
+
+  it("stores a template of the tile content structure", function () {
+    var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
+    var expected = {
+      extras: {
+        author: "Cesium",
+      },
+    };
+    expect(implicitTileset.contentJson[0]).toEqual(expected);
   });
 
   it("allows undefined content URI", function () {
     var noContentJson = clone(implicitTileJson);
     delete noContentJson.content;
     var implicitTileset = new ImplicitTileset(baseResource, noContentJson);
-    expect(implicitTileset.contentUriTemplate).not.toBeDefined();
+    expect(implicitTileset.contentUriTemplates).toEqual([]);
   });
 
   it("rejects bounding spheres", function () {
@@ -66,5 +92,74 @@ describe("Scene/ImplicitTileset", function () {
     expect(function () {
       return new ImplicitTileset(baseResource, tileJson);
     }).toThrowRuntimeError();
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    var b3dmPattern = "https://example.com/{level}/{x}/{y}.b3dm";
+    var pntsPattern = "https://example.com/{level}/{x}/{y}.pnts";
+    var gltfPattern = "https://example.com/{level}/{x}/{y}.gltf";
+    var multipleContentTile = {
+      geometricError: 500,
+      refine: "ADD",
+      boundingVolume: {
+        region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+      },
+      extensions: {
+        "3DTILES_implicit_tiling": {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 3,
+          maximumLevel: 4,
+          subtrees: {
+            uri: subtreeUriPattern,
+          },
+        },
+        "3DTILES_multiple_contents": {
+          content: [
+            {
+              uri: b3dmPattern,
+            },
+            {
+              uri: pntsPattern,
+            },
+            {
+              uri: gltfPattern,
+            },
+          ],
+        },
+      },
+    };
+
+    it("gathers content URIs from multiple contents extension", function () {
+      var implicitTileset = new ImplicitTileset(
+        baseResource,
+        multipleContentTile
+      );
+      expect(implicitTileset.contentUriTemplates).toEqual([
+        b3dmPattern,
+        pntsPattern,
+        gltfPattern,
+      ]);
+    });
+
+    it("stores content JSON for every tile", function () {
+      var withProperties = clone(multipleContentTile);
+      var extension = { "3DTILES_extension": {} };
+      var boundingBox = { box: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1] };
+      var contents =
+        withProperties.extensions["3DTILES_multiple_contents"].content;
+      var i;
+      for (i = 0; i < contents.length; i++) {
+        contents[i].boundingVolume = boundingBox;
+        contents[i].extensions = extension;
+      }
+
+      var implicitTileset = new ImplicitTileset(baseResource, withProperties);
+      for (i = 0; i < implicitTileset.contentJson.length; i++) {
+        expect(implicitTileset.contentJson[i]).toEqual({
+          boundingVolume: boundingBox,
+          extensions: extension,
+        });
+      }
+    });
   });
 });
