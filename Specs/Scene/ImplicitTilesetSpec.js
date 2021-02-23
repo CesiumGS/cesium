@@ -57,22 +57,15 @@ describe("Scene/ImplicitTileset", function () {
 
   it("stores a template of the tile JSON structure", function () {
     var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
-    var expected = {
-      extras: {
-        creationDate: "2021-02-22",
-      },
-    };
-    expect(implicitTileset.tileJson).toEqual(expected);
+    var expected = clone(implicitTileJson, true);
+    delete expected.content;
+    delete expected.extensions;
+    expect(implicitTileset.tileHeader).toEqual(expected);
   });
 
   it("stores a template of the tile content structure", function () {
     var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
-    var expected = {
-      extras: {
-        author: "Cesium",
-      },
-    };
-    expect(implicitTileset.contentJson[0]).toEqual(expected);
+    expect(implicitTileset.contentHeaders[0]).toEqual(implicitTileJson.content);
   });
 
   it("allows undefined content URI", function () {
@@ -135,9 +128,9 @@ describe("Scene/ImplicitTileset", function () {
         multipleContentTile
       );
       expect(implicitTileset.contentUriTemplates).toEqual([
-        b3dmPattern,
-        pntsPattern,
-        gltfPattern,
+        new Resource({ url: b3dmPattern }),
+        new Resource({ url: pntsPattern }),
+        new Resource({ url: gltfPattern }),
       ]);
     });
 
@@ -154,11 +147,8 @@ describe("Scene/ImplicitTileset", function () {
       }
 
       var implicitTileset = new ImplicitTileset(baseResource, withProperties);
-      for (i = 0; i < implicitTileset.contentJson.length; i++) {
-        expect(implicitTileset.contentJson[i]).toEqual({
-          boundingVolume: boundingBox,
-          extensions: extension,
-        });
+      for (i = 0; i < implicitTileset.contentHeaders.length; i++) {
+        expect(implicitTileset.contentHeaders[i]).toEqual(contents[i]);
       }
     });
   });
