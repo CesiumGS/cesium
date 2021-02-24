@@ -123,6 +123,16 @@ export default function ImplicitTileset(baseResource, tileJson) {
   }
 
   /**
+   * The maximum number of contents as well as content availability bitstreams.
+   * This is used for loop bounds when checking content availability.
+   *
+   * @type {Number}
+   * @readonly
+   * @private
+   */
+  this.contentCount = this.contentHeaders.length;
+
+  /**
    * Stores a copy of the root implicit tile's JSON header. This is used
    * as a template for creating {@link Cesium3DTile}s. The following properties
    * are removed:

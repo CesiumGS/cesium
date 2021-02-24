@@ -172,7 +172,7 @@ describe("Scene/Implicit3DTileContent", function () {
         [1, 0, 1],
       ];
       var contentAvailability = [false, true, true];
-      var templateUri = implicitTileset.contentUriTemplate;
+      var templateUri = implicitTileset.contentUriTemplates[0];
       var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);

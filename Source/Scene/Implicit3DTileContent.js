@@ -351,16 +351,20 @@ function deriveChildTile(
     );
   }
 
-  var contentJson;
-  if (subtree.contentIsAvailable(childBitIndex)) {
-    var childContentUri = implicitTileset.contentUriTemplate.getDerivedResource(
-      {
-        templateValues: implicitCoordinates.getTemplateValues(),
-      }
-    ).url;
-    contentJson = {
+  var contentJsons = [];
+  for (var i = 0; i < implicitTileset.contentCount; i++) {
+    if (!subtree.contentIsAvailable(childBitIndex, i)) {
+      continue;
+    }
+    var childContentUri = implicitTileset.contentUriTemplates[
+      i
+    ].getDerivedResource({
+      templateValues: implicitCoordinates.getTemplateValues(),
+    }).url;
+    var contentJson = {
       uri: childContentUri,
     };
+    contentJsons.push(contentJson);
   }
 
   var boundingVolume = deriveBoundingVolume(
@@ -374,8 +378,17 @@ function deriveChildTile(
     boundingVolume: boundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
-    content: contentJson,
   };
+
+  if (contentJsons.length === 1) {
+    tileJson.content = contentJsons[0];
+  } else if (contentJsons.length > 1) {
+    tileJson.extensions = {
+      "3DTILES_multiple_contents": {
+        content: contentJsons,
+      },
+    };
+  }
 
   var childTile = makeTile(
     implicitContent,
