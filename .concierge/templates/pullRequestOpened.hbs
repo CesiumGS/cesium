@@ -12,6 +12,7 @@ Thanks for the pull request @{{ userName }}!
 {{#if errorCla}}
 * :grey_exclamation: There was an error checking the CLA! If this is your first contribution, please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla).
     * Maintainers, this was the error I ran into while attempting to process the CLA check. Please resolve it to continue CLA checking.
+    * You'll need to [manually check for a submitted CLA](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CLAs/README.md)
     ```
     {{ errorCla }}
     ```
@@ -19,6 +20,7 @@ Thanks for the pull request @{{ userName }}!
 {{#if askForCla}}
 * :x: Missing CLA.
     * Please send in a [Contributor License Agreement](https://github.com/CesiumGS/cesium/blob/master/CONTRIBUTING.md#contributor-license-agreement-cla) (CLA) and comment back here to let us know to check this!
+    * Maintainers, [here's how to check](https://github.com/CesiumGS/cesium/blob/master/Documentation/Contributors/CLAs/README.md) for a submitted CLA.
 {{else}}
 * :heavy_check_mark: Signed CLA found.
 {{/if}}

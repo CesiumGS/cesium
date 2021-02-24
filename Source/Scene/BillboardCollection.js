@@ -111,6 +111,7 @@ var attributeLocationsInstanced = {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the billboards in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -199,6 +200,14 @@ function BillboardCollection(options) {
   this._boundingVolumeDirty = false;
 
   this._colorCommands = [];
+
+  /**
+   * Determines if billboards in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -1809,6 +1818,11 @@ var scratchWriterArray = [];
  */
 BillboardCollection.prototype.update = function (frameState) {
   removeBillboards(this);
+
+  if (!this.show) {
+    return;
+  }
+
   var billboards = this._billboards;
   var billboardsLength = billboards.length;
 
