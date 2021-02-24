@@ -450,6 +450,7 @@ describe(
 
     it("has czm_unpackFloat", function () {
       var packed = Cartesian4.packFloat(1);
+      packed = Cartesian4.divideByScalar(packed, 255, packed);
       var vec4 =
         "vec4(" +
         packed.x +

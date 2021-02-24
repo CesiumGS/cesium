@@ -5,7 +5,7 @@ import { Color } from "../../Source/Cesium.js";
 import { CullingVolume } from "../../Source/Cesium.js";
 import { defined } from "../../Source/Cesium.js";
 import { getAbsoluteUri } from "../../Source/Cesium.js";
-import { getStringFromTypedArray } from "../../Source/Cesium.js";
+import { getJsonFromTypedArray } from "../../Source/Cesium.js";
 import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { HeadingPitchRoll } from "../../Source/Cesium.js";
 import { Intersect } from "../../Source/Cesium.js";
@@ -363,7 +363,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path,
       });
-      expect(tileset.url).toEqual(path);
+      expect(tileset.resource.url).toEqual(path);
     });
 
     it("url and tilesetUrl set up correctly given path with query string", function () {
@@ -372,7 +372,7 @@ describe(
       var tileset = new Cesium3DTileset({
         url: path + param,
       });
-      expect(tileset.url).toEqual(path + param);
+      expect(tileset.resource.url).toEqual(path + param);
     });
 
     it("resolves readyPromise", function () {
@@ -402,7 +402,7 @@ describe(
 
         expect(tileset._geometricError).toEqual(240.0);
         expect(tileset.root).toBeDefined();
-        expect(tileset.url).toEqual(tilesetUrl);
+        expect(tileset.resource.url).toEqual(tilesetUrl);
       });
     });
 
@@ -2866,6 +2866,40 @@ describe(
       );
     });
 
+    it("doesn't re-evaluate style during the next update", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          tileset.show = false;
+          tileset.preloadWhenHidden = true;
+          tileset.style = new Cesium3DTileStyle({ color: 'color("red")' });
+          scene.renderForSpecs();
+
+          var statistics = tileset._statisticsPerPass[Cesium3DTilePass.PRELOAD];
+          expect(statistics.numberOfTilesStyled).toBe(1);
+
+          scene.renderForSpecs();
+          expect(statistics.numberOfTilesStyled).toBe(0);
+        }
+      );
+    });
+
+    it("doesn't re-evaluate style if the style being set is the same as the active style", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (tileset) {
+          var style = new Cesium3DTileStyle({ color: 'color("red")' });
+          tileset.style = style;
+          scene.renderForSpecs();
+
+          var statistics = tileset._statisticsPerPass[Cesium3DTilePass.RENDER];
+          expect(statistics.numberOfTilesStyled).toBe(1);
+
+          tileset.style = style;
+          scene.renderForSpecs();
+          expect(statistics.numberOfTilesStyled).toBe(0);
+        }
+      );
+    });
+
     function testColorBlendMode(url) {
       return Cesium3DTilesTester.loadTileset(scene, url).then(function (
         tileset
@@ -3765,11 +3799,10 @@ describe(
 
     function modifySubtreeBuffer(arrayBuffer) {
       var uint8Array = new Uint8Array(arrayBuffer);
-      var jsonString = getStringFromTypedArray(uint8Array);
-      var json = JSON.parse(jsonString);
+      var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      jsonString = JSON.stringify(json);
+      var jsonString = JSON.stringify(json);
       var length = jsonString.length;
       uint8Array = new Uint8Array(length);
       for (var i = 0; i < length; i++) {

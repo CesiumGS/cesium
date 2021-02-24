@@ -1,4 +1,6 @@
 import destroyObject from "../Core/destroyObject.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -99,8 +101,19 @@ Object.defineProperties(Tileset3DTileContent.prototype, {
   },
 });
 
-function initialize(content, json) {
-  content._tileset.loadTileset(content._resource, json, content._tile);
+function initialize(content, arrayBuffer, byteOffset) {
+  byteOffset = defaultValue(byteOffset, 0);
+  var uint8Array = new Uint8Array(arrayBuffer);
+  var tilesetJson;
+
+  try {
+    tilesetJson = getJsonFromTypedArray(uint8Array, byteOffset);
+  } catch (error) {
+    content._readyPromise.reject(new RuntimeError("Invalid tile content."));
+    return;
+  }
+
+  content._tileset.loadTileset(content._resource, tilesetJson, content._tile);
   content._readyPromise.resolve(content);
 }
 

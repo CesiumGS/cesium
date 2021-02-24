@@ -1,3 +1,4 @@
+import Uri from "../ThirdParty/Uri.js";
 import when from "../ThirdParty/when.js";
 import buildModuleUrl from "./buildModuleUrl.js";
 import defaultValue from "./defaultValue.js";
@@ -142,7 +143,7 @@ function createWorker(processor) {
       },
       baseUrl: buildModuleUrl.getCesiumBaseUrl().url,
     },
-    workerModule: TaskProcessor._workerModulePrefix + processor._workerName,
+    workerModule: processor._workerPath,
   };
 
   worker.postMessage(bootstrapMessage);
@@ -165,7 +166,7 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
     if (!defined(wasmOptions.fallbackModulePath)) {
       throw new RuntimeError(
         "This browser does not support Web Assembly, and no backup module was provided for " +
-          processor._workerName
+          processor._workerPath
       );
     }
 
@@ -193,14 +194,15 @@ function getWebAssemblyLoaderConfig(processor, wasmOptions) {
  * @alias TaskProcessor
  * @constructor
  *
- * @param {String} workerName The name of the worker.  This is expected to be a script
- *                            in the Workers folder.
+ * @param {String} workerPath The Url to the worker. This can either be an absolute path or relative to the Cesium Workers folder.
  * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
  *                                        scheduleTask will not queue any more tasks, allowing
  *                                        work to be rescheduled in future frames.
  */
-function TaskProcessor(workerName, maximumActiveTasks) {
-  this._workerName = workerName;
+function TaskProcessor(workerPath, maximumActiveTasks) {
+  this._workerPath = new Uri(workerPath).isAbsolute()
+    ? workerPath
+    : TaskProcessor._workerModulePrefix + workerPath;
   this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
   this._activeTasks = 0;
   this._deferreds = {};
@@ -222,7 +224,7 @@ var emptyTransferableObjectArray = [];
  *                    if there are too many active tasks,
  *
  * @example
- * var taskProcessor = new Cesium.TaskProcessor('myWorkerName');
+ * var taskProcessor = new Cesium.TaskProcessor('myWorkerPath');
  * var promise = taskProcessor.scheduleTask({
  *     someParameter : true,
  *     another : 'hello'

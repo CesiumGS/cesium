@@ -88,6 +88,7 @@ describe(
     it("constructor sets default properties", function () {
       cluster = new EntityCluster();
       expect(cluster.enabled).toEqual(false);
+      expect(cluster.show).toEqual(true);
       expect(cluster.pixelRange).toEqual(80);
       expect(cluster.minimumClusterSize).toEqual(2);
       expect(cluster.clusterBillboards).toEqual(true);
@@ -107,6 +108,7 @@ describe(
     it("constructor sets expected properties", function () {
       var options = {
         enabled: true,
+        show: false,
         pixelRange: 30,
         minimumClusterSize: 5,
         clusterBillboards: false,
@@ -115,6 +117,7 @@ describe(
       };
       cluster = new EntityCluster(options);
       expect(cluster.enabled).toEqual(options.enabled);
+      expect(cluster.show).toEqual(false);
       expect(cluster.pixelRange).toEqual(options.pixelRange);
       expect(cluster.minimumClusterSize).toEqual(options.minimumClusterSize);
       expect(cluster.clusterBillboards).toEqual(options.clusterBillboards);
