@@ -16,8 +16,6 @@ import TerrainData from "./TerrainData.js";
 import TerrainEncoding from "./TerrainEncoding.js";
 import TerrainMesh from "./TerrainMesh.js";
 import TerrainProvider from "./TerrainProvider.js";
-import TrianglePicking from "./TrianglePicking.js";
-import createTriangleVerticesCallback from "./createTriangleVerticesCallback.js";
 import QuadtreeTrianglePicker from "./QuadtreeTrianglePicker.js";
 
 /**

@@ -32,189 +32,61 @@
       function startup(Cesium) {
         "use strict";
         //Sandcastle_Begin
-        var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
-
-        var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-          url: "http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/",
-          credit: "Terrain data courtesy VT MÄK",
-        });
-
-        var arcGisTerrainProvider = new Cesium.ArcGISTiledElevationTerrainProvider(
-          {
-            url:
-              "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
-          }
-        );
-
-        var cesiumWorldTerrain = Cesium.createWorldTerrain();
-
         var viewer = new Cesium.Viewer("cesiumContainer", {
-          terrainProvider: cesiumWorldTerrain,
-          projectionPicker: true,
+          terrainProvider: Cesium.createWorldTerrain(),
+          shadows: true,
         });
 
-        viewer.extend(Cesium.viewerCesiumInspectorMixin);
-
-        var scene = viewer.scene;
-        var camera = scene.camera;
-        var globe = scene.globe;
-        var ellipsoid = globe.ellipsoid;
-
-        function switchTerrain(terrainProvider) {
-          return function () {
-            viewer.terrainProvider = terrainProvider;
-          };
+        if (!viewer.scene.highDynamicRangeSupported) {
+          window.alert("This browser does not support high dynamic range.");
         }
-
-        var options = [
-          {
-            text: "Cesium World Terrain",
-            onselect: switchTerrain(cesiumWorldTerrain),
-          },
-          {
-            text: "VRTheWorld",
-            onselect: switchTerrain(vrTheWorldProvider),
-          },
-          {
-            text: "ArcGIS",
-            onselect: switchTerrain(arcGisTerrainProvider),
-          },
-          {
-            text: "Ellipsoid",
-            onselect: switchTerrain(ellipsoidProvider),
-          },
-        ];
-
-        Sandcastle.addToolbarMenu(options);
 
         viewer.scene.camera.setView({
           destination: new Cesium.Cartesian3(
-            -1919497.530180931,
-            -4780966.888096772,
-            3750968.0087956334
+            -1915097.7863741855,
+            -4783356.851539908,
+            3748887.43462683
           ),
           orientation: new Cesium.HeadingPitchRoll(
-            1.2651436727328784,
-            -0.2653619861263108,
-            0.003162627360827841
+            6.166004548388564,
+            -0.043242401760068994,
+            0.002179961955988574
           ),
           endTransform: Cesium.Matrix4.IDENTITY,
         });
 
-        function singlePick(mousePosition) {
-          var scene = viewer.scene;
-          var camera = scene.camera;
+        viewer.scene.highDynamicRange = true;
 
-          var ray = camera.getPickRay(mousePosition);
-
-          var before = performance.now();
-          var pickPosition = scene.globe.pick(ray, scene);
-          var after = performance.now();
-
-          var foundPick = Cesium.defined(pickPosition);
-          console.log("Single pick at " + mousePosition);
-          console.log("Found: " + foundPick);
-          console.log("Time: " + (after - before));
-
-          viewer.entities.removeAll();
-
-          if (foundPick) {
-            viewer.entities.add({
-              position: pickPosition,
-              ellipsoid: {
-                radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-                material: Cesium.Color.RED,
-              },
-            });
-          }
-        }
-
-        function multiPick(drawShape) {
-          var scene = viewer.scene;
-          var camera = scene.camera;
-
-          var width = viewer.canvas.clientWidth;
-          var height = viewer.canvas.clientHeight;
-
-          var numPicksDim = 10;
-          var numPicksTotal = numPicksDim * numPicksDim;
-
-          var rays = new Array(numPicksTotal);
-          var pickPositions = new Array(numPicksTotal);
-
-          for (var x = 0; x < numPicksDim; x++) {
-            for (var y = 0; y < numPicksDim; y++) {
-              var mouseX = width * (x / (numPicksDim - 1));
-              var mouseY = height * (y / (numPicksDim - 1));
-              var mousePosition = Cesium.Cartesian2.fromElements(
-                mouseX,
-                mouseY
-              );
-              var ray = camera.getPickRay(mousePosition);
-              var index = x * numPicksDim + y;
-              rays[index] = ray;
-              pickPositions[index] = new Cesium.Cartesian3();
-            }
-          }
-
-          var before = performance.now();
-          for (var i = 0; i < numPicksTotal; i++) {
-            pickPositions[i] = scene.globe.pick(
-              rays[i],
-              scene,
-              pickPositions[i]
-            );
-          }
-          var after = performance.now();
-
-          console.log(
-            "Total time (ms) for " +
-              numPicksTotal +
-              " picks: " +
-              (after - before)
-          );
-
-          viewer.entities.removeAll();
-
-          if (drawShape) {
-            for (var ii = 0; ii < numPicksTotal; ii++) {
-              var pos = pickPositions[ii];
-              viewer.entities.add({
-                position: pos,
-                ellipsoid: {
-                  radii: new Cesium.Cartesian3(100.0, 100.0, 100.0),
-                  material: Cesium.Color.RED,
-                },
-              });
-            }
-          }
-        }
-
-        var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-        handler.setInputAction(function (movement) {
-          singlePick(movement.position);
-        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-
-        Sandcastle.addToggleButton("Fast Pick", true, function (checked) {
-          viewer.scene.globe.useNewPicking = checked;
+        Sandcastle.addToggleButton("HDR", true, function (checked) {
+          viewer.scene.highDynamicRange = checked;
         });
 
-        Sandcastle.addToolbarButton("Pick Center", function () {
-          var x = viewer.canvas.clientWidth / 2.0;
-          var y = viewer.canvas.clientHeight / 2.0;
+        var url =
+          "../../SampleData/models/DracoCompressed/CesiumMilkTruck.gltf";
+        var position = Cesium.Cartesian3.fromRadians(
+          -1.9516424279517286,
+          0.6322397098422969,
+          1239.0006814631095
+        );
+        var heading = Cesium.Math.toRadians(-15.0);
+        var pitch = 0;
+        var roll = 0;
+        var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+        var orientation = Cesium.Transforms.headingPitchRollQuaternion(
+          position,
+          hpr
+        );
+        var scale = 10.0;
 
-          var position = Cesium.Cartesian2.fromElements(x, y);
-          singlePick(position);
+        var entity = viewer.entities.add({
+          name: url,
+          position: position,
+          orientation: orientation,
+          model: {
+            uri: url,
+            scale: scale,
+          },
         });
-
-        Sandcastle.addToolbarButton("Multi Pick", function () {
-          multiPick(false);
-        });
-
-        Sandcastle.addToolbarButton("Multi Pick + Draw", function () {
-          multiPick(true);
-        });
-
         //Sandcastle_End
         Sandcastle.finishedLoading();
       }

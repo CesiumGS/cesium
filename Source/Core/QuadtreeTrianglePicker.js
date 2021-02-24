@@ -94,17 +94,6 @@ function rayTriIntersect(ray, v0, v1, v2, cullBackFaces) {
   return valid ? t : invalidIntersection;
 }
 
-function flatten(node) {
-  if (!node) {
-    return [];
-  }
-  return [node]
-    .concat(flatten(node.topLeftTree))
-    .concat(flatten(node.bottomLeftTree))
-    .concat(flatten(node.topRightTree))
-    .concat(flatten(node.bottomRightTree));
-}
-
 QuadtreeTrianglePicker.getDimensionBounds = function (
   level,
   width,
@@ -239,7 +228,6 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
     result = new Cartesian3();
   }
 
-  var allQuadTreeNodes = flatten(this._quadtree);
   if (traceDetails) {
     traceDetails.rectangle = this._rectangle;
     traceDetails.transform = this._transform;

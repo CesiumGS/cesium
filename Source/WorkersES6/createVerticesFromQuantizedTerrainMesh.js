@@ -15,7 +15,6 @@ import Rectangle from "../Core/Rectangle.js";
 import TerrainEncoding from "../Core/TerrainEncoding.js";
 import TerrainProvider from "../Core/TerrainProvider.js";
 import Transforms from "../Core/Transforms.js";
-import TrianglePicking from "../Core/TrianglePicking.js";
 import WebMercatorProjection from "../Core/WebMercatorProjection.js";
 import createTaskProcessorWorker from "./createTaskProcessorWorker.js";
 
@@ -30,34 +29,10 @@ var scratchNormal = new Cartesian3();
 var scratchToENU = new Matrix4();
 var scratchFromENU = new Matrix4();
 
-function createPackedTrianglesFromIndices(indices, positions, invTrans) {
-  var v0 = new Cartesian3();
-  var v1 = new Cartesian3();
-  var v2 = new Cartesian3();
-  var triangleCount = indices.length / 3;
-  var i;
-  var triangles = new Float32Array(triangleCount * 6);
-
-  for (i = 0; i < triangleCount; i++) {
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3]], v0);
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 1]], v1);
-    Matrix4.multiplyByPoint(invTrans, positions[indices[i * 3 + 2]], v2);
-    // Get local space AABBs for triangle
-    triangles[i] = Math.min(v0.x, v1.x, v2.x);
-    triangles[i + 1] = Math.max(v0.x, v1.x, v2.x);
-    triangles[i + 2] = Math.min(v0.y, v1.y, v2.y);
-    triangles[i + 3] = Math.max(v0.y, v1.y, v2.y);
-    triangles[i + 4] = Math.min(v0.z, v1.z, v2.z);
-    triangles[i + 5] = Math.max(v0.z, v1.z, v2.z);
-  }
-  return triangles;
-}
-
 function createVerticesFromQuantizedTerrainMesh(
   parameters,
   transferableObjects
 ) {
-  console.time("setup stuff");
   var quantizedVertices = parameters.quantizedVertices;
   var quantizedVertexCount = quantizedVertices.length / 3;
   var octEncodedNormals = parameters.octEncodedNormals;
@@ -196,18 +171,19 @@ function createVerticesFromQuantizedTerrainMesh(
     return uvs[a].x - uvs[b].x;
   });
 
+  var orientedBoundingBox;
   var boundingSphere;
-  if (exaggeration !== 1.0) {
-    // Bounding sphere needs to be recomputed since the tile payload assumes no exaggeration.
-    boundingSphere = BoundingSphere.fromPoints(positions);
-  }
 
-  var orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-    rectangle,
-    minimumHeight,
-    maximumHeight,
-    ellipsoid
-  );
+  if (exaggeration !== 1.0) {
+    // Bounding volumes need to be recomputed since the tile payload assumes no exaggeration.
+    boundingSphere = BoundingSphere.fromPoints(positions);
+    orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+      rectangle,
+      minimumHeight,
+      maximumHeight,
+      ellipsoid
+    );
+  }
 
   var occludeePointInScaledSpace;
   if (exaggeration !== 1.0 || minimumHeight < 0.0) {
@@ -219,21 +195,6 @@ function createVerticesFromQuantizedTerrainMesh(
       minimumHeight
     );
   }
-
-  var transform = OrientedBoundingBox.toTransformation(orientedBoundingBox);
-  var inverseTransform = Matrix4.inverse(transform, new Matrix4());
-  console.timeEnd("setup stuff");
-  console.time("making packed triangles");
-  var packedTriangles = createPackedTrianglesFromIndices(
-    parameters.indices,
-    positions,
-    inverseTransform
-  );
-  console.timeEnd("making packed triangles");
-  var packedOctree = TrianglePicking.createPackedOctree(
-    packedTriangles,
-    inverseTransform
-  );
 
   var hMin = minimumHeight;
   hMin = Math.min(
@@ -474,7 +435,6 @@ function createVerticesFromQuantizedTerrainMesh(
     occludeePointInScaledSpace: occludeePointInScaledSpace,
     encoding: encoding,
     indexCountWithoutSkirts: parameters.indices.length,
-    packedOctree: packedOctree,
   };
 }
 
