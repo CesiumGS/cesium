@@ -8,6 +8,13 @@
 
 ### 1.79 - 2021-03-01
 
+##### Breaking Changes :mega:
+
+- Removed `Cesium3DTileset.url`, which was deprecated in CesiumJS 1.78. Use `Cesium3DTileset.resource.url` to retrieve the url value.
+- Removed `EasingFunction.QUADRACTIC_IN`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN`.
+- Removed `EasingFunction.QUADRACTIC_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_OUT`.
+- Removed `EasingFunction.QUADRACTIC_IN_OUT`, which was deprecated in CesiumJS 1.77. Use `EasingFunction.QUADRATIC_IN_OUT`.
+
 ##### Fixes :wrench:
 
 - Fixed an issue that prevented use of the full CesiumJS zip release package in a Node.js application.
@@ -81,8 +88,8 @@
 
 ##### Breaking Changes :mega:
 
-- Removed `MapboxApi`, which was deprecated in v1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
-- Removed `BingMapsApi`, which was deprecated in v1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
+- Removed `MapboxApi`, which was deprecated in CesiumJS 1.72. Pass your access token directly to the `MapboxImageryProvider` or `MapboxStyleImageryProvider` constructors.
+- Removed `BingMapsApi`, which was deprecated in CesiumJS 1.72. Pass your access key directly to the `BingMapsImageryProvider` or `BingMapsGeocoderService` constructors.
 
 ##### Additions :tada:
 
