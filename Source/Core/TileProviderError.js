@@ -151,6 +151,7 @@ TileProviderError.handleError = function (
         '": ' +
         formatError(message)
     );
+    console.error(error);
   }
 
   if (error.retry && defined(retryFunction)) {
