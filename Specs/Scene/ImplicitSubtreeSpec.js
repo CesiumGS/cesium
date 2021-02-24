@@ -539,7 +539,7 @@ describe("Scene/ImplicitSubtree", function () {
       var outOfBounds = 100;
       return subtree.readyPromise.then(function () {
         expect(function () {
-          subtree.contentIsAvailble(0, outOfBounds);
+          subtree.contentIsAvailable(0, outOfBounds);
         }).toThrowDeveloperError();
       });
     });

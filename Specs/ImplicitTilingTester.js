@@ -34,13 +34,20 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     ),
   ];
 
+  var i;
   if (defined(subtreeDescription.contentAvailability)) {
-    parsedAvailability.push(
-      parseAvailability(
-        "contentAvailability",
-        subtreeDescription.contentAvailability
-      )
-    );
+    var contentAvailability = subtreeDescription.contentAvailability;
+    if (Array.isArray(contentAvailability)) {
+      for (i = 0; i < contentAvailability.length; i++) {
+        parsedAvailability.push(
+          parseAvailability("multipleContents", contentAvailability[i])
+        );
+      }
+    } else {
+      parsedAvailability.push(
+        parseAvailability("contentAvailability", contentAvailability)
+      );
+    }
   }
 
   // Some additional buffer in the subtree file (e.g. for metadata)
@@ -57,7 +64,7 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     external: [],
   };
   var bufferViewCount = 0;
-  for (var i = 0; i < parsedAvailability.length; i++) {
+  for (i = 0; i < parsedAvailability.length; i++) {
     var parsed = parsedAvailability[i];
     if (parsed.name === "contentAvailability" && parsed.shareBuffer) {
       subtreeJson.contentAvailability = {
