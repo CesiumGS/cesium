@@ -347,6 +347,8 @@
           }
         }
 
+        function drawRectangle(rect) {}
+
         function showQuadTreeAtLevel(level) {
           if (window.lastPickDetails) {
             var root = window.lastPickDetails.mesh._trianglePicking._quadtree;
@@ -360,12 +362,9 @@
             quadTreeDataSource.entities.removeAll();
             for (var i = 0; i < nodesAtLevel.length; i++) {
               var n = nodesAtLevel[i];
-              var color = Cesium.Color.GREEN.withAlpha(0.1);
+              var color = Cesium.Color.GREEN.withAlpha(0.05);
               if (n.isHit) {
-                color = Cesium.Color.GOLD.withAlpha(0.1);
-              }
-              if (n.isSpecial) {
-                color = Cesium.Color.RED.withAlpha(0.1);
+                color = Cesium.Color.GOLD.withAlpha(0.2);
               }
               drawQuadTreeNode(transform, n, color);
             }
@@ -450,9 +449,23 @@
               position: Cesium.Cartesian3.ZERO,
               polyline: {
                 positions: [ray.origin, Cesium.Ray.getPoint(ray, 10000)],
-                color: Cesium.Color.GREEN,
+                material: Cesium.Color.GOLDENROD,
               },
             });
+
+            // draw the tile rectangle
+            // viewer.entities.add({
+            //   id: "tile-rect",
+            //   rectangle: {
+            //     coordinates: details.mesh._trianglePicking._rectangle,
+            //     material: Cesium.Color.CYAN.withAlpha(0.5),
+            //     rotation: Cesium.Math.toRadians(0),
+            //     extrudedHeight: 10000,
+            //     height: 0,
+            //     outline: true,
+            //     outlineColor: Cesium.Color.BLACK,
+            //   },
+            // });
 
             setShowTestTriangles(showTestedTriangles);
             showIntersectedTriangles();
