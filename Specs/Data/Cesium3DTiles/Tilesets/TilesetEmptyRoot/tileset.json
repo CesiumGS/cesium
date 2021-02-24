@@ -48,7 +48,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ll.b3dm"
+          "uri": "ll.b3dm"
         }
       },
       {
@@ -64,7 +64,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "lr.b3dm"
+          "uri": "lr.b3dm"
         }
       },
       {
@@ -80,7 +80,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ur.b3dm"
+          "uri": "ur.b3dm"
         }
       },
       {
@@ -96,7 +96,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "ul.b3dm"
+          "uri": "ul.b3dm"
         }
       }
     ]

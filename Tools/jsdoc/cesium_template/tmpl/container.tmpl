@@ -1,8 +1,16 @@
 <?js
     var self = this;
+    var isGlobalPage;
+
     docs.forEach(function(doc, i) {
 ?>
 
+<?js
+    // we only need to check this once
+    if (typeof isGlobalPage === 'undefined') {
+        isGlobalPage = (doc.kind === 'globalobj');
+    }
+?>
 <?js if (doc.kind === 'mainpage' || (doc.kind === 'package')) { ?>
     <?js= self.partial('mainpage.tmpl', doc) ?>
 <?js } else if (doc.kind === 'source') { ?>
@@ -39,9 +47,7 @@
     <?js if (doc.augments && doc.augments.length) { ?>
         <h3 class="subsection-title">Extends</h3>
 
-        <ul><?js doc.augments.forEach(function(a) { ?>
-            <li><?js= self.linkto(a, a) ?></li>
-        <?js }); ?></ul>
+        <?js= self.partial('augments.tmpl', doc) ?>
     <?js } ?>
 
     <?js if (doc.mixes && doc.mixes.length) { ?>
@@ -62,7 +68,7 @@
 
     <?js
         var classes = self.find({kind: 'class', memberof: doc.longname});
-        if (doc.kind !== 'globalobj' && classes && classes.length) {
+        if (!isGlobalPage && classes && classes.length) {
     ?>
         <h3 class="subsection-title">Classes</h3>
 
@@ -74,7 +80,7 @@
 
     <?js
         var namespaces = self.find({kind: 'namespace', memberof: doc.longname});
-        if (doc.kind !== 'globalobj' && namespaces && namespaces.length) {
+        if (!isGlobalPage && namespaces && namespaces.length) {
     ?>
         <h3 class="subsection-title">Namespaces</h3>
 
@@ -85,34 +91,34 @@
     <?js } ?>
 
     <?js
-        var members = self.find({kind: 'member', memberof: title === 'Global' ? {isUndefined: true} : doc.longname});
+        var members = self.find({kind: 'member', memberof: isGlobalPage ? {isUndefined: true} : doc.longname});
         if (members && members.length && members.forEach) {
     ?>
         <h3 class="subsection-title">Members</h3>
 
-        <dl><?js members.forEach(function(p) { ?>
+        <?js members.forEach(function(p) { ?>
             <?js= self.partial('members.tmpl', p) ?>
-        <?js }); ?></dl>
+        <?js }); ?>
     <?js } ?>
 
     <?js
-        var methods = self.find({kind: 'function', memberof: title === 'Global' ? {isUndefined: true} : doc.longname});
+        var methods = self.find({kind: 'function', memberof: isGlobalPage ? {isUndefined: true} : doc.longname});
         if (methods && methods.length && methods.forEach) {
     ?>
         <h3 class="subsection-title">Methods</h3>
 
-        <dl><?js methods.forEach(function(m) { ?>
+        <?js methods.forEach(function(m) { ?>
             <?js= self.partial('method.tmpl', m) ?>
-        <?js }); ?></dl>
+        <?js }); ?>
     <?js } ?>
 
     <?js
-        var typedefs = self.find({kind: 'typedef', memberof: title === 'Global' ? {isUndefined: true} : doc.longname});
+        var typedefs = self.find({kind: 'typedef', memberof: isGlobalPage ? {isUndefined: true} : doc.longname});
         if (typedefs && typedefs.length && typedefs.forEach) {
     ?>
         <h3 class="subsection-title">Type Definitions</h3>
 
-        <dl><?js typedefs.forEach(function(e) {
+        <?js typedefs.forEach(function(e) {
                 if (e.signature) {
             ?>
                 <?js= self.partial('method.tmpl', e) ?>
@@ -123,18 +129,18 @@
                 <?js= self.partial('members.tmpl', e) ?>
             <?js
                 }
-            }); ?></dl>
+            }); ?>
     <?js } ?>
 
     <?js
-        var events = self.find({kind: 'event', memberof: title === 'Global' ? {isUndefined: true} : doc.longname});
+        var events = self.find({kind: 'event', memberof: isGlobalPage ? {isUndefined: true} : doc.longname});
         if (events && events.length && events.forEach) {
     ?>
         <h3 class="subsection-title">Events</h3>
 
-        <dl><?js events.forEach(function(e) { ?>
+        <?js events.forEach(function(e) { ?>
             <?js= self.partial('method.tmpl', e) ?>
-        <?js }); ?></dl>
+        <?js }); ?>
     <?js } ?>
 </article>
 

@@ -1,404 +1,288 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/Transforms',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/RenderState',
-        '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/AdditiveBlend',
-        '../Shaders/PostProcessFilters/BrightPass',
-        '../Shaders/PostProcessFilters/GaussianBlur1D',
-        '../Shaders/PostProcessFilters/PassThrough'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian4,
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        CesiumMath,
-        Matrix4,
-        PixelFormat,
-        Transforms,
-        ClearCommand,
-        Framebuffer,
-        PassState,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        Texture,
-        AdditiveBlend,
-        BrightPass,
-        GaussianBlur1D,
-        PassThrough) {
-    'use strict';
+import BoundingRectangle from "../Core/BoundingRectangle.js";
+import Cartesian2 from "../Core/Cartesian2.js";
+import Cartesian4 from "../Core/Cartesian4.js";
+import defined from "../Core/defined.js";
+import destroyObject from "../Core/destroyObject.js";
+import CesiumMath from "../Core/Math.js";
+import Matrix4 from "../Core/Matrix4.js";
+import Transforms from "../Core/Transforms.js";
+import AdditiveBlend from "../Shaders/PostProcessStages/AdditiveBlend.js";
+import BrightPass from "../Shaders/PostProcessStages/BrightPass.js";
+import GaussianBlur1D from "../Shaders/PostProcessStages/GaussianBlur1D.js";
+import PassThrough from "../Shaders/PostProcessStages/PassThrough.js";
+import PostProcessStage from "./PostProcessStage.js";
+import PostProcessStageComposite from "./PostProcessStageComposite.js";
+import PostProcessStageSampleMode from "./PostProcessStageSampleMode.js";
+import PostProcessStageTextureCache from "./PostProcessStageTextureCache.js";
+import SceneFramebuffer from "./SceneFramebuffer.js";
 
-    function SunPostProcess() {
-        this._fbo = undefined;
+function SunPostProcess() {
+  this._sceneFramebuffer = new SceneFramebuffer();
 
-        this._downSampleFBO1 = undefined;
-        this._downSampleFBO2 = undefined;
+  var scale = 0.125;
+  var stages = new Array(6);
 
-        this._clearFBO1Command = undefined;
-        this._clearFBO2Command = undefined;
+  stages[0] = new PostProcessStage({
+    fragmentShader: PassThrough,
+    textureScale: scale,
+    forcePowerOfTwo: true,
+    sampleMode: PostProcessStageSampleMode.LINEAR,
+  });
 
-        this._downSampleCommand = undefined;
-        this._brightPassCommand = undefined;
-        this._blurXCommand = undefined;
-        this._blurYCommand = undefined;
-        this._blendCommand = undefined;
-        this._fullScreenCommand = undefined;
+  var brightPass = (stages[1] = new PostProcessStage({
+    fragmentShader: BrightPass,
+    uniforms: {
+      avgLuminance: 0.5, // A guess at the average luminance across the entire scene
+      threshold: 0.25,
+      offset: 0.1,
+    },
+    textureScale: scale,
+    forcePowerOfTwo: true,
+  }));
 
-        this._downSamplePassState = new PassState();
-        this._downSamplePassState.scissorTest = {
-            enable : true,
-            rectangle : new BoundingRectangle()
-        };
+  var that = this;
+  this._delta = 1.0;
+  this._sigma = 2.0;
+  this._blurStep = new Cartesian2();
 
-        this._upSamplePassState = new PassState();
-        this._upSamplePassState.scissorTest = {
-            enabled : true,
-            rectangle : new BoundingRectangle()
-        };
+  stages[2] = new PostProcessStage({
+    fragmentShader: GaussianBlur1D,
+    uniforms: {
+      step: function () {
+        that._blurStep.x = that._blurStep.y =
+          1.0 / brightPass.outputTexture.width;
+        return that._blurStep;
+      },
+      delta: function () {
+        return that._delta;
+      },
+      sigma: function () {
+        return that._sigma;
+      },
+      direction: 0.0,
+    },
+    textureScale: scale,
+    forcePowerOfTwo: true,
+  });
 
-        this._uCenter = new Cartesian2();
-        this._uRadius = undefined;
+  stages[3] = new PostProcessStage({
+    fragmentShader: GaussianBlur1D,
+    uniforms: {
+      step: function () {
+        that._blurStep.x = that._blurStep.y =
+          1.0 / brightPass.outputTexture.width;
+        return that._blurStep;
+      },
+      delta: function () {
+        return that._delta;
+      },
+      sigma: function () {
+        return that._sigma;
+      },
+      direction: 1.0,
+    },
+    textureScale: scale,
+    forcePowerOfTwo: true,
+  });
 
-        this._blurStep = new Cartesian2();
+  stages[4] = new PostProcessStage({
+    fragmentShader: PassThrough,
+    sampleMode: PostProcessStageSampleMode.LINEAR,
+  });
+
+  this._uCenter = new Cartesian2();
+  this._uRadius = undefined;
+
+  stages[5] = new PostProcessStage({
+    fragmentShader: AdditiveBlend,
+    uniforms: {
+      center: function () {
+        return that._uCenter;
+      },
+      radius: function () {
+        return that._uRadius;
+      },
+      colorTexture2: function () {
+        return that._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+      },
+    },
+  });
+
+  this._stages = new PostProcessStageComposite({
+    stages: stages,
+  });
+
+  var textureCache = new PostProcessStageTextureCache(this);
+  var length = stages.length;
+  for (var i = 0; i < length; ++i) {
+    stages[i]._textureCache = textureCache;
+  }
+
+  this._textureCache = textureCache;
+  this.length = stages.length;
+}
+
+SunPostProcess.prototype.get = function (index) {
+  return this._stages.get(index);
+};
+
+SunPostProcess.prototype.getStageByName = function (name) {
+  var length = this._stages.length;
+  for (var i = 0; i < length; ++i) {
+    var stage = this._stages.get(i);
+    if (stage.name === name) {
+      return stage;
     }
+  }
+  return undefined;
+};
 
-    SunPostProcess.prototype.clear = function(context, color) {
-        var clear = this._clearFBO1Command;
-        Color.clone(defaultValue(color, Color.BLACK), clear.color);
-        clear.execute(context);
+var sunPositionECScratch = new Cartesian4();
+var sunPositionWCScratch = new Cartesian2();
+var sizeScratch = new Cartesian2();
+var postProcessMatrix4Scratch = new Matrix4();
 
-        clear = this._clearFBO2Command;
-        Color.clone(defaultValue(color, Color.BLACK), clear.color);
-        clear.execute(context);
-    };
+function updateSunPosition(postProcess, context, viewport) {
+  var us = context.uniformState;
+  var sunPosition = us.sunPositionWC;
+  var viewMatrix = us.view;
+  var viewProjectionMatrix = us.viewProjection;
+  var projectionMatrix = us.projection;
 
-    SunPostProcess.prototype.execute = function(context, framebuffer) {
-        this._downSampleCommand.execute(context, this._downSamplePassState);
-        this._brightPassCommand.execute(context, this._downSamplePassState);
-        this._blurXCommand.execute(context, this._downSamplePassState);
-        this._blurYCommand.execute(context, this._downSamplePassState);
+  // create up sampled render state
+  var viewportTransformation = Matrix4.computeViewportTransformation(
+    viewport,
+    0.0,
+    1.0,
+    postProcessMatrix4Scratch
+  );
+  var sunPositionEC = Matrix4.multiplyByPoint(
+    viewMatrix,
+    sunPosition,
+    sunPositionECScratch
+  );
+  var sunPositionWC = Transforms.pointToGLWindowCoordinates(
+    viewProjectionMatrix,
+    viewportTransformation,
+    sunPosition,
+    sunPositionWCScratch
+  );
 
-        this._fullScreenCommand.framebuffer = framebuffer;
-        this._blendCommand.framebuffer = framebuffer;
+  sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
+  var limbWC = Transforms.pointToGLWindowCoordinates(
+    projectionMatrix,
+    viewportTransformation,
+    sunPositionEC,
+    sunPositionEC
+  );
+  var sunSize =
+    Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) *
+    30.0 *
+    2.0;
 
-        this._fullScreenCommand.execute(context);
-        this._blendCommand.execute(context, this._upSamplePassState);
-    };
+  var size = sizeScratch;
+  size.x = sunSize;
+  size.y = sunSize;
 
-    var viewportBoundingRectangle  = new BoundingRectangle();
-    var downSampleViewportBoundingRectangle = new BoundingRectangle();
-    var sunPositionECScratch = new Cartesian4();
-    var sunPositionWCScratch = new Cartesian2();
-    var sizeScratch = new Cartesian2();
-    var postProcessMatrix4Scratch= new Matrix4();
+  postProcess._uCenter = Cartesian2.clone(sunPositionWC, postProcess._uCenter);
+  postProcess._uRadius = Math.max(size.x, size.y) * 0.15;
 
-    SunPostProcess.prototype.update = function(passState) {
-        var context = passState.context;
-        var viewport = passState.viewport;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+  var width = context.drawingBufferWidth;
+  var height = context.drawingBufferHeight;
 
-        var that = this;
+  var stages = postProcess._stages;
+  var firstStage = stages.get(0);
 
-        if (!defined(this._downSampleCommand)) {
-            this._clearFBO1Command = new ClearCommand({
-                color : new Color()
-            });
-            this._clearFBO2Command = new ClearCommand({
-                color : new Color()
-            });
+  var downSampleWidth = firstStage.outputTexture.width;
+  var downSampleHeight = firstStage.outputTexture.height;
 
-            var uniformMap = {};
+  var downSampleViewport = new BoundingRectangle();
+  downSampleViewport.width = downSampleWidth;
+  downSampleViewport.height = downSampleHeight;
 
-            this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
-                uniformMap : uniformMap,
-                owner : this
-            });
+  // create down sampled render state
+  viewportTransformation = Matrix4.computeViewportTransformation(
+    downSampleViewport,
+    0.0,
+    1.0,
+    postProcessMatrix4Scratch
+  );
+  sunPositionWC = Transforms.pointToGLWindowCoordinates(
+    viewProjectionMatrix,
+    viewportTransformation,
+    sunPosition,
+    sunPositionWCScratch
+  );
 
-            uniformMap = {
-                u_avgLuminance : function() {
-                    // A guess at the average luminance across the entire scene
-                    return 0.5;
-                },
-                u_threshold : function() {
-                    return 0.25;
-                },
-                u_offset : function() {
-                    return 0.1;
-                }
-            };
+  size.x *= downSampleWidth / width;
+  size.y *= downSampleHeight / height;
 
-            this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
-                uniformMap : uniformMap,
-                owner : this
-            });
+  var scissorRectangle = firstStage.scissorRectangle;
+  scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
+  scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
+  scissorRectangle.width = Math.min(size.x, width);
+  scissorRectangle.height = Math.min(size.y, height);
 
-            var delta = 1.0;
-            var sigma = 2.0;
+  for (var i = 1; i < 4; ++i) {
+    BoundingRectangle.clone(scissorRectangle, stages.get(i).scissorRectangle);
+  }
+}
 
-            uniformMap = {
-                delta : function() {
-                    return delta;
-                },
-                sigma : function() {
-                    return sigma;
-                },
-                direction : function() {
-                    return 0.0;
-                }
-            };
+SunPostProcess.prototype.clear = function (context, passState, clearColor) {
+  this._sceneFramebuffer.clear(context, passState, clearColor);
+  this._textureCache.clear(context);
+};
 
-            this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                uniformMap : uniformMap,
-                owner : this
-            });
+SunPostProcess.prototype.update = function (passState) {
+  var context = passState.context;
+  var viewport = passState.viewport;
 
-            uniformMap = {
-                delta : function() {
-                    return delta;
-                },
-                sigma : function() {
-                    return sigma;
-                },
-                direction : function() {
-                    return 1.0;
-                }
-            };
+  var sceneFramebuffer = this._sceneFramebuffer;
+  sceneFramebuffer.update(context, viewport);
+  var framebuffer = sceneFramebuffer.getFramebuffer();
 
-            this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                uniformMap : uniformMap,
-                owner : this
-            });
+  this._textureCache.update(context);
+  this._stages.update(context, false);
 
-            uniformMap = {
-                u_center : function() {
-                    return that._uCenter;
-                },
-                u_radius : function() {
-                    return that._uRadius;
-                }
-            };
+  updateSunPosition(this, context, viewport);
 
-            this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
-                uniformMap : uniformMap,
-                owner : this
-            });
+  return framebuffer;
+};
 
-            uniformMap = {};
+SunPostProcess.prototype.execute = function (context) {
+  var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+  var stages = this._stages;
+  var length = stages.length;
+  stages.get(0).execute(context, colorTexture);
+  for (var i = 1; i < length; ++i) {
+    stages.get(i).execute(context, stages.get(i - 1).outputTexture);
+  }
+};
 
-            this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
-                uniformMap : uniformMap,
-                owner : this
-            });
-        }
+SunPostProcess.prototype.copy = function (context, framebuffer) {
+  if (!defined(this._copyColorCommand)) {
+    var that = this;
+    this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
+      uniformMap: {
+        colorTexture: function () {
+          return that._stages.get(that._stages.length - 1).outputTexture;
+        },
+      },
+      owner: this,
+    });
+  }
 
-        var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
-        var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
+  this._copyColorCommand.framebuffer = framebuffer;
+  this._copyColorCommand.execute(context);
+};
 
-        // The size computed above can be less than 1.0 if size < 4.0. This will probably
-        // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
-        // errors in the tests.
-        var downSampleSize = Math.max(1.0, downSampleWidth, downSampleHeight);
+SunPostProcess.prototype.isDestroyed = function () {
+  return false;
+};
 
-        var downSampleViewport = downSampleViewportBoundingRectangle;
-        downSampleViewport.width = downSampleSize;
-        downSampleViewport.height = downSampleSize;
-
-        var fbo = this._fbo;
-        var colorTexture = (defined(fbo) && fbo.getColorTexture(0)) || undefined;
-        if (!defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height) {
-            fbo = fbo && fbo.destroy();
-            this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
-            this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
-
-            this._blurStep.x = this._blurStep.y = 1.0 / downSampleSize;
-
-            var colorTextures = [new Texture({
-                context : context,
-                width : width,
-                height : height
-            })];
-
-            if (context.depthTexture) {
-                fbo = this._fbo = new Framebuffer({
-                    context : context,
-                    colorTextures :colorTextures,
-                    depthTexture : new Texture({
-                        context : context,
-                        width : width,
-                        height : height,
-                        pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                        pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                    })
-                });
-            } else {
-                fbo = this._fbo = new Framebuffer({
-                    context : context,
-                    colorTextures : colorTextures,
-                    depthRenderbuffer : new Renderbuffer({
-                        context : context,
-                        format : RenderbufferFormat.DEPTH_COMPONENT16
-                    })
-                });
-            }
-
-            this._downSampleFBO1 = new Framebuffer({
-                context : context,
-                colorTextures : [new Texture({
-                    context : context,
-                    width : downSampleSize,
-                    height : downSampleSize
-                })]
-            });
-            this._downSampleFBO2 = new Framebuffer({
-                context : context,
-                colorTextures : [new Texture({
-                    context : context,
-                    width : downSampleSize,
-                    height : downSampleSize
-                })]
-            });
-
-            this._clearFBO1Command.framebuffer = this._downSampleFBO1;
-            this._clearFBO2Command.framebuffer = this._downSampleFBO2;
-            this._downSampleCommand.framebuffer = this._downSampleFBO1;
-            this._brightPassCommand.framebuffer = this._downSampleFBO2;
-            this._blurXCommand.framebuffer = this._downSampleFBO1;
-            this._blurYCommand.framebuffer = this._downSampleFBO2;
-
-            var downSampleRenderState = RenderState.fromCache({
-                viewport : downSampleViewport
-            });
-
-            this._downSampleCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture(0);
-            };
-            this._downSampleCommand.renderState = downSampleRenderState;
-
-            this._brightPassCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture(0);
-            };
-            this._brightPassCommand.renderState = downSampleRenderState;
-
-            this._blurXCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO2.getColorTexture(0);
-            };
-            this._blurXCommand.uniformMap.u_step = function() {
-                return that._blurStep;
-            };
-            this._blurXCommand.renderState = downSampleRenderState;
-
-            this._blurYCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture(0);
-            };
-            this._blurYCommand.uniformMap.u_step = function() {
-                return that._blurStep;
-            };
-            this._blurYCommand.renderState = downSampleRenderState;
-
-            var upSampledViewport = viewportBoundingRectangle;
-            upSampledViewport.width = width;
-            upSampledViewport.height = height;
-
-            var upSampleRenderState = RenderState.fromCache({ viewport : upSampledViewport });
-
-            this._blendCommand.uniformMap.u_texture0 = function() {
-                return fbo.getColorTexture(0);
-            };
-            this._blendCommand.uniformMap.u_texture1 = function() {
-                return that._downSampleFBO2.getColorTexture(0);
-            };
-            this._blendCommand.renderState = upSampleRenderState;
-
-            this._fullScreenCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture(0);
-            };
-            this._fullScreenCommand.renderState = upSampleRenderState;
-        }
-
-        var us = context.uniformState;
-        var sunPosition = us.sunPositionWC;
-        var viewMatrix = us.view;
-        var viewProjectionMatrix = us.viewProjection;
-        var projectionMatrix = us.projection;
-
-        // create up sampled render state
-        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        var sunPositionEC = Matrix4.multiplyByPoint(viewMatrix, sunPosition, sunPositionECScratch);
-        var sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
-
-        sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
-        var limbWC = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
-        var sunSize = Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) * 30.0 * 2.0;
-
-        var size = sizeScratch;
-        size.x = sunSize;
-        size.y = sunSize;
-
-        var scissorRectangle = this._upSamplePassState.scissorTest.rectangle;
-        scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
-        scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
-        scissorRectangle.width = Math.min(size.x, width);
-        scissorRectangle.height = Math.min(size.y, height);
-
-        this._uCenter = Cartesian2.clone(sunPositionWC, this._uCenter);
-        this._uRadius = Math.max(size.x, size.y) * 0.15;
-
-        // create down sampled render state
-        viewportTransformation = Matrix4.computeViewportTransformation(downSampleViewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        sunPositionWC = Transforms.pointToGLWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
-
-        size.x *= downSampleWidth / width;
-        size.y *= downSampleHeight / height;
-
-        scissorRectangle = this._downSamplePassState.scissorTest.rectangle;
-        scissorRectangle.x = Math.max(sunPositionWC.x - size.x * 0.5, 0.0);
-        scissorRectangle.y = Math.max(sunPositionWC.y - size.y * 0.5, 0.0);
-        scissorRectangle.width = Math.min(size.x, width);
-        scissorRectangle.height = Math.min(size.y, height);
-
-        this._downSamplePassState.context = context;
-        this._upSamplePassState.context = context;
-
-        return this._fbo;
-    };
-
-    SunPostProcess.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    SunPostProcess.prototype.destroy = function() {
-        this._fbo = this._fbo && this._fbo.destroy();
-        this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
-        this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
-        this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.shaderProgram.destroy();
-        this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.shaderProgram.destroy();
-        this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.shaderProgram.destroy();
-        this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.shaderProgram.destroy();
-        this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.shaderProgram.destroy();
-        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.shaderProgram.destroy();
-        return destroyObject(this);
-    };
-
-    return SunPostProcess;
-});
+SunPostProcess.prototype.destroy = function () {
+  this._textureCache.destroy();
+  this._stages.destroy();
+  return destroyObject(this);
+};
+export default SunPostProcess;

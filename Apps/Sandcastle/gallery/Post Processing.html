@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Post processing effects." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>Silhouette</td>
+            <td><input type="checkbox" data-bind="checked: silhouette" /></td>
+          </tr>
+          <tr>
+            <td>Black and White</td>
+            <td>
+              <input type="checkbox" data-bind="checked: blackAndWhiteShow" />
+            </td>
+            <td>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                data-bind="value: blackAndWhiteGradations, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Brightness</td>
+            <td>
+              <input type="checkbox" data-bind="checked: brightnessShow" />
+            </td>
+            <td>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                data-bind="value: brightnessValue, valueUpdate: 'input'"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Night Vision</td>
+            <td>
+              <input type="checkbox" data-bind="checked: nightVisionShow" />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
+
+        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
+        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        viewer.trackedEntity = viewer.entities.add({
+          name: url,
+          position: position,
+          model: {
+            uri: url,
+          },
+        });
+
+        var viewModel = {
+          blackAndWhiteShow: false,
+          blackAndWhiteGradations: 5.0,
+          brightnessShow: false,
+          brightnessValue: 0.5,
+          nightVisionShow: false,
+          silhouette: true,
+        };
+
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+        for (var name in viewModel) {
+          if (viewModel.hasOwnProperty(name)) {
+            Cesium.knockout
+              .getObservable(viewModel, name)
+              .subscribe(updatePostProcess);
+          }
+        }
+
+        if (
+          !Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)
+        ) {
+          window.alert(
+            "This browser does not support the silhouette post process."
+          );
+        }
+
+        var stages = viewer.scene.postProcessStages;
+        var silhouette = stages.add(
+          Cesium.PostProcessStageLibrary.createSilhouetteStage()
+        );
+        var blackAndWhite = stages.add(
+          Cesium.PostProcessStageLibrary.createBlackAndWhiteStage()
+        );
+        var brightness = stages.add(
+          Cesium.PostProcessStageLibrary.createBrightnessStage()
+        );
+        var nightVision = stages.add(
+          Cesium.PostProcessStageLibrary.createNightVisionStage()
+        );
+
+        function updatePostProcess() {
+          silhouette.enabled = Boolean(viewModel.silhouette);
+          silhouette.uniforms.color = Cesium.Color.YELLOW;
+          blackAndWhite.enabled = Boolean(viewModel.blackAndWhiteShow);
+          blackAndWhite.uniforms.gradations = Number(
+            viewModel.blackAndWhiteGradations
+          );
+          brightness.enabled = Boolean(viewModel.brightnessShow);
+          brightness.uniforms.brightness = Number(viewModel.brightnessValue);
+          nightVision.enabled = Boolean(viewModel.nightVisionShow);
+        }
+        updatePostProcess();
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

@@ -11,10 +11,7 @@ varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
-
-#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-#endif
 
 const float SHIFT_LEFT8 = 256.0;
 const float SHIFT_RIGHT8 = 1.0 / 256.0;
@@ -30,7 +27,7 @@ void main()
     float totalSize = positionHighAndSize.w + outlineWidthBothSides;
     float outlinePercent = outlineWidthBothSides / totalSize;
     // Scale in response to browser-zoom.
-    totalSize *= czm_resolutionScale;
+    totalSize *= czm_pixelRatio;
     // Add padding for anti-aliasing on both sides.
     totalSize += 3.0;
 
@@ -52,18 +49,16 @@ void main()
 
     vec4 color;
     vec4 outlineColor;
-#ifdef RENDER_FOR_PICK
+    vec4 pickColor;
+
     // compressedAttribute0.z => pickColor.rgb
 
-    color = vec4(0.0);
-    outlineColor = vec4(0.0);
-    vec4 pickColor;
     temp = compressedAttribute0.z * SHIFT_RIGHT8;
     pickColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
     temp = floor(temp) * SHIFT_RIGHT8;
     pickColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
     pickColor.r = floor(temp);
-#else
+
     // compressedAttribute0.x => color.rgb
 
     temp = compressedAttribute0.x * SHIFT_RIGHT8;
@@ -79,15 +74,13 @@ void main()
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor.r = floor(temp);
-#endif
 
     // compressedAttribute0.w => color.a, outlineColor.a, pickColor.a
 
     temp = compressedAttribute0.w * SHIFT_RIGHT8;
-#ifdef RENDER_FOR_PICK
     pickColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
     pickColor = pickColor / 255.0;
-#endif
+
     temp = floor(temp) * SHIFT_RIGHT8;
     outlineColor.a = (temp - floor(temp)) * SHIFT_LEFT8;
     outlineColor /= 255.0;
@@ -98,7 +91,6 @@ void main()
 
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    positionEC.xyz *= show;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -143,13 +135,13 @@ void main()
     float nearSq = distanceDisplayConditionAndDisableDepth.x;
     float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
-        positionEC.xyz = vec3(0.0);
+        // push vertex behind camera to force it to be clipped
+        positionEC.xyz = vec3(0.0, 0.0, 1.0);
     }
 #endif
 
-    vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
-
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    gl_Position = czm_projection * positionEC;
+    czm_vertexLogDepth();
 
 #ifdef DISABLE_DEPTH_DISTANCE
     float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
@@ -167,20 +159,22 @@ void main()
         {
             // Position z on the near plane.
             gl_Position.z = -gl_Position.w;
+#ifdef LOG_DEPTH
+            czm_vertexLogDepth(vec4(czm_currentFrustum.x));
+#endif
         }
     }
 #endif
 
     v_color = color;
-    v_color.a *= translucency;
+    v_color.a *= translucency * show;
     v_outlineColor = outlineColor;
-    v_outlineColor.a *= translucency;
+    v_outlineColor.a *= translucency * show;
 
     v_innerPercent = 1.0 - outlinePercent;
     v_pixelDistance = 2.0 / totalSize;
-    gl_PointSize = totalSize;
+    gl_PointSize = totalSize * show;
+    gl_Position *= show;
 
-#ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
-#endif
 }

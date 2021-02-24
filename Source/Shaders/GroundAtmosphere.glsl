@@ -3,11 +3,11 @@
  *
  * Copyright (c) 2000-2005, Sean O'Neil (s_p_oneil@hotmail.com)
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
  * * Redistributions in binary form must reproduce the above copyright notice,
@@ -16,7 +16,7 @@
  * * Neither the name of the project nor the names of its contributors may be
  *   used to endorse or promote products derived from this software without
  *   specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -30,14 +30,10 @@
  *
  * Modifications made by Analytical Graphics, Inc.
  */
- 
+
  // Atmosphere:
  //   Code:  http://sponeil.net/
- //   GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
-
-const float fInnerRadius = 6378137.0;
-const float fOuterRadius = 6378137.0 * 1.025;
-const float fOuterRadius2 = fOuterRadius * fOuterRadius;
+ //   GPU Gems 2 Article:  https://developer.nvidia.com/gpugems/GPUGems2/gpugems2_chapter16.html
 
 const float Kr = 0.0025;
 const float Km = 0.0015;
@@ -48,9 +44,10 @@ const float fKmESun = Km * ESun;
 const float fKr4PI = Kr * 4.0 * czm_pi;
 const float fKm4PI = Km * 4.0 * czm_pi;
 
-const float fScale = 1.0 / (fOuterRadius - fInnerRadius);
+// Original: vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+const vec3 v3InvWavelength = vec3(5.60204474633241, 9.473284437923038, 19.64380261047721);
+
 const float fScaleDepth = 0.25;
-const float fScaleOverScaleDepth = fScale / fScaleDepth;
 
 struct AtmosphereColor
 {
@@ -67,19 +64,24 @@ float scale(float fCos)
     return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));
 }
 
-AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
+AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos, bool dynamicLighting, vec3 lightDirectionWC)
 {
-	vec3 v3InvWavelength = vec3(1.0 / pow(0.650, 4.0), 1.0 / pow(0.570, 4.0), 1.0 / pow(0.475, 4.0));
+    float fInnerRadius = czm_ellipsoidRadii.x;
+    float fOuterRadius = czm_ellipsoidRadii.x * 1.025;
+    float fOuterRadius2 = fOuterRadius * fOuterRadius;
+
+    float fScale = 1.0 / (fOuterRadius - fInnerRadius);
+    float fScaleOverScaleDepth = fScale / fScaleDepth;
 
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 v3Ray = v3Pos - czm_viewerPositionWC;
     float fFar = length(v3Ray);
     v3Ray /= fFar;
-    
+
     float fCameraHeight = length(czm_viewerPositionWC);
     float fCameraHeight2 = fCameraHeight * fCameraHeight;
 
-    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray), 
+    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray),
     // which is what it should be, but there are problems at the poles.
     float B = 2.0 * length(czm_viewerPositionWC) * dot(normalize(czm_viewerPositionWC), v3Ray);
     float C = fCameraHeight2 - fOuterRadius2;
@@ -90,11 +92,12 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
     vec3 v3Start = czm_viewerPositionWC + v3Ray * fNear;
     fFar -= fNear;
     float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);
-    
-    // The light angle based on the sun position would be:
-    //    dot(czm_sunDirectionWC, v3Pos) / length(v3Pos);
-    // We want the atmosphere to be uniform over the globe so it is set to 1.0.
-    float fLightAngle = 1.0;
+
+    // The light angle based on the scene's light source would be:
+    //    dot(lightDirectionWC, v3Pos) / length(v3Pos);
+    // When we want the atmosphere to be uniform over the globe so it is set to 1.0.
+
+    float fLightAngle = czm_branchFreeTernary(dynamicLighting, dot(lightDirectionWC, v3Pos) / length(v3Pos), 1.0);
     float fCameraAngle = dot(-v3Ray, v3Pos) / length(v3Pos);
     float fCameraScale = scale(fCameraAngle);
     float fLightScale = scale(fLightAngle);
@@ -119,11 +122,11 @@ AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
         v3FrontColor += v3Attenuate * (fDepth * fScaledLength);
         v3SamplePoint += v3SampleRay;
     }
-    
+
     AtmosphereColor color;
     color.mie = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);
     color.rayleigh = v3Attenuate; // Calculate the attenuation factor for the ground
-    
+
     return color;
 }
 

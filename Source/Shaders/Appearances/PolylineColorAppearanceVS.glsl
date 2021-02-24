@@ -20,9 +20,9 @@ void main()
     vec4 prev = czm_computePrevPosition();
     vec4 next = czm_computeNextPosition();
 
-    v_color = color;
-
     float angle;
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
+
+    v_color = color;
 }

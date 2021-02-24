@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="User-defined clipping planes applied to terrain."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <select
+        data-bind="options: exampleTypes, value: currentExampleType"
+      ></select>
+      <input
+        type="checkbox"
+        value="false"
+        data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"
+      />
+      Globe clipping planes enabled
+      <input
+        type="checkbox"
+        value="false"
+        data-bind="checked: edgeStylingEnabled, valueUpdate: 'input'"
+      />
+      Edge styling enabled
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Use clipping planes to selectively hide parts of the globe surface.
+
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          skyAtmosphere: false,
+          shouldAnimate: true,
+          terrainProvider: Cesium.createWorldTerrain(),
+          scene3DOnly: true,
+        });
+        var globe = viewer.scene.globe;
+
+        var exampleTypes = [
+          "Cesium Man",
+          "St. Helens",
+          "Grand Canyon Isolated",
+        ];
+        var viewModel = {
+          exampleTypes: exampleTypes,
+          currentExampleType: exampleTypes[0],
+          clippingPlanesEnabled: true,
+          edgeStylingEnabled: true,
+        };
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.track(viewModel);
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        // For tracking state when switching exampleTypes
+        var clippingPlanesEnabled = true;
+        var edgeStylingEnabled = true;
+
+        var tileset;
+
+        loadCesiumMan();
+
+        function reset() {
+          viewer.entities.removeAll();
+          viewer.scene.primitives.remove(tileset);
+        }
+
+        function loadCesiumMan() {
+          var position = Cesium.Cartesian3.fromRadians(
+            -2.0862979473351286,
+            0.6586620013036164,
+            1400.0
+          );
+
+          var entity = viewer.entities.add({
+            position: position,
+            box: {
+              dimensions: new Cesium.Cartesian3(1400.0, 1400.0, 2800.0),
+              material: Cesium.Color.WHITE.withAlpha(0.3),
+              outline: true,
+              outlineColor: Cesium.Color.WHITE,
+            },
+          });
+
+          viewer.entities.add({
+            position: position,
+            model: {
+              uri: "../../SampleData/models/CesiumMan/Cesium_Man.glb",
+              minimumPixelSize: 128,
+              maximumScale: 800,
+            },
+          });
+
+          globe.depthTestAgainstTerrain = true;
+          globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+            modelMatrix: entity.computeModelMatrix(Cesium.JulianDate.now()),
+            planes: [
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(1.0, 0.0, 0.0),
+                -700.0
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(-1.0, 0.0, 0.0),
+                -700.0
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(0.0, 1.0, 0.0),
+                -700.0
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(0.0, -1.0, 0.0),
+                -700.0
+              ),
+            ],
+            edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+            edgeColor: Cesium.Color.WHITE,
+            enabled: clippingPlanesEnabled,
+          });
+          globe.backFaceCulling = true;
+          globe.showSkirts = true;
+
+          viewer.trackedEntity = entity;
+        }
+
+        function loadStHelens() {
+          // Create clipping planes for polygon around area to be clipped.
+          var points = [
+            new Cesium.Cartesian3(
+              -2358434.3501556474,
+              -3743554.5012105294,
+              4581080.771684084
+            ),
+            new Cesium.Cartesian3(
+              -2357886.4482675144,
+              -3744467.562778789,
+              4581020.9199767085
+            ),
+            new Cesium.Cartesian3(
+              -2357299.84353055,
+              -3744954.0879047974,
+              4581080.992360969
+            ),
+            new Cesium.Cartesian3(
+              -2356412.05169956,
+              -3745385.3013702347,
+              4580893.4737207815
+            ),
+            new Cesium.Cartesian3(
+              -2355472.889436636,
+              -3745256.5725702164,
+              4581252.3128526565
+            ),
+            new Cesium.Cartesian3(
+              -2354385.7458722834,
+              -3744319.3823686405,
+              4582372.770031389
+            ),
+            new Cesium.Cartesian3(
+              -2353758.788158616,
+              -3743051.0128084184,
+              4583356.453176038
+            ),
+            new Cesium.Cartesian3(
+              -2353663.8128999653,
+              -3741847.9126874236,
+              4584079.428665509
+            ),
+            new Cesium.Cartesian3(
+              -2354213.667592133,
+              -3740784.50946316,
+              4584502.428203525
+            ),
+            new Cesium.Cartesian3(
+              -2355596.239450013,
+              -3739901.0226732804,
+              4584515.9652557485
+            ),
+            new Cesium.Cartesian3(
+              -2356942.4170108805,
+              -3740342.454698685,
+              4583686.690694482
+            ),
+            new Cesium.Cartesian3(
+              -2357529.554838029,
+              -3740766.995076834,
+              4583145.055348843
+            ),
+            new Cesium.Cartesian3(
+              -2358106.017822064,
+              -3741439.438418052,
+              4582452.293605261
+            ),
+            new Cesium.Cartesian3(
+              -2358539.5426236596,
+              -3742680.720902901,
+              4581692.0260975715
+            ),
+          ];
+
+          var pointsLength = points.length;
+
+          // Create center points for each clipping plane
+          var clippingPlanes = [];
+          for (var i = 0; i < pointsLength; ++i) {
+            var nextIndex = (i + 1) % pointsLength;
+            var midpoint = Cesium.Cartesian3.add(
+              points[i],
+              points[nextIndex],
+              new Cesium.Cartesian3()
+            );
+            midpoint = Cesium.Cartesian3.multiplyByScalar(
+              midpoint,
+              0.5,
+              midpoint
+            );
+
+            var up = Cesium.Cartesian3.normalize(
+              midpoint,
+              new Cesium.Cartesian3()
+            );
+            var right = Cesium.Cartesian3.subtract(
+              points[nextIndex],
+              midpoint,
+              new Cesium.Cartesian3()
+            );
+            right = Cesium.Cartesian3.normalize(right, right);
+
+            var normal = Cesium.Cartesian3.cross(
+              right,
+              up,
+              new Cesium.Cartesian3()
+            );
+            normal = Cesium.Cartesian3.normalize(normal, normal);
+
+            // Compute distance by pretending the plane is at the origin
+            var originCenteredPlane = new Cesium.Plane(normal, 0.0);
+            var distance = Cesium.Plane.getPointDistance(
+              originCenteredPlane,
+              midpoint
+            );
+
+            clippingPlanes.push(new Cesium.ClippingPlane(normal, distance));
+          }
+          globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+            planes: clippingPlanes,
+            edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+            edgeColor: Cesium.Color.WHITE,
+            enabled: clippingPlanesEnabled,
+          });
+          globe.backFaceCulling = true;
+          globe.showSkirts = true;
+
+          // Load tileset
+          tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(5713),
+          });
+          return tileset.readyPromise
+            .then(function () {
+              tileset.pointCloudShading.attenuation = true;
+
+              // Adjust height so tileset is in terrain
+              var cartographic = Cesium.Cartographic.fromCartesian(
+                tileset.boundingSphere.center
+              );
+              var surface = Cesium.Cartesian3.fromRadians(
+                cartographic.longitude,
+                cartographic.latitude,
+                0.0
+              );
+              var offset = Cesium.Cartesian3.fromRadians(
+                cartographic.longitude,
+                cartographic.latitude,
+                -20.0
+              );
+              var translation = Cesium.Cartesian3.subtract(
+                offset,
+                surface,
+                new Cesium.Cartesian3()
+              );
+              tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+              tileset.style = new Cesium.Cesium3DTileStyle({
+                color: "rgb(207, 255, 207)",
+              });
+
+              viewer.scene.primitives.add(tileset);
+
+              var boundingSphere = tileset.boundingSphere;
+
+              var radius = boundingSphere.radius;
+              viewer.camera.viewBoundingSphere(
+                boundingSphere,
+                new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0)
+              );
+              viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+            })
+            .otherwise(function (error) {
+              throw error;
+            });
+        }
+
+        function loadGrandCanyon() {
+          // Pick a position at the Grand Canyon
+          var position = Cesium.Cartographic.toCartesian(
+            new Cesium.Cartographic.fromDegrees(-113.2665534, 36.0939345, 100)
+          );
+          var distance = 3000.0;
+          var boundingSphere = new Cesium.BoundingSphere(position, distance);
+
+          globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
+            modelMatrix: Cesium.Transforms.eastNorthUpToFixedFrame(position),
+            planes: [
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(1.0, 0.0, 0.0),
+                distance
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(-1.0, 0.0, 0.0),
+                distance
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(0.0, 1.0, 0.0),
+                distance
+              ),
+              new Cesium.ClippingPlane(
+                new Cesium.Cartesian3(0.0, -1.0, 0.0),
+                distance
+              ),
+            ],
+            unionClippingRegions: true,
+            edgeWidth: edgeStylingEnabled ? 1.0 : 0.0,
+            edgeColor: Cesium.Color.WHITE,
+            enabled: clippingPlanesEnabled,
+          });
+          globe.backFaceCulling = false;
+          globe.showSkirts = false;
+
+          viewer.camera.viewBoundingSphere(
+            boundingSphere,
+            new Cesium.HeadingPitchRange(0.5, -0.5, boundingSphere.radius * 5.0)
+          );
+          viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        }
+
+        Cesium.knockout
+          .getObservable(viewModel, "clippingPlanesEnabled")
+          .subscribe(function (value) {
+            globe.clippingPlanes.enabled = value;
+            clippingPlanesEnabled = value;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "edgeStylingEnabled")
+          .subscribe(function (value) {
+            edgeStylingEnabled = value;
+            globe.clippingPlanes.edgeWidth = edgeStylingEnabled ? 1.0 : 0.0;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "currentExampleType")
+          .subscribe(function (newValue) {
+            reset();
+            if (newValue === exampleTypes[0]) {
+              loadCesiumMan();
+            } else if (newValue === exampleTypes[1]) {
+              loadStHelens();
+            } else if (newValue === exampleTypes[2]) {
+              loadGrandCanyon();
+            }
+          });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

@@ -1,10 +1,6 @@
-define([
-        './addExtensionsUsed',
-        '../../Core/defined'
-    ], function(
-        addExtensionsUsed,
-        defined) {
-    'use strict';
+import addExtensionsUsed from './addExtensionsUsed.js'
+import addToArray from './addToArray.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Adds an extension to gltf.extensionsRequired if it does not already exist.
@@ -12,6 +8,8 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {String} extension The extension to add.
+     *
+     * @private
      */
     function addExtensionsRequired(gltf, extension) {
         var extensionsRequired = gltf.extensionsRequired;
@@ -19,10 +17,8 @@ define([
             extensionsRequired = [];
             gltf.extensionsRequired = extensionsRequired;
         }
-        if (extensionsRequired.indexOf(extension) < 0) {
-            extensionsRequired.push(extension);
-        }
+        addToArray(extensionsRequired, extension, true);
         addExtensionsUsed(gltf, extension);
     }
-    return addExtensionsRequired;
-});
+
+    export default addExtensionsRequired;

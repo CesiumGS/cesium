@@ -1,157 +1,161 @@
-define([
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import DOMPurify from "../ThirdParty/purify.js";
+import Check from "./Check.js";
+import defaultValue from "./defaultValue.js";
+import defined from "./defined.js";
 
-    var nextCreditId = 0;
-    var creditToId = {};
+var nextCreditId = 0;
+var creditToId = {};
 
-    /**
-     * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
-     *
-     * @param {String} [text] The text to be displayed on the screen if no imageUrl is specified.
-     * @param {String} [imageUrl] The source location for an image
-     * @param {String} [link] A URL location for which the credit will be hyperlinked
-     *
-     * @alias Credit
-     * @constructor
-     *
-     * @example
-     * //Create a credit with a tooltip, image and link
-     * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
-     */
-    function Credit(text, imageUrl, link) {
-        var hasLink = (defined(link));
-        var hasImage = (defined(imageUrl));
-        var hasText = (defined(text));
+/**
+ * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
+ * @param {String} html An string representing an html code snippet
+ * @param {Boolean} [showOnScreen=false] If true, the credit will be visible in the main credit container.  Otherwise, it will appear in a popover
+ *
+ * @alias Credit
+ * @constructor
+ *
+ * @exception {DeveloperError} html is required.
+ *
+ * @example
+ * //Create a credit with a tooltip, image and link
+ * var credit = new Cesium.Credit('<a href="https://cesium.com/" target="_blank"><img src="/images/cesium_logo.png" title="Cesium"/></a>');
+ */
+function Credit(html, showOnScreen) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("html", html);
+  //>>includeEnd('debug');
+  var id;
+  var key = html;
 
-        //>>includeStart('debug', pragmas.debug);
-        if (!hasText && !hasImage && !hasLink) {
-            throw new DeveloperError('text, imageUrl or link is required');
+  if (defined(creditToId[key])) {
+    id = creditToId[key];
+  } else {
+    id = nextCreditId++;
+    creditToId[key] = id;
+  }
+
+  showOnScreen = defaultValue(showOnScreen, false);
+
+  // Credits are immutable so generate an id to use to optimize equal()
+  this._id = id;
+  this._html = html;
+  this._showOnScreen = showOnScreen;
+  this._element = undefined;
+}
+
+Object.defineProperties(Credit.prototype, {
+  /**
+   * The credit content
+   * @memberof Credit.prototype
+   * @type {String}
+   * @readonly
+   */
+  html: {
+    get: function () {
+      return this._html;
+    },
+  },
+
+  /**
+   * @memberof Credit.prototype
+   * @type {Number}
+   * @readonly
+   *
+   * @private
+   */
+  id: {
+    get: function () {
+      return this._id;
+    },
+  },
+
+  /**
+   * Whether the credit should be displayed on screen or in a lightbox
+   * @memberof Credit.prototype
+   * @type {Boolean}
+   * @readonly
+   */
+  showOnScreen: {
+    get: function () {
+      return this._showOnScreen;
+    },
+  },
+
+  /**
+   * Gets the credit element
+   * @memberof Credit.prototype
+   * @type {HTMLElement}
+   * @readonly
+   */
+  element: {
+    get: function () {
+      if (!defined(this._element)) {
+        var html = DOMPurify.sanitize(this._html);
+
+        var div = document.createElement("div");
+        div._creditId = this._id;
+        div.style.display = "inline";
+        div.innerHTML = html;
+
+        var links = div.querySelectorAll("a");
+        for (var i = 0; i < links.length; i++) {
+          links[i].setAttribute("target", "_blank");
         }
-        //>>includeEnd('debug');
 
-        if (!hasText && !hasImage) {
-            text = link;
-        }
-
-        this._text = text;
-        this._imageUrl = imageUrl;
-        this._link = link;
-        this._hasLink = hasLink;
-        this._hasImage = hasImage;
-
-        // Credits are immutable so generate an id to use to optimize equal()
-        var id;
-        var key = JSON.stringify([text, imageUrl, link]);
-
-        if (defined(creditToId[key])) {
-            id = creditToId[key];
-        } else {
-            id = nextCreditId++;
-            creditToId[key] = id;
-        }
-
-        this._id = id;
-    }
-
-    defineProperties(Credit.prototype, {
-        /**
-         * The credit text
-         * @memberof Credit.prototype
-         * @type {String}
-         * @readonly
-         */
-        text : {
-            get : function() {
-                return this._text;
-            }
-        },
-
-        /**
-         * The source location for the image.
-         * @memberof Credit.prototype
-         * @type {String}
-         * @readonly
-         */
-        imageUrl : {
-            get : function() {
-                return this._imageUrl;
-            }
-        },
-
-        /**
-         * A URL location for the credit hyperlink
-         * @memberof Credit.prototype
-         * @type {String}
-         * @readonly
-         */
-        link : {
-            get : function() {
-                return this._link;
-            }
-        },
-
-        /**
-         * @memberof Credit.prototype
-         * @type {Number}
-         * @readonly
-         *
-         * @private
-         */
-        id : {
-            get : function() {
-                return this._id;
-            }
-        }
-    });
-
-    /**
-     * Returns true if the credit has an imageUrl
-     *
-     * @returns {Boolean}
-     */
-    Credit.prototype.hasImage = function() {
-        return this._hasImage;
-    };
-
-    /**
-     * Returns true if the credit has a link
-     *
-     * @returns {Boolean}
-     */
-    Credit.prototype.hasLink = function() {
-        return this._hasLink;
-    };
-
-    /**
-     * Returns true if the credits are equal
-     *
-     * @param {Credit} left The first credit
-     * @param {Credit} right The second credit
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    Credit.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left._id === right._id));
-    };
-
-    /**
-     * Returns true if the credits are equal
-     *
-     * @param {Credit} credit The credit to compare to.
-     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    Credit.prototype.equals = function(credit) {
-        return Credit.equals(this, credit);
-    };
-
-    return Credit;
+        this._element = div;
+      }
+      return this._element;
+    },
+  },
 });
+
+/**
+ * Returns true if the credits are equal
+ *
+ * @param {Credit} left The first credit
+ * @param {Credit} right The second credit
+ * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ */
+Credit.equals = function (left, right) {
+  return (
+    left === right ||
+    (defined(left) && defined(right) && left._id === right._id)
+  );
+};
+
+/**
+ * Returns true if the credits are equal
+ *
+ * @param {Credit} credit The credit to compare to.
+ * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+ */
+Credit.prototype.equals = function (credit) {
+  return Credit.equals(this, credit);
+};
+
+/**
+ * @private
+ * @param attribution
+ * @return {Credit}
+ */
+Credit.getIonCredit = function (attribution) {
+  var showOnScreen =
+    defined(attribution.collapsible) && !attribution.collapsible;
+  var credit = new Credit(attribution.html, showOnScreen);
+
+  credit._isIon = credit.html.indexOf("ion-credit.png") !== -1;
+  return credit;
+};
+
+/**
+ * Duplicates a Credit instance.
+ *
+ * @param {Credit} [credit] The Credit to duplicate.
+ * @returns {Credit} A new Credit instance that is a duplicate of the one provided. (Returns undefined if the credit is undefined)
+ */
+Credit.clone = function (credit) {
+  if (defined(credit)) {
+    return new Credit(credit.html, credit.showOnScreen);
+  }
+};
+export default Credit;

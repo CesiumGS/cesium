@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Draw a rectangle or extruded rectangle that conforms to the surface of the globe."
+    />
+    <meta name="cesium-sandcastle-labels" content="Geometries" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer");
+
+        viewer.entities.add({
+          id: "Red rectangle, zIndex 1",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(
+              -110.0,
+              20.0,
+              -100.5,
+              30.0
+            ),
+            material: Cesium.Color.RED,
+            zIndex: 1,
+          },
+        });
+
+        viewer.entities.add({
+          id: "Textured rectangle, zIndex 2",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(
+              -112.0,
+              25.0,
+              -102.5,
+              35.0
+            ),
+            material: "../images/Cesium_Logo_Color.jpg",
+            zIndex: 2,
+          },
+        });
+
+        viewer.entities.add({
+          id: "Blue rectangle, zIndex 3",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(
+              -110.0,
+              31.0,
+              -100.5,
+              41.0
+            ),
+            material: Cesium.Color.BLUE,
+            zIndex: 3,
+          },
+        });
+
+        viewer.entities.add({
+          id: "Textured rectangle, zIndex 3",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(-99.5, 20.0, -90.0, 30.0),
+            material: "../images/Cesium_Logo_Color.jpg",
+            zIndex: 3,
+          },
+        });
+
+        viewer.entities.add({
+          id: "Green rectangle, zIndex 2",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(-97.5, 25.0, -88.0, 35.0),
+            material: Cesium.Color.GREEN,
+            zIndex: 2,
+          },
+        });
+
+        viewer.entities.add({
+          id: "Blue rectangle, zIndex 1",
+          rectangle: {
+            coordinates: Cesium.Rectangle.fromDegrees(-99.5, 31.0, -90.0, 41.0),
+            material: Cesium.Color.BLUE,
+            zIndex: 1,
+          },
+        });
+
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+          window.alert(
+            "Polylines on terrain are not supported on this platform, Z-index will be ignored"
+          );
+        }
+
+        if (
+          !Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)
+        ) {
+          window.alert(
+            "Textured materials on terrain polygons are not supported on this platform, Z-index will be ignored"
+          );
+        }
+
+        viewer.entities.add({
+          id: "Polyline, zIndex 2",
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArray([
+              -120.0,
+              22.0,
+              -80.0,
+              22.0,
+            ]),
+            width: 8.0,
+            material: new Cesium.PolylineGlowMaterialProperty({
+              glowPower: 0.2,
+              color: Cesium.Color.BLUE,
+            }),
+            zIndex: 2,
+            clampToGround: true,
+          },
+        });
+
+        viewer.zoomTo(viewer.entities);
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

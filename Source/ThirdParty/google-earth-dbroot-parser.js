@@ -1,6 +1,4 @@
-define([
-    './protobuf-minimal'
-], function(
+window.cesiumGoogleEarthDbRootParser = function(
     $protobuf) {
     /* jshint curly: false, sub: true, newcap: false, shadow: true, unused: false*/
     'use strict';
@@ -8147,4 +8145,4 @@ define([
     // End generated code
 
     return $root.keyhole.dbroot;
-});
+};

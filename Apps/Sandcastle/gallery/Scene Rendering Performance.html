@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Use explicit rendering to improve app performance."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+
+      #toolbar h3,
+      h4 {
+        margin: 0 0 2px 0;
+      }
+
+      #toolbar i {
+        font-size: 85%;
+      }
+
+      #toolbar table {
+        margin: 2px 3px;
+        max-width: 280px;
+      }
+
+      #toolbar td {
+        padding-bottom: 10px;
+      }
+
+      #toolbar .cesium-button {
+        margin: 6px 0 0;
+      }
+
+      #toolbar input {
+        vertical-align: middle;
+      }
+
+      #toolbar input:disabled {
+        color: darkgray;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <h3>
+                <code><span data-bind="text: lastRenderTime"></span></code>
+              </h3>
+              Simulation time at last render frame
+              <button
+                type="button"
+                class="cesium-button"
+                data-bind="click: requestRender"
+              >
+                Render new frame
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <h3>
+                <input
+                  value="true"
+                  data-bind="checked: requestRenderMode, valueUpdate: 'input'"
+                  type="checkbox"
+                />
+                <code>requestRenderMode</code> enabled
+              </h3>
+              <i
+                >When enabled, a new frame is only rendered when scene updates
+                occur, or a new frame is explicitly rendered.</i
+              >
+            </td>
+          </tr>
+          <tr data-bind="visible: showTimeOptions">
+            <td>
+              <h4>
+                <input
+                  value="true"
+                  data-bind="checked: timeChangeEnabled, valueUpdate: 'input'"
+                  type="checkbox"
+                />
+                Render when simulation time changes
+              </h4>
+              <i
+                >Automatically render when the simulation time changes by "Max
+                delta time". Adjust the simulation time on the animation widget
+                and "Max delta time" value to see their relationship.</i
+              >
+            </td>
+          </tr>
+          <tr data-bind="visible: showTimeOptions">
+            <td>
+              <h4>Max delta time</h4>
+              <input
+                min="0"
+                max="20"
+                step="0.1"
+                data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled"
+                type="range"
+              />
+              <input
+                size="2"
+                data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled"
+                type="text"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        // Create a viewer that won't render a new frame unless
+        // updates to the scene require it to reduce overall CPU usage.
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          requestRenderMode: true,
+          maximumRenderTimeChange: Infinity,
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        var scene = viewer.scene;
+        scene.debugShowFramesPerSecond = true;
+
+        var tileset;
+
+        var viewModel = {
+          requestRenderMode: true,
+          showTimeOptions: false,
+          timeChangeEnabled: false,
+          maximumRenderTimeChange: 0.0,
+          lastRenderTime: "",
+          requestRender: function () {
+            scene.requestRender();
+          },
+        };
+
+        // Clear scene and set default view.
+        var handler;
+        function resetScene() {
+          viewer.trackedEntity = undefined;
+          viewer.dataSources.removeAll();
+          viewer.entities.removeAll();
+          viewer.scene.primitives.remove(tileset);
+          viewer.clock.shouldAnimate = false;
+          handler = handler && handler.destroy();
+          scene.skyBox.show = true;
+          scene.camera.flyHome(0.0);
+          scene.requestRender();
+          viewModel.showTimeOptions = false;
+          viewModel.timeChangeEnabled = false;
+          viewModel.maximumRenderTimeChange = 0;
+        }
+
+        // Load a tileset and set the view.
+        // No need to call scene.requestRender()
+        function loadTilesetScenario() {
+          resetScene();
+
+          tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(40866),
+          });
+          viewer.scene.primitives.add(tileset);
+          viewer.zoomTo(tileset);
+        }
+
+        // Load an animated model and set the view.
+        // No need to call scene.requestRender()
+        // Enable and adjust maximum simulation time change to see
+        // animations at desired speed.
+        function loadModelScenario() {
+          resetScene();
+          viewModel.timeChangeEnabled = true;
+          viewModel.showTimeOptions = true;
+
+          var entity = viewer.entities.add({
+            name: "Aircraft",
+            position: Cesium.Cartesian3.fromDegrees(
+              -123.0744619,
+              44.0503706,
+              5000.0
+            ),
+            model: {
+              uri: "../../SampleData/models/CesiumAir/Cesium_Air.glb",
+              minimumPixelSize: 128,
+              maximumScale: 20000,
+            },
+          });
+
+          viewer.trackedEntity = entity;
+          viewer.clock.shouldAnimate = true;
+        }
+
+        // Load CZML DataSource with a model and set the trackedEntity.
+        // No need to call scene.requestRender()
+        // Enable and adjust maximum simulation time change to see
+        // animations at desired speed.
+        function loadCzmlScenario() {
+          resetScene();
+          viewModel.showTimeOptions = true;
+          viewModel.timeChangeEnabled = true;
+          viewModel.maximumRenderTimeChange = 10.0;
+
+          viewer.dataSources.add(
+            Cesium.CzmlDataSource.load("../../SampleData/simple.czml")
+          );
+          viewer.clock.shouldAnimate = true;
+        }
+
+        // Pick an entity, only rendering when needed.
+        function pickingScenario() {
+          resetScene();
+
+          var color = Cesium.Color.CORNFLOWERBLUE;
+          var colorProperty = new Cesium.CallbackProperty(function () {
+            return color;
+          }, false);
+          var entity = viewer.entities.add({
+            position: Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
+            box: {
+              dimensions: new Cesium.Cartesian3(1000000.0, 1000000.0, 30000.0),
+              material: new Cesium.ColorMaterialProperty(colorProperty),
+            },
+          });
+
+          scene.requestRender();
+
+          // If the mouse is over the box, change its scale and color,
+          // then request a new render frame.
+          var lastPicked;
+          handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+          handler.setInputAction(function (movement) {
+            var pickedObject = scene.pick(movement.endPosition);
+            if (Cesium.defined(pickedObject) && pickedObject.id === entity) {
+              if (Cesium.defined(lastPicked)) {
+                return;
+              }
+              color = Cesium.Color.YELLOW;
+              scene.requestRender();
+              lastPicked = pickedObject;
+            } else if (Cesium.defined(lastPicked)) {
+              color = Cesium.Color.CORNFLOWERBLUE;
+              scene.requestRender();
+              lastPicked = undefined;
+            }
+          }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        }
+
+        // Changes to the scene with the API will require
+        // calling requestRender() on change.
+        function setScenePropertiesScenario() {
+          resetScene();
+
+          scene.skyBox.show = false;
+          scene.backgroundColor = Cesium.Color.CORNFLOWERBLUE;
+          scene.requestRender();
+        }
+
+        // BEGIN SANDCASTLE EXAMPLE UI SETUP
+
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.track(viewModel);
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "requestRenderMode")
+          .subscribe(function (value) {
+            scene.requestRenderMode = value;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "timeChangeEnabled")
+          .subscribe(function (value) {
+            scene.maximumRenderTimeChange = value
+              ? viewModel.maximumRenderTimeChange
+              : Infinity;
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "maximumRenderTimeChange")
+          .subscribe(function (value) {
+            scene.maximumRenderTimeChange = value;
+          });
+
+        scene.postRender.addEventListener(function () {
+          var time = Cesium.JulianDate.toGregorianDate(scene.lastRenderTime);
+          var value =
+            time.hour +
+            ":" +
+            time.minute +
+            ":" +
+            time.second +
+            ":" +
+            time.millisecond.toFixed(0);
+          Cesium.knockout.getObservable(viewModel, "lastRenderTime")(value);
+        });
+
+        var scenarios = [
+          {
+            text: "Default view",
+            onselect: resetScene,
+          },
+          {
+            text: "Load a 3D tileset and set the view",
+            onselect: loadTilesetScenario,
+          },
+          {
+            text: "Mouseover picking",
+            onselect: pickingScenario,
+          },
+          {
+            text: "Load time-dynamic CZML",
+            onselect: loadCzmlScenario,
+          },
+          {
+            text: "Animated model",
+            onselect: loadModelScenario,
+          },
+          {
+            text: "Scene changes with API",
+            onselect: setScenePropertiesScenario,
+          },
+        ];
+
+        Sandcastle.addToolbarMenu(scenarios);
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Apply materials to the globe." />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      .demo-container {
+        background-color: #303336;
+        border-radius: 5px;
+        padding: 5px;
+        margin: 5px 3px;
+      }
+      .demo-container input {
+        vertical-align: middle;
+        margin-top: 0;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <div id="zoomButtons"></div>
+      <div class="demo-container">
+        <label
+          ><input
+            type="radio"
+            name="shadingMaterials"
+            value="none"
+            data-bind="checked: selectedShading"
+          />
+          No shading</label
+        >
+        <label
+          ><input
+            type="radio"
+            name="shadingMaterials"
+            value="elevation"
+            data-bind="checked: selectedShading"
+          />
+          Elevation</label
+        >
+        <label
+          ><input
+            type="radio"
+            name="shadingMaterials"
+            value="slope"
+            data-bind="checked: selectedShading"
+          />
+          Slope</label
+        >
+        <label
+          ><input
+            type="radio"
+            name="shadingMaterials"
+            value="aspect"
+            data-bind="checked: selectedShading"
+          />
+          Aspect</label
+        >
+      </div>
+      <div class="demo-container">
+        <div>
+          <label
+            ><input type="checkbox" data-bind="checked: enableContour" />Enable
+            Contour Lines</label
+          >
+        </div>
+        <div>
+          Spacing
+          <input
+            style="width: 136px"
+            type="range"
+            min="1.0"
+            max="500.0"
+            step="1.0"
+            data-bind="value: contourSpacing, valueUpdate: 'input', enable: enableContour"
+          />
+          <span data-bind="text: contourSpacing"></span>m
+        </div>
+        <div>
+          Line Width
+          <input
+            style="width: 125px"
+            type="range"
+            min="1.0"
+            max="10.0"
+            step="1.0"
+            data-bind="value: contourWidth, valueUpdate: 'input', enable: enableContour"
+          />
+          <span data-bind="text: contourWidth"></span>px
+        </div>
+        <div>
+          <button
+            type="button"
+            data-bind="click: changeColor, enable: enableContour"
+          >
+            Change contour color
+          </button>
+        </div>
+      </div>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain({
+            requestVertexNormals: true, //Needed to visualize slope
+          }),
+        });
+        viewer.scene.globe.enableLighting = true;
+
+        function getElevationContourMaterial() {
+          // Creates a composite material with both elevation shading and contour lines
+          return new Cesium.Material({
+            fabric: {
+              type: "ElevationColorContour",
+              materials: {
+                contourMaterial: {
+                  type: "ElevationContour",
+                },
+                elevationRampMaterial: {
+                  type: "ElevationRamp",
+                },
+              },
+              components: {
+                diffuse:
+                  "contourMaterial.alpha == 0.0 ? elevationRampMaterial.diffuse : contourMaterial.diffuse",
+                alpha:
+                  "max(contourMaterial.alpha, elevationRampMaterial.alpha)",
+              },
+            },
+            translucent: false,
+          });
+        }
+
+        function getSlopeContourMaterial() {
+          // Creates a composite material with both slope shading and contour lines
+          return new Cesium.Material({
+            fabric: {
+              type: "SlopeColorContour",
+              materials: {
+                contourMaterial: {
+                  type: "ElevationContour",
+                },
+                slopeRampMaterial: {
+                  type: "SlopeRamp",
+                },
+              },
+              components: {
+                diffuse:
+                  "contourMaterial.alpha == 0.0 ? slopeRampMaterial.diffuse : contourMaterial.diffuse",
+                alpha: "max(contourMaterial.alpha, slopeRampMaterial.alpha)",
+              },
+            },
+            translucent: false,
+          });
+        }
+
+        function getAspectContourMaterial() {
+          // Creates a composite material with both aspect shading and contour lines
+          return new Cesium.Material({
+            fabric: {
+              type: "AspectColorContour",
+              materials: {
+                contourMaterial: {
+                  type: "ElevationContour",
+                },
+                aspectRampMaterial: {
+                  type: "AspectRamp",
+                },
+              },
+              components: {
+                diffuse:
+                  "contourMaterial.alpha == 0.0 ? aspectRampMaterial.diffuse : contourMaterial.diffuse",
+                alpha: "max(contourMaterial.alpha, aspectRampMaterial.alpha)",
+              },
+            },
+            translucent: false,
+          });
+        }
+
+        var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
+        var slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2) / 2, 0.87, 0.91, 1.0];
+        var aspectRamp = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0];
+        function getColorRamp(selectedShading) {
+          var ramp = document.createElement("canvas");
+          ramp.width = 100;
+          ramp.height = 1;
+          var ctx = ramp.getContext("2d");
+
+          var values;
+          if (selectedShading === "elevation") {
+            values = elevationRamp;
+          } else if (selectedShading === "slope") {
+            values = slopeRamp;
+          } else if (selectedShading === "aspect") {
+            values = aspectRamp;
+          }
+
+          var grd = ctx.createLinearGradient(0, 0, 100, 0);
+          grd.addColorStop(values[0], "#000000"); //black
+          grd.addColorStop(values[1], "#2747E0"); //blue
+          grd.addColorStop(values[2], "#D33B7D"); //pink
+          grd.addColorStop(values[3], "#D33038"); //red
+          grd.addColorStop(values[4], "#FF9742"); //orange
+          grd.addColorStop(values[5], "#ffd700"); //yellow
+          grd.addColorStop(values[6], "#ffffff"); //white
+
+          ctx.fillStyle = grd;
+          ctx.fillRect(0, 0, 100, 1);
+
+          return ramp;
+        }
+
+        var minHeight = -414.0; // approximate dead sea elevation
+        var maxHeight = 8777.0; // approximate everest elevation
+        var contourColor = Cesium.Color.RED.clone();
+        var contourUniforms = {};
+        var shadingUniforms = {};
+
+        // The viewModel tracks the state of our mini application.
+        var viewModel = {
+          enableContour: false,
+          contourSpacing: 150.0,
+          contourWidth: 2.0,
+          selectedShading: "elevation",
+          changeColor: function () {
+            contourUniforms.color = Cesium.Color.fromRandom(
+              { alpha: 1.0 },
+              contourColor
+            );
+          },
+        };
+
+        // Convert the viewModel members into knockout observables.
+        Cesium.knockout.track(viewModel);
+
+        // Bind the viewModel to the DOM elements of the UI that call for it.
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        function updateMaterial() {
+          var hasContour = viewModel.enableContour;
+          var selectedShading = viewModel.selectedShading;
+          var globe = viewer.scene.globe;
+          var material;
+          if (hasContour) {
+            if (selectedShading === "elevation") {
+              material = getElevationContourMaterial();
+              shadingUniforms =
+                material.materials.elevationRampMaterial.uniforms;
+              shadingUniforms.minimumHeight = minHeight;
+              shadingUniforms.maximumHeight = maxHeight;
+              contourUniforms = material.materials.contourMaterial.uniforms;
+            } else if (selectedShading === "slope") {
+              material = getSlopeContourMaterial();
+              shadingUniforms = material.materials.slopeRampMaterial.uniforms;
+              contourUniforms = material.materials.contourMaterial.uniforms;
+            } else if (selectedShading === "aspect") {
+              material = getAspectContourMaterial();
+              shadingUniforms = material.materials.aspectRampMaterial.uniforms;
+              contourUniforms = material.materials.contourMaterial.uniforms;
+            } else {
+              material = Cesium.Material.fromType("ElevationContour");
+              contourUniforms = material.uniforms;
+            }
+            contourUniforms.width = viewModel.contourWidth;
+            contourUniforms.spacing = viewModel.contourSpacing;
+            contourUniforms.color = contourColor;
+          } else if (selectedShading === "elevation") {
+            material = Cesium.Material.fromType("ElevationRamp");
+            shadingUniforms = material.uniforms;
+            shadingUniforms.minimumHeight = minHeight;
+            shadingUniforms.maximumHeight = maxHeight;
+          } else if (selectedShading === "slope") {
+            material = Cesium.Material.fromType("SlopeRamp");
+            shadingUniforms = material.uniforms;
+          } else if (selectedShading === "aspect") {
+            material = Cesium.Material.fromType("AspectRamp");
+            shadingUniforms = material.uniforms;
+          }
+          if (selectedShading !== "none") {
+            shadingUniforms.image = getColorRamp(selectedShading);
+          }
+
+          globe.material = material;
+        }
+
+        updateMaterial();
+
+        Cesium.knockout
+          .getObservable(viewModel, "enableContour")
+          .subscribe(function (newValue) {
+            updateMaterial();
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "contourWidth")
+          .subscribe(function (newValue) {
+            contourUniforms.width = parseFloat(newValue);
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "contourSpacing")
+          .subscribe(function (newValue) {
+            contourUniforms.spacing = parseFloat(newValue);
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "selectedShading")
+          .subscribe(function (value) {
+            updateMaterial();
+          });
+
+        Sandcastle.addToolbarMenu(
+          [
+            {
+              text: "Himalayas",
+              onselect: function () {
+                viewer.camera.setView({
+                  destination: new Cesium.Cartesian3(
+                    322100.7492728492,
+                    5917960.047024654,
+                    3077602.646977297
+                  ),
+                  orientation: {
+                    heading: 5.988151498702285,
+                    pitch: -1.5614542839414822,
+                    roll: 0,
+                  },
+                });
+                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
+                  "2017-09-22T04:00:00Z"
+                );
+              },
+            },
+            {
+              text: "Half Dome",
+              onselect: function () {
+                viewer.camera.setView({
+                  destination: new Cesium.Cartesian3(
+                    -2495709.521843174,
+                    -4391600.804712465,
+                    3884463.7192916023
+                  ),
+                  orientation: {
+                    heading: 1.7183056487769202,
+                    pitch: -0.06460370548034144,
+                    roll: 0.0079181631783527,
+                  },
+                });
+                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
+                  "2017-09-22T18:00:00Z"
+                );
+              },
+            },
+            {
+              text: "Vancouver",
+              onselect: function () {
+                viewer.camera.setView({
+                  destination: new Cesium.Cartesian3(
+                    -2301222.367751603,
+                    -3485269.915771613,
+                    4812080.961755785
+                  ),
+                  orientation: {
+                    heading: 0.11355958593902571,
+                    pitch: -0.260011078090858,
+                    roll: 0.00039019018274721873,
+                  },
+                });
+                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
+                  "2017-09-22T18:00:00Z"
+                );
+              },
+            },
+            {
+              text: "Mount Everest",
+              onselect: function () {
+                viewer.camera.setView({
+                  destination: new Cesium.Cartesian3(
+                    282157.6960889096,
+                    5638892.465594703,
+                    2978736.186473513
+                  ),
+                  orientation: {
+                    heading: 4.747266966349747,
+                    pitch: -0.2206998858596192,
+                    roll: 6.280340554587955,
+                  },
+                });
+                viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601(
+                  "2017-09-22T04:00:00Z"
+                );
+              },
+            },
+          ],
+          "zoomButtons"
+        );
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passTranslucent = 7.0;
+const float czm_passTranslucent = 8.0;

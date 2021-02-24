@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta name="description" content="Custom post processing effect." />
+    <meta
+      name="cesium-sandcastle-labels"
+      content="Showcases, Post Processing"
+    />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          shouldAnimate: true,
+        });
+
+        var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
+        var url = "../../SampleData/models/CesiumMan/Cesium_Man.glb";
+        viewer.trackedEntity = viewer.entities.add({
+          name: url,
+          position: position,
+          model: {
+            uri: url,
+          },
+        });
+
+        var fragmentShaderSource =
+          "uniform sampler2D colorTexture; \n" +
+          "varying vec2 v_textureCoordinates; \n" +
+          "const int KERNEL_WIDTH = 16; \n" +
+          "void main(void) \n" +
+          "{ \n" +
+          "    vec2 step = czm_pixelRatio / czm_viewport.zw; \n" +
+          "    vec2 integralPos = v_textureCoordinates - mod(v_textureCoordinates, 8.0 * step); \n" +
+          "    vec3 averageValue = vec3(0.0); \n" +
+          "    for (int i = 0; i < KERNEL_WIDTH; i++) \n" +
+          "    { \n" +
+          "        for (int j = 0; j < KERNEL_WIDTH; j++) \n" +
+          "        { \n" +
+          "            averageValue += texture2D(colorTexture, integralPos + step * vec2(i, j)).rgb; \n" +
+          "        } \n" +
+          "    } \n" +
+          "    averageValue /= float(KERNEL_WIDTH * KERNEL_WIDTH); \n" +
+          "    gl_FragColor = vec4(averageValue, 1.0); \n" +
+          "} \n";
+        viewer.scene.postProcessStages.add(
+          new Cesium.PostProcessStage({
+            fragmentShader: fragmentShaderSource,
+          })
+        );
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>

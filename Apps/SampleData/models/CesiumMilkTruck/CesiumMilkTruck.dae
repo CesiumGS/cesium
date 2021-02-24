@@ -118,7 +118,7 @@
     </library_animations>
     <library_images>
         <image id="Image0001" name="Image0001">
-            <init_from>CesiumMilkTruck.png</init_from>
+            <init_from>CesiumMilkTruck.jpg</init_from>
         </image>
     </library_images>
     <library_materials>

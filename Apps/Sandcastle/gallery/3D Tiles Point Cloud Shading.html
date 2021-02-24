@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Point Cloud Attenuation and Eye Dome Lighting example."
+    />
+    <meta name="cesium-sandcastle-labels" content="3D Tiles" />
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../Build/CesiumUnminified/Cesium.js"
+      nomodule
+    ></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+      #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+      }
+      #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+      }
+      #toolbar .header {
+        font-weight: bold;
+      }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <select
+        data-bind="options: exampleTypes, value: currentExampleType"
+      ></select>
+      <table>
+        <tbody>
+          <tr>
+            <td>Maximum Screen Space Error</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="64.0"
+                step="0.1"
+                data-bind="value: maximumScreenSpaceError, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: maximumScreenSpaceError"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td class="header">Attenuation</td>
+          </tr>
+          <tr>
+            <td>Geometric Error Scale</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="2.0"
+                step="0.1"
+                data-bind="value: geometricErrorScale, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: geometricErrorScale"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Attenuation</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="32.0"
+                step="1.0"
+                data-bind="value: maximumAttenuation, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: maximumAttenuation"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Base Resolution</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="10.0"
+                step="0.01"
+                data-bind="value: baseResolution, valueUpdate: 'input'"
+              />
+              <input type="text" size="5" data-bind="value: baseResolution" />
+            </td>
+          </tr>
+          <tr>
+            <td class="header">Eye Dome Lighting</td>
+          </tr>
+          <tr>
+            <td>Eye Dome Lighting Strength</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="10.0"
+                step="0.1"
+                data-bind="value: eyeDomeLightingStrength, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: eyeDomeLightingStrength"
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Eye Dome Lighting Radius</td>
+            <td>
+              <input
+                type="range"
+                min="0.0"
+                max="10.0"
+                step="0.1"
+                data-bind="value: eyeDomeLightingRadius, valueUpdate: 'input'"
+              />
+              <input
+                type="text"
+                size="5"
+                data-bind="value: eyeDomeLightingRadius"
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          terrainProvider: Cesium.createWorldTerrain(),
+        });
+
+        var scene = viewer.scene;
+        var viewModelTileset;
+
+        if (!Cesium.PointCloudShading.isSupported(scene)) {
+          window.alert("This browser does not support point cloud shading");
+        }
+
+        function reset() {
+          viewer.scene.primitives.remove(viewModelTileset);
+          viewModelTileset = undefined;
+        }
+
+        // The viewModel tracks the state of our mini application.
+        var pointClouds = ["St. Helens", "Church"];
+        var viewModel = {
+          exampleTypes: pointClouds,
+          currentExampleType: pointClouds[0],
+          maximumScreenSpaceError: 16.0,
+          geometricErrorScale: 1.0,
+          maximumAttenuation: 0, // Equivalent to undefined
+          baseResolution: 0, // Equivalent to undefined
+          eyeDomeLightingStrength: 1.0,
+          eyeDomeLightingRadius: 1.0,
+        };
+
+        function tilesetToViewModel(tileset) {
+          viewModelTileset = tileset;
+
+          var pointCloudShading = tileset.pointCloudShading;
+          viewModel.maximumScreenSpaceError = tileset.maximumScreenSpaceError;
+          viewModel.geometricErrorScale = pointCloudShading.geometricErrorScale;
+          viewModel.maximumAttenuation = pointCloudShading.maximumAttenuation
+            ? pointCloudShading.maximumAttenuation
+            : 0;
+          viewModel.baseResolution = pointCloudShading.baseResolution
+            ? pointCloudShading.baseResolution
+            : 0;
+          viewModel.eyeDomeLightingStrength =
+            pointCloudShading.eyeDomeLightingStrength;
+          viewModel.eyeDomeLightingRadius =
+            pointCloudShading.eyeDomeLightingRadius;
+        }
+
+        function loadStHelens() {
+          // Set the initial camera view to look at Mt. St. Helens
+          var initialPosition = Cesium.Cartesian3.fromRadians(
+            -2.1344873183780484,
+            0.8071380277370774,
+            5743.394497982162
+          );
+          var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+            112.99596671210358,
+            -21.34390550872461,
+            0.0716951918898415
+          );
+          viewer.scene.camera.setView({
+            destination: initialPosition,
+            orientation: initialOrientation,
+            endTransform: Cesium.Matrix4.IDENTITY,
+          });
+
+          // Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
+          // This tileset uses replacement refinement and has geometric error approximately equal to
+          // the average interpoint distance in each tile.
+          var tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(5713),
+          });
+          viewer.scene.primitives.add(tileset);
+
+          tileset.maximumScreenSpaceError = 16.0;
+          tileset.pointCloudShading.maximumAttenuation = undefined; // Will be based on maximumScreenSpaceError instead
+          tileset.pointCloudShading.baseResolution = undefined;
+          tileset.pointCloudShading.geometricErrorScale = 1.0;
+          tileset.pointCloudShading.attenuation = true;
+          tileset.pointCloudShading.eyeDomeLighting = true;
+
+          tilesetToViewModel(tileset);
+        }
+
+        function loadChurch() {
+          // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
+          // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
+          var tileset = new Cesium.Cesium3DTileset({
+            url: Cesium.IonResource.fromAssetId(16421),
+          });
+          viewer.scene.primitives.add(tileset);
+
+          tileset.maximumScreenSpaceError = 16.0;
+          tileset.pointCloudShading.maximumAttenuation = 4.0; // Don't allow points larger than 4 pixels.
+          tileset.pointCloudShading.baseResolution = 0.05; // Assume an original capture resolution of 5 centimeters between neighboring points.
+          tileset.pointCloudShading.geometricErrorScale = 0.5; // Applies to both geometric error and the base resolution.
+          tileset.pointCloudShading.attenuation = true;
+          tileset.pointCloudShading.eyeDomeLighting = true;
+
+          viewer.scene.camera.setView({
+            destination: new Cesium.Cartesian3(
+              4401744.644145314,
+              225051.41078911052,
+              4595420.374784433
+            ),
+            orientation: new Cesium.HeadingPitchRoll(
+              5.646733805039757,
+              -0.276607153839886,
+              6.281110875400085
+            ),
+          });
+
+          tilesetToViewModel(tileset);
+        }
+
+        function checkZero(newValue) {
+          var newValueFloat = parseFloat(newValue);
+          return newValueFloat === 0.0 ? undefined : newValueFloat;
+        }
+
+        loadStHelens();
+
+        // Convert the viewModel members into knockout observables.
+        Cesium.knockout.track(viewModel);
+
+        // Bind the viewModel to the DOM elements of the UI that call for it.
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
+
+        Cesium.knockout
+          .getObservable(viewModel, "currentExampleType")
+          .subscribe(function (newValue) {
+            reset();
+            if (newValue === pointClouds[0]) {
+              loadStHelens();
+            } else if (newValue === pointClouds[1]) {
+              loadChurch();
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "maximumScreenSpaceError")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.maximumScreenSpaceError = parseFloat(newValue);
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "geometricErrorScale")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.pointCloudShading.geometricErrorScale = parseFloat(
+                newValue
+              );
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "maximumAttenuation")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.pointCloudShading.maximumAttenuation = checkZero(
+                newValue
+              );
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "baseResolution")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.pointCloudShading.baseResolution = checkZero(
+                newValue
+              );
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "eyeDomeLightingStrength")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.pointCloudShading.eyeDomeLightingStrength = parseFloat(
+                newValue
+              );
+            }
+          });
+
+        Cesium.knockout
+          .getObservable(viewModel, "eyeDomeLightingRadius")
+          .subscribe(function (newValue) {
+            if (Cesium.defined(viewModelTileset)) {
+              viewModelTileset.pointCloudShading.eyeDomeLightingRadius = parseFloat(
+                newValue
+              );
+            }
+          });
+
+        Sandcastle.addToggleButton("Enable Attenuation", true, function (
+          checked
+        ) {
+          if (Cesium.defined(viewModelTileset)) {
+            viewModelTileset.pointCloudShading.attenuation = checked;
+          }
+        });
+
+        Sandcastle.addToggleButton("Enable Eye Dome Lighting", true, function (
+          checked
+        ) {
+          if (Cesium.defined(viewModelTileset)) {
+            viewModelTileset.pointCloudShading.eyeDomeLighting = checked;
+          }
+        });
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
+</html>
