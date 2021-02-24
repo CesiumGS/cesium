@@ -34,7 +34,9 @@ var activeRequests = [];
 var numberOfActiveRequestsByServer = {};
 
 var pageUri =
-  typeof document !== "undefined" ? new Uri(document.location.href) : new Uri();
+  typeof document !== "undefined" && typeof document.location !== "undefined"
+    ? new Uri(document.location.href)
+    : new Uri();
 
 var requestCompletedEvent = new Event();
 

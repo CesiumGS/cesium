@@ -32,7 +32,10 @@ getAbsoluteUri._implementation = function (relative, base, documentObject) {
   //>>includeEnd('debug');
 
   if (!defined(base)) {
-    if (typeof documentObject === "undefined") {
+    if (
+      typeof documentObject === "undefined" ||
+      typeof documentObject.location === "undefined"
+    ) {
       return relative;
     }
     base = defaultValue(documentObject.baseURI, documentObject.location.href);

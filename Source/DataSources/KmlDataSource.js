@@ -2094,7 +2094,10 @@ function processExtendedData(node, entity) {
 }
 
 var scratchDiv;
-if (typeof document !== "undefined") {
+if (
+  typeof document !== "undefined" &&
+  typeof document.createElement !== "undefined"
+) {
   scratchDiv = document.createElement("div");
 }
 
