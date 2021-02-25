@@ -28,6 +28,9 @@ describe("Scene/Implicit3DTileContent", function () {
     },
     content: {
       uri: "https://example.com/{level}/{x}/{y}.b3dm",
+      extras: {
+        author: "Cesium",
+      },
     },
     extensions: {
       "3DTILES_implicit_tiling": {
@@ -38,6 +41,9 @@ describe("Scene/Implicit3DTileContent", function () {
           uri: "https://example.com/{level}/{x}/{y}.subtree",
         },
       },
+    },
+    extras: {
+      year: "2021",
     },
   };
   var implicitTileset = new ImplicitTileset(tilesetResource, tileJson);
@@ -404,12 +410,17 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
-  it("preserves additional tile properties", function () {
-    fail();
-  });
-
-  it("preserves additional content properties", function () {
-    fail();
+  it("preserves tile extras", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
+    });
   });
 
   describe("_deriveBoundingBox", function () {
@@ -544,7 +555,6 @@ describe("Scene/Implicit3DTileContent", function () {
 
   describe("3DTILES_multiple_contents", function () {
     it("one content is transcoded to a regular tile", function () {
-      // TODO: not sure yet if this is the desired behavior
       fail();
     });
 

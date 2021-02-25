@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -364,7 +365,9 @@ function deriveChildTile(
     var contentJson = {
       uri: childContentUri,
     };
-    contentJsons.push(contentJson);
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
   var boundingVolume = deriveBoundingVolume(
@@ -393,7 +396,9 @@ function deriveChildTile(
   var childTile = makeTile(
     implicitContent,
     implicitTileset.baseResource,
-    tileJson,
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    combine(tileJson, implicitTileset.tileHeader),
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;
