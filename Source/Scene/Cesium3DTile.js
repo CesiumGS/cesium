@@ -30,6 +30,8 @@ import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
+import Multiple3DTileContent from "./Multiple3DTileContent.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
@@ -195,10 +197,22 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   var contentState;
   var contentResource;
   var serverKey;
+  var hasMultipleContents;
+  var multipleContentsHeader;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (defined(contentHeader)) {
+  // TODO: Don't store new properties
+  if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
+    //hasMultipleContents = true;
+    //multipleContentsHeader = header.extensions['3DTILES_multiple_contents'];
+
+    hasEmptyContent = false;
+    contentState = Cesium3DTileContentState.UNLOADED;
+    // Each content may have its own URI, but they all need to be resolved
+    // relative to the tileset, so the base resource is used.
+    contentResource = baseResource.clone();
+  } else if (defined(contentHeader)) {
     var contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
       Cesium3DTile._deprecationWarning(
@@ -227,6 +241,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._contentReadyToProcessPromise = undefined;
   this._contentReadyPromise = undefined;
   this._expiredContent = undefined;
+  this._multipleContentsHeader = multipleContentsHeader;
 
   this._serverKey = serverKey;
 
@@ -239,6 +254,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasEmptyContent = hasEmptyContent;
+
+  /**
+   * When <code>true</code>, the tile uses the
+   * <code>3DTILES_multiple_contents</code> and has multiple contents that
+   * will be stored in a {@link Multiple3DTileContent}.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents specification}
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasMultipleContents = hasMultipleContents;
 
   /**
    * When <code>true</code>, the tile's content points to an external tileset.
@@ -998,11 +1026,52 @@ function getJsonContent(arrayBuffer, byteOffset) {
 Cesium3DTile.prototype.requestContent = function () {
   var that = this;
   var tileset = this._tileset;
+  var content;
 
   if (this.hasEmptyContent) {
     return false;
   }
 
+  /*
+   * TODO: should be more like this
+  if (hasExtension && !defined(this._content.readyToProcessPromise)) {
+    this._content.request();
+    // eventually it'll set readyToProcessPromise;
+  }
+  */
+
+  var contentFailedFunction = getContentFailedFunction(this, tileset);
+  // TODO: check for extension instead
+  if (this.hasMultipleContents) {
+    // Unlike composite tiles, the Multiple3DTileContent can be created
+    // immediately, but its ready promise requires fetching additional
+    // contents.
+    // TODO: pass in the resource with expiration date here
+    content = new Multiple3DTileContent(
+      tileset,
+      this,
+      this._contentResource,
+      this._multipleContentsHeader
+    );
+    this._content = content;
+    this._contentState = Cesium3DTileContentState.PROCESSING;
+    this._contentReadyToProcessPromise.resolve(content);
+    content.readyPromise
+      .then(function (content) {
+        // TODO: there's more statistic handling that goes here
+        that._contentState = Cesium3DTileContentState.READY;
+        that._contentReadyPromise.resolve(content);
+      })
+      .otherwise(function (error) {
+        // TODO: there's more statistic handling that goes here
+        contentFailedFunction(error);
+      });
+
+    return true;
+  }
+
+  // TODO: expiration should still be per tile, not per content.
+  // TODO: Move this before the check for multi-content
   var resource = this._contentResource.clone();
   var expired = this.contentExpired;
   if (expired) {
@@ -1034,7 +1103,6 @@ Cesium3DTile.prototype.requestContent = function () {
   this._contentReadyToProcessPromise = when.defer();
   this._contentReadyPromise = when.defer();
 
-  var contentFailedFunction = getContentFailedFunction(this, tileset);
   promise
     .then(function (arrayBuffer) {
       if (that.isDestroyed()) {
@@ -1051,9 +1119,10 @@ Cesium3DTile.prototype.requestContent = function () {
       }
 
       var contentFactory = Cesium3DTileContentFactory[contentIdentifer];
-      var content;
 
       // Vector and Geometry tile rendering do not support the skip LOD optimization.
+      // TODO: for multi-content, if ANY inner content is vctr/geom
+      // disable skip LOD
       tileset._disableSkipLevelOfDetail =
         tileset._disableSkipLevelOfDetail ||
         contentIdentifer === "vctr" ||
@@ -1126,6 +1195,7 @@ Cesium3DTile.prototype.requestContent = function () {
       });
     })
     .otherwise(function (error) {
+      // TODO: this only affects fetching array buffers
       if (request.state === RequestState.CANCELLED) {
         // Cancelled due to low priority - try again later.
         that._contentState = contentState;

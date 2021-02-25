@@ -127,10 +127,11 @@ Object.defineProperties(Cesium3DTileContent.prototype, {
   },
 
   /**
-   * Gets the array of {@link Cesium3DTileContent} objects that represent the
-   * content a composite's inner tiles, which can also be composites.
+   * Gets the array of {@link Cesium3DTileContent} objects for contents that contain other contents. This includes composite contents as well as the <code>3DTILES_multiple_contents extension</code>. The inner contents may in turn have inner
+   * contents, such as a composite tile that contains a composite tile.
    *
-   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification/TileFormats/Composite|Composite specification}
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents specification}
    *
    * @memberof Cesium3DTileContent.prototype
    *

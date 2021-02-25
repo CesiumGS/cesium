@@ -577,6 +577,7 @@ function Cesium3DTileset(options) {
    * });
    */
   this.tileFailed = new Event();
+  // TODO: this will likely need to be deprecated in favor of this.contentFailed
 
   /**
    * This event fires once for each visible tile in a frame.  This can be used to manually
