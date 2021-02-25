@@ -48,8 +48,8 @@ describe("Scene/Metadata3DTilesExtension", function () {
           count: 100,
           properties: {
             height: {
-              min: [10.0],
-              max: [20.0],
+              min: 10.0,
+              max: 20.0,
             },
           },
         },
