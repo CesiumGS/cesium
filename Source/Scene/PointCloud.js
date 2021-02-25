@@ -101,6 +101,9 @@ function PointCloud(options) {
   this.normalShading = true;
   this._normalShading = true;
 
+  this.lightColor = undefined;
+  this._lightColor = undefined;
+
   this._opaqueRenderState = undefined;
   this._translucentRenderState = undefined;
 
@@ -910,6 +913,9 @@ function createUniformMap(pointCloud, frameState) {
     u_constantColor: function () {
       return pointCloud._constantColor;
     },
+    u_lightColor: function () {
+      return pointCloud._lightColor;
+    },
     u_clippingPlanes: function () {
       var clippingPlanes = pointCloud.clippingPlanes;
       var isClipped = pointCloud.isClipped;
@@ -1197,6 +1203,11 @@ function createShaders(pointCloud, frameState, style) {
     "uniform vec4 u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier; \n" +
     "uniform vec4 u_constantColor; \n" +
     "uniform vec4 u_highlightColor; \n";
+
+  if (defined(pointCloud._lightColor)) {
+    vs += "uniform vec3 u_lightColor; \n";
+  }
+
   vs += "float u_pointSize; \n" + "float u_time; \n";
 
   if (attenuation) {
@@ -1593,6 +1604,12 @@ PointCloud.prototype.update = function (frameState) {
     this._normalShading = this.normalShading;
     shadersDirty = true;
   }
+
+  if (defined(this.lightColor) !== defined(this._lightColor)) {
+    shadersDirty = true;
+  }
+
+  this._lightColor = Cartesian3.clone(this.lightColor, this._lightColor);
 
   if (this._style !== this.style || this.styleDirty) {
     this._style = this.style;

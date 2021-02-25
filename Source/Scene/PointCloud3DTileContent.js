@@ -330,6 +330,7 @@ PointCloud3DTileContent.prototype.update = function (tileset, frameState) {
   pointCloud.attenuation = pointCloudShading.attenuation;
   pointCloud.backFaceCulling = pointCloudShading.backFaceCulling;
   pointCloud.normalShading = pointCloudShading.normalShading;
+  pointCloud.lightColor = tileset.lightColor;
   pointCloud.geometricError = getGeometricError(this);
   pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
   if (
