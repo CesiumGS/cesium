@@ -913,6 +913,10 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       if (!defined(value)) {
+        if(defined(this._billboardCollection._textureAtlas))
+        {
+          this._billboardCollection._textureAtlas.resetNode(this._imageIndex,this._imageId);
+        }
         this._imageIndex = -1;
         this._imageSubRegion = undefined;
         this._imageId = undefined;

@@ -75,6 +75,7 @@ function TextureAtlas(options) {
   this._textureCoordinates = [];
   this._guid = createGuid();
   this._idHash = {};
+  this._idIndex={};
   this._initialSize = initialSize;
 
   this._root = undefined;
@@ -398,6 +399,7 @@ TextureAtlas.prototype.addImage = function (id, image) {
     }
 
     var index = that.numberOfImages;
+    that._idIndex[id]=index;
 
     addImage(that, image, index);
 
@@ -407,9 +409,43 @@ TextureAtlas.prototype.addImage = function (id, image) {
   // store the promise
   this._idHash[id] = indexPromise;
 
+
   return indexPromise;
 };
 
+function findnodByImageIndex(node,imageindex){
+  if(node.imageIndex==imageindex){
+    return node;
+  }
+  if(node.childNode1){
+    let childnode1= findnodByImageIndex(node.childNode1,imageindex);
+    if(defined(childnode1))
+      return childnode1;
+  }
+  if(node.childNode2){
+    let childnode2=findnodByImageIndex(node.childNode2,imageindex);
+    if(defined(childnode2)){
+      return childnode2;
+    }
+  }
+  return null;
+}
+
+TextureAtlas.prototype.resetNode=function(imageindex,imageid){
+  if(defined(imageindex)){
+    if(this._root){
+      var node=findnodByImageIndex(this._root,imageindex);
+      if(defined(node)){
+        node.imageIndex=null;
+      }
+    }
+  }
+  if(defined(imageid)){
+    delete this._idHash[imageid];
+    this._textureCoordinates.splice(this._idIndex[imageid],1);
+    delete this._idIndex[imageid];
+  }
+}
 /**
  * Add a sub-region of an existing atlas image as additional image indices.
  *
