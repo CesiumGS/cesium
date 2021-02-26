@@ -899,13 +899,17 @@ function Cesium3DTileset(options) {
   this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
   /**
-   * Render this primitive during the pick pass instead of the tileset
+   * Render this primitive during the pick pass instead of the tileset.
    *
+   * @type {Primitive}
    * @private
    */
   this.pickPrimitive = options.pickPrimitive;
 
   /**
+   * When true, causes this tileset's pick primitive to be used in the pick pass.
+   *
+   * @type {Boolean}
    * @private
    */
   this.usePickPrimitive = false;
