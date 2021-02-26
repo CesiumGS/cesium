@@ -71,7 +71,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return 0;
+      return this._model.pointsLength;
     },
   },
 
