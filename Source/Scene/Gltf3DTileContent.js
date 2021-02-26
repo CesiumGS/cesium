@@ -259,7 +259,7 @@ function createBatchTableFromFeatureMetadata(content, featureTable) {
           batchTableBinaryType = "VEC2";
         } else if (componentCount === 3) {
           batchTableBinaryType = "VEC3";
-        } else if (componentType === 4) {
+        } else if (componentCount === 4) {
           batchTableBinaryType = "VEC4";
         }
       }
