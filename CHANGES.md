@@ -4,7 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.pickPrimitive` and `Cesium3DTileset.usePickPrimitive` for rendering primitives instead of the tileset during the pick pass.
+- Added `Cesium3DTileset.pickPrimitive` for rendering primitives instead of the tileset during the pick pass.
 
 ### 1.79 - 2021-03-01
 

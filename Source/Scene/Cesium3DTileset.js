@@ -91,6 +91,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+ * @param {Primitive} [options.pickPrimitive] The primitive to be rendered during the pick pass instead of the tileset.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -101,7 +102,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- * @param {Primitive} [options.pickPrimitive] The primitive to be rendered during the pick pass instead of the tileset.
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
@@ -906,14 +906,6 @@ function Cesium3DTileset(options) {
    * @private
    */
   this.pickPrimitive = options.pickPrimitive;
-
-  /**
-   * When true, causes this tileset's pick primitive to be used in the pick pass.
-   *
-   * @type {Boolean}
-   * @private
-   */
-  this.usePickPrimitive = false;
 
   var that = this;
   var resource;
@@ -2483,11 +2475,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
     requestTiles(tileset);
   }
 
-  if (
-    frameState.passes.pick &&
-    defined(tileset.pickPrimitive) &&
-    tileset.usePickPrimitive
-  ) {
+  if (frameState.passes.pick && defined(tileset.pickPrimitive)) {
     tileset.pickPrimitive.update(frameState);
   } else {
     updateTiles(tileset, frameState, passOptions);

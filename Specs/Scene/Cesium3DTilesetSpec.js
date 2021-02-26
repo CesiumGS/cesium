@@ -719,6 +719,24 @@ describe(
       );
     });
 
+    it("renders pickPrimitive during pick pass if defined", function () {
+      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
+        function (batchTableTileset) {
+          var options = {
+            pickPrimitive: batchTableTileset,
+          };
+          return Cesium3DTilesTester.loadTileset(
+            scene,
+            tilesetUrl,
+            options
+          ).then(function (tileset) {
+            expect(tileset.pickPrimitive).toEqual(batchTableTileset);
+            expect(scene).toPickPrimitive(batchTableTileset);
+          });
+        }
+      );
+    });
+
     it("verify statistics", function () {
       options.url = tilesetUrl;
       var tileset = scene.primitives.add(new Cesium3DTileset(options));
