@@ -1,12 +1,13 @@
-import defaultValue from "../Core/defaultValue.js";
+//import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import getMagic from "../Core/getMagic.js";
 import RequestType from "../Core/RequestType.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
+import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
+import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
+import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
 /**
  * A collection of contents for tiles that use the <code>3DTILES_multiple_contents</code> extension.
@@ -32,6 +33,14 @@ export default function Multiple3DTileContent(
   this._tile = tile;
   this._baseResource = baseResource;
   this._contents = [];
+
+  // These arrays are undefined until they are needed
+  this._innerContentHeaders = undefined;
+  this._arrayFetchPromises = undefined;
+  this._payloads = undefined;
+
+  // undefined until all requests are scheduled
+  this._contentsFetchedPromise = undefined;
   this._readyPromise = when.defer();
 
   initialize(this, extensionJson, factory);
@@ -165,9 +174,29 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
       return undefined;
     },
   },
+
+  /**
+   * A promise that resolves when all of the inner contents have been fetched.
+   * This promise is undefined until the first frame where all array buffer
+   * requests have been scheduled.
+   * @type {Promise}
+   * @private
+   */
+  contentFetchedPromise: {
+    get: function () {
+      return this._contentsFetchedPromise;
+    },
+  },
 });
 
 function initialize(content, extensionJson, factory) {
+  var innerContentHeaders = extensionJson.content;
+  var contentCount = innerContentHeaders.length;
+
+  this._innerContentHeaders = innerContentHeaders;
+  this._arrayFetchPromises = new Array(contentCount);
+
+  /*
   var innerContentJsons = extensionJson.content;
   // TODO: what if some contents were not scheduled?
   var innerContentReadyPromises = innerContentJsons.map(function (json) {
@@ -192,28 +221,137 @@ function initialize(content, extensionJson, factory) {
     .otherwise(function (error) {
       content._readyPromise.reject(error);
     });
+
+  */
+}
+
+/**
+ * @return {Number} The number of contn
+ */
+Multiple3DTileContent.prototype.requestInnerContents = function () {
+  var requestBacklog = 0;
+  for (var i = 0; i < self._innerContentHeaders.length; i++) {
+    if (defined(self._arrayFetchPromises[i])) {
+      continue;
+    }
+
+    var promise = requestInnerContent(this);
+    if (!defined(promise)) {
+      requestBacklog++;
+    }
+    self._arrayFetchPromises[i] = promise;
+  }
+
+  if (requestBacklog > 0) {
+    self._contentsFetchedPromise = createInnerContents(this);
+  }
+
+  return requestBacklog;
+};
+
+/**
+ * @return {Promise<ArrayBuffer|undefined>} A promise that returns true
+ * @private
+ */
+function requestInnerContent(multipleContent) {
+  var contentUri; //innerContentJson.uri;
+  // TODO: preserve query parameters for this
+  var contentResource = multipleContent._baseResource.getDerivedResource({
+    url: contentUri,
+  });
+  var serverKey = RequestScheduler.getServerKey(
+    contentResource.getUrlComponent()
+  );
+
+  // TODO: set expiration query parameters?
+
+  var request = new Request({
+    throttle: true,
+    throttleByServer: true,
+    type: RequestType.TILES3D,
+    priorityFunction: function () {
+      return multipleContent._tile.priority;
+    },
+    serverKey: serverKey,
+  });
+
+  contentResource.request = request;
+
+  //TODO: build resource
+  //return resource.fetchArrayBuffer();
+  return contentResource.fetchArrayBuffer().otherwise(function (error) {
+    //TODO: this should call the contentFailed callback
+    console.error(error);
+    return undefined;
+  });
+}
+
+function createInnerContents(multipleContent) {
+  return when
+    .all(self._arrayFetchPromises)
+    .then(function (arrayBuffers) {
+      for (var i = 0; i < arrayBuffers.length; i++) {
+        var arrayBuffer = arrayBuffers[i];
+        if (!defined(arrayBuffer)) {
+          // TODO: missing a content. Should a warning be logged here
+          // or elsewhere?
+          return undefined;
+        }
+
+        try {
+          return createInnerContent(multipleContent, arrayBuffers[i]);
+        } catch (error) {
+          // TODO: how to trigger the content failed event?
+          console.error(error);
+          return undefined;
+        }
+      }
+    })
+    .then(function (contents) {
+      this._contents = contents.filter(defined);
+    });
+}
+
+function createInnerContent(multipleContent, arrayBuffer) {
+  var preprocessed = preprocess3DTileContent(arrayBuffer);
+
+  if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
+    throw new RuntimeError(
+      "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
+    );
+  }
+
+  multipleContent._disableSkipLevelOfDetail =
+    multipleContent._disableSkipLevelOfDetail ||
+    preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
+    preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+
+  var content;
+  var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
+  if (defined(preprocessed.binaryPayload)) {
+    content = contentFactory(
+      multipleContent._tileset,
+      multipleContent._tile,
+      // TODO: Where to get the resource?
+      multipleContent._contentResource,
+      // TODO: Change functions to take a Uint8Array?
+      preprocessed.binaryPayload.buffer,
+      0
+    );
+  } else {
+    // JSON formats
+    content = contentFactory(
+      multipleContent._tileset,
+      multipleContent._tile,
+      multipleContent._contentResource,
+      preprocessed.jsonPayload
+    );
+  }
+
+  return content;
 }
 
 /*
- * TODO: create a function like this, and another one to create the tile
-function prepocessContent(arrayBuffer) {
-  //1. create Uint8Array
-  //2. Check the magic
-  //3. if it's one of the binary formats (b3dm, vctr, subt, etc.), return
-  //{
-  //  contentType: Cesium3DTileContentType.B3DM,
-  //  binary: uint8Array
-  //}
-  //4. otherwise, assume JSON, so parse the JSON
-  //5. check if it's external tileset or glTF
-  //if it's valid, return:
-  //{
-  //  contentType: Cesium3DTileContentType.EXTERNAL
-  //  json: parsedJson
-  //}
-}
-*/
-
 function requestInnerContent(multipleContent, innerContentJson, factory) {
   var contentUri = innerContentJson.uri;
   // TODO: preserve query parameters for this
@@ -301,20 +439,7 @@ function requestInnerContent(multipleContent, innerContentJson, factory) {
   });
 }
 
-// TODO: This was copied from Cesiu3DTile. Refactor!
-function getJsonContent(arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var json;
-
-  try {
-    json = getJsonFromTypedArray(uint8Array);
-  } catch (error) {
-    throw new RuntimeError("Invalid tile content.");
-  }
-
-  return json;
-}
+*/
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>

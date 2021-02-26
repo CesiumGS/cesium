@@ -1904,9 +1904,9 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requested = tile.requestContent();
+  var requestBacklogCount = tile.requestContent();
 
-  if (!requested) {
+  if (requestBacklogCount > 0) {
     ++statistics.numberOfAttemptedRequests;
     return;
   }
