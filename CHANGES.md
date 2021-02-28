@@ -14,6 +14,7 @@
 
 - Fixed an issue that prevented use of the full CesiumJS zip release package in a Node.js application.
 - Fixed an issue where certain inputs to EllipsoidGeodesic would result in a surfaceDistance of NaN. [#9316](https://github.com/CesiumGS/cesium/pull/9316)
+- Fixed `sampleTerrain` and `sampleTerrainMostDetailed` not working for `ArcGISTiledElevationTerrainProvider`. [#9286](https://github.com/CesiumGS/cesium/pull/9286)
 
 ### 1.78 - 2021-02-01
 

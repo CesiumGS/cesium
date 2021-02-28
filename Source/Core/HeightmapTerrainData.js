@@ -434,8 +434,18 @@ HeightmapTerrainData.prototype.interpolateHeight = function (
   var heightOffset = structure.heightOffset;
   var heightScale = structure.heightScale;
 
+  var isMeshCreated = defined(this._mesh);
+  var isLERCEncoding = this._encoding === HeightmapEncoding.LERC;
+  var isInterpolationImpossible = !isMeshCreated && isLERCEncoding;
+  if (isInterpolationImpossible) {
+    // We can't interpolate using the buffer because it's LERC encoded
+    //  so please call createMesh() first and interpolate using the mesh;
+    //  as mesh creation will decode the LERC buffer
+    return undefined;
+  }
+
   var heightSample;
-  if (defined(this._mesh)) {
+  if (isMeshCreated) {
     var buffer = this._mesh.vertices;
     var encoding = this._mesh.encoding;
     var exaggeration = this._mesh.exaggeration;
