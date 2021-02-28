@@ -811,6 +811,14 @@ var relativeToCenter2dScratch = new Cartesian3();
 var obbCenterCartographicScratch = new Cartographic();
 var obbCenter2dScratch = new Cartographic();
 
+var scratchCreateMeshSyncOptions = {
+  tilingScheme: undefined,
+  x: 0,
+  y: 0,
+  level: 0,
+  exaggeration: 1.0,
+  mapProjection: undefined,
+};
 function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
     tile,
@@ -979,14 +987,15 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         heightOffset: maximumHeight,
       },
     });
-    fill.mesh = terrainData._createMeshSync(
-      tile.tilingScheme,
-      tile.x,
-      tile.y,
-      tile.level,
-      1.0,
-      mapProjection
-    );
+
+    var createMeshSyncOptions = scratchCreateMeshSyncOptions;
+    createMeshSyncOptions.tilingScheme = tile.tilingScheme;
+    createMeshSyncOptions.x = tile.x;
+    createMeshSyncOptions.y = tile.y;
+    createMeshSyncOptions.level = tile.level;
+    createMeshSyncOptions.mapProjection = mapProjection;
+
+    fill.mesh = terrainData._createMeshSync(createMeshSyncOptions);
   } else {
     var hasCustomProjection = !mapProjection.isNormalCylindrical;
 

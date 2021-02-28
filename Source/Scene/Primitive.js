@@ -1202,10 +1202,7 @@ var numberOfCreationWorkers = Math.max(
   1
 );
 var createGeometryTaskProcessors;
-var combineGeometryTaskProcessor = new TaskProcessor(
-  "combineGeometry",
-  Number.POSITIVE_INFINITY
-);
+var combineGeometryTaskProcessor = new TaskProcessor("combineGeometry");
 
 function loadAsynchronous(primitive, frameState) {
   var instances;
@@ -1244,10 +1241,7 @@ function loadAsynchronous(primitive, frameState) {
     if (!defined(createGeometryTaskProcessors)) {
       createGeometryTaskProcessors = new Array(numberOfCreationWorkers);
       for (i = 0; i < numberOfCreationWorkers; i++) {
-        createGeometryTaskProcessors[i] = new TaskProcessor(
-          "createGeometry",
-          Number.POSITIVE_INFINITY
-        );
+        createGeometryTaskProcessors[i] = new TaskProcessor("createGeometry");
       }
     }
 

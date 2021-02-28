@@ -151,7 +151,13 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
       var serializedMapProjection = geographicProjection.serialize();
 
       return when(
-        data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
       )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -255,31 +261,61 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: undefined,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires serializedMapProjection", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: undefined,
+        });
       }).toThrowDeveloperError();
     });
 
@@ -288,7 +324,13 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
       var wgs84 = Ellipsoid.WGS84;
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
           expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices
@@ -323,7 +365,14 @@ describe("Core/GoogleEarthEnterpriseTerrainData", function () {
 
     it("exaggerates mesh", function () {
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 2)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          exaggeration: 2,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
           expect(mesh.vertices.length).toBe(17 * mesh.encoding.getStride()); // 9 regular + 8 skirt vertices

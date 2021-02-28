@@ -1,8 +1,10 @@
+import { defined } from "../../Source/Cesium.js";
 import { GeographicProjection } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { HeightmapEncoding } from "../../Source/Cesium.js";
 import { HeightmapTerrainData } from "../../Source/Cesium.js";
 import { TerrainData } from "../../Source/Cesium.js";
+import { when } from "../../Source/Cesium.js";
 
 describe("Core/HeightmapTerrainData", function () {
   it("conforms to TerrainData interface", function () {
@@ -71,43 +73,133 @@ describe("Core/HeightmapTerrainData", function () {
     var geographicProjection = new GeographicProjection();
     var serializedMapProjection = geographicProjection.serialize();
 
-    beforeEach(function () {
-      tilingScheme = new GeographicTilingScheme();
-      data = new HeightmapTerrainData({
+    function createSampleTerrainData() {
+      return new HeightmapTerrainData({
         buffer: new Float32Array(25),
         width: 5,
         height: 5,
       });
+    }
+
+    beforeEach(function () {
+      tilingScheme = new GeographicTilingScheme();
+      data = createSampleTerrainData();
     });
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: undefined,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires serializedMapProjection", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: undefined,
+        });
       }).toThrowDeveloperError();
+    });
+
+    it("requires level", function () {
+      expect(function () {
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: undefined,
+          serializedMapProjection: serializedMapProjection,
+        });
+      }).toThrowDeveloperError();
+    });
+
+    it("enables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: true,
+        serializedMapProjection: serializedMapProjection,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
+      return when.all(promises);
+    });
+
+    it("disables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        throttle: false,
+        serializedMapProjection: serializedMapProjection,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(taskCount);
+      return when.all(promises);
     });
   });
 
@@ -200,7 +292,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -290,7 +388,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -413,7 +517,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
@@ -499,7 +609,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
         })
@@ -589,7 +705,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
         })
@@ -681,7 +803,13 @@ describe("Core/HeightmapTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
         })
