@@ -382,6 +382,7 @@ gulp.task(
         "Build/Cesium/**",
         "Build/CesiumUnminified/**",
         "Build/Documentation/**",
+        "Build/package.json",
       ],
       {
         base: ".",
@@ -398,6 +399,7 @@ gulp.task(
         "favicon.ico",
         "gulpfile.cjs",
         "server.cjs",
+        "index.cjs",
         "package.json",
         "LICENSE.md",
         "CHANGES.md",
