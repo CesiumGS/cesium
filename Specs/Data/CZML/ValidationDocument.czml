@@ -579,6 +579,11 @@
       "classificationType":"TERRAIN",
       "zIndex":445
     },
+    "tileset":{
+      "show":true,
+      "uri":"http://example.com/6864",
+      "maximumScreenSpaceError":51767
+    },
     "wall":{
       "show":true,
       "positions":{
@@ -696,7 +701,8 @@
           83,22,249,147
         ]
       },
-      "environmentIntersectionWidth":13317
+      "environmentIntersectionWidth":13317,
+      "showThroughEllipsoid":true
     },
     "agi_customPatternSensor":{
       "show":true,
@@ -772,7 +778,8 @@
           134,29,12,55
         ]
       },
-      "environmentIntersectionWidth":53576
+      "environmentIntersectionWidth":53576,
+      "showThroughEllipsoid":true
     },
     "agi_rectangularSensor":{
       "show":true,
@@ -844,7 +851,8 @@
           84,60,81,144
         ]
       },
-      "environmentIntersectionWidth":64839
+      "environmentIntersectionWidth":64839,
+      "showThroughEllipsoid":true
     },
     "agi_fan":{
       "show":true,
@@ -8008,6 +8016,17 @@
         "reference":"Constant#rectangle.zIndex"
       }
     },
+    "tileset":{
+      "show":{
+        "reference":"Constant#tileset.show"
+      },
+      "uri":{
+        "reference":"Constant#tileset.uri"
+      },
+      "maximumScreenSpaceError":{
+        "reference":"Constant#tileset.maximumScreenSpaceError"
+      }
+    },
     "wall":{
       "show":{
         "reference":"Constant#wall.show"
@@ -8151,6 +8170,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#conicSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#conicSensor.showThroughEllipsoid"
       }
     },
     "agi_customPatternSensor":{
@@ -8233,6 +8255,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#customPatternSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#customPatternSensor.showThroughEllipsoid"
       }
     },
     "agi_rectangularSensor":{
@@ -8321,6 +8346,9 @@
       },
       "environmentIntersectionWidth":{
         "reference":"Constant#rectangularSensor.environmentIntersectionWidth"
+      },
+      "showThroughEllipsoid":{
+        "reference":"Constant#rectangularSensor.showThroughEllipsoid"
       }
     },
     "agi_fan":{
@@ -11902,6 +11930,15 @@
         "number":[
           0,27256,
           3600,53581
+        ]
+      }
+    },
+    "tileset":{
+      "maximumScreenSpaceError":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,17401,
+          3600,7930
         ]
       }
     },

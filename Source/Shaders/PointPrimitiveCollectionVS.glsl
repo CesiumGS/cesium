@@ -135,7 +135,8 @@ void main()
     float nearSq = distanceDisplayConditionAndDisableDepth.x;
     float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq) {
-        positionEC.xyz = vec3(0.0);
+        // push vertex behind camera to force it to be clipped
+        positionEC.xyz = vec3(0.0, 0.0, 1.0);
     }
 #endif
 

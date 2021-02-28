@@ -1,238 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Showcase of different Cesium Map Projections.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Showcase of different Cesium Map Projections."
+    />
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../ThirdParty/requirejs-2.1.20/require.js"
+    ></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+      require.config({
+        baseUrl: "../../../Source",
+        waitSeconds: 60,
+      });
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <select data-bind="options: projectionTypes, value: currentProjectionType"></select>
-</div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar">
+      <select
+        data-bind="options: projectionTypes, value: currentProjectionType"
+      ></select>
+    </div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
 
-var viewer;
-var showLines = true;
+        var viewer;
+        var showLines = true;
 
-var projectionTypes = ['geographic', 'web mercator', 'from well-known-text', 'from data URI', 'from external code file', 'from Matrix4'];
-var viewModel = {
-    projectionTypes : projectionTypes,
-    currentProjectionType : projectionTypes[0]
-};
+        var projectionTypes = [
+          "geographic",
+          "web mercator",
+          "from well-known-text",
+          "from data URI",
+          "from external code file",
+          "from Matrix4",
+        ];
+        var viewModel = {
+          projectionTypes: projectionTypes,
+          currentProjectionType: projectionTypes[0],
+        };
 
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
+        Cesium.knockout.track(viewModel);
+        var toolbar = document.getElementById("toolbar");
+        Cesium.knockout.applyBindings(viewModel, toolbar);
 
-function reset() {
-    if (Cesium.defined(viewer)) {
-        viewer.destroy();
-        viewer = undefined;
-    }
-}
-
-function addPolylines() {
-    for (var longitude = -180; longitude <= 170; longitude += 10) {
-        viewer.entities.add({
-            name : 'longitude ' + longitude,
-            polyline : {
-                positions : Cesium.Cartesian3.fromDegreesArray([longitude, -89,
-                                                                longitude, 89]),
-                width : 3,
-                material : Cesium.Color.GREY.withAlpha(0.3)
-            }
-        });
-    }
-
-    for (var latitude = -80; latitude <= 80; latitude += 10) {
-        viewer.entities.add({
-            name : 'latitude ' + latitude,
-            polyline : {
-                positions : Cesium.Cartesian3.fromDegreesArray([-179, latitude,
-                                                                 0,  latitude,
-                                                                 179, latitude]),
-                arcType : Cesium.ArcType.RHUMB,
-                width : 3,
-                material : Cesium.Color.GREY.withAlpha(0.3)
-            }
-        });
-
-        // Close gap across the IDL
-        viewer.entities.add({
-            name : 'latitude ' + latitude,
-            polyline : {
-                positions : Cesium.Cartesian3.fromDegreesArray([-179, latitude,
-                                                                 179, latitude]),
-                arcType : Cesium.ArcType.RHUMB,
-                width : 3,
-                material : Cesium.Color.GREY.withAlpha(0.3)
-            }
-        });
-    }
-
-    viewer.entities.show = showLines;
-}
-
-function launchGeographic() {
-    viewer = new Cesium.Viewer('cesiumContainer', {
-        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW
-    });
-    addPolylines();
-    // Fly to a view covering the whole projection
-    viewer.camera.flyHome(0);
-}
-
-function launchWebMercator() {
-    viewer = new Cesium.Viewer('cesiumContainer', {
-        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-        mapProjection : new Cesium.WebMercatorProjection()
-    });
-    addPolylines();
-    // Fly to a view covering the whole projection
-    viewer.camera.flyHome(0);
-}
-
-function launchFromWellKnownText() {
-    // EPSG:3411
-    var wellKnownText = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs';
-    var epsg3411Bounds = Cesium.Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
-    viewer = new Cesium.Viewer('cesiumContainer', {
-        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-        mapProjection : new Cesium.Proj4Projection({
-            wellKnownText : wellKnownText,
-            wgs84Bounds : epsg3411Bounds
-        })
-    });
-    addPolylines();
-    // Fly to a view covering the whole projection
-    viewer.camera.flyHome(0);
-}
-
-function launchFromDataUri() {
-    var projectionText =
-        'function createProjectionFunctions(callback) {\n' +
-        '     function project(cartographic, result) {\n' +
-        '          result.x = cartographic.longitude * 6378137.0;\n' +
-        '          result.y = cartographic.latitude * 2.0 * 6378137.0;\n' +
-        '          result.z = cartographic.height + Math.abs(cartographic.longitude * cartographic.longitude * 1000000.0);\n' +
-        '     }\n' +
-        '     function unproject(cartesian, result) {\n' +
-        '          result.longitude = cartesian.x / 6378137.0;\n' +
-        '          result.latitude = cartesian.y / (2.0 * 6378137.0);\n' +
-        '          result.height = cartesian.z - Math.abs(result.longitude * result.longitude * 1000000.0);\n' +
-        '     }\n' +
-        '     callback(project, unproject);\n' +
-        ' }\n';
-    var projectionTextUrl = 'data:text/javascript;base64,' + window.btoa(projectionText);
-
-    var customProjection = new Cesium.CustomProjection(projectionTextUrl);
-    customProjection.readyPromise
-        .then(function(projection) {
-            viewer = new Cesium.Viewer('cesiumContainer', {
-                sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-                mapProjection : projection
-            });
-            addPolylines();
-            // Fly to a view covering the whole projection
-            viewer.camera.flyHome(0);
-        }).otherwise(function(error) {
-            console.log(error);
-        });
-}
-
-function launchFromFile() {
-    var customProjection = new Cesium.CustomProjection('../../SampleData/sampleProjection.js');
-    customProjection.readyPromise
-        .then(function(projection) {
-            viewer = new Cesium.Viewer('cesiumContainer', {
-                sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-                mapProjection : projection
-            });
-            addPolylines();
-            // Fly to a view covering the whole projection
-            viewer.camera.flyHome(0);
-        }).otherwise(function(error) {
-            console.log(error);
-        });
-}
-
-function launchFromMatrix4() {
-    var array = [
-        1e5, 0.0, 0.0, 0.0,
-        0.0, 2e5, 0.0, 0.0,
-        0.0, 0.0, 3.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ];
-    var matrix = Cesium.Matrix4.fromColumnMajorArray(array);
-    viewer = new Cesium.Viewer('cesiumContainer', {
-        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-        mapProjection : new Cesium.Matrix4Projection({
-            matrix : matrix
-        })
-    });
-    addPolylines();
-    // Fly to a view covering the whole projection
-    viewer.camera.flyHome(0);
-}
-
-Cesium.knockout.getObservable(viewModel, 'currentProjectionType').subscribe(function(newValue) {
-    reset();
-
-    var readyPromise = Cesium.when.resolve();
-    if (newValue === projectionTypes[0]) {
-        launchGeographic();
-    } else if (newValue === projectionTypes[1]) {
-        launchWebMercator();
-    } else if (newValue === projectionTypes[2]) {
-        launchFromWellKnownText();
-    } else if (newValue === projectionTypes[3]) {
-        if (Cesium.FeatureDetection.isInternetExplorer()) {
-            console.warn('Data URI projections are not available in Internet Explorer, loading from external file...');
-            launchFromFile();
-        } else {
-            launchFromDataUri();
+        function reset() {
+          if (Cesium.defined(viewer)) {
+            viewer.destroy();
+            viewer = undefined;
+          }
         }
-    } else if (newValue === projectionTypes[4]) {
-        launchFromFile();
-    } else if (newValue === projectionTypes[5]) {
-        launchFromMatrix4();
-    }
-});
 
-Sandcastle.addToggleButton('Show Lines', true, function(checked) {
-    showLines = checked;
-    viewer.entities.show = showLines;
-});
+        function addPolylines() {
+          for (var longitude = -180; longitude <= 170; longitude += 10) {
+            viewer.entities.add({
+              name: "longitude " + longitude,
+              polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray([
+                  longitude,
+                  -89,
+                  longitude,
+                  89,
+                ]),
+                width: 3,
+                material: Cesium.Color.GREY.withAlpha(0.3),
+              },
+            });
+          }
 
-launchGeographic();
+          for (var latitude = -80; latitude <= 80; latitude += 10) {
+            viewer.entities.add({
+              name: "latitude " + latitude,
+              polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray([
+                  -179,
+                  latitude,
+                  0,
+                  latitude,
+                  179,
+                  latitude,
+                ]),
+                arcType: Cesium.ArcType.RHUMB,
+                width: 3,
+                material: Cesium.Color.GREY.withAlpha(0.3),
+              },
+            });
 
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
-</script>
-</body>
+            // Close gap across the IDL
+            viewer.entities.add({
+              name: "latitude " + latitude,
+              polyline: {
+                positions: Cesium.Cartesian3.fromDegreesArray([
+                  -179,
+                  latitude,
+                  179,
+                  latitude,
+                ]),
+                arcType: Cesium.ArcType.RHUMB,
+                width: 3,
+                material: Cesium.Color.GREY.withAlpha(0.3),
+              },
+            });
+          }
+
+          viewer.entities.show = showLines;
+        }
+
+        function launchGeographic() {
+          viewer = new Cesium.Viewer("cesiumContainer", {
+            sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+          });
+          addPolylines();
+          // Fly to a view covering the whole projection
+          viewer.camera.flyHome(0);
+        }
+
+        function launchWebMercator() {
+          viewer = new Cesium.Viewer("cesiumContainer", {
+            sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+            mapProjection: new Cesium.WebMercatorProjection(),
+          });
+          addPolylines();
+          // Fly to a view covering the whole projection
+          viewer.camera.flyHome(0);
+        }
+
+        function launchFromWellKnownText() {
+          // EPSG:3411
+          var wellKnownText =
+            "+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs";
+          var epsg3411Bounds = Cesium.Rectangle.fromDegrees(
+            -180.0,
+            30.0,
+            180.0,
+            90.0
+          );
+          viewer = new Cesium.Viewer("cesiumContainer", {
+            sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+            mapProjection: new Cesium.Proj4Projection({
+              wellKnownText: wellKnownText,
+              wgs84Bounds: epsg3411Bounds,
+            }),
+          });
+          addPolylines();
+          // Fly to a view covering the whole projection
+          viewer.camera.flyHome(0);
+        }
+
+        function launchFromDataUri() {
+          var projectionText =
+            "function createProjectionFunctions(callback) {\n" +
+            "     function project(cartographic, result) {\n" +
+            "          result.x = cartographic.longitude * 6378137.0;\n" +
+            "          result.y = cartographic.latitude * 2.0 * 6378137.0;\n" +
+            "          result.z = cartographic.height + Math.abs(cartographic.longitude * cartographic.longitude * 1000000.0);\n" +
+            "     }\n" +
+            "     function unproject(cartesian, result) {\n" +
+            "          result.longitude = cartesian.x / 6378137.0;\n" +
+            "          result.latitude = cartesian.y / (2.0 * 6378137.0);\n" +
+            "          result.height = cartesian.z - Math.abs(result.longitude * result.longitude * 1000000.0);\n" +
+            "     }\n" +
+            "     callback(project, unproject);\n" +
+            " }\n";
+          var projectionTextUrl =
+            "data:text/javascript;base64," + window.btoa(projectionText);
+
+          var customProjection = new Cesium.CustomProjection(projectionTextUrl);
+          customProjection.readyPromise
+            .then(function (projection) {
+              viewer = new Cesium.Viewer("cesiumContainer", {
+                sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+                mapProjection: projection,
+              });
+              addPolylines();
+              // Fly to a view covering the whole projection
+              viewer.camera.flyHome(0);
+            })
+            .otherwise(function (error) {
+              console.log(error);
+            });
+        }
+
+        function launchFromFile() {
+          var customProjection = new Cesium.CustomProjection(
+            "../../SampleData/sampleProjection.js"
+          );
+          customProjection.readyPromise
+            .then(function (projection) {
+              viewer = new Cesium.Viewer("cesiumContainer", {
+                sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+                mapProjection: projection,
+              });
+              addPolylines();
+              // Fly to a view covering the whole projection
+              viewer.camera.flyHome(0);
+            })
+            .otherwise(function (error) {
+              console.log(error);
+            });
+        }
+
+        function launchFromMatrix4() {
+          var array = [
+            1e5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            2e5,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            3.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+          ];
+          var matrix = Cesium.Matrix4.fromColumnMajorArray(array);
+          viewer = new Cesium.Viewer("cesiumContainer", {
+            sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+            mapProjection: new Cesium.Matrix4Projection({
+              matrix: matrix,
+            }),
+          });
+          addPolylines();
+          // Fly to a view covering the whole projection
+          viewer.camera.flyHome(0);
+        }
+
+        Cesium.knockout
+          .getObservable(viewModel, "currentProjectionType")
+          .subscribe(function (newValue) {
+            reset();
+
+            var readyPromise = Cesium.when.resolve();
+            if (newValue === projectionTypes[0]) {
+              launchGeographic();
+            } else if (newValue === projectionTypes[1]) {
+              launchWebMercator();
+            } else if (newValue === projectionTypes[2]) {
+              launchFromWellKnownText();
+            } else if (newValue === projectionTypes[3]) {
+              if (Cesium.FeatureDetection.isInternetExplorer()) {
+                console.warn(
+                  "Data URI projections are not available in Internet Explorer, loading from external file..."
+                );
+                launchFromFile();
+              } else {
+                launchFromDataUri();
+              }
+            } else if (newValue === projectionTypes[4]) {
+              launchFromFile();
+            } else if (newValue === projectionTypes[5]) {
+              launchFromMatrix4();
+            }
+          });
+
+        Sandcastle.addToggleButton("Show Lines", true, function (checked) {
+          showLines = checked;
+          viewer.entities.show = showLines;
+        });
+
+        launchGeographic();
+
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        startup(Cesium);
+      } else if (typeof require === "function") {
+        require(["Cesium"], startup);
+      }
+    </script>
+  </body>
 </html>
