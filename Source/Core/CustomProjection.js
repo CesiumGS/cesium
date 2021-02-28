@@ -243,15 +243,18 @@ function buildCustomProjection(customProjection, url) {
 
   // Clear createProjectionFunctions, if it already exists
   try {
-    createProjectionFunctions = undefined; // eslint-disable-line no-undef
-  } catch (e) {} // eslint-disable-line no-empty
+    // eslint-disable-next-line no-undef
+    createProjectionFunctions = undefined;
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
 
   if (
     typeof WorkerGlobalScope !== "undefined" &&
+    // eslint-disable-next-line no-undef
     self instanceof WorkerGlobalScope
   ) {
-    // eslint-disable-line no-undef
-    importScripts(url); // eslint-disable-line no-undef
+    // eslint-disable-next-line no-undef
+    importScripts(url);
     fetch = when.resolve();
   } else {
     fetch = loadAndExecuteScript(url).otherwise(function () {
@@ -264,8 +267,8 @@ function buildCustomProjection(customProjection, url) {
   fetch = fetch
     .then(function () {
       try {
+        // eslint-disable-next-line no-undef
         if (!defined(createProjectionFunctions)) {
-          // eslint-disable-line no-undef
           throw new Error();
         }
       } catch (e) {
@@ -275,8 +278,10 @@ function buildCustomProjection(customProjection, url) {
           )
         );
       }
-      var localCreateProjectionFunctions = createProjectionFunctions; // eslint-disable-line no-undef
-      createProjectionFunctions = undefined; // eslint-disable-line no-undef
+      // eslint-disable-next-line no-undef
+      var localCreateProjectionFunctions = createProjectionFunctions;
+      // eslint-disable-next-line no-undef
+      createProjectionFunctions = undefined;
       if (useCache) {
         CustomProjection._loadedProjectionFunctions[
           url
