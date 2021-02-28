@@ -413,27 +413,6 @@ function getUint64BigIntFallback(index, values) {
   return value;
 }
 
-function getComponentDatatype(type) {
-  switch (type) {
-    case MetadataType.INT8:
-      return ComponentDatatype.BYTE;
-    case MetadataType.UINT8:
-      return ComponentDatatype.UNSIGNED_BYTE;
-    case MetadataType.INT16:
-      return ComponentDatatype.SHORT;
-    case MetadataType.UINT16:
-      return ComponentDatatype.UNSIGNED_SHORT;
-    case MetadataType.INT32:
-      return ComponentDatatype.INT;
-    case MetadataType.UINT32:
-      return ComponentDatatype.UNSIGNED_INT;
-    case MetadataType.FLOAT32:
-      return ComponentDatatype.FLOAT;
-    case MetadataType.FLOAT64:
-      return ComponentDatatype.DOUBLE;
-  }
-}
-
 function requiresUnpackForGet(property) {
   if (defined(property._unpackedValues)) {
     return false;
@@ -612,7 +591,7 @@ function BufferView(bufferView, type, length) {
       };
     }
   } else {
-    var componentDatatype = getComponentDatatype(type);
+    var componentDatatype = MetadataType.getComponentDatatype(type);
     typedArray = ComponentDatatype.createArrayBufferView(
       componentDatatype,
       bufferView.buffer,

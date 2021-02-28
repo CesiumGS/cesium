@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import ComponentDatatype from "../Core/ComponentDatatype.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 
@@ -24,6 +25,33 @@ var MetadataType = {
   STRING: "STRING",
   ENUM: "ENUM",
   ARRAY: "ARRAY",
+};
+
+/**
+ * Gets the {@link ComponentDatatype} for the given type.
+ *
+ * @param {MetadataType} type The type.
+ * @returns {ComponentDatatype|undefined} The <code>ComponentDatatype</code>, or <code>undefined</code> if there is no matching <code>ComponentDatatype</code>.
+ */
+MetadataType.getComponentDatatype = function (type) {
+  switch (type) {
+    case MetadataType.INT8:
+      return ComponentDatatype.BYTE;
+    case MetadataType.UINT8:
+      return ComponentDatatype.UNSIGNED_BYTE;
+    case MetadataType.INT16:
+      return ComponentDatatype.SHORT;
+    case MetadataType.UINT16:
+      return ComponentDatatype.UNSIGNED_SHORT;
+    case MetadataType.INT32:
+      return ComponentDatatype.INT;
+    case MetadataType.UINT32:
+      return ComponentDatatype.UNSIGNED_INT;
+    case MetadataType.FLOAT32:
+      return ComponentDatatype.FLOAT;
+    case MetadataType.FLOAT64:
+      return ComponentDatatype.DOUBLE;
+  }
 };
 
 /**
