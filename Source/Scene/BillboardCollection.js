@@ -111,6 +111,7 @@ var attributeLocationsInstanced = {
  * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The billboard blending option. The default
  * is used for rendering both opaque and translucent billboards. However, if either all of the billboards are completely opaque or all are completely translucent,
  * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve performance by up to 2x.
+ * @param {Boolean} [options.show=true] Determines if the billboards in the collection will be shown.
  *
  * @performance For best performance, prefer a few collections, each with many billboards, to
  * many collections with only a few billboards each.  Organize collections so that billboards
@@ -199,6 +200,14 @@ function BillboardCollection(options) {
   this._boundingVolumeDirty = false;
 
   this._colorCommands = [];
+
+  /**
+   * Determines if billboards in this collection will be shown.
+   *
+   * @type {Boolean}
+   * @default true
+   */
+  this.show = defaultValue(options.show, true);
 
   /**
    * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -322,7 +331,9 @@ function BillboardCollection(options) {
         var billboards = this._billboards;
         var length = billboards.length;
         for (var i = 0; i < length; ++i) {
-          billboards[i]._updateClamping();
+          if (defined(billboards[i])) {
+            billboards[i]._updateClamping();
+          }
         }
       },
       this
@@ -783,7 +794,7 @@ function createVAF(
     attributes.push({
       index: attributeLocations.a_batchId,
       componentsPerAttribute: 1,
-      componentDatatyps: ComponentDatatype.FLOAT,
+      componentDatatype: ComponentDatatype.FLOAT,
       bufferUsage: BufferUsage.STATIC_DRAW,
     });
   }
@@ -813,7 +824,7 @@ var writePositionScratch = new EncodedCartesian3();
 
 function writePositionScaleAndRotation(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -887,7 +898,7 @@ var UPPER_LEFT = 1.0;
 
 function writeCompressedAttrib0(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1036,7 +1047,7 @@ function writeCompressedAttrib0(
 
 function writeCompressedAttrib1(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1122,7 +1133,7 @@ function writeCompressedAttrib1(
 
 function writeCompressedAttrib2(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1131,7 +1142,7 @@ function writeCompressedAttrib2(
   var writer = vafWriters[attributeLocations.compressedAttribute2];
   var color = billboard.color;
   var pickColor = !defined(billboardCollection._batchTable)
-    ? billboard.getPickId(context).color
+    ? billboard.getPickId(frameState.context).color
     : Color.WHITE;
   var sizeInMeters = billboard.sizeInMeters ? 1.0 : 0.0;
   var validAlignedAxis =
@@ -1201,7 +1212,7 @@ function writeCompressedAttrib2(
 
 function writeEyeOffset(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1258,7 +1269,7 @@ function writeEyeOffset(
 
 function writeScaleByDistance(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1298,7 +1309,7 @@ function writeScaleByDistance(
 
 function writePixelOffsetScaleByDistance(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1338,7 +1349,7 @@ function writePixelOffsetScaleByDistance(
 
 function writeCompressedAttribute3(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1362,7 +1373,7 @@ function writeCompressedAttribute3(
   var disableDepthTestDistance = billboard.disableDepthTestDistance;
   var clampToGround =
     billboard.heightReference === HeightReference.CLAMP_TO_GROUND &&
-    billboardCollection._scene.context.depthTexture;
+    frameState.context.depthTexture;
   if (!defined(disableDepthTestDistance)) {
     disableDepthTestDistance = clampToGround ? 5000.0 : 0.0;
   }
@@ -1429,14 +1440,21 @@ function writeCompressedAttribute3(
 
 function writeTextureCoordinateBoundsOrLabelTranslate(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
 ) {
   if (billboard.heightReference === HeightReference.CLAMP_TO_GROUND) {
+    var scene = billboardCollection._scene;
+    var context = frameState.context;
+    var globeTranslucent = frameState.globeTranslucencyState.translucent;
+    var depthTestAgainstTerrain =
+      defined(scene.globe) && scene.globe.depthTestAgainstTerrain;
+
+    // Only do manual depth test if the globe is opaque and writes depth
     billboardCollection._shaderClampToGround =
-      billboardCollection._scene.context.depthTexture;
+      context.depthTexture && !globeTranslucent && depthTestAgainstTerrain;
   }
   var i;
   var writer =
@@ -1500,7 +1518,7 @@ function writeTextureCoordinateBoundsOrLabelTranslate(
 
 function writeBatchId(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1527,7 +1545,7 @@ function writeBatchId(
 
 function writeSDF(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
@@ -1567,84 +1585,84 @@ function writeSDF(
 
 function writeBillboard(
   billboardCollection,
-  context,
+  frameState,
   textureAtlasCoordinates,
   vafWriters,
   billboard
 ) {
   writePositionScaleAndRotation(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeCompressedAttrib0(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeCompressedAttrib1(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeCompressedAttrib2(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeEyeOffset(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeScaleByDistance(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writePixelOffsetScaleByDistance(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeCompressedAttribute3(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeTextureCoordinateBoundsOrLabelTranslate(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeBatchId(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
   );
   writeSDF(
     billboardCollection,
-    context,
+    frameState,
     textureAtlasCoordinates,
     vafWriters,
     billboard
@@ -1800,6 +1818,11 @@ var scratchWriterArray = [];
  */
 BillboardCollection.prototype.update = function (frameState) {
   removeBillboards(this);
+
+  if (!this.show) {
+    return;
+  }
+
   var billboards = this._billboards;
   var billboardsLength = billboards.length;
 
@@ -1876,7 +1899,7 @@ BillboardCollection.prototype.update = function (frameState) {
         billboard._dirty = false; // In case it needed an update.
         writeBillboard(
           this,
-          context,
+          frameState,
           textureAtlasCoordinates,
           vafWriters,
           billboard
@@ -1969,7 +1992,7 @@ BillboardCollection.prototype.update = function (frameState) {
         b._dirty = false;
 
         for (var n = 0; n < numWriters; ++n) {
-          writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
+          writers[n](this, frameState, textureAtlasCoordinates, vafWriters, b);
         }
       }
       this._vaf.commit(getIndexBuffer(context));
@@ -1979,7 +2002,7 @@ BillboardCollection.prototype.update = function (frameState) {
         bb._dirty = false;
 
         for (var o = 0; o < numWriters; ++o) {
-          writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
+          writers[o](this, frameState, textureAtlasCoordinates, vafWriters, bb);
         }
 
         if (this._instanced) {

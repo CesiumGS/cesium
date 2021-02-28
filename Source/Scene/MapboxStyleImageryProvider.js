@@ -2,7 +2,6 @@ import Credit from "../Core/Credit.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import MapboxApi from "../Core/MapboxApi.js";
 import Resource from "../Core/Resource.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
@@ -12,26 +11,32 @@ var defaultCredit = new Credit(
 );
 
 /**
+ * @typedef {Object} MapboxStyleImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the MapboxStyleImageryProvider constructor
+ *
+ * @property {Resource|String} [url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
+ * @property {String} [username='mapbox'] The username of the map account.
+ * @property {String} styleId The Mapbox Style ID.
+ * @property {String} accessToken The public access token for the imagery.
+ * @property {Number} [tilesize=512] The size of the image tiles.
+ * @property {Boolean} [scaleFactor] Determines if tiles are rendered at a @2x scale factor.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+ *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+ *                 to result in rendering problems.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ */
+
+/**
  * Provides tiled imagery hosted by Mapbox.
  *
  * @alias MapboxStyleImageryProvider
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Resource|String} [options.url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
- * @param {String} [options.username='mapbox'] The username of the map account.
- * @param {String} options.styleId The Mapbox Style ID.
- * @param {String} [options.accessToken] The public access token for the imagery.
- * @param {Number} [options.tilesize=512] The size of the image tiles.
- * @param {Boolean} [options.scaleFactor] Determines if tiles are rendered at a @2x scale factor.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
- *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
- *                 to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- *
+ * @param {MapboxStyleImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @example
  * // Mapbox style provider
@@ -52,17 +57,105 @@ function MapboxStyleImageryProvider(options) {
   }
   //>>includeEnd('debug');
 
+  var accessToken = options.accessToken;
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(accessToken)) {
+    throw new DeveloperError("options.accessToken is required.");
+  }
+  //>>includeEnd('debug');
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
+
   var resource = Resource.createIfNeeded(
     defaultValue(options.url, "https://api.mapbox.com/styles/v1/")
   );
 
-  var accessToken = MapboxApi.getAccessToken(options.accessToken);
   this._styleId = styleId;
   this._accessToken = accessToken;
-
-  this._accessTokenErrorCredit = Credit.clone(
-    MapboxApi.getErrorCredit(options.accessToken)
-  );
 
   var tilesize = defaultValue(options.tilesize, 512);
   this._tilesize = tilesize;
@@ -191,7 +284,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
    * @memberof MapboxStyleImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -313,9 +406,7 @@ Object.defineProperties(MapboxStyleImageryProvider.prototype, {
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
 MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
-  if (defined(this._accessTokenErrorCredit)) {
-    return [this._accessTokenErrorCredit];
-  }
+  return undefined;
 };
 
 /**
@@ -326,7 +417,7 @@ MapboxStyleImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

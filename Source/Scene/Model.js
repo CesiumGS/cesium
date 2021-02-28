@@ -16,6 +16,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -68,6 +69,7 @@ import ModelLoadResources from "./ModelLoadResources.js";
 import ModelMaterial from "./ModelMaterial.js";
 import ModelMesh from "./ModelMesh.js";
 import ModelNode from "./ModelNode.js";
+import ModelOutlineLoader from "./ModelOutlineLoader.js";
 import ModelUtility from "./ModelUtility.js";
 import OctahedralProjectedCubeMap from "./OctahedralProjectedCubeMap.js";
 import processModelMaterialsCommon from "./processModelMaterialsCommon.js";
@@ -216,6 +218,7 @@ var uriToGuid = {};
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
  *
  * @see Model.fromGltf
  *
@@ -487,10 +490,24 @@ function Model(options) {
   this.clippingPlanes = options.clippingPlanes;
   // Used for checking if shaders need to be regenerated due to clipping plane changes.
   this._clippingPlanesState = 0;
-  // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
-  // This is so that when models are part of a tileset they all get clipped relative
-  // to the root tile.
-  this.clippingPlanesOriginMatrix = undefined;
+
+  // If defined, use this matrix to transform miscellaneous properties like
+  // clipping planes and IBL instead of the modelMatrix. This is so that when
+  // models are part of a tileset these properties get transformed relative to
+  // a common reference (such as the root).
+  this.referenceMatrix = undefined;
+
+  /**
+   * Whether to cull back-facing geometry. When true, back face culling is
+   * determined by the material's doubleSided property; when false, back face
+   * culling is disabled. Back faces are not culled if {@link Model#color} is
+   * translucent or {@link Model#silhouetteSize} is greater than 0.0.
+   *
+   * @type {Boolean}
+   *
+   * @default true
+   */
+  this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
    * This property is for debugging only; it is not for production use nor is it optimized.
@@ -550,7 +567,8 @@ function Model(options) {
   this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
   this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-  this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
+  this._clippingPlanesMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from reference matrix and the current view matrix
+  this._iblReferenceFrameMatrix = Matrix3.clone(Matrix3.IDENTITY); // Derived from reference matrix and the current view matrix
   this._initialRadius = undefined; // Radius without model's scale property, model-matrix scale, animations, or skins
   this._boundingSphere = undefined;
   this._scaledBoundingSphere = new BoundingSphere();
@@ -1370,6 +1388,7 @@ function containsGltfMagic(uint8Array) {
  * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
  * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
  * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
+ * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the material's doubleSided property; when false, back face culling is disabled. Back faces are not culled if {@link Model#color} is translucent or {@link Model#silhouetteSize} is greater than 0.0.
  *
  * @returns {Model} The newly created model.
  *
@@ -1462,8 +1481,8 @@ Model.fromGltf = function (options) {
           cachedGltf.makeReady(parsedGltf);
         } else {
           // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
+          var json = getJsonFromTypedArray(array);
+          cachedGltf.makeReady(json);
         }
 
         var resourceCredits = model._resourceCredits;
@@ -2422,7 +2441,6 @@ function createProgram(programToCreate, model, context) {
   var fs = shaders[program.fragmentShader];
 
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
   if (
     model.extensionsUsed.WEB3D_quantized_attributes ||
@@ -2438,17 +2456,6 @@ function createProgram(programToCreate, model, context) {
 
   var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
   var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
-
-  // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
-  // https://github.com/CesiumGS/cesium/issues/6575.
-  // For IE log depth code is defined out anyway due to unsupported WebGL extensions, so the wrappers can be omitted.
-  if (!FeatureDetection.isInternetExplorer()) {
-    drawVS = ModelUtility.modifyVertexShaderForLogDepth(
-      drawVS,
-      toClipCoordinatesGLSL
-    );
-    drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-  }
 
   if (!defined(model._uniformMapLoaded)) {
     drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
@@ -2486,7 +2493,7 @@ function createProgram(programToCreate, model, context) {
       model._useDefaultSpecularMaps;
     var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -2539,7 +2546,6 @@ function recreateProgram(programToCreate, model, context) {
   var shaders = model._rendererResources.sourceShaders;
 
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
   var clippingPlaneCollection = model.clippingPlanes;
   var addClippingPlaneCode = isClippingEnabled(model);
@@ -2568,14 +2574,6 @@ function recreateProgram(programToCreate, model, context) {
 
   var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
   var drawFS = modifyShader(finalFS, programId, model._fragmentShaderLoaded);
-
-  if (!FeatureDetection.isInternetExplorer()) {
-    drawVS = ModelUtility.modifyVertexShaderForLogDepth(
-      drawVS,
-      toClipCoordinatesGLSL
-    );
-    drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-  }
 
   if (!defined(model._uniformMapLoaded)) {
     drawFS = "uniform vec4 czm_pickColor;\n" + drawFS;
@@ -2611,9 +2609,9 @@ function recreateProgram(programToCreate, model, context) {
       (defined(model._specularEnvironmentMapAtlas) &&
         model._specularEnvironmentMapAtlas.ready) ||
       model._useDefaultSpecularMaps;
-    var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+    var addMatrix = usesSH || usesSM || useIBL;
     if (addMatrix) {
-      drawFS = "uniform mat4 gltf_clippingPlanesMatrix; \n" + drawFS;
+      drawFS = "uniform mat3 gltf_iblReferenceFrameMatrix; \n" + drawFS;
     }
 
     if (defined(model._sphericalHarmonicCoefficients)) {
@@ -3006,12 +3004,10 @@ function getAttributeLocations(model, primitive) {
 
   var attributes = technique.attributes;
   var program = model._rendererResources.programs[technique.program];
-  var programVertexAttributes = program.vertexAttributes;
   var programAttributeLocations = program._attributeLocations;
 
-  // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-  for (location in programVertexAttributes) {
-    if (programVertexAttributes.hasOwnProperty(location)) {
+  for (location in programAttributeLocations) {
+    if (programAttributeLocations.hasOwnProperty(location)) {
       var attribute = attributes[location];
       if (defined(attribute)) {
         index = programAttributeLocations[location];
@@ -3020,11 +3016,7 @@ function getAttributeLocations(model, primitive) {
     }
   }
 
-  // Always add pre-created attributes.
-  // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-  // but should be included in the list of attribute locations for the pick program.
-  // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-  // that programVertexAttributes optimizes out unused attributes.
+  // Add pre-created attributes.
   var precreatedAttributes = model._precreatedAttributes;
   if (defined(precreatedAttributes)) {
     for (location in precreatedAttributes) {
@@ -3603,6 +3595,13 @@ function createUniformMaps(model, context) {
     u.values = uniforms.values; // material parameter name -> ModelMaterial for modifying the parameter at runtime
     u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
     u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
+
+    if (defined(technique.attributes.a_outlineCoordinates)) {
+      var outlineTexture = ModelOutlineLoader.createTexture(model, context);
+      u.uniformMap.u_outlineTexture = function () {
+        return outlineTexture;
+      };
+    }
   });
 }
 
@@ -3658,25 +3657,15 @@ function createColorFunction(model) {
   };
 }
 
-var scratchClippingPlaneMatrix = new Matrix4();
 function createClippingPlanesMatrixFunction(model) {
   return function () {
-    var clippingPlanes = model.clippingPlanes;
-    if (
-      !defined(clippingPlanes) &&
-      !defined(model._sphericalHarmonicCoefficients) &&
-      !defined(model._specularEnvironmentMaps)
-    ) {
-      return Matrix4.IDENTITY;
-    }
-    var modelMatrix = defined(clippingPlanes)
-      ? clippingPlanes.modelMatrix
-      : Matrix4.IDENTITY;
-    return Matrix4.multiply(
-      model._clippingPlaneModelViewMatrix,
-      modelMatrix,
-      scratchClippingPlaneMatrix
-    );
+    return model._clippingPlanesMatrix;
+  };
+}
+
+function createIBLReferenceFrameMatrixFunction(model) {
+  return function () {
+    return model._iblReferenceFrameMatrix;
   };
 }
 
@@ -3858,6 +3847,9 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         model
       ),
       gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model),
+      gltf_iblReferenceFrameMatrix: createIBLReferenceFrameMatrixFunction(
+        model
+      ),
       gltf_iblFactor: createIBLFactorFunction(model),
       gltf_lightColor: createLightColorFunction(model),
       gltf_sphericalHarmonicCoefficients: createSphericalHarmonicCoefficientsFunction(
@@ -3960,6 +3952,9 @@ function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
       // Generated on demand when color alpha is less than 1.0
       translucentCommand: undefined,
       translucentCommand2D: undefined,
+      // Generated on demand when back face culling is false
+      disableCullingCommand: undefined,
+      disableCullingCommand2D: undefined,
       // For updating node commands on shader reconstruction
       programId: programId,
     };
@@ -4076,7 +4071,6 @@ function createResources(model, frameState) {
   var context = frameState.context;
   var scene3DOnly = frameState.scene3DOnly;
   var quantizedVertexShaders = model._quantizedVertexShaders;
-  var toClipCoordinates = (model._toClipCoordinatesGLSL = {});
   var techniques = model._sourceTechniques;
   var programs = model._sourcePrograms;
 
@@ -4112,10 +4106,6 @@ function createResources(model, frameState) {
       }
 
       shader = modifyShader(shader, programId, model._vertexShaderLoaded);
-      toClipCoordinates[programId] = ModelUtility.toClipCoordinatesGLSL(
-        model.gltf,
-        shader
-      );
     }
   }
 
@@ -4380,7 +4370,7 @@ function applySkins(model) {
         computedJointMatrices[m]
       );
       if (defined(bindShapeMatrix)) {
-        // Optimization for when bind shape matrix is the identity.
+        // NOTE: bindShapeMatrix is glTF 1.0 only, removed in glTF 2.0.
         computedJointMatrices[m] = Matrix4.multiplyTransformation(
           computedJointMatrices[m],
           bindShapeMatrix,
@@ -4518,7 +4508,10 @@ function updateColor(model, frameState, forceDerive) {
   if (alpha > 0.0 && alpha < 1.0) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].translucentCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4526,6 +4519,47 @@ function updateColor(model, frameState, forceDerive) {
         if (!scene3DOnly) {
           var command2D = nodeCommand.command2D;
           nodeCommand.translucentCommand2D = deriveTranslucentCommand(
+            command2D
+          );
+        }
+      }
+    }
+  }
+}
+
+function getDisableCullingRenderState(renderState) {
+  var rs = clone(renderState, true);
+  rs.cull.enabled = false;
+  return RenderState.fromCache(rs);
+}
+
+function deriveDisableCullingCommand(command) {
+  var disableCullingCommand = DrawCommand.shallowClone(command);
+  disableCullingCommand.renderState = getDisableCullingRenderState(
+    command.renderState
+  );
+  return disableCullingCommand;
+}
+
+function updateBackFaceCulling(model, frameState, forceDerive) {
+  var scene3DOnly = frameState.scene3DOnly;
+  var backFaceCulling = model.backFaceCulling;
+  if (!backFaceCulling) {
+    var nodeCommands = model._nodeCommands;
+    var length = nodeCommands.length;
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].disableCullingCommand) || forceDerive)
+    ) {
+      for (var i = 0; i < length; ++i) {
+        var nodeCommand = nodeCommands[i];
+        var command = nodeCommand.command;
+        nodeCommand.disableCullingCommand = deriveDisableCullingCommand(
+          command
+        );
+        if (!scene3DOnly) {
+          var command2D = nodeCommand.command2D;
+          nodeCommand.disableCullingCommand2D = deriveDisableCullingCommand(
             command2D
           );
         }
@@ -4760,7 +4794,7 @@ function modifyShaderForClippingPlanes(
   shader = ShaderSource.replaceMain(shader, "gltf_clip_main");
   shader += Model._getClippingFunction(clippingPlaneCollection, context) + "\n";
   shader +=
-    "uniform sampler2D gltf_clippingPlanes; \n" +
+    "uniform highp sampler2D gltf_clippingPlanes; \n" +
     "uniform mat4 gltf_clippingPlanesMatrix; \n" +
     "uniform vec4 gltf_clippingPlanesEdgeStyle; \n" +
     "void main() \n" +
@@ -4786,12 +4820,13 @@ function updateSilhouette(model, frameState, force) {
 
   var nodeCommands = model._nodeCommands;
   var dirty =
-    alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
-    alphaDirty(
-      model.silhouetteColor.alpha,
-      model._silhouetteColorPreviousAlpha
-    ) ||
-    !defined(nodeCommands[0].silhouetteModelCommand);
+    nodeCommands.length > 0 &&
+    (alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+      alphaDirty(
+        model.silhouetteColor.alpha,
+        model._silhouetteColorPreviousAlpha
+      ) ||
+      !defined(nodeCommands[0].silhouetteModelCommand));
 
   model._colorPreviousAlpha = model.color.alpha;
   model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
@@ -5064,6 +5099,10 @@ function distanceDisplayConditionVisible(model, frameState) {
   return distance2 >= nearSquared && distance2 <= farSquared;
 }
 
+var scratchClippingPlanesMatrix = new Matrix4();
+var scratchIBLReferenceFrameMatrix4 = new Matrix4();
+var scratchIBLReferenceFrameMatrix3 = new Matrix3();
+
 /**
  * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
  * get the draw commands needed to render this primitive.
@@ -5249,6 +5288,7 @@ Model.prototype.update = function (frameState) {
         loadResources.resourcesParsed &&
         loadResources.pendingShaderLoads === 0
       ) {
+        ModelOutlineLoader.outlinePrimitives(this);
         createResources(this, frameState);
       }
     }
@@ -5364,6 +5404,7 @@ Model.prototype.update = function (frameState) {
   var silhouette = hasSilhouette(this, frameState);
   var translucent = isTranslucent(this);
   var invisible = isInvisible(this);
+  var backFaceCulling = this.backFaceCulling;
   var displayConditionPassed = defined(this.distanceDisplayCondition)
     ? distanceDisplayConditionVisible(this, frameState)
     : true;
@@ -5468,6 +5509,32 @@ Model.prototype.update = function (frameState) {
       defined(clippingPlanes) &&
       clippingPlanes.enabled &&
       clippingPlanes.length > 0;
+
+    // If defined, use the reference matrix to transform miscellaneous properties like
+    // clipping planes and IBL instead of the modelMatrix. This is so that when
+    // models are part of a tileset these properties get transformed relative to
+    // a common reference (such as the root).
+    var referenceMatrix = defaultValue(this.referenceMatrix, modelMatrix);
+
+    if (useClippingPlanes) {
+      var clippingPlanesMatrix = scratchClippingPlanesMatrix;
+      clippingPlanesMatrix = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        clippingPlanesMatrix
+      );
+      clippingPlanesMatrix = Matrix4.multiply(
+        clippingPlanesMatrix,
+        clippingPlanes.modelMatrix,
+        clippingPlanesMatrix
+      );
+      this._clippingPlanesMatrix = Matrix4.inverseTranspose(
+        clippingPlanesMatrix,
+        this._clippingPlanesMatrix
+      );
+      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+    }
+
     var usesSH =
       defined(this._sphericalHarmonicCoefficients) ||
       this._useDefaultSphericalHarmonics;
@@ -5475,20 +5542,28 @@ Model.prototype.update = function (frameState) {
       (defined(this._specularEnvironmentMapAtlas) &&
         this._specularEnvironmentMapAtlas.ready) ||
       this._useDefaultSpecularMaps;
-    if (useClippingPlanes || usesSH || usesSM) {
-      var clippingPlanesOriginMatrix = defaultValue(
-        this.clippingPlanesOriginMatrix,
-        modelMatrix
-      );
-      Matrix4.multiply(
-        context.uniformState.view3D,
-        clippingPlanesOriginMatrix,
-        this._clippingPlaneModelViewMatrix
-      );
-    }
 
-    if (useClippingPlanes) {
-      currentClippingPlanesState = clippingPlanes.clippingPlanesState;
+    if (usesSH || usesSM) {
+      var iblReferenceFrameMatrix3 = scratchIBLReferenceFrameMatrix3;
+      var iblReferenceFrameMatrix4 = scratchIBLReferenceFrameMatrix4;
+
+      iblReferenceFrameMatrix4 = Matrix4.multiply(
+        context.uniformState.view3D,
+        referenceMatrix,
+        iblReferenceFrameMatrix4
+      );
+      iblReferenceFrameMatrix3 = Matrix4.getMatrix3(
+        iblReferenceFrameMatrix4,
+        iblReferenceFrameMatrix3
+      );
+      iblReferenceFrameMatrix3 = Matrix3.getRotation(
+        iblReferenceFrameMatrix3,
+        iblReferenceFrameMatrix3
+      );
+      this._iblReferenceFrameMatrix = Matrix3.transpose(
+        iblReferenceFrameMatrix3,
+        this._iblReferenceFrameMatrix
+      );
     }
 
     var shouldRegenerateShaders = this._shouldRegenerateShaders;
@@ -5508,6 +5583,7 @@ Model.prototype.update = function (frameState) {
       regenerateShaders(this, frameState);
     } else {
       updateColor(this, frameState, false);
+      updateBackFaceCulling(this, frameState, false);
       updateSilhouette(this, frameState, false);
     }
   }
@@ -5542,8 +5618,14 @@ Model.prototype.update = function (frameState) {
       for (i = 0; i < length; ++i) {
         nc = nodeCommands[i];
         if (nc.show) {
-          var command = translucent ? nc.translucentCommand : nc.command;
-          command = silhouette ? nc.silhouetteModelCommand : command;
+          var command = nc.command;
+          if (silhouette) {
+            command = nc.silhouetteModelCommand;
+          } else if (translucent) {
+            command = nc.translucentCommand;
+          } else if (!backFaceCulling) {
+            command = nc.disableCullingCommand;
+          }
           commandList.push(command);
           boundingVolume = nc.command.boundingVolume;
           if (
@@ -5551,10 +5633,14 @@ Model.prototype.update = function (frameState) {
             (boundingVolume.center.y + boundingVolume.radius > idl2D ||
               boundingVolume.center.y - boundingVolume.radius < idl2D)
           ) {
-            var command2D = translucent
-              ? nc.translucentCommand2D
-              : nc.command2D;
-            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
+            var command2D = nc.command2D;
+            if (silhouette) {
+              command2D = nc.silhouetteModelCommand2D;
+            } else if (translucent) {
+              command2D = nc.translucentCommand2D;
+            } else if (!backFaceCulling) {
+              command2D = nc.disableCullingCommand2D;
+            }
             commandList.push(command2D);
           }
         }
@@ -5681,6 +5767,7 @@ function regenerateShaders(model, frameState) {
 
   // Force update silhouette commands/shaders
   updateColor(model, frameState, true);
+  updateBackFaceCulling(model, frameState, true);
   updateSilhouette(model, frameState, true);
 }
 

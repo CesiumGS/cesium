@@ -3,7 +3,7 @@ import WebGLConstants from "../Core/WebGLConstants.js";
 /**
  * Enumerates all possible filters used when magnifying WebGL textures.
  *
- * @exports TextureMagnificationFilter
+ * @enum {Number}
  *
  * @see TextureMinificationFilter
  */
@@ -22,20 +22,20 @@ var TextureMagnificationFilter = {
    * @constant
    */
   LINEAR: WebGLConstants.LINEAR,
-
-  /**
-   * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
-   *
-   * @private
-   *
-   * @param textureMagnificationFilter
-   * @returns {Boolean} <code>true</code> if <code>textureMagnificationFilter</code> is valid.
-   */
-  validate: function (textureMagnificationFilter) {
-    return (
-      textureMagnificationFilter === TextureMagnificationFilter.NEAREST ||
-      textureMagnificationFilter === TextureMagnificationFilter.LINEAR
-    );
-  },
 };
+
+/**
+ * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
+ * @param textureMagnificationFilter
+ * @returns {Boolean} <code>true</code> if <code>textureMagnificationFilter</code> is valid.
+ *
+ * @private
+ */
+TextureMagnificationFilter.validate = function (textureMagnificationFilter) {
+  return (
+    textureMagnificationFilter === TextureMagnificationFilter.NEAREST ||
+    textureMagnificationFilter === TextureMagnificationFilter.LINEAR
+  );
+};
+
 export default Object.freeze(TextureMagnificationFilter);

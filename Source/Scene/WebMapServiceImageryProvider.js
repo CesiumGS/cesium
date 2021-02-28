@@ -9,44 +9,51 @@ import TimeDynamicImagery from "./TimeDynamicImagery.js";
 import UrlTemplateImageryProvider from "./UrlTemplateImageryProvider.js";
 
 /**
- * Provides tiled imagery hosted by a Web Map Service (WMS) server.
+ * @typedef {Object} WebMapServiceImageryProvider.ConstructorOptions
  *
- * @alias WebMapServiceImageryProvider
- * @constructor
+ * Initialization options for the WebMapServiceImageryProvider constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
- * @param {String} options.layers The layers to include, separated by commas.
- * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
- * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
- * @param {Boolean} [options.enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
+ * @property {Resource|String} url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
+ * @property {String} layers The layers to include, separated by commas.
+ * @property {Object} [parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+ * @property {Object} [getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
  *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
  *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you know your WMS server does not support
  *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
  *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
- * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
+ * @property {GetFeatureInfoFormat[]} [getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
  *        in which to try WMS GetFeatureInfo requests.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified,
  *        this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *        parameter is specified, the WGS84 ellipsoid is used.
- * @param {Number} [options.tileWidth=256] The width of each tile in pixels.
- * @param {Number} [options.tileHeight=256] The height of each tile in pixels.
- * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
+ * @property {Number} [tileWidth=256] The width of each tile in pixels.
+ * @property {Number} [tileHeight=256] The height of each tile in pixels.
+ * @property {Number} [minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when
  *        specifying this that the number of tiles at the minimum level is small, such as four or less.  A larger number is
  *        likely to result in rendering problems.
- * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+ * @property {Number} [maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
  *        If not specified, there is no limit.
- * @param {String} [options.crs] CRS specification, for use with WMS specification >= 1.3.0.
- * @param {String} [options.srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
- * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+ * @property {String} [crs] CRS specification, for use with WMS specification >= 1.3.0.
+ * @property {String} [srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.
+ * @property {String|String[]} [subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
  *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
  *                          an array, each element in the array is a subdomain.
- * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
- * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+ * @property {Clock} [clock] A Clock instance that is used when determining the value for the time dimension. Required when `times` is specified.
+ * @property {TimeIntervalCollection} [times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+ */
+
+/**
+ * Provides tiled imagery hosted by a Web Map Service (WMS) server.
+ *
+ * @alias WebMapServiceImageryProvider
+ * @constructor
+ *
+ * @param {WebMapServiceImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see BingMapsImageryProvider
@@ -86,6 +93,92 @@ function WebMapServiceImageryProvider(options) {
       "options.times was specified, so options.clock is required."
     );
   }
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   var resource = Resource.createIfNeeded(options.url);
 
@@ -162,10 +255,16 @@ function WebMapServiceImageryProvider(options) {
 
   var pickFeatureParams = {
     query_layers: options.layers,
-    x: "{i}",
-    y: "{j}",
     info_format: "{format}",
   };
+  // use correct pixel coordinate identifier based on version
+  if (parseFloat(pickFeatureResource.queryParameters.version) >= 1.3) {
+    pickFeatureParams.i = "{i}";
+    pickFeatureParams.j = "{j}";
+  } else {
+    pickFeatureParams.x = "{i}";
+    pickFeatureParams.y = "{j}";
+  }
   pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
   this._resource = resource;
@@ -293,7 +392,7 @@ Object.defineProperties(WebMapServiceImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
    * @memberof WebMapServiceImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -494,7 +593,7 @@ WebMapServiceImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

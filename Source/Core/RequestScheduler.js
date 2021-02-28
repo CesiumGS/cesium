@@ -44,7 +44,7 @@ var requestCompletedEvent = new Event();
  * a lot of new requests may be generated and a lot of in-flight requests may become redundant. The request scheduler manually constrains the
  * number of requests so that newer requests wait in a shorter queue and don't have to compete for bandwidth with requests that have expired.
  *
- * @exports RequestScheduler
+ * @namespace RequestScheduler
  *
  */
 function RequestScheduler() {}
@@ -66,6 +66,7 @@ RequestScheduler.maximumRequestsPerServer = 6;
 
 /**
  * A per server key list of overrides to use for throttling instead of <code>maximumRequestsPerServer</code>
+ * @type {Object}
  *
  * @example
  * RequestScheduler.requestsByServer = {
@@ -176,11 +177,16 @@ function getRequestReceivedFunction(request) {
       // If the data request comes back but the request is cancelled, ignore it.
       return;
     }
+    // explicitly set to undefined to ensure GC of request response data. See #8843
+    var deferred = request.deferred;
+
     --statistics.numberOfActiveRequests;
     --numberOfActiveRequestsByServer[request.serverKey];
     requestCompletedEvent.raiseEvent();
     request.state = RequestState.RECEIVED;
-    request.deferred.resolve(results);
+    request.deferred = undefined;
+
+    deferred.resolve(results);
   };
 }
 
@@ -217,7 +223,13 @@ function cancelRequest(request) {
   var active = request.state === RequestState.ACTIVE;
   request.state = RequestState.CANCELLED;
   ++statistics.numberOfCancelledRequests;
-  request.deferred.reject();
+  // check that deferred has not been cleared since cancelRequest can be called
+  // on a finished request, e.g. by clearForSpecs during tests
+  if (defined(request.deferred)) {
+    var deferred = request.deferred;
+    request.deferred = undefined;
+    deferred.reject();
+  }
 
   if (active) {
     --statistics.numberOfActiveRequests;

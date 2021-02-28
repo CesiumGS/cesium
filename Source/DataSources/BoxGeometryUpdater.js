@@ -66,6 +66,7 @@ Object.defineProperties(BoxGeometryUpdater.prototype, {
    * @type {TerrainOffsetProperty}
    * @memberof BoxGeometryUpdater.prototype
    * @readonly
+   * @private
    */
   terrainOffsetProperty: {
     get: function () {

@@ -87,7 +87,7 @@ function SelectionIndicatorViewModel(
    * Gets or sets the function for converting the world position of the object to the screen space position.
    *
    * @member
-   * @type {SelectionIndicatorViewModel~ComputeScreenSpacePosition}
+   * @type {SelectionIndicatorViewModel.ComputeScreenSpacePosition}
    * @default SceneTransforms.wgs84ToWindowCoordinates
    *
    * @example
@@ -205,7 +205,7 @@ Object.defineProperties(SelectionIndicatorViewModel.prototype, {
 
 /**
  * A function that converts the world position of an object to a screen space position.
- * @callback SelectionIndicatorViewModel~ComputeScreenSpacePosition
+ * @callback SelectionIndicatorViewModel.ComputeScreenSpacePosition
  * @param {Cartesian3} position The position in WGS84 (world) coordinates.
  * @param {Cartesian2} result An object to return the input position transformed to window coordinates.
  * @returns {Cartesian2} The modified result parameter.

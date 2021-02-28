@@ -111,7 +111,7 @@ Object.defineProperties(TimeDynamicImagery.prototype, {
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
  *
- * @returns {Promise.<Image>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if the tile is not in the cache.
  */
 TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
@@ -282,7 +282,7 @@ function addToCache(that, tile, interval) {
 
   var keyElements = getKeyElements(key);
   var request = new Request({
-    throttle: true,
+    throttle: false,
     throttleByServer: true,
     type: RequestType.IMAGERY,
     priorityFunction: tile.priorityFunction,

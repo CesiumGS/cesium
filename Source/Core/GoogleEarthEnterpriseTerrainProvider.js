@@ -604,7 +604,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
   if (metadata.isValid(quadKey)) {
     // We will need this tile, so request metadata and return false for now
     var request = new Request({
-      throttle: true,
+      throttle: false,
       throttleByServer: true,
       type: RequestType.TERRAIN,
     });
@@ -619,7 +619,7 @@ GoogleEarthEnterpriseTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function (
   x,

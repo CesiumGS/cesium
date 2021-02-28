@@ -8,6 +8,7 @@ import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import Matrix3 from "../Core/Matrix3.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -22,6 +23,7 @@ import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileFeatureTable from "./Cesium3DTileFeatureTable.js";
 import ModelInstanceCollection from "./ModelInstanceCollection.js";
+import ModelAnimationLoop from "./ModelAnimationLoop.js";
 
 /**
  * Represents the contents of a
@@ -202,12 +204,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJsonByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJsonByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -233,12 +234,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   var batchTableJson;
   var batchTableBinary;
   if (batchTableJsonByteLength > 0) {
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJsonByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJsonByteLength;
 
     if (batchTableBinaryByteLength > 0) {
@@ -303,6 +303,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     luminanceAtZenith: tileset.luminanceAtZenith,
     sphericalHarmonicCoefficients: tileset.sphericalHarmonicCoefficients,
     specularEnvironmentMaps: tileset.specularEnvironmentMaps,
+    backFaceCulling: tileset.backFaceCulling,
   };
 
   if (gltfFormat === 0) {
@@ -548,6 +549,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   content._modelInstanceCollection = new ModelInstanceCollection(
     collectionOptions
   );
+  content._modelInstanceCollection.readyPromise.then(function (collection) {
+    collection.activeAnimations.addAll({
+      loop: ModelAnimationLoop.REPEAT,
+    });
+  });
 }
 
 function createFeatures(content) {
@@ -609,6 +615,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
   this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
   this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
+  this._modelInstanceCollection.backFaceCulling = this._tileset.backFaceCulling;
   this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
   var model = this._modelInstanceCollection._model;
@@ -616,7 +623,7 @@ Instanced3DModel3DTileContent.prototype.update = function (
   if (defined(model)) {
     // Update for clipping planes
     var tilesetClippingPlanes = this._tileset.clippingPlanes;
-    model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+    model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
     if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
       // Dereference the clipping planes from the model if they are irrelevant - saves on shading
       // Link/Dereference directly to avoid ownership checks.

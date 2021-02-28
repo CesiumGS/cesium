@@ -54,6 +54,18 @@ import TileImagery from "./TileImagery.js";
  *                          current frame state, this layer, and the x, y, and level coordinates of the
  *                          imagery tile for which the alpha is required, and it is expected to return
  *                          the alpha value to use for the tile.
+ * @param {Number|Function} [options.nightAlpha=1.0] The alpha blending value of this layer on the night side of the globe, from 0.0 to 1.0.
+ *                          This can either be a simple number or a function with the signature
+ *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+ *                          current frame state, this layer, and the x, y, and level coordinates of the
+ *                          imagery tile for which the alpha is required, and it is expected to return
+ *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
+ * @param {Number|Function} [options.dayAlpha=1.0] The alpha blending value of this layer on the day side of the globe, from 0.0 to 1.0.
+ *                          This can either be a simple number or a function with the signature
+ *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+ *                          current frame state, this layer, and the x, y, and level coordinates of the
+ *                          imagery tile for which the alpha is required, and it is expected to return
+ *                          the alpha value to use for the tile. This only takes effect when <code>enableLighting</code> is <code>true</code>.
  * @param {Number|Function} [options.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
  *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
  *                          This can either be a simple number or a function with the signature
@@ -129,6 +141,30 @@ function ImageryLayer(imageryProvider, options) {
   this.alpha = defaultValue(
     options.alpha,
     defaultValue(imageryProvider.defaultAlpha, 1.0)
+  );
+
+  /**
+   * The alpha blending value of this layer on the night side of the globe, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 1.0
+   */
+  this.nightAlpha = defaultValue(
+    options.nightAlpha,
+    defaultValue(imageryProvider.defaultNightAlpha, 1.0)
+  );
+
+  /**
+   * The alpha blending value of this layer on the day side of the globe, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque. This only takes effect when {@link Globe#enableLighting} is <code>true</code>.
+   *
+   * @type {Number}
+   * @default 1.0
+   */
+  this.dayAlpha = defaultValue(
+    options.dayAlpha,
+    defaultValue(imageryProvider.defaultDayAlpha, 1.0)
   );
 
   /**
@@ -1199,6 +1235,10 @@ ImageryLayer.prototype._reprojectTexture = function (
         imagery.state = ImageryState.READY;
         imagery.releaseReference();
       },
+      canceled: function () {
+        imagery.state = ImageryState.TEXTURE_LOADED;
+        imagery.releaseReference();
+      },
     });
     this._reprojectComputeCommands.push(computeCommand);
   } else {
@@ -1232,6 +1272,11 @@ ImageryLayer.prototype.queueReprojectionCommands = function (frameState) {
  * @private
  */
 ImageryLayer.prototype.cancelReprojections = function () {
+  this._reprojectComputeCommands.forEach(function (command) {
+    if (defined(command.canceled)) {
+      command.canceled();
+    }
+  });
   this._reprojectComputeCommands.length = 0;
 };
 
@@ -1467,6 +1512,7 @@ function reprojectToGeographic(command, context, texture, rectangle) {
  * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
  * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
  * @returns {Number} The level with the specified texel spacing or less.
+ * @private
  */
 function getLevelWithMaximumTexelSpacing(
   layer,

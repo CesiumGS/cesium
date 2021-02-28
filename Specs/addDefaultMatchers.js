@@ -363,9 +363,9 @@ function createDefaultMatchers(debug) {
 
     toPickAndCall: function (util, customEqualityTesters) {
       return {
-        compare: function (actual, expected) {
+        compare: function (actual, expected, args) {
           var scene = actual;
-          var result = scene.pick(new Cartesian2(0, 0));
+          var result = scene.pick(defaultValue(args, new Cartesian2(0, 0)));
 
           var webglStub = !!window.webglStub;
           if (!webglStub) {

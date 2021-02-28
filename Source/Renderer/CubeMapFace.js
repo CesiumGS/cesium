@@ -9,10 +9,11 @@ import PixelDatatype from "./PixelDatatype.js";
  * @private
  */
 function CubeMapFace(
-  gl,
+  context,
   texture,
   textureTarget,
   targetFace,
+  internalFormat,
   pixelFormat,
   pixelDatatype,
   size,
@@ -20,12 +21,13 @@ function CubeMapFace(
   flipY,
   initialized
 ) {
-  this._gl = gl;
+  this._context = context;
   this._texture = texture;
   this._textureTarget = textureTarget;
   this._targetFace = targetFace;
-  this._pixelFormat = pixelFormat;
   this._pixelDatatype = pixelDatatype;
+  this._internalFormat = internalFormat;
+  this._pixelFormat = pixelFormat;
   this._size = size;
   this._preMultiplyAlpha = preMultiplyAlpha;
   this._flipY = flipY;
@@ -96,7 +98,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
   }
   //>>includeEnd('debug');
 
-  var gl = this._gl;
+  var gl = this._context._gl;
   var target = this._textureTarget;
   var targetFace = this._targetFace;
 
@@ -109,6 +111,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
 
   var size = this._size;
   var pixelFormat = this._pixelFormat;
+  var internalFormat = this._internalFormat;
   var pixelDatatype = this._pixelDatatype;
 
   var preMultiplyAlpha = this._preMultiplyAlpha;
@@ -145,12 +148,12 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           targetFace,
           0,
-          pixelFormat,
+          internalFormat,
           size,
           size,
           0,
           pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
           arrayBufferView
         );
       } else {
@@ -161,9 +164,9 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         gl.texImage2D(
           targetFace,
           0,
+          internalFormat,
           pixelFormat,
-          pixelFormat,
-          pixelDatatype,
+          PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
           source
         );
       }
@@ -182,12 +185,12 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
       gl.texImage2D(
         targetFace,
         0,
-        pixelFormat,
+        internalFormat,
         size,
         size,
         0,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         bufferView
       );
     }
@@ -216,7 +219,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         width,
         height,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         arrayBufferView
       );
     } else {
@@ -231,7 +234,7 @@ CubeMapFace.prototype.copyFrom = function (source, xOffset, yOffset) {
         xOffset,
         yOffset,
         pixelFormat,
-        pixelDatatype,
+        PixelDatatype.toWebGLConstant(pixelDatatype, this._context),
         source
       );
     }
@@ -315,7 +318,7 @@ CubeMapFace.prototype.copyFromFramebuffer = function (
   }
   //>>includeEnd('debug');
 
-  var gl = this._gl;
+  var gl = this._context._gl;
   var target = this._textureTarget;
 
   gl.activeTexture(gl.TEXTURE0);

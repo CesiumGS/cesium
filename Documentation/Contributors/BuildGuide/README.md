@@ -109,7 +109,6 @@ Here's the full set of scripts and what they do.
   - `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.
   - `clean` - Removes all generated build artifacts.
   - `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories. This requires [Perl](http://www.perl.org/) to execute.
-  - `sortRequires` - Alphabetically sorts the list of required modules in every `js` file. It also makes sure that the top of every source file uses the same formatting.
 - **Testing scripts** -- build and run the unit tests
   - `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
   - `test-all` - Runs all tests with Karma using all browsers installed on the current system.

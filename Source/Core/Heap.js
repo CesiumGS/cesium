@@ -10,7 +10,7 @@ import defined from "./defined.js";
  * @private
  *
  * @param {Object} options Object with the following properties:
- * @param {Heap~ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+ * @param {Heap.ComparatorCallback} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
  */
 function Heap(options) {
   //>>includeStart('debug', pragmas.debug);
@@ -65,11 +65,20 @@ Object.defineProperties(Heap.prototype, {
       return this._maximumLength;
     },
     set: function (value) {
-      this._maximumLength = value;
-      if (this._length > value && value > 0) {
+      //>>includeStart('debug', pragmas.debug);
+      Check.typeOf.number.greaterThanOrEquals("maximumLength", value, 0);
+      //>>includeEnd('debug');
+      var originalLength = this._length;
+      if (value < originalLength) {
+        var array = this._array;
+        // Remove trailing references
+        for (var i = value; i < originalLength; ++i) {
+          array[i] = undefined;
+        }
         this._length = value;
-        this._array.length = value;
+        array.length = value;
       }
+      this._maximumLength = value;
     },
   },
 
@@ -78,7 +87,7 @@ Object.defineProperties(Heap.prototype, {
    *
    * @memberof Heap.prototype
    *
-   * @type {Heap~ComparatorCallback}
+   * @type {Heap.ComparatorCallback}
    */
   comparator: {
     get: function () {
@@ -211,12 +220,13 @@ Heap.prototype.pop = function (index) {
   var root = array[index];
   swap(array, index, --this._length);
   this.heapify(index);
+  array[this._length] = undefined; // Remove trailing reference
   return root;
 };
 
 /**
  * The comparator to use for the heap.
- * @callback Heap~ComparatorCallback
+ * @callback Heap.ComparatorCallback
  * @param {*} a An element in the heap.
  * @param {*} b An element in the heap.
  * @returns {Number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.

@@ -3,7 +3,7 @@ import defined from "./defined.js";
 /**
  * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
  *
- * @exports LagrangePolynomialApproximation
+ * @namespace LagrangePolynomialApproximation
  */
 var LagrangePolynomialApproximation = {
   type: "Lagrange",

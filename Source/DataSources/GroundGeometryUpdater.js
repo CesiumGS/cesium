@@ -54,6 +54,7 @@ Object.defineProperties(GroundGeometryUpdater.prototype, {
    * @type {TerrainOffsetProperty}
    * @memberof GroundGeometryUpdater.prototype
    * @readonly
+   * @private
    */
   terrainOffsetProperty: {
     get: function () {

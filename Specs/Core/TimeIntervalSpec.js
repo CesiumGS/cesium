@@ -633,27 +633,11 @@ describe("Core/TimeInterval", function () {
     }).toThrowDeveloperError();
   });
 
-  it("equalsEpsilon throws without epsilon.", function () {
-    var left = new TimeInterval();
-    var right = new TimeInterval();
-    expect(function () {
-      TimeInterval.equalsEpsilon(left, right, undefined);
-    }).toThrowDeveloperError();
-  });
-
   it("intersect throws without left.", function () {
     var right = new TimeInterval();
     var result = new TimeInterval();
     expect(function () {
       TimeInterval.intersect(undefined, right, result);
-    }).toThrowDeveloperError();
-  });
-
-  it("intersect throws without result.", function () {
-    var left = new TimeInterval();
-    var right = new TimeInterval();
-    expect(function () {
-      TimeInterval.intersect(left, right, undefined);
     }).toThrowDeveloperError();
   });
 

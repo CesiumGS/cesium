@@ -294,6 +294,19 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
       return false;
     },
   },
+  /**
+   * Gets an object that can be used to determine availability of terrain from this provider, such as
+   * at points and in rectangles.  This function should not be called before
+   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * information is not available.
+   * @memberof ArcGISTiledElevationTerrainProvider.prototype
+   * @type {TileAvailability}
+   */
+  availability: {
+    get: function () {
+      return undefined;
+    },
+  },
 });
 
 /**
@@ -459,7 +472,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
@@ -611,7 +624,7 @@ function requestAvailability(that, level, x, y) {
   }
 
   var request = new Request({
-    throttle: true,
+    throttle: false,
     throttleByServer: true,
     type: RequestType.TERRAIN,
   });

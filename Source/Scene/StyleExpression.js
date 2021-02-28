@@ -55,7 +55,7 @@ StyleExpression.prototype.evaluateColor = function (feature, result) {
  * Returns undefined if the shader function can't be generated from this expression.
  *
  * @param {String} functionName Name to give to the generated function.
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -65,7 +65,7 @@ StyleExpression.prototype.evaluateColor = function (feature, result) {
  */
 StyleExpression.prototype.getShaderFunction = function (
   functionName,
-  attributePrefix,
+  propertyNameMap,
   shaderState,
   returnType
 ) {

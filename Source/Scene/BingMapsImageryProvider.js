@@ -1,4 +1,3 @@
-import BingMapsApi from "../Core/BingMapsApi.js";
 import buildModuleUrl from "../Core/buildModuleUrl.js";
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
@@ -18,27 +17,33 @@ import DiscardEmptyTilePolicy from "./DiscardEmptyTileImagePolicy.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
+ * @typedef {Object} BingMapsImageryProvider.ConstructorOptions
+ *
+ * Initialization options for the BingMapsImageryProvider constructor
+ *
+ * @property {Resource|String} url The url of the Bing Maps server hosting the imagery.
+ * @property {String} key The Bing Maps key for your application, which can be
+ *        created at {@link https://www.bingmapsportal.com/}.
+ * @property {String} [tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
+ *        By default, tiles are loaded using the same protocol as the page.
+ * @property {BingMapsStyle} [mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+ * @property {String} [culture=''] The culture to use when requesting Bing Maps imagery. Not
+ *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
+ *        for information on the supported cultures.
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
+ *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
+ *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
+ *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
+ */
+
+/**
  * Provides tiled imagery using the Bing Maps Imagery REST API.
  *
  * @alias BingMapsImageryProvider
  * @constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
- * @param {String} [options.key] The Bing Maps key for your application, which can be
- *        created at {@link https://www.bingmapsportal.com/}.
- *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
- * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
- *        By default, tiles are loaded using the same protocol as the page.
- * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
- * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
- *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
- *        for information on the supported cultures.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
- *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
- *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
- *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
+ * @param {BingMapsImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see ArcGisMapServerImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -62,14 +67,104 @@ import ImageryProvider from "./ImageryProvider.js";
  */
 function BingMapsImageryProvider(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var accessKey = options.key;
 
   //>>includeStart('debug', pragmas.debug);
   if (!defined(options.url)) {
     throw new DeveloperError("options.url is required.");
   }
+  if (!defined(accessKey)) {
+    throw new DeveloperError("options.key is required.");
+  }
   //>>includeEnd('debug');
 
-  this._key = BingMapsApi.getKey(options.key);
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default 1.0
+   */
+  this.defaultGamma = 1.0;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
+
+  this._key = accessKey;
   this._resource = Resource.createIfNeeded(options.url);
   this._resource.appendForwardSlash();
   this._tileProtocol = options.tileProtocol;
@@ -87,16 +182,6 @@ function BingMapsImageryProvider(options) {
       BingMapsImageryProvider.logoUrl +
       '" title="Bing Imagery"/></a>'
   );
-
-  /**
-   * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-   * Changing this value after creating an {@link ImageryLayer} for this provider will have
-   * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
-   *
-   * @type {Number}
-   * @default 1.0
-   */
-  this.defaultGamma = 1.0;
 
   this._tilingScheme = new WebMercatorTilingScheme({
     numberOfLevelZeroTilesX: 2,
@@ -339,7 +424,7 @@ Object.defineProperties(BingMapsImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link BingMapsImageryProvider#ready} returns true.
    * @memberof BingMapsImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -550,7 +635,7 @@ BingMapsImageryProvider.prototype.getTileCredits = function (x, y, level) {
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

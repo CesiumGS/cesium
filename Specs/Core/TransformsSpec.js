@@ -1716,6 +1716,59 @@ describe("Core/Transforms", function () {
     expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
   });
 
+  it("rotationMatrixFromPositionVelocity works without a result parameter", function () {
+    var matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Y
+    );
+    var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+    matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Z
+    );
+    expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+    matrix = Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_Y,
+      Cartesian3.UNIT_Z
+    );
+    expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+    expect(matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+  });
+
+  it("rotationMatrixFromPositionVelocity works with a result parameter", function () {
+    var result = new Matrix3();
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Y,
+      Ellipsoid.WGS84,
+      result
+    );
+    var expected = new Matrix3(0, 0, 1, 1, 0, 0, 0, 1, 0);
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_X,
+      Cartesian3.UNIT_Z,
+      Ellipsoid.WGS84,
+      result
+    );
+    expected = new Matrix3(0, 0, 1, 0, -1, 0, 1, 0, 0);
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+    Transforms.rotationMatrixFromPositionVelocity(
+      Cartesian3.UNIT_Y,
+      Cartesian3.UNIT_Z,
+      Ellipsoid.WGS84,
+      result
+    );
+    expected = new Matrix3(0, 1, 0, 0, 0, 1, 1, 0, 0);
+    expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+  });
+
   it("basisTo2D projects translation", function () {
     var ellipsoid = Ellipsoid.WGS84;
     var projection = new GeographicProjection(ellipsoid);

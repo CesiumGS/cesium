@@ -4,7 +4,7 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * An {@link InterpolationAlgorithm} for performing linear interpolation.
  *
- * @exports LinearApproximation
+ * @namespace LinearApproximation
  */
 var LinearApproximation = {
   type: "Linear",

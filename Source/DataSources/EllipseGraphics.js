@@ -6,6 +6,33 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} EllipseGraphics.ConstructorOptions
+ *
+ * Initialization options for the EllipseGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the ellipse.
+ * @property {Property | number} [semiMajorAxis] The numeric Property specifying the semi-major axis.
+ * @property {Property | number} [semiMinorAxis] The numeric Property specifying the semi-minor axis.
+ * @property {Property | number} [height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+ * @property {Property | number} [extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
+ * @property {Property | HeightReference} [extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
+ * @property {Property | number} [rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
+ * @property {Property | number} [stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
+ * @property {Property | number} [granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the ellipse.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the ellipse is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | number} [numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
+ * @property {Property | ClassificationType} [classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
+ * @property {ConstantProperty | number} [zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
+ */
+
+/**
  * Describes an ellipse defined by a center point and semi-major and semi-minor axes.
  * The ellipse conforms to the curvature of the globe and can be placed on the surface or
  * at altitude and can optionally be extruded into a volume.
@@ -14,27 +41,7 @@ import createPropertyDescriptor from "./createPropertyDescriptor.js";
  * @alias EllipseGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipse.
- * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
- * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
- * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
- * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
- * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
- * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
- * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
- * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipse.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipse is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
- * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
- * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
+ * @param {EllipseGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
  */
@@ -101,7 +108,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the ellipse.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -109,21 +116,21 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the semi-major axis.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   semiMajorAxis: createPropertyDescriptor("semiMajorAxis"),
 
   /**
    * Gets or sets the numeric Property specifying the semi-minor axis.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   semiMinorAxis: createPropertyDescriptor("semiMinorAxis"),
 
   /**
    * Gets or sets the numeric Property specifying the altitude of the ellipse.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0.0
    */
   height: createPropertyDescriptor("height"),
@@ -131,7 +138,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -140,22 +147,22 @@ Object.defineProperties(EllipseGraphics.prototype, {
    * Gets or sets the numeric Property specifying the altitude of the ellipse extrusion.
    * Setting this property creates volume starting at height and ending at this altitude.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   extrudedHeight: createPropertyDescriptor("extrudedHeight"),
 
   /**
    * Gets or sets the Property specifying the extruded {@link HeightReference}.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   extrudedHeightReference: createPropertyDescriptor("extrudedHeightReference"),
 
   /**
-   * Gets or sets the numeric property specifying the rotation of the ellipse clockwise from north.
+   * Gets or sets the numeric property specifying the rotation of the ellipse counter-clockwise from north.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0
    */
   rotation: createPropertyDescriptor("rotation"),
@@ -163,7 +170,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 0
    */
   stRotation: createPropertyDescriptor("stRotation"),
@@ -171,7 +178,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the angular distance between points on the ellipse.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default {CesiumMath.RADIANS_PER_DEGREE}
    */
   granularity: createPropertyDescriptor("granularity"),
@@ -179,7 +186,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the ellipse is filled with the provided material.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -187,7 +194,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the material used to fill the ellipse.
    * @memberof EllipseGraphics.prototype
-   * @type {MaterialProperty}
+   * @type {MaterialProperty|undefined}
    * @default Color.WHITE
    */
   material: createMaterialPropertyDescriptor("material"),
@@ -195,7 +202,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the Property specifying whether the ellipse is outlined.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -203,7 +210,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -211,7 +218,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -219,7 +226,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 16
    */
   numberOfVerticalLines: createPropertyDescriptor("numberOfVerticalLines"),
@@ -228,7 +235,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
    * Get or sets the enum Property specifying whether the ellipse
    * casts or receives shadows from light sources.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -236,7 +243,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this ellipse will be displayed.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
@@ -245,7 +252,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the {@link ClassificationType} Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
    * @memberof EllipseGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ClassificationType.BOTH
    */
   classificationType: createPropertyDescriptor("classificationType"),
@@ -253,7 +260,7 @@ Object.defineProperties(EllipseGraphics.prototype, {
   /**
    * Gets or sets the zIndex Property specifying the ellipse ordering.  Only has an effect if the ellipse is constant and neither height or extrudedHeight are specified
    * @memberof EllipseGraphics.prototype
-   * @type {ConstantProperty}
+   * @type {ConstantProperty|undefined}
    * @default 0
    */
   zIndex: createPropertyDescriptor("zIndex"),

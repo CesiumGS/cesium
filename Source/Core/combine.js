@@ -30,7 +30,7 @@ import defined from "./defined.js";
  * @param {Boolean} [deep=false] Perform a recursive merge.
  * @returns {Object} The combined object containing all properties from both objects.
  *
- * @exports combine
+ * @function
  */
 function combine(object1, object2, deep) {
   deep = defaultValue(deep, false);

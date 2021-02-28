@@ -21,16 +21,13 @@ import ImageryLayerFeatureInfo from "./ImageryLayerFeatureInfo.js";
 import ImageryProvider from "./ImageryProvider.js";
 
 /**
- * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
- * used, if available.
+ * @typedef {Object} ArcGisMapServerImageryProvider.ConstructorOptions
  *
- * @alias ArcGisMapServerImageryProvider
- * @constructor
+ * Initialization options for the ArcGisMapServerImageryProvider constructor
  *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.url The URL of the ArcGIS MapServer service.
- * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
- * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+ * @property {Resource|String} url The URL of the ArcGIS MapServer service.
+ * @property {String} [token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+ * @property {TileDiscardPolicy} [tileDiscardPolicy] The policy that determines if a tile
  *        is invalid and should be discarded.  If this value is not specified, a default
  *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
  *        {@link NeverTileDiscardPolicy} is used for non-tiled map servers.  In the former case,
@@ -41,27 +38,37 @@ import ImageryProvider from "./ImageryProvider.js";
  *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
  *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
  *        parameter.
- * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+ * @property {Boolean} [usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
  *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
  *        'export' service is used.
- * @param {String} [options.layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
- * @param {Boolean} [options.enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
+ * @property {String} [layers] A comma-separated list of the layers to show, or undefined if all layers should be shown.
+ * @property {Boolean} [enablePickFeatures=true] If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will invoke
  *        the Identify service on the MapServer and return the features included in the response.  If false,
  *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
  *        without communicating with the server.  Set this property to false if you don't want this provider's features to
  *        be pickable. Can be overridden by setting the {@link ArcGisMapServerImageryProvider#enablePickFeatures} property on the object.
- * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
+ * @property {Rectangle} [rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
  *                    a tiled layer.
- * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
+ * @property {TilingScheme} [tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
  *                       This parameter is ignored when accessing a tiled server.
- * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
+ * @property {Ellipsoid} [ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
  *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
  *                    parameter is specified, the WGS84 ellipsoid is used.
- * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
- * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
+ * @property {Credit|String} [credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
+ * @property {Number} [maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
  *                                        a tiled server.
+ */
+
+/**
+ * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
+ * used, if available.
+ *
+ * @alias ArcGisMapServerImageryProvider
+ * @constructor
+ *
+ * @param {ArcGisMapServerImageryProvider.ConstructorOptions} options Object describing initialization options
  *
  * @see BingMapsImageryProvider
  * @see GoogleEarthEnterpriseMapsProvider
@@ -89,6 +96,92 @@ function ArcGisMapServerImageryProvider(options) {
     throw new DeveloperError("options.url is required.");
   }
   //>>includeEnd('debug');
+
+  /**
+   * The default alpha blending value of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the night side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultNightAlpha = undefined;
+
+  /**
+   * The default alpha blending value on the day side of the globe of this provider, with 0.0 representing fully transparent and
+   * 1.0 representing fully opaque.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultDayAlpha = undefined;
+
+  /**
+   * The default brightness of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0
+   * makes the imagery darker while greater than 1.0 makes it brighter.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultBrightness = undefined;
+
+  /**
+   * The default contrast of this provider.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+   * the contrast while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultContrast = undefined;
+
+  /**
+   * The default hue of this provider in radians. 0.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultHue = undefined;
+
+  /**
+   * The default saturation of this provider. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
+   * saturation while greater than 1.0 increases it.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultSaturation = undefined;
+
+  /**
+   * The default gamma correction to apply to this provider.  1.0 uses the unmodified imagery color.
+   *
+   * @type {Number|undefined}
+   * @default undefined
+   */
+  this.defaultGamma = undefined;
+
+  /**
+   * The default texture minification filter to apply to this provider.
+   *
+   * @type {TextureMinificationFilter}
+   * @default undefined
+   */
+  this.defaultMinificationFilter = undefined;
+
+  /**
+   * The default texture magnification filter to apply to this provider.
+   *
+   * @type {TextureMagnificationFilter}
+   * @default undefined
+   */
+  this.defaultMagnificationFilter = undefined;
 
   var resource = Resource.createIfNeeded(options.url);
   resource.appendForwardSlash();
@@ -338,7 +431,7 @@ function buildImageResource(imageryProvider, x, y, level, request) {
     var query = {
       bbox: bbox,
       size: imageryProvider._tileWidth + "," + imageryProvider._tileHeight,
-      format: "png",
+      format: "png32",
       transparent: true,
       f: "image",
     };
@@ -449,7 +542,7 @@ Object.defineProperties(ArcGisMapServerImageryProvider.prototype, {
    * Gets the maximum level-of-detail that can be requested.  This function should
    * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
    * @memberof ArcGisMapServerImageryProvider.prototype
-   * @type {Number}
+   * @type {Number|undefined}
    * @readonly
    */
   maximumLevel: {
@@ -677,7 +770,7 @@ ArcGisMapServerImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

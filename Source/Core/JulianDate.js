@@ -901,15 +901,11 @@ JulianDate.equals = function (left, right) {
  *
  * @param {JulianDate} [left] The first instance.
  * @param {JulianDate} [right] The second instance.
- * @param {Number} epsilon The maximum number of seconds that should separate the two instances.
+ * @param {Number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @returns {Boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.equalsEpsilon = function (left, right, epsilon) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(epsilon)) {
-    throw new DeveloperError("epsilon is required.");
-  }
-  //>>includeEnd('debug');
+  epsilon = defaultValue(epsilon, 0);
 
   return (
     left === right ||
@@ -1182,7 +1178,7 @@ JulianDate.prototype.equals = function (right) {
  * seconds, must be less than <code>epsilon</code>.
  *
  * @param {JulianDate} [right] The second instance.
- * @param {Number} epsilon The maximum number of seconds that should separate the two instances.
+ * @param {Number} [epsilon=0] The maximum number of seconds that should separate the two instances.
  * @returns {Boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
  */
 JulianDate.prototype.equalsEpsilon = function (right, epsilon) {

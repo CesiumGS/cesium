@@ -6,22 +6,30 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} BoxGraphics.ConstructorOptions
+ *
+ * Initialization options for the BoxGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the box.
+ * @property {Property | Cartesian3} [dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the box is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the box.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the box is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
+ *
+ */
+
+/**
  * Describes a box. The center position and orientation are determined by the containing {@link Entity}.
  *
  * @alias BoxGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
- * @param {Property} [options.dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the box is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the box.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the box is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
+ * @param {BoxGraphics.ConstructorOptions} [options] Object describing initialization options
  *
  * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
  */
@@ -67,7 +75,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the box.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -75,14 +83,14 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets {@link Cartesian3} Property property specifying the length, width, and height of the box.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   dimensions: createPropertyDescriptor("dimensions"),
 
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -90,7 +98,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the box is filled with the provided material.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -98,7 +106,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the material used to fill the box.
    * @memberof BoxGraphics.prototype
-   * @type {MaterialProperty}
+   * @type {MaterialProperty|undefined}
    * @default Color.WHITE
    */
   material: createMaterialPropertyDescriptor("material"),
@@ -106,7 +114,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the Property specifying whether the box is outlined.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -114,7 +122,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -122,7 +130,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -131,7 +139,7 @@ Object.defineProperties(BoxGraphics.prototype, {
    * Get or sets the enum Property specifying whether the box
    * casts or receives shadows from light sources.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -139,7 +147,7 @@ Object.defineProperties(BoxGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this box will be displayed.
    * @memberof BoxGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"
