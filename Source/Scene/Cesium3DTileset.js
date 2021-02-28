@@ -1166,25 +1166,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The url to a tileset JSON file.
-   *
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {String}
-   * @readonly
-   * @deprecated
-   */
-  url: {
-    get: function () {
-      deprecationWarning(
-        "Cesium3DTileset.url",
-        "Cesium3DTileset.url has been deprecated and will be removed in CesiumJS 1.79.  Instead, use Cesium3DTileset.resource.url to retrieve the url value."
-      );
-      return this._url;
-    },
-  },
-
-  /**
    * The resource used to fetch the tileset JSON file
    *
    * @memberof Cesium3DTileset.prototype

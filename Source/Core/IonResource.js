@@ -227,11 +227,16 @@ function retryCallback(that, error) {
   var ionRoot = defaultValue(that._ionRoot, that);
   var endpointResource = ionRoot._ionEndpointResource;
 
+  // Image is not available in worker threads, so this avoids
+  // a ReferenceError
+  var imageDefined = typeof Image !== "undefined";
+
   // We only want to retry in the case of invalid credentials (401) or image
   // requests(since Image failures can not provide a status code)
   if (
     !defined(error) ||
-    (error.statusCode !== 401 && !(error.target instanceof Image))
+    (error.statusCode !== 401 &&
+      !(imageDefined && error.target instanceof Image))
   ) {
     return when.resolve(false);
   }

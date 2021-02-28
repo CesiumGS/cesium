@@ -291,10 +291,7 @@ GoogleEarthEnterpriseMetadata.prototype.isValid = function (quadKey) {
   return valid;
 };
 
-var taskProcessor = new TaskProcessor(
-  "decodeGoogleEarthEnterprisePacket",
-  Number.POSITIVE_INFINITY
-);
+var taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
 /**
  * Retrieves a Google Earth Enterprise quadtree packet.
