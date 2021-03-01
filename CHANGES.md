@@ -1,5 +1,11 @@
 # Change Log
 
+### 1.79.1 - 2021-03-01
+
+##### Fixes :wrench:
+
+- Fixed a regression in 1.79 that broke terrain exaggeration. [#9397](https://github.com/CesiumGS/cesium/pull/9397)
+
 ### 1.79 - 2021-03-01
 
 ##### Breaking Changes :mega:
