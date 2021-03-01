@@ -122,7 +122,10 @@ function packBuffer(points, ellipsoid) {
   return packedBuffer;
 }
 
-var createVerticesTaskProcessor = new TaskProcessor("createVectorTilePoints");
+var createVerticesTaskProcessor = new TaskProcessor(
+  "createVectorTilePoints",
+  5
+);
 var scratchPosition = new Cartesian3();
 
 function createPoints(points, ellipsoid) {

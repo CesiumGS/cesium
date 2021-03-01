@@ -5,10 +5,7 @@ import DeveloperError from "./DeveloperError.js";
 import Resource from "./Resource.js";
 import TaskProcessor from "./TaskProcessor.js";
 
-var transcodeTaskProcessor = new TaskProcessor(
-  "transcodeCRNToDXT",
-  Number.POSITIVE_INFINITY
-);
+var transcodeTaskProcessor = new TaskProcessor("transcodeCRNToDXT");
 
 /**
  * Asynchronously loads and parses the given URL to a CRN file or parses the raw binary data of a CRN file.
