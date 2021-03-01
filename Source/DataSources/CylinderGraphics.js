@@ -6,27 +6,34 @@ import createMaterialPropertyDescriptor from "./createMaterialPropertyDescriptor
 import createPropertyDescriptor from "./createPropertyDescriptor.js";
 
 /**
+ * @typedef {Object} CylinderGraphics.ConstructorOptions
+ *
+ * Initialization options for the CylinderGraphics constructor
+ *
+ * @property {Property | boolean} [show=true] A boolean Property specifying the visibility of the cylinder.
+ * @property {Property | number} [length] A numeric Property specifying the length of the cylinder.
+ * @property {Property | number} [topRadius] A numeric Property specifying the radius of the top of the cylinder.
+ * @property {Property | number} [bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
+ * @property {Property | HeightReference} [heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
+ * @property {Property | boolean} [fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
+ * @property {MaterialProperty | Color} [material=Color.WHITE] A Property specifying the material used to fill the cylinder.
+ * @property {Property | boolean} [outline=false] A boolean Property specifying whether the cylinder is outlined.
+ * @property {Property | Color} [outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
+ * @property {Property | number} [outlineWidth=1.0] A numeric Property specifying the width of the outline.
+ * @property {Property | number} [numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
+ * @property {Property | number} [slices=128] The number of edges around the perimeter of the cylinder.
+ * @property {Property | ShadowMode} [shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from light sources.
+ * @property {Property | DistanceDisplayCondition} [distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
+ */
+
+/**
  * Describes a cylinder, truncated cone, or cone defined by a length, top radius, and bottom radius.
  * The center position and orientation are determined by the containing {@link Entity}.
  *
  * @alias CylinderGraphics
  * @constructor
  *
- * @param {Object} [options] Object with the following properties:
- * @param {Property} [options.show=true] A boolean Property specifying the visibility of the cylinder.
- * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
- * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
- * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
- * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
- * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
- * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
- * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
- * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
- * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
- * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
- * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
- * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from light sources.
- * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
+ * @param {CylinderGraphics.ConstructorOptions} [options] Object describing initialization options
  */
 function CylinderGraphics(options) {
   this._definitionChanged = new Event();
@@ -79,7 +86,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying the visibility of the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   show: createPropertyDescriptor("show"),
@@ -87,28 +94,28 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the length of the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   length: createPropertyDescriptor("length"),
 
   /**
    * Gets or sets the numeric Property specifying the radius of the top of the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   topRadius: createPropertyDescriptor("topRadius"),
 
   /**
    * Gets or sets the numeric Property specifying the radius of the bottom of the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   bottomRadius: createPropertyDescriptor("bottomRadius"),
 
   /**
    * Gets or sets the Property specifying the {@link HeightReference}.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default HeightReference.NONE
    */
   heightReference: createPropertyDescriptor("heightReference"),
@@ -116,7 +123,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the cylinder is filled with the provided material.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default true
    */
   fill: createPropertyDescriptor("fill"),
@@ -124,7 +131,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the material used to fill the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {MaterialProperty}
+   * @type {MaterialProperty|undefined}
    * @default Color.WHITE
    */
   material: createMaterialPropertyDescriptor("material"),
@@ -132,7 +139,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the boolean Property specifying whether the cylinder is outlined.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default false
    */
   outline: createPropertyDescriptor("outline"),
@@ -140,7 +147,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the {@link Color} of the outline.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default Color.BLACK
    */
   outlineColor: createPropertyDescriptor("outlineColor"),
@@ -148,7 +155,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the numeric Property specifying the width of the outline.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 1.0
    */
   outlineWidth: createPropertyDescriptor("outlineWidth"),
@@ -156,7 +163,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of vertical lines to draw along the perimeter for the outline.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 16
    */
   numberOfVerticalLines: createPropertyDescriptor("numberOfVerticalLines"),
@@ -164,7 +171,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default 128
    */
   slices: createPropertyDescriptor("slices"),
@@ -173,7 +180,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
    * Get or sets the enum Property specifying whether the cylinder
    * casts or receives shadows from light sources.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    * @default ShadowMode.DISABLED
    */
   shadows: createPropertyDescriptor("shadows"),
@@ -181,7 +188,7 @@ Object.defineProperties(CylinderGraphics.prototype, {
   /**
    * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this cylinder will be displayed.
    * @memberof CylinderGraphics.prototype
-   * @type {Property}
+   * @type {Property|undefined}
    */
   distanceDisplayCondition: createPropertyDescriptor(
     "distanceDisplayCondition"

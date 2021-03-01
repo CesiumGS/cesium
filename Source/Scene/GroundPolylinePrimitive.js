@@ -212,7 +212,7 @@ function GroundPolylinePrimitive(options) {
     depthTest: {
       enabled: true,
     },
-    blending: BlendingState.ALPHA_BLEND,
+    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
     depthMask: false,
   });
 }
@@ -334,7 +334,7 @@ Object.defineProperties(GroundPolylinePrimitive.prototype, {
  * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
  * GroundPolylinePrimitive synchronously.
  *
- * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
+ * @returns {Promise<void>} A promise that will resolve once the terrain heights have been loaded.
  */
 GroundPolylinePrimitive.initializeTerrainHeights = function () {
   return ApproximateTerrainHeights.initialize();
@@ -487,7 +487,7 @@ function getRenderState(mask3DTiles) {
     cull: {
       enabled: true, // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
     },
-    blending: BlendingState.ALPHA_BLEND,
+    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
     depthMask: false,
     stencilTest: {
       enabled: mask3DTiles,

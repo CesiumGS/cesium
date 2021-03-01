@@ -128,6 +128,47 @@ describe("Core/WallGeometry", function () {
     expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
   });
 
+  it("creates positions when first and last positions are equal", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        positions: Cartesian3.fromDegreesArrayHeights([
+          -107.0,
+          43.0,
+          1000.0,
+          -106.0,
+          43.0,
+          1000.0,
+          -106.0,
+          42.0,
+          1000.0,
+          -107.0,
+          42.0,
+          1000.0,
+          -107.0,
+          43.0,
+          1000.0,
+        ]),
+      })
+    );
+
+    var positions = w.attributes.position.values;
+    var numPositions = 16;
+    var numTriangles = 8;
+    expect(positions.length).toEqual(numPositions * 3);
+    expect(w.indices.length).toEqual(numTriangles * 3);
+
+    var cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 0)
+    );
+    expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
+
+    cartographic = ellipsoid.cartesianToCartographic(
+      Cartesian3.fromArray(positions, 3)
+    );
+    expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
+  });
+
   it("creates positions with minimum and maximum heights", function () {
     var w = WallGeometry.createGeometry(
       new WallGeometry({
@@ -219,8 +260,44 @@ describe("Core/WallGeometry", function () {
     expect(cartographic.height).toEqualEpsilon(2000.0, CesiumMath.EPSILON8);
   });
 
-  it("does not clean positions that add up past EPSILON14", function () {
-    var eightyPercentOfEpsilon14 = 0.8 * CesiumMath.EPSILON14;
+  it("removes duplicates with very small difference", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.POSITION_ONLY,
+        positions: [
+          new Cartesian3(
+            4347090.215457887,
+            1061403.4237998386,
+            4538066.036525028
+          ),
+          new Cartesian3(
+            4348147.589624987,
+            1043897.8776143644,
+            4541092.234751661
+          ),
+          new Cartesian3(
+            4348147.589882754,
+            1043897.8776762491,
+            4541092.234492364
+          ),
+          new Cartesian3(
+            4335659.882947743,
+            1047571.602084736,
+            4552098.654605664
+          ),
+        ],
+      })
+    );
+
+    var numPositions = 8;
+    var numTriangles = 4;
+    var positions = w.attributes.position.values;
+    expect(positions.length).toEqual(numPositions * 3);
+    expect(w.indices.length).toEqual(numTriangles * 3);
+  });
+
+  it("does not clean positions that add up past EPSILON10", function () {
+    var eightyPercentOfEpsilon14 = 0.8 * CesiumMath.EPSILON10;
     var inputPositions = Cartesian3.fromRadiansArrayHeights([
       1.0,
       1.0,
@@ -338,6 +415,48 @@ describe("Core/WallGeometry", function () {
         vertexFormat: VertexFormat.ALL,
         positions: Cartesian3.fromDegreesArrayHeights([
           49.0,
+          18.0,
+          1000.0,
+          50.0,
+          18.0,
+          1000.0,
+          51.0,
+          18.0,
+          1000.0,
+        ]),
+      })
+    );
+
+    expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
+    expect(w.attributes.st.values).toEqual([
+      0.0,
+      0.0,
+      0.0,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      1.0,
+      1.0,
+      0.0,
+      1.0,
+      1.0,
+    ]);
+  });
+
+  it("creates correct texture coordinates when there are duplicate wall positions", function () {
+    var w = WallGeometry.createGeometry(
+      new WallGeometry({
+        vertexFormat: VertexFormat.ALL,
+        positions: Cartesian3.fromDegreesArrayHeights([
+          49.0,
+          18.0,
+          1000.0,
+          50.0,
           18.0,
           1000.0,
           50.0,

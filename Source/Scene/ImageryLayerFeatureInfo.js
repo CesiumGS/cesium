@@ -9,34 +9,34 @@ import defined from "../Core/defined.js";
 function ImageryLayerFeatureInfo() {
   /**
    * Gets or sets the name of the feature.
-   * @type {String}
+   * @type {String|undefined}
    */
   this.name = undefined;
 
   /**
    * Gets or sets an HTML description of the feature.  The HTML is not trusted and should
    * be sanitized before display to the user.
-   * @type {String}
+   * @type {String|undefined}
    */
   this.description = undefined;
 
   /**
    * Gets or sets the position of the feature, or undefined if the position is not known.
    *
-   * @type {Cartographic}
+   * @type {Cartographic|undefined}
    */
   this.position = undefined;
 
   /**
    * Gets or sets the raw data describing the feature.  The raw data may be in any
    * number of formats, such as GeoJSON, KML, etc.
-   * @type {Object}
+   * @type {Object|undefined}
    */
   this.data = undefined;
 
   /**
    * Gets or sets the image layer of the feature.
-   * @type {Object}
+   * @type {Object|undefined}
    */
   this.imageryLayer = undefined;
 }

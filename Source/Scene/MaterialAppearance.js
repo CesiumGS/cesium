@@ -22,11 +22,11 @@ import Material from "./Material.js";
      * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
-     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
+     * @param {MaterialAppearance.MaterialSupportType} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     * @param {Object} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/CesiumGS/cesium/wiki/Fabric|Fabric}
      * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
@@ -177,7 +177,7 @@ Object.defineProperties(MaterialAppearance.prototype, {
    *
    * @memberof MaterialAppearance.prototype
    *
-   * @type {MaterialAppearance.MaterialSupport}
+   * @type {MaterialAppearance.MaterialSupportType}
    * @readonly
    *
    * @default {@link MaterialAppearance.MaterialSupport.TEXTURED}
@@ -277,17 +277,26 @@ MaterialAppearance.prototype.getRenderState =
   Appearance.prototype.getRenderState;
 
 /**
+ * @typedef MaterialAppearance.MaterialSupportType
+ * @type {Object}
+ * @property {VertexFormat} vertexFormat
+ * @property {String} vertexShaderSource
+ * @property {String} fragmentShaderSource
+ */
+
+/**
  * Determines the type of {@link Material} that is supported by a
  * {@link MaterialAppearance} instance.  This is a trade-off between
  * flexibility (a wide array of materials) and memory/performance
  * (required vertex format and GLSL shader complexity.
- * @exports MaterialAppearance.MaterialSupport
+ * @namespace
  */
 MaterialAppearance.MaterialSupport = {
   /**
    * Only basic materials, which require just <code>position</code> and
    * <code>normal</code> vertex attributes, are supported.
    *
+   * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */
   BASIC: Object.freeze({
@@ -300,6 +309,7 @@ MaterialAppearance.MaterialSupport = {
    * <code>normal</code>, and <code>st</code> vertex attributes,
    * are supported.  The vast majority of materials fall into this category.
    *
+   * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */
   TEXTURED: Object.freeze({
@@ -312,6 +322,7 @@ MaterialAppearance.MaterialSupport = {
    * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
    * <code>tangent</code>, and <code>bitangent</code> vertex attributes.
    *
+   * @type {MaterialAppearance.MaterialSupportType}
    * @constant
    */
   ALL: Object.freeze({

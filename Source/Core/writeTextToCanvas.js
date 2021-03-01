@@ -21,10 +21,10 @@ var imageSmoothingEnabledName;
  * @param {Number} [options.strokeWidth=1] The stroke width.
  * @param {Color} [options.backgroundColor=Color.TRANSPARENT] The background color of the canvas.
  * @param {Number} [options.padding=0] The pixel size of the padding to add around the text.
- * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
+ * @returns {HTMLCanvasElement|undefined} A new canvas with the given text drawn into it.  The dimensions object
  *                   from measureText will also be added to the returned canvas. If text is
  *                   blank, returns undefined.
- * @exports writeTextToCanvas
+ * @function writeTextToCanvas
  */
 function writeTextToCanvas(text, options) {
   //>>includeStart('debug', pragmas.debug);

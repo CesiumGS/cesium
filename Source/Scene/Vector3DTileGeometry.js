@@ -139,7 +139,7 @@ Object.defineProperties(Vector3DTileGeometry.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTileGeometry.prototype
-   * @type {Promise}
+   * @type {Promise<void>}
    * @readonly
    */
   readyPromise: {
@@ -210,7 +210,8 @@ function unpackBuffer(geometries, packedBuffer) {
 }
 
 var createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTileGeometries"
+  "createVectorTileGeometries",
+  5
 );
 var scratchColor = new Color();
 

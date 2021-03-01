@@ -143,7 +143,7 @@ Object.defineProperties(Vector3DTilePolygons.prototype, {
   /**
    * Gets a promise that resolves when the primitive is ready to render.
    * @memberof Vector3DTilePolygons.prototype
-   * @type {Promise}
+   * @type {Promise<void>}
    * @readonly
    */
   readyPromise: {
@@ -215,7 +215,10 @@ function unpackBuffer(polygons, packedBuffer) {
   }
 }
 
-var createVerticesTaskProcessor = new TaskProcessor("createVectorTilePolygons");
+var createVerticesTaskProcessor = new TaskProcessor(
+  "createVectorTilePolygons",
+  5
+);
 var scratchColor = new Color();
 
 function createPrimitive(polygons) {

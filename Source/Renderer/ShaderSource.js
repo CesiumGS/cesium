@@ -170,41 +170,40 @@ function combineShader(shaderSource, isFragmentShader, context) {
 
   // Extract existing shader version from sources
   var version;
-  combinedSources = combinedSources.replace(
-    /#version\s+(.*?)\n/gm,
-    function (match, group1) {
-      //>>includeStart('debug', pragmas.debug);
-      if (defined(version) && version !== group1) {
-        throw new DeveloperError(
-          "inconsistent versions found: " + version + " and " + group1
-        );
-      }
-      //>>includeEnd('debug');
-
-      // Extract #version to put at the top
-      version = group1;
-
-      // Replace original #version directive with a new line so the line numbers
-      // are not off by one.  There can be only one #version directive
-      // and it must appear at the top of the source, only preceded by
-      // whitespace and comments.
-      return "\n";
+  combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function (
+    match,
+    group1
+  ) {
+    //>>includeStart('debug', pragmas.debug);
+    if (defined(version) && version !== group1) {
+      throw new DeveloperError(
+        "inconsistent versions found: " + version + " and " + group1
+      );
     }
-  );
+    //>>includeEnd('debug');
+
+    // Extract #version to put at the top
+    version = group1;
+
+    // Replace original #version directive with a new line so the line numbers
+    // are not off by one.  There can be only one #version directive
+    // and it must appear at the top of the source, only preceded by
+    // whitespace and comments.
+    return "\n";
+  });
 
   // Extract shader extensions from sources
   var extensions = [];
-  combinedSources = combinedSources.replace(
-    /#extension.*\n/gm,
-    function (match) {
-      // Extract extension to put at the top
-      extensions.push(match);
+  combinedSources = combinedSources.replace(/#extension.*\n/gm, function (
+    match
+  ) {
+    // Extract extension to put at the top
+    extensions.push(match);
 
-      // Replace original #extension directive with a new line so the line numbers
-      // are not off by one.
-      return "\n";
-    }
-  );
+    // Replace original #extension directive with a new line so the line numbers
+    // are not off by one.
+    return "\n";
+  });
 
   // Remove precision qualifier
   combinedSources = combinedSources.replace(
@@ -236,12 +235,16 @@ function combineShader(shaderSource, isFragmentShader, context) {
   }
 
   if (isFragmentShader) {
+    // If high precision isn't support replace occurrences of highp with mediump
+    // The highp keyword is not always available on older mobile devices
+    // See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#In_WebGL_1_highp_float_support_is_optional_in_fragment_shaders
     result +=
       "\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
     precision highp float;\n\
 #else\n\
     precision mediump float;\n\
+    #define highp mediump\n\
 #endif\n\n";
   }
 
@@ -265,6 +268,11 @@ function combineShader(shaderSource, isFragmentShader, context) {
   // Define a constant for the OES_texture_float_linear extension since WebGL does not.
   if (context.textureFloatLinear) {
     result += "#define OES_texture_float_linear\n\n";
+  }
+
+  // Define a constant for the OES_texture_float extension since WebGL does not.
+  if (context.floatingPointTexture) {
+    result += "#define OES_texture_float\n\n";
   }
 
   // append built-ins

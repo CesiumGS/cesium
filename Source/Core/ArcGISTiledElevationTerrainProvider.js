@@ -294,6 +294,26 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
       return false;
     },
   },
+  /**
+   * Gets an object that can be used to determine availability of terrain from this provider, such as
+   * at points and in rectangles.  This function should not be called before
+   * {@link TerrainProvider#ready} returns true.  This property may be undefined if availability
+   * information is not available.
+   * @memberof ArcGISTiledElevationTerrainProvider.prototype
+   * @type {TileAvailability}
+   */
+  availability: {
+    get: function () {
+      //>>includeStart('debug', pragmas.debug)
+      if (!this._ready) {
+        throw new DeveloperError(
+          "availability must not be called before the terrain provider is ready."
+        );
+      }
+      //>>includeEnd('debug');
+      return this._tilesAvailable;
+    },
+  },
 });
 
 /**
@@ -459,7 +479,7 @@ ArcGISTiledElevationTerrainProvider.prototype.getTileDataAvailable = function (
  * @param {Number} x The X coordinate of the tile for which to request geometry.
  * @param {Number} y The Y coordinate of the tile for which to request geometry.
  * @param {Number} level The level of the tile for which to request geometry.
- * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+ * @returns {undefined|Promise<void>} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
  */
 ArcGISTiledElevationTerrainProvider.prototype.loadTileDataAvailability = function (
   x,
@@ -611,7 +631,7 @@ function requestAvailability(that, level, x, y) {
   }
 
   var request = new Request({
-    throttle: true,
+    throttle: false,
     throttleByServer: true,
     type: RequestType.TERRAIN,
   });
@@ -637,6 +657,7 @@ function requestAvailability(that, level, x, y) {
 
     // Mark whole area as having availability loaded
     that._tilesAvailablityLoaded.addAvailableTileRange(
+      level,
       xOffset,
       yOffset,
       xOffset + dim,

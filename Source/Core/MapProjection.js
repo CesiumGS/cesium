@@ -9,6 +9,7 @@ import Rectangle from "./Rectangle.js";
  *
  * @alias MapProjection
  * @constructor
+ * @abstract
  *
  * @see GeographicProjection
  * @see WebMercatorProjection

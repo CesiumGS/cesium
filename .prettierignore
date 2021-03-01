@@ -1,11 +1,31 @@
-/node_modules
-/Build
-/ThirdParty
-/Apps/Sandcastle/ThirdParty
-/Source/Cesium.js
-/Source/Shaders/**/*.js
-/Source/ThirdParty/**
-/Source/Workers/**/*
-!/Source/Workers/cesiumWorkerBootstrapper.js
-!/Source/Workers/transferTypedArrayTest.js
-*.min.js
+
+# Ignore everything
+*
+
+# Unignore directories (to all depths) and unignore code and style files in these directories
+!.concierge/**/
+!.github/**/
+!.vscode/**/
+!Apps/**/
+!Documentation/**/
+!Source/**/
+!Specs/**/
+!Tools/**/
+
+!**/*.js
+!**/*.cjs
+!**/*.css
+!**/*.html
+!**/*.md
+!**/*.ts
+
+# Re-ignore a few things caught above
+**/*.min.js
+Source/Cesium.js
+Source/Shaders/**/*.js
+Source/ThirdParty/**
+Source/Workers/**/*
+Apps/Sandcastle/ThirdParty
+
+!Source/Workers/cesiumWorkerBootstrapper.js
+!Source/Workers/transferTypedArrayTest.js

@@ -1,5 +1,6 @@
 import { BoundingSphere } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { defined } from "../../Source/Cesium.js";
 import { GeographicProjection } from "../../Source/Cesium.js";
 import { GeographicTilingScheme } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
@@ -105,7 +106,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
       var tilingScheme = new GeographicTilingScheme();
 
       return when(
-        data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
       )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -201,7 +208,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
       var tilingScheme = new GeographicTilingScheme();
 
       return when(
-        data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
       )
         .then(function () {
           var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -270,7 +283,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       var tilingScheme = new GeographicTilingScheme();
       return when(
-        data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
       )
         .then(function () {
           return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -381,7 +400,13 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
       var tilingScheme = new GeographicTilingScheme();
       return when(
-        data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
       )
         .then(function () {
           var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -457,9 +482,8 @@ describe("Core/QuantizedMeshTerrainData", function () {
     var geographicProjection = new GeographicProjection();
     var serializedMapProjection = geographicProjection.serialize();
 
-    beforeEach(function () {
-      tilingScheme = new GeographicTilingScheme();
-      data = new QuantizedMeshTerrainData({
+    function createSampleTerrainData() {
+      return new QuantizedMeshTerrainData({
         minimumHeight: 0.0,
         maximumHeight: 4.0,
         quantizedVertices: new Uint16Array([
@@ -493,41 +517,81 @@ describe("Core/QuantizedMeshTerrainData", function () {
         northSkirtHeight: 1.0,
         childTileMask: 15,
       });
+    }
+    beforeEach(function () {
+      tilingScheme = new GeographicTilingScheme();
+      data = createSampleTerrainData();
     });
 
     it("requires tilingScheme", function () {
       expect(function () {
-        data.createMesh(undefined, 0, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: undefined,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires x", function () {
       expect(function () {
-        data.createMesh(tilingScheme, undefined, 0, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: undefined,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires y", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, undefined, 0, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: undefined,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires level", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, undefined, serializedMapProjection);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          serializedMapProjection: serializedMapProjection,
+          level: undefined,
+        });
       }).toThrowDeveloperError();
     });
 
     it("requires serializedMapProjection", function () {
       expect(function () {
-        data.createMesh(tilingScheme, 0, 0, 0, undefined);
+        data.createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          serializedMapProjection: undefined,
+          level: 0,
+        });
       }).toThrowDeveloperError();
     });
 
     it("creates specified vertices plus skirt vertices", function () {
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
           expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
@@ -540,7 +604,14 @@ describe("Core/QuantizedMeshTerrainData", function () {
 
     it("exaggerates mesh", function () {
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 2)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          exaggeration: 2,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
           expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
@@ -585,11 +656,61 @@ describe("Core/QuantizedMeshTerrainData", function () {
       });
 
       return data
-        .createMesh(tilingScheme, 0, 0, 0, serializedMapProjection)
+        .createMesh({
+          tilingScheme: tilingScheme,
+          x: 0,
+          y: 0,
+          level: 0,
+          serializedMapProjection: serializedMapProjection,
+        })
         .then(function (mesh) {
           expect(mesh).toBeInstanceOf(TerrainMesh);
           expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
         });
+    });
+
+    it("enables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        serializedMapProjection: serializedMapProjection,
+        throttle: true,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(TerrainData.maximumAsynchronousTasks);
+      return when.all(promises);
+    });
+
+    it("disables throttling for asynchronous tasks", function () {
+      var options = {
+        tilingScheme: tilingScheme,
+        x: 0,
+        y: 0,
+        level: 0,
+        serializedMapProjection: serializedMapProjection,
+        throttle: false,
+      };
+      var taskCount = TerrainData.maximumAsynchronousTasks + 1;
+      var promises = new Array();
+      for (var i = 0; i < taskCount; i++) {
+        var tempData = createSampleTerrainData();
+        var promise = tempData.createMesh(options);
+        if (defined(promise)) {
+          promises.push(promise);
+        }
+      }
+      expect(promises.length).toBe(taskCount);
+      return when.all(promises);
     });
   });
 

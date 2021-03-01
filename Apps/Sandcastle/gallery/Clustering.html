@@ -188,13 +188,11 @@
             dataSource.clustering.enabled = checked;
           });
 
-          Sandcastle.addToggleButton(
-            "Custom Styling",
-            true,
-            function (checked) {
-              customStyle();
-            }
-          );
+          Sandcastle.addToggleButton("Custom Styling", true, function (
+            checked
+          ) {
+            customStyle();
+          });
 
           var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
           handler.setInputAction(function (movement) {

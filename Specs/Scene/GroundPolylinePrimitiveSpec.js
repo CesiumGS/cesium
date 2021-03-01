@@ -1,5 +1,7 @@
 import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
+import { Cartesian2 } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
+import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
 import { destroyObject } from "../../Source/Cesium.js";
@@ -7,6 +9,7 @@ import { DistanceDisplayConditionGeometryInstanceAttribute } from "../../Source/
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeometryInstance } from "../../Source/Cesium.js";
 import { GroundPolylineGeometry } from "../../Source/Cesium.js";
+import { HeadingPitchRange } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { RectangleGeometry } from "../../Source/Cesium.js";
 import { ShowGeometryInstanceAttribute } from "../../Source/Cesium.js";
@@ -16,6 +19,7 @@ import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
 import { PolylineColorAppearance } from "../../Source/Cesium.js";
 import { PolylineMaterialAppearance } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
+import createCanvas from "../createCanvas.js";
 import createScene from "../createScene.js";
 import pollToPromise from "../pollToPromise.js";
 
@@ -40,8 +44,14 @@ describe(
     var lookPosition = Cartesian3.fromDegrees(0.02, 0.0);
     var lookPositionOffset = Cartesian3.fromDegrees(0.02, 0.0001);
 
+    var canvasWidth = 4;
+    var canvasHeight = 4;
+
     beforeAll(function () {
-      scene = createScene();
+      var canvas = createCanvas(canvasWidth, canvasHeight);
+      scene = createScene({
+        canvas: canvas,
+      });
       scene.postProcessStages.fxaa.enabled = false;
 
       context = scene.context;
@@ -85,6 +95,11 @@ describe(
 
     beforeEach(function () {
       scene.morphTo3D(0);
+
+      // Other specs can mess with camera near/far, which can interfere with the
+      // algorithm used to draw ground polylines.
+      scene.camera.frustum.near = 0.1;
+      scene.camera.frustum.far = 10000000000.0;
 
       var depthpolylineColorAttribute = ColorGeometryInstanceAttribute.fromColor(
         new Color(0.0, 0.0, 1.0, 1.0)
@@ -313,6 +328,22 @@ describe(
       expect(frameState.commandList.length).toEqual(0);
     });
 
+    function coordinateOfPixelColor(rgba, color) {
+      for (var y = 0; y < canvasHeight; y++) {
+        for (var x = 0; x < canvasWidth; x++) {
+          var i = (y * canvasWidth + x) * 4;
+          if (
+            color[0] === rgba[i] &&
+            color[1] === rgba[i + 1] &&
+            color[2] === rgba[i + 2] &&
+            color[3] === rgba[i + 3]
+          ) {
+            return new Cartesian2(x, canvasHeight - y);
+          }
+        }
+      }
+    }
+
     function verifyGroundPolylinePrimitiveRender(
       lookPosition,
       primitive,
@@ -322,12 +353,16 @@ describe(
 
       scene.groundPrimitives.add(depthRectanglePrimitive);
       expect(scene).toRenderAndCall(function (rgba) {
-        expect(rgba).not.toEqual([0, 0, 0, 255]);
-        expect(rgba[0]).toEqual(0);
+        expect(coordinateOfPixelColor(rgba, depthColor)).toBeDefined();
       });
 
       scene.groundPrimitives.add(primitive);
-      expect(scene).toRender(color);
+      var coordinate;
+      expect(scene).toRenderAndCall(function (rgba) {
+        coordinate = coordinateOfPixelColor(rgba, color);
+        expect(coordinate).toBeDefined();
+      });
+      return coordinate;
     }
 
     it("renders in 3D", function () {
@@ -408,16 +443,23 @@ describe(
         appearance: new PolylineColorAppearance(),
       });
 
-      // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
+      scene.groundPrimitives.add(depthRectanglePrimitive);
+      scene.groundPrimitives.add(groundPolylinePrimitive);
+
+      // Morph to 2D first
       scene.morphTo2D(0);
       scene.renderForSpecs();
 
       scene.morphToColumbusView(1);
-      verifyGroundPolylinePrimitiveRender(
-        lookPosition,
-        groundPolylinePrimitive,
-        polylineColor
-      );
+      // Morph changes the view distance to be very far, so:
+      // * the mock globe may not be visible due to small canvas size
+      // * GroundPolylinePrimitive renders its volume instead of using the
+      //   volume as a stencil for sampling the depth texture
+      // So just check that the ground polyline primitive rendered.
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(coordinateOfPixelColor(rgba, polylineColor)).toBeDefined();
+      });
+
       scene.completeMorph();
     });
 
@@ -657,14 +699,14 @@ describe(
         return;
       }
 
-      var near = 10000.0;
-      var far = 1000000.0;
+      var near = 10.0;
+      var far = 1000.0;
 
       var geometryInstance = new GeometryInstance({
         geometry: new GroundPolylineGeometry({
           positions: positions,
           granularity: 0.0,
-          width: 1.0,
+          width: 1000.0,
           loop: false,
           ellipsoid: ellipsoid,
         }),
@@ -674,6 +716,7 @@ describe(
             near,
             far
           ),
+          color: polylineColorAttribute,
         },
       });
 
@@ -693,17 +736,29 @@ describe(
       var center = boundingSphere.center;
       var radius = boundingSphere.radius;
 
-      scene.camera.lookAt(center, new Cartesian3(0.0, 0.0, radius));
-      expect(scene).toRender(depthColor);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius)
+      );
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(coordinateOfPixelColor(rgba, depthColor)).toBeDefined();
+      });
 
       scene.camera.lookAt(
         center,
-        new Cartesian3(0.0, 0.0, radius + near + 1.0)
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0)
       );
-      expect(scene).not.toRender(depthColor);
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(coordinateOfPixelColor(rgba, depthColor)).toBeUndefined();
+      });
 
-      scene.camera.lookAt(center, new Cartesian3(0.0, 0.0, radius + far + 1.0));
-      expect(scene).toRender(depthColor);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0)
+      );
+      expect(scene).toRenderAndCall(function (rgba) {
+        expect(coordinateOfPixelColor(rgba, depthColor)).toBeDefined();
+      });
     });
 
     it("getGeometryInstanceAttributes returns same object each time", function () {
@@ -747,16 +802,15 @@ describe(
         appearance: new PolylineColorAppearance(),
       });
 
-      verifyGroundPolylinePrimitiveRender(
+      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
       );
 
       expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(groundPolylinePrimitive);
         expect(result.id).toEqual("polyline on terrain");
-      });
+      }, polylineColorCoordinate);
     });
 
     it("picking in 2D", function () {
@@ -771,16 +825,15 @@ describe(
       });
 
       scene.morphTo2D(0);
-      verifyGroundPolylinePrimitiveRender(
+      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
       );
 
       expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(groundPolylinePrimitive);
         expect(result.id).toEqual("polyline on terrain");
-      });
+      }, polylineColorCoordinate);
     });
 
     it("picking in Columbus View", function () {
@@ -795,16 +848,16 @@ describe(
       });
 
       scene.morphToColumbusView(0);
-      verifyGroundPolylinePrimitiveRender(
+      var polylineColorCoordinate = verifyGroundPolylinePrimitiveRender(
         lookPosition,
         groundPolylinePrimitive,
         polylineColor
       );
 
+      scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
       expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(groundPolylinePrimitive);
         expect(result.id).toEqual("polyline on terrain");
-      });
+      }, polylineColorCoordinate);
     });
 
     it("picking in Morph", function () {
@@ -830,21 +883,29 @@ describe(
         appearance: new PolylineColorAppearance(),
       });
 
-      // Morph to 2D first because 3D -> 2D/CV morph is difficult in single-pixel
+      // Morph to 2D first
       scene.morphTo2D(0);
       scene.renderForSpecs();
 
       scene.morphToColumbusView(1);
-      verifyGroundPolylinePrimitiveRender(
-        lookPosition,
-        groundPolylinePrimitive,
-        polylineColor
-      );
+      // Morph changes the view distance to be very far, so:
+      // * the mock globe may not be visible due to small canvas size
+      // * GroundPolylinePrimitive renders its volume instead of using the
+      //   volume as a stencil for sampling the depth texture
+      // So just check that the ground polyline primitive rendered.
+      scene.groundPrimitives.add(depthRectanglePrimitive);
+      scene.groundPrimitives.add(groundPolylinePrimitive);
 
-      expect(scene).toPickAndCall(function (result) {
-        expect(result.primitive).toEqual(groundPolylinePrimitive);
-        expect(result.id).toEqual("big polyline on terrain");
+      var polylineColorCoordinate;
+      expect(scene).toRenderAndCall(function (rgba) {
+        polylineColorCoordinate = coordinateOfPixelColor(rgba, polylineColor);
       });
+
+      scene.renderForSpecs();
+      expect(scene).toPickAndCall(function (result) {
+        expect(result.id).toEqual("big polyline on terrain");
+      }, polylineColorCoordinate);
+
       scene.completeMorph();
     });
 

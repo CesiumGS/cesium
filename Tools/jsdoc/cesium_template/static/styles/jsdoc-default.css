@@ -176,6 +176,7 @@ div.menu {
 div.nav {
   overflow-x: hidden;
   overflow-y: auto;
+  background: #f8f8f8; /* Can be any color, but is needed for horizontal scrolling of main content. */
 }
 
 @media (max-width: 839px) {
@@ -603,7 +604,6 @@ span.attribute-constant {
   color: #fff;
   font-size: 0.7em;
   padding: 2px 4px;
-  margin-right: 8px;
   margin-bottom: 1px;
   position: relative;
   top: -1px;

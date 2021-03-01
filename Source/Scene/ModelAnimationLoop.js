@@ -1,7 +1,7 @@
 /**
  * Determines if and how a glTF animation is looped.
  *
- * @exports ModelAnimationLoop
+ * @enum {Number}
  *
  * @see ModelAnimationCollection#add
  */

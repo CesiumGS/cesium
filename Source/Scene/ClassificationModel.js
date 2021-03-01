@@ -628,7 +628,7 @@ function createProgram(model) {
     uniformDecl +
     "void main() {\n" +
     computePosition +
-    "    gl_Position = czm_depthClampFarPlane(positionInClipCoords);\n" +
+    "    gl_Position = czm_depthClamp(positionInClipCoords);\n" +
     "}\n";
   var fs =
     "#ifdef GL_EXT_frag_depth\n" +
@@ -637,7 +637,7 @@ function createProgram(model) {
     "void main() \n" +
     "{ \n" +
     "    gl_FragColor = vec4(1.0); \n" +
-    "    czm_writeDepthClampedToFarPlane();\n" +
+    "    czm_writeDepthClamp();\n" +
     "}\n";
 
   if (model.extensionsUsed.WEB3D_quantized_attributes) {
@@ -646,9 +646,6 @@ function createProgram(model) {
 
   var drawVS = modifyShader(vs, model._vertexShaderLoaded);
   var drawFS = modifyShader(fs, model._classificationShaderLoaded);
-
-  drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClip);
-  drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
   model._shaderProgram = {
     vertexShaderSource: drawVS,
@@ -679,25 +676,25 @@ function createVertexArray(model) {
   var primitive = primitives[0];
   var attributeLocations = getAttributeLocations();
   var attributes = {};
-  ForEach.meshPrimitiveAttribute(
-    primitive,
-    function (accessorId, attributeName) {
-      // Skip if the attribute is not used by the material, e.g., because the asset
-      // was exported with an attribute that wasn't used and the asset wasn't optimized.
-      var attributeLocation = attributeLocations[attributeName];
-      if (defined(attributeLocation)) {
-        var a = accessors[accessorId];
-        attributes[attributeName] = {
-          index: attributeLocation,
-          vertexBuffer: rendererBuffers[a.bufferView],
-          componentsPerAttribute: numberOfComponentsForType(a.type),
-          componentDatatype: a.componentType,
-          offsetInBytes: a.byteOffset,
-          strideInBytes: getAccessorByteStride(gltf, a),
-        };
-      }
+  ForEach.meshPrimitiveAttribute(primitive, function (
+    accessorId,
+    attributeName
+  ) {
+    // Skip if the attribute is not used by the material, e.g., because the asset
+    // was exported with an attribute that wasn't used and the asset wasn't optimized.
+    var attributeLocation = attributeLocations[attributeName];
+    if (defined(attributeLocation)) {
+      var a = accessors[accessorId];
+      attributes[attributeName] = {
+        index: attributeLocation,
+        vertexBuffer: rendererBuffers[a.bufferView],
+        componentsPerAttribute: numberOfComponentsForType(a.type),
+        componentDatatype: a.componentType,
+        offsetInBytes: a.byteOffset,
+        strideInBytes: getAccessorByteStride(gltf, a),
+      };
     }
-  );
+  });
 
   var indexBuffer;
   if (defined(primitive.indices)) {

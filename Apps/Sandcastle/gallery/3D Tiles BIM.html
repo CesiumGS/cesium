@@ -65,16 +65,14 @@
         var selectedFeature;
         var picking = false;
 
-        Sandcastle.addToggleButton(
-          "Per-feature selection",
-          false,
-          function (checked) {
-            picking = checked;
-            if (!picking) {
-              unselectFeature(selectedFeature);
-            }
+        Sandcastle.addToggleButton("Per-feature selection", false, function (
+          checked
+        ) {
+          picking = checked;
+          if (!picking) {
+            unselectFeature(selectedFeature);
           }
-        );
+        });
 
         function selectFeature(feature) {
           var element = feature.getProperty("element");

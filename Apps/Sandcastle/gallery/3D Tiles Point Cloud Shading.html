@@ -357,25 +357,21 @@
             }
           });
 
-        Sandcastle.addToggleButton(
-          "Enable Attenuation",
-          true,
-          function (checked) {
-            if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.attenuation = checked;
-            }
+        Sandcastle.addToggleButton("Enable Attenuation", true, function (
+          checked
+        ) {
+          if (Cesium.defined(viewModelTileset)) {
+            viewModelTileset.pointCloudShading.attenuation = checked;
           }
-        );
+        });
 
-        Sandcastle.addToggleButton(
-          "Enable Eye Dome Lighting",
-          true,
-          function (checked) {
-            if (Cesium.defined(viewModelTileset)) {
-              viewModelTileset.pointCloudShading.eyeDomeLighting = checked;
-            }
+        Sandcastle.addToggleButton("Enable Eye Dome Lighting", true, function (
+          checked
+        ) {
+          if (Cesium.defined(viewModelTileset)) {
+            viewModelTileset.pointCloudShading.eyeDomeLighting = checked;
           }
-        );
+        });
 
         //Sandcastle_End
         Sandcastle.finishedLoading();

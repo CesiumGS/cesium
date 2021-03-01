@@ -5,7 +5,7 @@ var dataUriRegex = /^data:/i;
 /**
  * Determines if the specified uri is a data uri.
  *
- * @exports isDataUri
+ * @function isDataUri
  *
  * @param {String} uri The uri to test.
  * @returns {Boolean} true when the uri is a data uri; otherwise, false.

@@ -5134,6 +5134,98 @@ describe("DataSources/CzmlDataSource", function () {
     });
   });
 
+  it("can load constant data for polylineVolume", function () {
+    var expectedPosition = [
+      new Cartesian3(1.0, 2.0, 3.0),
+      new Cartesian3(5.0, 6.0, 7.0),
+    ];
+    var expectedShape = [new Cartesian2(1.0, 2.0), new Cartesian2(3.0, 4.0)];
+
+    var polylineVolumePacket = {
+      polylineVolume: {
+        positions: {
+          cartesian: [
+            expectedPosition[0].x,
+            expectedPosition[0].y,
+            expectedPosition[0].z,
+            expectedPosition[1].x,
+            expectedPosition[1].y,
+            expectedPosition[1].z,
+          ],
+        },
+        shape: {
+          cartesian: [
+            expectedShape[0].x,
+            expectedShape[0].y,
+            expectedShape[1].x,
+            expectedShape[1].y,
+          ],
+        },
+        cornerType: "MITERED",
+        show: true,
+        fill: true,
+        material: {
+          solidColor: {
+            color: {
+              rgbaf: [0.1, 0.2, 0.3, 0.4],
+            },
+          },
+        },
+        outline: true,
+        outlineColor: {
+          rgbaf: [0.2, 0.2, 0.2, 0.2],
+        },
+        outlineWidth: 6,
+        granularity: 3,
+        shadows: "ENABLED",
+      },
+    };
+
+    var czmlPolylineVolume = polylineVolumePacket.polylineVolume;
+
+    var dataSource = new CzmlDataSource();
+    return dataSource
+      .load(makeDocument(polylineVolumePacket))
+      .then(function (dataSource) {
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.polylineVolume).toBeDefined();
+        expect(
+          entity.polylineVolume.positions.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(expectedPosition);
+        expect(
+          entity.polylineVolume.shape.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(expectedShape);
+        expect(
+          entity.polylineVolume.cornerType.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(CornerType.MITERED);
+        expect(
+          entity.polylineVolume.show.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(czmlPolylineVolume.show);
+        expect(
+          entity.polylineVolume.fill.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(czmlPolylineVolume.fill);
+        expect(
+          entity.polylineVolume.material.getValue(Iso8601.MINIMUM_VALUE).color
+        ).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(
+          entity.polylineVolume.outline.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(true);
+        expect(
+          entity.polylineVolume.outlineColor.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(
+          entity.polylineVolume.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(6);
+        expect(
+          entity.polylineVolume.granularity.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(czmlPolylineVolume.granularity);
+        expect(
+          entity.polylineVolume.shadows.getValue(Iso8601.MINIMUM_VALUE)
+        ).toEqual(ShadowMode.ENABLED);
+      });
+  });
+
   it("can load constant data for model", function () {
     var packet = {
       model: {

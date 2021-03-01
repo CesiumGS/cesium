@@ -1,7 +1,7 @@
 /**
  * Describes how the map will operate in 2D.
  *
- * @exports MapMode2D
+ * @enum {Number}
  */
 var MapMode2D = {
   /**

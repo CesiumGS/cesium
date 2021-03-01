@@ -5,7 +5,6 @@ import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import defineProperties from "./defineProperties.js";
 import Ellipsoid from "./Ellipsoid.js";
 import MapProjectionType from "./MapProjectionType.js";
 import Matrix4 from "./Matrix4.js";
@@ -66,7 +65,7 @@ function Matrix4Projection(options) {
   this._wgs84Bounds = Rectangle.clone(wgs84Bounds);
 }
 
-defineProperties(Matrix4Projection.prototype, {
+Object.defineProperties(Matrix4Projection.prototype, {
   /**
    * Gets the {@link Ellipsoid}.
    *

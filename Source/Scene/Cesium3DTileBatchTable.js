@@ -36,6 +36,7 @@ var DEFAULT_SHOW_VALUE = true;
 
 /**
  * @private
+ * @constructor
  */
 function Cesium3DTileBatchTable(
   content,
@@ -708,17 +709,16 @@ function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
 
 function hasPropertyInHierarchy(batchTable, batchId, name) {
   var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instances = hierarchy.classes[classId].instances;
-      if (defined(instances[name])) {
-        return true;
-      }
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instances = hierarchy.classes[classId].instances;
+    if (defined(instances[name])) {
+      return true;
     }
-  );
+  });
   return defined(result);
 }
 
@@ -739,51 +739,49 @@ function getPropertyNamesInHierarchy(batchTable, batchId, results) {
 
 function getHierarchyProperty(batchTable, batchId, name) {
   var hierarchy = batchTable._batchTableHierarchy;
-  return traverseHierarchy(
+  return traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      var indexInClass = hierarchy.classIndexes[instanceIndex];
-      var propertyValues = instanceClass.instances[name];
-      if (defined(propertyValues)) {
-        if (defined(propertyValues.typedArray)) {
-          return getBinaryProperty(propertyValues, indexInClass);
-        }
-        return clone(propertyValues[indexInClass], true);
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    var indexInClass = hierarchy.classIndexes[instanceIndex];
+    var propertyValues = instanceClass.instances[name];
+    if (defined(propertyValues)) {
+      if (defined(propertyValues.typedArray)) {
+        return getBinaryProperty(propertyValues, indexInClass);
       }
+      return clone(propertyValues[indexInClass], true);
     }
-  );
+  });
 }
 
 function setHierarchyProperty(batchTable, batchId, name, value) {
   var hierarchy = batchTable._batchTableHierarchy;
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      var indexInClass = hierarchy.classIndexes[instanceIndex];
-      var propertyValues = instanceClass.instances[name];
-      if (defined(propertyValues)) {
-        //>>includeStart('debug', pragmas.debug);
-        if (instanceIndex !== batchId) {
-          throw new DeveloperError(
-            'Inherited property "' + name + '" is read-only.'
-          );
-        }
-        //>>includeEnd('debug');
-        if (defined(propertyValues.typedArray)) {
-          setBinaryProperty(propertyValues, indexInClass, value);
-        } else {
-          propertyValues[indexInClass] = clone(value, true);
-        }
-        return true;
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    var indexInClass = hierarchy.classIndexes[instanceIndex];
+    var propertyValues = instanceClass.instances[name];
+    if (defined(propertyValues)) {
+      //>>includeStart('debug', pragmas.debug);
+      if (instanceIndex !== batchId) {
+        throw new DeveloperError(
+          'Inherited property "' + name + '" is read-only.'
+        );
       }
+      //>>includeEnd('debug');
+      if (defined(propertyValues.typedArray)) {
+        setBinaryProperty(propertyValues, indexInClass, value);
+      } else {
+        propertyValues[indexInClass] = clone(value, true);
+      }
+      return true;
     }
-  );
+  });
   return defined(result);
 }
 
@@ -800,17 +798,16 @@ Cesium3DTileBatchTable.prototype.isClass = function (batchId, className) {
   }
 
   // PERFORMANCE_IDEA : treat class names as integers for faster comparisons
-  var result = traverseHierarchy(
+  var result = traverseHierarchy(hierarchy, batchId, function (
     hierarchy,
-    batchId,
-    function (hierarchy, instanceIndex) {
-      var classId = hierarchy.classIds[instanceIndex];
-      var instanceClass = hierarchy.classes[classId];
-      if (instanceClass.name === className) {
-        return true;
-      }
+    instanceIndex
+  ) {
+    var classId = hierarchy.classIds[instanceIndex];
+    var instanceClass = hierarchy.classes[classId];
+    if (instanceClass.name === className) {
+      return true;
     }
-  );
+  });
   return defined(result);
 };
 

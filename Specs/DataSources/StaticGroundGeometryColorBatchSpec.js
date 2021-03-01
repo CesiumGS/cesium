@@ -2,6 +2,7 @@ import { ApproximateTerrainHeights } from "../../Source/Cesium.js";
 import { Cartesian3 } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { DistanceDisplayCondition } from "../../Source/Cesium.js";
+import { GeographicProjection } from "../../Source/Cesium.js";
 import { JulianDate } from "../../Source/Cesium.js";
 import { Math as CesiumMath } from "../../Source/Cesium.js";
 import { TimeInterval } from "../../Source/Cesium.js";
@@ -42,7 +43,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
     var entity = new Entity({
       position: new Cartesian3(1234, 5678, 9101112),
@@ -105,7 +107,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
     var entity = new Entity({
       position: new Cartesian3(1234, 5678, 9101112),
@@ -167,7 +170,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
 
     var updater = new EllipseGeometryUpdater(entity, scene);
@@ -225,7 +229,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
 
     var updater = new EllipseGeometryUpdater(entity, scene);
@@ -260,7 +265,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
 
     function renderScene() {
@@ -335,7 +341,8 @@ describe("DataSources/StaticGroundGeometryColorBatch", function () {
 
     var batch = new StaticGroundGeometryColorBatch(
       scene.groundPrimitives,
-      ClassificationType.BOTH
+      ClassificationType.BOTH,
+      new GeographicProjection()
     );
 
     function renderScene() {

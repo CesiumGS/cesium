@@ -14,7 +14,7 @@ var colorScratch = new Color();
 var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
-function Batch(primitives, classificationType, color, zIndex) {
+function Batch(primitives, classificationType, color, zIndex, mapProjection) {
   this.primitives = primitives;
   this.zIndex = zIndex;
   this.classificationType = classificationType;
@@ -31,7 +31,7 @@ function Batch(primitives, classificationType, color, zIndex) {
   this.showsUpdated = new AssociativeArray();
   this.itemsToRemove = [];
   this.isDirty = false;
-  this.rectangleCollisionCheck = new RectangleCollisionChecker();
+  this.rectangleCollisionCheck = new RectangleCollisionChecker(mapProjection);
 }
 
 Batch.prototype.overlapping = function (rectangle) {
@@ -282,10 +282,15 @@ Batch.prototype.removeAllPrimitives = function () {
 /**
  * @private
  */
-function StaticGroundGeometryColorBatch(primitives, classificationType) {
+function StaticGroundGeometryColorBatch(
+  primitives,
+  classificationType,
+  mapProjection
+) {
   this._batches = [];
   this._primitives = primitives;
   this._classificationType = classificationType;
+  this._mapProjection = mapProjection;
 }
 
 StaticGroundGeometryColorBatch.prototype.add = function (time, updater) {
@@ -310,7 +315,8 @@ StaticGroundGeometryColorBatch.prototype.add = function (time, updater) {
       this._primitives,
       this._classificationType,
       instance.attributes.color.value,
-      zIndex
+      zIndex,
+      this._mapProjection
     );
     batches.push(batch);
   }

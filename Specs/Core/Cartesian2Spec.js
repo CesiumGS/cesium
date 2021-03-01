@@ -402,6 +402,14 @@ describe("Core/Cartesian2", function () {
     expect(result).toEqual(expectedResult);
   });
 
+  it("cross", function () {
+    var left = new Cartesian2(0.0, 1.0);
+    var right = new Cartesian2(1.0, 0.0);
+    var expectedResult = -1.0;
+    var result = Cartesian2.cross(left, right);
+    expect(result).toEqual(expectedResult);
+  });
+
   it("add works with a result parameter", function () {
     var left = new Cartesian2(2.0, 3.0);
     var right = new Cartesian2(4.0, 5.0);
@@ -857,12 +865,6 @@ describe("Core/Cartesian2", function () {
   it("mostOrthogonalAxis throws with no cartesian parameter", function () {
     expect(function () {
       Cartesian2.mostOrthogonalAxis(undefined);
-    }).toThrowDeveloperError();
-  });
-
-  it("equalsEpsilon throws with no epsilon", function () {
-    expect(function () {
-      Cartesian2.equalsEpsilon(new Cartesian2(), new Cartesian2(), undefined);
     }).toThrowDeveloperError();
   });
 

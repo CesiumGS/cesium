@@ -5,7 +5,6 @@ import webGLConstantToGlslType from "../Core/webGLConstantToGlslType.js";
 import addToArray from "../ThirdParty/GltfPipeline/addToArray.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import numberOfComponentsForType from "../ThirdParty/GltfPipeline/numberOfComponentsForType.js";
 import ModelUtility from "./ModelUtility.js";
 
 /**
@@ -92,6 +91,10 @@ function addTextureCoordinates(
   result
 ) {
   var texCoord;
+  var texInfo = generatedMaterialValues[textureName];
+  if (defined(texInfo) && defined(texInfo.texCoord) && texInfo.texCoord === 1) {
+    defaultTexCoord = defaultTexCoord.replace("0", "1");
+  }
   if (defined(generatedMaterialValues[textureName + "Offset"])) {
     texCoord = textureName + "Coord";
     result.fragmentShaderMain +=
@@ -236,6 +239,8 @@ function generateTechnique(
   var hasNormals = false;
   var hasTangents = false;
   var hasTexCoords = false;
+  var hasTexCoord1 = false;
+  var hasOutline = false;
   var isUnlit = false;
 
   if (defined(primitiveInfo)) {
@@ -246,6 +251,8 @@ function generateTechnique(
     hasNormals = primitiveInfo.hasNormals;
     hasTangents = primitiveInfo.hasTangents;
     hasTexCoords = primitiveInfo.hasTexCoords;
+    hasTexCoord1 = primitiveInfo.hasTexCoord1;
+    hasOutline = primitiveInfo.hasOutline;
   }
 
   var morphTargets;
@@ -282,8 +289,6 @@ function generateTechnique(
     defined(material.extensions.KHR_materials_unlit)
   ) {
     isUnlit = true;
-    hasNormals = false;
-    hasTangents = false;
   }
 
   if (hasNormals) {
@@ -365,47 +370,19 @@ function generateTechnique(
     }
   }
 
+  if (hasOutline) {
+    fragmentShader += "uniform sampler2D u_outlineTexture;\n";
+  }
+
   // Add attributes with semantics
   var vertexShaderMain = "";
   if (hasSkinning) {
-    var i, j;
-    var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
-    var matrix = false;
-    if (skinningInfo.type.indexOf("MAT") === 0) {
-      matrix = true;
-      numberOfComponents = Math.sqrt(numberOfComponents);
-    }
-    if (!matrix) {
-      for (i = 0; i < numberOfComponents; i++) {
-        if (i === 0) {
-          vertexShaderMain += "    mat4 skinMatrix = ";
-        } else {
-          vertexShaderMain += "    skinMatrix += ";
-        }
-        vertexShaderMain +=
-          "a_weight[" + i + "] * u_jointMatrix[int(a_joint[" + i + "])];\n";
-      }
-    } else {
-      for (i = 0; i < numberOfComponents; i++) {
-        for (j = 0; j < numberOfComponents; j++) {
-          if (i === 0 && j === 0) {
-            vertexShaderMain += "    mat4 skinMatrix = ";
-          } else {
-            vertexShaderMain += "    skinMatrix += ";
-          }
-          vertexShaderMain +=
-            "a_weight[" +
-            i +
-            "][" +
-            j +
-            "] * u_jointMatrix[int(a_joint[" +
-            i +
-            "][" +
-            j +
-            "])];\n";
-        }
-      }
-    }
+    vertexShaderMain +=
+      "    mat4 skinMatrix =\n" +
+      "        a_weight.x * u_jointMatrix[int(a_joint.x)] +\n" +
+      "        a_weight.y * u_jointMatrix[int(a_joint.y)] +\n" +
+      "        a_weight.z * u_jointMatrix[int(a_joint.z)] +\n" +
+      "        a_weight.w * u_jointMatrix[int(a_joint.w)];\n";
   }
 
   // Add position always
@@ -414,9 +391,20 @@ function generateTechnique(
       semantic: "POSITION",
     },
   };
+
+  if (hasOutline) {
+    techniqueAttributes.a_outlineCoordinates = {
+      semantic: "_OUTLINE_COORDINATES",
+    };
+  }
+
   vertexShader += "attribute vec3 a_position;\n";
   if (hasNormals) {
     vertexShader += "varying vec3 v_positionEC;\n";
+  }
+  if (hasOutline) {
+    vertexShader += "attribute vec3 a_outlineCoordinates;\n";
+    vertexShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
   // Morph Target Weighting
@@ -480,21 +468,26 @@ function generateTechnique(
   }
   vertexShaderMain += "    gl_Position = u_projectionMatrix * position;\n";
 
+  if (hasOutline) {
+    vertexShaderMain += "    v_outlineCoordinates = a_outlineCoordinates;\n";
+  }
+
   // Final normal computation
   if (hasNormals) {
     techniqueAttributes.a_normal = {
       semantic: "NORMAL",
     };
     vertexShader += "attribute vec3 a_normal;\n";
-    vertexShader += "varying vec3 v_normal;\n";
-    if (hasSkinning) {
-      vertexShaderMain +=
-        "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
-    } else {
-      vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+    if (!isUnlit) {
+      vertexShader += "varying vec3 v_normal;\n";
+      if (hasSkinning) {
+        vertexShaderMain +=
+          "    v_normal = u_normalMatrix * mat3(skinMatrix) * weightedNormal;\n";
+      } else {
+        vertexShaderMain += "    v_normal = u_normalMatrix * weightedNormal;\n";
+      }
+      fragmentShader += "varying vec3 v_normal;\n";
     }
-
-    fragmentShader += "varying vec3 v_normal;\n";
     fragmentShader += "varying vec3 v_positionEC;\n";
   }
 
@@ -510,6 +503,10 @@ function generateTechnique(
     vertexShaderMain += "    v_tangent.w = weightedTangent.w;\n";
 
     fragmentShader += "varying vec4 v_tangent;\n";
+  }
+
+  if (hasOutline) {
+    fragmentShader += "varying vec3 v_outlineCoordinates;\n";
   }
 
   var fragmentShaderMain = "";
@@ -535,6 +532,19 @@ function generateTechnique(
     vertexShaderMain += "    " + v_texCoord + " = a_texcoord_0;\n";
 
     fragmentShader += "varying vec2 " + v_texCoord + ";\n";
+
+    if (hasTexCoord1) {
+      techniqueAttributes.a_texcoord_1 = {
+        semantic: "TEXCOORD_1",
+      };
+
+      var v_texCoord1 = v_texCoord.replace("0", "1");
+      vertexShader += "attribute vec2 a_texcoord_1;\n";
+      vertexShader += "varying vec2 " + v_texCoord1 + ";\n";
+      vertexShaderMain += "    " + v_texCoord1 + " = a_texcoord_1;\n";
+
+      fragmentShader += "varying vec2 " + v_texCoord1 + ";\n";
+    }
 
     var result = {
       fragmentShaderMain: fragmentShaderMain,
@@ -583,7 +593,7 @@ function generateTechnique(
     );
     emissiveTexCoord = addTextureCoordinates(
       gltf,
-      "u_emmissiveTexture",
+      "u_emissiveTexture",
       generatedMaterialValues,
       v_texCoord,
       result
@@ -594,7 +604,6 @@ function generateTechnique(
 
   // Add skinning information if available
   if (hasSkinning) {
-    var attributeType = ModelUtility.getShaderVariable(skinningInfo.type);
     techniqueAttributes.a_joint = {
       semantic: "JOINTS_0",
     };
@@ -602,8 +611,8 @@ function generateTechnique(
       semantic: "WEIGHTS_0",
     };
 
-    vertexShader += "attribute " + attributeType + " a_joint;\n";
-    vertexShader += "attribute " + attributeType + " a_weight;\n";
+    vertexShader += "attribute vec4 a_joint;\n";
+    vertexShader += "attribute vec4 a_weight;\n";
   }
 
   if (hasVertexColors) {
@@ -628,7 +637,7 @@ function generateTechnique(
   vertexShader += "}\n";
 
   // Fragment shader lighting
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "const float M_PI = 3.141592653589793;\n";
 
     fragmentShader +=
@@ -727,7 +736,7 @@ function generateTechnique(
   fragmentShader += fragmentShaderMain;
 
   // Add normal mapping to fragment shader
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     fragmentShader += "    vec3 ng = normalize(v_normal);\n";
     fragmentShader +=
       "    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n";
@@ -776,8 +785,7 @@ function generateTechnique(
       fragmentShader += "    vec3 n = ng;\n";
     }
     if (material.doubleSided) {
-      // !gl_FrontFacing doesn't work as expected on Mac/Intel so use the more verbose form instead. See https://github.com/CesiumGS/cesium/pull/8494.
-      fragmentShader += "    if (gl_FrontFacing == false)\n";
+      fragmentShader += "    if (czm_backFacing())\n";
       fragmentShader += "    {\n";
       fragmentShader += "        n = -n;\n";
       fragmentShader += "    }\n";
@@ -805,7 +813,7 @@ function generateTechnique(
 
   fragmentShader += "    vec3 baseColor = baseColorWithAlpha.rgb;\n";
 
-  if (hasNormals) {
+  if (hasNormals && !isUnlit) {
     if (useSpecGloss) {
       if (defined(generatedMaterialValues.u_specularGlossinessTexture)) {
         fragmentShader +=
@@ -1027,17 +1035,10 @@ function generateTechnique(
 
     // Environment maps were provided, use them for IBL
     fragmentShader += "#elif defined(DIFFUSE_IBL) || defined(SPECULAR_IBL) \n";
-
-    fragmentShader +=
-      "    mat3 fixedToENU = mat3(gltf_clippingPlanesMatrix[0][0], gltf_clippingPlanesMatrix[1][0], gltf_clippingPlanesMatrix[2][0], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][1], gltf_clippingPlanesMatrix[1][1], gltf_clippingPlanesMatrix[2][1], \n";
-    fragmentShader +=
-      "                           gltf_clippingPlanesMatrix[0][2], gltf_clippingPlanesMatrix[1][2], gltf_clippingPlanesMatrix[2][2]); \n";
     fragmentShader +=
       "    const mat3 yUpToZUp = mat3(-1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 1.0, 0.0); \n";
     fragmentShader +=
-      "    vec3 cubeDir = normalize(yUpToZUp * fixedToENU * normalize(reflect(-v, n))); \n";
+      "    vec3 cubeDir = normalize(yUpToZUp * gltf_iblReferenceFrameMatrix * normalize(reflect(-v, n))); \n";
 
     fragmentShader += "#ifdef DIFFUSE_IBL \n";
     fragmentShader += "#ifdef CUSTOM_SPHERICAL_HARMONICS \n";
@@ -1101,6 +1102,19 @@ function generateTechnique(
   }
 
   fragmentShader += "    color = LINEARtoSRGB(color);\n";
+
+  if (hasOutline) {
+    fragmentShader += "    float outlineness = max(\n";
+    fragmentShader +=
+      "        texture2D(u_outlineTexture, vec2(v_outlineCoordinates.x, 0.5)).r,\n";
+    fragmentShader += "        max(\n";
+    fragmentShader +=
+      "          texture2D(u_outlineTexture, vec2(v_outlineCoordinates.y, 0.5)).r,\n";
+    fragmentShader +=
+      "          texture2D(u_outlineTexture, vec2(v_outlineCoordinates.z, 0.5)).r));\n";
+    fragmentShader +=
+      "    color = mix(color, vec3(0.0, 0.0, 0.0), outlineness);\n";
+  }
 
   if (defined(alphaMode)) {
     if (alphaMode === "MASK") {

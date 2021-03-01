@@ -119,7 +119,7 @@ Object.defineProperties(EllipsoidTangentPlane.prototype, {
 
   /**
    * Gets the local Z-axis (up) of the tangent plane.
-   * @member EllipsoidTangentPlane.prototype
+   * @memberof EllipsoidTangentPlane.prototype
    * @readonly
    * @type {Cartesian3}
    */
@@ -135,8 +135,9 @@ var tmp = new AxisAlignedBoundingBox();
  * Creates a new instance from the provided ellipsoid and the center
  * point of the provided Cartesians.
  *
- * @param {Cartesian3} cartesians The list of positions surrounding the center point.
+ * @param {Cartesian3[]} cartesians The list of positions surrounding the center point.
  * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+ * @returns {EllipsoidTangentPlane} The new instance of EllipsoidTangentPlane.
  */
 EllipsoidTangentPlane.fromPoints = function (cartesians, ellipsoid) {
   //>>includeStart('debug', pragmas.debug);

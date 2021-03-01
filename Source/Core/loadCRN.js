@@ -5,10 +5,7 @@ import DeveloperError from "./DeveloperError.js";
 import Resource from "./Resource.js";
 import TaskProcessor from "./TaskProcessor.js";
 
-var transcodeTaskProcessor = new TaskProcessor(
-  "transcodeCRNToDXT",
-  Number.POSITIVE_INFINITY
-);
+var transcodeTaskProcessor = new TaskProcessor("transcodeCRNToDXT");
 
 /**
  * Asynchronously loads and parses the given URL to a CRN file or parses the raw binary data of a CRN file.
@@ -17,7 +14,7 @@ var transcodeTaskProcessor = new TaskProcessor(
  * using XMLHttpRequest, which means that in order to make requests to another origin,
  * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
  *
- * @exports loadCRN
+ * @function loadCRN
  *
  * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
  * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.

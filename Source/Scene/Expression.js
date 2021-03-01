@@ -171,7 +171,7 @@ Expression.prototype.evaluateColor = function (feature, result) {
  * Returns undefined if the shader function can't be generated from this expression.
  *
  * @param {String} functionName Name to give to the generated function.
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  * @param {String} returnType The return type of the generated function.
  *
@@ -181,11 +181,11 @@ Expression.prototype.evaluateColor = function (feature, result) {
  */
 Expression.prototype.getShaderFunction = function (
   functionName,
-  attributePrefix,
+  propertyNameMap,
   shaderState,
   returnType
 ) {
-  var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
+  var shaderExpression = this.getShaderExpression(propertyNameMap, shaderState);
 
   shaderExpression =
     returnType +
@@ -205,7 +205,7 @@ Expression.prototype.getShaderFunction = function (
  * Gets the shader expression for this expression.
  * Returns undefined if the shader expression can't be generated from this expression.
  *
- * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+ * @param {String} propertyNameMap Maps property variable names to shader attribute names.
  * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
  *
  * @returns {String} The shader expression.
@@ -213,10 +213,10 @@ Expression.prototype.getShaderFunction = function (
  * @private
  */
 Expression.prototype.getShaderExpression = function (
-  attributePrefix,
+  propertyNameMap,
   shaderState
 ) {
-  return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
+  return this._runtimeAst.getShaderExpression(propertyNameMap, shaderState);
 };
 
 var unaryOperators = ["!", "-", "+"];
@@ -1967,12 +1967,12 @@ function colorToVec4(color) {
   return "vec4(" + r + ", " + g + ", " + b + ", " + a + ")";
 }
 
-function getExpressionArray(array, attributePrefix, shaderState, parent) {
+function getExpressionArray(array, propertyNameMap, shaderState, parent) {
   var length = array.length;
   var expressions = new Array(length);
   for (var i = 0; i < length; ++i) {
     expressions[i] = array[i].getShaderExpression(
-      attributePrefix,
+      propertyNameMap,
       shaderState,
       parent
     );
@@ -1980,10 +1980,22 @@ function getExpressionArray(array, attributePrefix, shaderState, parent) {
   return expressions;
 }
 
+function getVariableName(variableName, propertyNameMap) {
+  if (!defined(propertyNameMap[variableName])) {
+    throw new RuntimeError(
+      'Style references a property "' +
+        variableName +
+        '" that does not exist or is not styleable.'
+    );
+  }
+
+  return propertyNameMap[variableName];
+}
+
 var nullSentinel = "czm_infinity"; // null just needs to be some sentinel value that will cause "[expression] === null" to be false in nearly all cases. GLSL doesn't have a NaN constant so use czm_infinity.
 
 Node.prototype.getShaderExpression = function (
-  attributePrefix,
+  propertyNameMap,
   shaderState,
   parent
 ) {
@@ -1998,28 +2010,31 @@ Node.prototype.getShaderExpression = function (
   if (defined(this._left)) {
     if (Array.isArray(this._left)) {
       // Left can be an array if the type is LITERAL_COLOR or LITERAL_VECTOR
-      left = getExpressionArray(this._left, attributePrefix, shaderState, this);
+      left = getExpressionArray(this._left, propertyNameMap, shaderState, this);
     } else {
-      left = this._left.getShaderExpression(attributePrefix, shaderState, this);
+      left = this._left.getShaderExpression(propertyNameMap, shaderState, this);
     }
   }
 
   if (defined(this._right)) {
-    right = this._right.getShaderExpression(attributePrefix, shaderState, this);
+    right = this._right.getShaderExpression(propertyNameMap, shaderState, this);
   }
 
   if (defined(this._test)) {
-    test = this._test.getShaderExpression(attributePrefix, shaderState, this);
+    test = this._test.getShaderExpression(propertyNameMap, shaderState, this);
   }
 
   if (Array.isArray(this._value)) {
     // For ARRAY type
-    value = getExpressionArray(this._value, attributePrefix, shaderState, this);
+    value = getExpressionArray(this._value, propertyNameMap, shaderState, this);
   }
 
   switch (type) {
     case ExpressionNodeType.VARIABLE:
-      return attributePrefix + value;
+      if (checkFeature(this)) {
+        return undefined;
+      }
+      return getVariableName(value, propertyNameMap);
     case ExpressionNodeType.UNARY:
       // Supported types: +, -, !, Boolean, Number
       if (value === "Boolean") {
@@ -2045,8 +2060,6 @@ Node.prototype.getShaderExpression = function (
         throw new RuntimeError(
           'Error generating style shader: "' + value + '" is not supported.'
         );
-      } else if (defined(unaryFunctions[value])) {
-        return value + "(" + left + ")";
       }
       return value + left;
     case ExpressionNodeType.BINARY:
@@ -2071,6 +2084,9 @@ Node.prototype.getShaderExpression = function (
     case ExpressionNodeType.CONDITIONAL:
       return "(" + test + " ? " + left + " : " + right + ")";
     case ExpressionNodeType.MEMBER:
+      if (checkFeature(this._left)) {
+        return getVariableName(right, propertyNameMap);
+      }
       // This is intended for accessing the components of vector properties. String members aren't supported.
       // Check for 0.0 rather than 0 because all numbers are previously converted to decimals.
       if (right === "r" || right === "x" || right === "0.0") {
@@ -2132,7 +2148,8 @@ Node.prototype.getShaderExpression = function (
           value === "x" ||
           value === "y" ||
           value === "z" ||
-          value === "w"
+          value === "w" ||
+          checkFeature(parent._left)
         ) {
           return value;
         }

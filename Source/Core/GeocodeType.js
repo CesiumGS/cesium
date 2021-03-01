@@ -1,6 +1,6 @@
 /**
  * The type of geocoding to be performed by a {@link GeocoderService}.
- * @exports GeocodeType
+ * @enum {Number}
  * @see Geocoder
  */
 var GeocodeType = {

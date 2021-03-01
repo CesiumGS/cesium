@@ -75,38 +75,34 @@
         viewer.trackedEntity = sphere;
 
         var synchronizer;
-        Sandcastle.addToggleButton(
-          "Clock synchronization",
-          false,
-          function (checked) {
-            // By default, the video plays normally and simply shows
-            // whatever frame the video is currently on.
-            // We can synchronize the video with the scene clock
-            // using a VideoSynchronizer.
+        Sandcastle.addToggleButton("Clock synchronization", false, function (
+          checked
+        ) {
+          // By default, the video plays normally and simply shows
+          // whatever frame the video is currently on.
+          // We can synchronize the video with the scene clock
+          // using a VideoSynchronizer.
 
-            if (Cesium.defined(synchronizer)) {
-              synchronizer = synchronizer.destroy();
-              videoElement.playbackRate = 1.0;
-              return;
-            }
-
-            synchronizer = new Cesium.VideoSynchronizer({
-              clock: viewer.clock,
-              element: videoElement,
-            });
+          if (Cesium.defined(synchronizer)) {
+            synchronizer = synchronizer.destroy();
+            videoElement.playbackRate = 1.0;
+            return;
           }
-        );
+
+          synchronizer = new Cesium.VideoSynchronizer({
+            clock: viewer.clock,
+            element: videoElement,
+          });
+        });
 
         // Since it's just an image material, we can modify the number
         // of times the video repeats in each direction..
         var isRepeating = true;
-        Sandcastle.addToggleButton(
-          "Image Repeat",
-          isRepeating,
-          function (checked) {
-            isRepeating = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Image Repeat", isRepeating, function (
+          checked
+        ) {
+          isRepeating = checked;
+        });
 
         sphere.ellipsoid.material.repeat = new Cesium.CallbackProperty(
           function (time, result) {

@@ -8,7 +8,7 @@
  * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
  * </div>
  *
- * @exports HorizontalOrigin
+ * @enum {Number}
  *
  * @see Billboard#horizontalOrigin
  * @see Label#horizontalOrigin

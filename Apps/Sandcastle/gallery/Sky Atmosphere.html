@@ -123,21 +123,17 @@
         subscribeParameter("saturationShift", "atmosphereSaturationShift");
         subscribeParameter("brightnessShift", "atmosphereBrightnessShift");
 
-        Sandcastle.addToggleButton(
-          "Lighting",
-          globe.enableLighting,
-          function (checked) {
-            globe.enableLighting = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Lighting", globe.enableLighting, function (
+          checked
+        ) {
+          globe.enableLighting = checked;
+        });
 
-        Sandcastle.addToggleButton(
-          "Fog",
-          scene.fog.enabled,
-          function (checked) {
-            scene.fog.enabled = checked;
-          }
-        );
+        Sandcastle.addToggleButton("Fog", scene.fog.enabled, function (
+          checked
+        ) {
+          scene.fog.enabled = checked;
+        });
 
         var camera = viewer.camera;
         camera.setView({
