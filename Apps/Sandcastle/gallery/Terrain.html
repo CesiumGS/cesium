@@ -59,6 +59,11 @@
           credit: "Terrain data courtesy VT MÄK",
         });
 
+        var arcGisProvider = new Cesium.ArcGISTiledElevationTerrainProvider({
+          url:
+            "https://elevation3d.arcgis.com/arcgis/rest/services/WorldElevation3D/Terrain3D/ImageServer",
+        });
+
         Sandcastle.addToolbarMenu(
           [
             {
@@ -101,6 +106,12 @@
               text: "VRTheWorldTerrainProvider",
               onselect: function () {
                 viewer.terrainProvider = vrTheWorldProvider;
+              },
+            },
+            {
+              text: "ArcGISTerrainProvider",
+              onselect: function () {
+                viewer.terrainProvider = arcGisProvider;
               },
             },
           ],

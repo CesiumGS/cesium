@@ -5,7 +5,6 @@ if (typeof self === "undefined") {
 }
 
 self.onmessage = function (event) {
-  "use strict";
   var array = event.data.array;
   var postMessage = self.webkitPostMessage || self.postMessage;
 

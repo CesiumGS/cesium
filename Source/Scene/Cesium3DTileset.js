@@ -2435,10 +2435,12 @@ function detectModelMatrixChanged(tileset, frameState) {
       tileset.modelMatrix,
       tileset._previousModelMatrix
     );
-    tileset._previousModelMatrix = Matrix4.clone(
-      tileset.modelMatrix,
-      tileset._previousModelMatrix
-    );
+    if (tileset._modelMatrixChanged) {
+      tileset._previousModelMatrix = Matrix4.clone(
+        tileset.modelMatrix,
+        tileset._previousModelMatrix
+      );
+    }
   }
 }
 
