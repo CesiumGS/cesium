@@ -763,6 +763,13 @@ function Cesium3DTileset(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
+   * The primitive to be rendered during the pick pass instead of the tileset.
+   *
+   * @type {Object}
+   */
+  this.pickPrimitive = options.pickPrimitive;
+
+  /**
    * This property is for debugging only; it is not optimized for production use.
    * <p>
    * Determines if only the tiles from last frame should be used for rendering.  This
@@ -898,13 +905,6 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-
-  /**
-   * The primitive to be rendered during the pick pass instead of the tileset.
-   *
-   * @type {Object}
-   */
-  this.pickPrimitive = options.pickPrimitive;
 
   var that = this;
   var resource;
