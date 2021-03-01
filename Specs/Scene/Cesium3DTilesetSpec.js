@@ -720,8 +720,10 @@ describe(
     });
 
     it("renders pickPrimitive during pick pass if defined", function () {
+      viewRootOnly();
       return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
         function (batchTableTileset) {
+          batchTableTileset.maximumScreenSpaceError = 0.0;
           var options = {
             pickPrimitive: batchTableTileset,
           };
@@ -730,6 +732,7 @@ describe(
             tilesetUrl,
             options
           ).then(function (tileset) {
+            tileset.maximumScreenSpaceError = 0.0;
             expect(tileset.pickPrimitive).toEqual(batchTableTileset);
             expect(scene).toPickPrimitive(batchTableTileset);
           });

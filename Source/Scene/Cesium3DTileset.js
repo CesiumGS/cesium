@@ -903,7 +903,6 @@ function Cesium3DTileset(options) {
    * The primitive to be rendered during the pick pass instead of the tileset.
    *
    * @type {Primitive}
-   * @private
    */
   this.pickPrimitive = options.pickPrimitive;
 
@@ -2475,11 +2474,7 @@ function update(tileset, frameState, passStatistics, passOptions) {
     requestTiles(tileset);
   }
 
-  if (frameState.passes.pick && defined(tileset.pickPrimitive)) {
-    tileset.pickPrimitive.update(frameState);
-  } else {
-    updateTiles(tileset, frameState, passOptions);
-  }
+  updateTiles(tileset, frameState, passOptions);
 
   // Update pass statistics
   Cesium3DTilesetStatistics.clone(statistics, passStatistics);
@@ -2555,13 +2550,17 @@ Cesium3DTileset.prototype.updateForPass = function (
   var passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
-    this._pass = pass;
-    tilesetPassState.ready = update(
-      this,
-      frameState,
-      passStatistics,
-      passOptions
-    );
+    if (frameState.passes.pick && defined(this.pickPrimitive)) {
+      this.pickPrimitive.update(frameState);
+    } else {
+      this._pass = pass;
+      tilesetPassState.ready = update(
+        this,
+        frameState,
+        passStatistics,
+        passOptions
+      );
+    }
   }
 
   if (ignoreCommands) {
