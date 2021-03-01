@@ -1,8 +1,9 @@
 //import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
-import RequestType from "../Core/RequestType.js";
+import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
+import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
@@ -193,8 +194,8 @@ function initialize(content, extensionJson, factory) {
   var innerContentHeaders = extensionJson.content;
   var contentCount = innerContentHeaders.length;
 
-  this._innerContentHeaders = innerContentHeaders;
-  this._arrayFetchPromises = new Array(contentCount);
+  content._innerContentHeaders = innerContentHeaders;
+  content._arrayFetchPromises = new Array(contentCount);
 
   /*
   var innerContentJsons = extensionJson.content;
@@ -230,20 +231,21 @@ function initialize(content, extensionJson, factory) {
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
   var requestBacklog = 0;
-  for (var i = 0; i < self._innerContentHeaders.length; i++) {
-    if (defined(self._arrayFetchPromises[i])) {
+  for (var i = 0; i < this._innerContentHeaders.length; i++) {
+    if (defined(this._arrayFetchPromises[i])) {
       continue;
     }
 
-    var promise = requestInnerContent(this);
+    var promise = requestInnerContent(this, this._innerContentHeaders[i]);
     if (!defined(promise)) {
       requestBacklog++;
     }
-    self._arrayFetchPromises[i] = promise;
+    this._arrayFetchPromises[i] = promise;
   }
 
-  if (requestBacklog > 0) {
-    self._contentsFetchedPromise = createInnerContents(this);
+  // TODO: Is this the right place for this?
+  if (requestBacklog === 0) {
+    this._contentsFetchedPromise = createInnerContents(this);
   }
 
   return requestBacklog;
@@ -253,18 +255,17 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
  * @return {Promise<ArrayBuffer|undefined>} A promise that returns true
  * @private
  */
-function requestInnerContent(multipleContent) {
-  var contentUri; //innerContentJson.uri;
-  // TODO: preserve query parameters for this
+function requestInnerContent(multipleContent, innerContentHeader) {
+  var contentUri = innerContentHeader.uri;
   var contentResource = multipleContent._baseResource.getDerivedResource({
     url: contentUri,
+    preserveQueryParameters: true,
   });
   var serverKey = RequestScheduler.getServerKey(
     contentResource.getUrlComponent()
   );
 
   // TODO: set expiration query parameters?
-
   var request = new Request({
     throttle: true,
     throttleByServer: true,
@@ -274,11 +275,8 @@ function requestInnerContent(multipleContent) {
     },
     serverKey: serverKey,
   });
-
   contentResource.request = request;
 
-  //TODO: build resource
-  //return resource.fetchArrayBuffer();
   return contentResource.fetchArrayBuffer().otherwise(function (error) {
     //TODO: this should call the contentFailed callback
     console.error(error);
@@ -288,27 +286,31 @@ function requestInnerContent(multipleContent) {
 
 function createInnerContents(multipleContent) {
   return when
-    .all(self._arrayFetchPromises)
+    .all(multipleContent._arrayFetchPromises)
     .then(function (arrayBuffers) {
-      for (var i = 0; i < arrayBuffers.length; i++) {
-        var arrayBuffer = arrayBuffers[i];
+      return arrayBuffers.map(function (arrayBuffer) {
         if (!defined(arrayBuffer)) {
           // TODO: missing a content. Should a warning be logged here
           // or elsewhere?
+          console.warning("missing content");
           return undefined;
         }
 
         try {
-          return createInnerContent(multipleContent, arrayBuffers[i]);
+          return createInnerContent(multipleContent, arrayBuffer);
         } catch (error) {
           // TODO: how to trigger the content failed event?
           console.error(error);
           return undefined;
         }
-      }
+      });
     })
     .then(function (contents) {
-      this._contents = contents.filter(defined);
+      multipleContent._contents = contents.filter(defined);
+      makeReadyPromise(multipleContent);
+    })
+    .otherwise(function (error) {
+      console.error(error);
     });
 }
 
@@ -349,6 +351,21 @@ function createInnerContent(multipleContent, arrayBuffer) {
   }
 
   return content;
+}
+
+function makeReadyPromise(multipleContent) {
+  var readyPromises = multipleContent._contents.map(function (content) {
+    return content.readyPromise;
+  });
+
+  when
+    .all(readyPromises)
+    .then(function () {
+      multipleContent._readyPromise.resolve(multipleContent);
+    })
+    .otherwise(function (error) {
+      multipleContent._readyPromise.reject(error);
+    });
 }
 
 /*
