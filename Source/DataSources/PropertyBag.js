@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import ConstantProperty from './ConstantProperty.js';
@@ -16,16 +15,16 @@ import Property from './Property.js';
      * @param {Object} [value] An object, containing key-value mapping of property names to properties.
      * @param {Function} [createPropertyCallback] A function that will be called when the value of any of the properties in value are not a Property.
      */
-    var PropertyBag = function(value, createPropertyCallback) {
+    function PropertyBag(value, createPropertyCallback) {
         this._propertyNames = [];
         this._definitionChanged = new Event();
 
         if (defined(value)) {
             this.merge(value, createPropertyCallback);
         }
-    };
+    }
 
-    defineProperties(PropertyBag.prototype, {
+    Object.defineProperties(PropertyBag.prototype, {
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof PropertyBag.prototype

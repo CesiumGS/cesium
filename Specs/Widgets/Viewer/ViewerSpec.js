@@ -102,6 +102,7 @@ describe('Widgets/Viewer/Viewer', function() {
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
         expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
         expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
+        expect(viewer.useBrowserRecommendedResolution).toBe(true);
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
         expect(viewer.isDestroyed()).toEqual(true);
@@ -432,6 +433,7 @@ describe('Widgets/Viewer/Viewer', function() {
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
+            powerPreference: 'low-power',
             premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
@@ -452,6 +454,7 @@ describe('Widgets/Viewer/Viewer', function() {
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.powerPreference).toEqual(webglOptions.powerPreference);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });

@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import CesiumMath from '../Core/Math.js';
@@ -181,7 +180,7 @@ import TextureMinificationFilter from './TextureMinificationFilter.js';
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
 
-    defineProperties(CubeMap.prototype, {
+    Object.defineProperties(CubeMap.prototype, {
         positiveX : {
             get : function() {
                 return this._positiveX;

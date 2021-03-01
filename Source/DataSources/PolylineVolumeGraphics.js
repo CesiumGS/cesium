@@ -1,6 +1,5 @@
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
@@ -24,7 +23,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.outline=false] A boolean Property specifying whether the volume is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the volume casts or receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the volume casts or receives shadows from light sources.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this volume will be displayed.
      *
      * @see Entity
@@ -60,7 +59,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
 
-    defineProperties(PolylineVolumeGraphics.prototype, {
+    Object.defineProperties(PolylineVolumeGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.
          * @memberof PolylineVolumeGraphics.prototype
@@ -154,7 +153,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
 
         /**
          * Get or sets the enum Property specifying whether the volume
-         * casts or receives shadows from each light source.
+         * casts or receives shadows from light sources.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
          * @default ShadowMode.DISABLED

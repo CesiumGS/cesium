@@ -1,5 +1,4 @@
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 
     /**
      * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
@@ -37,7 +36,7 @@ import defineProperties from '../Core/defineProperties.js';
         this._complete = false;
     }
 
-    defineProperties(ParticleBurst.prototype, {
+    Object.defineProperties(ParticleBurst.prototype, {
         /**
          * <code>true</code> if the burst has been completed; <code>false</code> otherwise.
          * @memberof ParticleBurst.prototype

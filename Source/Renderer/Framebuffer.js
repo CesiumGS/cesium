@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -236,7 +235,7 @@ import PixelDatatype from './PixelDatatype.js';
         this._unBind();
     }
 
-    defineProperties(Framebuffer.prototype, {
+    Object.defineProperties(Framebuffer.prototype, {
         /**
          * The status of the framebuffer. If the status is not WebGLConstants.FRAMEBUFFER_COMPLETE,
          * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.

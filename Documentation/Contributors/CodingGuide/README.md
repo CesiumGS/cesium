@@ -62,7 +62,7 @@ this._canvas = canvas;
 ```
 * Constants are in uppercase with underscores, e.g.,
 ```javascript
-Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
+Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 ```
 * Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g.,
 ```javascript
@@ -90,57 +90,13 @@ A few more naming conventions are introduced below along with their design patte
 
 ## Formatting
 
-In general, format new code in the same way as the existing code.
-
-* Use four spaces for indentation.  Do not use tab characters.
-* Do not include trailing whitespace.
-* Put `{` on the same line as the previous statement:
-```javascript
-function defaultValue(a, b) {
-   // ...
-}
-
-if (!defined(result)) {
-   // ...
-}
-```
-* Use curly braces even for single line `if`, `for`, and `while` blocks, e.g.,
-```javascript
-if (!defined(result))
-    result = new Cartesian3();
-```
-is better written as
-```javascript
-if (!defined(result)) {
-    result = new Cartesian3();
-}
-```
-* Use parenthesis judiciously, e.g.,
-```javascript
-var foo = x > 0.0 && y !== 0.0;
-```
-is better written as
-```javascript
-var foo = (x > 0.0) && (y !== 0.0);
-```
-* Use vertical whitespace to separate functions and to group related statements within a function, e.g.,
-```javascript
-function Model(options) {
-    // ...
-    this._allowPicking = defaultValue(options.allowPicking, true);
-
-    this._ready = false;
-    this._readyPromise = when.defer();
-    // ...
-};
-```
-* In JavaScript code, use single quotes, `'`, instead of double quotes, `"`.  In HTML, use double quotes.
-
-* Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
+* We use [prettier](https://prettier.io/) to automatically re-format all JS code at commit time, so all of the work is done for you. Code is automatically reformatted when you commit.
+* For HTML code, keep the existing style. Use double quotes.
+* Text files, end with a newline to minimize the noise in diffs.
 
 ## Linting
 
-For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js).
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/CesiumGS/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/CesiumGS/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/CesiumGS/cesium/blob/master/Tools/eslint-config-cesium/node.js).
 
 **General rules:**
 - [block-scoped-var](http://eslint.org/docs/rules/block-scoped-var)
@@ -165,10 +121,11 @@ For syntax and style guidelines, we use the ESLint recommended settings (the lis
 - [no-new-require](http://eslint.org/docs/rules/no-new-require)
 
 **[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
- * When disabling linting for one line, use `//eslint-disable-line`:
+ * When disabling linting for one line, use `//eslint-disable-next-line`:
 ```js
 function exit(warningMessage) {
-    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+    //eslint-disable-next-line no-alert
+    window.alert('Cannot exit: ' + warningMessage);
 }
 ```
 
@@ -284,20 +241,15 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `freezeObject` function to create enums, e.g.,
+* Use `Object.freeze` function to create enums, e.g.,
 ```javascript
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
         ANIMATING : 1
     };
 
-    return freezeObject(ModelAnimationState);
+    return Object.freeze(ModelAnimationState);
 });
 ```
 * Use descriptive comments for non-obvious code, e.g.,
@@ -429,7 +381,7 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+Use the functions of Cesium's [Check](https://github.com/CesiumGS/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
 
 * For example, to check that a parameter is defined and is an object:
 ```javascript
@@ -629,9 +581,9 @@ The prototype versions have the benefit of being able to be used polymorphically
 
 ### Static Constants
 
-To create a static constant related to a class, use `freezeObject`:
+To create a static constant related to a class, use `Object.freeze`:
 ```javascript
-Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
+Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
 ### Private Functions
@@ -678,13 +630,13 @@ function Model(options) {
 };
 ```
 
-Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
+Read-only properties can be created with a private property and a getter using `Object.defineProperties` function, e.g.,
 ```javascript
 function Cesium3DTileset(options) {
     this._url = options.url;
 };
 
-defineProperties(Cesium3DTileset.prototype, {
+Object.defineProperties(Cesium3DTileset.prototype, {
     url : {
         get : function() {
             return this._url;
@@ -696,7 +648,7 @@ Getters can perform any needed computation to return the property, but the perfo
 
 Setters can also perform computation before assigning to a private property, set a flag to delay computation, or both, for example:
 ```javascript
-defineProperties(UniformState.prototype, {
+Object.defineProperties(UniformState.prototype, {
     viewport : {
         get : function() {
             return this._viewport;
@@ -774,13 +726,13 @@ even though it relies on implicitly hoisting the `loadTileset` function to the t
 
 * :house: Make a class or function part of the Cesium API only if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
 * :art: Put new classes and functions in the right part of the Cesium stack (directory).  From the bottom up:
-   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js).
-   * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
-   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depends on `Renderer`.
-   * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
-   * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
+   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/loadArrayBuffer.js).
+   * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/CesiumGS/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
+   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/CesiumGS/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depends on `Renderer`.
+   * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/CesiumGS/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/CesiumGS/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
+   * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/CesiumGS/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
 
-It is usually obvious what directory a file belongs in.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+It is usually obvious what directory a file belongs in.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/CesiumGS/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
 
 ![](1.jpg)
 
@@ -790,14 +742,12 @@ Modules (files) should only reference modules in the same level or a lower level
 ```javascript
 define([
         '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
-        defineProperties,
         Event,
         JulianDate,
         ModelAnimationLoop,
@@ -830,7 +780,7 @@ An `@experimental` API is subject to breaking changes in future Cesium releases 
 A public identifier (class, function, property) should be deprecated before being removed.  To do so:
 
 * Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
-* Use [`deprecationWarning`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
+* Use [`deprecationWarning`](https://github.com/CesiumGS/cesium/blob/master/Source/Core/deprecationWarning.js) to warn users that the API is deprecated and what proactive changes they can take, e.g.,
 ```javascript
 function Foo() {
     deprecationWarning('Foo', 'Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead.');
@@ -839,12 +789,12 @@ function Foo() {
 ```
 * Add the [`@deprecated`](http://usejsdoc.org/tags-deprecated.html) doc tag.
 * Remove all use of the deprecated API inside Cesium except for unit tests that specifically test the deprecated API.
-* Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
-* Create an [issue](https://github.com/AnalyticalGraphicsInc/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
+* Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/CesiumGS/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
+* Create an [issue](https://github.com/CesiumGS/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
 
 ## Third-Party Libraries
 
-:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
+:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium community forum](https://community.cesium.com/) ([example discussion](https://community.cesium.com/t/do-we-like-using-third-party-libraries/745)).  The library should
 * Have a compatible license such as MIT, BSD, or Apache 2.0.
 * Provide capabilities that Cesium truly needs and that the team doesn't have the time and/or expertise to develop.
 * Be lightweight, tested, maintained, and reasonably widely used.
@@ -857,7 +807,7 @@ Cesium includes a handful of standard widgets that are used in the Viewer, inclu
 
 To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
 
-Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
+Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/CesiumGS/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
 
 ``` javascript
 knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
@@ -865,11 +815,11 @@ knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
 
 ### Knockout subscriptions
 
-Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding.  For [example](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes.  This cannot be done with binding because the value from `FullscreenButtonViewModel` is affecting a value not contained within that widget.
+Use a knockout subscription only when you are unable to accomplish what you need to do with a standard binding.  For [example](https://github.com/CesiumGS/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L588), the `Viewer` subscribes to `FullscreenButtonViewModel.isFullscreenEnabled` because it needs to change the width of the timeline widget when that value changes.  This cannot be done with binding because the value from `FullscreenButtonViewModel` is affecting a value not contained within that widget.
 
-Cesium includes a [`subscribeAndEvaluate`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
+Cesium includes a [`subscribeAndEvaluate`](https://github.com/CesiumGS/cesium/blob/master/Source/Widgets/subscribeAndEvaluate.js) helper function for subscribing to knockout observable.
 
-When using a subscription, always be sure to [dispose the subscription](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it.  Otherwise the listener will continue to be notified for the lifetime of the observable.
+When using a subscription, always be sure to [dispose the subscription](https://github.com/CesiumGS/cesium/blob/master/Source/Widgets/Viewer/Viewer.js#L1413) when the viewmodel is no longer using it.  Otherwise the listener will continue to be notified for the lifetime of the observable.
 
 ```
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
@@ -881,10 +831,10 @@ fullscreenSubscription.dispose();
 
 ### Naming
 
-* GLSL files end with `.glsl` and are in the [Shaders](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Source/Shaders) directory.
+* GLSL files end with `.glsl` and are in the [Shaders](https://github.com/CesiumGS/cesium/tree/master/Source/Shaders) directory.
 * Files for vertex shaders have a `VS` suffix; fragment shaders have an `FS` suffix.  For example: `BillboardCollectionVS.glsl` and `BillboardCollectionFS.glsl`.
 * Generally, identifiers, such as functions and variables, use `camelCase`.
-* Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Shaders/Builtin/Structs/material.glsl).  Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
+* Cesium built-in identifiers start with `czm_`, for example, [`czm_material`](https://github.com/CesiumGS/cesium/blob/master/Source/Shaders/Builtin/Structs/material.glsl).  Files have the same name without the `czm_` prefix, e.g., `material.glsl`.
 * Varyings start with `v_`, e.g.,
 ```javascript
 varying vec2 v_textureCoordinates;

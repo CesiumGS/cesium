@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import JulianDate from '../Core/JulianDate.js';
 import Request from '../Core/Request.js';
@@ -42,7 +41,7 @@ import RequestType from '../Core/RequestType.js';
         this._clockOnTick(clock);
     }
 
-    defineProperties(TimeDynamicImagery.prototype, {
+    Object.defineProperties(TimeDynamicImagery.prototype, {
         /**
          * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
          * @memberof TimeDynamicImagery.prototype

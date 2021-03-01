@@ -1,7 +1,6 @@
 import Check from '../Core/Check.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import TextureMagnificationFilter from './TextureMagnificationFilter.js';
 import TextureMinificationFilter from './TextureMinificationFilter.js';
@@ -46,7 +45,7 @@ import TextureWrap from './TextureWrap.js';
         this._maximumAnisotropy = maximumAnisotropy;
     }
 
-    defineProperties(Sampler.prototype, {
+    Object.defineProperties(Sampler.prototype, {
         wrapS : {
             get : function() {
                 return this._wrapS;
@@ -84,4 +83,11 @@ import TextureWrap from './TextureWrap.js';
                 (left._magnificationFilter === right._magnificationFilter) &&
                 (left._maximumAnisotropy === right._maximumAnisotropy));
     };
+
+    Sampler.NEAREST = Object.freeze(new Sampler({
+        wrapS : TextureWrap.CLAMP_TO_EDGE,
+        wrapT : TextureWrap.CLAMP_TO_EDGE,
+        minificationFilter : TextureMinificationFilter.NEAREST,
+        magnificationFilter : TextureMagnificationFilter.NEAREST
+    }));
 export default Sampler;

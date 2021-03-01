@@ -1,5 +1,4 @@
 import defaultValue from '../Core/defaultValue.js';
-import defineProperties from '../Core/defineProperties.js';
 import FeatureDetection from '../Core/FeatureDetection.js';
 import VertexFormat from '../Core/VertexFormat.js';
 import PerInstanceFlatColorAppearanceFS from '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js';
@@ -87,7 +86,7 @@ import Appearance from './Appearance.js';
         this._vertexFormat = vertexFormat;
     }
 
-    defineProperties(PolylineColorAppearance.prototype, {
+    Object.defineProperties(PolylineColorAppearance.prototype, {
         /**
          * The GLSL source code for the vertex shader.
          *

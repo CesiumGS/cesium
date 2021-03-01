@@ -174,7 +174,7 @@ import Property from './Property.js';
                !Property.isConstant(corridor.outlineWidth) || //
                !Property.isConstant(corridor.cornerType) || //
                !Property.isConstant(corridor.zIndex) || //
-               (this._onTerrain && !Property.isConstant(this._materialProperty));
+               (this._onTerrain && !Property.isConstant(this._materialProperty) && !(this._materialProperty instanceof ColorMaterialProperty));
     };
 
     CorridorGeometryUpdater.prototype._setStaticOptions = function(entity, corridor) {

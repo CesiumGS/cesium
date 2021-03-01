@@ -5,7 +5,6 @@ import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import PixelFormat from '../Core/PixelFormat.js';
@@ -172,7 +171,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         this._enabled = true;
     }
 
-    defineProperties(PostProcessStage.prototype, {
+    Object.defineProperties(PostProcessStage.prototype, {
         /**
          * Determines if this post-process stage is ready to be executed. A stage is only executed when both <code>ready</code>
          * and {@link PostProcessStage#enabled} are <code>true</code>. A stage will not be ready while it is waiting on textures
@@ -479,7 +478,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
         }
 
         stage._uniforms = {};
-        defineProperties(stage._uniforms, newUniforms);
+        Object.defineProperties(stage._uniforms, newUniforms);
 
         stage._uniformMap = combine(uniformMap, {
             colorTexture : function() {
@@ -765,12 +764,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
                     width : 1,
                     height : 1
                 },
-                sampler : new Sampler({
-                    wrapS : TextureWrap.CLAMP_TO_EDGE,
-                    wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.NEAREST,
-                    magnificationFilter : TextureMagnificationFilter.NEAREST
-                })
+                sampler : Sampler.NEAREST
             });
             return;
         }
@@ -810,12 +804,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
                 width : textureLength,
                 height : 1
             },
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
+            sampler : Sampler.NEAREST
         });
     }
 

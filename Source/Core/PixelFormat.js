@@ -1,5 +1,4 @@
 import PixelDatatype from '../Renderer/PixelDatatype.js';
-import freezeObject from './freezeObject.js';
 import WebGLConstants from './WebGLConstants.js';
 
     /**
@@ -324,4 +323,4 @@ import WebGLConstants from './WebGLConstants.js';
             return flipped;
         }
     };
-export default freezeObject(PixelFormat);
+export default Object.freeze(PixelFormat);

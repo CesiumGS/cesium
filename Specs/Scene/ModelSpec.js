@@ -7,7 +7,6 @@ import { combine } from '../../Source/Cesium.js';
 import { Credit } from '../../Source/Cesium.js';
 import { defaultValue } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
-import { defineProperties } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { Ellipsoid } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
@@ -33,6 +32,7 @@ import { DracoLoader } from '../../Source/Cesium.js';
 import { HeightReference } from '../../Source/Cesium.js';
 import { Model } from '../../Source/Cesium.js';
 import { ModelAnimationLoop } from '../../Source/Cesium.js';
+import { DepthFunction } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
@@ -212,10 +212,25 @@ describe('Scene/Model', function() {
 
     function verifyRender(model) {
         expect(model.ready).toBe(true);
+
+        expect({
+            scene : scene,
+            time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+        }).toRenderAndCall(function(rgba) {
+            expect(rgba).toEqual([0, 0, 0, 255]);
+        });
+
         expect(scene).toRender([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
-        expect(scene).notToRender([0, 0, 0, 255]);
+
+        expect({
+            scene : scene,
+            time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
+        }).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+        });
+
         model.show = false;
     }
 
@@ -523,7 +538,8 @@ describe('Scene/Model', function() {
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true
+                    enabled : true,
+                    func : DepthFunction.LESS_OR_EQUAL
                 },
                 depthMask : true,
                 blending : {
@@ -999,7 +1015,7 @@ describe('Scene/Model', function() {
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([179, 9, 9, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -2478,7 +2494,8 @@ describe('Scene/Model', function() {
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            expect(scene).toRenderAndCall(function(rgba) { //eslint-disable-line no-loop-func
+            //eslint-disable-next-line no-loop-func
+            expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 expect(rgba).not.toEqual(oldPixelColor);
                 oldPixelColor = rgba;
@@ -3071,12 +3088,12 @@ describe('Scene/Model', function() {
             };
 
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([119, 6, 5, 255], 5);
+                expect(rgba).toEqualEpsilon([131, 9, 9, 255], 5);
             });
 
             model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([85, 6, 5, 255], 5);
+                expect(rgba).toEqualEpsilon([102, 9, 9, 255], 5);
             });
 
             model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
@@ -3283,7 +3300,7 @@ describe('Scene/Model', function() {
             };
 
             globe.terrainProviderChanged = new Event();
-            defineProperties(globe, {
+            Object.defineProperties(globe, {
                 terrainProvider : {
                     set : function(value) {
                         this.terrainProviderChanged.raiseEvent(value);

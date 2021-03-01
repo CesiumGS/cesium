@@ -1,4 +1,3 @@
-import freezeObject from './freezeObject.js';
 
     /**
      * Constants used by {@link Clock#tick} to determine behavior
@@ -38,4 +37,4 @@ import freezeObject from './freezeObject.js';
          */
         LOOP_STOP : 2
     };
-export default freezeObject(ClockRange);
+export default Object.freeze(ClockRange);

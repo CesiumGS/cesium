@@ -2,7 +2,6 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
 import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
@@ -113,7 +112,7 @@ import SceneMode from './SceneMode.js';
         };
     }
 
-    defineProperties(SkyAtmosphere.prototype, {
+    Object.defineProperties(SkyAtmosphere.prototype, {
         /**
          * Gets the ellipsoid the atmosphere is drawn around.
          * @memberof SkyAtmosphere.prototype
@@ -131,8 +130,8 @@ import SceneMode from './SceneMode.js';
     /**
      * @private
      */
-    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
-        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
+    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting, useSunDirection) {
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? (useSunDirection ? 2.0 : 1.0) : 0.0;
     };
 
     /**

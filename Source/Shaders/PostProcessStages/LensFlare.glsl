@@ -75,7 +75,7 @@ void main(void)
     if(!isSpace || !((sunPos.x >= -1.1 && sunPos.x <= 1.1) && (sunPos.y >= -1.1 && sunPos.y <= 1.1)))
     {
         // Lens flare is disabled when not in space until #5932 is fixed.
-        //    https://github.com/AnalyticalGraphicsInc/cesium/issues/5932
+        //    https://github.com/CesiumGS/cesium/issues/5932
         gl_FragColor = originalColor;
         return;
     }

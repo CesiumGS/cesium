@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Hint defining optimization support for a 3D tile
@@ -12,4 +11,4 @@ import freezeObject from '../Core/freezeObject.js';
         USE_OPTIMIZATION: 1,
         SKIP_OPTIMIZATION: 0
     };
-export default freezeObject(Cesium3DTileOptimizationHint);
+export default Object.freeze(Cesium3DTileOptimizationHint);

@@ -1,7 +1,6 @@
 import Cartesian3 from '../Core/Cartesian3.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import DeveloperError from '../Core/DeveloperError.js';
 import Event from '../Core/Event.js';
 import JulianDate from '../Core/JulianDate.js';
@@ -38,7 +37,7 @@ import Property from './Property.js';
         this.position = position;
     }
 
-    defineProperties(VelocityVectorProperty.prototype, {
+    Object.defineProperties(VelocityVectorProperty.prototype, {
         /**
          * Gets a value indicating if this property is constant.
          * @memberof VelocityVectorProperty.prototype

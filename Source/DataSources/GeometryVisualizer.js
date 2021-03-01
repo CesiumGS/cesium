@@ -138,14 +138,30 @@ import WallGeometryUpdater from './WallGeometryUpdater.js';
         var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
         var groundColorBatches = new Array(numberOfClassificationTypes);
         var groundMaterialBatches = [];
+        var mapProjection = scene.mapProjection;
         if (supportsMaterialsforEntitiesOnTerrain) {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
-                groundMaterialBatches.push(new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, MaterialAppearance, scene.mapProjection));
-                groundColorBatches[i] = new StaticGroundGeometryPerMaterialBatch(groundPrimitives, i, PerInstanceColorAppearance, scene.mapProjection);
+                groundMaterialBatches.push(
+                    new StaticGroundGeometryPerMaterialBatch(
+                        groundPrimitives,
+                        i,
+                        MaterialAppearance,
+                        mapProjection
+                    )
+                );
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(
+                    groundPrimitives,
+                    i,
+                    mapProjection
+                );
             }
         } else {
             for (i = 0; i < numberOfClassificationTypes; ++i) {
-                groundColorBatches[i] = new StaticGroundGeometryColorBatch(groundPrimitives, i);
+                groundColorBatches[i] = new StaticGroundGeometryColorBatch(
+                    groundPrimitives,
+                    i,
+                    mapProjection
+                );
             }
         }
 

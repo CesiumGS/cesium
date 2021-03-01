@@ -81,13 +81,15 @@ import TimelineTrack from './TimelineTrack.js';
 
         container = getElement(container);
 
+        var ownerDocument = container.ownerDocument;
+
         /**
          * Gets the parent container.
          * @type {Element}
          */
         this.container = container;
 
-        var topDiv = document.createElement('div');
+        var topDiv = ownerDocument.createElement('div');
         topDiv.className = 'cesium-timeline-main';
         container.appendChild(topDiv);
         this._topDiv = topDiv;
@@ -137,8 +139,8 @@ import TimelineTrack from './TimelineTrack.js';
         this._onTouchEnd = createTouchEndCallback(this);
 
         var timeBarEle = this._timeBarEle;
-        document.addEventListener('mouseup', this._onMouseUp, false);
-        document.addEventListener('mousemove', this._onMouseMove, false);
+        ownerDocument.addEventListener('mouseup', this._onMouseUp, false);
+        ownerDocument.addEventListener('mousemove', this._onMouseMove, false);
         timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
         timeBarEle.addEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
         timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
@@ -183,8 +185,9 @@ import TimelineTrack from './TimelineTrack.js';
     Timeline.prototype.destroy = function() {
         this._clock.onTick.removeEventListener(this.updateFromClock, this);
 
-        document.removeEventListener('mouseup', this._onMouseUp, false);
-        document.removeEventListener('mousemove', this._onMouseMove, false);
+        var doc = this.container.ownerDocument;
+        doc.removeEventListener('mouseup', this._onMouseUp, false);
+        doc.removeEventListener('mousemove', this._onMouseMove, false);
 
         var timeBarEle = this._timeBarEle;
         timeBarEle.removeEventListener('mousedown', this._onMouseDown, false);

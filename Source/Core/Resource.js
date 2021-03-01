@@ -6,9 +6,7 @@ import clone from './clone.js';
 import combine from './combine.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
-import defineProperties from './defineProperties.js';
 import DeveloperError from './DeveloperError.js';
-import freezeObject from './freezeObject.js';
 import getAbsoluteUri from './getAbsoluteUri.js';
 import getBaseUri from './getBaseUri.js';
 import getExtensionFromUri from './getExtensionFromUri.js';
@@ -385,7 +383,7 @@ import TrustedServers from './TrustedServers.js';
         return supportsImageBitmapOptionsPromise;
     };
 
-    defineProperties(Resource, {
+    Object.defineProperties(Resource, {
         /**
          * Returns true if blobs are supported.
          *
@@ -401,7 +399,7 @@ import TrustedServers from './TrustedServers.js';
         }
     });
 
-    defineProperties(Resource.prototype, {
+    Object.defineProperties(Resource.prototype, {
         /**
          * Query parameters appended to the url.
          *
@@ -943,7 +941,6 @@ import TrustedServers from './TrustedServers.js';
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
-            var url = resource.url;
             var crossOrigin = false;
 
             // data URIs can't have crossorigin set.
@@ -952,7 +949,7 @@ import TrustedServers from './TrustedServers.js';
             }
 
             var deferred = when.defer();
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
+            Resource._Implementations.createImage(request, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -1822,7 +1819,8 @@ import TrustedServers from './TrustedServers.js';
         image.src = url;
     }
 
-    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY, preferImageBitmap) {
+    Resource._Implementations.createImage = function(request, crossOrigin, deferred, flipY, preferImageBitmap) {
+        var url = request.url;
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
         // See:
@@ -1831,16 +1829,32 @@ import TrustedServers from './TrustedServers.js';
         Resource.supportsImageBitmapOptions()
             .then(function(supportsImageBitmap) {
                 // We can only use ImageBitmap if we can flip on decode.
-                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                // See: https://github.com/CesiumGS/cesium/pull/7579#issuecomment-466146898
                 if (!(supportsImageBitmap && preferImageBitmap)) {
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
+                var responseType = 'blob';
+                var method = 'GET';
+                var xhrDeferred = when.defer();
+                var xhr = Resource._Implementations.loadWithXhr(
+                    url,
+                    responseType,
+                    method,
+                    undefined,
+                    undefined,
+                    xhrDeferred,
+                    undefined,
+                    undefined,
+                    undefined
+                );
 
-                return Resource.fetchBlob({
-                    url: url
-                })
-                .then(function(blob) {
+                if (defined(xhr) && defined(xhr.abort)) {
+                    request.cancelFunction = function() {
+                        xhr.abort();
+                    };
+                }
+                return xhrDeferred.promise.then(function(blob) {
                     if (!defined(blob)) {
                         deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
                         return;
@@ -1883,15 +1897,13 @@ import TrustedServers from './TrustedServers.js';
     }
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
-
-        // Specifically use the Node version of require to avoid conflicts with the global
-        // require defined in the built version of Cesium.
-        var nodeRequire = global.require; // eslint-disable-line
-
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = nodeRequire('url').parse(url);
-        var http = URL.protocol === 'https:' ? nodeRequire('https') : nodeRequire('http');
-        var zlib = nodeRequire('zlib');
+        /* eslint-disable no-undef */
+        var URL = require('url').parse(url);
+        var http = URL.protocol === 'https:' ? require('https') : require('http');
+        var zlib = require('zlib');
+        /* eslint-enable no-undef */
+
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,
@@ -1915,7 +1927,8 @@ import TrustedServers from './TrustedServers.js';
                 });
 
                 res.on('end', function() {
-                    var result = Buffer.concat(chunkArray); // eslint-disable-line
+                    // eslint-disable-next-line no-undef
+                    var result = Buffer.concat(chunkArray);
                     if (res.headers['content-encoding'] === 'gzip') {
                         zlib.gunzip(result, function(error, resultUnzipped) {
                             if (error) {
@@ -2052,7 +2065,7 @@ import TrustedServers from './TrustedServers.js';
      * @type {Resource}
      * @constant
      */
-    Resource.DEFAULT = freezeObject(new Resource({
+    Resource.DEFAULT = Object.freeze(new Resource({
         url: (typeof document === 'undefined') ? '' : document.location.href.split('?')[0]
     }));
 

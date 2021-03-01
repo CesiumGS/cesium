@@ -2,7 +2,6 @@ import BoundingSphere from '../Core/BoundingSphere.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Cartesian4 from '../Core/Cartesian4.js';
 import defined from '../Core/defined.js';
-import defineProperties from '../Core/defineProperties.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import IntersectionTests from '../Core/IntersectionTests.js';
 import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
@@ -72,7 +71,7 @@ import TerrainState from './TerrainState.js';
         this.clippedByBoundaries = false;
     }
 
-    defineProperties(GlobeSurfaceTile.prototype, {
+    Object.defineProperties(GlobeSurfaceTile.prototype, {
         /**
          * Gets a value indicating whether or not this tile is eligible to be unloaded.
          * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
@@ -163,12 +162,12 @@ import TerrainState from './TerrainState.js';
             var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
             var t = IntersectionTests.rayTriangleParametric(ray, v0, v1, v2, cullBackFaces);
-            if (defined(t) && t < minT) {
+            if (defined(t) && t < minT && t >= 0.0) {
                 minT = t;
             }
         }
 
-        return minT < Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
+        return minT !== Number.MAX_VALUE ? Ray.getPoint(ray, minT, result) : undefined;
     };
 
     GlobeSurfaceTile.prototype.freeResources = function() {

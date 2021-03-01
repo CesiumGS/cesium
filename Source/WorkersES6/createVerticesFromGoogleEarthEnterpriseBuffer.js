@@ -40,34 +40,45 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
-        return deserializeMapProjection(parameters.serializedMapProjection).then(function(mapProjection) {
-            var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
-                parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
-                parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold,
-                mapProjection);
-            var vertices = statistics.vertices;
-            transferableObjects.push(vertices.buffer);
-            var indices = statistics.indices;
-            transferableObjects.push(indices.buffer);
+        return deserializeMapProjection(parameters.serializedMapProjection).then(
+            function (mapProjection) {
+              var statistics = processBuffer(
+                parameters.buffer,
+                parameters.relativeToCenter,
+                parameters.ellipsoid,
+                parameters.rectangle,
+                parameters.nativeRectangle,
+                parameters.exaggeration,
+                parameters.skirtHeight,
+                parameters.includeWebMercatorT,
+                parameters.negativeAltitudeExponentBias,
+                parameters.negativeElevationThreshold,
+                mapProjection
+              );
+              var vertices = statistics.vertices;
+              transferableObjects.push(vertices.buffer);
+              var indices = statistics.indices;
+              transferableObjects.push(indices.buffer);
 
-            return {
-                vertices : vertices.buffer,
-                indices : indices.buffer,
-                numberOfAttributes : statistics.encoding.getStride(),
-                minimumHeight : statistics.minimumHeight,
-                maximumHeight : statistics.maximumHeight,
-                boundingSphere3D : statistics.boundingSphere3D,
-                orientedBoundingBox : statistics.orientedBoundingBox,
-                occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
-                encoding : statistics.encoding,
-                vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-                skirtIndex : statistics.skirtIndex,
-                westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
-                southIndicesEastToWest : statistics.southIndicesEastToWest,
-                eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
-                northIndicesWestToEast : statistics.northIndicesWestToEast
-            };
-        });
+              return {
+                vertices: vertices.buffer,
+                indices: indices.buffer,
+                numberOfAttributes: statistics.encoding.getStride(),
+                minimumHeight: statistics.minimumHeight,
+                maximumHeight: statistics.maximumHeight,
+                boundingSphere3D: statistics.boundingSphere3D,
+                orientedBoundingBox: statistics.orientedBoundingBox,
+                occludeePointInScaledSpace: statistics.occludeePointInScaledSpace,
+                encoding: statistics.encoding,
+                vertexCountWithoutSkirts: statistics.vertexCountWithoutSkirts,
+                indexCountWithoutSkirts: statistics.indexCountWithoutSkirts,
+                westIndicesSouthToNorth: statistics.westIndicesSouthToNorth,
+                southIndicesEastToWest: statistics.southIndicesEastToWest,
+                eastIndicesNorthToSouth: statistics.eastIndicesNorthToSouth,
+                northIndicesWestToEast: statistics.northIndicesWestToEast,
+              };
+            }
+        );
     }
 
     var scratchCartographic = new Cartographic();
@@ -336,7 +347,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var vertexCountWithoutSkirts = pointOffset;
-        var skirtIndex = indicesOffset;
+        var indexCountWithoutSkirts = indicesOffset;
 
         // Add skirt points
         var skirtOptions = {
@@ -433,7 +444,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex,
+            indexCountWithoutSkirts : indexCountWithoutSkirts,
             westIndicesSouthToNorth : westIndicesSouthToNorth,
             southIndicesEastToWest : southIndicesEastToWest,
             eastIndicesNorthToSouth : eastIndicesNorthToSouth,

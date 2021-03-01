@@ -1,4 +1,3 @@
-import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Describes how to draw a label.
@@ -32,4 +31,4 @@ import freezeObject from '../Core/freezeObject.js';
          */
         FILL_AND_OUTLINE : 2
     };
-export default freezeObject(LabelStyle);
+export default Object.freeze(LabelStyle);
