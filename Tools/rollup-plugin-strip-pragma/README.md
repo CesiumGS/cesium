@@ -20,14 +20,14 @@ Cartesian3.fromSpherical = function(spherical, result) {
 The following rollup usage will produce code with pragmas stripped.
 
 ```js
-const rollup = require('rollup');
-const rollupStripPragma = require('./rollup-plugin-strip-pragma');
+const rollup = require("rollup");
+const rollupStripPragma = require("./rollup-plugin-strip-pragma");
 const bundle = await rollup.rollup({
-    input: 'source.js',
-    plugins: [
-        rollupStripPragma({
-            pragmas: ['debug']
-        })
-    ]
+  input: "source.js",
+  plugins: [
+    rollupStripPragma({
+      pragmas: ["debug"],
+    }),
+  ],
 });
 ```

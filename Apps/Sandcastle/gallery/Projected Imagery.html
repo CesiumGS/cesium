@@ -1,106 +1,146 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Demonstration of Imagery served in projections other than Geographic and Web Mercator.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Demonstration of Imagery served in projections other than Geographic and Web Mercator."
+    />
+    <meta name="cesium-sandcastle-labels" content="Showcases" />
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script
+      type="text/javascript"
+      src="../../../ThirdParty/requirejs-2.1.20/require.js"
+    ></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
+      if (typeof require === "function") {
+        require.config({
+          baseUrl: "../../../Source",
+          waitSeconds: 120,
+        });
+      }
     </script>
-</head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
-<style>
-    @import url(../templates/bucket.css);
-</style>
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
-<script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
-//Sandcastle_Begin
-var esri53028wkt = '+proj=cass +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    mapProjection : new Cesium.Proj4Projection({
-        wellKnownText : esri53028wkt
-    }),
-    sceneMode : Cesium.SceneMode.COLUMBUS_VIEW
-});
-var epsg3413wkt = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs';
-var epsg3413bounds = Cesium.Rectangle.fromDegrees(-180.0000, 60.0000, 180.0000, 90.0000);
-var epsg3413mapProjection = new Cesium.Proj4Projection({
-    wellKnownText : epsg3413wkt,
-    wgs84Bounds : epsg3413bounds
-});
+  </head>
+  <body
+    class="sandcastle-loading"
+    data-sandcastle-bucket="bucket-requirejs.html"
+  >
+    <style>
+      @import url(../templates/bucket.css);
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay"><h1>Loading...</h1></div>
+    <div id="toolbar"></div>
+    <script id="cesium_sandcastle_script">
+      function startup(Cesium) {
+        "use strict";
+        //Sandcastle_Begin
+        var esri53028wkt =
+          "+proj=cass +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs";
+        var viewer = new Cesium.Viewer("cesiumContainer", {
+          mapProjection: new Cesium.Proj4Projection({
+            wellKnownText: esri53028wkt,
+          }),
+          sceneMode: Cesium.SceneMode.COLUMBUS_VIEW,
+        });
+        var epsg3413wkt =
+          "+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs";
+        var epsg3413bounds = Cesium.Rectangle.fromDegrees(
+          -180.0,
+          60.0,
+          180.0,
+          90.0
+        );
+        var epsg3413mapProjection = new Cesium.Proj4Projection({
+          wellKnownText: epsg3413wkt,
+          wgs84Bounds: epsg3413bounds,
+        });
 
-// Add WMTS layer served from epsg3413: https://epsg.io/3413
-// See capabilities XML: https://map1.vis.earthdata.nasa.gov/wmts-arctic/wmts.cgi?SERVICE=WMTS&request=GetCapabilities
-var tilingScheme = new Cesium.ProjectedImageryTilingScheme({
-    mapProjection : epsg3413mapProjection,
-    projectedRectangle : new Cesium.Rectangle(-4194304, -4194304, 4194304, 4194304),
-    numberOfLevelZeroTilesX : 2,
-    numberOfLevelZeroTilesY : 2
-});
+        // Add WMTS layer served from epsg3413: https://epsg.io/3413
+        // See capabilities XML: https://map1.vis.earthdata.nasa.gov/wmts-arctic/wmts.cgi?SERVICE=WMTS&request=GetCapabilities
+        var tilingScheme = new Cesium.ProjectedImageryTilingScheme({
+          mapProjection: epsg3413mapProjection,
+          projectedRectangle: new Cesium.Rectangle(
+            -4194304,
+            -4194304,
+            4194304,
+            4194304
+          ),
+          numberOfLevelZeroTilesX: 2,
+          numberOfLevelZeroTilesY: 2,
+        });
 
-var arcticProvider = new Cesium.WebMapTileServiceImageryProvider({
-    url : 'https://map1.vis.earthdata.nasa.gov/wmts-arctic/wmts.cgi',
-    tileMatrixSetID : 'EPSG3413_250m',
-    layer : 'OSM_Land_Water_Map',
-    tilingScheme : tilingScheme,
-    style : 'default',
-    format : 'image/png',
-    tileWidth : 512,
-    tileHeight : 512,
-    maximumLevel : 5
-});
+        var arcticProvider = new Cesium.WebMapTileServiceImageryProvider({
+          url: "https://map1.vis.earthdata.nasa.gov/wmts-arctic/wmts.cgi",
+          tileMatrixSetID: "EPSG3413_250m",
+          layer: "OSM_Land_Water_Map",
+          tilingScheme: tilingScheme,
+          style: "default",
+          format: "image/png",
+          tileWidth: 512,
+          tileHeight: 512,
+          maximumLevel: 5,
+        });
 
-var arcticImageryLayer = viewer.imageryLayers.addImageryProvider(arcticProvider);
-arcticImageryLayer.alpha = 0.8;
-arcticImageryLayer.brightness = 1.8;
+        var arcticImageryLayer = viewer.imageryLayers.addImageryProvider(
+          arcticProvider
+        );
+        arcticImageryLayer.alpha = 0.8;
+        arcticImageryLayer.brightness = 1.8;
 
-var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
-var epsg3031Bounds = Cesium.Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
-var epsg3031mapProjection = new Cesium.Proj4Projection({
-    wellKnownText : epsg3031wkt,
-    wgs84Bounds : epsg3031Bounds
-});
+        var epsg3031wkt =
+          "+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs";
+        var epsg3031Bounds = Cesium.Rectangle.fromDegrees(
+          -180.0,
+          -90.0,
+          180.0,
+          -60.0
+        );
+        var epsg3031mapProjection = new Cesium.Proj4Projection({
+          wellKnownText: epsg3031wkt,
+          wgs84Bounds: epsg3031Bounds,
+        });
 
-// Add TMS layer derived from Landsat Imagery Mosaic of Antarctica (LIMA): https://lima.usgs.gov/access.php
-var limaProvider = new Cesium.TileMapServiceImageryProvider({
-    url : '../../SampleData/LIMAportion/',
-    mapProjection : epsg3031mapProjection
-});
+        // Add TMS layer derived from Landsat Imagery Mosaic of Antarctica (LIMA): https://lima.usgs.gov/access.php
+        var limaProvider = new Cesium.TileMapServiceImageryProvider({
+          url: "../../SampleData/LIMAportion/",
+          mapProjection: epsg3031mapProjection,
+        });
 
-viewer.imageryLayers.addImageryProvider(limaProvider);
+        viewer.imageryLayers.addImageryProvider(limaProvider);
 
-// Add single-tile elevation of Brazil projected to ESRI53009 (https://epsg.io/53009) by QGIS and converted to png
-var brazilMollweide = viewer.imageryLayers.addImageryProvider(new Cesium.SingleTileProjectedImageryProvider({
-    url : '../../SampleData/Brazil_elevation_ESRI53009.png',
-    projectedRectangle : new Cesium.Rectangle(-8309084.8709259927272797,-6474832.4202510649338365,-2331162.9914685478433967,1661637.9380288750398904),
-    mapProjection : new Cesium.Proj4Projection({
-        wellKnownText : '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m no_defs'
-    })
-}));
+        // Add single-tile elevation of Brazil projected to ESRI53009 (https://epsg.io/53009) by QGIS and converted to png
+        var brazilMollweide = viewer.imageryLayers.addImageryProvider(
+          new Cesium.SingleTileProjectedImageryProvider({
+            url: "../../SampleData/Brazil_elevation_ESRI53009.png",
+            projectedRectangle: new Cesium.Rectangle(
+              -8309084.8709259927272797,
+              -6474832.4202510649338365,
+              -2331162.9914685478433967,
+              1661637.9380288750398904
+            ),
+            mapProjection: new Cesium.Proj4Projection({
+              wellKnownText:
+                "+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m no_defs",
+            }),
+          })
+        );
 
-brazilMollweide.alpha = 0.7;
+        brazilMollweide.alpha = 0.7;
 
-//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    window.startupCalled = true;
-    startup(Cesium);
-}
-</script>
-</body>
+        //Sandcastle_End
+        Sandcastle.finishedLoading();
+      }
+      if (typeof Cesium !== "undefined") {
+        window.startupCalled = true;
+        startup(Cesium);
+      }
+    </script>
+  </body>
 </html>
