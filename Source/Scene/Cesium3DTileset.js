@@ -898,6 +898,13 @@ function Cesium3DTileset(options) {
    */
   this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
+  /**
+   * Function for examining vector lines as they are being streamed.
+   *
+   * @private
+   */
+  this.examineVectorLinesFunction = undefined;
+
   var that = this;
   var resource;
   when(options.url)
@@ -1652,6 +1659,20 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       );
       //>>includeEnd('debug');
       Cartesian2.clone(value, this._imageBasedLightingFactor);
+    },
+  },
+
+  /**
+   * Minimum and maximum heights that vector tiles clamped to surfaces will clamp to.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Cartesian2}
+   * @default undefined
+   */
+  minimumMaximumVectorHeights: {
+    get: function () {
+      return this._minimumMaximumVectorHeights;
     },
   },
 });
