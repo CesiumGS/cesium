@@ -719,25 +719,27 @@ describe(
       );
     });
 
+    function loadTilesetAtFullDetail(url) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        tileset.maximumScreenSpaceError = 0.0;
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      });
+    }
+
     it("renders pickPrimitive during pick pass if defined", function () {
       viewRootOnly();
-      return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(
-        function (batchTableTileset) {
-          batchTableTileset.maximumScreenSpaceError = 0.0;
-          var options = {
-            pickPrimitive: batchTableTileset,
-          };
-          return Cesium3DTilesTester.loadTileset(
-            scene,
-            tilesetUrl,
-            options
-          ).then(function (tileset) {
-            tileset.maximumScreenSpaceError = 0.0;
-            expect(tileset.pickPrimitive).toEqual(batchTableTileset);
-            expect(scene).toPickPrimitive(batchTableTileset);
-          });
-        }
-      );
+      return when
+        .all([
+          loadTilesetAtFullDetail(tilesetUrl),
+          loadTilesetAtFullDetail(withBatchTableUrl),
+        ])
+        .then(function (tilesets) {
+          tilesets[0].pickPrimitive = tilesets[1];
+          expect(tilesets[0].pickPrimitive).toEqual(tilesets[1]);
+          expect(scene).toPickPrimitive(tilesets[1]);
+        });
     });
 
     it("verify statistics", function () {
