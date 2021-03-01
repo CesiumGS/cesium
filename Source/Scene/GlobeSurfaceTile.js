@@ -644,7 +644,7 @@ function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
   createMeshOptions.x = x;
   createMeshOptions.y = y;
   createMeshOptions.level = level;
-  createMeshOptions.exaggeration = frameState.exaggeration;
+  createMeshOptions.exaggeration = frameState.terrainExaggeration;
   createMeshOptions.throttle = true;
 
   var terrainData = surfaceTile.terrainData;
