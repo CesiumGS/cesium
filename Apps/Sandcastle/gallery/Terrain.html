@@ -35,7 +35,9 @@
       <div id="zoomButtons"></div>
       <div id="showQuadtreeLevel"></div>
       <div id="showTestedTriangles"></div>
+      <div id="showTileRectangle"></div>
       <div id="sampleButtons"></div>
+      <div id="showOBB"></div>
     </div>
     <script id="cesium_sandcastle_script">
       function startup(Cesium) {
@@ -100,13 +102,19 @@
           terrainProvider: arcGisTerrainProvider,
         });
         viewer.scene.globe.enableLighting = false;
+        // viewer.scene.globe.depthTestAgainstTerrain = false;
         viewer.scene.fog.enabled = false;
 
         window.viewer = viewer;
 
         var selectedQuadTreeAtLevel = null;
         var showTestedTriangles = false;
+        var selectedShowTileRectangle = false;
+        var selectedShowOBB = false;
 
+        var tileRectDataSource = new Cesium.CustomDataSource(
+          "tileRectDataSource"
+        );
         var quadTreeDataSource = new Cesium.CustomDataSource("quadtree");
 
         var intersectedTriangleDataSource = new Cesium.CustomDataSource(
@@ -118,12 +126,15 @@
         var testedPointsDataSource = new Cesium.CustomDataSource(
           "testedPoints"
         );
+        var obbDataSource = new Cesium.CustomDataSource("obbDataSource");
         var axisPrimitiveCollection = new Cesium.PrimitiveCollection();
 
         viewer.dataSources.add(quadTreeDataSource);
         viewer.dataSources.add(intersectedTriangleDataSource);
+        viewer.dataSources.add(tileRectDataSource);
         viewer.dataSources.add(testedTrianglesDataSource);
         viewer.dataSources.add(testedPointsDataSource);
+        viewer.dataSources.add(obbDataSource);
         viewer.scene.primitives.add(axisPrimitiveCollection);
 
         function localToWorld(transform, local) {
@@ -134,7 +145,7 @@
           );
         }
 
-        function drawQuadTreeNode(transform, node, color) {
+        function drawQuadTreeNode(transform, node, obb, color) {
           var topLeft = node.topLeft;
           var bottomRight = node.bottomRight;
           var minHeight = node.minHeight;
@@ -172,11 +183,37 @@
           );
 
           var rect = new Cesium.Rectangle(
-            topLeftCartographic.longitude,
-            topLeftCartographic.latitude,
-            bottomRightCartographic.longitude,
-            bottomRightCartographic.latitude
+            Math.min(
+              topLeftCartographic.longitude,
+              bottomRightCartographic.longitude
+            ),
+            Math.min(
+              topLeftCartographic.latitude,
+              bottomRightCartographic.latitude
+            ),
+            Math.max(
+              bottomRightCartographic.longitude,
+              topLeftCartographic.longitude
+            ),
+            Math.max(
+              bottomRightCartographic.latitude,
+              topLeftCartographic.latitude
+            )
           );
+
+          if (rect.north < rect.south) {
+            console.warn("invalid node", rect, node);
+            var tmp = rect.north;
+            rect.north = rect.south;
+            rect.south = tmp;
+          }
+
+          // if (rect.north < rect.south) {
+          //   console.warn("invalid node", rect, node);
+          //   var tmp = rect.north;
+          //   rect.north = rect.south;
+          //   rect.south = tmp;
+          // }
 
           quadTreeDataSource.entities.add({
             rectangle: {
@@ -191,13 +228,13 @@
           });
         }
 
-        function addDot(transform, local, color, radius) {
+        function addDot(transform, local, color, radius, dataSource) {
           radius = radius || 50;
           var point = localToWorld(transform, local);
-          viewer.entities.add({
+          dataSource.entities.add({
             position: point,
             ellipsoid: {
-              radii: new Cesium.Cartesian3(50.0, 50.0, 50.0),
+              radii: new Cesium.Cartesian3(radius, radius, radius),
               material: color,
             },
           });
@@ -210,7 +247,26 @@
               dataSource.entities.add({
                 position: p,
                 ellipsoid: {
-                  radii: new Cesium.Cartesian3(10.0, 10.0, 10.0),
+                  radii: new Cesium.Cartesian3(10000.0, 10000.0, 10000.0),
+                  material: color,
+                },
+              });
+            }
+          }
+        }
+
+        function drawSphere(color, dataSource, spheres) {
+          if (spheres && spheres.length) {
+            for (var i = 0; i < spheres.length; i++) {
+              var sphere = spheres[i];
+              dataSource.entities.add({
+                position: sphere.center,
+                ellipsoid: {
+                  radii: new Cesium.Cartesian3(
+                    sphere.radius,
+                    sphere.radius,
+                    sphere.radius
+                  ),
                   material: color,
                 },
               });
@@ -347,12 +403,108 @@
           }
         }
 
-        function drawRectangle(rect) {}
+        function drawRectangle(dataSource, rect) {
+          dataSource.entities.add({
+            id: "tile-rect",
+            rectangle: {
+              coordinates: rect,
+              material: Cesium.Color.CYAN.withAlpha(0.5),
+              rotation: Cesium.Math.toRadians(0),
+              extrudedHeight: 10000,
+              height: 0,
+              outline: true,
+              outlineColor: Cesium.Color.BLACK,
+            },
+          });
+        }
+
+        // function drawBoundingBox() {
+        //   var obb =
+        //     window.lastPickDetails &&
+        //     window.lastPickDetails.mesh &&
+        //     window.lastPickDetails.mesh._trianglePicking &&
+        //     window.lastPickDetails.mesh._trianglePicking.obb;
+        //   if (oob) {
+        //     drawPointList(Cesium.Color.CYAN, testedTrianglesDataSource, [
+        //       oob.center,
+        //     ]);
+        //   }
+        // }
+
+        function drawBoundingSphere() {
+          var sphere =
+            window.lastPickDetails &&
+            window.lastPickDetails.mesh &&
+            window.lastPickDetails.mesh._trianglePicking &&
+            window.lastPickDetails.mesh._trianglePicking.sphere;
+          if (sphere) {
+            drawSphere(
+              Cesium.Color.ORANGE.withAlpha(0.1),
+              testedTrianglesDataSource,
+              [sphere]
+            );
+          }
+        }
+
+        function showTileRectangle(show) {
+          var rect =
+            window.lastPickDetails &&
+            window.lastPickDetails.mesh &&
+            window.lastPickDetails.mesh._trianglePicking &&
+            window.lastPickDetails.mesh._trianglePicking._rectangle;
+          tileRectDataSource.entities.removeAll();
+          if (rect && show) {
+            drawRectangle(tileRectDataSource, rect);
+          }
+        }
+
+        function showOBB(show, dataSource) {
+          dataSource.entities.removeAll();
+          if (!show) {
+            return;
+          }
+
+          function c(x, y, z) {
+            return new Cesium.Cartesian3(x, y, z);
+          }
+
+          var C = Cesium.Color;
+          var transform = window.lastPickDetails.traceDetails.transform;
+
+          var x;
+          var y;
+          var z;
+          for (x = -0.5; x <= 0.5; x += 0.1) {
+            for (y = -0.5; y <= 0.5; y += 0.1) {
+              for (z = -0.5; z <= 0.5; z += 0.1) {
+                var color = C.VIOLET;
+                if (x < 0 && y < 0) {
+                  // TOP LEFT
+                  color = C.BLUE;
+                }
+                if (x > 0 && y > 0) {
+                  // BOTTOM RIGHT
+                  color = C.ORANGE;
+                }
+                if (x < 0 && y > 0) {
+                  // BOTTOM LEFT
+                  color = C.GREEN;
+                }
+                if (x > 0 && y < 0) {
+                  // TOP RIGHT
+                  color = C.GOLD;
+                }
+                addDot(transform, c(x, y, z), color, 50000, dataSource);
+              }
+            }
+          }
+        }
 
         function showQuadTreeAtLevel(level) {
           if (window.lastPickDetails) {
             var root = window.lastPickDetails.mesh._trianglePicking._quadtree;
             var transform = window.lastPickDetails.traceDetails.transform;
+            var obb = window.lastPickDetails.mesh._trianglePicking.obb;
 
             var nodes = flatten(root);
             var nodesAtLevel = nodes.filter(function (n) {
@@ -362,11 +514,11 @@
             quadTreeDataSource.entities.removeAll();
             for (var i = 0; i < nodesAtLevel.length; i++) {
               var n = nodesAtLevel[i];
-              var color = Cesium.Color.GREEN.withAlpha(0.05);
+              var color = Cesium.Color.GREEN.withAlpha(0.4);
               if (n.isHit) {
-                color = Cesium.Color.GOLD.withAlpha(0.2);
+                color = Cesium.Color.GOLD.withAlpha(0.4);
               }
-              drawQuadTreeNode(transform, n, color);
+              drawQuadTreeNode(transform, n, obb, color);
             }
           }
         }
@@ -413,6 +565,45 @@
           ],
           "showTestedTriangles"
         );
+        Sandcastle.addToolbarMenu(
+          [
+            {
+              text: "Hide Orientated Bounding Box",
+              onselect: function () {
+                selectedShowOBB = false;
+                showOBB(selectedShowOBB, obbDataSource);
+              },
+            },
+            {
+              text: "Show Orientated Bounding Box",
+              onselect: function () {
+                selectedShowOBB = true;
+                showOBB(selectedShowOBB, obbDataSource);
+              },
+            },
+          ],
+          "showOBB"
+        );
+
+        Sandcastle.addToolbarMenu(
+          [
+            {
+              text: "Hide Tile Rectangle",
+              onselect: function () {
+                selectedShowTileRectangle = false;
+                showTileRectangle(selectedShowTileRectangle);
+              },
+            },
+            {
+              text: "Show Tile Rectangle",
+              onselect: function () {
+                selectedShowTileRectangle = true;
+                showTileRectangle(selectedShowTileRectangle);
+              },
+            },
+          ],
+          "showTileRectangle"
+        );
 
         var scene = viewer.scene;
         var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -435,6 +626,7 @@
 
             debugger;
             var transform = details.traceDetails.transform;
+            var inverseTransform = details.traceDetails.inverseTransform;
 
             var axis = new Cesium.DebugModelMatrixPrimitive({
               modelMatrix: transform,
@@ -453,23 +645,11 @@
               },
             });
 
-            // draw the tile rectangle
-            // viewer.entities.add({
-            //   id: "tile-rect",
-            //   rectangle: {
-            //     coordinates: details.mesh._trianglePicking._rectangle,
-            //     material: Cesium.Color.CYAN.withAlpha(0.5),
-            //     rotation: Cesium.Math.toRadians(0),
-            //     extrudedHeight: 10000,
-            //     height: 0,
-            //     outline: true,
-            //     outlineColor: Cesium.Color.BLACK,
-            //   },
-            // });
-
             setShowTestTriangles(showTestedTriangles);
             showIntersectedTriangles();
             showQuadTreeAtLevel(selectedQuadTreeAtLevel);
+            showTileRectangle(selectedShowTileRectangle);
+            showOBB(selectedShowOBB, obbDataSource);
           }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 

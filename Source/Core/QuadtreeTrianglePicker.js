@@ -14,6 +14,8 @@ function QuadtreeTrianglePicker(packedQuadtree, encoding, vertices, indices) {
   this._encoding = encoding;
   this._vertices = vertices;
   this._indices = indices;
+  this.obb = packedQuadtree.orientedBoundingBox;
+  this.sphere = packedQuadtree.boundingSphere3D;
 
   this._width = packedQuadtree.width;
   this._height = packedQuadtree.height;
@@ -317,6 +319,26 @@ QuadtreeTrianglePicker.prototype.rayIntersect = function (
   if (traceDetails) {
     traceDetails.testedPoints = [];
     traceDetails.testedTriangles = [];
+
+    var i = -1;
+    while (i++ < 100) {
+      var t0v0 = encoding.decodePosition(
+        vertices,
+        indices[i * 3],
+        new Cartesian3()
+      );
+      var t0v1 = encoding.decodePosition(
+        vertices,
+        indices[i * 3 + 1],
+        new Cartesian3()
+      );
+      var t0v2 = encoding.decodePosition(
+        vertices,
+        indices[i * 3 + 2],
+        new Cartesian3()
+      );
+      traceDetails.testedTriangles.push([t0v0, t0v1, t0v2]);
+    }
   }
 
   // for each intersected node - test every triangle which falls in that node
