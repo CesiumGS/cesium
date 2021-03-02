@@ -1089,7 +1089,7 @@ function requestSingleContent(tile) {
 
   var promise = resource.fetchArrayBuffer();
   if (!defined(promise)) {
-    return 0;
+    return 1;
   }
 
   var previousState = tile._contentState;
