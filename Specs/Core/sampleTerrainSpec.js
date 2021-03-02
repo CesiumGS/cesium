@@ -125,7 +125,7 @@ describe("Core/sampleTerrain", function () {
           .call(terrainProvider, x, y, level, request)
           .then(function (tile) {
             spyOn(tile, "createMesh").and.callThrough();
-            // return the original tile - after we've spied on the create mesh method
+            // return the original tile - after we've spied on the createMesh method
             return tile;
           });
       });

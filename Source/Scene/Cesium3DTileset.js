@@ -91,6 +91,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+ * @param {Object} [options.pickPrimitive] The primitive to be rendered during the pick pass instead of the tileset.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -144,6 +145,7 @@ function Cesium3DTileset(options) {
   this._url = undefined;
   this._basePath = undefined;
   this._root = undefined;
+  this._resource = undefined;
   this._asset = undefined; // Metadata for the entire tileset
   this._properties = undefined; // Metadata for per-model/point/etc properties
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -761,6 +763,13 @@ function Cesium3DTileset(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
+   * The primitive to be rendered during the pick pass instead of the tileset.
+   *
+   * @type {Object}
+   */
+  this.pickPrimitive = options.pickPrimitive;
+
+  /**
    * This property is for debugging only; it is not optimized for production use.
    * <p>
    * Determines if only the tiles from last frame should be used for rendering.  This
@@ -903,6 +912,7 @@ function Cesium3DTileset(options) {
     .then(function (url) {
       var basePath;
       resource = Resource.createIfNeeded(url);
+      that._resource = resource;
 
       // ion resources have a credits property we can use for additional attribution.
       that._credits = resource.credits;
@@ -1164,16 +1174,16 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The url to a tileset JSON file.
+   * The resource used to fetch the tileset JSON file
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {String}
+   * @type {Resource}
    * @readonly
    */
-  url: {
+  resource: {
     get: function () {
-      return this._url;
+      return this._resource;
     },
   },
 
@@ -1697,6 +1707,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
     this._basePath += "?v=" + tilesetVersion;
+    resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
 
@@ -2424,10 +2435,12 @@ function detectModelMatrixChanged(tileset, frameState) {
       tileset.modelMatrix,
       tileset._previousModelMatrix
     );
-    tileset._previousModelMatrix = Matrix4.clone(
-      tileset.modelMatrix,
-      tileset._previousModelMatrix
-    );
+    if (tileset._modelMatrixChanged) {
+      tileset._previousModelMatrix = Matrix4.clone(
+        tileset.modelMatrix,
+        tileset._previousModelMatrix
+      );
+    }
   }
 }
 
@@ -2539,13 +2552,17 @@ Cesium3DTileset.prototype.updateForPass = function (
   var passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
-    this._pass = pass;
-    tilesetPassState.ready = update(
-      this,
-      frameState,
-      passStatistics,
-      passOptions
-    );
+    if (frameState.passes.pick && defined(this.pickPrimitive)) {
+      this.pickPrimitive.update(frameState);
+    } else {
+      this._pass = pass;
+      tilesetPassState.ready = update(
+        this,
+        frameState,
+        passStatistics,
+        passOptions
+      );
+    }
   }
 
   if (ignoreCommands) {

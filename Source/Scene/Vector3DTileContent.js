@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import ComponentDatatype from "../Core/ComponentDatatype.js";
 import CesiumMath from "../Core/Math.js";
 import Matrix4 from "../Core/Matrix4.js";
@@ -297,12 +297,11 @@ function initialize(content, arrayBuffer, byteOffset) {
   var pointsPositionByteLength = view.getUint32(byteOffset, true);
   byteOffset += sizeOfUint32;
 
-  var featureTableString = getStringFromTypedArray(
+  var featureTableJson = getJsonFromTypedArray(
     uint8Array,
     byteOffset,
     featureTableJSONByteLength
   );
-  var featureTableJson = JSON.parse(featureTableString);
   byteOffset += featureTableJSONByteLength;
 
   var featureTableBinary = new Uint8Array(
@@ -320,12 +319,11 @@ function initialize(content, arrayBuffer, byteOffset) {
     //
     // We could also make another request for it, but that would make the property set/get
     // API async, and would double the number of numbers in some cases.
-    var batchTableString = getStringFromTypedArray(
+    batchTableJson = getJsonFromTypedArray(
       uint8Array,
       byteOffset,
       batchTableJSONByteLength
     );
-    batchTableJson = JSON.parse(batchTableString);
     byteOffset += batchTableJSONByteLength;
 
     if (batchTableBinaryByteLength > 0) {
