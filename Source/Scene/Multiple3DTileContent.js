@@ -21,30 +21,33 @@ import preprocess3DTileContent from "./preprocess3DTileContent.js";
  * @alias Multiple3DTileContent
  * @constructor
  *
+ * @param {Cesium3DTileset} tileset The tileset this content belongs to
+ * @param {Cesium3DTile} tile The content this content belongs to
+ * @param {Resource} tilesetResource The resource that points to the tileset. This will be used to derive each inner content's resource.
+ * @param {Object} extensionJson The <code>3DTILES_multiple_contents</code> extension JSON
+ *
  * @private
  */
 export default function Multiple3DTileContent(
   tileset,
   tile,
-  baseResource,
-  extensionJson,
-  factory
+  tilesetResource,
+  extensionJson
 ) {
   this._tileset = tileset;
   this._tile = tile;
-  this._baseResource = baseResource;
+  this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  // These arrays are undefined until they are needed
-  this._innerContentHeaders = undefined;
-  this._arrayFetchPromises = undefined;
-  this._payloads = undefined;
+  this._innerContentHeaders = extensionJson.content;
+
+  var contentCount = this._innerContentHeaders.length;
+  this._arrayFetchPromises = new Array(contentCount);
+  this._innerContentResources = new Array(contentCount);
 
   // undefined until all requests are scheduled
   this._contentsFetchedPromise = undefined;
   this._readyPromise = when.defer();
-
-  initialize(this, extensionJson, factory);
 }
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
@@ -190,42 +193,6 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
-function initialize(content, extensionJson, factory) {
-  var innerContentHeaders = extensionJson.content;
-  var contentCount = innerContentHeaders.length;
-
-  content._innerContentHeaders = innerContentHeaders;
-  content._arrayFetchPromises = new Array(contentCount);
-
-  /*
-  var innerContentJsons = extensionJson.content;
-  // TODO: what if some contents were not scheduled?
-  var innerContentReadyPromises = innerContentJsons.map(function (json) {
-    // TODO: the fetch inner contents should be a seperate promise
-    return requestInnerContent(content, json).then(function (innerContent) {
-      if (!defined(innerContent)) {
-        // TODO: request was not scheduled... what to do here?
-        return when.resolve();
-      }
-
-      content._contents.push(innerContent);
-      return innerContent.readyPromise;
-    });
-    // TODO: how do failures here impact statistics in Cesium3DTile?
-  });
-
-  when
-    .all(innerContentReadyPromises)
-    .then(function () {
-      content._readyPromise.resolve(content);
-    })
-    .otherwise(function (error) {
-      content._readyPromise.reject(error);
-    });
-
-  */
-}
-
 /**
  * @return {Number} The number of contn
  */
@@ -236,14 +203,13 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
       continue;
     }
 
-    var promise = requestInnerContent(this, this._innerContentHeaders[i]);
+    var promise = requestInnerContent(this, i);
     if (!defined(promise)) {
       requestBacklog++;
     }
     this._arrayFetchPromises[i] = promise;
   }
 
-  // TODO: Is this the right place for this?
   if (requestBacklog === 0) {
     this._contentsFetchedPromise = createInnerContents(this);
   }
@@ -251,13 +217,12 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   return requestBacklog;
 };
 
-/**
- * @return {Promise<ArrayBuffer|undefined>} A promise that returns true
- * @private
- */
-function requestInnerContent(multipleContent, innerContentHeader) {
+function requestInnerContent(multipleContent, index) {
+  var innerContentHeader = multipleContent._innerContentHeaders[index];
+
+  var tile = multipleContent.tile;
   var contentUri = innerContentHeader.uri;
-  var contentResource = multipleContent._baseResource.getDerivedResource({
+  var contentResource = multipleContent._tilesetResource.getDerivedResource({
     url: contentUri,
     preserveQueryParameters: true,
   });
@@ -265,7 +230,14 @@ function requestInnerContent(multipleContent, innerContentHeader) {
     contentResource.getUrlComponent()
   );
 
-  // TODO: set expiration query parameters?
+  var expired = tile.contentExpired;
+  if (expired) {
+    // Append a query parameter of the tile expiration date to prevent caching
+    contentResource.setQueryParameters({
+      expired: tile.expireDate.toString(),
+    });
+  }
+
   var request = new Request({
     throttle: true,
     throttleByServer: true,
@@ -277,9 +249,12 @@ function requestInnerContent(multipleContent, innerContentHeader) {
   });
   contentResource.request = request;
 
+  // Save the resource for later since it's used to construct
+  // Cesium3DTileContent objects.
+  multipleContent._innerContentResources[index] = contentResource;
+
   return contentResource.fetchArrayBuffer().otherwise(function (error) {
-    //TODO: this should call the contentFailed callback
-    console.error(error);
+    handleInnerContentFailed(multipleContent, error);
     return undefined;
   });
 }
@@ -288,33 +263,33 @@ function createInnerContents(multipleContent) {
   return when
     .all(multipleContent._arrayFetchPromises)
     .then(function (arrayBuffers) {
-      return arrayBuffers.map(function (arrayBuffer) {
+      return arrayBuffers.map(function (arrayBuffer, i) {
         if (!defined(arrayBuffer)) {
-          // TODO: missing a content. Should a warning be logged here
-          // or elsewhere?
-          console.warning("missing content");
+          // Content was not fetched. The error was handled in
+          // the fetch promise
           return undefined;
         }
 
+        var resource = multipleContent._innerContentResources[i];
+
         try {
-          return createInnerContent(multipleContent, arrayBuffer);
+          return createInnerContent(multipleContent, resource, arrayBuffer);
         } catch (error) {
-          // TODO: how to trigger the content failed event?
-          console.error(error);
+          handleInnerContentFailed(multipleContent, error);
           return undefined;
         }
       });
     })
     .then(function (contents) {
       multipleContent._contents = contents.filter(defined);
-      makeReadyPromise(multipleContent);
+      awaitReadyPromises(multipleContent);
     })
     .otherwise(function (error) {
-      console.error(error);
+      multipleContent._readyPromise.reject(error);
     });
 }
 
-function createInnerContent(multipleContent, arrayBuffer) {
+function createInnerContent(multipleContent, resource, arrayBuffer) {
   var preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
@@ -334,9 +309,7 @@ function createInnerContent(multipleContent, arrayBuffer) {
     content = contentFactory(
       multipleContent._tileset,
       multipleContent._tile,
-      // TODO: Where to get the resource?
-      multipleContent._contentResource,
-      // TODO: Change functions to take a Uint8Array?
+      resource,
       preprocessed.binaryPayload.buffer,
       0
     );
@@ -345,7 +318,7 @@ function createInnerContent(multipleContent, arrayBuffer) {
     content = contentFactory(
       multipleContent._tileset,
       multipleContent._tile,
-      multipleContent._contentResource,
+      resource,
       preprocessed.jsonPayload
     );
   }
@@ -353,7 +326,7 @@ function createInnerContent(multipleContent, arrayBuffer) {
   return content;
 }
 
-function makeReadyPromise(multipleContent) {
+function awaitReadyPromises(multipleContent) {
   var readyPromises = multipleContent._contents.map(function (content) {
     return content.readyPromise;
   });
@@ -368,95 +341,16 @@ function makeReadyPromise(multipleContent) {
     });
 }
 
-/*
-function requestInnerContent(multipleContent, innerContentJson, factory) {
-  var contentUri = innerContentJson.uri;
-  // TODO: preserve query parameters for this
-  var contentResource = multipleContent._baseResource.getDerivedResource({
-    url: contentUri,
-  });
-  var serverKey = RequestScheduler.getServerKey(
-    contentResource.getUrlComponent()
-  );
-
-  // TODO: set expiration query parameters?
-
-  var request = new Request({
-    throttle: true,
-    throttleByServer: true,
-    type: RequestType.TILES3D,
-    priorityFunction: function () {
-      return multipleContent._tile.priority;
-    },
-    serverKey: serverKey,
-  });
-
-  contentResource.request = request;
-
-  var promise = contentResource.fetchArrayBuffer();
-
-  if (!defined(promise)) {
-    //TODO: what to do here if the request wasn't prioritized?
-    return when.resolve(undefined);
-  }
-
-  return promise.then(function (arrayBuffer) {
-    var tile = multipleContent._tile;
-    var tileset = multipleContent._tileset;
-    var innerContent;
-
-    // TODO: if the tile was destroyed before the buffer was loaded, reject
-    // the promise, or is something else needed?
-    var uint8Array = new Uint8Array(arrayBuffer);
-
-    var magic = getMagic(uint8Array);
-    var contentIdentifer = magic;
-    if (magic === "glTF") {
-      contentIdentifer = "glb";
-    }
-
-    var contentFactory = factory[contentIdentifer];
-
-    // TODO: for vector and geom should the tileset disable skip LOD?
-    if (defined(contentFactory)) {
-      innerContent = contentFactory(
-        tileset,
-        tile,
-        contentResource,
-        arrayBuffer,
-        0
-      );
-    } else {
-      var json = getJsonContent(arrayBuffer, 0);
-      if (defined(json.geometricError)) {
-        // Most likely a tileset JSON
-        throw new RuntimeError(
-          "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
-        );
-      } else if (defined(json.asset)) {
-        // Most likely a glTF. Tileset JSON also has an "asset" property
-        // so this check needs to happen second
-        innerContent = contentFactory.gltf(
-          tileset,
-          tile,
-          contentResource,
-          json
-        );
-      }
-    }
-
-    if (!defined(innerContent)) {
-      throw new RuntimeError("Invalid tile content.");
-    }
-
-    // TODO: Should tile.hasImplicitContent be updated?
-    // TODO: Should tile.expireDate be updated?
-
-    return innerContent;
-  });
+function handleInnerContentFailed(multipleContent, error) {
+  // TODO: What's the best way to report this as an even to the tile
+  // and to the tileset? here are some ideas:
+  //
+  // 1. A callback passed into the constructor?
+  // 2. Access multipleContent._tile directly to raise events?
+  // 3. Have a multipleContent.innerContentFailed event and have the tile
+  //  subscribe to that?
+  console.log(error);
 }
-
-*/
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
