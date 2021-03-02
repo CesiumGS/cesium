@@ -212,10 +212,31 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     gltf.buffers.length > 0 &&
     defined(gltf.bufferViews)
   ) {
+    var i;
+    var j;
+    var hasFeatureIds = false;
+    var meshes = gltf.meshes;
+    if (defined(meshes)) {
+      var meshesLength = meshes.length;
+      for (i = 0; i < meshesLength; ++i) {
+        var mesh = gltf.meshes[i];
+        var primitives = mesh.primitives;
+        var primitivesLength = primitives.length;
+        for (j = 0; j < primitivesLength; ++j) {
+          if (defined(primitives[j].attributes._FEATURE_ID_0)) {
+            hasFeatureIds = true;
+          }
+        }
+      }
+    }
+
+    if (!hasFeatureIds) {
+      return;
+    }
+
     var buffer = gltf.buffers[0].extras._pipeline.source;
     var bufferViewsLength = gltf.bufferViews.length;
     var bufferViews = {};
-    var i;
 
     for (i = 0; i < bufferViewsLength; ++i) {
       var bufferView = gltf.bufferViews[i];
