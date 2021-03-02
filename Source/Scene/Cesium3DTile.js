@@ -34,6 +34,7 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+import Pass from "../Renderer/Pass.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -1615,7 +1616,14 @@ Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
   updateClippingPlanes(this, tileset);
   applyDebugSettings(this, tileset, frameState, passOptions);
   updateContent(this, tileset, frameState);
-  this._commandsLength = frameState.commandList.length - initCommandLength;
+  var commandsLength = (this._commandsLength =
+    frameState.commandList.length - initCommandLength);
+
+  for (var i = 0; i < commandsLength; ++i) {
+    var command = frameState.commandList[initCommandLength + i];
+    command.depthForTranslucentClassification =
+      command.pass === Pass.TRANSLUCENT;
+  }
 
   this.clippingPlanesDirty = false; // reset after content update
 };
