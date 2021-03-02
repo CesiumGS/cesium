@@ -5,6 +5,7 @@
 ##### Additions :tada:
 
 - Added `Cesium3DTileset.pickPrimitive` for rendering primitives instead of the tileset during the pick pass.
+- Added `TranslucentTileClassification` for classifying translucent 3D Tiles.
 
 ### 1.79.1 - 2021-03-01
 
