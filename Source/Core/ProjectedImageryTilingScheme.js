@@ -2,7 +2,6 @@ import CesiumMath from "./Math.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
-import defineProperties from "./defineProperties.js";
 import GeographicTilingScheme from "./GeographicTilingScheme.js";
 import Ellipsoid from "./Ellipsoid.js";
 import Rectangle from "./Rectangle.js";
@@ -68,7 +67,7 @@ function ProjectedImageryTilingScheme(options) {
   this._numberOfLevelZeroTilesY = numberOfLevelZeroTilesY;
 }
 
-defineProperties(ProjectedImageryTilingScheme.prototype, {
+Object.defineProperties(ProjectedImageryTilingScheme.prototype, {
   /**
    * Gets the ellipsoid that is tiled by this tiling scheme.
    * @memberof ProjectedImageryTilingScheme.prototype

@@ -2,6 +2,7 @@ import { SingleTileProjectedImageryProvider } from "../../Source/Cesium.js";
 import { Ellipsoid } from "../../Source/Cesium.js";
 import { ProjectedImageryTilingScheme } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
+import { Request } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
 import { WebMercatorProjection } from "../../Source/Cesium.js";
 import { Imagery } from "../../Source/Cesium.js";
@@ -139,12 +140,17 @@ describe("Core/SingleTileProjectedImageryProvider", function () {
     var imageUrl = "Data/Images/Red16x16.png";
 
     spyOn(Resource._Implementations, "createImage").and.callFake(function (
-      url,
+      request,
       crossOrigin,
       deferred
     ) {
+      var url = request.url;
       expect(url).toEqual(imageUrl);
-      Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+      Resource._DefaultImplementations.createImage(
+        request,
+        crossOrigin,
+        deferred
+      );
     });
 
     var provider = new SingleTileProjectedImageryProvider({
@@ -159,7 +165,7 @@ describe("Core/SingleTileProjectedImageryProvider", function () {
       return provider.ready;
     }).then(function () {
       return when(provider.requestImage(0, 0, 0), function (image) {
-        expect(image).toBeInstanceOf(Image);
+        expect(image).toBeImageOrImageBitmap();
       });
     });
   });
@@ -210,14 +216,14 @@ describe("Core/SingleTileProjectedImageryProvider", function () {
     });
 
     Resource._Implementations.createImage = function (
-      url,
+      request,
       crossOrigin,
       deferred
     ) {
       if (tries === 2) {
         // Succeed after 2 tries
         Resource._DefaultImplementations.createImage(
-          "Data/Images/Red16x16.png",
+          new Request({ url: "Data/Images/Red16x16.png" }),
           crossOrigin,
           deferred
         );
@@ -239,7 +245,7 @@ describe("Core/SingleTileProjectedImageryProvider", function () {
       return pollToPromise(function () {
         return imagery.state === ImageryState.RECEIVED;
       }).then(function () {
-        expect(imagery.image).toBeInstanceOf(Image);
+        expect(imagery.image).toBeImageOrImageBitmap();
         expect(tries).toEqual(2);
         imagery.releaseReference();
       });

@@ -1,6 +1,5 @@
 import Check from "../Core/Check.js";
 import Credit from "../Core/Credit.js";
-import defineProperties from "../Core/defineProperties.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Event from "../Core/Event.js";
 import ProjectedImageryTilingScheme from "../Core/ProjectedImageryTilingScheme.js";
@@ -9,6 +8,7 @@ import Resource from "../Core/Resource.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import TileProviderError from "../Core/TileProviderError.js";
 import when from "../ThirdParty/when.js";
+import ImageryProvider from "./ImageryProvider.js";
 
 /**
  * Provides a single, top-level imagery tile.  The single image may be in any projection.
@@ -98,13 +98,13 @@ function SingleTileProjectedImageryProvider(options) {
   }
 
   function doRequest() {
-    when(resource.fetchImage(), success, failure);
+    ImageryProvider.loadImage(null, resource).then(success).otherwise(failure);
   }
 
   doRequest();
 }
 
-defineProperties(SingleTileProjectedImageryProvider.prototype, {
+Object.defineProperties(SingleTileProjectedImageryProvider.prototype, {
   /**
    * Gets the URL of the single, top-level imagery tile.
    * @memberof SingleTileProjectedImageryProvider.prototype
@@ -364,7 +364,7 @@ SingleTileProjectedImageryProvider.prototype.getTileCredits = function (
  * @param {Number} y The tile Y coordinate.
  * @param {Number} level The tile level.
  * @param {Request} [request] The request object. Intended for internal use only.
- * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
+ * @returns {Promise.<HTMLImageElement|HTMLCanvasElement>|undefined} A promise for the image that will resolve when the image is available, or
  *          undefined if there are too many active requests to the server, and the request
  *          should be retried later.  The resolved image may be either an
  *          Image or a Canvas DOM object.

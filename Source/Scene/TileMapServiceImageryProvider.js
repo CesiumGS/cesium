@@ -274,12 +274,12 @@ TileMapServiceImageryProvider.prototype._metadataSuccess = function (xml) {
         ellipsoid: options.ellipsoid,
       });
     } else if (defined(options.mapProjection)) {
-      var west = Number.parseFloat(origin.getAttribute("x"));
-      var south = Number.parseFloat(origin.getAttribute("y"));
+      var west = parseFloat(origin.getAttribute("x"));
+      var south = parseFloat(origin.getAttribute("y"));
 
-      var width = Number.parseFloat(format.getAttribute("width"));
-      var height = Number.parseFloat(format.getAttribute("height"));
-      var unitsPerPixel = Number.parseFloat(
+      var width = parseFloat(format.getAttribute("width"));
+      var height = parseFloat(format.getAttribute("height"));
+      var unitsPerPixel = parseFloat(
         tilesets.childNodes[1].getAttribute("units-per-pixel")
       );
       var east = west + unitsPerPixel * width;
