@@ -88,7 +88,7 @@ function Vector3DTileClampedPolylines(options) {
   this._startEllipsoidNormals = undefined;
   this._endEllipsoidNormals = undefined;
   this._startPositionAndHeights = undefined;
-  this._startFaceNormalAndVertexCorners = undefined;
+  this._startFaceNormalAndVertexCornerIds = undefined;
   this._endPositionAndHeights = undefined;
   this._endFaceNormalAndHalfWidths = undefined;
   this._vertexBatchIds = undefined;
@@ -270,8 +270,8 @@ function createVertexArray(polylines, context) {
       polylines._startPositionAndHeights = new Float32Array(
         result.startPositionAndHeights
       );
-      polylines._startFaceNormalAndVertexCorners = new Float32Array(
-        result.startFaceNormalAndVertexCorners
+      polylines._startFaceNormalAndVertexCornerIds = new Float32Array(
+        result.startFaceNormalAndVertexCornerIds
       );
       polylines._endPositionAndHeights = new Float32Array(
         result.endPositionAndHeights
@@ -298,8 +298,8 @@ function createVertexArray(polylines, context) {
     var endEllipsoidNormals = polylines._endEllipsoidNormals;
     var startPositionAndHeights = polylines._startPositionAndHeights;
     var endPositionAndHeights = polylines._endPositionAndHeights;
-    var startFaceNormalAndVertexCorners =
-      polylines._startFaceNormalAndVertexCorners;
+    var startFaceNormalAndVertexCornerIds =
+      polylines._startFaceNormalAndVertexCornerIds;
     var endFaceNormalAndHalfWidths = polylines._endFaceNormalAndHalfWidths;
     var batchIdAttribute = polylines._vertexBatchIds;
 
@@ -310,7 +310,7 @@ function createVertexArray(polylines, context) {
     byteLength +=
       startPositionAndHeights.byteLength + endPositionAndHeights.byteLength;
     byteLength +=
-      startFaceNormalAndVertexCorners.byteLength +
+      startFaceNormalAndVertexCornerIds.byteLength +
       endFaceNormalAndHalfWidths.byteLength;
     byteLength += batchIdAttribute.byteLength + indices.byteLength;
 
@@ -337,9 +337,9 @@ function createVertexArray(polylines, context) {
       typedArray: endPositionAndHeights,
       usage: BufferUsage.STATIC_DRAW,
     });
-    var startFaceNormalAndVertexCornersBuffer = Buffer.createVertexBuffer({
+    var startFaceNormalAndVertexCornerIdsBuffer = Buffer.createVertexBuffer({
       context: context,
-      typedArray: startFaceNormalAndVertexCorners,
+      typedArray: startFaceNormalAndVertexCornerIds,
       usage: BufferUsage.STATIC_DRAW,
     });
     var endFaceNormalAndHalfWidthsBuffer = Buffer.createVertexBuffer({
@@ -390,7 +390,7 @@ function createVertexArray(polylines, context) {
       },
       {
         index: attributeLocations.startFaceNormalAndVertexCorner,
-        vertexBuffer: startFaceNormalAndVertexCornersBuffer,
+        vertexBuffer: startFaceNormalAndVertexCornerIdsBuffer,
         componentDatatype: ComponentDatatype.FLOAT,
         componentsPerAttribute: 4,
       },
@@ -429,7 +429,7 @@ function createVertexArray(polylines, context) {
     polylines._startEllipsoidNormals = undefined;
     polylines._endEllipsoidNormals = undefined;
     polylines._startPositionAndHeights = undefined;
-    polylines._startFaceNormalAndVertexCorners = undefined;
+    polylines._startFaceNormalAndVertexCornerIds = undefined;
     polylines._endPositionAndHeights = undefined;
     polylines._endFaceNormalAndHalfWidths = undefined;
     polylines._vertexBatchIds = undefined;
