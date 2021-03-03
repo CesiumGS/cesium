@@ -39,11 +39,40 @@ export default function Multiple3DTileContent(
   this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  this._innerContentHeaders = extensionJson.content;
+  var contentHeaders = extensionJson.content;
+  this._innerContentHeaders = contentHeaders;
 
   var contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
+
   this._innerContentResources = new Array(contentCount);
+  this._serverKeys = new Array(contentCount);
+
+  var priorityFunction = function () {
+    return tile.priority;
+  };
+  for (var i = 0; i < contentCount; i++) {
+    var contentResource = tilesetResource.getDerivedResource({
+      url: contentHeaders[i].uri,
+      preserveQueryParameters: true,
+    });
+
+    var serverKey = RequestScheduler.getServerKey(
+      contentResource.getUrlComponent()
+    );
+
+    var request = new Request({
+      throttle: true,
+      throttleByServer: true,
+      type: RequestType.TILES3D,
+      priorityFunction: priorityFunction,
+      serverKey: serverKey,
+    });
+    contentResource.request = request;
+
+    this._innerContentResources[i] = contentResource;
+    this._serverKeys[i] = serverKey;
+  }
 
   // undefined until all requests are scheduled
   this._contentsFetchedPromise = undefined;
@@ -193,65 +222,63 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
-/*
-function canIScheduleStuff() {
-  for (header in headers) {
-    if (!RequestScheuduler.serverHasOpenSlots(serverKey)) {
-      return false
+/**
+ * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
+ * {@link Multiple3DTileContent#contentFetchedPromise} is defined. This promise
+ * becomes available as soon as all requests are scheduled.
+ *
+ * @return {Number} The number of attempted requests that were unable to be scheduled.
+ * @private
+ */
+Multiple3DTileContent.prototype.requestInnerContents = function () {
+  // It's possible for these promises to leak content array buffers if the
+  // camera moves before they all are scheduled. To prevent this leak, check
+  // if we can schedule all the requests at once. If not, no requests are
+  // scheduled
+  if (!canScheduleAllRequests(this._serverKeys)) {
+    return this._serverKeys.length;
+  }
+
+  var contentHeaders = this._innerContentHeaders;
+  for (var i = 0; i < contentHeaders.length; i++) {
+    this._arrayFetchPromises[i] = requestInnerContent(this, i);
+  }
+
+  this._contentsFetchedPromise = createInnerContents(this);
+  return 0;
+};
+
+/**
+ * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
+ * @param {String[]} serverKeys the server keys for all of the inner contents
+ * @return {Boolean} True if the request scheduler has enough open slots for all inner contents
+ * @private
+ */
+function canScheduleAllRequests(serverKeys) {
+  var requestCountsByServer = {};
+  for (var i = 0; i < serverKeys.length; i++) {
+    var serverKey = serverKeys[i];
+    if (defined(requestCountsByServer[serverKey])) {
+      requestCountsByServer[serverKey]++;
+    } else {
+      requestCountsByServer[serverKey] = 1;
+    }
+  }
+
+  for (var key in requestCountsByServer) {
+    if (
+      requestCountsByServer.hasOwnProperty(key) &&
+      !RequestScheduler.serverHasOpenSlots(key, requestCountsByServer[key])
+    ) {
+      return false;
     }
   }
   return true;
 }
-*/
-
-/**
- * @return {Number} The number of contn
- */
-Multiple3DTileContent.prototype.requestInnerContents = function () {
-  /*
-  if (!canIScheduleStuff(headers)) {
-    return headers.length;
-  }
-  */
-
-  //if (this._innerContentHeaders.length > RequestScheduler.
-
-  //RequestScheduler.priorityHeapLength ==
-
-  // reset timeout
-  // set timeout for X ms, delete all the promises, tile state = UNLOADED
-  var requestBacklog = 0;
-  for (var i = 0; i < this._innerContentHeaders.length; i++) {
-    if (defined(this._arrayFetchPromises[i])) {
-      continue;
-    }
-
-    var promise = requestInnerContent(this, i);
-    if (!defined(promise)) {
-      requestBacklog++;
-    }
-    this._arrayFetchPromises[i] = promise;
-  }
-
-  if (requestBacklog === 0) {
-    this._contentsFetchedPromise = createInnerContents(this);
-  }
-
-  return requestBacklog;
-};
 
 function requestInnerContent(multipleContent, index) {
-  var innerContentHeader = multipleContent._innerContentHeaders[index];
-
+  var contentResource = multipleContent._innerContentResources[index];
   var tile = multipleContent.tile;
-  var contentUri = innerContentHeader.uri;
-  var contentResource = multipleContent._tilesetResource.getDerivedResource({
-    url: contentUri,
-    preserveQueryParameters: true,
-  });
-  var serverKey = RequestScheduler.getServerKey(
-    contentResource.getUrlComponent()
-  );
 
   var expired = tile.contentExpired;
   if (expired) {
@@ -260,21 +287,6 @@ function requestInnerContent(multipleContent, index) {
       expired: tile.expireDate.toString(),
     });
   }
-
-  var request = new Request({
-    throttle: true,
-    throttleByServer: true,
-    type: RequestType.TILES3D,
-    priorityFunction: function () {
-      return multipleContent._tile.priority;
-    },
-    serverKey: serverKey,
-  });
-  contentResource.request = request;
-
-  // Save the resource for later since it's used to construct
-  // Cesium3DTileContent objects.
-  multipleContent._innerContentResources[index] = contentResource;
 
   return contentResource.fetchArrayBuffer().otherwise(function (error) {
     /*
