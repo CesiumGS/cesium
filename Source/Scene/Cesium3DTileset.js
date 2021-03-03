@@ -560,6 +560,7 @@ function Cesium3DTileset(options) {
    * <p>
    * If there are no event listeners, error messages will be logged to the console.
    * </p>
+   * TODO: add a note here about multiple contents
    * <p>
    * The error object passed to the listener contains two properties:
    * <ul>
@@ -577,7 +578,6 @@ function Cesium3DTileset(options) {
    * });
    */
   this.tileFailed = new Event();
-  // TODO: this will likely need to be deprecated in favor of this.contentFailed
 
   /**
    * This event fires once for each visible tile in a frame.  This can be used to manually
@@ -2065,6 +2065,7 @@ function handleTileSuccess(tileset, tile) {
       ++tileset._statistics.numberOfLoadedTilesTotal;
 
       // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
+      // TODO: this might be problematic...
       tileset._cache.add(tile);
     }
 

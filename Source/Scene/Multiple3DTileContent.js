@@ -193,10 +193,33 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
+/*
+function canIScheduleStuff() {
+  for (header in headers) {
+    if (!RequestScheuduler.serverHasOpenSlots(serverKey)) {
+      return false
+    }
+  }
+  return true;
+}
+*/
+
 /**
  * @return {Number} The number of contn
  */
 Multiple3DTileContent.prototype.requestInnerContents = function () {
+  /*
+  if (!canIScheduleStuff(headers)) {
+    return headers.length;
+  }
+  */
+
+  //if (this._innerContentHeaders.length > RequestScheduler.
+
+  //RequestScheduler.priorityHeapLength ==
+
+  // reset timeout
+  // set timeout for X ms, delete all the promises, tile state = UNLOADED
   var requestBacklog = 0;
   for (var i = 0; i < this._innerContentHeaders.length; i++) {
     if (defined(this._arrayFetchPromises[i])) {
@@ -254,6 +277,16 @@ function requestInnerContent(multipleContent, index) {
   multipleContent._innerContentResources[index] = contentResource;
 
   return contentResource.fetchArrayBuffer().otherwise(function (error) {
+    /*
+     * TODO: update the tile statistics, but that requires knowing how many
+     * requests are in flight
+      if (request.state === RequestState.CANCELLED) {
+        // Cancelled due to low priority - try again later.
+        --tileset.statistics.numberOfPendingRequests;
+        ++tileset.statistics.numberOfAttemptedRequests;
+        return;
+      }
+      */
     handleInnerContentFailed(multipleContent, error);
     return undefined;
   });
@@ -342,14 +375,10 @@ function awaitReadyPromises(multipleContent) {
 }
 
 function handleInnerContentFailed(multipleContent, error) {
-  // TODO: What's the best way to report this as an even to the tile
-  // and to the tileset? here are some ideas:
-  //
-  // 1. A callback passed into the constructor?
-  // 2. Access multipleContent._tile directly to raise events?
-  // 3. Have a multipleContent.innerContentFailed event and have the tile
-  //  subscribe to that?
-  console.log(error);
+  //TODO: something like this. maybe the tile instead?
+  //multipleContent._tileset.handleContentFailure(multipleContent, error);
+
+  console.error(error);
 }
 
 /**
