@@ -210,7 +210,8 @@ function unpackBuffer(geometries, packedBuffer) {
 }
 
 var createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTileGeometries"
+  "createVectorTileGeometries",
+  5
 );
 var scratchColor = new Color();
 

@@ -807,6 +807,13 @@ var neVertexScratch = new HeightAndNormal();
 var heightmapBuffer =
   typeof Uint8Array !== "undefined" ? new Uint8Array(9 * 9) : undefined;
 
+var scratchCreateMeshSyncOptions = {
+  tilingScheme: undefined,
+  x: 0,
+  y: 0,
+  level: 0,
+  exaggeration: 1.0,
+};
 function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
   GlobeSurfaceTile.initialize(
     tile,
@@ -973,13 +980,14 @@ function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         heightOffset: maximumHeight,
       },
     });
-    fill.mesh = terrainData._createMeshSync(
-      tile.tilingScheme,
-      tile.x,
-      tile.y,
-      tile.level,
-      1.0
-    );
+
+    var createMeshSyncOptions = scratchCreateMeshSyncOptions;
+    createMeshSyncOptions.tilingScheme = tile.tilingScheme;
+    createMeshSyncOptions.x = tile.x;
+    createMeshSyncOptions.y = tile.y;
+    createMeshSyncOptions.level = tile.level;
+
+    fill.mesh = terrainData._createMeshSync(createMeshSyncOptions);
   } else {
     var encoding = new TerrainEncoding(
       undefined,

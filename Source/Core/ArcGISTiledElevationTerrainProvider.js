@@ -304,7 +304,14 @@ Object.defineProperties(ArcGISTiledElevationTerrainProvider.prototype, {
    */
   availability: {
     get: function () {
-      return undefined;
+      //>>includeStart('debug', pragmas.debug)
+      if (!this._ready) {
+        throw new DeveloperError(
+          "availability must not be called before the terrain provider is ready."
+        );
+      }
+      //>>includeEnd('debug');
+      return this._tilesAvailable;
     },
   },
 });
@@ -650,6 +657,7 @@ function requestAvailability(that, level, x, y) {
 
     // Mark whole area as having availability loaded
     that._tilesAvailablityLoaded.addAvailableTileRange(
+      level,
       xOffset,
       yOffset,
       xOffset + dim,
