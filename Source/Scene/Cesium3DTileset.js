@@ -886,7 +886,10 @@ function Cesium3DTileset(options) {
    * @type {Boolean}
    * @default false
    */
-  this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
+  this.debugShowMtyemoryUsage = defaultValue(
+    options.debugShowMemoryUsage,
+    false
+  );
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -902,7 +905,9 @@ function Cesium3DTileset(options) {
   /**
    * Function for examining vector lines as they are being streamed.
    *
-   * @experimental
+   * @type {Function}
+   * @default undefined
+   * @experimental This feature is experimental and is subject to change without Cesium's standard deprecation policy.
    */
   this.examineVectorLinesFunction = options.examineVectorLinesFunction;
 
