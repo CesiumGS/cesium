@@ -102,6 +102,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
  * @param {Function} [options.examineVectorLinesFunction] Callback function for examining vector lines as they are being streamed.
+ *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
  * @example
