@@ -101,7 +101,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- *
+ * @param {Function} [options.examineVectorLinesFunction] Callback function for examining vector lines as they are being streamed.
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
  * @example
@@ -903,7 +903,7 @@ function Cesium3DTileset(options) {
    *
    * @experimental
    */
-  this.examineVectorLinesFunction = undefined;
+  this.examineVectorLinesFunction = options.examineVectorLinesFunction;
 
   var that = this;
   var resource;
