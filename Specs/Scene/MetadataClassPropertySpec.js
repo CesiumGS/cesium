@@ -1,7 +1,9 @@
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { MetadataClassProperty } from "../../Source/Cesium.js";
-import { MetadataEnum } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import {
+  FeatureDetection,
+  MetadataClassProperty,
+  MetadataEnum,
+  MetadataType,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataClassProperty", function () {
   it("creates property with default values", function () {

@@ -1,6 +1,8 @@
-import { defaultValue } from "../../Source/Cesium.js";
-import { MetadataTableProperty } from "../../Source/Cesium.js";
-import MetadataClassProperty from "../../Source/Scene/MetadataClassProperty.js";
+import {
+  defaultValue,
+  MetadataClassProperty,
+  MetadataTableProperty,
+} from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
 describe("Scene/MetadataTableProperty", function () {

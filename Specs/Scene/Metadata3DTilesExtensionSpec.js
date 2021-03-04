@@ -1,5 +1,7 @@
-import { Metadata3DTilesExtension } from "../../Source/Cesium.js";
-import MetadataSchema from "../../Source/Scene/MetadataSchema.js";
+import {
+  Metadata3DTilesExtension,
+  MetadataSchema,
+} from "../../Source/Cesium.js";
 
 describe("Scene/Metadata3DTilesExtension", function () {
   it("creates 3D Tiles metadata with default values", function () {
@@ -48,8 +50,8 @@ describe("Scene/Metadata3DTilesExtension", function () {
           count: 100,
           properties: {
             height: {
-              min: [10.0],
-              max: [20.0],
+              min: 10.0,
+              max: 20.0,
             },
           },
         },

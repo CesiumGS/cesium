@@ -1,5 +1,4 @@
-import { MetadataEnum } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import { MetadataEnum, MetadataType } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataEnum", function () {
   it("creates enum with default values", function () {
