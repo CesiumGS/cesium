@@ -394,7 +394,7 @@ function gltfToGlb(gltf, buffer) {
   return glb;
 }
 
-function createFeatureTable(properties, instancesLength) {
+function createFeatureTable(properties, instancesLength, rtcCenter) {
   var featureTableJson = {};
 
   var propertiesLength = properties.length;
@@ -431,6 +431,7 @@ function createFeatureTable(properties, instancesLength) {
   }
 
   featureTableJson.INSTANCES_LENGTH = instancesLength;
+  featureTableJson.RTC_CENTER = rtcCenter;
 
   var featureTableBinaryByteLength = byteOffset;
 
@@ -628,9 +629,12 @@ function createInstanced3DModel(content, gltf, instancedNodeId, buffer) {
     batchTableBinaryByteLength = batchTableResults.binaryByteLength;
   }
 
+  var rtcCenter = gltf.nodes[instancedNodeId].translation;
+
   var featureTableResults = createFeatureTable(
     featureTableProperties,
-    instancesLength
+    instancesLength,
+    rtcCenter
   );
   var featureTableBuffer = featureTableResults.buffer;
   var featureTableJsonByteLength = featureTableResults.jsonByteLength;
@@ -638,6 +642,8 @@ function createInstanced3DModel(content, gltf, instancedNodeId, buffer) {
 
   gltf = clone(gltf, true);
   node = gltf.nodes[instancedNodeId];
+
+  delete gltf.nodes[instancedNodeId].translation;
 
   // Remove nodes that don't have instancedNodeId as a descendant
   removeNodes(gltf, function (gltf, nodeId) {
