@@ -478,7 +478,7 @@ function getRenderState(mask3DTiles) {
     cull: {
       enabled: true, // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
     },
-    blending: BlendingState.ALPHA_BLEND,
+    blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
     depthMask: false,
     stencilTest: {
       enabled: mask3DTiles,
