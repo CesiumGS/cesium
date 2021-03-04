@@ -1,9 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTilePass,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  HeadingPitchRange,
+  Model,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 
@@ -86,19 +88,6 @@ describe(
 
           expect(content.geometryByteLength).toEqual(geometryByteLength);
           expect(content.texturesByteLength).toEqual(0);
-        }
-      );
-    });
-
-    it("does not have batch table or features", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
-        function (tileset) {
-          var content = tileset.root.content;
-          expect(content.batchTableByteLength).toBe(0);
-          expect(content.batchTable).toBeUndefined();
-          expect(content.featuresLength).toBe(0);
-          expect(content.hasProperty(0, "property")).toBe(false);
-          expect(content.getFeature(0)).toBeUndefined();
         }
       );
     });

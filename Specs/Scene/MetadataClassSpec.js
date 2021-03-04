@@ -1,6 +1,8 @@
-import { MetadataClass } from "../../Source/Cesium.js";
-import { MetadataEnum } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import {
+  MetadataClass,
+  MetadataEnum,
+  MetadataType,
+} from "../../Source/Cesium.js";
 
 describe("Scene/MetadataClass", function () {
   it("creates class with default values", function () {

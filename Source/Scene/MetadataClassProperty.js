@@ -186,10 +186,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * An array storing the maximum value of each component. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the maximum allowable value of this property. Only defined when type or componentType is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number[]}
+   * @type {Number|Number[]}
    * @readonly
    * @private
    */
@@ -200,10 +200,10 @@ Object.defineProperties(MetadataClassProperty.prototype, {
   },
 
   /**
-   * An array storing the minimum value of each component. Only defined when type or componentType is a numeric type.
+   * A number or an array of numbers storing the minimum allowable value of this property. Only defined when type or componentType is a numeric type.
    *
    * @memberof MetadataClassProperty.prototype
-   * @type {Number[]}
+   * @type {Number|Number[]}
    * @readonly
    * @private
    */
