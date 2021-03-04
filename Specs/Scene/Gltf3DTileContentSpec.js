@@ -90,19 +90,6 @@ describe(
       );
     });
 
-    it("does not have batch table or features", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
-        function (tileset) {
-          var content = tileset.root.content;
-          expect(content.batchTableByteLength).toBe(0);
-          expect(content.batchTable).toBeUndefined();
-          expect(content.featuresLength).toBe(0);
-          expect(content.hasProperty(0, "property")).toBe(false);
-          expect(content.getFeature(0)).toBeUndefined();
-        }
-      );
-    });
-
     it("links model to tileset clipping planes based on bounding volume clipping", function () {
       return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
         function (tileset) {
