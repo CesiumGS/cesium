@@ -1,9 +1,11 @@
-import { Cartesian3 } from "../../Source/Cesium.js";
-import { HeadingPitchRange } from "../../Source/Cesium.js";
-import { Cesium3DTilePass } from "../../Source/Cesium.js";
-import { ClippingPlane } from "../../Source/Cesium.js";
-import { ClippingPlaneCollection } from "../../Source/Cesium.js";
-import { Model } from "../../Source/Cesium.js";
+import {
+  Cartesian3,
+  Cesium3DTilePass,
+  ClippingPlane,
+  ClippingPlaneCollection,
+  HeadingPitchRange,
+  Model,
+} from "../../Source/Cesium.js";
 import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
 import createScene from "../createScene.js";
 

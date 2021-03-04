@@ -1,5 +1,4 @@
-import { MetadataClass } from "../../Source/Cesium.js";
-import { MetadataTileset } from "../../Source/Cesium.js";
+import { MetadataClass, MetadataTileset } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataTileset", function () {
   it("creates tileset metadata with default values", function () {

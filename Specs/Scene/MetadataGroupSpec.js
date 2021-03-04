@@ -1,5 +1,4 @@
-import { MetadataClass } from "../../Source/Cesium.js";
-import { MetadataGroup } from "../../Source/Cesium.js";
+import { MetadataClass, MetadataGroup } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataGroup", function () {
   it("creates group metadata with default values", function () {
