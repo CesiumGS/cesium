@@ -3,6 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
+import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
@@ -226,6 +227,10 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
  * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
  * {@link Multiple3DTileContent#contentFetchedPromise} is defined. This promise
  * becomes available as soon as all requests are scheduled.
+ * <p>
+ * This method also updates the tile statistics' pending request count if the
+ * requests are successfully scheduled.
+ * </p>
  *
  * @return {Number} The number of attempted requests that were unable to be scheduled.
  * @private
@@ -240,6 +245,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   }
 
   var contentHeaders = this._innerContentHeaders;
+  this._tileset.statistics.numberOfPendingRequests += contentHeaders.length;
   for (var i = 0; i < contentHeaders.length; i++) {
     this._arrayFetchPromises[i] = requestInnerContent(this, i);
   }
@@ -288,20 +294,31 @@ function requestInnerContent(multipleContent, index) {
     });
   }
 
-  return contentResource.fetchArrayBuffer().otherwise(function (error) {
-    /*
-     * TODO: update the tile statistics, but that requires knowing how many
-     * requests are in flight
+  var tileset = multipleContent._tileset;
+  return contentResource
+    .fetchArrayBuffer()
+    .then(function (arrayBuffer) {
+      --tileset.statistics.numberOfPendingRequests;
+      return arrayBuffer;
+    })
+    .otherwise(function (error) {
+      var request = contentResource.request;
+      --tileset.statistics.numberOfPendingRequests;
+
       if (request.state === RequestState.CANCELLED) {
-        // Cancelled due to low priority - try again later.
-        --tileset.statistics.numberOfPendingRequests;
+        // Cancelled due to low priority
+        // TODO: How to update this if canceling one inner content cancels
+        // the entire multiple content?
         ++tileset.statistics.numberOfAttemptedRequests;
-        return;
+        // TODO: this should throw an exception to cancel the whole
+        // multiple content. This will require some other tweaks to
+        // ensure statistics are accurate.
+        return undefined;
       }
-      */
-    handleInnerContentFailed(multipleContent, error);
-    return undefined;
-  });
+
+      handleInnerContentFailed(multipleContent, index, error);
+      return undefined;
+    });
 }
 
 function createInnerContents(multipleContent) {
@@ -320,7 +337,7 @@ function createInnerContents(multipleContent) {
         try {
           return createInnerContent(multipleContent, resource, arrayBuffer);
         } catch (error) {
-          handleInnerContentFailed(multipleContent, error);
+          handleInnerContentFailed(multipleContent, i, error);
           return undefined;
         }
       });
@@ -386,11 +403,19 @@ function awaitReadyPromises(multipleContent) {
     });
 }
 
-function handleInnerContentFailed(multipleContent, error) {
-  //TODO: something like this. maybe the tile instead?
-  //multipleContent._tileset.handleContentFailure(multipleContent, error);
-
-  console.error(error);
+function handleInnerContentFailed(multipleContent, index, error) {
+  var tileset = multipleContent._tileset;
+  var url = multipleContent._innerContentResources[index].url;
+  var message = defined(error.message) ? error.message : error.toString();
+  if (tileset.tileFailed.numberOfListeners > 0) {
+    tileset.tileFailed.raiseEvent({
+      url: url,
+      message: message,
+    });
+  } else {
+    console.log("A content failed to load: " + url);
+    console.log("Error: " + message);
+  }
 }
 
 /**

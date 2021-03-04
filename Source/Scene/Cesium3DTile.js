@@ -1054,11 +1054,10 @@ function requestMultipleContents(tile) {
 }
 
 function multipleContentFailed(tile, tileset, error) {
+  // note: The Multiple3DTileContent handles decrementing the number of pending
+  // requests if the state is LOADING.
   if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
     --tileset.statistics.numberOfTilesProcessing;
-  } else {
-    //TODO: decrement this but need to query the multiple content for more information.
-    --tileset.statistics.numberOfPendingRequests;
   }
 
   tile._contentState = Cesium3DTileContentState.FAILED;
@@ -1067,7 +1066,6 @@ function multipleContentFailed(tile, tileset, error) {
 }
 
 function requestSingleContent(tile) {
-  // TODO: expiration should still be per tile, not per content.
   var resource = tile._contentResource.clone();
   var expired = tile.contentExpired;
   if (expired) {
@@ -1098,6 +1096,7 @@ function requestSingleContent(tile) {
   tile._contentState = Cesium3DTileContentState.LOADING;
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
+  ++tileset.statistics.numberOfPendingRequests;
 
   promise
     .then(function (arrayBuffer) {
@@ -1120,6 +1119,7 @@ function requestSingleContent(tile) {
       tile._content = content;
       tile._contentState = Cesium3DTileContentState.PROCESSING;
       tile._contentReadyToProcessPromise.resolve(content);
+      --tileset.statistics.numberOfPendingRequests;
 
       return content.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {

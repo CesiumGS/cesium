@@ -1904,10 +1904,10 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requestBacklogCount = tile.requestContent();
+  var attemptedRequests = tile.requestContent();
 
-  if (requestBacklogCount > 0) {
-    ++statistics.numberOfAttemptedRequests;
+  if (attemptedRequests > 0) {
+    statistics.numberOfAttemptedRequests += attemptedRequests;
     return;
   }
 
@@ -1920,7 +1920,6 @@ function requestContent(tileset, tile) {
     }
   }
 
-  ++statistics.numberOfPendingRequests;
   tileset._requestedTilesInFlight.push(tile);
 
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -2032,7 +2031,6 @@ function addToProcessingQueue(tileset, tile) {
   return function () {
     tileset._processingQueue.push(tile);
 
-    --tileset._statistics.numberOfPendingRequests;
     ++tileset._statistics.numberOfTilesProcessing;
   };
 }
@@ -2065,7 +2063,6 @@ function handleTileSuccess(tileset, tile) {
       ++tileset._statistics.numberOfLoadedTilesTotal;
 
       // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
-      // TODO: this might be problematic...
       tileset._cache.add(tile);
     }
 
