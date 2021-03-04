@@ -6,7 +6,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 
 /**
- * Results of the preproces3DTileContent() function. This includes the
+ * Results of the preprocess3DTileContent() function. This includes the
  * {@link Cesium3DTileContentType} and the payload. The payload is either
  * binary or JSON depending on the content type).
  *
@@ -25,7 +25,7 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  * @return {PreprocessedContent}
  * @private
  */
-export default function preproces3DTileContent(arrayBuffer) {
+export default function preprocess3DTileContent(arrayBuffer) {
   var uint8Array = new Uint8Array(arrayBuffer);
   var contentIdentifier = getMagic(uint8Array);
 
