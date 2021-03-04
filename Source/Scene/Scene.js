@@ -2659,10 +2659,10 @@ function executeCommands(scene, passState) {
     );
 
     // Classification for translucent 3D Tiles
-    var hasClassificationOnTranslucent =
+    var has3DTilesClassificationCommands =
       frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION] > 0;
     if (
-      hasClassificationOnTranslucent &&
+      has3DTilesClassificationCommands &&
       view.translucentTileClassification.isSupported()
     ) {
       view.translucentTileClassification.executeTranslucentCommands(
