@@ -332,37 +332,4 @@ ComponentDatatype.fromName = function (name) {
   }
 };
 
-/**
- * Get the name from a ComponentDatatype.
- *
- * @param {ComponentDatatype} componentDatatype The component data type.
- * @returns {String} Name of the ComponentDatatype.
- *
- * @exception {DeveloperError} componentDatatype is not a valid value.
- */
-ComponentDatatype.getName = function (componentDatatype) {
-  switch (componentDatatype) {
-    case ComponentDatatype.BYTE:
-      return "BYTE";
-    case ComponentDatatype.UNSIGNED_BYTE:
-      return "UNSIGNED_BYTE";
-    case ComponentDatatype.SHORT:
-      return "SHORT";
-    case ComponentDatatype.UNSIGNED_SHORT:
-      return "UNSIGNED_SHORT";
-    case ComponentDatatype.INT:
-      return "INT";
-    case ComponentDatatype.UNSIGNED_INT:
-      return "UNSIGNED_INT";
-    case ComponentDatatype.FLOAT:
-      return "FLOAT";
-    case ComponentDatatype.DOUBLE:
-      return "DOUBLE";
-    //>>includeStart('debug', pragmas.debug);
-    default:
-      throw new DeveloperError("componentDatatype is not a valid value.");
-    //>>includeEnd('debug');
-  }
-};
-
 export default Object.freeze(ComponentDatatype);

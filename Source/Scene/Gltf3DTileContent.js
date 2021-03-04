@@ -216,6 +216,27 @@ function getComponentDatatype(type) {
   }
 }
 
+function getComponentType(componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return "BYTE";
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return "UNSIGNED_BYTE";
+    case ComponentDatatype.SHORT:
+      return "SHORT";
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return "UNSIGNED_SHORT";
+    case ComponentDatatype.INT:
+      return "INT";
+    case ComponentDatatype.UNSIGNED_INT:
+      return "UNSIGNED_INT";
+    case ComponentDatatype.FLOAT:
+      return "FLOAT";
+    case ComponentDatatype.DOUBLE:
+      return "DOUBLE";
+  }
+}
+
 function createBatchTable(content, gltf, colorChangedCallback) {
   if (
     hasExtension(gltf, "EXT_feature_metadata") &&
@@ -272,62 +293,65 @@ function createBatchTable(content, gltf, colorChangedCallback) {
 
     var featureTables = metadata.featureTables;
     var featureTable = featureTables[featureTableId];
-    if (defined(featureTable.class)) {
-      var count = featureTable.count;
-      var batchTableJson = {};
-      var batchTableBinary;
-      var classProperties = featureTable.class.properties;
-      for (var propertyId in classProperties) {
-        if (classProperties.hasOwnProperty(propertyId)) {
-          var property = featureTable.properties[propertyId];
-          var classProperty = classProperties[propertyId];
-          var type = classProperty.type;
-          var valueType = classProperty.valueType;
-          var batchTableBinaryType;
-          if (type === MetadataType.ARRAY) {
-            var componentCount = classProperty.componentCount;
-            if (componentCount === 2) {
-              batchTableBinaryType = "VEC2";
-            } else if (componentCount === 3) {
-              batchTableBinaryType = "VEC3";
-            } else if (componentCount === 4) {
-              batchTableBinaryType = "VEC4";
-            }
-          } else {
-            batchTableBinaryType = "SCALAR";
-          }
 
-          var componentDatatype = getComponentDatatype(valueType);
+    if (!defined(featureTable.class)) {
+      return;
+    }
 
-          if (
-            defined(componentDatatype) &&
-            defined(batchTableBinaryType) &&
-            defined(property) // May be undefined if the property is optional
-          ) {
-            var typedArray = property._values.typedArray;
-            batchTableJson[propertyId] = {
-              byteOffset: typedArray.byteOffset,
-              componentType: ComponentDatatype.getName(componentDatatype),
-              type: batchTableBinaryType,
-            };
-            batchTableBinary = new Uint8Array(buffer.buffer);
-          } else {
-            var values = new Array(count);
-            for (i = 0; i < count; ++i) {
-              values[i] = featureTable.getProperty(i, propertyId);
-            }
-            batchTableJson[propertyId] = values;
+    var count = featureTable.count;
+    var batchTableJson = {};
+    var batchTableBinary;
+    var classProperties = featureTable.class.properties;
+    for (var propertyId in classProperties) {
+      if (classProperties.hasOwnProperty(propertyId)) {
+        var property = featureTable.properties[propertyId];
+        var classProperty = classProperties[propertyId];
+        var type = classProperty.type;
+        var valueType = classProperty.valueType;
+        var batchTableBinaryType;
+        if (type === MetadataType.ARRAY) {
+          var componentCount = classProperty.componentCount;
+          if (componentCount === 2) {
+            batchTableBinaryType = "VEC2";
+          } else if (componentCount === 3) {
+            batchTableBinaryType = "VEC3";
+          } else if (componentCount === 4) {
+            batchTableBinaryType = "VEC4";
           }
+        } else {
+          batchTableBinaryType = "SCALAR";
+        }
+
+        var componentDatatype = getComponentDatatype(valueType);
+
+        if (
+          defined(componentDatatype) &&
+          defined(batchTableBinaryType) &&
+          defined(property) // May be undefined if the property is optional
+        ) {
+          var typedArray = property._values.typedArray;
+          batchTableJson[propertyId] = {
+            byteOffset: typedArray.byteOffset,
+            componentType: getComponentType(componentDatatype),
+            type: batchTableBinaryType,
+          };
+          batchTableBinary = new Uint8Array(buffer.buffer);
+        } else {
+          var values = new Array(count);
+          for (i = 0; i < count; ++i) {
+            values[i] = featureTable.getProperty(i, propertyId);
+          }
+          batchTableJson[propertyId] = values;
         }
       }
-      return new Cesium3DTileBatchTable(
-        content,
-        count,
-        batchTableJson,
-        batchTableBinary,
-        colorChangedCallback
-      );
     }
+    return new Cesium3DTileBatchTable(
+      content,
+      count,
+      batchTableJson,
+      batchTableBinary,
+      colorChangedCallback
+    );
   }
 }
 
