@@ -51,18 +51,6 @@ function MetadataGltfExtension(options) {
     }
   }
 
-  // TODO
-  // var featureTextures = {};
-  // for (var featureTextureId in extension.featureTextures) {
-  //   if (extension.featureTextures.hasOwnProperty(featureTextureId)) {
-  //     var featureTexture = extension.featureTextures[featureTextureId];
-  //     featureTextures[featureTextureId] = new MetadataTexture({
-  //       properties: featureTexture.properties,
-  //       class: schema.classes[featureTexture.class],
-  //     });
-  //   }
-  // }
-
   this._schema = schema;
   this._featureTables = featureTables;
   this._statistics = extension.statistics;

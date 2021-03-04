@@ -21,6 +21,17 @@ import ModelUtility from "./ModelUtility.js";
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
  * <p>
+ * Has limited support for the {@link https://github.com/CesiumGS/glTF/tree/master/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} with the following caveats:
+ * </p>
+ * <ul>
+ *    <li>Only works with glb models with a single buffer</li>
+ *    <li>Does not work with schemaUri</li>
+ *    <li>Does not work with multiple feature tables</li>
+ *    <li>Only works with _FEATURE_ID_0</li>
+ *    <li>Does not support feature ID textures</li>
+ *    <li>Does not support feature textures</li>
+ * </ul>
+ * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
@@ -214,7 +225,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
   ) {
     var i;
     var j;
-    var hasFeatureIds = false;
+    var featureTableId;
     var meshes = gltf.meshes;
     if (defined(meshes)) {
       var meshesLength = meshes.length;
@@ -223,14 +234,17 @@ function createBatchTable(content, gltf, colorChangedCallback) {
         var primitives = mesh.primitives;
         var primitivesLength = primitives.length;
         for (j = 0; j < primitivesLength; ++j) {
-          if (defined(primitives[j].attributes._FEATURE_ID_0)) {
-            hasFeatureIds = true;
+          var primitive = primitives[j];
+          if (defined(primitive.attributes._FEATURE_ID_0)) {
+            var featureMetadata = primitive.extensions.EXT_feature_metadata;
+            featureTableId =
+              featureMetadata.featureIdAttributes[0].featureTable;
           }
         }
       }
     }
 
-    if (!hasFeatureIds) {
+    if (!defined(featureTableId)) {
       return;
     }
 
@@ -257,12 +271,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     });
 
     var featureTables = metadata.featureTables;
-    var featureTableIds = Object.keys(featureTables);
-    if (featureTableIds.length === 0) {
-      return;
-    }
-
-    var featureTable = featureTables[featureTableIds[0]];
+    var featureTable = featureTables[featureTableId];
     if (defined(featureTable.class)) {
       var count = featureTable.count;
       var batchTableJson = {};
@@ -295,7 +304,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
             defined(batchTableBinaryType) &&
             defined(property) // May be undefined if the property is optional
           ) {
-            var typedArray = property._values.typedArray; // TODO: avoid private member access
+            var typedArray = property._values.typedArray;
             batchTableJson[propertyId] = {
               byteOffset: typedArray.byteOffset,
               componentType: ComponentDatatype.getName(componentDatatype),
@@ -336,13 +345,6 @@ function initialize(content, gltf) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
-  // TODO: many caveats right now
-  // * Only works with glb models with a single buffer
-  // * Does not work with schemaUri
-  // * Does not work with multiple feature tables
-  // * Only works with _FEATURE_ID_0
-  // * Does not support feature ID textures
-  // * Does not support feature textures
   var batchTable = createBatchTable(content, gltf, colorChangedCallback);
 
   if (!defined(batchTable)) {
