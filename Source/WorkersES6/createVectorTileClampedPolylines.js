@@ -101,7 +101,7 @@ function VertexAttributesAndIndices(volumesCount) {
   this.startEllipsoidNormals = new Float32Array(vec3Floats);
   this.endEllipsoidNormals = new Float32Array(vec3Floats);
   this.startPositionAndHeights = new Float32Array(vec4Floats);
-  this.startFaceNormalAndVertexCorners = new Float32Array(vec4Floats);
+  this.startFaceNormalAndVertexCornerIds = new Float32Array(vec4Floats);
   this.endPositionAndHeights = new Float32Array(vec4Floats);
   this.endFaceNormalAndHalfWidths = new Float32Array(vec4Floats);
   this.vertexBatchIds = new Uint16Array(vertexCount);
@@ -253,7 +253,8 @@ VertexAttributesAndIndices.prototype.addVolume = function (
   var startEllipsoidNormals = this.startEllipsoidNormals;
   var endEllipsoidNormals = this.endEllipsoidNormals;
   var startPositionAndHeights = this.startPositionAndHeights;
-  var startFaceNormalAndVertexCorners = this.startFaceNormalAndVertexCorners;
+  var startFaceNormalAndVertexCornerIds = this
+    .startFaceNormalAndVertexCornerIds;
   var endPositionAndHeights = this.endPositionAndHeights;
   var endFaceNormalAndHalfWidths = this.endFaceNormalAndHalfWidths;
   var vertexBatchIds = this.vertexBatchIds;
@@ -275,10 +276,10 @@ VertexAttributesAndIndices.prototype.addVolume = function (
 
     Cartesian3.pack(
       startFaceNormal,
-      startFaceNormalAndVertexCorners,
+      startFaceNormalAndVertexCornerIds,
       vec4Offset
     );
-    startFaceNormalAndVertexCorners[vec4Offset + 3] = i;
+    startFaceNormalAndVertexCornerIds[vec4Offset + 3] = i;
 
     Cartesian3.pack(endFaceNormal, endFaceNormalAndHalfWidths, vec4Offset);
     endFaceNormalAndHalfWidths[vec4Offset + 3] = halfWidth;
@@ -480,7 +481,7 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
   transferableObjects.push(attribsAndIndices.endEllipsoidNormals.buffer);
   transferableObjects.push(attribsAndIndices.startPositionAndHeights.buffer);
   transferableObjects.push(
-    attribsAndIndices.startFaceNormalAndVertexCorners.buffer
+    attribsAndIndices.startFaceNormalAndVertexCornerIds.buffer
   );
   transferableObjects.push(attribsAndIndices.endPositionAndHeights.buffer);
   transferableObjects.push(attribsAndIndices.endFaceNormalAndHalfWidths.buffer);
@@ -495,8 +496,8 @@ function createVectorTileClampedPolylines(parameters, transferableObjects) {
     startEllipsoidNormals: attribsAndIndices.startEllipsoidNormals.buffer,
     endEllipsoidNormals: attribsAndIndices.endEllipsoidNormals.buffer,
     startPositionAndHeights: attribsAndIndices.startPositionAndHeights.buffer,
-    startFaceNormalAndVertexCorners:
-      attribsAndIndices.startFaceNormalAndVertexCorners.buffer,
+    startFaceNormalAndVertexCornerIds:
+      attribsAndIndices.startFaceNormalAndVertexCornerIds.buffer,
     endPositionAndHeights: attribsAndIndices.endPositionAndHeights.buffer,
     endFaceNormalAndHalfWidths:
       attribsAndIndices.endFaceNormalAndHalfWidths.buffer,
