@@ -238,7 +238,7 @@ function parseSubtreeChunks(subtreeView) {
  * @private
  */
 function preprocessBuffers(bufferHeaders) {
-  bufferHeaders = defaultValue(bufferHeaders, []);
+  bufferHeaders = defined(bufferHeaders) ? bufferHeaders : [];
   for (var i = 0; i < bufferHeaders.length; i++) {
     var bufferHeader = bufferHeaders[i];
     bufferHeader.isExternal = defined(bufferHeader.uri);
@@ -271,7 +271,7 @@ function preprocessBuffers(bufferHeaders) {
  * @private
  */
 function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
-  bufferViewHeaders = defaultValue(bufferViewHeaders, []);
+  bufferViewHeaders = defined(bufferViewHeaders) ? bufferViewHeaders : [];
   for (var i = 0; i < bufferViewHeaders.length; i++) {
     var bufferViewHeader = bufferViewHeaders[i];
     var bufferHeader = bufferHeaders[bufferViewHeader.buffer];
