@@ -1,5 +1,4 @@
-import { FeatureDetection } from "../../Source/Cesium.js";
-import { MetadataType } from "../../Source/Cesium.js";
+import { FeatureDetection, MetadataType } from "../../Source/Cesium.js";
 
 describe("Scene/MetadataType", function () {
   it("getMinimum", function () {

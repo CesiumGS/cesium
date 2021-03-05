@@ -38,16 +38,14 @@ MetadataTester.createProperty = function (options) {
   return table.properties.propertyId;
 };
 
-MetadataTester.createTable = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var propertiesJson = options.properties;
+function createProperties(options) {
+  var schema = options.schema;
+  var classId = options.classId;
   var propertyValues = options.propertyValues;
   var offsetType = options.offsetType;
-  var enums = defined(options.enums) ? options.enums : {};
-  var disableBigIntSupport = options.disableBigIntSupport;
-  var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
-  var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
+  var bufferViews = defined(options.bufferViews) ? options.bufferViews : {};
 
+  var enums = defined(schema.enums) ? schema.enums : {};
   var enumDefinitions = {};
   for (var enumId in enums) {
     if (enums.hasOwnProperty(enumId)) {
@@ -59,16 +57,13 @@ MetadataTester.createTable = function (options) {
   }
 
   var classDefinition = new MetadataClass({
-    id: "classId",
-    class: {
-      properties: propertiesJson,
-    },
+    id: classId,
+    class: schema.classes[classId],
     enums: enumDefinitions,
   });
 
   var properties = {};
-  var bufferViews = {};
-  var bufferViewIndex = 0;
+  var bufferViewIndex = Object.keys(bufferViews).length;
   var count = 0;
 
   for (var propertyId in propertyValues) {
@@ -117,6 +112,41 @@ MetadataTester.createTable = function (options) {
     }
   }
 
+  return {
+    count: count,
+    properties: properties,
+    class: classDefinition,
+    bufferViews: bufferViews,
+  };
+}
+
+MetadataTester.createTable = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var disableBigIntSupport = options.disableBigIntSupport;
+  var disableBigInt64ArraySupport = options.disableBigInt64ArraySupport;
+  var disableBigUint64ArraySupport = options.disableBigUint64ArraySupport;
+
+  var schema = {
+    enums: options.enums,
+    classes: {
+      classId: {
+        properties: options.properties,
+      },
+    },
+  };
+
+  var propertyResults = createProperties({
+    schema: schema,
+    classId: "classId",
+    propertyValues: options.propertyValues,
+    offsetType: options.offsetType,
+  });
+
+  var count = propertyResults.count;
+  var properties = propertyResults.properties;
+  var classDefinition = propertyResults.class;
+  var bufferViews = propertyResults.bufferViews;
+
   if (disableBigIntSupport) {
     spyOn(FeatureDetection, "supportsBigInt").and.returnValue(false);
   }
@@ -135,6 +165,38 @@ MetadataTester.createTable = function (options) {
     class: classDefinition,
     bufferViews: bufferViews,
   });
+};
+
+MetadataTester.createFeatureTables = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+  var featureTables = {};
+  var bufferViews = {};
+
+  for (var featureTableId in options.featureTables) {
+    if (options.featureTables.hasOwnProperty(featureTableId)) {
+      var featureTable = options.featureTables[featureTableId];
+      var propertyResults = createProperties({
+        schema: options.schema,
+        classId: featureTable.class,
+        propertyValues: featureTable.properties,
+        bufferViews: bufferViews,
+      });
+
+      var count = propertyResults.count;
+      var properties = propertyResults.properties;
+      featureTables[featureTableId] = {
+        class: featureTable.class,
+        count: count,
+        properties: properties,
+      };
+    }
+  }
+
+  return {
+    featureTables: featureTables,
+    bufferViews: bufferViews,
+  };
 };
 
 function createBuffer(values, type) {

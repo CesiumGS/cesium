@@ -161,7 +161,8 @@ function packBuffer(polylines) {
 }
 
 var createVerticesTaskProcessor = new TaskProcessor(
-  "createVectorTilePolylines"
+  "createVectorTilePolylines",
+  5
 );
 var attributeLocations = {
   previousPosition: 0,

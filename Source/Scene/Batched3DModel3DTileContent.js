@@ -71,7 +71,7 @@ Object.defineProperties(Batched3DModel3DTileContent.prototype, {
 
   pointsLength: {
     get: function () {
-      return 0;
+      return this._model.pointsLength;
     },
   },
 
@@ -455,7 +455,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: tileset.classificationType,
       batchTable: batchTable,
     });
   }
@@ -520,36 +520,40 @@ Batched3DModel3DTileContent.prototype.applyStyle = function (style) {
 Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   var commandStart = frameState.commandList.length;
 
+  var model = this._model;
+  var tile = this._tile;
+  var batchTable = this._batchTable;
+
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
   // actually generate commands.
-  this._batchTable.update(tileset, frameState);
+  batchTable.update(tileset, frameState);
 
   this._contentModelMatrix = Matrix4.multiply(
-    this._tile.computedTransform,
+    tile.computedTransform,
     this._rtcCenterTransform,
     this._contentModelMatrix
   );
-  this._model.modelMatrix = this._contentModelMatrix;
+  model.modelMatrix = this._contentModelMatrix;
 
-  this._model.shadows = this._tileset.shadows;
-  this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
-  this._model.lightColor = this._tileset.lightColor;
-  this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
-  this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
-  this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
-  this._model.backFaceCulling = this._tileset.backFaceCulling;
-  this._model.debugWireframe = this._tileset.debugWireframe;
+  model.shadows = tileset.shadows;
+  model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
+  model.lightColor = tileset.lightColor;
+  model.luminanceAtZenith = tileset.luminanceAtZenith;
+  model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
+  model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
+  model.backFaceCulling = tileset.backFaceCulling;
+  model.debugWireframe = tileset.debugWireframe;
 
   // Update clipping planes
-  var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
-  if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
+  var tilesetClippingPlanes = tileset.clippingPlanes;
+  model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
+  if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.
     // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-    this._model._clippingPlanes =
-      tilesetClippingPlanes.enabled && this._tile._isClipped
+    model._clippingPlanes =
+      tilesetClippingPlanes.enabled && tile._isClipped
         ? tilesetClippingPlanes
         : undefined;
   }
@@ -558,13 +562,13 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
   // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
   if (
     defined(tilesetClippingPlanes) &&
-    defined(this._model._clippingPlanes) &&
-    this._model._clippingPlanes !== tilesetClippingPlanes
+    defined(model._clippingPlanes) &&
+    model._clippingPlanes !== tilesetClippingPlanes
   ) {
-    this._model._clippingPlanes = tilesetClippingPlanes;
+    model._clippingPlanes = tilesetClippingPlanes;
   }
 
-  this._model.update(frameState);
+  model.update(frameState);
 
   // If any commands were pushed, add derived commands
   var commandEnd = frameState.commandList.length;
@@ -573,7 +577,7 @@ Batched3DModel3DTileContent.prototype.update = function (tileset, frameState) {
     (frameState.passes.render || frameState.passes.pick) &&
     !defined(tileset.classificationType)
   ) {
-    this._batchTable.addDerivedCommands(frameState, commandStart);
+    batchTable.addDerivedCommands(frameState, commandStart);
   }
 };
 

@@ -730,6 +730,29 @@ describe(
       );
     });
 
+    function loadTilesetAtFullDetail(url) {
+      return Cesium3DTilesTester.loadTileset(scene, url).then(function (
+        tileset
+      ) {
+        tileset.maximumScreenSpaceError = 0.0;
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+      });
+    }
+
+    it("renders pickPrimitive during pick pass if defined", function () {
+      viewRootOnly();
+      return when
+        .all([
+          loadTilesetAtFullDetail(tilesetUrl),
+          loadTilesetAtFullDetail(withBatchTableUrl),
+        ])
+        .then(function (tilesets) {
+          tilesets[0].pickPrimitive = tilesets[1];
+          expect(tilesets[0].pickPrimitive).toEqual(tilesets[1]);
+          expect(scene).toPickPrimitive(tilesets[1]);
+        });
+    });
+
     it("verify statistics", function () {
       options.url = tilesetUrl;
       var tileset = scene.primitives.add(new Cesium3DTileset(options));
