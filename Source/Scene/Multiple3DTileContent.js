@@ -42,6 +42,14 @@ export default function Multiple3DTileContent(
 
   var contentHeaders = extensionJson.content;
   this._innerContentHeaders = contentHeaders;
+  this._requestsInFlight = 0;
+
+  /**
+   * This is set to true if one of the inner contents are canceled.
+   * @type {Boolean}
+   * @private
+   */
+  this.canceled = false;
 
   var contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
@@ -224,6 +232,41 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 });
 
 /**
+ * Reset the request counter and any promise chains. This method must be called
+ * by the caller after handling a canceled request.
+ * @private
+ */
+Multiple3DTileContent.prototype.reset = function () {
+  // Reset request counting
+  this.canceled = false;
+  this._requestsInFlight = 0;
+
+  // Discard the request promises.
+  var contentCount = this._innerContentHeaders.length;
+  this._arrayFetchPromises = new Array(contentCount);
+  this._contentsFetchedPromise = undefined;
+};
+
+function updatePendingRequests(multipleContent, deltaRequestCount) {
+  if (multipleContent.canceled) {
+    return;
+  }
+
+  multipleContent._requestsInFlight += deltaRequestCount;
+  multipleContent.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
+}
+
+function cancelPendingRequests(multipleContent) {
+  if (multipleContent.canceled) {
+    return;
+  }
+
+  multipleContent.tileset.statistics.numberOfPendingRequests -=
+    multipleContent._requestsInFlight;
+  multipleContent._requestsInFlight = 0;
+}
+
+/**
  * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
  * {@link Multiple3DTileContent#contentFetchedPromise} is defined. This promise
  * becomes available as soon as all requests are scheduled.
@@ -245,7 +288,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   }
 
   var contentHeaders = this._innerContentHeaders;
-  this._tileset.statistics.numberOfPendingRequests += contentHeaders.length;
+  updatePendingRequests(this, contentHeaders.length);
   for (var i = 0; i < contentHeaders.length; i++) {
     this._arrayFetchPromises[i] = requestInnerContent(this, i);
   }
@@ -294,28 +337,29 @@ function requestInnerContent(multipleContent, index) {
     });
   }
 
-  var tileset = multipleContent._tileset;
   return contentResource
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
-      --tileset.statistics.numberOfPendingRequests;
-      return arrayBuffer;
-    })
-    .otherwise(function (error) {
-      var request = contentResource.request;
-      --tileset.statistics.numberOfPendingRequests;
-
-      if (request.state === RequestState.CANCELLED) {
-        // Cancelled due to low priority
-        // TODO: How to update this if canceling one inner content cancels
-        // the entire multiple content?
-        ++tileset.statistics.numberOfAttemptedRequests;
-        // TODO: this should throw an exception to cancel the whole
-        // multiple content. This will require some other tweaks to
-        // ensure statistics are accurate.
+      // Short circuit if another inner content was canceled.
+      if (multipleContent.canceled) {
         return undefined;
       }
 
+      updatePendingRequests(multipleContent, -1);
+      return arrayBuffer;
+    })
+    .otherwise(function (error) {
+      // Short circuit if another inner content was canceled.
+      if (multipleContent.canceled) {
+        return undefined;
+      }
+
+      if (contentResource.request.state === RequestState.CANCELLED) {
+        cancelPendingRequests(multipleContent);
+        throw new RuntimeError("request canceled");
+      }
+
+      updatePendingRequests(multipleContent, -1);
       handleInnerContentFailed(multipleContent, index, error);
       return undefined;
     });
