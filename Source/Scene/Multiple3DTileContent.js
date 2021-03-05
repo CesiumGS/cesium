@@ -200,9 +200,33 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Get an array of the inner content URLs, regardless of whether they've
+   * been fetched or not. This is intended for use with
+   * {@link Cesium3DTileset#debugShowUrl}.
+   *
+   * @type {String[]}
+   * @readonly
+   * @private
+   */
+  innerContentUrls: {
+    get: function () {
+      return this._innerContentHeaders.map(function (contentHeader) {
+        return contentHeader.uri;
+      });
+    },
+  },
+
+  /**
+   * Unlike other content types, <code>Multiple3DTileContent</code> does not
+   * have a single URL, so this returns undefined.
+   *
+   * @type {String}
+   * @readonly
+   */
   url: {
     get: function () {
-      return this._resource.getUrlComponent(true);
+      return undefined;
     },
   },
 

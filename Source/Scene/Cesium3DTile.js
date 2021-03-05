@@ -194,6 +194,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   var content;
   var hasEmptyContent = false;
+  var hasMultipleContents = false;
   var contentState;
   var contentResource;
   var serverKey;
@@ -203,6 +204,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
     var extensionHeader = header.extensions["3DTILES_multiple_contents"];
 
+    hasMultipleContents = true;
     contentResource = baseResource.clone();
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
@@ -279,6 +281,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasImplicitContent = false;
+
+  /**
+   * When <code>true</code>, the tile has multiple contents via the
+   * <code>3DTILES_multiple_contents</code> extension.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasMultipleContents = hasMultipleContents;
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.

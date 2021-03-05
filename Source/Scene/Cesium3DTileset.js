@@ -2185,8 +2185,17 @@ function addTileDebugLabel(tile, tileset, position) {
   }
 
   if (tileset.debugShowUrl) {
-    labelString += "\nUrl: " + tile._header.content.uri;
-    attributes++;
+    if (tile.hasMultipleContents) {
+      labelString += "\nUrls:";
+      var urls = tile.content.innerContentUrls;
+      for (var i = 0; i < urls.length; i++) {
+        labelString += "\n- " + urls[i];
+      }
+      attributes += urls.length;
+    } else {
+      labelString += "\nUrl: " + tile._header.content.uri;
+      attributes++;
+    }
   }
 
   var newLabel = {

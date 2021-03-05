@@ -70,7 +70,7 @@ var Cesium3DTileContentType = {
    * @constant
    * @private
    */
-  GLTF: "glTF",
+  GLTF: "gltf",
   /**
    * The binary form of a glTF file. Internally, the magic number is
    * changed from <code>glTF</code> to <code>glb</code> to distinguish it from
