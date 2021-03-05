@@ -1,14 +1,31 @@
-import { defined } from "../Source/Cesium.js";
+import { defined, defaultValue } from "../Source/Cesium.js";
 import concatTypedArrays from "./concatTypedArrays.js";
 
 export default function ImplicitTilingTester() {}
 
-ImplicitTilingTester.generateSubtreeBuffers = function (subtreeDescription) {
+/**
+ *
+ */
+
+/**
+ * Generate a subtree buffer
+ * @param {SubtreeDescription} subtreeDescription A JSON description of the subtree's structure and values
+ * @param {Boolean} constantOnly true if
+ */
+ImplicitTilingTester.generateSubtreeBuffers = function (
+  subtreeDescription,
+  constantOnly
+) {
+  constantOnly = defaultValue(constantOnly, false);
+
   // This will be populated by makeBufferViews() and makeBuffers()
-  var subtreeJson = {
-    buffers: [],
-    bufferViews: [],
-  };
+  var subtreeJson = {};
+  if (!constantOnly) {
+    subtreeJson = {
+      buffers: [],
+      bufferViews: [],
+    };
+  }
 
   var bufferViewsU8 = makeBufferViews(subtreeDescription, subtreeJson);
   var buffersU8 = makeBuffers(bufferViewsU8, subtreeJson);

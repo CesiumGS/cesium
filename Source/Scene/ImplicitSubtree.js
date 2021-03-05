@@ -233,11 +233,12 @@ function parseSubtreeChunks(subtreeView) {
  * isExternal and isActive fields for easier parsing later. This modifies
  * the objects in place.
  *
- * @param {Object[]} bufferHeaders The JSON from subtreeJson.buffers.
+ * @param {Object[]} [bufferHeaders=[]] The JSON from subtreeJson.buffers.
  * @returns {BufferHeader[]} The same array of headers with additional fields.
  * @private
  */
 function preprocessBuffers(bufferHeaders) {
+  bufferHeaders = defaultValue(bufferHeaders, []);
   for (var i = 0; i < bufferHeaders.length; i++) {
     var bufferHeader = bufferHeaders[i];
     bufferHeader.isExternal = defined(bufferHeader.uri);
@@ -264,12 +265,13 @@ function preprocessBuffers(bufferHeaders) {
  * Iterate the list of buffer views from the subtree JSON and add the
  * isActive flag. Also save a reference to the bufferHeader
  *
- * @param {Object[]} bufferViewHeaders The JSON from subtree.bufferViews
+ * @param {Object[]} [bufferViewHeaders=[]] The JSON from subtree.bufferViews
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @returns {BufferViewHeader[]} The same array of bufferView headers with additional fields
  * @private
  */
 function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
+  bufferViewHeaders = defaultValue(bufferViewHeaders, []);
   for (var i = 0; i < bufferViewHeaders.length; i++) {
     var bufferViewHeader = bufferViewHeaders[i];
     var bufferHeader = bufferHeaders[bufferViewHeader.buffer];
