@@ -1,16 +1,71 @@
 import { defined, defaultValue } from "../Source/Cesium.js";
 import concatTypedArrays from "./concatTypedArrays.js";
 
+/**
+ * Class to generate implicit subtrees for implicit tiling unit tests
+ * @private
+ */
 export default function ImplicitTilingTester() {}
 
 /**
- *
+ * Description of a single availability bitstream
+ * @typedef {Object} AvailabilityDescription
+ * @property {String|Number} descriptor Either a string of <code>0</code>s and <code>1</code>s representing the bitstream values, or an integer <code>0</code> or <code>1</code> to indicate a constant value.
+ * @property {Number} lengthBits How many bits are in the bitstream. This must be specified, even if descriptor is a string of <code>0</code>s and <code>1</code>s
+ * @property {Boolean} isInternal <code>true</code> if an internal bufferView should be created. <code>false</code> indicates the bufferview is stored in an external buffer instead.
+ * @property {Boolean} [shareBuffer=false] This is only used for content availability. If <code>true</code>, then the content availability will share the same buffer as the tile availaibility, as this is a common optimization
+ */
+
+/**
+ * A JSON description of a subtree file for easier generation
+ * @typedef {Object} SubtreeDescription
+ * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
+ * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
+ * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
+ * @private
+ */
+
+/**
+ * Results of procedurally generating a subtree.
+ * @typedef {Object} GeneratedSubtree
+ * @property {Uint8Array} subtreeBuffer A typed array storing the contents of the subtree file (including the internal buffer)
+ * @property {Uint8Array} externalBuffer A typed array representing an external .bin file. This is always returned, but it may be an empty typed array.
  */
 
 /**
  * Generate a subtree buffer
  * @param {SubtreeDescription} subtreeDescription A JSON description of the subtree's structure and values
- * @param {Boolean} constantOnly true if
+ * @param {Boolean} constantOnly true if all the bitstreams are constant, i.e. no buffers/bufferViews are needed.
+ * @return {GeneratedSubtree} The procedurally generated subtree and an external buffer.
+ *
+ * @example
+ *  var subtreeDescription = {
+ *    tileAvailability: {
+ *      descriptor: 1,
+ *      lengthBits: 5,
+ *      isInternal: true,
+ *    },
+ *    contentAvailability: {
+ *      descriptor: "11000",
+ *      lengthBits: 5,
+ *      isInternal: true,
+ *    },
+ *    childSubtreeAvailability: {
+ *      descriptor: "1111000010100000",
+ *      lengthBits: 16,
+ *      isInternal: true,
+ *    },
+ *    other: {
+ *      descriptor: "101010",
+ *      lengthBits: 6,
+ *      isInternal: false,
+ *    },
+ *  };
+ *  var results = ImplicitTilingTester.generateSubtreeBuffers(
+ *    subtreeDescription
+ *  );
+ *
+ * @private
  */
 ImplicitTilingTester.generateSubtreeBuffers = function (
   subtreeDescription,
