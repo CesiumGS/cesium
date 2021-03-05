@@ -4866,6 +4866,36 @@ describe(
         }
       );
     });
+
+    describe("3DTILES_multiple_contents", function () {
+      it("statistics update correctly for success", function () {
+        fail();
+      });
+
+      it("statistics update correctly for partial success", function () {
+        fail();
+      });
+
+      it("statistics update correctly if requests are not scheduled", function () {
+        fail();
+      });
+
+      it("statistics update correctly for error", function () {
+        fail();
+      });
+
+      it("statistics update correctly if tile is canceled", function () {
+        fail();
+      });
+
+      it("verify multiple content statistics", function () {
+        fail();
+      });
+
+      it("debugColorizeTiles for multiple contents", function () {
+        //return checkDebugColorizeTiles(compositeUrl);
+      });
+    });
   },
   "WebGL"
 );
