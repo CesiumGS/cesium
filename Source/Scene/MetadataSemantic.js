@@ -1,7 +1,7 @@
 /**
  * An enum of built-in semantics.
  *
- * @exports MetadataSemantic
+ * @enum MetadataSemantic
  *
  * @private
  */

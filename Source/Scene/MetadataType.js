@@ -5,7 +5,7 @@ import FeatureDetection from "../Core/FeatureDetection.js";
 /**
  * An enum of metadata types.
  *
- * @exports MetadataType
+ * @enum MetadataType
  *
  * @private
  */
