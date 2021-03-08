@@ -47,10 +47,6 @@ function Batched3DModel3DTileContent(
   this._batchTable = undefined;
   this._features = undefined;
 
-  this._classificationType = tileset.noClassificationModels
-    ? undefined
-    : tileset.classificationType;
-
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
@@ -165,7 +161,7 @@ function getBatchIdAttributeName(gltf) {
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._classificationType);
+    var handleTranslucent = !defined(content._tileset.classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
