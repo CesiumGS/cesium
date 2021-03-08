@@ -113,21 +113,237 @@ Object.defineProperties(DoubleEndedPriorityQueue.prototype, {
   },
 });
 
-function swap(that, index0, index1) {
+/**
+ * Clones the double ended priority queue.
+ *
+ * @returns {DoubleEndedPriorityQueue} The cloned double ended priority queue.
+ */
+DoubleEndedPriorityQueue.prototype.clone = function () {
+  var maximumLength = this._maximumLength;
+  var comparator = this._comparator;
+  var array = this._array;
+  var length = this._length;
+
+  var result = new DoubleEndedPriorityQueue({
+    comparator: comparator,
+    maximumLength: maximumLength,
+  });
+
+  result._length = length;
+  for (var i = 0; i < length; i++) {
+    result._array[i] = array[i];
+  }
+
+  return result;
+};
+
+/**
+ * Removes all elements from the queue.
+ */
+DoubleEndedPriorityQueue.prototype.reset = function () {
+  this._length = 0;
+
+  // Dereference elements
+  var maximumLength = this._maximumLength;
+  if (defined(maximumLength)) {
+    // Dereference all elements but keep the array the same size
+    for (var i = 0; i < maximumLength; i++) {
+      this._array[i] = undefined;
+    }
+  } else {
+    // Dereference all elements by clearing the array
+    this._array.length = 0;
+  }
+};
+
+/**
+ * Resort the queue.
+ */
+DoubleEndedPriorityQueue.prototype.resort = function () {
+  var length = this._length;
+
+  // Fix the queue from the top-down
+  for (var i = 0; i < length; i++) {
+    pushUp(this, i);
+  }
+};
+
+/**
+ * Inserts an element into the queue.
+ * If the queue is at full capacity, the minimum element is removed.
+ * The new element is returned (and not added) if it is less than or equal priority to the minimum element.
+ *
+ * @param {*} element
+ * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
+ */
+DoubleEndedPriorityQueue.prototype.insert = function (element) {
+  var removedElement;
+
+  var maximumLength = this._maximumLength;
+  if (defined(maximumLength)) {
+    if (maximumLength === 0) {
+      return undefined;
+    } else if (this._length === maximumLength) {
+      // It's faster to access the minimum directly instead of calling the getter
+      // because it avoids the length === 0 check.
+      var minimumElement = this._array[0];
+      if (this._comparator(element, minimumElement) <= 0.0) {
+        // The element that is being inserted is less than or equal to
+        // the minimum element, so don't insert anything and exit early.
+        return element;
+      }
+      removedElement = this.removeMinimum();
+    }
+  }
+
+  var index = this._length;
+  this._array[index] = element;
+  this._length++;
+  pushUp(this, index);
+
+  return removedElement;
+};
+
+/**
+ * Removes the minimum element from the queue and returns it.
+ * If the queue is empty, the return value is undefined.
+ *
+ * @returns {*|undefined} The minimum element, or undefined if the queue is empty.
+ */
+DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  this._length--;
+
+  // The minimum element is always the root
+  var minimumElement = this._array[0];
+
+  if (length >= 2) {
+    this._array[0] = this._array[length - 1];
+    pushDown(this, 0);
+  }
+
+  // Dereference removed element
+  this._array[length - 1] = undefined;
+
+  return minimumElement;
+};
+
+/**
+ * Removes the maximum element from the queue and returns it.
+ * If the queue is empty, the return value is undefined.
+ *
+ * @returns {*|undefined} The maximum element, or undefined if the queue is empty.
+ */
+DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  this._length--;
+  var maximumElement;
+
+  // If the root has no children, the maximum is the root.
+  // If the root has one child, the maximum is the child.
+  if (length <= 2) {
+    maximumElement = this._array[length - 1];
+  } else {
+    // Otherwise, the maximum is the larger of the root's two children.
+    var maximumElementIndex = greaterThan(this, 1, 2) ? 1 : 2;
+    maximumElement = this._array[maximumElementIndex];
+
+    // Re-balance the heap
+    this._array[maximumElementIndex] = this._array[length - 1];
+    if (length >= 4) {
+      pushDown(this, maximumElementIndex);
+    }
+  }
+
+  // Dereference removed element
+  this._array[length - 1] = undefined;
+
+  return maximumElement;
+};
+
+/**
+ * Gets the minimum element in the queue.
+ * If the queue is empty, the result is undefined.
+ *
+ * @returns {*|undefined} element
+ */
+
+DoubleEndedPriorityQueue.prototype.getMinimum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  // The minimum element is always the root
+  return this._array[0];
+};
+
+/**
+ * Gets the maximum element in the queue.
+ * If the queue is empty, the result is undefined.
+ *
+ * @returns {*|undefined} element
+ */
+DoubleEndedPriorityQueue.prototype.getMaximum = function () {
+  var length = this._length;
+  if (length === 0) {
+    return undefined;
+  }
+
+  // If the root has no children, the maximum is the root.
+  // If the root has one child, the maximum is the child.
+  if (length <= 2) {
+    return this._array[length - 1];
+  }
+
+  // Otherwise, the maximum is the larger of the root's two children.
+  return this._array[greaterThan(this, 1, 2) ? 1 : 2];
+};
+
+// Helper functions
+
+/**
+ * @param {DoubleEndedPriorityQueue} that
+ * @param {Number} indexA
+ * @param {Number} indexB
+ */
+function swap(that, indexA, indexB) {
   var array = that._array;
-  var temp = array[index0];
-  array[index0] = array[index1];
-  array[index1] = temp;
+  var temp = array[indexA];
+  array[indexA] = array[indexB];
+  array[indexB] = temp;
 }
 
+/**
+ * @param {DoubleEndedPriorityQueue} that
+ * @param {Number} indexA
+ * @param {Number} indexB
+ */
 function lessThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) < 0.0;
 }
 
+/**
+ * @param {DoubleEndedPriorityQueue} that
+ * @param {Number} indexA
+ * @param {Number} indexB
+ */
 function greaterThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) > 0.0;
 }
 
+/**
+ * @param {DoubleEndedPriorityQueue} that
+ * @param {Number} index
+ */
 function pushUp(that, index) {
   if (index === 0) {
     return;
@@ -156,6 +372,10 @@ function pushUp(that, index) {
   }
 }
 
+/**
+ * @param {DoubleEndedPriorityQueue} that
+ * @param {Number} index
+ */
 function pushDown(that, index) {
   var length = that._length;
   var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
@@ -194,207 +414,6 @@ function pushDown(that, index) {
     index = target;
   }
 }
-
-/**
- * Clones the double ended priority queue.
- *
- * @returns {DoubleEndedPriorityQueue} The cloned double ended priority queue.
- */
-DoubleEndedPriorityQueue.prototype.clone = function () {
-  var that = this;
-  var maximumLength = that._maximumLength;
-  var comparator = that._comparator;
-  var array = that._array;
-  var length = that._length;
-
-  var result = new DoubleEndedPriorityQueue({
-    comparator: comparator,
-    maximumLength: maximumLength,
-  });
-
-  result._length = length;
-  for (var i = 0; i < length; i++) {
-    result._array[i] = array[i];
-  }
-
-  return result;
-};
-
-/**
- * Removes all elements from the queue.
- */
-DoubleEndedPriorityQueue.prototype.reset = function () {
-  this._length = 0;
-
-  // Dereference elements
-  var maximumLength = this._maximumLength;
-  if (defined(maximumLength)) {
-    // Dereference all elements but keep the array the same size
-    for (var i = 0; i < maximumLength; i++) {
-      this._array[i] = undefined;
-    }
-  } else {
-    // Dereference all elements by clearing the array
-    this._array.length = 0;
-  }
-};
-
-/**
- * Resort the queue.
- */
-DoubleEndedPriorityQueue.prototype.resort = function () {
-  var that = this;
-  var length = that._length;
-
-  // Fix the queue from the top-down
-  for (var i = 0; i < length; i++) {
-    pushUp(that, i);
-  }
-};
-
-/**
- * Inserts an element into the queue.
- * If the queue is at full capacity, the minimum element is removed.
- * The new element is returned (and not added) if it is less than or equal priority to the minimum element.
- *
- * @param {*} element
- * @returns {*|undefined} The minimum element if the queue is at full capacity. Returns undefined if there is no maximum length.
- */
-DoubleEndedPriorityQueue.prototype.insert = function (element) {
-  var removedElement;
-
-  var that = this;
-  var maximumLength = that._maximumLength;
-  if (defined(maximumLength)) {
-    if (maximumLength === 0) {
-      return undefined;
-    } else if (that._length === maximumLength) {
-      // It's faster to access the minimum directly instead of calling the getter
-      // because it avoids the length === 0 check.
-      var minimumElement = that._array[0];
-      if (that._comparator(element, minimumElement) <= 0.0) {
-        // The element that is being inserted is less than or equal to
-        // the minimum element, so don't insert anything and exit early.
-        return element;
-      }
-      removedElement = that.removeMinimum();
-    }
-  }
-
-  var index = that._length;
-  that._array[index] = element;
-  that._length++;
-  pushUp(that, index);
-
-  return removedElement;
-};
-
-/**
- * Removes the minimum element from the queue and returns it.
- * If the queue is empty, the return value is undefined.
- *
- * @returns {*|undefined} The minimum element, or undefined if the queue is empty.
- */
-DoubleEndedPriorityQueue.prototype.removeMinimum = function () {
-  var that = this;
-  var length = that._length;
-  if (length === 0) {
-    return undefined;
-  }
-
-  that._length--;
-
-  // The minimum element is always the root
-  var minimumElement = that._array[0];
-
-  if (length >= 2) {
-    that._array[0] = that._array[length - 1];
-    pushDown(that, 0);
-  }
-
-  // Dereference removed element
-  that._array[length - 1] = undefined;
-
-  return minimumElement;
-};
-
-/**
- * Removes the maximum element from the queue and returns it.
- * If the queue is empty, the return value is undefined.
- *
- * @returns {*|undefined} The maximum element, or undefined if the queue is empty.
- */
-DoubleEndedPriorityQueue.prototype.removeMaximum = function () {
-  var that = this;
-  var length = that._length;
-  if (length === 0) {
-    return undefined;
-  }
-
-  that._length--;
-  var maximumElement;
-
-  // If the root has no children, the maximum is the root.
-  // If the root has one child, the maximum is the child.
-  if (length <= 2) {
-    maximumElement = that._array[length - 1];
-  } else {
-    // Otherwise, the maximum is the larger of the root's two children.
-    var maximumElementIndex = greaterThan(that, 1, 2) ? 1 : 2;
-    maximumElement = that._array[maximumElementIndex];
-
-    // Re-balance the heap
-    that._array[maximumElementIndex] = that._array[length - 1];
-    if (length >= 4) {
-      pushDown(that, maximumElementIndex);
-    }
-  }
-
-  // Dereference removed element
-  that._array[length - 1] = undefined;
-
-  return maximumElement;
-};
-
-/**
- * Gets the minimum element in the queue.
- * If the queue is empty, the result is undefined.
- *
- * @param {*|undefined} element
- */
-
-DoubleEndedPriorityQueue.prototype.getMinimum = function () {
-  var length = this._length;
-  if (length === 0) {
-    return undefined;
-  }
-
-  // The minimum element is always the root
-  return this._array[0];
-};
-
-/**
- * Gets the maximum element in the queue.
- * If the queue is empty, the result is undefined.
- *
- * @param {*|undefined} element
- */
-DoubleEndedPriorityQueue.prototype.getMaximum = function () {
-  var length = this._length;
-  if (length === 0) {
-    return undefined;
-  }
-
-  // If the root has no children, the maximum is the root.
-  // If the root has one child, the maximum is the child.
-  if (length <= 2) {
-    return this._array[length - 1];
-  }
-
-  // Otherwise, the maximum is the larger of the root's two children.
-  var that = this;
-  return this._array[greaterThan(that, 1, 2) ? 1 : 2];
-};
 
 /**
  * The comparator to use for the queue.
