@@ -12,9 +12,6 @@ import RenderState from "../Renderer/RenderState.js";
 import Sampler from "../Renderer/Sampler.js";
 import ShaderSource from "../Renderer/ShaderSource.js";
 import Texture from "../Renderer/Texture.js";
-import TextureWrap from "../Renderer/TextureWrap.js";
-import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
-import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import CompareAndPackTranslucentDepth from "../Shaders/CompareAndPackTranslucentDepth.js";
 import CompositeTranslucentClassification from "../Shaders/PostProcessStages/CompositeTranslucentClassification.js";
 import BlendingState from "./BlendingState.js";
@@ -135,12 +132,7 @@ function rgbaTexture(context, width, height) {
     height: height,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: new Sampler({
-      wrapS: TextureWrap.CLAMP_TO_EDGE,
-      wrapT: TextureWrap.CLAMP_TO_EDGE,
-      minificationFilter: TextureMinificationFilter.NEAREST,
-      magnificationFilter: TextureMagnificationFilter.NEAREST,
-    }),
+    sampler: Sampler.NEAREST,
   });
 }
 
@@ -156,12 +148,7 @@ function updateTextures(transpClass, context, width, height) {
     height: height,
     pixelFormat: PixelFormat.DEPTH_STENCIL,
     pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
-    sampler: new Sampler({
-      wrapS: TextureWrap.CLAMP_TO_EDGE,
-      wrapT: TextureWrap.CLAMP_TO_EDGE,
-      minificationFilter: TextureMinificationFilter.NEAREST,
-      magnificationFilter: TextureMagnificationFilter.NEAREST,
-    }),
+    sampler: Sampler.NEAREST,
   });
 
   transpClass._packedTranslucentDepth = new Texture({
@@ -170,12 +157,7 @@ function updateTextures(transpClass, context, width, height) {
     height: height,
     pixelFormat: PixelFormat.RGBA,
     pixelDatatype: PixelDatatype.UNSIGNED_BYTE,
-    sampler: new Sampler({
-      wrapS: TextureWrap.CLAMP_TO_EDGE,
-      wrapT: TextureWrap.CLAMP_TO_EDGE,
-      minificationFilter: TextureMinificationFilter.NEAREST,
-      magnificationFilter: TextureMagnificationFilter.NEAREST,
-    }),
+    sampler: Sampler.NEAREST,
   });
 }
 

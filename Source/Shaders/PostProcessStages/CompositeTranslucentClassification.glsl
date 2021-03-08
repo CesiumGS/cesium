@@ -22,6 +22,9 @@ void main()
     {
         discard;
     }
+#else
+    // Reverse premultiplication process to get the correct composited result of the classification primitives
+    color.rgb /= color.a;
 #endif
     gl_FragColor = color;
 #endif
