@@ -310,11 +310,6 @@ DoubleEndedPriorityQueue.prototype.getMaximum = function () {
 
 // Helper functions
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} indexA
- * @param {Number} indexB
- */
 function swap(that, indexA, indexB) {
   var array = that._array;
   var temp = array[indexA];
@@ -322,30 +317,14 @@ function swap(that, indexA, indexB) {
   array[indexB] = temp;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} indexA
- * @param {Number} indexB
- * @returns {Boolean}
- */
 function lessThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) < 0.0;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} indexA
- * @param {Number} indexB
- * @returns {Boolean}
- */
 function greaterThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) > 0.0;
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} index
- */
 function pushUp(that, index) {
   if (index === 0) {
     return;
@@ -374,10 +353,6 @@ function pushUp(that, index) {
   }
 }
 
-/**
- * @param {DoubleEndedPriorityQueue} that
- * @param {Number} index
- */
 function pushDown(that, index) {
   var length = that._length;
   var onMinLevel = Math.floor(CesiumMath.log2(index + 1)) % 2 === 0;
