@@ -326,6 +326,7 @@ function swap(that, indexA, indexB) {
  * @param {DoubleEndedPriorityQueue} that
  * @param {Number} indexA
  * @param {Number} indexB
+ * @returns {Boolean}
  */
 function lessThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) < 0.0;
@@ -335,6 +336,7 @@ function lessThan(that, indexA, indexB) {
  * @param {DoubleEndedPriorityQueue} that
  * @param {Number} indexA
  * @param {Number} indexB
+ * @returns {Boolean}
  */
 function greaterThan(that, indexA, indexB) {
   return that._comparator(that._array[indexA], that._array[indexB]) > 0.0;
