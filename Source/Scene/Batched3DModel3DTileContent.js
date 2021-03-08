@@ -47,6 +47,10 @@ function Batched3DModel3DTileContent(
   this._batchTable = undefined;
   this._features = undefined;
 
+  this._classificationType = tileset.noClassificationModels
+    ? undefined
+    : tileset.classificationType;
+
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
   this._diffuseAttributeOrUniformName = {};
