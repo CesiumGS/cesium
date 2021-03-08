@@ -467,4 +467,46 @@ describe("Scene/ImplicitSubtree", function () {
       );
     });
   });
+
+  it("handles subtree with constant-only data", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: 1,
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: 0,
+        lengthBits: 9,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: 0,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+
+    var constantOnly = true;
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription,
+      constantOnly
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree
+    );
+    return subtree.readyPromise.then(function () {
+      expectTileAvailability(subtree, subtreeDescription.tileAvailability);
+      expectContentAvailability(
+        subtree,
+        subtreeDescription.contentAvailability
+      );
+      expectChildSubtreeAvailability(
+        subtree,
+        subtreeDescription.childSubtreeAvailability
+      );
+    });
+  });
 });
