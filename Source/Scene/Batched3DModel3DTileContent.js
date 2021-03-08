@@ -348,7 +348,7 @@ function initialize(content, arrayBuffer, byteOffset) {
   }
 
   var colorChangedCallback;
-  if (defined(content._tileset.classificationType)) {
+  if (defined(tileset.classificationType)) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
@@ -403,7 +403,7 @@ function initialize(content, arrayBuffer, byteOffset) {
     new Matrix4()
   );
 
-  if (!defined(content._tileset.classificationType)) {
+  if (!defined(tileset.classificationType)) {
     // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
     // The pick shader still needs to be patched.
     content._model = new Model({
