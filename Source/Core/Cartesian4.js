@@ -869,21 +869,18 @@ Cartesian4.prototype.toString = function () {
   return "(" + this.x + ", " + this.y + ", " + this.z + ", " + this.w + ")";
 };
 
-var scratchFloatArray = new Float32Array(1);
-var SHIFT_LEFT_8 = 256.0;
-var SHIFT_LEFT_16 = 65536.0;
-var SHIFT_LEFT_24 = 16777216.0;
+// scratchU8Array and scratchF32Array are views into the same buffer
+var scratchF32Array = new Float32Array(1);
+var scratchU8Array = new Uint8Array(scratchF32Array.buffer);
 
-var SHIFT_RIGHT_8 = 1.0 / SHIFT_LEFT_8;
-var SHIFT_RIGHT_16 = 1.0 / SHIFT_LEFT_16;
-var SHIFT_RIGHT_24 = 1.0 / SHIFT_LEFT_24;
-
-var BIAS = 38.0;
+var testU32 = new Uint32Array([0x11223344]);
+var testU8 = new Uint8Array(testU32.buffer);
+var littleEndian = testU8[0] === 0x44;
 
 /**
  * Packs an arbitrary floating point value to 4 values representable using uint8.
  *
- * @param {Number} value A floating point number
+ * @param {Number} value A floating point number.
  * @param {Cartesian4} [result] The Cartesian4 that will contain the packed float.
  * @returns {Cartesian4} A Cartesian4 representing the float packed to values in x, y, z, and w.
  */
@@ -896,34 +893,21 @@ Cartesian4.packFloat = function (value, result) {
     result = new Cartesian4();
   }
 
-  // Force the value to 32 bit precision
-  scratchFloatArray[0] = value;
-  value = scratchFloatArray[0];
+  // scratchU8Array and scratchF32Array are views into the same buffer
+  scratchF32Array[0] = value;
 
-  if (value === 0.0) {
-    return Cartesian4.clone(Cartesian4.ZERO, result);
-  }
-
-  var sign = value < 0.0 ? 1.0 : 0.0;
-  var exponent;
-
-  if (!isFinite(value)) {
-    value = 0.1;
-    exponent = BIAS;
+  if (littleEndian) {
+    result.x = scratchU8Array[0];
+    result.y = scratchU8Array[1];
+    result.z = scratchU8Array[2];
+    result.w = scratchU8Array[3];
   } else {
-    value = Math.abs(value);
-    exponent = Math.floor(CesiumMath.logBase(value, 10)) + 1.0;
-    value = value / Math.pow(10.0, exponent);
+    // convert from big-endian to little-endian
+    result.x = scratchU8Array[3];
+    result.y = scratchU8Array[2];
+    result.z = scratchU8Array[1];
+    result.w = scratchU8Array[0];
   }
-
-  var temp = value * SHIFT_LEFT_8;
-  result.x = Math.floor(temp);
-  temp = (temp - result.x) * SHIFT_LEFT_8;
-  result.y = Math.floor(temp);
-  temp = (temp - result.y) * SHIFT_LEFT_8;
-  result.z = Math.floor(temp);
-  result.w = (exponent + BIAS) * 2.0 + sign;
-
   return result;
 };
 
@@ -939,22 +923,19 @@ Cartesian4.unpackFloat = function (packedFloat) {
   Check.typeOf.object("packedFloat", packedFloat);
   //>>includeEnd('debug');
 
-  var temp = packedFloat.w / 2.0;
-  var exponent = Math.floor(temp);
-  var sign = (temp - exponent) * 2.0;
-  exponent = exponent - BIAS;
-
-  sign = sign * 2.0 - 1.0;
-  sign = -sign;
-
-  if (exponent >= BIAS) {
-    return sign < 0.0 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+  // scratchU8Array and scratchF32Array are views into the same buffer
+  if (littleEndian) {
+    scratchU8Array[0] = packedFloat.x;
+    scratchU8Array[1] = packedFloat.y;
+    scratchU8Array[2] = packedFloat.z;
+    scratchU8Array[3] = packedFloat.w;
+  } else {
+    // convert from little-endian to big-endian
+    scratchU8Array[0] = packedFloat.w;
+    scratchU8Array[1] = packedFloat.z;
+    scratchU8Array[2] = packedFloat.y;
+    scratchU8Array[3] = packedFloat.x;
   }
-
-  var unpacked = sign * packedFloat.x * SHIFT_RIGHT_8;
-  unpacked += sign * packedFloat.y * SHIFT_RIGHT_16;
-  unpacked += sign * packedFloat.z * SHIFT_RIGHT_24;
-
-  return unpacked * Math.pow(10.0, exponent);
+  return scratchF32Array[0];
 };
 export default Cartesian4;

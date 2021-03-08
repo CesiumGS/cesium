@@ -627,17 +627,28 @@ function requestTileGeometry(surfaceTile, terrainProvider, x, y, level) {
   doRequest();
 }
 
+var scratchCreateMeshOptions = {
+  tilingScheme: undefined,
+  x: 0,
+  y: 0,
+  level: 0,
+  exaggeration: 1.0,
+  throttle: true,
+};
+
 function transform(surfaceTile, frameState, terrainProvider, x, y, level) {
   var tilingScheme = terrainProvider.tilingScheme;
 
+  var createMeshOptions = scratchCreateMeshOptions;
+  createMeshOptions.tilingScheme = tilingScheme;
+  createMeshOptions.x = x;
+  createMeshOptions.y = y;
+  createMeshOptions.level = level;
+  createMeshOptions.exaggeration = frameState.terrainExaggeration;
+  createMeshOptions.throttle = true;
+
   var terrainData = surfaceTile.terrainData;
-  var meshPromise = terrainData.createMesh(
-    tilingScheme,
-    x,
-    y,
-    level,
-    frameState.terrainExaggeration
-  );
+  var meshPromise = terrainData.createMesh(createMeshOptions);
 
   if (!defined(meshPromise)) {
     // Postponed.

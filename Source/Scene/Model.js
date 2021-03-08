@@ -16,6 +16,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import DistanceDisplayCondition from "../Core/DistanceDisplayCondition.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import getStringFromTypedArray from "../Core/getStringFromTypedArray.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
@@ -1480,8 +1481,8 @@ Model.fromGltf = function (options) {
           cachedGltf.makeReady(parsedGltf);
         } else {
           // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
+          var json = getJsonFromTypedArray(array);
+          cachedGltf.makeReady(json);
         }
 
         var resourceCredits = model._resourceCredits;
@@ -4507,7 +4508,10 @@ function updateColor(model, frameState, forceDerive) {
   if (alpha > 0.0 && alpha < 1.0) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].translucentCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4543,7 +4547,10 @@ function updateBackFaceCulling(model, frameState, forceDerive) {
   if (!backFaceCulling) {
     var nodeCommands = model._nodeCommands;
     var length = nodeCommands.length;
-    if (!defined(nodeCommands[0].disableCullingCommand) || forceDerive) {
+    if (
+      length > 0 &&
+      (!defined(nodeCommands[0].disableCullingCommand) || forceDerive)
+    ) {
       for (var i = 0; i < length; ++i) {
         var nodeCommand = nodeCommands[i];
         var command = nodeCommand.command;
@@ -4813,12 +4820,13 @@ function updateSilhouette(model, frameState, force) {
 
   var nodeCommands = model._nodeCommands;
   var dirty =
-    alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
-    alphaDirty(
-      model.silhouetteColor.alpha,
-      model._silhouetteColorPreviousAlpha
-    ) ||
-    !defined(nodeCommands[0].silhouetteModelCommand);
+    nodeCommands.length > 0 &&
+    (alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
+      alphaDirty(
+        model.silhouetteColor.alpha,
+        model._silhouetteColorPreviousAlpha
+      ) ||
+      !defined(nodeCommands[0].silhouetteModelCommand));
 
   model._colorPreviousAlpha = model.color.alpha;
   model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
