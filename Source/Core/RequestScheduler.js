@@ -3,14 +3,15 @@ import when from "../ThirdParty/when.js";
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "./defined.js";
+import DoubleEndedPriorityQueue from "./DoubleEndedPriorityQueue.js";
 import Event from "./Event.js";
-import Heap from "./Heap.js";
 import isBlobUri from "./isBlobUri.js";
 import isDataUri from "./isDataUri.js";
 import RequestState from "./RequestState.js";
 
 function sortRequests(a, b) {
-  return a.priority - b.priority;
+  // lower number = higher priority, so flip the order
+  return b.priority - a.priority;
 }
 
 var statistics = {
@@ -23,12 +24,11 @@ var statistics = {
   lastNumberOfActiveRequests: 0,
 };
 
-var priorityHeapLength = 20;
-var requestHeap = new Heap({
+var priorityQueueLength = 20;
+var requestQueue = new DoubleEndedPriorityQueue({
   comparator: sortRequests,
+  maximumLength: priorityQueueLength,
 });
-requestHeap.maximumLength = priorityHeapLength;
-requestHeap.reserve(priorityHeapLength);
 
 var activeRequests = [];
 var numberOfActiveRequestsByServer = {};
@@ -121,7 +121,7 @@ Object.defineProperties(RequestScheduler, {
   },
 
   /**
-   * The maximum size of the priority heap. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
+   * The maximum size of the priority queue. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
    *
    * @memberof RequestScheduler
    *
@@ -129,22 +129,20 @@ Object.defineProperties(RequestScheduler, {
    * @default 20
    * @private
    */
-  priorityHeapLength: {
+  priorityQueueLength: {
     get: function () {
-      return priorityHeapLength;
+      return priorityQueueLength;
     },
     set: function (value) {
-      // If the new length shrinks the heap, need to cancel some of the requests.
-      // Since this value is not intended to be tweaked regularly it is fine to just cancel the high priority requests.
-      if (value < priorityHeapLength) {
-        while (requestHeap.length > value) {
-          var request = requestHeap.pop();
+      // If the new length shrinks the queue, need to cancel some of the requests.
+      if (value < priorityQueueLength) {
+        while (requestQueue.length > value) {
+          var request = requestQueue.removeMinimum();
           cancelRequest(request);
         }
       }
-      priorityHeapLength = value;
-      requestHeap.maximumLength = value;
-      requestHeap.reserve(value);
+      priorityQueueLength = value;
+      requestQueue.maximumLength = value;
     },
   },
 });
@@ -271,13 +269,13 @@ RequestScheduler.update = function () {
   }
   activeRequests.length -= removeCount;
 
-  // Update priority of issued requests and resort the heap
-  var issuedRequests = requestHeap.internalArray;
-  var issuedLength = requestHeap.length;
+  // Update priority of issued requests and resort the queue
+  var issuedRequests = requestQueue.internalArray;
+  var issuedLength = requestQueue.length;
   for (i = 0; i < issuedLength; ++i) {
     updatePriority(issuedRequests[i]);
   }
-  requestHeap.resort();
+  requestQueue.resort();
 
   // Get the number of open slots and fill with the highest priority requests.
   // Un-throttled requests are automatically added to activeRequests, so activeRequests.length may exceed maximumRequests
@@ -286,9 +284,9 @@ RequestScheduler.update = function () {
     0
   );
   var filledSlots = 0;
-  while (filledSlots < openSlots && requestHeap.length > 0) {
-    // Loop until all open slots are filled or the heap becomes empty
-    request = requestHeap.pop();
+  while (filledSlots < openSlots && requestQueue.length > 0) {
+    // Loop until all open slots are filled or the queue becomes empty
+    request = requestQueue.removeMaximum();
     if (request.cancelled) {
       // Request was explicitly cancelled
       cancelRequest(request);
@@ -383,17 +381,17 @@ RequestScheduler.request = function (request) {
     return undefined;
   }
 
-  // Insert into the priority heap and see if a request was bumped off. If this request is the lowest
+  // Insert into the priority queue and see if a request was bumped off. If this request is the lowest
   // priority it will be returned.
   updatePriority(request);
-  var removedRequest = requestHeap.insert(request);
+  var removedRequest = requestQueue.insert(request);
 
   if (defined(removedRequest)) {
     if (removedRequest === request) {
       // Request does not have high enough priority to be issued
       return undefined;
     }
-    // A previously issued request has been bumped off the priority heap, so cancel it
+    // A previously issued request has been bumped off the priority queue, so cancel it
     cancelRequest(removedRequest);
   }
 
@@ -448,8 +446,8 @@ function updateStatistics() {
  * @private
  */
 RequestScheduler.clearForSpecs = function () {
-  while (requestHeap.length > 0) {
-    var request = requestHeap.pop();
+  while (requestQueue.length > 0) {
+    var request = requestQueue.removeMinimum();
     cancelRequest(request);
   }
   var length = activeRequests.length;
@@ -483,5 +481,5 @@ RequestScheduler.numberOfActiveRequestsByServer = function (serverKey) {
  *
  * @private
  */
-RequestScheduler.requestHeap = requestHeap;
+RequestScheduler.requestQueue = requestQueue;
 export default RequestScheduler;

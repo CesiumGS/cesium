@@ -6,14 +6,14 @@ import { when } from "../../Source/Cesium.js";
 describe("Core/RequestScheduler", function () {
   var originalMaximumRequests;
   var originalMaximumRequestsPerServer;
-  var originalPriorityHeapLength;
+  var originalPriorityQueueLength;
   var originalRequestsByServer;
 
   beforeAll(function () {
     originalMaximumRequests = RequestScheduler.maximumRequests;
     originalMaximumRequestsPerServer =
       RequestScheduler.maximumRequestsPerServer;
-    originalPriorityHeapLength = RequestScheduler.priorityHeapLength;
+    originalPriorityQueueLength = RequestScheduler.priorityQueueLength;
     originalRequestsByServer = RequestScheduler.requestsByServer;
   });
 
@@ -25,7 +25,7 @@ describe("Core/RequestScheduler", function () {
   afterEach(function () {
     RequestScheduler.maximumRequests = originalMaximumRequests;
     RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
-    RequestScheduler.priorityHeapLength = originalPriorityHeapLength;
+    RequestScheduler.priorityQueueLength = originalPriorityQueueLength;
     RequestScheduler.requestsByServer = originalRequestsByServer;
   });
 
@@ -207,7 +207,7 @@ describe("Core/RequestScheduler", function () {
     }
   });
 
-  it("honors priorityHeapLength", function () {
+  it("honors priorityQueueLength", function () {
     var deferreds = [];
     var requests = [];
 
@@ -228,23 +228,24 @@ describe("Core/RequestScheduler", function () {
       return request;
     }
 
-    RequestScheduler.priorityHeapLength = 1;
+    RequestScheduler.priorityQueueLength = 1;
     var firstRequest = createRequest(0.0);
     var promise = RequestScheduler.request(firstRequest);
     expect(promise).toBeDefined();
     promise = RequestScheduler.request(createRequest(1.0));
     expect(promise).toBeUndefined();
 
-    RequestScheduler.priorityHeapLength = 3;
+    RequestScheduler.priorityQueueLength = 3;
     promise = RequestScheduler.request(createRequest(2.0));
-    promise = RequestScheduler.request(createRequest(3.0));
+    var lastRequest = createRequest(3.0);
+    promise = RequestScheduler.request(lastRequest);
     expect(promise).toBeDefined();
     promise = RequestScheduler.request(createRequest(4.0));
     expect(promise).toBeUndefined();
 
-    // A request is cancelled to accommodate the new heap length
-    RequestScheduler.priorityHeapLength = 2;
-    expect(firstRequest.state).toBe(RequestState.CANCELLED);
+    // A request is cancelled to accommodate the new queue length
+    RequestScheduler.priorityQueueLength = 2;
+    expect(lastRequest.state).toBe(RequestState.CANCELLED);
 
     var length = deferreds.length;
     for (var i = 0; i < length; ++i) {
@@ -463,7 +464,7 @@ describe("Core/RequestScheduler", function () {
       });
     }
 
-    var length = RequestScheduler.priorityHeapLength;
+    var length = RequestScheduler.priorityQueueLength;
     for (var i = 0; i < length; ++i) {
       var priority = Math.random();
       RequestScheduler.request(createRequest(priority));
@@ -500,7 +501,7 @@ describe("Core/RequestScheduler", function () {
 
     var i;
     var request;
-    var length = RequestScheduler.priorityHeapLength;
+    var length = RequestScheduler.priorityQueueLength;
     for (i = 0; i < length; ++i) {
       var priority = i / (length - 1);
       request = createRequest(priority);
@@ -512,25 +513,25 @@ describe("Core/RequestScheduler", function () {
     RequestScheduler.maximumRequests = 0;
     RequestScheduler.update();
 
-    var requestHeap = RequestScheduler.requestHeap;
+    var requestQueue = RequestScheduler.requestQueue;
     var requests = [];
     var currentTestId = 0;
-    while (requestHeap.length > 0) {
-      request = requestHeap.pop();
+    while (requestQueue.length > 0) {
+      request = requestQueue.removeMaximum();
       requests.push(request);
       expect(request.testId).toBeGreaterThanOrEqualTo(currentTestId);
       currentTestId = request.testId;
     }
 
     for (i = 0; i < length; ++i) {
-      requestHeap.insert(requests[i]);
+      requestQueue.insert(requests[i]);
     }
 
     invertPriority = true;
     RequestScheduler.update();
 
-    while (requestHeap.length > 0) {
-      request = requestHeap.pop();
+    while (requestQueue.length > 0) {
+      request = requestQueue.removeMaximum();
       expect(request.testId).toBeLessThanOrEqualTo(currentTestId);
       currentTestId = request.testId;
     }
@@ -554,17 +555,17 @@ describe("Core/RequestScheduler", function () {
     var mediumPriority = 0.5;
     var lowPriority = 1.0;
 
-    var length = RequestScheduler.priorityHeapLength;
+    var length = RequestScheduler.priorityQueueLength;
     for (var i = 0; i < length; ++i) {
       RequestScheduler.request(createRequest(mediumPriority));
     }
 
-    // Heap is full so low priority request is not even issued
+    // Queue is full so low priority request is not even issued
     var promise = RequestScheduler.request(createRequest(lowPriority));
     expect(promise).toBeUndefined();
     expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(0);
 
-    // Heap is full so high priority request bumps off lower priority request
+    // Queue is full so high priority request bumps off lower priority request
     promise = RequestScheduler.request(createRequest(highPriority));
     expect(promise).toBeDefined();
     expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(1);
