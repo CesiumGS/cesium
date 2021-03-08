@@ -8,25 +8,28 @@ var cache = new GltfCache();
 
 function Model(options) {}
 
+/**
+ * @param {Object} options Object with the following properties:
+ * @param {Resource|String} options.url The url to the .gltf file.
+ * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
+ *
+ * @returns {Model} The newly created model.
+ */
 Model.fromGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var uri = options.url;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.url", uri);
+  Check.defined("options.url", options.url);
   //>>includeEnd('debug');
 
-  // Create resource for the model file
-  var resource = Resource.createIfNeeded(uri);
-
-  // Setup basePath to get dependent files
-  var basePath = defined(options.basePath)
-    ? options.basePath
-    : resource.clone();
-  var baseResource = Resource.createIfNeeded(basePath);
+  var model = new Model(options);
 
   cache.loadGltf({
-    resource: resource,
-    baseResource: baseResource,
+    uri: options.uri,
+    basePath: options.basePath,
+  }).then(function(gltf) {
+    
   });
+
+  return new Model(options);
 };

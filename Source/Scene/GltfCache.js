@@ -79,7 +79,10 @@ function containsGltfMagic(uint8Array) {
 
 function loadLegacyBuffer(cache, buffer, baseResource) {
   return cache
-    .loadBuffer(cache, buffer, baseResource)
+    .loadBuffer({
+      uri: buffer.uri,
+      baseResource: baseResource,
+    })
     .then(function (uint8Array) {
       buffer.extras._pipeline.source = uint8Array;
     });
@@ -130,11 +133,11 @@ function decodeDataUris(gltf) {
   return when.all(promises);
 }
 
-function getEmbeddedBufferCacheKey(baseResource, bufferId) {
-  return baseResource.url + "-buffer-" + bufferId;
+function getEmbeddedBufferCacheKey(resource, bufferId) {
+  return resource.url + "-buffer-" + bufferId;
 }
 
-function cacheEmbeddedBuffers(cache, gltf, baseResource) {
+function cacheEmbeddedBuffers(cache, gltf, resource) {
   var buffers = gltf.buffers;
   if (defined(buffers)) {
     var buffersLength = buffers.length;
@@ -142,7 +145,7 @@ function cacheEmbeddedBuffers(cache, gltf, baseResource) {
       var buffer = buffers[i];
       var source = buffer.extras._pipeline.source;
       if (defined(source) && !defined(buffer.uri)) {
-        var cacheKey = getEmbeddedBufferCacheKey(baseResource, i);
+        var cacheKey = getEmbeddedBufferCacheKey(resource, i);
         addCacheItem(cache, {
           contents: source,
           cacheKey: cacheKey,
@@ -152,7 +155,7 @@ function cacheEmbeddedBuffers(cache, gltf, baseResource) {
   }
 }
 
-function processGltf(cache, arrayBuffer, baseResource) {
+function processGltf(cache, arrayBuffer, resource, baseResource) {
   var uint8Array = new Uint8Array(arrayBuffer);
 
   var gltf;
@@ -167,7 +170,7 @@ function processGltf(cache, arrayBuffer, baseResource) {
   return decodeDataUris(gltf).then(function () {
     return upgradeVersion(cache, gltf, baseResource).then(function () {
       addDefaults(gltf);
-      cacheEmbeddedBuffers(cache, gltf, baseResource);
+      cacheEmbeddedBuffers(cache, gltf, resource);
       removePipelineExtras(gltf);
       return gltf;
     });
@@ -184,15 +187,30 @@ function getFailedLoadMessage(error, type, path) {
 
 var uriToGuid = {};
 
+var defaultModelAccept =
+  "model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01";
+
 GltfCache.prototype.loadGltf = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resource = options.resource;
-  var baseResource = options.baseResource;
+  var uri = options.uri;
+  var basePath = options.basePath;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resource", resource);
-  Check.typeOf.object("options.baseResource", baseResource);
+  Check.defined("options.uri", uri);
   //>>includeEnd('debug');
+
+  // Create resource for the model file
+  var resource = Resource.createIfNeeded(uri);
+
+  // Add Accept header if we need it
+  if (!defined(resource.headers.Accept)) {
+    resource.headers.Accept = defaultModelAccept;
+  }
+
+  // Set up baseResource to get dependent files
+  var baseResource = defined(basePath)
+    ? Resource.createIfNeeded(basePath)
+    : resource.clone();
 
   // Check using a URI to GUID dictionary that we have not already added this glTF
   var cacheKey = uriToGuid[getAbsoluteUri(resource.url)];

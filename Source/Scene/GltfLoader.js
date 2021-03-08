@@ -4,8 +4,6 @@ import defined from "../Core/defined.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 
-var cache = GltfLoaderCache();
-
 function GltfLoader(options) {}
 
 function loadShaders(promises) {
@@ -192,22 +190,6 @@ function getUsedBufferIds(gltf) {
   return Object.keys(usedBufferIds);
 }
 
-function getLoadedBuffers(gltf) {
-  // Get loaded buffers from buffer.extras._pipeline.source
-  var loadedBuffers;
-  var buffers = gltf.buffers;
-  if (defined(buffers)) {
-    var buffersLength = buffers.length;
-    loadedBuffers = new Array(buffersLength);
-    for (var i = 0; i < buffersLength; ++i) {
-      var buffer = buffers[i];
-      loadedBuffers[i] = buffer.extras._pipeline.source;
-    }
-  }
-  removePipelineExtras(gltf);
-  return loadedBuffers;
-}
-
 function loadBuffers(gltf) {
   var promises = [];
   var loadedBuffers = getLoadedBuffers(gltf);
@@ -220,7 +202,7 @@ function loadBuffers(gltf) {
       var promise = cache
         .loadBuffer(buffer.uri)
         .then(function (typedArray) {
-          loadedBuffers[i] = typedArray; // TODO: need closure
+          loadedBuffers[i] = typedArray;
         })
         .otherwise(function (error) {
           throw new RuntimeError(
@@ -236,112 +218,12 @@ function loadBuffers(gltf) {
   });
 }
 
-function loadGltfFromCache(uri) {
-  if (!cache.getGltf(uri)) {
+GltfLoader.loadGltf = function(gltf) {
+  return cache.loadGltf({
+    uri: options.uri,
+    basePath: options.basePath,
+  }).then(function(gltf) {
+    
   }
 
-  // TODO: data uri
-
-  // The cache either has a promise to a "finished" glTF or a finished gltf
-  // A finished gltf is just the gltf JSON, not the buffers/textures/shaders
-}
-
-var defaultModelAccept =
-  "model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01";
-
-/**
- * Loads a glTF model from a uri.
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.uri The uri to the glTF file.
- * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
- *
- * @returns {Model} The newly created model.
- */
-GltfLoader.fromUri = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var uri = options.uri;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.defined("options.uri", uri);
-  //>>includeEnd('debug');
-
-  // Create resource for the model file
-  var modelResource = Resource.createIfNeeded(uri);
-
-  // Setup basePath to get dependent files
-  var basePath = defined(options.basePath)
-    ? options.basePath
-    : modelResource.clone();
-  var resource = Resource.createIfNeeded(basePath);
-
-  // If no cache key is provided, use a GUID.
-  // Check using a URI to GUID dictionary that we have not already added this model.
-  var cacheKey = defaultValue(
-    options.cacheKey,
-    uriToGuid[getAbsoluteUri(modelResource.url)]
-  );
-  if (!defined(cacheKey)) {
-    cacheKey = createGuid();
-    uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
-  }
-
-  if (defined(options.basePath) && !defined(options.cacheKey)) {
-    cacheKey += resource.url;
-  }
-  options.cacheKey = cacheKey;
-  options.basePath = resource;
-
-  var model = new Model(options);
-
-  var cachedGltf = gltfCache[cacheKey];
-  if (!defined(cachedGltf)) {
-    cachedGltf = new CachedGltf({
-      ready: false,
-    });
-    cachedGltf.count = 1;
-    cachedGltf.modelsToLoad.push(model);
-    setCachedGltf(model, cachedGltf);
-    gltfCache[cacheKey] = cachedGltf;
-
-    // Add Accept header if we need it
-    if (!defined(modelResource.headers.Accept)) {
-      modelResource.headers.Accept = defaultModelAccept;
-    }
-
-    modelResource
-      .fetchArrayBuffer()
-      .then(function (arrayBuffer) {
-        var array = new Uint8Array(arrayBuffer);
-        if (containsGltfMagic(array)) {
-          // Load binary glTF
-          var parsedGltf = parseGlb(array);
-          cachedGltf.makeReady(parsedGltf);
-        } else {
-          // Load text (JSON) glTF
-          var json = getStringFromTypedArray(array);
-          cachedGltf.makeReady(JSON.parse(json));
-        }
-
-        var resourceCredits = model._resourceCredits;
-        var credits = modelResource.credits;
-        if (defined(credits)) {
-          var length = credits.length;
-          for (var i = 0; i < length; i++) {
-            resourceCredits.push(credits[i]);
-          }
-        }
-      })
-      .otherwise(
-        ModelUtility.getFailedLoadFunction(model, "model", modelResource.url)
-      );
-  } else if (!cachedGltf.ready) {
-    // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
-    ++cachedGltf.count;
-    cachedGltf.modelsToLoad.push(model);
-  }
-  // else if the cached glTF is defined and ready, the
-  // model constructor will pick it up using the cache key.
-
-  return model;
 };
