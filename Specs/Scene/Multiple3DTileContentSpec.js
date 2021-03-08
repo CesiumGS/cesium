@@ -1,17 +1,238 @@
+import {
+  Cartesian3,
+  Color,
+  HeadingPitchRange,
+  Multiple3DTileContent,
+  RequestScheduler,
+  Resource,
+  when,
+} from "../../Source/Cesium.js";
+import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
+import createScene from "../createScene.js";
+
 describe("Scene/Multiple3DTileContent", function () {
+  var scene;
+
+  // This scene is the same as Composite/Composite, just rephrased
+  // using 3DTILES_multiple_contents
+  var centerLongitude = -1.31968;
+  var centerLatitude = 0.698874;
+  var multipleContentUrl =
+    "./Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
+
+  var tilesetResource = new Resource({ url: "http://example.com" });
+  var extensionJson = {
+    content: [
+      {
+        uri: "pointcloud.pnts",
+      },
+      {
+        uri: "batched.b3dm",
+      },
+      {
+        uri: "gltfModel.glb",
+      },
+    ],
+  };
+
+  function makeGltfBuffer() {
+    var gltf = {
+      asset: {
+        version: "1.0",
+      },
+    };
+    var gltfJson = JSON.stringify(gltf);
+    var buffer = new Uint8Array(gltfJson.length);
+    for (var i = 0; i < gltfJson.length; i++) {
+      buffer[i] = gltfJson.charCodeAt(i);
+    }
+
+    return buffer.buffer;
+  }
+
+  var originalRequestsPerServer;
+
+  beforeAll(function () {
+    scene = createScene();
+    // One item in each data set is always located in the center, so point the camera there
+    var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+    scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
+
+    originalRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
+  });
+
+  afterAll(function () {
+    scene.destroyForSpecs();
+  });
+
+  beforeEach(function () {
+    RequestScheduler.maximumRequestsPerServer = originalRequestsPerServer;
+  });
+
+  afterEach(function () {
+    scene.primitives.removeAll();
+  });
+
+  function expectRenderMultipleContents(tileset) {
+    expect(scene).toPickAndCall(function (result) {
+      // Pick a building
+      var pickedBuilding = result;
+      expect(pickedBuilding).toBeDefined();
+
+      // Change the color of the picked building to yellow
+      pickedBuilding.color = Color.clone(Color.YELLOW, pickedBuilding.color);
+
+      // Expect the pixel color to be some shade of yellow
+      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
+        expect(rgba[0]).toBeGreaterThan(0);
+        expect(rgba[1]).toBeGreaterThan(0);
+        expect(rgba[2]).toEqual(0);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      // Both a building and instance are located at the center, hide the building and pick the instance
+      pickedBuilding.show = false;
+
+      var pickedInstance;
+      expect(scene).toPickAndCall(function (result) {
+        pickedInstance = result;
+        expect(pickedInstance).toBeDefined();
+        expect(pickedInstance).not.toEqual(pickedBuilding);
+      });
+
+      // Change the color of the picked instance to green
+      pickedInstance.color = Color.clone(Color.GREEN, pickedInstance.color);
+
+      // Expect the pixel color to be some shade of green
+      Cesium3DTilesTester.expectRender(scene, tileset, function (rgba) {
+        expect(rgba[0]).toEqual(0);
+        expect(rgba[1]).toBeGreaterThan(0);
+        expect(rgba[2]).toEqual(0);
+        expect(rgba[3]).toEqual(255);
+      });
+
+      // Hide the instance, and expect the render to be blank
+      pickedInstance.show = false;
+      Cesium3DTilesTester.expectRenderBlank(scene, tileset);
+    });
+  }
+
   it("urls returns the urls from the extension", function () {
-    fail();
+    var tileset = {};
+    var tile = {};
+    var content = new Multiple3DTileContent(
+      tileset,
+      tile,
+      tilesetResource,
+      extensionJson
+    );
+
+    expect(content.innerContentUrls).toEqual([
+      "pointcloud.pnts",
+      "batched.b3dm",
+      "gltfModel.glb",
+    ]);
+  });
+
+  it("contentFetchedPromise is undefined until requestInnerContents is successful", function () {
+    var mockTileset = {
+      statistics: {
+        numberOfPendingRequests: 0,
+      },
+    };
+    var tile = {};
+    var content = new Multiple3DTileContent(
+      mockTileset,
+      tile,
+      tilesetResource,
+      extensionJson
+    );
+
+    expect(content.contentFetchedPromise).not.toBeDefined();
+
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+      return when.resolve(makeGltfBuffer());
+    });
+    content.requestInnerContents();
+    expect(content.contentFetchedPromise).toBeDefined();
+  });
+
+  it("contentsFetchedPromise is undefined if no requests are scheduled", function () {
+    var mockTileset = {
+      statistics: {
+        numberOfPendingRequests: 0,
+      },
+    };
+    var tile = {};
+    var content = new Multiple3DTileContent(
+      mockTileset,
+      tile,
+      tilesetResource,
+      extensionJson
+    );
+
+    expect(content.contentFetchedPromise).not.toBeDefined();
+
+    RequestScheduler.maximumRequestsPerServer = 2;
+    content.requestInnerContents();
+
+    expect(content.contentFetchedPromise).not.toBeDefined();
+  });
+
+  it("requestInnerContents returns 0 if successful", function () {
+    var mockTileset = {
+      statistics: {
+        numberOfPendingRequests: 0,
+      },
+    };
+    var tile = {};
+    var content = new Multiple3DTileContent(
+      mockTileset,
+      tile,
+      tilesetResource,
+      extensionJson
+    );
+
+    var fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(
+      function () {
+        return when.resolve(makeGltfBuffer());
+      }
+    );
+    expect(content.requestInnerContents()).toBe(0);
+    expect(fetchArray.calls.count()).toBe(3);
+  });
+
+  it("requestInnerContents schedules no requests if there are not enough open slots", function () {
+    var mockTileset = {
+      statistics: {
+        numberOfPendingRequests: 0,
+      },
+    };
+    var tile = {};
+    var content = new Multiple3DTileContent(
+      mockTileset,
+      tile,
+      tilesetResource,
+      extensionJson
+    );
+
+    var fetchArray = spyOn(Resource.prototype, "fetchArrayBuffer");
+    RequestScheduler.maximumRequestsPerServer = 2;
+    expect(content.requestInnerContents()).toBe(3);
+    expect(fetchArray).not.toHaveBeenCalled();
   });
 
   it("resolves readyPromise", function () {
-    fail();
+    return Cesium3DTilesTester.resolvesReadyPromise(scene, multipleContentUrl);
   });
 
-  it("rejects readyPromise on error", function () {
-    fail();
+  it("renders multiple contents", function () {
+    return Cesium3DTilesTester.loadTileset(scene, multipleContentUrl).then(
+      expectRenderMultipleContents
+    );
   });
 
-  it("throws with invalid inner tile content type", function () {
-    fail();
+  it("destroys", function () {
+    return Cesium3DTilesTester.tileDestroys(scene, multipleContentUrl);
   });
 });
