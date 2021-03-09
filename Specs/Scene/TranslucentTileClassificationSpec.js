@@ -388,10 +388,18 @@ describe(
       );
 
       var secondFrustumAccumulation = accumulationFBO;
-      expect(readPixels(secondFrustumAccumulation)).not.toEqual([0, 0, 0, 0]);
-      expect(readPixels(secondFrustumAccumulation)).toEqual(
-        readPixels(drawClassificationFBO)
-      );
+      var accumulationPixels = readPixels(secondFrustumAccumulation);
+      var classificationPixels = readPixels(drawClassificationFBO);
+      var expectedPixels = [
+        // Multiply by two to account for premultiplied alpha
+        classificationPixels[0] * 2,
+        classificationPixels[1] * 2,
+        classificationPixels[2] * 2,
+        classificationPixels[3],
+      ];
+
+      expect(accumulationPixels).not.toEqual([0, 0, 0, 0]);
+      expect(accumulationPixels).toEqualEpsilon(expectedPixels, 1);
 
       translucentTileClassification.destroy();
     });
@@ -498,16 +506,9 @@ describe(
       var postCompositePixels = readPixels(targetColorFBO);
       expect(postCompositePixels).not.toEqual(preCompositePixels);
 
-      var normalizedAlpha = pixelsToComposite[3] / 255;
-      var red =
-        Math.round(normalizedAlpha * pixelsToComposite[0]) +
-        preCompositePixels[0];
-      var green =
-        Math.round(normalizedAlpha * pixelsToComposite[1]) +
-        preCompositePixels[1];
-      var blue =
-        Math.round(normalizedAlpha * pixelsToComposite[2]) +
-        preCompositePixels[2];
+      var red = Math.round(pixelsToComposite[0]) + preCompositePixels[0];
+      var green = Math.round(pixelsToComposite[1]) + preCompositePixels[1];
+      var blue = Math.round(pixelsToComposite[2]) + preCompositePixels[2];
       var alpha = pixelsToComposite[3] + preCompositePixels[3];
 
       expect(postCompositePixels[0]).toEqual(red);
