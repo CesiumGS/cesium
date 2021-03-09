@@ -432,11 +432,11 @@ function createShaders(primitive, context) {
     "a_batchId",
     undefined
   )(Vector3DTilePolylinesVS);
-  var fsSource = batchTable.getFragmentShaderCallback()(
-    PolylineFS,
+  var fsSource = batchTable.getFragmentShaderCallback(
     false,
-    undefined
-  );
+    undefined,
+    false
+  )(PolylineFS);
 
   var vs = new ShaderSource({
     defines: [
