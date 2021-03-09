@@ -48,8 +48,5 @@ void main()
     }
     gl_FragColor = u_highlightColor;
 
-    // Premultiply alpha. Required for classification primitives on translucent globe.
-    gl_FragColor.rgb *= gl_FragColor.a;
-
     czm_writeDepthClamp();
 }
