@@ -101,7 +101,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- * @param {Boolean} [options.noClassificationModels=false] Do not use b3dms for classification.
+ * @param {Boolean} [options.noClassificationModels=false] Indicates that the tileset's b3dms should not be used for classification.
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
@@ -1666,6 +1666,34 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       );
       //>>includeEnd('debug');
       Cartesian2.clone(value, this._imageBasedLightingFactor);
+    },
+  },
+
+  /**
+   * Minimum and maximum heights that vector tiles clamped to surfaces will clamp to.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Cartesian2}
+   * @default undefined
+   */
+  minimumMaximumVectorHeights: {
+    get: function () {
+      return this._minimumMaximumVectorHeights;
+    },
+  },
+
+  /**
+   * Indicates that the tileset's b3dms should not be used for classification.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  noClassificationModels: {
+    get: function () {
+      return this._noClassificationModels;
     },
   },
 });
