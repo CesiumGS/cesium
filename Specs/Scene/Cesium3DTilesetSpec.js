@@ -160,6 +160,8 @@ describe(
     var multipleContentsUrl =
       "Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
 
+    var implicitTilesetUrl =
+      "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
     var implicitRootUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
     var implicitChildUrl =
@@ -4868,6 +4870,18 @@ describe(
           expect(implicitTile.implicitCoordinates.y).toEqual(0);
         }
       );
+    });
+
+    describe("3DTILES_implicit_tiling", function () {
+      it("renders tileset", function () {
+        return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
+          function (tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(6);
+            expect(statistics.numberOfCommands).toEqual(5);
+          }
+        );
+      });
     });
 
     describe("3DTILES_multiple_contents", function () {
