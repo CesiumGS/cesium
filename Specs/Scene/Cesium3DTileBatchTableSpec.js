@@ -152,13 +152,6 @@ describe(
       }).toThrowDeveloperError();
     });
 
-    it("setColor throws with undefined value", function () {
-      var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-      expect(function () {
-        batchTable.setColor(0);
-      }).toThrowDeveloperError();
-    });
-
     it("setColor", function () {
       var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
@@ -168,6 +161,13 @@ describe(
 
       // Check that batch table resources are still undefined because value is true by default
       batchTable.setColor(0, Color.WHITE);
+      batchTable.update(mockTileset, scene.frameState);
+      expect(batchTable._batchValues).toBeUndefined();
+      expect(batchTable._batchTexture).toBeUndefined();
+      expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
+
+      // Check that batch table resources are still undefined because value is true by default
+      batchTable.setColor(0);
       batchTable.update(mockTileset, scene.frameState);
       expect(batchTable._batchValues).toBeUndefined();
       expect(batchTable._batchTexture).toBeUndefined();
