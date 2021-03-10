@@ -430,6 +430,68 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
+  it("computes level offset", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: "110101011",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree
+    );
+
+    expect(subtree.getLevelOffset(2)).toEqual(9);
+  });
+
+  it("computes parent Morton index", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: "110101011",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree
+    );
+
+    // 341 = 0b101010101
+    //  42 = 0b101010
+    expect(subtree.getParentMortonIndex(341)).toBe(42);
+  });
+
   it("availability works for octrees", function () {
     var subtreeDescription = {
       tileAvailability: {
@@ -510,6 +572,44 @@ describe("Scene/ImplicitSubtree", function () {
         subtreeDescription.childSubtreeAvailability
       );
     });
+  });
+
+  it("rejects ready promise on error", function () {
+    var error = new Error("simulated error");
+    spyOn(when, "all").and.returnValue(when.reject(error));
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: 1,
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: {
+        descriptor: 1,
+        lengthBits: 5,
+        isInternal: true,
+      },
+      childSubtreeAvailability: {
+        descriptor: 0,
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise
+      .then(function () {
+        fail();
+      })
+      .otherwise(function (error) {
+        expect(error).toEqual(error);
+      });
   });
 
   describe("3DTILES_multiple_contents", function () {

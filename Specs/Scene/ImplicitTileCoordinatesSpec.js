@@ -39,6 +39,21 @@ describe("Scene/ImplicitTileCoordinates", function () {
     expect(coordinates.z).toEqual(1);
   });
 
+  it("deriveChildCoordinates throws for out of bounds index", function () {
+    var coordinates = new ImplicitTileCoordinates({
+      subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,
+      level: 1,
+      x: 0,
+      y: 0,
+    });
+    expect(function () {
+      return coordinates.deriveChildCoordinates(-1);
+    }).toThrowDeveloperError();
+    expect(function () {
+      return coordinates.deriveChildCoordinates(10);
+    }).toThrowDeveloperError();
+  });
+
   it("derives child quadtree coordinates", function () {
     var coordinates = new ImplicitTileCoordinates({
       subdivisionScheme: ImplicitSubdivisionScheme.QUADTREE,

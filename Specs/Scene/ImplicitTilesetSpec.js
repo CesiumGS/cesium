@@ -57,9 +57,22 @@ describe("Scene/ImplicitTileset", function () {
 
   it("stores a template of the tile JSON structure", function () {
     var implicitTileset = new ImplicitTileset(baseResource, implicitTileJson);
-    var expected = clone(implicitTileJson, true);
+    var deep = true;
+    var expected = clone(implicitTileJson, deep);
     delete expected.content;
     delete expected.extensions;
+    expect(implicitTileset.tileHeader).toEqual(expected);
+  });
+
+  it("tileHeader stores additional extensions", function () {
+    var deep = true;
+    var withExtensions = clone(implicitTileJson, deep);
+    withExtensions.extensions["3DTILES_extension"] = {};
+
+    var implicitTileset = new ImplicitTileset(baseResource, withExtensions);
+    var expected = clone(withExtensions, deep);
+    delete expected.content;
+    delete expected.extensions["3DTILES_implicit_tiling"];
     expect(implicitTileset.tileHeader).toEqual(expected);
   });
 
@@ -135,7 +148,8 @@ describe("Scene/ImplicitTileset", function () {
     });
 
     it("stores content JSON for every tile", function () {
-      var withProperties = clone(multipleContentTile);
+      var deep = true;
+      var withProperties = clone(multipleContentTile, deep);
       var extension = { "3DTILES_extension": {} };
       var boundingBox = { box: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1] };
       var contents =
@@ -150,6 +164,14 @@ describe("Scene/ImplicitTileset", function () {
       for (i = 0; i < implicitTileset.contentHeaders.length; i++) {
         expect(implicitTileset.contentHeaders[i]).toEqual(contents[i]);
       }
+    });
+
+    it("template tileHeader does not store multiple contents extension", function () {
+      var implicitTileset = new ImplicitTileset(
+        baseResource,
+        multipleContentTile
+      );
+      expect(implicitTileset.tileHeader.extensions).not.toBeDefined();
     });
   });
 });

@@ -1794,9 +1794,9 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
     var deepCopy = true;
     var tileJson = combine(contentJson, tileHeader, deepCopy);
 
-    // Cesium3DTile gets confused if the extensions are present on the
-    // placeholder tile
-    // TODO: See if there's a better way to do this
+    // The placeholder tile does not have any extensions. If there are any
+    // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+    // copy them to the transcoded tiles.
     delete tileJson.extensions;
 
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
