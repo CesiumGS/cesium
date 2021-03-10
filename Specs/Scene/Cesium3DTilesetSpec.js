@@ -157,6 +157,9 @@ describe(
     var pointCloudBatchedUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
 
+    var multipleContentsUrl =
+      "Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
+
     var implicitRootUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
     var implicitChildUrl =
@@ -4868,32 +4871,237 @@ describe(
     });
 
     describe("3DTILES_multiple_contents", function () {
-      it("statistics update correctly for success", function () {
-        fail();
+      it("request statistics are updated correctly on success", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            var statistics = tileset.statistics;
+            expect(statistics.numberOfAttemptedRequests).toBe(0);
+            expect(statistics.numberOfPendingRequests).toBe(0);
+            expect(statistics.numberOfTilesProcessing).toBe(0);
+            expect(statistics.numberOfTilesWithContentReady).toBe(1);
+          }
+        );
       });
 
-      it("statistics update correctly for partial success", function () {
-        fail();
+      it("request statistics are updated for partial success", function () {
+        var originalLoadJson = Cesium3DTileset.loadJson;
+        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+            var content =
+              tilesetJson.root.extensions["3DTILES_multiple_contents"].content;
+            var badTile = {
+              uri: "nonexistent.b3dm",
+            };
+            content.splice(1, 0, badTile);
+
+            return tilesetJson;
+          });
+        });
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+
+            var statistics = tileset.statistics;
+            expect(statistics.numberOfAttemptedRequests).toBe(0);
+            expect(statistics.numberOfPendingRequests).toBe(3);
+            expect(statistics.numberOfTilesProcessing).toBe(0);
+            expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+            tileset.root.contentReadyToProcessPromise.then(function () {
+              expect(statistics.numberOfAttemptedRequests).toBe(0);
+              expect(statistics.numberOfPendingRequests).toBe(0);
+              expect(statistics.numberOfTilesProcessing).toBe(1);
+              expect(statistics.numberOfTilesWithContentReady).toBe(0);
+            });
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+              function () {
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(1);
+              }
+            );
+          }
+        );
       });
 
-      it("statistics update correctly if requests are not scheduled", function () {
-        fail();
-      });
+      it("request statistics are updated correctly if requests are not scheduled", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            var oldMaximumRequestsPerServer =
+              RequestScheduler.maximumRequestsPerServer;
+            RequestScheduler.maximumRequestsPerServer = 1;
 
-      it("statistics update correctly for error", function () {
-        fail();
+            viewAllTiles();
+            scene.renderForSpecs();
+
+            var statistics = tileset.statistics;
+            expect(statistics.numberOfAttemptedRequests).toBe(2);
+            expect(statistics.numberOfPendingRequests).toBe(0);
+            expect(statistics.numberOfTilesProcessing).toBe(0);
+            expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+            RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
+          }
+        );
       });
 
       it("statistics update correctly if tile is canceled", function () {
-        fail();
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+
+            var statistics = tileset.statistics;
+            expect(statistics.numberOfAttemptedRequests).toBe(0);
+            expect(statistics.numberOfPendingRequests).toBe(2);
+            expect(statistics.numberOfTilesProcessing).toBe(0);
+            expect(statistics.numberOfTilesWithContentReady).toBe(0);
+
+            var multipleContent = tileset.root.content;
+            multipleContent._innerContentResources.forEach(function (resource) {
+              resource.request.cancel();
+            });
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+              function () {
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+              }
+            );
+          }
+        );
       });
 
       it("verify multiple content statistics", function () {
-        fail();
+        options.url = multipleContentsUrl;
+        var tileset = scene.primitives.add(new Cesium3DTileset(options));
+
+        return checkPointAndFeatureCounts(tileset, 35, 0, 132);
+      });
+
+      it("calls tileFailed for each content with errors", function () {
+        var originalLoadJson = Cesium3DTileset.loadJson;
+        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+            var extension =
+              tilesetJson.root.extensions["3DTILES_multiple_contents"];
+            extension.content = [
+              {
+                uri: "nonexistent1.b3dm",
+              },
+              {
+                uri: "nonexistent2.b3dm",
+              },
+              {
+                uri: "nonexistent3.b3dm",
+              },
+            ];
+
+            return tilesetJson;
+          });
+        });
+
+        var uris = [];
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            tileset.tileFailed.addEventListener(function (event) {
+              console.log(event);
+              uris.push(event.url);
+            });
+
+            viewAllTiles();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+              function () {
+                expect(uris.length).toBe(3);
+                uris.sort();
+                var expected = [
+                  "nonexistent1.b3dm",
+                  "nonexistent2.b3dm",
+                  "nonexistent3.b3dm",
+                ];
+
+                for (var i = 0; i < expected.length; i++) {
+                  expect(uris[i].endsWith(expected[i])).toBe(true);
+                }
+              }
+            );
+          }
+        );
+      });
+
+      it("raises tileFailed for external tileset inside multiple contents", function () {
+        var originalLoadJson = Cesium3DTileset.loadJson;
+        spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+          return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+            var extension =
+              tilesetJson.root.extensions["3DTILES_multiple_contents"];
+            extension.content = [
+              {
+                uri: "external.json",
+              },
+            ];
+
+            return tilesetJson;
+          });
+        });
+
+        spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
+          var externalTileset = {
+            asset: {
+              version: "1.0",
+            },
+            geometricError: 100.0,
+          };
+          var buffer = Cesium3DTilesTester.generateJsonBuffer(externalTileset);
+          return when.resolve(buffer);
+        });
+
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            tileset.tileFailed.addEventListener(function (event) {
+              expect(event.url.endsWith("external.json")).toBe(true);
+              expect(event.message).toEqual(
+                "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
+              );
+            });
+
+            viewAllTiles();
+            scene.renderForSpecs();
+          }
+        );
       });
 
       it("debugColorizeTiles for multiple contents", function () {
-        //return checkDebugColorizeTiles(compositeUrl);
+        return checkDebugColorizeTiles(multipleContentsUrl);
+      });
+
+      it("debugShowUrl lists each URI", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            tileset.debugShowUrl = true;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).toBeDefined();
+
+            var expected = "Urls:\n- batched.b3dm\n- instanced.i3dm";
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
+
+            tileset.debugShowUrl = false;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
+          }
+        );
       });
     });
   },

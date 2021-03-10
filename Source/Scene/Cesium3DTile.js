@@ -1038,8 +1038,11 @@ function requestMultipleContents(tile) {
     .then(function () {
       var tileset = tile._tileset;
       if (tile.isDestroyed()) {
-        // Tile is unloaded before the content finishes loading
-        multipleContentFailed(tile, tileset);
+        multipleContentFailed(
+          tile,
+          tileset,
+          "Tile was unloaded while content was loading"
+        );
         return;
       }
 
@@ -1048,8 +1051,11 @@ function requestMultipleContents(tile) {
 
       return multipleContent.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
-          // Tile is unloaded before the content finishes processing
-          multipleContentFailed(tile, tileset);
+          multipleContentFailed(
+            tile,
+            tileset,
+            "Tile was unloaded while content was processing"
+          );
           return;
         }
         updateExpireDate(tile);

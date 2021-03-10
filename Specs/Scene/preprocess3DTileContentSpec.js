@@ -73,4 +73,11 @@ describe("Scene/preprocess3DTileContent", function () {
       jsonPayload: glTF,
     });
   });
+
+  it("throws for invalid content", function () {
+    expect(function () {
+      var payload = makeBinaryFile("fake");
+      preprocess3DTileContent(payload.buffer);
+    }).toThrowRuntimeError();
+  });
 });

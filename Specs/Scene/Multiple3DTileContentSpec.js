@@ -1,5 +1,6 @@
 import {
   Cartesian3,
+  Cesium3DTileset,
   Color,
   HeadingPitchRange,
   Multiple3DTileContent,
@@ -41,13 +42,7 @@ describe("Scene/Multiple3DTileContent", function () {
         version: "1.0",
       },
     };
-    var gltfJson = JSON.stringify(gltf);
-    var buffer = new Uint8Array(gltfJson.length);
-    for (var i = 0; i < gltfJson.length; i++) {
-      buffer[i] = gltfJson.charCodeAt(i);
-    }
-
-    return buffer.buffer;
+    return Cesium3DTilesTester.generateJsonBuffer(gltf);
   }
 
   var originalRequestsPerServer;
@@ -57,7 +52,6 @@ describe("Scene/Multiple3DTileContent", function () {
     // One item in each data set is always located in the center, so point the camera there
     var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
     scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
-
     originalRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
   });
 
@@ -227,6 +221,25 @@ describe("Scene/Multiple3DTileContent", function () {
   });
 
   it("renders multiple contents", function () {
+    return Cesium3DTilesTester.loadTileset(scene, multipleContentUrl).then(
+      expectRenderMultipleContents
+    );
+  });
+
+  it("renders valid tiles after tile failure", function () {
+    var originalLoadJson = Cesium3DTileset.loadJson;
+    spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+      return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+        var content =
+          tilesetJson.root.extensions["3DTILES_multiple_contents"].content;
+        var badTile = {
+          uri: "nonexistent.b3dm",
+        };
+        content.splice(1, 0, badTile);
+
+        return tilesetJson;
+      });
+    });
     return Cesium3DTilesTester.loadTileset(scene, multipleContentUrl).then(
       expectRenderMultipleContents
     );
