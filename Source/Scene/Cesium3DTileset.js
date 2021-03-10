@@ -561,6 +561,7 @@ function Cesium3DTileset(options) {
    * <p>
    * If there are no event listeners, error messages will be logged to the console.
    * </p>
+   * TODO: add a note here about multiple contents
    * <p>
    * The error object passed to the listener contains two properties:
    * <ul>
@@ -578,7 +579,6 @@ function Cesium3DTileset(options) {
    * });
    */
   this.tileFailed = new Event();
-  // TODO: this will likely need to be deprecated in favor of this.contentFailed
 
   /**
    * This event fires once for each visible tile in a frame.  This can be used to manually
@@ -1920,10 +1920,10 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requestBacklogCount = tile.requestContent();
+  var attemptedRequests = tile.requestContent();
 
-  if (requestBacklogCount > 0) {
-    ++statistics.numberOfAttemptedRequests;
+  if (attemptedRequests > 0) {
+    statistics.numberOfAttemptedRequests += attemptedRequests;
     return;
   }
 
@@ -1936,7 +1936,6 @@ function requestContent(tileset, tile) {
     }
   }
 
-  ++statistics.numberOfPendingRequests;
   tileset._requestedTilesInFlight.push(tile);
 
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -2048,7 +2047,6 @@ function addToProcessingQueue(tileset, tile) {
   return function () {
     tileset._processingQueue.push(tile);
 
-    --tileset._statistics.numberOfPendingRequests;
     ++tileset._statistics.numberOfTilesProcessing;
   };
 }
@@ -2195,8 +2193,17 @@ function addTileDebugLabel(tile, tileset, position) {
   }
 
   if (tileset.debugShowUrl) {
-    labelString += "\nUrl: " + tile._header.content.uri;
-    attributes++;
+    if (tile.hasMultipleContents) {
+      labelString += "\nUrls:";
+      var urls = tile.content.innerContentUrls;
+      for (var i = 0; i < urls.length; i++) {
+        labelString += "\n- " + urls[i];
+      }
+      attributes += urls.length;
+    } else {
+      labelString += "\nUrl: " + tile._header.content.uri;
+      attributes++;
+    }
   }
 
   var newLabel = {

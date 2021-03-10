@@ -3,6 +3,7 @@ import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
+import RequestState from "../Core/RequestState.js";
 import RequestType from "../Core/RequestType.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
@@ -39,11 +40,48 @@ export default function Multiple3DTileContent(
   this._tilesetResource = tilesetResource;
   this._contents = [];
 
-  this._innerContentHeaders = extensionJson.content;
+  var contentHeaders = extensionJson.content;
+  this._innerContentHeaders = contentHeaders;
+  this._requestsInFlight = 0;
+
+  /**
+   * This is set to true if one of the inner contents are canceled.
+   * @type {Boolean}
+   * @private
+   */
+  this.canceled = false;
 
   var contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
+
   this._innerContentResources = new Array(contentCount);
+  this._serverKeys = new Array(contentCount);
+
+  var priorityFunction = function () {
+    return tile.priority;
+  };
+  for (var i = 0; i < contentCount; i++) {
+    var contentResource = tilesetResource.getDerivedResource({
+      url: contentHeaders[i].uri,
+      preserveQueryParameters: true,
+    });
+
+    var serverKey = RequestScheduler.getServerKey(
+      contentResource.getUrlComponent()
+    );
+
+    var request = new Request({
+      throttle: true,
+      throttleByServer: true,
+      type: RequestType.TILES3D,
+      priorityFunction: priorityFunction,
+      serverKey: serverKey,
+    });
+    contentResource.request = request;
+
+    this._innerContentResources[i] = contentResource;
+    this._serverKeys[i] = serverKey;
+  }
 
   // undefined until all requests are scheduled
   this._contentsFetchedPromise = undefined;
@@ -162,9 +200,33 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
     },
   },
 
+  /**
+   * Get an array of the inner content URLs, regardless of whether they've
+   * been fetched or not. This is intended for use with
+   * {@link Cesium3DTileset#debugShowUrl}.
+   *
+   * @type {String[]}
+   * @readonly
+   * @private
+   */
+  innerContentUrls: {
+    get: function () {
+      return this._innerContentHeaders.map(function (contentHeader) {
+        return contentHeader.uri;
+      });
+    },
+  },
+
+  /**
+   * Unlike other content types, <code>Multiple3DTileContent</code> does not
+   * have a single URL, so this returns undefined.
+   *
+   * @type {String}
+   * @readonly
+   */
   url: {
     get: function () {
-      return this._resource.getUrlComponent(true);
+      return undefined;
     },
   },
 
@@ -194,41 +256,102 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
 });
 
 /**
- * @return {Number} The number of contn
+ * Reset the request counter and any promise chains. This method must be called
+ * by the caller after handling a canceled request.
+ * @private
  */
-Multiple3DTileContent.prototype.requestInnerContents = function () {
-  var requestBacklog = 0;
-  for (var i = 0; i < this._innerContentHeaders.length; i++) {
-    if (defined(this._arrayFetchPromises[i])) {
-      continue;
-    }
+Multiple3DTileContent.prototype.reset = function () {
+  // Reset request counting
+  this.canceled = false;
+  this._requestsInFlight = 0;
 
-    var promise = requestInnerContent(this, i);
-    if (!defined(promise)) {
-      requestBacklog++;
-    }
-    this._arrayFetchPromises[i] = promise;
-  }
-
-  if (requestBacklog === 0) {
-    this._contentsFetchedPromise = createInnerContents(this);
-  }
-
-  return requestBacklog;
+  // Discard the request promises.
+  var contentCount = this._innerContentHeaders.length;
+  this._arrayFetchPromises = new Array(contentCount);
+  this._contentsFetchedPromise = undefined;
 };
 
-function requestInnerContent(multipleContent, index) {
-  var innerContentHeader = multipleContent._innerContentHeaders[index];
+function updatePendingRequests(multipleContent, deltaRequestCount) {
+  if (multipleContent.canceled) {
+    return;
+  }
 
+  multipleContent._requestsInFlight += deltaRequestCount;
+  multipleContent.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
+}
+
+function cancelPendingRequests(multipleContent) {
+  if (multipleContent.canceled) {
+    return;
+  }
+
+  multipleContent.tileset.statistics.numberOfPendingRequests -=
+    multipleContent._requestsInFlight;
+  multipleContent._requestsInFlight = 0;
+}
+
+/**
+ * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
+ * {@link Multiple3DTileContent#contentFetchedPromise} is defined. This promise
+ * becomes available as soon as all requests are scheduled.
+ * <p>
+ * This method also updates the tile statistics' pending request count if the
+ * requests are successfully scheduled.
+ * </p>
+ *
+ * @return {Number} The number of attempted requests that were unable to be scheduled.
+ * @private
+ */
+Multiple3DTileContent.prototype.requestInnerContents = function () {
+  // It's possible for these promises to leak content array buffers if the
+  // camera moves before they all are scheduled. To prevent this leak, check
+  // if we can schedule all the requests at once. If not, no requests are
+  // scheduled
+  if (!canScheduleAllRequests(this._serverKeys)) {
+    return this._serverKeys.length;
+  }
+
+  var contentHeaders = this._innerContentHeaders;
+  updatePendingRequests(this, contentHeaders.length);
+  for (var i = 0; i < contentHeaders.length; i++) {
+    this._arrayFetchPromises[i] = requestInnerContent(this, i);
+  }
+
+  this._contentsFetchedPromise = createInnerContents(this);
+  return 0;
+};
+
+/**
+ * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
+ * @param {String[]} serverKeys the server keys for all of the inner contents
+ * @return {Boolean} True if the request scheduler has enough open slots for all inner contents
+ * @private
+ */
+function canScheduleAllRequests(serverKeys) {
+  var requestCountsByServer = {};
+  for (var i = 0; i < serverKeys.length; i++) {
+    var serverKey = serverKeys[i];
+    if (defined(requestCountsByServer[serverKey])) {
+      requestCountsByServer[serverKey]++;
+    } else {
+      requestCountsByServer[serverKey] = 1;
+    }
+  }
+
+  for (var key in requestCountsByServer) {
+    if (
+      requestCountsByServer.hasOwnProperty(key) &&
+      !RequestScheduler.serverHasOpenSlots(key, requestCountsByServer[key])
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function requestInnerContent(multipleContent, index) {
+  var contentResource = multipleContent._innerContentResources[index];
   var tile = multipleContent.tile;
-  var contentUri = innerContentHeader.uri;
-  var contentResource = multipleContent._tilesetResource.getDerivedResource({
-    url: contentUri,
-    preserveQueryParameters: true,
-  });
-  var serverKey = RequestScheduler.getServerKey(
-    contentResource.getUrlComponent()
-  );
 
   var expired = tile.contentExpired;
   if (expired) {
@@ -238,25 +361,32 @@ function requestInnerContent(multipleContent, index) {
     });
   }
 
-  var request = new Request({
-    throttle: true,
-    throttleByServer: true,
-    type: RequestType.TILES3D,
-    priorityFunction: function () {
-      return multipleContent._tile.priority;
-    },
-    serverKey: serverKey,
-  });
-  contentResource.request = request;
+  return contentResource
+    .fetchArrayBuffer()
+    .then(function (arrayBuffer) {
+      // Short circuit if another inner content was canceled.
+      if (multipleContent.canceled) {
+        return undefined;
+      }
 
-  // Save the resource for later since it's used to construct
-  // Cesium3DTileContent objects.
-  multipleContent._innerContentResources[index] = contentResource;
+      updatePendingRequests(multipleContent, -1);
+      return arrayBuffer;
+    })
+    .otherwise(function (error) {
+      // Short circuit if another inner content was canceled.
+      if (multipleContent.canceled) {
+        return undefined;
+      }
 
-  return contentResource.fetchArrayBuffer().otherwise(function (error) {
-    handleInnerContentFailed(multipleContent, error);
-    return undefined;
-  });
+      if (contentResource.request.state === RequestState.CANCELLED) {
+        cancelPendingRequests(multipleContent);
+        throw new RuntimeError("request canceled");
+      }
+
+      updatePendingRequests(multipleContent, -1);
+      handleInnerContentFailed(multipleContent, index, error);
+      return undefined;
+    });
 }
 
 function createInnerContents(multipleContent) {
@@ -275,7 +405,7 @@ function createInnerContents(multipleContent) {
         try {
           return createInnerContent(multipleContent, resource, arrayBuffer);
         } catch (error) {
-          handleInnerContentFailed(multipleContent, error);
+          handleInnerContentFailed(multipleContent, i, error);
           return undefined;
         }
       });
@@ -341,15 +471,19 @@ function awaitReadyPromises(multipleContent) {
     });
 }
 
-function handleInnerContentFailed(multipleContent, error) {
-  // TODO: What's the best way to report this as an even to the tile
-  // and to the tileset? here are some ideas:
-  //
-  // 1. A callback passed into the constructor?
-  // 2. Access multipleContent._tile directly to raise events?
-  // 3. Have a multipleContent.innerContentFailed event and have the tile
-  //  subscribe to that?
-  console.log(error);
+function handleInnerContentFailed(multipleContent, index, error) {
+  var tileset = multipleContent._tileset;
+  var url = multipleContent._innerContentResources[index].url;
+  var message = defined(error.message) ? error.message : error.toString();
+  if (tileset.tileFailed.numberOfListeners > 0) {
+    tileset.tileFailed.raiseEvent({
+      url: url,
+      message: message,
+    });
+  } else {
+    console.log("A content failed to load: " + url);
+    console.log("Error: " + message);
+  }
 }
 
 /**

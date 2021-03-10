@@ -70,7 +70,7 @@ var Cesium3DTileContentType = {
    * @constant
    * @private
    */
-  GLTF: "glTF",
+  GLTF: "gltf",
   /**
    * The binary form of a glTF file. Internally, the magic number is
    * changed from <code>glTF</code> to <code>glb</code> to distinguish it from
@@ -116,11 +116,12 @@ Cesium3DTileContentType.isBinaryFormat = function (contentType) {
   switch (contentType) {
     case Cesium3DTileContentType.BATCHED_3D_MODEL:
     case Cesium3DTileContentType.INSTANCED_3D_MODEL:
-    case Cesium3DTileContentType.GLTF_BINARY:
-    case Cesium3DTileContentType.VECTOR:
-    case Cesium3DTileContentType.IMPLICIT_SUBTREE:
     case Cesium3DTileContentType.COMPOSITE:
     case Cesium3DTileContentType.POINT_CLOUD:
+    case Cesium3DTileContentType.VECTOR:
+    case Cesium3DTileContentType.GEOMETRY:
+    case Cesium3DTileContentType.IMPLICIT_SUBTREE:
+    case Cesium3DTileContentType.GLTF_BINARY:
       return true;
     default:
       return false;

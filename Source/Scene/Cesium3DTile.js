@@ -37,6 +37,7 @@ import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
+import Pass from "../Renderer/Pass.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -194,6 +195,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
 
   var content;
   var hasEmptyContent = false;
+  var hasMultipleContents = false;
   var contentState;
   var contentResource;
   var serverKey;
@@ -203,6 +205,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
     var extensionHeader = header.extensions["3DTILES_multiple_contents"];
 
+    hasMultipleContents = true;
     contentResource = baseResource.clone();
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
@@ -279,6 +282,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasImplicitContent = false;
+
+  /**
+   * When <code>true</code>, the tile has multiple contents via the
+   * <code>3DTILES_multiple_contents</code> extension.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasMultipleContents = hasMultipleContents;
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -968,17 +984,6 @@ function updateExpireDate(tile) {
   }
 }
 
-function contentFailed(tile, tileset, error) {
-  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
-    --tileset.statistics.numberOfTilesProcessing;
-  } else {
-    --tileset.statistics.numberOfPendingRequests;
-  }
-  tile._contentState = Cesium3DTileContentState.FAILED;
-  tile._contentReadyPromise.reject(error);
-  tile._contentReadyToProcessPromise.reject(error);
-}
-
 function createPriorityFunction(tile) {
   return function () {
     return tile._priority;
@@ -1016,8 +1021,8 @@ Cesium3DTile.prototype.requestContent = function () {
  */
 function requestMultipleContents(tile) {
   var multipleContent = tile._content;
-  //var previousState = tile._contentState;
   var tileset = tile._tileset;
+  var previousState = tile._contentState;
   if (!defined(multipleContent.contentFetchedPromise)) {
     var backloggedRequestCount = multipleContent.requestInnerContents();
     if (backloggedRequestCount > 0) {
@@ -1033,8 +1038,11 @@ function requestMultipleContents(tile) {
     .then(function () {
       var tileset = tile._tileset;
       if (tile.isDestroyed()) {
-        // Tile is unloaded before the content finishes loading
-        contentFailed(tile, tileset);
+        multipleContentFailed(
+          tile,
+          tileset,
+          "Tile was unloaded while content was loading"
+        );
         return;
       }
 
@@ -1043,8 +1051,11 @@ function requestMultipleContents(tile) {
 
       return multipleContent.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
-          // Tile is unloaded before the content finishes processing
-          contentFailed(tile, tileset);
+          multipleContentFailed(
+            tile,
+            tileset,
+            "Tile was unloaded while content was processing"
+          );
           return;
         }
         updateExpireDate(tile);
@@ -1059,14 +1070,33 @@ function requestMultipleContents(tile) {
       });
     })
     .otherwise(function (error) {
-      contentFailed(tile, tileset, error);
+      // One of the inner contents were canceled, so reset the tile
+      // to try again later.
+      if (multipleContent.canceled) {
+        tile._contentState = previousState;
+        multipleContent.reset();
+        return;
+      }
+
+      multipleContentFailed(tile, tileset, error);
     });
 
   return 0;
 }
 
+function multipleContentFailed(tile, tileset, error) {
+  // note: The Multiple3DTileContent handles decrementing the number of pending
+  // requests if the state is LOADING.
+  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+    --tileset.statistics.numberOfTilesProcessing;
+  }
+
+  tile._contentState = Cesium3DTileContentState.FAILED;
+  tile._contentReadyPromise.reject(error);
+  tile._contentReadyToProcessPromise.reject(error);
+}
+
 function requestSingleContent(tile) {
-  // TODO: expiration should still be per tile, not per content.
   var resource = tile._contentResource.clone();
   var expired = tile.contentExpired;
   if (expired) {
@@ -1097,13 +1127,14 @@ function requestSingleContent(tile) {
   tile._contentState = Cesium3DTileContentState.LOADING;
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
+  ++tileset.statistics.numberOfPendingRequests;
 
   promise
     .then(function (arrayBuffer) {
       var tileset = tile._tileset;
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content finishes loading
-        contentFailed(tile, tileset);
+        singleContentFailed(tile, tileset);
         return;
       }
 
@@ -1119,11 +1150,12 @@ function requestSingleContent(tile) {
       tile._content = content;
       tile._contentState = Cesium3DTileContentState.PROCESSING;
       tile._contentReadyToProcessPromise.resolve(content);
+      --tileset.statistics.numberOfPendingRequests;
 
       return content.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
           // Tile is unloaded before the content finishes processing
-          contentFailed(tile, tileset);
+          singleContentFailed(tile, tileset);
           return;
         }
         updateExpireDate(tile);
@@ -1145,10 +1177,21 @@ function requestSingleContent(tile) {
         ++tileset.statistics.numberOfAttemptedRequests;
         return;
       }
-      contentFailed(tile, tileset, error);
+      singleContentFailed(tile, tileset, error);
     });
 
   return 0;
+}
+
+function singleContentFailed(tile, tileset, error) {
+  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+    --tileset.statistics.numberOfTilesProcessing;
+  } else {
+    --tileset.statistics.numberOfPendingRequests;
+  }
+  tile._contentState = Cesium3DTileContentState.FAILED;
+  tile._contentReadyPromise.reject(error);
+  tile._contentReadyToProcessPromise.reject(error);
 }
 
 /**
@@ -1757,11 +1800,21 @@ function updateClippingPlanes(tile, tileset) {
  * @private
  */
 Cesium3DTile.prototype.update = function (tileset, frameState, passOptions) {
-  var initCommandLength = frameState.commandList.length;
+  var commandStart = frameState.commandList.length;
+
   updateClippingPlanes(this, tileset);
   applyDebugSettings(this, tileset, frameState, passOptions);
   updateContent(this, tileset, frameState);
-  this._commandsLength = frameState.commandList.length - initCommandLength;
+
+  var commandEnd = frameState.commandList.length;
+  var commandsLength = commandEnd - commandStart;
+  this._commandsLength = commandsLength;
+
+  for (var i = 0; i < commandsLength; ++i) {
+    var command = frameState.commandList[commandStart + i];
+    var translucent = command.pass === Pass.TRANSLUCENT;
+    command.depthForTranslucentClassification = translucent;
+  }
 
   this.clippingPlanesDirty = false; // reset after content update
 };
