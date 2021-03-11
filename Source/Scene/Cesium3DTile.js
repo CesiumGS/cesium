@@ -1130,7 +1130,6 @@ function requestSingleContent(tile) {
 
   promise
     .then(function (arrayBuffer) {
-      var tileset = tile._tileset;
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content finishes loading
         singleContentFailed(tile, tileset);

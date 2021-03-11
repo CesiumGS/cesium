@@ -1,4 +1,3 @@
-import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
@@ -43,7 +42,7 @@ export default function preprocess3DTileContent(arrayBuffer) {
     };
   }
 
-  var json = getJsonContent(arrayBuffer, 0);
+  var json = getJsonContent(uint8Array);
   if (defined(json.geometricError)) {
     // Most likely a tileset JSON
     return {
@@ -64,10 +63,7 @@ export default function preprocess3DTileContent(arrayBuffer) {
   throw new RuntimeError("Invalid tile content.");
 }
 
-// TODO: is this needed anywhere else?
-function getJsonContent(arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
-  var uint8Array = new Uint8Array(arrayBuffer);
+function getJsonContent(uint8Array) {
   var json;
 
   try {
