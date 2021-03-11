@@ -91,7 +91,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
- * @param {Object} [options.pickPrimitive] The primitive to be rendered during the pick pass instead of the tileset.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -761,13 +760,6 @@ function Cesium3DTileset(options) {
    * @default true
    */
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
-
-  /**
-   * The primitive to be rendered during the pick pass instead of the tileset.
-   *
-   * @type {Object}
-   */
-  this.pickPrimitive = options.pickPrimitive;
 
   /**
    * This property is for debugging only; it is not optimized for production use.
@@ -2552,17 +2544,13 @@ Cesium3DTileset.prototype.updateForPass = function (
   var passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
-    if (frameState.passes.pick && defined(this.pickPrimitive)) {
-      this.pickPrimitive.update(frameState);
-    } else {
-      this._pass = pass;
-      tilesetPassState.ready = update(
-        this,
-        frameState,
-        passStatistics,
-        passOptions
-      );
-    }
+    this._pass = pass;
+    tilesetPassState.ready = update(
+      this,
+      frameState,
+      passStatistics,
+      passOptions
+    );
   }
 
   if (ignoreCommands) {
