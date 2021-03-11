@@ -1,5 +1,5 @@
 /**
- * An enum to indicate the the different types of {@link Cesium3DTileContent}.
+ * An enum to indicate the different types of {@link Cesium3DTileContent}.
  * For binary files, the enum value is the magic number of the binary file
  * unless otherwise noted. For JSON files, the enum value is a unique name
  * for internal use.

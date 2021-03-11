@@ -1197,7 +1197,7 @@ function singleContentFailed(tile, tileset, error) {
 /**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
  * <p>
- * This is only used for single contents,
+ * This is only used for single contents.
  * </p>
  *
  * @param {Cesium3DTile} tile The tile
@@ -1209,7 +1209,7 @@ function singleContentFailed(tile, tileset, error) {
 function makeContent(tile, arrayBuffer) {
   var preprocessed = preprocess3DTileContent(arrayBuffer);
 
-  // Vector and Geometry tile rendering do not support the skip LOD optimizatio.
+  // Vector and Geometry tile rendering do not support the skip LOD optimization.
   var tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||

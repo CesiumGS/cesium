@@ -8,7 +8,7 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 /**
  * Results of the preprocess3DTileContent() function. This includes the
  * {@link Cesium3DTileContentType} and the payload. The payload is either
- * binary or JSON depending on the content type).
+ * binary or JSON depending on the content type.
  *
  * @typedef {Object} PreprocessedContent
  * @property {Cesium3DTileContentType} contentType The type of the content
