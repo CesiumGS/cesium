@@ -118,7 +118,12 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
 
   url: {
     get: function () {
-      return this._resource.getUrlComponent(true);
+      var resource = this._implicitTileset.subtreeUriTemplate;
+      var templateValues = this._implicitCoordinates.getTemplateValues();
+      var derivedResource = resource.getDerivedResource({
+        templateValues: templateValues,
+      });
+      return derivedResource.getUrlComponent(true);
     },
   },
 
@@ -386,11 +391,13 @@ function deriveChildTile(
   if (contentJsons.length === 1) {
     tileJson.content = contentJsons[0];
   } else if (contentJsons.length > 1) {
-    tileJson.extensions = {
+    var multipleContentExtension = {
       "3DTILES_multiple_contents": {
         content: contentJsons,
       },
     };
+    var existingExtensions = implicitTileset.tileHeader.extensions;
+    tileJson.extensions = combine(multipleContentExtension, existingExtensions);
   }
 
   var childTile = makeTile(

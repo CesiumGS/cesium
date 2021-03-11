@@ -5141,7 +5141,7 @@ describe(
           implicitMultipleContentsUrl
         ).then(function (tileset) {
           var statistics = tileset._statistics;
-          // root + implicit placeholder + 4 child tiles
+          // implicit placeholder + transcoded root + 4 child tiles
           expect(statistics.visited).toEqual(6);
           // root content + 2 contents per child tile
           expect(statistics.numberOfCommands).toEqual(9);
