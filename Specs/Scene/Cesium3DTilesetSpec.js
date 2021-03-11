@@ -4963,8 +4963,10 @@ describe(
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-            var multipleContent = tileset.root.content;
-            multipleContent._innerContentResources.forEach(function (resource) {
+            var multipleContents = tileset.root.content;
+            multipleContents._innerContentResources.forEach(function (
+              resource
+            ) {
               resource.request.cancel();
             });
 

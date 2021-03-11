@@ -1020,11 +1020,11 @@ Cesium3DTile.prototype.requestContent = function () {
  * @private
  */
 function requestMultipleContents(tile) {
-  var multipleContent = tile._content;
+  var multipleContents = tile._content;
   var tileset = tile._tileset;
   var previousState = tile._contentState;
-  if (!defined(multipleContent.contentsFetchedPromise)) {
-    var backloggedRequestCount = multipleContent.requestInnerContents();
+  if (!defined(multipleContents.contentsFetchedPromise)) {
+    var backloggedRequestCount = multipleContents.requestInnerContents();
     if (backloggedRequestCount > 0) {
       return backloggedRequestCount;
     }
@@ -1034,7 +1034,7 @@ function requestMultipleContents(tile) {
     tile._contentReadyPromise = when.defer();
   }
 
-  multipleContent.contentsFetchedPromise
+  multipleContents.contentsFetchedPromise
     .then(function () {
       if (tile.isDestroyed()) {
         multipleContentFailed(
@@ -1046,9 +1046,9 @@ function requestMultipleContents(tile) {
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
-      tile._contentReadyToProcessPromise.resolve(multipleContent);
+      tile._contentReadyToProcessPromise.resolve(multipleContents);
 
-      return multipleContent.readyPromise.then(function (content) {
+      return multipleContents.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
           multipleContentFailed(
             tile,
@@ -1071,9 +1071,9 @@ function requestMultipleContents(tile) {
     .otherwise(function (error) {
       // One of the inner contents were canceled, so reset the tile
       // to try again later.
-      if (multipleContent.canceled) {
+      if (multipleContents.canceled) {
         tile._contentState = previousState;
-        multipleContent.reset();
+        multipleContents.reset();
         return;
       }
 

@@ -114,6 +114,13 @@ var Cesium3DTileContentType = {
   MULTIPLE_CONTENT: "multipleContent",
 };
 
+/**
+ * Check if a content is one of the supported binary formats. Otherwise,
+ * the caller can assume a JSON format.
+ * @param {Cesium3DTileContentType} contentType The content type of the content payload.
+ * @return {Boolean} <code>true</code> if the content type is a binary format, or <code>false</code> if the content type is a JSON format.
+ * @private
+ */
 Cesium3DTileContentType.isBinaryFormat = function (contentType) {
   switch (contentType) {
     case Cesium3DTileContentType.BATCHED_3D_MODEL:

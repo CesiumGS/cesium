@@ -270,24 +270,24 @@ Multiple3DTileContent.prototype.reset = function () {
   this._contentsFetchedPromise = undefined;
 };
 
-function updatePendingRequests(multipleContent, deltaRequestCount) {
-  if (multipleContent.canceled) {
+function updatePendingRequests(multipleContents, deltaRequestCount) {
+  if (multipleContents.canceled) {
     return;
   }
 
-  multipleContent._requestsInFlight += deltaRequestCount;
-  multipleContent.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
+  multipleContents._requestsInFlight += deltaRequestCount;
+  multipleContents.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
 }
 
-function cancelPendingRequests(multipleContent) {
-  if (multipleContent.canceled) {
+function cancelPendingRequests(multipleContents) {
+  if (multipleContents.canceled) {
     return;
   }
 
   this.canceled = true;
-  multipleContent.tileset.statistics.numberOfPendingRequests -=
-    multipleContent._requestsInFlight;
-  multipleContent._requestsInFlight = 0;
+  multipleContents.tileset.statistics.numberOfPendingRequests -=
+    multipleContents._requestsInFlight;
+  multipleContents._requestsInFlight = 0;
 }
 
 /**
@@ -349,9 +349,9 @@ function canScheduleAllRequests(serverKeys) {
   return true;
 }
 
-function requestInnerContent(multipleContent, index) {
-  var contentResource = multipleContent._innerContentResources[index];
-  var tile = multipleContent.tile;
+function requestInnerContent(multipleContents, index) {
+  var contentResource = multipleContents._innerContentResources[index];
+  var tile = multipleContents.tile;
 
   var expired = tile.contentExpired;
   if (expired) {
@@ -365,33 +365,33 @@ function requestInnerContent(multipleContent, index) {
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
       // Short circuit if another inner content was canceled.
-      if (multipleContent.canceled) {
+      if (multipleContents.canceled) {
         return undefined;
       }
 
-      updatePendingRequests(multipleContent, -1);
+      updatePendingRequests(multipleContents, -1);
       return arrayBuffer;
     })
     .otherwise(function (error) {
       // Short circuit if another inner content was canceled.
-      if (multipleContent.canceled) {
+      if (multipleContents.canceled) {
         return undefined;
       }
 
       if (contentResource.request.state === RequestState.CANCELLED) {
-        cancelPendingRequests(multipleContent);
+        cancelPendingRequests(multipleContents);
         throw new RuntimeError("request canceled");
       }
 
-      updatePendingRequests(multipleContent, -1);
-      handleInnerContentFailed(multipleContent, index, error);
+      updatePendingRequests(multipleContents, -1);
+      handleInnerContentFailed(multipleContents, index, error);
       return undefined;
     });
 }
 
-function createInnerContents(multipleContent) {
+function createInnerContents(multipleContents) {
   return when
-    .all(multipleContent._arrayFetchPromises)
+    .all(multipleContents._arrayFetchPromises)
     .then(function (arrayBuffers) {
       return arrayBuffers.map(function (arrayBuffer, i) {
         if (!defined(arrayBuffer)) {
@@ -400,26 +400,26 @@ function createInnerContents(multipleContent) {
           return undefined;
         }
 
-        var resource = multipleContent._innerContentResources[i];
+        var resource = multipleContents._innerContentResources[i];
 
         try {
-          return createInnerContent(multipleContent, resource, arrayBuffer);
+          return createInnerContent(multipleContents, resource, arrayBuffer);
         } catch (error) {
-          handleInnerContentFailed(multipleContent, i, error);
+          handleInnerContentFailed(multipleContents, i, error);
           return undefined;
         }
       });
     })
     .then(function (contents) {
-      multipleContent._contents = contents.filter(defined);
-      awaitReadyPromises(multipleContent);
+      multipleContents._contents = contents.filter(defined);
+      awaitReadyPromises(multipleContents);
     })
     .otherwise(function (error) {
-      multipleContent._readyPromise.reject(error);
+      multipleContents._readyPromise.reject(error);
     });
 }
 
-function createInnerContent(multipleContent, resource, arrayBuffer) {
+function createInnerContent(multipleContents, resource, arrayBuffer) {
   var preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
@@ -428,8 +428,8 @@ function createInnerContent(multipleContent, resource, arrayBuffer) {
     );
   }
 
-  multipleContent._disableSkipLevelOfDetail =
-    multipleContent._disableSkipLevelOfDetail ||
+  multipleContents._disableSkipLevelOfDetail =
+    multipleContents._disableSkipLevelOfDetail ||
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
@@ -437,8 +437,8 @@ function createInnerContent(multipleContent, resource, arrayBuffer) {
   var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
-      multipleContent._tileset,
-      multipleContent._tile,
+      multipleContents._tileset,
+      multipleContents._tile,
       resource,
       preprocessed.binaryPayload.buffer,
       0
@@ -446,8 +446,8 @@ function createInnerContent(multipleContent, resource, arrayBuffer) {
   } else {
     // JSON formats
     content = contentFactory(
-      multipleContent._tileset,
-      multipleContent._tile,
+      multipleContents._tileset,
+      multipleContents._tile,
       resource,
       preprocessed.jsonPayload
     );
@@ -456,24 +456,24 @@ function createInnerContent(multipleContent, resource, arrayBuffer) {
   return content;
 }
 
-function awaitReadyPromises(multipleContent) {
-  var readyPromises = multipleContent._contents.map(function (content) {
+function awaitReadyPromises(multipleContents) {
+  var readyPromises = multipleContents._contents.map(function (content) {
     return content.readyPromise;
   });
 
   when
     .all(readyPromises)
     .then(function () {
-      multipleContent._readyPromise.resolve(multipleContent);
+      multipleContents._readyPromise.resolve(multipleContents);
     })
     .otherwise(function (error) {
-      multipleContent._readyPromise.reject(error);
+      multipleContents._readyPromise.reject(error);
     });
 }
 
-function handleInnerContentFailed(multipleContent, index, error) {
-  var tileset = multipleContent._tileset;
-  var url = multipleContent._innerContentResources[index].url;
+function handleInnerContentFailed(multipleContents, index, error) {
+  var tileset = multipleContents._tileset;
+  var url = multipleContents._innerContentResources[index].url;
   var message = defined(error.message) ? error.message : error.toString();
   if (tileset.tileFailed.numberOfListeners > 0) {
     tileset.tileFailed.raiseEvent({
@@ -489,6 +489,7 @@ function handleInnerContentFailed(multipleContent, index, error) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a specific inner content
+ * @private
  */
 Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
   return false;
@@ -497,6 +498,7 @@ Multiple3DTileContent.prototype.hasProperty = function (batchId, name) {
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
  * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a specific inner content
+ * @private
  */
 Multiple3DTileContent.prototype.getFeature = function (batchId) {
   return undefined;
