@@ -165,6 +165,11 @@ describe(
     var implicitChildUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
 
+    function endsWith(string, suffix) {
+      var slicePoint = string.length - suffix.length;
+      return string.slice(slicePoint) === suffix;
+    }
+
     beforeAll(function () {
       scene = createScene();
     });
@@ -4837,7 +4842,8 @@ describe(
         function (tileset) {
           var implicitTile = tileset.root;
           expect(
-            implicitTile._contentResource.url.endsWith(
+            endsWith(
+              implicitTile._contentResource.url,
               "subtrees/0/0/0/0.subtree"
             )
           ).toEqual(true);
@@ -4858,7 +4864,10 @@ describe(
           var parentTile = tileset.root;
           var implicitTile = parentTile.children[0];
           expect(
-            implicitTile._contentResource.url.endsWith("subtrees/0/0/0.subtree")
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0.subtree"
+            )
           ).toEqual(true);
           expect(implicitTile.implicitTileset).toBeDefined();
           expect(implicitTile.implicitCoordinates).toBeDefined();
@@ -5032,7 +5041,7 @@ describe(
                 ];
 
                 for (var i = 0; i < expected.length; i++) {
-                  expect(uris[i].endsWith(expected[i])).toBe(true);
+                  expect(endsWith(uris[i], expected[i])).toBe(true);
                 }
               }
             );
@@ -5070,8 +5079,10 @@ describe(
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
+            var errorCount = 0;
             tileset.tileFailed.addEventListener(function (event) {
-              expect(event.url.endsWith("external.json")).toBe(true);
+              errorCount++;
+              expect(endsWith(event.url, "external.json")).toBe(true);
               expect(event.message).toEqual(
                 "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
               );
@@ -5079,6 +5090,12 @@ describe(
 
             viewAllTiles();
             scene.renderForSpecs();
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+              function () {
+                expect(errorCount).toBe(1);
+              }
+            );
           }
         );
       });
