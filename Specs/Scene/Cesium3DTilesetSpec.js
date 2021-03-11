@@ -166,6 +166,8 @@ describe(
       "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
     var implicitChildUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
+    var implicitMultipleContentsUrl =
+      "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
 
     beforeAll(function () {
       scene = createScene();
@@ -4877,7 +4879,9 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
           function (tileset) {
             var statistics = tileset._statistics;
+            // root + implicit placeholder + 4 child tiles
             expect(statistics.visited).toEqual(6);
+            // the implicit placeholder tile is not rendered
             expect(statistics.numberOfCommands).toEqual(5);
           }
         );
@@ -5116,6 +5120,33 @@ describe(
             expect(tileset._tileDebugLabels).not.toBeDefined();
           }
         );
+      });
+
+      it("renders tileset with multiple contents", function () {
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(2);
+          }
+        );
+      });
+
+      it("renders implicit tileset with multiple contents", function () {
+        var oldMaximumRequestsPerServer =
+          RequestScheduler.maximumRequestsPerServer;
+        RequestScheduler.maximumRequestsPerServer = 10;
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          var statistics = tileset._statistics;
+          // root + implicit placeholder + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+          RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
+        });
       });
     });
   },
