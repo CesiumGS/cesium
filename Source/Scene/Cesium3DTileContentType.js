@@ -47,7 +47,8 @@ var Cesium3DTileContentType = {
    */
   POINT_CLOUD: "pnts",
   /**
-   * TODO: description
+   * Vector tiles. This is a binary format with magic number
+   * <code>vect</code>
    *
    * @type {String}
    * @constant
@@ -55,7 +56,8 @@ var Cesium3DTileContentType = {
    */
   VECTOR: "vect",
   /**
-   * TODO: description
+   * Geometry tiles. This is a binary format with magic number
+   * <code>vect</code>
    *
    * @type {String}
    * @constant
@@ -82,7 +84,7 @@ var Cesium3DTileContentType = {
    */
   GLTF_BINARY: "glb",
   /**
-   * For the <code>3DTILES_multiple_contents</code> extension,
+   * For the <code>3DTILES_implicit_tiling</code> extension,
    * availability bitstreams are stored in binary subtree files.
    * The magic number is <code>subt</code>
    *

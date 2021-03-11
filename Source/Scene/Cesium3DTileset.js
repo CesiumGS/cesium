@@ -561,13 +561,15 @@ function Cesium3DTileset(options) {
    * <p>
    * If there are no event listeners, error messages will be logged to the console.
    * </p>
-   * TODO: add a note here about multiple contents
    * <p>
    * The error object passed to the listener contains two properties:
    * <ul>
    * <li><code>url</code>: the url of the failed tile.</li>
    * <li><code>message</code>: the error message.</li>
    * </ul>
+   * <p>
+   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * </p>
    *
    * @type {Event}
    * @default new Event()

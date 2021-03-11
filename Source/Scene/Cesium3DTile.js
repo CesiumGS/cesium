@@ -1005,7 +1005,7 @@ Cesium3DTile.prototype.requestContent = function () {
     return 0;
   }
 
-  if (has3DTilesExtension(this._header, "3DTILES_multiple_contents")) {
+  if (this.hasMultipleContents) {
     return requestMultipleContents(this);
   }
 
@@ -1023,7 +1023,7 @@ function requestMultipleContents(tile) {
   var multipleContent = tile._content;
   var tileset = tile._tileset;
   var previousState = tile._contentState;
-  if (!defined(multipleContent.contentFetchedPromise)) {
+  if (!defined(multipleContent.contentsFetchedPromise)) {
     var backloggedRequestCount = multipleContent.requestInnerContents();
     if (backloggedRequestCount > 0) {
       return backloggedRequestCount;
@@ -1034,9 +1034,8 @@ function requestMultipleContents(tile) {
     tile._contentReadyPromise = when.defer();
   }
 
-  multipleContent.contentFetchedPromise
+  multipleContent.contentsFetchedPromise
     .then(function () {
-      var tileset = tile._tileset;
       if (tile.isDestroyed()) {
         multipleContentFailed(
           tile,
@@ -1202,7 +1201,6 @@ function singleContentFailed(tile, tileset, error) {
  *
  * @param {Cesium3DTile} tile The tile
  * @param {ArrayBuffer} arrayBuffer The downloaded payload containing data for the content
- * @param {Boolean} expired True if the tile is expired
  * @return {Cesium3DTileContent} A content object
  * @private
  */

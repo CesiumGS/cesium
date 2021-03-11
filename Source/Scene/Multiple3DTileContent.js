@@ -1,4 +1,3 @@
-//import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
 import Request from "../Core/Request.js";
@@ -113,7 +112,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   featuresLength: {
     get: function () {
@@ -122,9 +121,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead, call <code>pointsLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   pointsLength: {
     get: function () {
@@ -135,7 +134,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   /**
    * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   trianglesLength: {
     get: function () {
@@ -144,9 +143,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   geometryByteLength: {
     get: function () {
@@ -155,9 +154,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.   <code>Composite3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface.   <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   texturesByteLength: {
     get: function () {
@@ -166,9 +165,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
    * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   batchTableByteLength: {
     get: function () {
@@ -231,9 +230,9 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+   * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
-   * @memberof Composite3DTileContent.prototype
+   * @memberof Multiple3DTileContent.prototype
    */
   batchTable: {
     get: function () {
@@ -248,7 +247,7 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * @type {Promise}
    * @private
    */
-  contentFetchedPromise: {
+  contentsFetchedPromise: {
     get: function () {
       return this._contentsFetchedPromise;
     },
@@ -285,6 +284,7 @@ function cancelPendingRequests(multipleContent) {
     return;
   }
 
+  this.canceled = true;
   multipleContent.tileset.statistics.numberOfPendingRequests -=
     multipleContent._requestsInFlight;
   multipleContent._requestsInFlight = 0;
@@ -292,7 +292,7 @@ function cancelPendingRequests(multipleContent) {
 
 /**
  * Request the inner contents of this <code>Multiple3DTileContent</code>. This must be called once a frame until
- * {@link Multiple3DTileContent#contentFetchedPromise} is defined. This promise
+ * {@link Multiple3DTileContent#contentsFetchedPromise} is defined. This promise
  * becomes available as soon as all requests are scheduled.
  * <p>
  * This method also updates the tile statistics' pending request count if the

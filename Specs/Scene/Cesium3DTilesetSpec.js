@@ -4569,7 +4569,6 @@ describe(
               expect(
                 results[2].object.content.url.indexOf("2_4_4.b3dm") > -1
               ).toBe(true);
-              console.log(results);
             });
           }
         );
@@ -5016,7 +5015,6 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             tileset.tileFailed.addEventListener(function (event) {
-              console.log(event);
               uris.push(event.url);
             });
 
