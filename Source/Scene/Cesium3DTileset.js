@@ -1670,20 +1670,6 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * Minimum and maximum heights that vector tiles clamped to surfaces will clamp to.
-   *
-   * @memberof Cesium3DTileset.prototype
-   *
-   * @type {Cartesian2}
-   * @default undefined
-   */
-  minimumMaximumVectorHeights: {
-    get: function () {
-      return this._minimumMaximumVectorHeights;
-    },
-  },
-
-  /**
    * Indicates that only the tileset's vector tiles should be used for classification.
    *
    * @memberof Cesium3DTileset.prototype
