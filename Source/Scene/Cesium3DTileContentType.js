@@ -1,5 +1,5 @@
 /**
- * An enum to indicate the the different types of {@link Cesium3DTileContent}.
+ * An enum to indicate the different types of {@link Cesium3DTileContent}.
  * For binary files, the enum value is the magic number of the binary file
  * unless otherwise noted. For JSON files, the enum value is a unique name
  * for internal use.
@@ -47,7 +47,8 @@ var Cesium3DTileContentType = {
    */
   POINT_CLOUD: "pnts",
   /**
-   * TODO: description
+   * Vector tiles. This is a binary format with magic number
+   * <code>vect</code>
    *
    * @type {String}
    * @constant
@@ -55,7 +56,8 @@ var Cesium3DTileContentType = {
    */
   VECTOR: "vect",
   /**
-   * TODO: description
+   * Geometry tiles. This is a binary format with magic number
+   * <code>vect</code>
    *
    * @type {String}
    * @constant
@@ -82,7 +84,7 @@ var Cesium3DTileContentType = {
    */
   GLTF_BINARY: "glb",
   /**
-   * For the <code>3DTILES_multiple_contents</code> extension,
+   * For the <code>3DTILES_implicit_tiling</code> extension,
    * availability bitstreams are stored in binary subtree files.
    * The magic number is <code>subt</code>
    *
@@ -112,6 +114,13 @@ var Cesium3DTileContentType = {
   MULTIPLE_CONTENT: "multipleContent",
 };
 
+/**
+ * Check if a content is one of the supported binary formats. Otherwise,
+ * the caller can assume a JSON format.
+ * @param {Cesium3DTileContentType} contentType The content type of the content payload.
+ * @return {Boolean} <code>true</code> if the content type is a binary format, or <code>false</code> if the content type is a JSON format.
+ * @private
+ */
 Cesium3DTileContentType.isBinaryFormat = function (contentType) {
   switch (contentType) {
     case Cesium3DTileContentType.BATCHED_3D_MODEL:

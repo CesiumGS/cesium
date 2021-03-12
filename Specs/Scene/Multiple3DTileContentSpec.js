@@ -111,7 +111,7 @@ describe("Scene/Multiple3DTileContent", function () {
     });
   }
 
-  it("urls returns the urls from the extension", function () {
+  it("innerContentUrls returns the urls from the extension", function () {
     var tileset = {};
     var tile = {};
     var content = new Multiple3DTileContent(
@@ -128,7 +128,7 @@ describe("Scene/Multiple3DTileContent", function () {
     ]);
   });
 
-  it("contentFetchedPromise is undefined until requestInnerContents is successful", function () {
+  it("contentsFetchedPromise is undefined until requestInnerContents is successful", function () {
     var mockTileset = {
       statistics: {
         numberOfPendingRequests: 0,
@@ -142,13 +142,13 @@ describe("Scene/Multiple3DTileContent", function () {
       extensionJson
     );
 
-    expect(content.contentFetchedPromise).not.toBeDefined();
+    expect(content.contentsFetchedPromise).not.toBeDefined();
 
     spyOn(Resource.prototype, "fetchArrayBuffer").and.callFake(function () {
       return when.resolve(makeGltfBuffer());
     });
     content.requestInnerContents();
-    expect(content.contentFetchedPromise).toBeDefined();
+    expect(content.contentsFetchedPromise).toBeDefined();
   });
 
   it("contentsFetchedPromise is undefined if no requests are scheduled", function () {
@@ -165,12 +165,12 @@ describe("Scene/Multiple3DTileContent", function () {
       extensionJson
     );
 
-    expect(content.contentFetchedPromise).not.toBeDefined();
+    expect(content.contentsFetchedPromise).not.toBeDefined();
 
     RequestScheduler.maximumRequestsPerServer = 2;
     content.requestInnerContents();
 
-    expect(content.contentFetchedPromise).not.toBeDefined();
+    expect(content.contentsFetchedPromise).not.toBeDefined();
   });
 
   it("requestInnerContents returns 0 if successful", function () {

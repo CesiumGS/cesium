@@ -228,6 +228,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
     contentState = Cesium3DTileContentState.UNLOADED;
     contentResource = baseResource.getDerivedResource({
       url: contentHeaderUri,
+      preserveQueryParameters: true,
     });
     serverKey = RequestScheduler.getServerKey(
       contentResource.getUrlComponent()
@@ -1005,7 +1006,7 @@ Cesium3DTile.prototype.requestContent = function () {
     return 0;
   }
 
-  if (has3DTilesExtension(this._header, "3DTILES_multiple_contents")) {
+  if (this.hasMultipleContents) {
     return requestMultipleContents(this);
   }
 
@@ -1020,11 +1021,10 @@ Cesium3DTile.prototype.requestContent = function () {
  * @private
  */
 function requestMultipleContents(tile) {
-  var multipleContent = tile._content;
+  var multipleContents = tile._content;
   var tileset = tile._tileset;
-  var previousState = tile._contentState;
-  if (!defined(multipleContent.contentFetchedPromise)) {
-    var backloggedRequestCount = multipleContent.requestInnerContents();
+  if (!defined(multipleContents.contentsFetchedPromise)) {
+    var backloggedRequestCount = multipleContents.requestInnerContents();
     if (backloggedRequestCount > 0) {
       return backloggedRequestCount;
     }
@@ -1034,9 +1034,8 @@ function requestMultipleContents(tile) {
     tile._contentReadyPromise = when.defer();
   }
 
-  multipleContent.contentFetchedPromise
+  multipleContents.contentsFetchedPromise
     .then(function () {
-      var tileset = tile._tileset;
       if (tile.isDestroyed()) {
         multipleContentFailed(
           tile,
@@ -1047,9 +1046,9 @@ function requestMultipleContents(tile) {
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
-      tile._contentReadyToProcessPromise.resolve(multipleContent);
+      tile._contentReadyToProcessPromise.resolve(multipleContents);
 
-      return multipleContent.readyPromise.then(function (content) {
+      return multipleContents.readyPromise.then(function (content) {
         if (tile.isDestroyed()) {
           multipleContentFailed(
             tile,
@@ -1070,14 +1069,6 @@ function requestMultipleContents(tile) {
       });
     })
     .otherwise(function (error) {
-      // One of the inner contents were canceled, so reset the tile
-      // to try again later.
-      if (multipleContent.canceled) {
-        tile._contentState = previousState;
-        multipleContent.reset();
-        return;
-      }
-
       multipleContentFailed(tile, tileset, error);
     });
 
@@ -1131,7 +1122,6 @@ function requestSingleContent(tile) {
 
   promise
     .then(function (arrayBuffer) {
-      var tileset = tile._tileset;
       if (tile.isDestroyed()) {
         // Tile is unloaded before the content finishes loading
         singleContentFailed(tile, tileset);
@@ -1197,19 +1187,18 @@ function singleContentFailed(tile, tileset, error) {
 /**
  * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
  * <p>
- * This is only used for single contents,
+ * This is only used for single contents.
  * </p>
  *
  * @param {Cesium3DTile} tile The tile
  * @param {ArrayBuffer} arrayBuffer The downloaded payload containing data for the content
- * @param {Boolean} expired True if the tile is expired
  * @return {Cesium3DTileContent} A content object
  * @private
  */
 function makeContent(tile, arrayBuffer) {
   var preprocessed = preprocess3DTileContent(arrayBuffer);
 
-  // Vector and Geometry tile rendering do not support the skip LOD optimizatio.
+  // Vector and Geometry tile rendering do not support the skip LOD optimization.
   var tileset = tile._tileset;
   tileset._disableSkipLevelOfDetail =
     tileset._disableSkipLevelOfDetail ||

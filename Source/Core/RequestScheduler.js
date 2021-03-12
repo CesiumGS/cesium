@@ -156,7 +156,7 @@ function updatePriority(request) {
 }
 
 /**
- * Check if there are open slots for a particular server keys. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
+ * Check if there are open slots for a particular server key. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
  * @param {String} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
  * @param {Number} [desiredRequests=1] How many requests the caller plans to request
  * @return {Boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.

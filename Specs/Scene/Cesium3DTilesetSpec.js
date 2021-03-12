@@ -169,6 +169,11 @@ describe(
     var implicitMultipleContentsUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
 
+    function endsWith(string, suffix) {
+      var slicePoint = string.length - suffix.length;
+      return string.slice(slicePoint) === suffix;
+    }
+
     beforeAll(function () {
       scene = createScene();
     });
@@ -4573,7 +4578,6 @@ describe(
               expect(
                 results[2].object.content.url.indexOf("2_4_4.b3dm") > -1
               ).toBe(true);
-              console.log(results);
             });
           }
         );
@@ -4842,7 +4846,8 @@ describe(
         function (tileset) {
           var implicitTile = tileset.root;
           expect(
-            implicitTile._contentResource.url.endsWith(
+            endsWith(
+              implicitTile._contentResource.url,
               "subtrees/0/0/0/0.subtree"
             )
           ).toEqual(true);
@@ -4863,7 +4868,10 @@ describe(
           var parentTile = tileset.root;
           var implicitTile = parentTile.children[0];
           expect(
-            implicitTile._contentResource.url.endsWith("subtrees/0/0/0.subtree")
+            endsWith(
+              implicitTile._contentResource.url,
+              "subtrees/0/0/0.subtree"
+            )
           ).toEqual(true);
           expect(implicitTile.implicitTileset).toBeDefined();
           expect(implicitTile.implicitCoordinates).toBeDefined();
@@ -4928,12 +4936,14 @@ describe(
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-            tileset.root.contentReadyToProcessPromise.then(function () {
-              expect(statistics.numberOfAttemptedRequests).toBe(0);
-              expect(statistics.numberOfPendingRequests).toBe(0);
-              expect(statistics.numberOfTilesProcessing).toBe(1);
-              expect(statistics.numberOfTilesWithContentReady).toBe(0);
-            });
+            tileset.root.contentReadyToProcessPromise
+              .then(function () {
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(1);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+              })
+              .otherwise(fail);
 
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
               function () {
@@ -4973,6 +4983,11 @@ describe(
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
+            var callCount = 0;
+            tileset.tileFailed.addEventListener(function (event) {
+              callCount++;
+            });
+
             viewAllTiles();
             scene.renderForSpecs();
 
@@ -4982,17 +4997,36 @@ describe(
             expect(statistics.numberOfTilesProcessing).toBe(0);
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
-            var multipleContent = tileset.root.content;
-            multipleContent._innerContentResources.forEach(function (resource) {
+            var multipleContents = tileset.root.content;
+            multipleContents._innerContentResources.forEach(function (
+              resource
+            ) {
               resource.request.cancel();
             });
 
+            tileset.root.contentReadyToProcessPromise
+              .then(function () {
+                expect(multipleContents._cancelCount).toBe(1);
+                expect(statistics.numberOfAttemptedRequests).toBe(0);
+                expect(statistics.numberOfPendingRequests).toBe(0);
+                expect(statistics.numberOfTilesProcessing).toBe(1);
+                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+              })
+              .otherwise(fail);
+
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
               function () {
+                // the content should be canceled once
+                expect(multipleContents._cancelCount).toBe(1);
+
+                // Resetting content should be handled gracefully; it should
+                // not trigger the tileFailed event
+                expect(callCount).toBe(0);
+
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(0);
-                expect(statistics.numberOfTilesWithContentReady).toBe(0);
+                expect(statistics.numberOfTilesWithContentReady).toBe(1);
               }
             );
           }
@@ -5034,7 +5068,6 @@ describe(
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             tileset.tileFailed.addEventListener(function (event) {
-              console.log(event);
               uris.push(event.url);
             });
 
@@ -5050,7 +5083,7 @@ describe(
                 ];
 
                 for (var i = 0; i < expected.length; i++) {
-                  expect(uris[i].endsWith(expected[i])).toBe(true);
+                  expect(endsWith(uris[i], expected[i])).toBe(true);
                 }
               }
             );
@@ -5088,8 +5121,10 @@ describe(
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
+            var errorCount = 0;
             tileset.tileFailed.addEventListener(function (event) {
-              expect(event.url.endsWith("external.json")).toBe(true);
+              errorCount++;
+              expect(endsWith(event.url, "external.json")).toBe(true);
               expect(event.message).toEqual(
                 "External tilesets are disallowed inside the 3DTILES_multiple_contents extension"
               );
@@ -5097,6 +5132,12 @@ describe(
 
             viewAllTiles();
             scene.renderForSpecs();
+
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+              function () {
+                expect(errorCount).toBe(1);
+              }
+            );
           }
         );
       });
