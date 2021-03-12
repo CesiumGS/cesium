@@ -43,6 +43,11 @@ export default function Multiple3DTileContent(
   this._innerContentHeaders = contentHeaders;
   this._requestsInFlight = 0;
 
+  // How many times .reset() has been called. This is
+  // used to help short-circuit computations after a tile
+  // was canceled.
+  this._resetCount = 0;
+
   /**
    * This is set to true if one of the inner contents are canceled.
    * @type {Boolean}
@@ -263,6 +268,7 @@ Multiple3DTileContent.prototype.reset = function () {
   // Reset request counting
   this.canceled = false;
   this._requestsInFlight = 0;
+  this._resetCount++;
 
   // Discard the request promises.
   var contentCount = this._innerContentHeaders.length;
@@ -279,12 +285,15 @@ function updatePendingRequests(multipleContents, deltaRequestCount) {
   multipleContents.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
 }
 
-function cancelPendingRequests(multipleContents) {
-  if (multipleContents.canceled) {
+function cancelPendingRequests(multipleContents, originalResetCount) {
+  if (
+    multipleContents.canceled ||
+    originalResetCount < multipleContents._resetCount
+  ) {
     return;
   }
 
-  this.canceled = true;
+  multipleContents.canceled = true;
   multipleContents.tileset.statistics.numberOfPendingRequests -=
     multipleContents._requestsInFlight;
   multipleContents._requestsInFlight = 0;
@@ -313,8 +322,15 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
 
   var contentHeaders = this._innerContentHeaders;
   updatePendingRequests(this, contentHeaders.length);
+
   for (var i = 0; i < contentHeaders.length; i++) {
-    this._arrayFetchPromises[i] = requestInnerContent(this, i);
+    // The reset count is needed to avoid a race condition where a content
+    // is canceled multiple times.
+    this._arrayFetchPromises[i] = requestInnerContent(
+      this,
+      i,
+      this._resetCount
+    );
   }
 
   this._contentsFetchedPromise = createInnerContents(this);
@@ -349,7 +365,7 @@ function canScheduleAllRequests(serverKeys) {
   return true;
 }
 
-function requestInnerContent(multipleContents, index) {
+function requestInnerContent(multipleContents, index, originalResetCount) {
   var contentResource = multipleContents._innerContentResources[index];
   var tile = multipleContents.tile;
 
@@ -379,7 +395,7 @@ function requestInnerContent(multipleContents, index) {
       }
 
       if (contentResource.request.state === RequestState.CANCELLED) {
-        cancelPendingRequests(multipleContents);
+        cancelPendingRequests(multipleContents, originalResetCount);
         throw new RuntimeError("request canceled");
       }
 
