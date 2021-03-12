@@ -1,5 +1,4 @@
 import { Cartesian3 } from "../../Source/Cesium.js";
-import { Cesium3DTileStyle } from "../../Source/Cesium.js";
 import { ClassificationType } from "../../Source/Cesium.js";
 import { Color } from "../../Source/Cesium.js";
 import { ColorGeometryInstanceAttribute } from "../../Source/Cesium.js";
@@ -8,8 +7,6 @@ import { Ellipsoid } from "../../Source/Cesium.js";
 import { GeometryInstance } from "../../Source/Cesium.js";
 import { Rectangle } from "../../Source/Cesium.js";
 import { RectangleGeometry } from "../../Source/Cesium.js";
-import { Cesium3DTileBatchTable } from "../../Source/Cesium.js";
-import { ColorBlendMode } from "../../Source/Cesium.js";
 import { Pass } from "../../Source/Cesium.js";
 import { PerInstanceColorAppearance } from "../../Source/Cesium.js";
 import { Primitive } from "../../Source/Cesium.js";
@@ -37,21 +34,6 @@ describe(
     afterAll(function () {
       scene.destroyForSpecs();
     });
-
-    var mockTileset = {
-      _statistics: {
-        texturesByteLength: 0,
-      },
-      tileset: {
-        _statistics: {
-          batchTableByteLength: 0,
-        },
-        colorBlendMode: ColorBlendMode.HIGHLIGHT,
-      },
-      getFeature: function (id) {
-        return { batchId: id };
-      },
-    };
 
     function MockGlobePrimitive(primitive) {
       this._primitive = primitive;
@@ -110,58 +92,37 @@ describe(
       polylines = polylines && !polylines.isDestroyed() && polylines.destroy();
     });
 
-    xit("renders clamped polylines", function () {
+    it("renders clamped polylines", function () {
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(0.0, 0.0, 1.5),
+        new Cartesian3(0.0, 0.0, 1.0)
+      );
       return Cesium3DTilesTester.loadTileset(scene, vectorPolylines, {
         classificationType: ClassificationType.TERRAIN,
       }).then(function (tileset) {
-        tileset.style = new Cesium3DTileStyle({
-          color: "rgba(255, 0, 0, 1.0)",
-        });
-        tileset.maximumScreenSpaceError = 0.0;
-
-        // var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-        // batchTable.update(mockTileset, scene.frameState);
-
         scene.primitives.add(depthRectanglePrimitive);
 
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.01, 0.0, 1.5),
-          new Cartesian3(0.0, 0.0, 1.0)
-        );
+        tileset.show = false;
         expect(scene).toRender([0, 0, 255, 255]);
+        tileset.show = true;
+        expect(scene).toRender([255, 255, 255, 255]);
       });
     });
 
-    xit("picks a clamped polyline", function () {
+    it("picks a clamped polyline", function () {
+      scene.camera.lookAt(
+        Cartesian3.fromDegrees(0.0, 0.0, 1.5),
+        new Cartesian3(0.0, 0.0, 1.0)
+      );
       return Cesium3DTilesTester.loadTileset(scene, vectorPolylines, {
         classificationType: ClassificationType.TERRAIN,
       }).then(function (tileset) {
-        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
-        batchTable.update(mockTileset, scene.frameState);
-
         scene.primitives.add(depthRectanglePrimitive);
 
-        scene.camera.lookAt(
-          Cartesian3.fromDegrees(0.5, 0.0, 1.5),
-          new Cartesian3(0.0, 0.0, 1.0)
-        );
-
-        var features = [];
-        var content = tileset._root._content;
-        content._polylines.createFeatures(mockTileset, features);
-
-        var getFeature = mockTileset.getFeature;
-        mockTileset.getFeature = function (index) {
-          return features[index];
-        };
-
-        scene.frameState.passes.pick = true;
-        batchTable.update(mockTileset, scene.frameState);
-        expect(scene).toPickAndCall(function (result) {
-          expect(result).toBe(features[0]);
-        });
-
-        mockTileset.getFeature = getFeature;
+        tileset.show = false;
+        expect(scene).toPickPrimitive(depthRectanglePrimitive._primitive);
+        tileset.show = true;
+        expect(scene).toPickPrimitive(tileset);
       });
     });
 
