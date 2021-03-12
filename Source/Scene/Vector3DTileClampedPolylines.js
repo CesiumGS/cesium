@@ -10,6 +10,7 @@ import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import IndexDatatype from "../Core/IndexDatatype.js";
+import OrientedBoundingBox from "../Core/OrientedBoundingBox.js";
 import Matrix4 from "../Core/Matrix4.js";
 import Rectangle from "../Core/Rectangle.js";
 import TaskProcessor from "../Core/TaskProcessor.js";
@@ -49,7 +50,6 @@ import StencilOperation from "./StencilOperation.js";
  * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
  * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
  * @param {Uint16Array} options.batchIds The batch ids for each polyline.
- * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
  * @param {Cesium3DTileset} options.tileset Tileset carrying minimum and maximum clamping heights.
  *
  * @private
@@ -68,7 +68,6 @@ function Vector3DTileClampedPolylines(options) {
   this._center = options.center;
   this._rectangle = options.rectangle;
 
-  this._boundingVolume = options.boundingVolume;
   this._batchTable = options.batchTable;
 
   this._va = undefined;
@@ -83,6 +82,12 @@ function Vector3DTileClampedPolylines(options) {
   this._minimumMaximumVectorHeights = new Cartesian2(
     ApproximateTerrainHeights._defaultMinTerrainHeight,
     ApproximateTerrainHeights._defaultMaxTerrainHeight
+  );
+  this._boundingVolume = OrientedBoundingBox.fromRectangle(
+    options.rectangle,
+    ApproximateTerrainHeights._defaultMinTerrainHeight,
+    ApproximateTerrainHeights._defaultMaxTerrainHeight,
+    this._ellipsoid
   );
 
   // Fat vertices - all information for each volume packed to a vec3 and 5 vec4s
@@ -164,9 +169,15 @@ function updateMinimumMaximumHeights(polylines, rectangle, ellipsoid) {
     rectangle,
     ellipsoid
   );
+  var min = result.minimumTerrainHeight;
+  var max = result.maximumTerrainHeight;
   var minimumMaximumVectorHeights = polylines._minimumMaximumVectorHeights;
-  minimumMaximumVectorHeights.x = result.minimumTerrainHeight;
-  minimumMaximumVectorHeights.y = result.maximumTerrainHeight;
+  minimumMaximumVectorHeights.x = min;
+  minimumMaximumVectorHeights.y = max;
+
+  var obb = polylines._boundingVolume;
+  var rect = polylines._rectangle;
+  OrientedBoundingBox.fromRectangle(rect, min, max, ellipsoid, obb);
 }
 
 function packBuffer(polylines) {

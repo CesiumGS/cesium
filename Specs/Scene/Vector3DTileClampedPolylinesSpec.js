@@ -166,7 +166,9 @@ describe(
     });
 
     it("isDestroyed", function () {
-      polylines = new Vector3DTileClampedPolylines({});
+      polylines = new Vector3DTileClampedPolylines({
+        rectangle: new Rectangle(),
+      });
       expect(polylines.isDestroyed()).toEqual(false);
       polylines.destroy();
       expect(polylines.isDestroyed()).toEqual(true);
