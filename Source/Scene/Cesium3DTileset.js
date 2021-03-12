@@ -90,6 +90,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -101,7 +102,6 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
  * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
  * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
- * @param {Boolean} [options.noClassificationModels=false] Indicates that the tileset's b3dms should not be used for classification.
  *
  * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
  *
@@ -274,8 +274,8 @@ function Cesium3DTileset(options) {
   this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
   this._clippingPlanesOriginMatrixDirty = true;
 
-  this._noClassificationModels = defaultValue(
-    options.noClassificationModels,
+  this._vectorClassificationOnly = defaultValue(
+    options.vectorClassificationOnly,
     false
   );
 
@@ -1684,16 +1684,18 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * Indicates that the tileset's b3dms should not be used for classification.
+   * Indicates that only the tileset's vector tiles should be used for classification.
    *
    * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
    *
    * @type {Boolean}
    * @default false
    */
-  noClassificationModels: {
+  vectorClassificationOnly: {
     get: function () {
-      return this._noClassificationModels;
+      return this._vectorClassificationOnly;
     },
   },
 });

@@ -47,7 +47,7 @@ function Batched3DModel3DTileContent(
   this._batchTable = undefined;
   this._features = undefined;
 
-  this._classificationType = tileset.noClassificationModels
+  this._classificationType = tileset.vectorClassificationOnly
     ? undefined
     : tileset.classificationType;
 
