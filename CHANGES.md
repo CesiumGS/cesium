@@ -4,8 +4,7 @@
 
 ##### Additions :tada:
 
-- Added `Cesium3DTileset.pickPrimitive` for rendering primitives instead of the tileset during the pick pass.
-- Added support for for drawing ground primitives on translucent 3D Tiles. [#9399](https://github.com/CesiumGS/cesium/pull/9399)
+- Added support for drawing ground primitives on translucent 3D Tiles. [#9399](https://github.com/CesiumGS/cesium/pull/9399)
 
 ### 1.79.1 - 2021-03-01
 
