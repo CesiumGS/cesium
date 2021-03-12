@@ -28,6 +28,7 @@ import when from "../ThirdParty/when.js";
 import BlendingState from "./BlendingState.js";
 import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import ClassificationType from "./ClassificationType.js";
+import CullFace from "./CullFace.js";
 import StencilConstants from "./StencilConstants.js";
 import StencilFunction from "./StencilFunction.js";
 import StencilOperation from "./StencilOperation.js";
@@ -474,9 +475,17 @@ function createUniformMap(primitive, context) {
 }
 
 function getRenderState(mask3DTiles) {
+  /**
+   * Cull front faces of each volume (relative to camera) to prevent
+   * classification drawing from both the front and back faces, double-draw.
+   * The geometry is "inverted" (inside-out winding order for the indices) but
+   * the vertex shader seems to re-invert so that the triangles face "out" again.
+   * So cull FRONT faces.
+   */
   return RenderState.fromCache({
     cull: {
-      enabled: true, // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
+      enabled: true,
+      face: CullFace.FRONT,
     },
     blending: BlendingState.PRE_MULTIPLIED_ALPHA_BLEND,
     depthMask: false,
