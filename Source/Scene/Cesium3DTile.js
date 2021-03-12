@@ -1023,7 +1023,6 @@ Cesium3DTile.prototype.requestContent = function () {
 function requestMultipleContents(tile) {
   var multipleContents = tile._content;
   var tileset = tile._tileset;
-  var previousState = tile._contentState;
   if (!defined(multipleContents.contentsFetchedPromise)) {
     var backloggedRequestCount = multipleContents.requestInnerContents();
     if (backloggedRequestCount > 0) {
@@ -1070,14 +1069,6 @@ function requestMultipleContents(tile) {
       });
     })
     .otherwise(function (error) {
-      // One of the inner contents were canceled, so reset the tile
-      // to try again later.
-      if (multipleContents.canceled) {
-        tile._contentState = previousState;
-        multipleContents.reset();
-        return;
-      }
-
       multipleContentFailed(tile, tileset, error);
     });
 

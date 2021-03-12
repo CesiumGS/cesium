@@ -43,17 +43,9 @@ export default function Multiple3DTileContent(
   this._innerContentHeaders = contentHeaders;
   this._requestsInFlight = 0;
 
-  // How many times .reset() has been called. This is
-  // used to help short-circuit computations after a tile
-  // was canceled.
-  this._resetCount = 0;
-
-  /**
-   * This is set to true if one of the inner contents are canceled.
-   * @type {Boolean}
-   * @private
-   */
-  this.canceled = false;
+  // How many times cancelPendingRequests() has been called. This is
+  // used to help short-circuit computations after a tile was canceled.
+  this._cancelCount = 0;
 
   var contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
@@ -61,9 +53,6 @@ export default function Multiple3DTileContent(
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
 
-  var priorityFunction = function () {
-    return tile.priority;
-  };
   for (var i = 0; i < contentCount; i++) {
     var contentResource = tilesetResource.getDerivedResource({
       url: contentHeaders[i].uri,
@@ -73,15 +62,6 @@ export default function Multiple3DTileContent(
     var serverKey = RequestScheduler.getServerKey(
       contentResource.getUrlComponent()
     );
-
-    var request = new Request({
-      throttle: true,
-      throttleByServer: true,
-      type: RequestType.TILES3D,
-      priorityFunction: priorityFunction,
-      serverKey: serverKey,
-    });
-    contentResource.request = request;
 
     this._innerContentResources[i] = contentResource;
     this._serverKeys[i] = serverKey;
@@ -259,44 +239,25 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 });
 
-/**
- * Reset the request counter and any promise chains. This method must be called
- * by the caller after handling a canceled request.
- * @private
- */
-Multiple3DTileContent.prototype.reset = function () {
-  // Reset request counting
-  this.canceled = false;
-  this._requestsInFlight = 0;
-  this._resetCount++;
-
-  // Discard the request promises.
-  var contentCount = this._innerContentHeaders.length;
-  this._arrayFetchPromises = new Array(contentCount);
-  this._contentsFetchedPromise = undefined;
-};
-
 function updatePendingRequests(multipleContents, deltaRequestCount) {
-  if (multipleContents.canceled) {
-    return;
-  }
-
   multipleContents._requestsInFlight += deltaRequestCount;
   multipleContents.tileset.statistics.numberOfPendingRequests += deltaRequestCount;
 }
 
-function cancelPendingRequests(multipleContents, originalResetCount) {
-  if (
-    multipleContents.canceled ||
-    originalResetCount < multipleContents._resetCount
-  ) {
-    return;
-  }
+function cancelPendingRequests(multipleContents, originalContentState) {
+  multipleContents._cancelCount++;
 
-  multipleContents.canceled = true;
+  // reset the tile's content state to try again later.
+  multipleContents._tile.contentState = originalContentState;
+
   multipleContents.tileset.statistics.numberOfPendingRequests -=
     multipleContents._requestsInFlight;
   multipleContents._requestsInFlight = 0;
+
+  // Discard the request promises.
+  var contentCount = multipleContents._innerContentHeaders.length;
+  multipleContents._arrayFetchPromises = new Array(contentCount);
+  multipleContents._contentsFetchedPromise = undefined;
 }
 
 /**
@@ -329,7 +290,8 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
     this._arrayFetchPromises[i] = requestInnerContent(
       this,
       i,
-      this._resetCount
+      this._cancelCount,
+      this._tile._contentState
     );
   }
 
@@ -365,9 +327,28 @@ function canScheduleAllRequests(serverKeys) {
   return true;
 }
 
-function requestInnerContent(multipleContents, index, originalResetCount) {
+function requestInnerContent(
+  multipleContents,
+  index,
+  originalCancelCount,
+  originalContentState
+) {
   var contentResource = multipleContents._innerContentResources[index];
   var tile = multipleContents.tile;
+
+  // Always create a new request. If the tile gets canceled, this
+  // avoids getting stuck in the canceled state.
+  var priorityFunction = function () {
+    return tile.priority;
+  };
+  var serverKey = multipleContents._serverKeys[index];
+  contentResource.request = new Request({
+    throttle: true,
+    throttleByServer: true,
+    type: RequestType.TILES3D,
+    priorityFunction: priorityFunction,
+    serverKey: serverKey,
+  });
 
   var expired = tile.contentExpired;
   if (expired) {
@@ -381,7 +362,7 @@ function requestInnerContent(multipleContents, index, originalResetCount) {
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
       // Short circuit if another inner content was canceled.
-      if (multipleContents.canceled) {
+      if (originalCancelCount < multipleContents._cancelCount) {
         return undefined;
       }
 
@@ -390,13 +371,13 @@ function requestInnerContent(multipleContents, index, originalResetCount) {
     })
     .otherwise(function (error) {
       // Short circuit if another inner content was canceled.
-      if (multipleContents.canceled) {
+      if (originalCancelCount < multipleContents._cancelCount) {
         return undefined;
       }
 
       if (contentResource.request.state === RequestState.CANCELLED) {
-        cancelPendingRequests(multipleContents, originalResetCount);
-        throw new RuntimeError("request canceled");
+        cancelPendingRequests(multipleContents, originalContentState);
+        return undefined;
       }
 
       updatePendingRequests(multipleContents, -1);
