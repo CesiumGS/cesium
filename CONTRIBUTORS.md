@@ -150,6 +150,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   - [Erixen Cruz](https://github.com/ErixenCruz)
   - [Dzung Nguyen](https://github.com/dzungpng)
   - [Nithin Pranesh](https://github.com/nithinp7)
+  - [Alexander Gallegos](https://github.com/argallegos)
 - [Northrop Grumman](http://www.northropgrumman.com)
   - [Joseph Stein](https://github.com/nahgrin)
 - [EOX IT Services GmbH](https://eox.at)
@@ -283,4 +284,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Victor Turansky](https://github.com/turansky)
 - [Will Jadkowski](https://github.com/willjad)
 - [Mac Clayton](https://github.com/mclayton7)
-- [Nadav Peleg](https://github.com/nadav42)
+- [Ben Murphy](https://github.com/littlemurph)
