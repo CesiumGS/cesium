@@ -913,6 +913,7 @@ Object.defineProperties(Billboard.prototype, {
     },
     set: function (value) {
       if (!defined(value)) {
+        this._freeFromTextureAtlas();
         this._imageIndex = -1;
         this._imageSubRegion = undefined;
         this._imageId = undefined;
@@ -1225,6 +1226,7 @@ Billboard.prototype.setImage = function (id, image) {
     return;
   }
 
+  this._freeFromTextureAtlas();
   this._imageIndex = -1;
   this._imageSubRegion = undefined;
   this._imageId = id;
@@ -1261,6 +1263,7 @@ Billboard.prototype.setImageSubRegion = function (id, subRegion) {
     return;
   }
 
+  this._freeFromTextureAtlas();
   this._imageIndex = -1;
   this._imageId = id;
   this._imageSubRegion = BoundingRectangle.clone(subRegion);
@@ -1508,7 +1511,17 @@ Billboard.prototype.equals = function (other) {
   );
 };
 
+// will free the textureAtlas node if no other resources are using this image id anymore
+Billboard.prototype._freeFromTextureAtlas = function () {
+  if (defined(this._imageId)) {
+    var atlas = this._billboardCollection._textureAtlas;
+    atlas.freeImageNode(this._imageId);
+  }
+};
+
 Billboard.prototype._destroy = function () {
+  this._freeFromTextureAtlas();
+
   if (defined(this._customData)) {
     this._billboardCollection._scene.globe._surface.removeTileCustomData(
       this._customData
