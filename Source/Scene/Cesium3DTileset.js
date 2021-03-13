@@ -90,6 +90,7 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -144,6 +145,7 @@ function Cesium3DTileset(options) {
   this._url = undefined;
   this._basePath = undefined;
   this._root = undefined;
+  this._resource = undefined;
   this._asset = undefined; // Metadata for the entire tileset
   this._properties = undefined; // Metadata for per-model/point/etc properties
   this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -271,6 +273,11 @@ function Cesium3DTileset(options) {
   this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
   this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
   this._clippingPlanesOriginMatrixDirty = true;
+
+  this._vectorClassificationOnly = defaultValue(
+    options.vectorClassificationOnly,
+    false
+  );
 
   /**
    * Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
@@ -897,12 +904,22 @@ function Cesium3DTileset(options) {
    */
   this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
+  /**
+   * Function for examining vector lines as they are being streamed.
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Function}
+   */
+  this.examineVectorLinesFunction = undefined;
+
   var that = this;
   var resource;
   when(options.url)
     .then(function (url) {
       var basePath;
       resource = Resource.createIfNeeded(url);
+      that._resource = resource;
 
       // ion resources have a credits property we can use for additional attribution.
       that._credits = resource.credits;
@@ -1164,16 +1181,16 @@ Object.defineProperties(Cesium3DTileset.prototype, {
   },
 
   /**
-   * The url to a tileset JSON file.
+   * The resource used to fetch the tileset JSON file
    *
    * @memberof Cesium3DTileset.prototype
    *
-   * @type {String}
+   * @type {Resource}
    * @readonly
    */
-  url: {
+  resource: {
     get: function () {
-      return this._url;
+      return this._resource;
     },
   },
 
@@ -1652,6 +1669,22 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       Cartesian2.clone(value, this._imageBasedLightingFactor);
     },
   },
+
+  /**
+   * Indicates that only the tileset's vector tiles should be used for classification.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  vectorClassificationOnly: {
+    get: function () {
+      return this._vectorClassificationOnly;
+    },
+  },
 });
 
 /**
@@ -1697,6 +1730,7 @@ Cesium3DTileset.prototype.loadTileset = function (
   if (defined(tilesetVersion)) {
     // Append the tileset version to the resource
     this._basePath += "?v=" + tilesetVersion;
+    resource = resource.clone();
     resource.setQueryParameters({ v: tilesetVersion });
   }
 
@@ -2424,10 +2458,12 @@ function detectModelMatrixChanged(tileset, frameState) {
       tileset.modelMatrix,
       tileset._previousModelMatrix
     );
-    tileset._previousModelMatrix = Matrix4.clone(
-      tileset.modelMatrix,
-      tileset._previousModelMatrix
-    );
+    if (tileset._modelMatrixChanged) {
+      tileset._previousModelMatrix = Matrix4.clone(
+        tileset.modelMatrix,
+        tileset._previousModelMatrix
+      );
+    }
   }
 }
 

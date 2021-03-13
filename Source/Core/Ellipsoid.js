@@ -359,7 +359,7 @@ Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function (
  *
  * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
  * @param {Cartesian3} [result] The object onto which to store the result.
- * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+ * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided, or undefined if a normal cannot be found.
  */
 Ellipsoid.prototype.geodeticSurfaceNormal = function (cartesian, result) {
   if (
