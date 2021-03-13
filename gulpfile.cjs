@@ -5,6 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const child_process = require("child_process");
+const decompress = require("decompress");
+const download = require("download");
 const crypto = require("crypto");
 const zlib = require("zlib");
 const readline = require("readline");
@@ -41,7 +43,7 @@ let version = packageJson.version;
 if (/\.0$/.test(version)) {
   version = version.substring(0, version.length - 2);
 }
-
+const bucketName = "cesium.com-next";
 const karmaConfigFile = path.join(__dirname, "Specs/karma.conf.cjs");
 const travisDeployUrl =
   "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
@@ -514,8 +516,7 @@ gulp.task("deploy-s3", function (done) {
 
 // Deploy cesium to s3
 function deployCesium(cacheControl, done) {
-  const bucketName = "cesium.com";
-  const refDocPrefix = "docs/cesiumjs-ref-doc";
+  const refDocPrefix = "cesiumjs/ref-doc";
   const sandcastlePrefix = "sandcastle";
   const cesiumViewerPrefix = "cesiumjs/cesium-viewer";
 
@@ -609,7 +610,9 @@ function deployCesium(cacheControl, done) {
     return uploadFiles(cesiumViewerPrefix, "Build/CesiumViewer/", files);
   });
 
-  Promise.all(uploadSandcastle, uploadRefDoc, uploadCesiumViewer)
+  const uploadRelease = deployCesiumRelease(s3, errors);
+
+  Promise.all(uploadSandcastle, uploadRefDoc, uploadCesiumViewer, uploadRelease)
     .then(function () {
       console.log("Successfully uploaded " + uploaded + " files.");
     })
@@ -628,6 +631,84 @@ function deployCesium(cacheControl, done) {
       });
       done(1);
     });
+}
+
+async function deployCesiumRelease(s3, errors) {
+  const releaseDir = "cesiumjs/releases";
+  const quiet = process.env.TRAVIS;
+
+  let release;
+  try {
+    // Deploy any new releases
+    const response = await request({
+      method: "GET",
+      uri: "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
+      json: true,
+      headers: {
+        Authorization: process.env.TOKEN
+          ? "token " + process.env.TOKEN
+          : undefined,
+        "User-Agent": "cesium.com-build",
+      },
+    });
+    release = {
+      tag: response.tag_name,
+      name: response.name,
+      url: response.assets[0].browser_download_url,
+    };
+
+    await s3
+      .headObject({
+        Bucket: bucketName,
+        Key: path.posix.join(releaseDir, release.tag, "cesium.zip"),
+      })
+      .promise();
+    console.log(
+      `Cesium version ${release.tag} up to date. Skipping release deployment.`
+    );
+  } catch (error) {
+    // The current version is not uploaded
+    if (error.code === "NotFound") {
+      console.log("Updating cesium version...");
+      const data = await download(release.url);
+      // upload and unzip contents
+      const key = path.posix.join(releaseDir, release.tag, "cesium.zip");
+      await uploadObject(s3, key, data, quiet);
+      const files = await decompress(data);
+      await Promise.map(
+        files,
+        function (file) {
+          if (file.path.startsWith("Apps")) {
+            // skip uploading apps and sandcastle
+            return;
+          }
+          // Upload to release directory
+          const key = path.posix.join(releaseDir, release.tag, file.path);
+          return uploadObject(s3, key, file.data, quiet);
+        },
+        { concurrency: 5 }
+      );
+    }
+
+    // else, unexpected error
+    errors.push(error);
+  }
+}
+
+function uploadObject(s3, key, contents, quiet) {
+  if (!quiet) {
+    console.log(`Uploading ${key}...`);
+  }
+
+  return s3
+    .upload({
+      Bucket: bucketName,
+      Key: key,
+      Body: contents,
+      ContentType: mime.lookup(key) || undefined,
+      CacheControl: "public, max-age=1800",
+    })
+    .promise();
 }
 
 function getMimeType(filename) {
