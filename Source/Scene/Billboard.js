@@ -182,8 +182,6 @@ function Billboard(options, billboardCollection) {
         imageId = image;
       } else if (defined(image.src)) {
         imageId = image.src;
-      } else if (image instanceof HTMLCanvasElement && defined(image.id) && image.id) {
-        imageId = image.id;
       } else {
         imageId = createGuid();
       }
@@ -927,8 +925,6 @@ Object.defineProperties(Billboard.prototype, {
         this.setImage(value.url, value);
       } else if (defined(value.src)) {
         this.setImage(value.src, value);
-      } else if (value instanceof HTMLCanvasElement && defined(value.id) && value.id) {
-        this.setImage(value.id, value);
       } else {
         this.setImage(createGuid(), value);
       }
