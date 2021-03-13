@@ -250,6 +250,24 @@ function resizeAtlas(textureAtlas, image) {
   }
 }
 
+// find Node by image index
+function findNodeByImageIndex(textureAtlas, node, imageIndex) {
+  if (!defined(node)) {
+    return undefined;
+  }
+
+  // If a leaf node
+  if (!defined(node.childNode1) && !defined(node.childNode2) && node.imageIndex === imageIndex) {
+    return node;
+  }
+
+  // If not a leaf node
+  return (
+    findNodeByImageIndex(textureAtlas, node.childNode1, imageIndex) ||
+    findNodeByImageIndex(textureAtlas, node.childNode2, imageIndex)
+  );
+}
+
 // A recursive function that finds the best place to insert
 // a new image based on existing image 'nodes'.
 // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
@@ -408,6 +426,41 @@ TextureAtlas.prototype.addImage = function (id, image) {
   this._idHash[id] = indexPromise;
 
   return indexPromise;
+};
+
+/**
+ * free occupied TextureAtlasNode
+ *
+ * @param {String} id An identifier to detect whether the image already exists in the atlas.
+ * @returns {void}
+ */
+TextureAtlas.prototype.freeImageNode = function (id) {
+  //>>includeStart('debug', pragmas.debug);
+  if (!defined(id)) {
+    throw new DeveloperError("id is required.");
+  }
+  //>>includeEnd('debug');
+
+  var indexPromise = this._idHash[id];
+
+  if (!defined(indexPromise)) {
+    indexPromise;
+  }
+
+  var that = this;
+
+  // 1. TODO: only clear when 0 resources are using that id (store stack like pop push?)
+
+  // 2. TODO: clear the old texture area? will it be needed? how do I achieve this?
+  // the only problem with not doing it seems that new billboards will have non transparent border around them from old images
+  // can something like this be done? -> that._texture.copyFrom(EmptyTexture, node.bottomLeft.x, node.bottomLeft.y);
+  
+  indexPromise.then(function (imageIndex) {
+    var node = findNodeByImageIndex(that, that._root, imageIndex);
+    if (defined(node)) {
+      node.imageIndex = undefined; //console.log("found node to free:", node);
+    }
+  });
 };
 
 /**
