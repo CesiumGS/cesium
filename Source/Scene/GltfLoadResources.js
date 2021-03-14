@@ -4,30 +4,32 @@ function GltfLoadResources(asynchronous) {
   this.indexBuffersToLoad = [];
 }
 
-function VertexBufferToLoad(cacheKey, bufferViewId) {
-  this.buffer = undefined;
-  this.bufferView = undefined;
-  this.cacheKey = cacheKey;
-  this.bufferPromise = undefined;
+GltfLoadResources.prototype.addVertexBuffer = function (options) {
+  this.vertexBuffersToLoad.push(new VertexBufferToLoad(options));
+};
+
+GltfLoadResources.prototype.addIndexBuffer = function (options) {
+  this.indexBuffersToLoad.push(new IndexBufferToLoad(options));
+};
+
+function VertexBufferToLoad(options) {
+  this.buffer = options.buffer;
+  this.bufferView = options.bufferView;
+  this.cacheKey = options.cacheKey;
+  this.bufferCacheKey = options.bufferCacheKey;
   this.typedArray = undefined;
   this.vertexBuffer = undefined;
-  this.ready = false;
+  this.deferredPromise = undefined;
 }
 
-function IndexBufferToLoad(cacheKey, accessorId) {
-  this.accessorId = accessorId;
-  this.cacheKey = cacheKey;
-  this.loadBufferPromise = undefined;
-  this.indexBuffer = undefined;
+function IndexBufferToLoad(options) {
+  this.buffer = options.buffer;
+  this.bufferView = options.bufferView;
+  this.cacheKey = options.cacheKey;
+  this.bufferCacheKey = options.bufferCacheKey;
+  this.typedArray = undefined;
+  this.vertexBuffer = undefined;
+  this.deferredPromise = undefined;
 }
 
-GltfLoadResources.prototype.addVertexBuffer = function (
-  cacheKey,
-  bufferViewId
-) {
-  this.vertexBuffersToLoad.push(new VertexBufferToLoad(cacheKey, bufferViewId));
-};
-
-GltfLoadResources.prototype.addIndexBuffer = function (cacheKey, accessorId) {
-  this.indexBuffersToLoad.push(new IndexBufferToLoad(cacheKey, accessorId));
-};
+export default GltfLoadResources;

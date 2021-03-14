@@ -17,8 +17,12 @@ var GltfLoaderState = {
   FAILED: 4,
 };
 
+var defaultAccept =
+  "model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01";
+
 /**
  * TODO: from ArrayBuffer
+ * TODO: accessors that don't have a buffer view
  * 
  * Loads a glTF model.
  * 
@@ -35,6 +39,9 @@ var GltfLoaderState = {
  */
 function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var uri = options.uri;
+  var keepResident = defaultValue(options.keepResident, true);
+  var asynchronous = defaultValue(options.asynchronous, true);
 
   // Create resource for the glTF file
   var gltfResource = Resource.createIfNeeded(uri);
@@ -49,14 +56,14 @@ function GltfLoader(options) {
     ? Resource.createIfNeeded(basePath)
     : gltfResource.clone();
 
-  this._uri = options.uri;
+  this._uri = uri;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
-  this._keepResident = defaultValue(options.keepResident, true);
-  this._asynchronous = defaultValue(options.asynchronous, true);
+  this._keepResident = keepResident;
+  this._asynchronous = asynchronous;
   this._gltf = undefined;
   this._gltfCacheKey = getAbsoluteUri(gltfResource.url);
-  this._loadResource = new GltfLoadResources();
+  this._loadResources = new GltfLoadResources(asynchronous);
   this._error = undefined;
   this._state = GltfLoaderState.UNLOADED;
 }
@@ -97,9 +104,7 @@ function getBufferCacheKey(loader, buffer, bufferId) {
   return GltfCache.getEmbeddedBufferCacheKey(loader._gltfCacheKey, bufferId);
 }
 
-function getVertexBuffersToLoad(loader) {
-  var gltf = loader._gltf;
-
+function loadVertexBuffers(cache, loader, loadResources, gltf) {
   var bufferViewIds = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
@@ -135,33 +140,53 @@ function getVertexBuffersToLoad(loader) {
     });
   });
 
-  // Need to load instancing vertex buffers
+  if (hasExtension(gltf, "EXT_mesh_gpu_instancing")) {
+    ForEach.node(gltf, function (node) {
+      if (defined(node.extensions) && defined(node.extensions.EXT_mesh_gpu_instancing)) {
+        var attributes = node.extensions.EXT_mesh_gpu_instancing.attributes;
+        if (defined(attributes)) {
+          for (var attributeId in attributes) {
+            if (attributes.hasOwnProperty(attributeId)) {
+              var accessorId = attributes[attributeId];
+              var accessor = gltf.accessors[accessorId];
+              var bufferViewId = accessor.bufferView;
+              if (defined(bufferViewId)) {
+                bufferViewIds[bufferViewId] = true;
+              }
+            }
+          }
+        }
+      }
+    });
+  }
 
-  var vertexBuffersToLoad = [];
+  var vertexBuffersToLoad = {};
   for (var bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
       var bufferView = gltf.bufferViews[bufferViewId];
       var bufferId = bufferView.buffer;
       var buffer = gltf.buffers[bufferId];
       var bufferCacheKey = getBufferCacheKey(loader, buffer, bufferId);
-      var vertexBufferCacheKey = GltfCache.getVertexBufferCacheKey(bufferCacheKey, bufferViewId);
-      vertexBuffersToLoad.push(new VertexBufferToLoad(vertexBufferCacheKey, bufferViewId)); 
+      var vertexBufferCacheKey = GltfCache.getVertexBufferCacheKey(bufferCacheKey, bufferView);
+      vertexBuffersToLoad[bufferViewId] = cache.loadVertexBuffer({
+        buffer: buffer,
+        bufferView: bufferView,
+        cacheKey: vertexBufferCacheKey,
+        bufferCacheKey: bufferCacheKey
+      });
     }
   }
-
   return vertexBuffersToLoad;
 }
 
-function getIndexBuffersToLoad(loader) {
-  var gltf = loader._gltf;
-
+function loadIndexBuffers(cache, loader, loadResources, gltf) {
   var accessorIds = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
       var hasDracoExtension = defined(primitive.extensions) && defined(primitive.extensions.KHR_draco_mesh_compression);
       if (!hasDracoExtension && defined(primitive.indices)) {
         // Ignore accessors that may contain uncompressed fallback data since we only care about the compressed data
-        accessorIds[primitive.indices]
+        accessorIds[primitive.indices] = true;
       }
     });
   });
@@ -176,8 +201,10 @@ function getIndexBuffersToLoad(loader) {
         var bufferId = bufferView.buffer;
         var buffer = gltf.buffers[bufferId];
         var bufferCacheKey = getBufferCacheKey(loader, buffer, bufferId);
-        var indexBufferCacheKey = GltfCache.getIndexBufferCacheKey(bufferCacheKey, accessorId);
-        indexBuffersToLoad.push(new IndexBufferToLoad(indexBufferCacheKey, bufferViewId)); 
+        var indexBufferCacheKey = GltfCache.getIndexBufferCacheKey(bufferCacheKey, accessor, bufferView);
+        indexBuffersToLoad.push(cache.loadIndexBuffer({
+
+        }));
       }
     }
   }
@@ -185,14 +212,11 @@ function getIndexBuffersToLoad(loader) {
   return indexBuffersToLoad;
 }
 
-function parseGltf(loader) {
+function getLoadResources(loader) {
   var loadResources = new GltfLoadResources(loader._asynchronous);
-  load._loadResources = loadResources;
-
-  loadResources._vertexBuffersToLoad = getVertexBuffersToLoad(loader);
-  loadResources._indexBuffersToLoad = getIndexBuffersToLoad(loader);
-
-  cache.enqueueLoadResources(loadResources);
+  addVertexBuffersToLoadResources(loader, loadResources);
+  addIndexBuffersToLoadResources(loader, loadResources);
+  return loadResources;
 }
 
 function handleModelDestroyed(loader, model) {
@@ -211,9 +235,16 @@ function loadGltf(loader, model) {
     if (handleModelDestroyed(loader, model)) {
       return;
     }
+
+    var loadResources = getLoadResources(loader);
+  
     loader._gltf = gltf;
-    parseGltf(loader);
+    loader._loadResources = loadResources;
     loader._state = GltfLoaderState.PROCESSING;
+
+    return cache.loadResources(loadResources).then(function() {
+      loader._state = GltfLoaderState.READY;
+    });
   }).otherwise(function (error) {
     loader._error = error;
     loader._state = GltfLoaderState.FAILED;

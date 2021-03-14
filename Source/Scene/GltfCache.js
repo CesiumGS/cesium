@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
@@ -18,39 +19,19 @@ import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
 import when from "../ThirdParty/when.js";
 import JobType from "./JobType.js";
 
+/**
+ * Cache for glTF resources shared across models.
+ *
+ * @alias GltfCache
+ * @constructor
+ *
+ * @private
+ */
 function GltfCache() {
   this._cacheEntries = {};
+  this._vertexBuffersToLoad = {};
+
   this._allLoadResources = new ManagedArray();
-}
-
-function CacheEntry() {
-  this.referenceCount = 1;
-  this.cacheKey = undefined;
-  this.contents = undefined;
-  this.promise = undefined;
-  this.parent = undefined;
-  this.children = [];
-}
-
-function addCacheEntry(
-  cache,
-  cacheKey,
-  contents,
-  parentCacheEntry,
-  keepResident
-) {
-  var cacheEntry = new CacheEntry();
-  cacheEntry.cacheKey = cacheKey;
-  cacheEntry.contents = contents;
-  cacheEntry.keepResident = keepResident;
-
-  if (defined(parentCacheEntry)) {
-    cacheEntry.parent = parentCacheEntry;
-    parentCacheEntry.children.push(cacheEntry);
-  }
-
-  cache._cacheEntries[cacheKey] = cacheEntry;
-  return cacheEntry;
 }
 
 function getDerivedResource(baseResource, uri) {
@@ -59,39 +40,104 @@ function getDerivedResource(baseResource, uri) {
   });
 }
 
+GltfCache.getGltfCacheKey = function (gltfResource) {
+  return getAbsoluteUri(gltfResource.url);
+};
+
+GltfCache.getEmbeddedBufferCacheKey = function (gltfCacheKey, bufferId) {
+  return gltfCacheKey + "-buffer-" + bufferId;
+};
+
+GltfCache.getExternalResourceCacheKey = function (baseResource, uri) {
+  var resource = getDerivedResource(baseResource, uri);
+  return getAbsoluteUri(resource.url);
+};
+
+GltfCache.getVertexBufferCacheKey = function (bufferCacheKey, bufferView) {
+  var byteOffset = bufferView.byteOffset;
+  var byteLength = bufferView.byteLength;
+  var bufferViewKey = byteOffset + "-" + byteLength;
+  return bufferCacheKey + "-vertex-buffer-" + bufferViewKey;
+};
+
+GltfCache.getDracoVertexBufferCacheKey = function (
+  bufferCacheKey,
+  bufferView,
+  dracoAttributeId
+) {
+  var byteOffset = bufferView.byteOffset;
+  var byteLength = bufferView.byteLength;
+  var bufferViewKey = byteOffset + "-" + byteLength;
+  var dracoKey = dracoAttributeId;
+
+  return (
+    bufferCacheKey + "-draco-vertex-buffer-" + dracoKey + "-" + bufferViewKey
+  );
+};
+
+GltfCache.getIndexBufferCacheKey = function (
+  bufferCacheKey,
+  accessor,
+  bufferView
+) {
+  var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+  var componentType = accessor.componentType;
+  var type = accessor.type;
+  var count = accessor.count;
+  var accessorKey = componentType + "-" + type + "-" + count;
+  return bufferCacheKey + "-index-buffer-" + byteOffset + "-" + accessorKey;
+};
+
+function CacheEntry() {
+  this.referenceCount = 1;
+  this.cacheKey = undefined;
+  this.contents = undefined;
+  this.promise = undefined;
+  this.children = [];
+  this.keepResident = undefined;
+  this.unloadFunction = undefined;
+}
+
 function loadFromCache(
   cache,
   cacheKey,
-  parentCacheEntry,
+  parentCacheKey,
   keepResident,
-  loadCallback
+  contents, // TODO: usually undefined
+  loadFunction,
+  unloadFunction
 ) {
   var cacheEntries = cache._cacheEntries;
   var cacheEntry = cacheEntries[cacheKey];
   if (defined(cacheEntry)) {
+    ++cacheEntry.referenceCount;
     if (defined(cacheEntry.promise)) {
       return cacheEntry.promise.then(function () {
-        ++cacheEntry.referenceCount;
         return cacheEntry.contents;
       });
     }
-    ++cacheEntry.referenceCount;
     return when.resolve(cacheEntry.contents);
   }
 
-  cacheEntry = addCacheEntry(
-    cache,
-    cacheKey,
-    undefined,
-    parentCacheEntry,
-    keepResident
-  );
+  cacheEntry = new CacheEntry();
+  cacheEntries[cacheKey] = cacheEntry;
 
-  if (!defined(loadCallback)) {
-    return when.resolve(undefined);
+  if (defined(parentCacheKey)) {
+    var parentCacheEntry = cacheEntries[parentCacheKey];
+    keepResident = defaultValue(keepResident, parentCacheEntry.keepResident);
+    parentCacheEntry.children.push(cacheEntry);
   }
 
-  cacheEntry.promise = loadCallback(cacheEntry)
+  cacheEntry.cacheKey = cacheKey;
+  cacheEntry.contents = contents;
+  cacheEntry.keepResident = defaultValue(keepResident, false);
+  cacheEntry.unloadFunction = unloadFunction;
+
+  if (!defined(loadFunction)) {
+    return when.resolve(contents);
+  }
+
+  cacheEntry.promise = loadFunction()
     .then(function (contents) {
       cacheEntry.contents = contents;
       cacheEntry.promise = undefined;
@@ -104,18 +150,12 @@ function loadFromCache(
   return cacheEntry.promise;
 }
 
-function containsGltfMagic(uint8Array) {
-  var magic = getMagic(uint8Array);
+function containsGltfMagic(typedArray) {
+  var magic = getMagic(typedArray);
   return magic === "glTF";
 }
 
-function upgradeVersion(
-  cache,
-  gltf,
-  gltfResource,
-  baseResource,
-  gltfCacheEntry
-) {
+function upgradeVersion(cache, gltf, baseResource, gltfCacheKey) {
   if (gltf.asset.version === "2.0") {
     return when.resolve();
   }
@@ -123,19 +163,17 @@ function upgradeVersion(
   // Load all buffers into memory. updateVersion will read and in some cases modify
   // the buffer data, which it accesses from buffer.extras._pipeline.source
   var promises = [];
-  ForEach.buffer(gltf, function (buffer, bufferId) {
+  ForEach.buffer(gltf, function (buffer) {
     if (!defined(buffer.extras._pipeline.source) && defined(buffer.uri)) {
+      var bufferCacheKey = GltfCache.getExternalResourceCacheKey(
+        baseResource,
+        buffer.uri
+      );
       promises.push(
         cache
-          .loadBuffer(
-            buffer,
-            bufferId,
-            gltfResource,
-            baseResource,
-            gltfCacheEntry
-          )
-          .then(function (cacheKey) {
-            buffer.extras._pipeline.source = cache.getContents(cacheKey);
+          .loadBuffer(cache, bufferCacheKey, buffer, baseResource, gltfCacheKey)
+          .then(function (typedArray) {
+            buffer.extras._pipeline.source = typedArray;
           })
       );
     }
@@ -162,112 +200,53 @@ function decodeDataUris(gltf) {
   return when.all(promises);
 }
 
-GltfCache.getGltfCacheKey = function (gltfResource) {
-  return getAbsoluteUri(gltfResource.url);
-};
-
-GltfCache.getEmbeddedBufferCacheKey = function (gltfCacheKey, bufferId) {
-  return gltfCacheKey + "-buffer-" + bufferId;
-};
-
-GltfCache.getExternalResourceCacheKey = function (baseResource, uri) {
-  var resource = getDerivedResource(baseResource, uri);
-  return getAbsoluteUri(resource.url);
-};
-
-GltfCache.getVertexBufferCacheKey = function (bufferCacheKey, bufferViewId) {
-  return bufferCacheKey + "-vertex-buffer-" + bufferViewId;
-};
-
-GltfCache.getDracoVertexBufferCacheKey = function (
-  bufferCacheKey,
-  dracoAttributeId
-) {
-  return bufferCacheKey + "-draco-vertex-buffer-" + dracoAttributeId;
-};
-
-GltfCache.getIndexBufferCacheKey = function (bufferCacheKey, accessorId) {
-  return bufferCacheKey + "-index-buffer-" + accessorId;
-};
-
-GltfCache.getBufferCacheKey = function (
-  gltfResource,
-  bufferResource,
-  buffer,
-  bufferId
-) {
-  if (defined(buffer.uri)) {
-    return GltfCache.getGltfCacheKey(gltfResource) + "-buffer-" + bufferId;
-  }
-
-  var resource = getDerivedResource(baseResource, uri);
-
-  return getAbsoluteUri(bufferResource.url);
-};
-
-GltfCache.getEmbeddedBufferCacheKey = function (bufferResource) {
-  return getAbsoluteUri(bufferResource.url);
-};
-
-function getExternalResourceCacheKey(baseResource, uri) {
-  var resource = getDerivedResource(baseResource, uri);
-  cacheKey = getAbsoluteUri(resource.url);
-}
-
-function cacheEmbeddedBuffers(
-  cache,
-  gltf,
-  gltfResource,
-  gltfCacheEntry,
-  keepResident
-) {
+function cacheEmbeddedBuffers(cache, gltf, gltfCacheKey) {
+  var promises = [];
   ForEach.buffer(gltf, function (buffer, bufferId) {
     var source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
-      var cacheKey = getEmbeddedBufferCacheKey(gltfResource, bufferId);
-      addCacheEntry(cache, cacheKey, source, gltfCacheEntry, keepResident);
+      var cacheKey = GltfCache.getEmbeddedBufferCacheKey(
+        gltfCacheKey,
+        bufferId
+      );
+      promises.push(
+        loadFromCache(
+          cache,
+          cacheKey,
+          gltfCacheKey,
+          undefined,
+          source,
+          undefined,
+          undefined
+        )
+      );
     }
   });
+  return when.all(promises);
 }
 
-function processGltf(
-  cache,
-  arrayBuffer,
-  gltfResource,
-  baseResource,
-  gltfCacheEntry,
-  keepResident
-) {
-  var uint8Array = new Uint8Array(arrayBuffer);
-
+function processGltf(cache, typedArray, gltfCacheKey, baseResource) {
   var gltf;
-  if (containsGltfMagic(uint8Array)) {
-    gltf = parseGlb(uint8Array);
+  if (containsGltfMagic(typedArray)) {
+    gltf = parseGlb(typedArray);
   } else {
-    gltf = getJsonFromTypedArray(uint8Array);
+    gltf = getJsonFromTypedArray(typedArray);
   }
 
   addPipelineExtras(gltf);
 
   return decodeDataUris(gltf).then(function () {
-    return upgradeVersion(
-      cache,
-      gltf,
-      gltfResource,
-      baseResource,
-      gltfCacheEntry
-    ).then(function () {
-      addDefaults(gltf);
-      cacheEmbeddedBuffers(
-        cache,
-        gltf,
-        gltfResource,
-        gltfCacheEntry,
-        keepResident
-      );
-      removePipelineExtras(gltf);
-      return gltf;
-    });
+    return upgradeVersion(cache, gltf, baseResource, gltfCacheKey).then(
+      function () {
+        addDefaults(gltf);
+        return cacheEmbeddedBuffers(cache, gltf, gltfCacheKey).then(
+          function () {
+            removePipelineExtras(gltf);
+            return gltf;
+          }
+        );
+      }
+    );
   });
 }
 
@@ -286,120 +265,76 @@ GltfCache.prototype.loadGltf = function (
   keepResident
 ) {
   var that = this;
-  return loadFromCache(this, cacheKey, undefined, keepResident, function (
-    gltfCacheEntry
-  ) {
+  var loadFunction = function () {
     return resource.fetchArrayBuffer().then(function (arrayBuffer) {
-      return processGltf(
-        that,
-        arrayBuffer,
-        resource,
-        baseResource,
-        gltfCacheEntry,
-        keepResident
-      );
+      var typedArray = new Uint8Array(arrayBuffer);
+      return processGltf(that, typedArray, cacheKey, baseResource);
     });
-  }).otherwise(function (error) {
+  };
+
+  return loadFromCache(
+    this,
+    cacheKey,
+    undefined,
+    keepResident,
+    loadFunction,
+    undefined
+  ).otherwise(function (error) {
     throw new RuntimeError(getFailedLoadMessage(error, "glTF", resource.url));
   });
 };
 
-GltfCache.prototype.loadBuffer = function (
-  cacheKey,
-  buffer,
-  baseResource,
-  gltfCacheKey
-) {
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("buffer", buffer);
-  Check.defined("bufferId", bufferId);
-  Check.typeOf.object("gltfResource", gltfResource);
-  Check.typeOf.object("baseResource", baseResource);
-  Check.typeOf.object("gltfCacheEntry", gltfCacheEntry);
-  //>>includeEnd('debug');
-
-  var cacheKey;
-
+function loadBuffer(cache, cacheKey, buffer, baseResource, gltfCacheKey) {
+  // Is external buffer
   if (defined(buffer.uri)) {
-    var resource = getDerivedResource(baseResource, buffer.uri);
-    cacheKey = getAbsoluteUri(resource.url);
-    return loadFromCache(this, cacheKey, gltfCacheEntry, function () {
+    var loadFunction = function () {
+      var resource = getDerivedResource(baseResource, buffer.uri);
       return resource.fetchArrayBuffer().then(function (arrayBuffer) {
         return new Uint8Array(arrayBuffer);
       });
-    }).otherwise(function (error) {
+    };
+    return loadFromCache(
+      cache,
+      cacheKey,
+      undefined,
+      false,
+      loadFunction,
+      undefined
+    ).otherwise(function (error) {
       throw new RuntimeError(getFailedLoadMessage(error, "buffer", buffer.uri));
     });
   }
 
-  cacheKey = getEmbeddedBufferCacheKey(gltfResource, bufferId);
-  return loadFromCache(this, cacheKey, gltfCacheEntry);
-};
-
-GltfCache.prototype.loadVertexBuffer = function (cacheKey, loadPromise) {
-  return loadFromCache(this, cacheKey, undefined, false, function () {
-    return loadPromise;
-  });
-};
-
-GltfCache.prototype.getContents = function (cacheKey) {
-  return this._cacheEntries[cacheKey].contents;
-};
-
-function getVertexBufferCacheKey(gltfResource, buffer) {
-  // Needs to be globally identifiable... depends if it's embedded or not
-  // If the buffer is a uri the key can be related to the buffer uri and offset/range
-  // If the buffer is embedded the key is related to the glTF file name + offset/range
-  // Note that the uri won't always exist like for b3dm, i3dm, etc
-  return getAbsoluteUri(gltfResource.url) + "-buffer-" + bufferId;
+  // Is embedded buffer. Already in the cache so don't pass in keepResident or loadFunction.
+  return loadFromCache(
+    cache,
+    cacheKey,
+    gltfCacheKey,
+    undefined,
+    undefined,
+    undefined
+  );
 }
 
-GltfCache.prototype.getBufferView = function () {
-  // TODO:
-};
+function VertexBufferToLoad(options) {
+  this.byteOffset = options.byteOffset;
+  this.byteLength = options.byteLength;
+  this.bufferUri = options.bufferUri;
+  this.cacheKey = options.cacheKey;
+  this.bufferCacheKey = options.bufferCacheKey;
 
-GltfCache.prototype.getContents = function (cacheKey) {
-  return this._cacheEntries[cacheKey];
-};
-
-GltfCache.prototype.getVertexBuffer = function (cacheKey, gltf, bufferView) {
-  var bufferId = bufferView;
-  var buffer = gltf.buffers[bufferId];
-
-  var cacheKey = getVertexBufferCacheKey(this, bufferViewId);
-  return this._cacheEntries[cacheKey];
-};
-
-GltfCache.prototype.getIndexBuffer = function (cacheKey, accessorId) {
-  var cacheKey = get;
-  return this._cacheEntries[cacheKey];
-};
-
-function releaseCacheEntry(cache, cacheEntry) {
-  // Keep resident even if there are no active users TODO
-
-  --cacheEntry.referenceCount;
-
-  if (cacheEntry.referenceCount === 0) {
-    var children = cacheEntry.children;
-    var childrenLength = children.length;
-    for (var i = 0; i < childrenLength; ++i) {
-      releaseCacheEntry(cache, children[i]);
-    }
-    if (defined(cacheEntry.parent)) {
-      releaseCacheEntry(cache, cacheEntry.parent);
-    }
-    delete cache._cacheEntries[cacheEntry.cacheKey];
-  }
+  this.typedArray = undefined;
+  this.vertexBuffer = undefined;
+  this.vertexBufferPromise = undefined;
 }
 
-var CreateVertexBufferJob = function () {
+function CreateVertexBufferJob() {
   this.typedArray = undefined;
   this.context = undefined;
   this.vertexBuffer = undefined;
-};
+}
 
-CreateIndexBufferJob.prototype.set = function (typedArray, context) {
+CreateVertexBufferJob.prototype.set = function (typedArray, context) {
   this.typedArray = typedArray;
   this.context = context;
 };
@@ -420,122 +355,137 @@ function createVertexBuffer(typedArray, context) {
 
 var scratchVertexBufferJob = new CreateVertexBufferJob();
 
-function loadVertexBuffer(
-  cache,
-  loadResources,
-  vertexBufferToLoad,
-  frameState
-) {
-  if (defined(vertexBufferToLoad.typedArray)) {
-    // Create the GPU vertex buffer once the buffer contents are loaded into memory
-    if (loadResources.asynchronous) {
-      scratchVertexBufferJob.set(
-        vertexBufferToLoad.typedArray,
-        frameState.context
-      );
-      var jobScheduler = frameState.jobScheduler;
-      if (!jobScheduler.execute(scratchVertexBufferJob, JobType.BUFFER)) {
-        return;
-      }
-      vertexBufferToLoad.vertexBuffer = scratchVertexBufferJob.vertexBuffer;
-    } else {
-      vertexBufferToLoad.vertexBuffer = createVertexBuffer(
-        vertexBufferToLoad.typedArray,
-        frameState.context
-      );
-    }
-
-    vertexBufferToLoad.typedArray = undefined;
-    vertexBufferToLoad.ready = true;
-    cache.release(vertexBufferToLoad.bufferCacheKey);
+function updateVertexBuffer(loadResources, vertexBufferToLoad, frameState) {
+  if (defined(vertexBufferToLoad.vertexBuffer)) {
+    // Already created vertex buffer
     return;
   }
 
-  if (!defined(vertexBufferToLoad.bufferPromise)) {
-    // Load the buffer that this vertex buffer references
-    vertexBufferToLoad.bufferPromise = this.loadBuffer(
+  if (!defined(vertexBufferToLoad.typedArray)) {
+    // Not ready to create vertex buffer
+    return;
+  }
+
+  var vertexBuffer;
+
+  if (loadResources.asynchronous) {
+    var vertexBufferJob = scratchVertexBufferJob;
+    vertexBufferJob.set(vertexBufferToLoad.typedArray, frameState.context);
+    var jobScheduler = frameState.jobScheduler;
+    if (!jobScheduler.execute(vertexBufferJob, JobType.BUFFER)) {
+      // Job scheduler is full. Try again next frame.
+      return;
+    }
+    vertexBuffer = vertexBufferJob.vertexBuffer;
+  } else {
+    vertexBuffer = createVertexBuffer(
+      vertexBufferToLoad.typedArray,
+      frameState.context
+    );
+  }
+
+  vertexBufferToLoad.typedArray = undefined;
+  vertexBufferToLoad.vertexBuffer = vertexBuffer;
+  vertexBufferToLoad.vertexBufferPromise.resolve();
+}
+
+function getBufferCacheKey(gltfResource, baseResource, buffer, bufferId) {
+  if (defined(buffer.uri)) {
+    return GltfCache.getExternalResourceCacheKey(baseResource, buffer.uri);
+  }
+  var gltfCacheKey = GltfCache.getGltfCacheKey(gltfResource);
+  return GltfCache.getEmbeddedBufferCacheKey(gltfCacheKey, bufferId);
+}
+
+GltfCache.prototype.loadVertexBuffer = function (options) {
+  var bufferViewId = options.bufferViewId;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var gltf = options.gltf;
+
+  var bufferView = gltf.bufferViews[bufferViewId];
+  var bufferId = bufferView.buffer;
+  var buffer = gltf.buffers[bufferId];
+  var bufferCacheKey = getBufferCacheKey(
+    gltfResource,
+    baseResource,
+    buffer,
+    bufferId
+  );
+  var vertexBufferCacheKey = GltfCache.getVertexBufferCacheKey(
+    bufferCacheKey,
+    bufferView
+  );
+
+  var cacheEntry = this._cacheEntries[vertexBufferCacheKey];
+  var vertexBufferToLoad;
+  if (defined(cacheEntry)) {
+    vertexBufferToLoad = cacheEntry.contents;
+  } else {
+    vertexBufferToLoad = new VertexBufferToLoad({
+      byteOffset: bufferView.byteOffset,
+      byteLength: bufferView.byteLength,
+      bufferUri: buffer.uri,
+      cacheKey: vertexBufferCacheKey,
+      bufferCacheKey: bufferCacheKey,
+    });
+  }
+
+  var that = this;
+
+  var loadFunction = function () {
+    return loadBuffer(
+      that,
       vertexBufferToLoad.bufferCacheKey,
       vertexBufferToLoad.buffer,
       vertexBufferToLoad.baseResource,
       vertexBufferToLoad.gltfCacheKey
     ).then(function (bufferTypedArray) {
+      // Got buffer from the cache
       var bufferView = vertexBufferToLoad.bufferView;
       var byteOffset = bufferView.byteOffset;
       var byteLength = bufferView.byteLength;
-      vertexBufferToLoad.typedArray = new Uint8Array(
+      var vertexBufferTypedArray = new Uint8Array(
         bufferTypedArray.buffer,
         bufferTypedArray.byteOffset + byteOffset,
         byteLength
       );
-      vertexBufferToLoad.bufferPromise = undefined;
+      // Now wait for the GPU buffer to be created in the update loop
+      var vertexBufferPromise = when.defer();
+      vertexBufferToLoad.vertexBufferPromise = vertexBufferPromise;
+      vertexBufferToLoad.typedArray = vertexBufferTypedArray;
+      return vertexBufferPromise.promise.then(function () {
+        // TODO: make sure that this gets garbage collected
+        // TODO: the bufferCache should really be a parent of this cache, but not the reverse
+        // Release the reference to the buffer now that the data is on the GPU
+        that.release(vertexBufferToLoad.bufferCacheKey);
+        return vertexBufferToLoad;
+      });
     });
-  }
-}
+  };
 
-// var CreateIndexBufferJob = function () {
-//   this.typedArray = undefined;
-//   this.context = undefined;
-//   this.indexBuffer = undefined;
-// };
+  var unloadFunction = function (vertexBufferToLoad) {
+    var vertexBuffer = vertexBufferToLoad.vertexBuffer;
+    var vertexBufferPromise = vertexBufferToLoad.vertexBufferPromise;
 
-// CreateIndexBufferJob.prototype.set = function (typedArray, context) {
-//   this.typedArray = typedArray;
-//   this.context = context;
-// };
+    if (defined(vertexBuffer)) {
+      vertexBuffer.destroy();
+    } else if (defined(vertexBufferPromise)) {
+      // Force the promise to resolve so the bufferCacheKey
+      vertexBufferPromise.resolve();
+    }
+  };
 
-// CreateIndexBufferJob.prototype.execute = function () {
-//   this.indexBuffer = createIndexBuffer(this.typedArray, this.context);
-// };
-
-// function createIndexBuffer(typedArray, context) {
-//   var indexBuffer = Buffer.createIndexBuffer({
-//     context: context,
-//     typedArray: typedArray,
-//     usage: BufferUsage.STATIC_DRAW,
-//     indexDatatype: ComponentDatatype.fromTypedArray(typedArray),
-//   });
-//   indexBuffer.vertexArrayDestroyable = false;
-//   return indexBuffer;
-// }
-
-// var scratchIndexBufferJob = new CreateIndexBufferJob();
-
-// function loadIndexBuffer(cache, loadResources, indexBufferToLoad, frameState) {
-//   if (defined(indexBufferToLoad.indexBuffer)) {
-//     return;
-//   }
-//   if (!defined(indexBufferToLoad.bufferPromise)) {
-//     indexBufferToLoad.bufferPromise = this.loadBuffer(
-//       indexBufferToLoad.cacheKey,
-//       indexBufferToLoad.buffer,
-//       indexBufferToLoad.baseResource,
-//       indexBufferToLoad.gltfCacheKey
-//     ).then(function (bufferTypedArray) {
-//       var bufferView = indexBufferToLoad.bufferView;
-//       var byteOffset = bufferView.byteOffset;
-//       var byteLength = bufferView.byteLength;
-//       indexBufferToLoad.typedArray = new Uint8Array(
-//         bufferTypedArray.buffer,
-//         bufferTypedArray.byteOffset + byteOffset,
-//         byteLength
-//       );
-//     });
-//   }
-
-//   if (defined(indexBufferToLoad.typedArray)) {
-//     if (loadResources.asynchronous) {
-//       scratchIndexBufferJob.set(indexBufferToLoad.typedArray, frameState.context);
-//       var jobScheduler = frameState.jobScheduler;
-//       if (!jobScheduler.execute(scratchIndexBufferJob, JobType.BUFFER)) {
-//         return;
-//       }
-//       indexBufferToLoad.indexBuffer = scratchIndexBufferJob.indexBuffer;
-//       cache.release(indexBufferToLoad.cacheKey);
-//     } else {
-//       indexBufferToLoad.indexBuffer = createIndexBuffer(indexBufferToLoad.typedArray, frameState.context);
-//     }
-//   }
-// }
+  return loadFromCache(
+    cache,
+    vertexBufferCacheKey,
+    undefined,
+    false,
+    vertexBufferToLoad,
+    loadFunction,
+    unloadFunction
+  );
+};
 
 GltfCache.prototype.update = function (frameState) {
   var i;
@@ -547,7 +497,7 @@ GltfCache.prototype.update = function (frameState) {
   var allLoadResourcesLength = allLoadResources.length;
 
   for (i = 0; i < allLoadResourcesLength; ++i) {
-    var ready = false;
+    var ready = true;
     var loadResources = allLoadResources.get(i);
     var vertexBuffersToLoad = loadResources.vertexBuffersToLoad;
     var indexBuffersToLoad = loadResources.indexBuffersToLoad;
@@ -556,13 +506,17 @@ GltfCache.prototype.update = function (frameState) {
 
     for (j = 0; j < vertexBuffersToLoadLength; ++j) {
       var vertexBufferToLoad = vertexBuffersToLoad[j];
-      if (!vertexBufferToLoad.ready) {
-        loadVertexBuffer(vertexBuffersToLoad[j]);
-        ready = ready && vertexBufferToLoad.ready;
-      }
+      updateVertexBuffer(vertexBufferToLoad);
+      var vertexBufferReady = defined(vertexBufferToLoad.vertexBuffer);
+      ready = ready && vertexBufferReady;
     }
 
-    loadResources.ready = ready;
+    for (j = 0; j < indexBuffersToLoadLength; ++j) {
+      var indexBufferToLoad = indexBuffersToLoad[j];
+      updateIndexBuffer(indexBufferToLoad);
+      var indexBufferReady = defined(indexBufferToLoad.indexBuffer);
+      ready = ready && indexBufferReady;
+    }
 
     if (ready) {
       ++readyCount;
@@ -570,7 +524,7 @@ GltfCache.prototype.update = function (frameState) {
     }
 
     if (readyCount > 0) {
-      // Shift back to fill in vacated slots from ready GltfLoadSource objects
+      // Shift back to fill in vacated slots
       allLoadResources.set(i - readyCount, loadResources);
     }
   }
@@ -578,9 +532,70 @@ GltfCache.prototype.update = function (frameState) {
   allLoadResources.resize(allLoadResourcesLength - readyCount);
 };
 
-GltfCache.prototype.enqueueLoadResources = function (loadResources) {
+GltfCache.prototype.loadResources = function (loadResources) {
+  var i;
+
+  var promises = [];
+
+  var vertexBuffersToLoad = loadResources.vertexBuffersToLoad;
+  var indexBuffersToLoad = loadResources.indexBuffersToLoad;
+  var vertexBuffersToLoadLength = vertexBuffersToLoad.length;
+  var indexBuffersToLoadLength = indexBuffersToLoad.length;
+
+  for (i = 0; i < vertexBuffersToLoadLength; ++i) {
+    promises.push(loadVertexBuffer(this, vertexBuffersToLoad[i]));
+  }
+
+  for (i = 0; i < indexBuffersToLoadLength; ++i) {
+    promises.push(loadIndexBuffer(this, indexBuffersToLoad[i]));
+  }
+
   this._allLoadResources.push(loadResources);
+
+  return when.all(promises);
 };
+
+GltfCache.prototype.unloadResources = function (loadResources) {
+  // TODO: need to watch out for promises that are still in flight.
+  // E.g. some things are waiting on promises for resources they don't even control
+
+  var i;
+
+  var vertexBuffersToLoad = loadResources.vertexBuffersToLoad;
+  var indexBuffersToLoad = loadResources.indexBuffersToLoad;
+  var vertexBuffersToLoadLength = vertexBuffersToLoad.length;
+  var indexBuffersToLoadLength = indexBuffersToLoad.length;
+
+  for (i = 0; i < vertexBuffersToLoadLength; ++i) {
+    promises.push(loadVertexBuffer(this, vertexBuffersToLoad[i]));
+  }
+
+  for (i = 0; i < indexBuffersToLoadLength; ++i) {
+    promises.push(loadIndexBuffer(this, indexBuffersToLoad[i]));
+  }
+
+  this._allLoadResources.push(loadResources);
+
+  return when.all(promises);
+};
+
+function releaseCacheEntry(cache, cacheEntry) {
+  --cacheEntry.referenceCount;
+
+  if (cacheEntry.referenceCount === 0) {
+    var children = cacheEntry.children;
+    var childrenLength = children.length;
+    for (var i = 0; i < childrenLength; ++i) {
+      releaseCacheEntry(cache, children[i]);
+    }
+    if (!cacheEntry.keepResident) {
+      if (defined(cacheEntry.unloadFunction)) {
+        cacheEntry.unloadFunction(cacheEntry.contents);
+      }
+      delete cache._cacheEntries[cacheEntry.cacheKey];
+    }
+  }
+}
 
 GltfCache.prototype.release = function (cacheKey) {
   var cacheEntry = this._cacheEntries[cacheKey];
