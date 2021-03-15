@@ -1023,17 +1023,23 @@ Cesium3DTile.prototype.requestContent = function () {
 function requestMultipleContents(tile) {
   var multipleContents = tile._content;
   var tileset = tile._tileset;
-  if (!defined(multipleContents.contentsFetchedPromise)) {
-    var backloggedRequestCount = multipleContents.requestInnerContents();
-    if (backloggedRequestCount > 0) {
-      return backloggedRequestCount;
-    }
 
-    tile._contentState = Cesium3DTileContentState.LOADING;
-    tile._contentReadyToProcessPromise = when.defer();
-    tile._contentReadyPromise = when.defer();
+  var firstTime = !defined(multipleContents.contentsFetchedPromise);
+  var backloggedRequestCount = multipleContents.requestInnerContents();
+  if (backloggedRequestCount > 0) {
+    return backloggedRequestCount;
   }
 
+  tile._contentState = Cesium3DTileContentState.LOADING;
+
+  if (!firstTime) {
+    return 0;
+  }
+
+  // These promise chains must only be initialized once
+
+  tile._contentReadyToProcessPromise = when.defer();
+  tile._contentReadyPromise = when.defer();
   multipleContents.contentsFetchedPromise
     .then(function () {
       if (tile.isDestroyed()) {
