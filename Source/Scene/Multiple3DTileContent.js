@@ -67,7 +67,7 @@ export default function Multiple3DTileContent(
     this._serverKeys[i] = serverKey;
   }
 
-  // undefined until all requests are scheduled
+  // undefined until the first time requests are scheduled
   this._contentsFetchedPromise = undefined;
   this._readyPromise = when.defer();
 }
@@ -247,7 +247,11 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    */
   contentsFetchedPromise: {
     get: function () {
-      return this._contentsFetchedPromise;
+      if (defined(this._contentsFetchedPromise)) {
+        return this._contentsFetchedPromise.promise;
+      }
+
+      return undefined;
     },
   },
 });
@@ -261,7 +265,7 @@ function cancelPendingRequests(multipleContents, originalContentState) {
   multipleContents._cancelCount++;
 
   // reset the tile's content state to try again later.
-  multipleContents._tile.contentState = originalContentState;
+  multipleContents._tile._contentState = originalContentState;
 
   multipleContents.tileset.statistics.numberOfPendingRequests -=
     multipleContents._requestsInFlight;
@@ -270,7 +274,6 @@ function cancelPendingRequests(multipleContents, originalContentState) {
   // Discard the request promises.
   var contentCount = multipleContents._innerContentHeaders.length;
   multipleContents._arrayFetchPromises = new Array(contentCount);
-  multipleContents._contentsFetchedPromise = undefined;
 }
 
 /**
@@ -308,7 +311,13 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
     );
   }
 
-  this._contentsFetchedPromise = createInnerContents(this);
+  // set up the deferred promise the first time requestInnerContent()
+  // is called.
+  if (!defined(this._contentsFetchedPromise)) {
+    this._contentsFetchedPromise = when.defer();
+  }
+
+  createInnerContents(this);
   return 0;
 };
 
@@ -352,7 +361,7 @@ function requestInnerContent(
   // Always create a new request. If the tile gets canceled, this
   // avoids getting stuck in the canceled state.
   var priorityFunction = function () {
-    return tile.priority;
+    return tile._priority;
   };
   var serverKey = multipleContents._serverKeys[index];
   contentResource.request = new Request({
@@ -400,9 +409,14 @@ function requestInnerContent(
 }
 
 function createInnerContents(multipleContents) {
-  return when
+  var originalCancelCount = multipleContents._cancelCount;
+  when
     .all(multipleContents._arrayFetchPromises)
     .then(function (arrayBuffers) {
+      if (originalCancelCount < multipleContents._cancelCount) {
+        return undefined;
+      }
+
       return arrayBuffers.map(function (arrayBuffer, i) {
         if (!defined(arrayBuffer)) {
           // Content was not fetched. The error was handled in
@@ -421,11 +435,17 @@ function createInnerContents(multipleContents) {
       });
     })
     .then(function (contents) {
+      if (!defined(contents)) {
+        // tile was canceled.
+        return;
+      }
+
       multipleContents._contents = contents.filter(defined);
       awaitReadyPromises(multipleContents);
+      multipleContents._contentsFetchedPromise.resolve();
     })
     .otherwise(function (error) {
-      multipleContents._readyPromise.reject(error);
+      multipleContents._contentsFetchedPromise.reject(error);
     });
 }
 
