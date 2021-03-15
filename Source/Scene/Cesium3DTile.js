@@ -1036,8 +1036,9 @@ function requestMultipleContents(tile) {
     return 0;
   }
 
-  // These promise chains must only be initialized once
+  var expired = tile.contentExpired;
 
+  // These promise chains must only be initialized once
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
   multipleContents.contentsFetchedPromise
@@ -1049,6 +1050,10 @@ function requestMultipleContents(tile) {
           "Tile was unloaded while content was loading"
         );
         return;
+      }
+
+      if (expired) {
+        tile.expireDate = undefined;
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
