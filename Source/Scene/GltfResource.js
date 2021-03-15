@@ -25,55 +25,61 @@ import when from "../ThirdParty/when.js";
  * @private
  */
 function GltfResource(options) {
-  var cache = options.cache;
-  var gltfResource = options.gltfResource;
-
-  var loadFunction = function () {
-    return gltfResource.fetchArrayBuffer().then(function (arrayBuffer) {
-      var typedArray = new Uint8Array(arrayBuffer);
-      return processGltf(that, typedArray, cacheKey, baseResource);
-    });
-  };
-
-  return loadFromCache(
-    this,
-    cacheKey,
-    undefined,
-    keepResident,
-    loadFunction,
-    undefined
-  ).otherwise(function (error) {
-    throw new RuntimeError(getFailedLoadMessage(error, "glTF", resource.url));
-  });
-
-  this._promise = promise;
+  this._gltfResource = options.gltfResource;
+  this._promise = undefined;
   this._gltf = undefined;
+  this._bufferResources = [];
 }
 
-GltfResource.getCacheKey = getGltfCacheKey;
-
-GltfResource.load = function (options) {
-  var cache = options.cache;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
-  var buffer = options.buffer;
-  var bufferId = options.bufferId;
-
-  var cacheKey = getGltfCacheKey(gltfResource, baseResource, buffer, bufferId);
-  var bufferResource = cache.get(cacheKey);
-  if (defined(bufferResource)) {
-    return bufferResource;
-  }
-
-  return new GltfBufferResource(options);
+GltfResource.prototype.load = function (cache) {
+  var that = this;
+  this._promise = this._gltfResource
+    .fetchArrayBuffer()
+    .then(function (arrayBuffer) {
+      var typedArray = new Uint8Array(arrayBuffer);
+      return processGltf(that, cache, typedArray, baseResource);
+    }).then(function(gltf) {
+      this._gltf = gltf;
+    }).otherwise(function(error) {
+      var message = "Failed to load glTF: " + that._gltfResource.url;
+      if (defined(error)) {
+        message += "\n" + error.message;
+      }
+      throw new RuntimeError(message);
+    });
 };
+
+GltfResource.prototype.unload = function (cache) {
+  // TODO: what to do about glTF 1.0 models
+  this._bufferResources.forEach(function(bufferResource) {
+    cache.unloadBuffer(bufferResource);
+  });
+};
+
+Object.defineProperties(GltfResource.prototype, {
+  promise: {
+    get: function () {
+      return this._promise;
+    },
+  },
+  cacheKey: {
+    get: function () {
+      return this._cacheKey;
+    },
+  },
+  gltf: {
+    get: function () {
+      return this._gltf;
+    },
+  },
+});
 
 function containsGltfMagic(typedArray) {
   var magic = getMagic(typedArray);
   return magic === "glTF";
 }
 
-function upgradeVersion(cache, gltf, baseResource, gltfCacheKey) {
+function upgradeVersion(gltfResource, cache, gltf, baseResource, gltfCacheKey) {
   if (gltf.asset.version === "2.0") {
     return when.resolve();
   }
@@ -81,15 +87,29 @@ function upgradeVersion(cache, gltf, baseResource, gltfCacheKey) {
   // Load all buffers into memory. updateVersion will read and in some cases modify
   // the buffer data, which it accesses from buffer.extras._pipeline.source
   var promises = [];
-  ForEach.buffer(gltf, function (buffer) {
+  ForEach.buffer(gltf, function (buffer, bufferId) {
     if (!defined(buffer.extras._pipeline.source) && defined(buffer.uri)) {
-      var bufferCacheKey = GltfCache.getExternalResourceCacheKey(
-        baseResource,
-        buffer.uri
-      );
+      var bufferResource = cache
+      .loadBuffer({
+        buffer: buffer,
+        bufferId: bufferId,
+        gltfResource: gltfResource._gltfResource,
+        baseResource: gltfResource._baseResource,
+        keepResident: 
+
+        promises.push(bufferResource.promise)
+
+
       promises.push(
         cache
-          .loadBuffer(cache, bufferCacheKey, buffer, baseResource, gltfCacheKey)
+          .loadBuffer({
+            buffer: buffer,
+            bufferId: bufferId,
+            gltfResource: gltfResource._gltfResource,
+            baseResource: gltfResource._baseResource,
+            keepResident: 
+
+          })
           .then(function (typedArray) {
             buffer.extras._pipeline.source = typedArray;
           })
@@ -147,7 +167,6 @@ function processGltf(
   gltfResource,
   cache,
   typedArray,
-  gltfCacheKey,
   baseResource
 ) {
   var gltf;
@@ -166,7 +185,7 @@ function processGltf(
         return cacheEmbeddedBuffers(cache, gltf, gltfCacheKey).then(
           function () {
             removePipelineExtras(gltf);
-            return gltfResource;
+            return gltf;
           }
         );
       }
