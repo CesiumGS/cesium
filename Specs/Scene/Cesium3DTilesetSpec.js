@@ -158,7 +158,7 @@ describe(
       "Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
 
     var multipleContentsUrl =
-      "Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
+      "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
 
     var implicitRootUrl =
       "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";

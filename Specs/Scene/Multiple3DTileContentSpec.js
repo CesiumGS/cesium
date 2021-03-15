@@ -19,7 +19,7 @@ describe("Scene/Multiple3DTileContent", function () {
   var centerLongitude = -1.31968;
   var centerLatitude = 0.698874;
   var multipleContentUrl =
-    "./Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
+    "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
 
   var tilesetResource = new Resource({ url: "http://example.com" });
   var extensionJson = {
