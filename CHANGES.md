@@ -11,6 +11,7 @@
 ##### Fixes :wrench:
 
 - Fixed a regression in 1.79 that broke terrain exaggeration. [#9397](https://github.com/CesiumGS/cesium/pull/9397)
+- Fixed an issue where interpolating certain small rhumblines with surface distance 0.0 would not return the expected result. [#9430](https://github.com/CesiumGS/cesium/pull/9430)
 
 ### 1.79 - 2021-03-01
 
