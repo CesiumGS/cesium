@@ -29,12 +29,15 @@ describe("Scene/ImplicitSubtree", function () {
     }
   }
 
-  function expectContentAvailability(subtree, availability, contentIndex) {
-    var expectedAvailability = availabilityToBooleanArray(availability);
-    for (var i = 0; i < availability.lengthBits; i++) {
-      expect(subtree.contentIsAvailable(i, contentIndex)).toEqual(
-        expectedAvailability[i]
-      );
+  function expectContentAvailability(subtree, availabilityArray) {
+    for (var i = 0; i < availabilityArray.length; i++) {
+      var availability = availabilityArray[i];
+      var expectedAvailability = availabilityToBooleanArray(availability);
+      for (var j = 0; j < availability.lengthBits; j++) {
+        expect(subtree.contentIsAvailable(j, i)).toEqual(
+          expectedAvailability[j]
+        );
+      }
     }
   }
 
@@ -101,11 +104,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -141,11 +146,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -187,11 +194,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -236,12 +245,14 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        shareBuffer: true,
-        descriptor: "11010",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          shareBuffer: true,
+          descriptor: "11010",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -282,11 +293,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -318,11 +331,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -397,11 +412,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: 1,
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 0,
         lengthBits: 16,
@@ -437,11 +454,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "110101011",
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 1,
         lengthBits: 64,
@@ -467,11 +486,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "110101011",
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 1,
         lengthBits: 64,
@@ -499,11 +520,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "110101011",
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 1,
         lengthBits: 64,
@@ -539,11 +562,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: 0,
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: 0,
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 0,
         lengthBits: 64,
@@ -583,11 +608,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: 1,
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 0,
         lengthBits: 16,
@@ -697,12 +724,12 @@ describe("Scene/ImplicitSubtree", function () {
           {
             descriptor: 1,
             lengthBits: 5,
-            isInternal: true,
+            isInternal: false,
           },
           {
             descriptor: "10011",
             lengthBits: 5,
-            isInternal: true,
+            isInternal: false,
           },
         ],
         childSubtreeAvailability: {
@@ -727,13 +754,7 @@ describe("Scene/ImplicitSubtree", function () {
         expect(fetchExternal.calls.count()).toEqual(1);
         expectContentAvailability(
           subtree,
-          subtreeDescription.contentAvailability[0],
-          0
-        );
-        expectContentAvailability(
-          subtree,
-          subtreeDescription.contentAvailability[1],
-          1
+          subtreeDescription.contentAvailability
         );
       });
     });
