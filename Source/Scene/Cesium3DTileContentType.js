@@ -48,16 +48,16 @@ var Cesium3DTileContentType = {
   POINT_CLOUD: "pnts",
   /**
    * Vector tiles. This is a binary format with magic number
-   * <code>vect</code>
+   * <code>vctr</code>
    *
    * @type {String}
    * @constant
    * @private
    */
-  VECTOR: "vect",
+  VECTOR: "vctr",
   /**
    * Geometry tiles. This is a binary format with magic number
-   * <code>vect</code>
+   * <code>geom</code>
    *
    * @type {String}
    * @constant

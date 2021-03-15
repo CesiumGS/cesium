@@ -23,7 +23,7 @@ describe("Scene/preprocess3DTileContent", function () {
 
   it("detects binary contents by magic number", function () {
     // glb is handled in a separate test
-    var magics = ["b3dm", "i3dm", "pnts", "cmpt", "vect", "geom", "subt"];
+    var magics = ["b3dm", "i3dm", "pnts", "cmpt", "vctr", "geom", "subt"];
     magics.forEach(function (magic) {
       var typedArray = makeBinaryFile(magic);
       var results = preprocess3DTileContent(typedArray.buffer);
