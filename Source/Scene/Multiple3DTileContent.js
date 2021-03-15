@@ -73,6 +73,14 @@ export default function Multiple3DTileContent(
 }
 
 Object.defineProperties(Multiple3DTileContent.prototype, {
+  /**
+   * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code> checks if any of the inner contents have dirty featurePropertiesDirty.
+   * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {Boolean}
+   *
+   * @private
+   */
   featurePropertiesDirty: {
     get: function () {
       var contents = this._contents;
@@ -185,25 +193,10 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
-   * Get an array of the inner content URLs, regardless of whether they've
-   * been fetched or not. This is intended for use with
-   * {@link Cesium3DTileset#debugShowUrl}.
-   *
-   * @type {String[]}
-   * @readonly
-   * @private
-   */
-  innerContentUrls: {
-    get: function () {
-      return this._innerContentHeaders.map(function (contentHeader) {
-        return contentHeader.uri;
-      });
-    },
-  },
-
-  /**
+   * Part of the {@link Cesium3DTileContent} interface.
    * Unlike other content types, <code>Multiple3DTileContent</code> does not
    * have a single URL, so this returns undefined.
+   * @memberof Multiple3DTileContent.prototype
    *
    * @type {String}
    * @readonly
@@ -226,9 +219,29 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
   },
 
   /**
+   * Get an array of the inner content URLs, regardless of whether they've
+   * been fetched or not. This is intended for use with
+   * {@link Cesium3DTileset#debugShowUrl}.
+   * @memberof Multiple3DTileContent.prototype
+   *
+   * @type {String[]}
+   * @readonly
+   * @private
+   */
+  innerContentUrls: {
+    get: function () {
+      return this._innerContentHeaders.map(function (contentHeader) {
+        return contentHeader.uri;
+      });
+    },
+  },
+
+  /**
    * A promise that resolves when all of the inner contents have been fetched.
    * This promise is undefined until the first frame where all array buffer
    * requests have been scheduled.
+   * @memberof Multiple3DTileContent.prototype
+   *
    * @type {Promise}
    * @private
    */
@@ -285,7 +298,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
   updatePendingRequests(this, contentHeaders.length);
 
   for (var i = 0; i < contentHeaders.length; i++) {
-    // The reset count is needed to avoid a race condition where a content
+    // The cancel count is needed to avoid a race condition where a content
     // is canceled multiple times.
     this._arrayFetchPromises[i] = requestInnerContent(
       this,
@@ -301,7 +314,7 @@ Multiple3DTileContent.prototype.requestInnerContents = function () {
 
 /**
  * Check if all requests for inner contents can be scheduled at once. This is slower, but it avoids a potential memory leak.
- * @param {String[]} serverKeys the server keys for all of the inner contents
+ * @param {String[]} serverKeys The server keys for all of the inner contents
  * @return {Boolean} True if the request scheduler has enough open slots for all inner contents
  * @private
  */

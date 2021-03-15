@@ -1129,9 +1129,6 @@ function requestSingleContent(tile) {
       }
 
       var content = makeContent(tile, arrayBuffer);
-      if (!defined(content)) {
-        throw new RuntimeError("Invalid tile content.");
-      }
 
       if (expired) {
         tile.expireDate = undefined;

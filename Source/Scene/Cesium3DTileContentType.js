@@ -57,7 +57,7 @@ var Cesium3DTileContentType = {
   VECTOR: "vect",
   /**
    * Geometry tiles. This is a binary format with magic number
-   * <code>vect</code>
+   * <code>geom</code>
    *
    * @type {String}
    * @constant

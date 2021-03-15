@@ -26,18 +26,18 @@ import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
  */
 export default function preprocess3DTileContent(arrayBuffer) {
   var uint8Array = new Uint8Array(arrayBuffer);
-  var contentIdentifier = getMagic(uint8Array);
+  var contentType = getMagic(uint8Array);
 
   // We use glTF for JSON glTF files. For binary glTF, we rename this
   // to glb to disambiguate
-  if (contentIdentifier === "glTF") {
-    contentIdentifier = "glb";
+  if (contentType === "glTF") {
+    contentType = "glb";
   }
 
-  if (Cesium3DTileContentType.isBinaryFormat(contentIdentifier)) {
+  if (Cesium3DTileContentType.isBinaryFormat(contentType)) {
     return {
       // For binary files, the enum value is the magic number
-      contentType: contentIdentifier,
+      contentType: contentType,
       binaryPayload: uint8Array,
     };
   }
