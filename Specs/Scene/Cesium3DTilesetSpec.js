@@ -3891,13 +3891,7 @@ describe(
       var json = getJsonFromTypedArray(uint8Array);
       json.root.children.splice(0, 1);
 
-      var jsonString = JSON.stringify(json);
-      var length = jsonString.length;
-      uint8Array = new Uint8Array(length);
-      for (var i = 0; i < length; i++) {
-        uint8Array[i] = jsonString.charCodeAt(i);
-      }
-      return uint8Array.buffer;
+      return Cesium3DTilesTester.generateJsonBuffer(json);
     }
 
     it("tile with tileset content expires", function () {
