@@ -199,6 +199,7 @@ export default function ImplicitTileset(baseResource, tileJson) {
  *
  * @param {Object} tileJson The JSON header of the tile with the 3DTILES_implicit_tiling extension.
  * @return {Object[]} An array of JSON headers for the contents of each tile
+ * @private
  */
 function gatherContentHeaders(tileJson) {
   if (has3DTilesExtension(tileJson, "3DTILES_multiple_contents")) {
