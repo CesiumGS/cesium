@@ -314,10 +314,7 @@ Object.defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
   },
 });
 
-var taskProcessor = new TaskProcessor(
-  "decodeGoogleEarthEnterprisePacket",
-  Number.POSITIVE_INFINITY
-);
+var taskProcessor = new TaskProcessor("decodeGoogleEarthEnterprisePacket");
 
 // If the tile has its own terrain, then you can just use its child bitmask. If it was requested using it's parent
 //  then you need to check all of its children to see if they have terrain.

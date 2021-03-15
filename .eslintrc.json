@@ -1,29 +1,13 @@
 {
     "extends": [
-        "./Tools/eslint-config-cesium/browser.js",
-        "prettier",
-        "plugin:es/restrict-to-es5"
+        "./Tools/eslint-config-cesium/node.js", 
+        "prettier"
     ],
-    "plugins": [
-        "html",
-        "es"
-    ],
-    "rules": {
-        "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
-        "es/no-modules": "off",
-        "es/no-typed-arrays": "off"
+    "env": {
+        "node": true,
+        "es6": true
     },
-    "overrides": [
-        {
-            "files": [
-                "index.cjs",
-                "server.cjs",
-                "gulpfile.js",
-                "Source/Workers/transferTypedArrayTest.js"
-            ],
-            "parserOptions": {
-                "sourceType": "script"
-            }
-        }
-    ]
+    "parserOptions": {
+        "ecmaVersion": 2019
+    }
 }

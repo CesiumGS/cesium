@@ -1,5 +1,7 @@
-import { Metadata3DTilesExtension } from "../../Source/Cesium.js";
-import { MetadataSchema } from "../../Source/Cesium.js";
+import {
+  Metadata3DTilesExtension,
+  MetadataSchema,
+} from "../../Source/Cesium.js";
 
 describe("Scene/Metadata3DTilesExtension", function () {
   it("creates 3D Tiles metadata with default values", function () {
