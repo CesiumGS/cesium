@@ -543,6 +543,10 @@ function Model(options) {
 
   // Undocumented options
   this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
+  this._addFeatureIdToGeneratedShaders = options.addFeatureIdToGeneratedShaders;
+  this._addFeatureIdTextureToGeneratedShaders =
+    options.addFeatureIdTextureToGeneratedShaders;
+  this._featureIdTextureInfo = options.featureIdTextureInfo;
   this._precreatedAttributes = options.precreatedAttributes;
   this._vertexShaderLoaded = options.vertexShaderLoaded;
   this._fragmentShaderLoaded = options.fragmentShaderLoaded;
@@ -3608,6 +3612,17 @@ function createUniformMaps(model, context) {
     u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
     u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
 
+    if (model._addFeatureIdTextureToGeneratedShaders) {
+      var uv = ModelUtility.createUniformFunction(
+        WebGLConstants.SAMPLER_2D,
+        model._featureIdTextureInfo,
+        textures,
+        defaultTexture
+      );
+      u.uniformMap.u_featureIdTexture = uv.func;
+      u.values.u_featureIdTexture = uv;
+    }
+
     if (defined(technique.attributes.a_outlineCoordinates)) {
       var outlineTexture = ModelOutlineLoader.createTexture(model, context);
       u.uniformMap.u_outlineTexture = function () {
@@ -5252,6 +5267,10 @@ Model.prototype.update = function (frameState) {
 
           var options = {
             addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders,
+            addFeatureIdToGeneratedShaders: this
+              ._addFeatureIdToGeneratedShaders,
+            addFeatureIdTextureToGeneratedShaders: this
+              ._addFeatureIdTextureToGeneratedShaders,
           };
 
           processModelMaterialsCommon(gltf, options);

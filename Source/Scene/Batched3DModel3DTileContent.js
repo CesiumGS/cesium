@@ -178,7 +178,8 @@ function getVertexShaderCallback(content) {
     var callback = batchTable.getVertexShaderCallback(
       handleTranslucent,
       content._batchIdAttributeName,
-      content._diffuseAttributeOrUniformName[programId]
+      content._diffuseAttributeOrUniformName[programId],
+      false
     );
     return defined(callback) ? callback(vs) : vs;
   };
@@ -198,6 +199,8 @@ function getFragmentShaderCallback(content) {
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
       content._diffuseAttributeOrUniformName[programId],
+      false,
+      undefined,
       false
     );
     return defined(callback) ? callback(fs) : fs;
@@ -206,7 +209,7 @@ function getFragmentShaderCallback(content) {
 
 function getPickIdCallback(content) {
   return function () {
-    return content._batchTable.getPickId();
+    return content._batchTable.getPickId(undefined, false);
   };
 }
 

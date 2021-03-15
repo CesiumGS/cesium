@@ -300,15 +300,18 @@ function createShaders(primitive, context) {
   var vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
+    false
   )(VectorTileVS);
   var fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
-    true
+    true,
+    undefined,
+    false
   )(ShadowVolumeFS);
 
-  pickId = batchTable.getPickId();
+  pickId = batchTable.getPickId(undefined, false);
 
   var vs = new ShaderSource({
     sources: [vsSource],

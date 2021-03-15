@@ -28,7 +28,7 @@ import ModelUtility from "./ModelUtility.js";
  *    <li>Does not work with schemaUri</li>
  *    <li>Does not work with multiple feature tables</li>
  *    <li>Only works with _FEATURE_ID_0</li>
- *    <li>Does not support feature ID textures</li>
+ *    <li>Only supports a single feature ID texture accessed from the red channel</li>
  *    <li>Does not support feature textures</li>
  * </ul>
  * <p>
@@ -53,8 +53,10 @@ function InnerGltf3DTileContent(tileset, tile, resource, gltf) {
     : tileset.classificationType;
 
   // Populate from gltf when available
-  this._batchIdAttributeName = undefined;
+  this._featureIdExpression = undefined;
   this._diffuseAttributeOrUniformName = {};
+  this._addFeatureIdTextureToGeneratedShaders = undefined;
+  this._featureIdTextureInfo = undefined;
 
   this.featurePropertiesDirty = false;
 
@@ -135,6 +137,19 @@ Object.defineProperties(InnerGltf3DTileContent.prototype, {
   },
 });
 
+function getFeatureIdExpression(content, gltf) {
+  if (content._addFeatureIdTextureToGeneratedShaders) {
+    var texCoord = defaultValue(content._featureIdTextureInfo.texCoord, 0);
+    return (
+      "floor(texture2D(u_featureIdTexture, v_texcoord_" +
+      texCoord +
+      ").r * 255.0 + 0.5)"
+    );
+  }
+
+  return ModelUtility.getAttributeOrUniformBySemantic(gltf, "_FEATURE_ID_0");
+}
+
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
@@ -142,10 +157,7 @@ function getVertexShaderCallback(content) {
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
-      content._batchIdAttributeName = ModelUtility.getAttributeOrUniformBySemantic(
-        gltf,
-        "_FEATURE_ID_0"
-      );
+      content._featureIdExpression = getFeatureIdExpression(content, gltf);
       content._diffuseAttributeOrUniformName[
         programId
       ] = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
@@ -153,8 +165,9 @@ function getVertexShaderCallback(content) {
 
     var callback = batchTable.getVertexShaderCallback(
       handleTranslucent,
-      content._batchIdAttributeName,
-      content._diffuseAttributeOrUniformName[programId]
+      content._featureIdExpression,
+      content._diffuseAttributeOrUniformName[programId],
+      content._addFeatureIdTextureToGeneratedShaders
     );
     return defined(callback) ? callback(vs) : vs;
   };
@@ -167,6 +180,7 @@ function getFragmentShaderCallback(content) {
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
+      content._featureIdExpression = getFeatureIdExpression(content, gltf);
       content._diffuseAttributeOrUniformName[
         programId
       ] = ModelUtility.getDiffuseAttributeOrUniform(gltf, programId);
@@ -174,7 +188,9 @@ function getFragmentShaderCallback(content) {
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
       content._diffuseAttributeOrUniformName[programId],
-      false
+      false,
+      content._featureIdExpression,
+      content._addFeatureIdTextureToGeneratedShaders
     );
     return defined(callback) ? callback(fs) : fs;
   };
@@ -182,7 +198,14 @@ function getFragmentShaderCallback(content) {
 
 function getPickIdCallback(content) {
   return function () {
-    return content._batchTable.getPickId();
+    var gltf = content._model.gltf;
+    if (defined(gltf)) {
+      content._featureIdExpression = getFeatureIdExpression(content, gltf);
+    }
+    return content._batchTable.getPickId(
+      content._featureIdExpression,
+      content._addFeatureIdTextureToGeneratedShaders
+    );
   };
 }
 
@@ -251,6 +274,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
   ) {
     var i;
     var j;
+    var featureIdAttribute;
     var featureTableId;
     var meshes = gltf.meshes;
     if (defined(meshes)) {
@@ -261,10 +285,16 @@ function createBatchTable(content, gltf, colorChangedCallback) {
         var primitivesLength = primitives.length;
         for (j = 0; j < primitivesLength; ++j) {
           var primitive = primitives[j];
-          if (defined(primitive.attributes._FEATURE_ID_0)) {
+          var extensions = primitive.extensions;
+          if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
             var featureMetadata = primitive.extensions.EXT_feature_metadata;
-            featureTableId =
-              featureMetadata.featureIdAttributes[0].featureTable;
+            if (defined(featureMetadata.featureIdAttributes)) {
+              featureIdAttribute = featureMetadata.featureIdAttributes[0];
+              featureTableId = featureIdAttribute.featureTable;
+            } else if (defined(featureMetadata.featureIdTextures)) {
+              featureIdAttribute = featureMetadata.featureIdTextures[0];
+              featureTableId = featureIdAttribute.featureTable;
+            }
           }
         }
       }
@@ -360,6 +390,44 @@ function createBatchTable(content, gltf, colorChangedCallback) {
   }
 }
 
+function getFeatureIdInfo(gltf) {
+  var addFeatureIdTextureToGeneratedShaders = false;
+  var addFeatureIdToGeneratedShaders = false;
+  var featureIdTextureInfo;
+
+  if (hasExtension(gltf, "EXT_feature_metadata")) {
+    var meshes = gltf.meshes;
+    if (defined(meshes)) {
+      var meshesLength = meshes.length;
+      for (var i = 0; i < meshesLength; ++i) {
+        var mesh = gltf.meshes[i];
+        var primitives = mesh.primitives;
+        var primitivesLength = primitives.length;
+        for (var j = 0; j < primitivesLength; ++j) {
+          var primitive = primitives[j];
+          var extensions = primitive.extensions;
+          if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+            var featureMetadata = primitive.extensions.EXT_feature_metadata;
+            if (defined(featureMetadata.featureIdAttributes)) {
+              addFeatureIdToGeneratedShaders = true;
+            } else if (defined(featureMetadata.featureIdTextures)) {
+              addFeatureIdTextureToGeneratedShaders = true;
+              var featureIdTexture = featureMetadata.featureIdTextures[0];
+              featureIdTextureInfo = featureIdTexture.featureIds.texture;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return {
+    featureIdTextureInfo: featureIdTextureInfo,
+    addFeatureIdTextureToGeneratedShaders: addFeatureIdTextureToGeneratedShaders,
+    addFeatureIdToGeneratedShaders: addFeatureIdToGeneratedShaders,
+  };
+}
+
 function initialize(content, gltf) {
   var tileset = content._tileset;
   var tile = content._tile;
@@ -375,6 +443,16 @@ function initialize(content, gltf) {
   }
 
   var batchTable = createBatchTable(content, gltf, colorChangedCallback);
+
+  var featureIdInfo = getFeatureIdInfo(gltf);
+  var addFeatureIdToGeneratedShaders =
+    featureIdInfo.addFeatureIdToGeneratedShaders;
+  var addFeatureIdTextureToGeneratedShaders =
+    featureIdInfo.addFeatureIdTextureToGeneratedShaders;
+  var featureIdTextureInfo = featureIdInfo.featureIdTextureInfo;
+
+  content._addFeatureIdTextureToGeneratedShaders = addFeatureIdTextureToGeneratedShaders;
+  content._featureIdTextureInfo = featureIdTextureInfo;
 
   if (!defined(batchTable)) {
     batchTable = new Cesium3DTileBatchTable(
@@ -413,7 +491,9 @@ function initialize(content, gltf) {
       fragmentShaderLoaded: getFragmentShaderCallback(content),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      addBatchIdToGeneratedShaders: batchTable.featuresLength > 0, // If the batch table has values in it, generated shaders will need a batchId attribute
+      addFeatureIdToGeneratedShaders: addFeatureIdToGeneratedShaders,
+      addFeatureIdTextureToGeneratedShaders: addFeatureIdTextureToGeneratedShaders,
+      featureIdTextureInfo: featureIdTextureInfo,
       pickObject: pickObject,
       imageBasedLightingFactor: tileset.imageBasedLightingFactor,
       lightColor: tileset.lightColor,

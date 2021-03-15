@@ -539,12 +539,15 @@ function createShaders(primitive, context) {
   var vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
+    false
   )(Vector3DTileClampedPolylinesVS);
   var fsSource = batchTable.getFragmentShaderCallback(
     false,
     undefined,
-    true
+    true,
+    undefined,
+    false
   )(Vector3DTileClampedPolylinesFS);
 
   var vs = new ShaderSource({
@@ -581,7 +584,7 @@ function queueCommands(primitive, frameState) {
       uniformMap: uniformMap,
       boundingVolume: primitive._boundingVolume,
       pass: Pass.TERRAIN_CLASSIFICATION,
-      pickId: primitive._batchTable.getPickId(),
+      pickId: primitive._batchTable.getPickId(undefined, false),
     });
 
     var derivedTilesetCommand = DrawCommand.shallowClone(

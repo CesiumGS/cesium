@@ -141,7 +141,8 @@ function getVertexShaderLoaded(content) {
       return content._batchTable.getVertexShaderCallback(
         false,
         "a_batchId",
-        undefined
+        undefined,
+        false
       )(vs);
     }
     return vs;
@@ -152,6 +153,8 @@ function getFragmentShaderLoaded(content) {
   return function (fs) {
     if (defined(content._batchTable)) {
       return content._batchTable.getFragmentShaderCallback(
+        false,
+        undefined,
         false,
         undefined,
         false
@@ -188,7 +191,7 @@ function getBatchTableLoaded(content) {
 function getPickIdLoaded(content) {
   return function () {
     return defined(content._batchTable)
-      ? content._batchTable.getPickId()
+      ? content._batchTable.getPickId(undefined, false)
       : "czm_pickColor";
   };
 }

@@ -430,9 +430,12 @@ function createShaders(primitive, context) {
   var vsSource = batchTable.getVertexShaderCallback(
     false,
     "a_batchId",
-    undefined
+    undefined,
+    false
   )(Vector3DTilePolylinesVS);
   var fsSource = batchTable.getFragmentShaderCallback(
+    false,
+    undefined,
     false,
     undefined,
     false
@@ -471,7 +474,7 @@ function queueCommands(primitive, frameState) {
       uniformMap: uniformMap,
       boundingVolume: primitive._boundingVolume,
       pass: Pass.TRANSLUCENT,
-      pickId: primitive._batchTable.getPickId(),
+      pickId: primitive._batchTable.getPickId(undefined, false),
     });
   }
 

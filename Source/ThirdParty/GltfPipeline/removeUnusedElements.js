@@ -158,6 +158,33 @@ Remove.bufferView = function(gltf, bufferViewId) {
             });
         });
     }
+
+    if (hasExtension(gltf, 'EXT_feature_metadata')) {
+        var extension = gltf.extensions.EXT_feature_metadata;
+        var featureTables = extension.featureTables;
+        for (var featureTableId in featureTables) {
+            if (featureTables.hasOwnProperty(featureTableId)) {
+                var featureTable = featureTables[featureTableId];
+                var properties = featureTable.properties;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            if (defined(property.bufferView) && property.bufferView > bufferViewId) {
+                                property.bufferView--;
+                            }
+                            if (defined(property.arrayOffsetBufferView) && property.arrayOffsetBufferView > bufferViewId) {
+                                property.arrayOffsetBufferView--;
+                            }
+                            if (defined(property.stringOffsetBufferView) && property.stringOffsetBufferView > bufferViewId) {
+                                property.stringOffsetBufferView--;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 };
 
 Remove.image = function(gltf, imageId) {
@@ -285,6 +312,48 @@ Remove.texture = function(gltf, textureId) {
             }
         });
     });
+
+    if (hasExtension(gltf, 'EXT_feature_metadata')) {
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                var extensions = primitive.extensions;
+                if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+                    var extension = extensions.EXT_feature_metadata;
+                    var featureIdTextures = extension.featureIdTextures;
+                    if (defined(featureIdTextures)) {
+                        var featureIdTexturesLength = featureIdTextures.length;
+                        for (var i = 0; i < featureIdTexturesLength; ++i) {
+                            var featureIdTexture = featureIdTextures[i];
+                            var textureInfo = featureIdTexture.featureIds.texture;
+                            if (textureInfo.index > textureId) {
+                                --textureInfo.index;
+                            }
+                        }
+                    }
+                }
+            });
+        });
+
+        var extension = gltf.extensions.EXT_feature_metadata;
+        var featureTextures = extension.featureTextures;
+        for (var featureTextureId in featureTextures) {
+            if (featureTextures.hasOwnProperty(featureTextureId)) {
+                var featureTexture = featureTextures[featureTextureId];
+                var properties = featureTexture.properties;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            var textureInfo = property.texture;
+                            if (textureInfo.index > textureId) {
+                                --textureInfo.index;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 };
 
 /**
@@ -391,6 +460,33 @@ getListOfElementsIdsInUse.bufferView = function(gltf) {
                 }
             });
         });
+    }
+
+    if (hasExtension(gltf, 'EXT_feature_metadata')) {
+        var extension = gltf.extensions.EXT_feature_metadata;
+        var featureTables = extension.featureTables;
+        for (var featureTableId in featureTables) {
+            if (featureTables.hasOwnProperty(featureTableId)) {
+                var featureTable = featureTables[featureTableId];
+                var properties = featureTable.properties;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            if (defined(property.bufferView)) {
+                                usedBufferViewIds[property.bufferView] = true;
+                            }
+                            if (defined(property.arrayOffsetBufferView)) {
+                                usedBufferViewIds[property.arrayOffsetBufferView] = true;
+                            }
+                            if (defined(property.stringOffsetBufferView)) {
+                                usedBufferViewIds[property.stringOffsetBufferView] = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     return usedBufferViewIds;
@@ -502,6 +598,44 @@ getListOfElementsIdsInUse.texture = function(gltf) {
             usedTextureIds[textureId] = true;
         });
     });
+
+    if (hasExtension(gltf, 'EXT_feature_metadata')) {
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                var extensions = primitive.extensions;
+                if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+                    var extension = extensions.EXT_feature_metadata;
+                    var featureIdTextures = extension.featureIdTextures;
+                    if (defined(featureIdTextures)) {
+                        var featureIdTexturesLength = featureIdTextures.length;
+                        for (var i = 0; i < featureIdTexturesLength; ++i) {
+                            var featureIdTexture = featureIdTextures[i];
+                            var textureInfo = featureIdTexture.featureIds.texture;
+                            usedTextureIds[textureInfo.index] = true;
+                        }
+                    }
+                }
+            });
+        });
+
+        var extension = gltf.extensions.EXT_feature_metadata;
+        var featureTextures = extension.featureTextures;
+        for (var featureTextureId in featureTextures) {
+            if (featureTextures.hasOwnProperty(featureTextureId)) {
+                var featureTexture = featureTextures[featureTextureId];
+                var properties = featureTexture.properties;
+                if (defined(properties)) {
+                    for (var propertyId in properties) {
+                        if (properties.hasOwnProperty(propertyId)) {
+                            var property = properties[propertyId];
+                            var textureInfo = property.texture;
+                            usedTextureIds[textureInfo.index] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     return usedTextureIds;
 };

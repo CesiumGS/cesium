@@ -148,7 +148,7 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
 
 function getPickIdCallback(content) {
   return function () {
-    return content._batchTable.getPickId();
+    return content._batchTable.getPickId(undefined, false);
   };
 }
 

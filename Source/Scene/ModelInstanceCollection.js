@@ -436,7 +436,8 @@ function getVertexShaderCallback(collection) {
       instancedSource = collection._batchTable.getVertexShaderCallback(
         true,
         "a_batchId",
-        diffuseAttributeOrUniformName
+        diffuseAttributeOrUniformName,
+        false
       )(instancedSource);
     }
 
@@ -456,6 +457,8 @@ function getFragmentShaderCallback(collection) {
       fs = batchTable.getFragmentShaderCallback(
         true,
         diffuseAttributeOrUniformName,
+        false,
+        undefined,
         false
       )(fs);
     } else {
@@ -517,7 +520,8 @@ function getVertexShaderNonInstancedCallback(collection) {
       vs = collection._batchTable.getVertexShaderCallback(
         true,
         "a_batchId",
-        diffuseAttributeOrUniformName
+        diffuseAttributeOrUniformName,
+        false
       )(vs);
       // Treat a_batchId as a uniform rather than a vertex attribute
       vs = "uniform float a_batchId\n;" + vs;
@@ -538,6 +542,8 @@ function getFragmentShaderNonInstancedCallback(collection) {
       fs = batchTable.getFragmentShaderCallback(
         true,
         diffuseAttributeOrUniformName,
+        false,
+        undefined,
         false
       )(fs);
     } else {
@@ -874,7 +880,7 @@ function createCommands(collection, drawCommands) {
     drawCommand.boundingVolume = boundingSphere;
     drawCommand.cull = cull;
     if (defined(collection._batchTable)) {
-      drawCommand.pickId = collection._batchTable.getPickId();
+      drawCommand.pickId = collection._batchTable.getPickId(undefined, false);
     } else {
       drawCommand.pickId = "v_pickColor";
     }

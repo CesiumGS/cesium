@@ -165,6 +165,15 @@ function generateTechnique(
     false
   );
 
+  var addFeatureIdToGenerateShaders = defaultValue(
+    options.addFeatureIdToGenerateShaders,
+    false
+  );
+  var addFeatureIdTextureToGeneratedShaders = defaultValue(
+    options.addFeatureIdTextureToGeneratedShaders,
+    false
+  );
+
   var techniquesWebgl = gltf.extensions.KHR_techniques_webgl;
   var techniques = techniquesWebgl.techniques;
   var shaders = techniquesWebgl.shaders;
@@ -630,6 +639,16 @@ function generateTechnique(
       semantic: "_BATCHID",
     };
     vertexShader += "attribute float a_batchId;\n";
+  }
+
+  if (addFeatureIdToGenerateShaders) {
+    techniqueAttributes.a_featureId_0 = {
+      semantic: "_FEATURE_ID_0",
+    };
+    vertexShader += "attribute float a_featureId_0;\n";
+  }
+  if (addFeatureIdTextureToGeneratedShaders) {
+    fragmentShader += "uniform sampler2D u_featureIdTexture;\n";
   }
 
   vertexShader += "void main(void) \n{\n";
