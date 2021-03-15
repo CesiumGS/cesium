@@ -460,7 +460,7 @@ function initialize(content, arrayBuffer, byteOffset) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: content._classificationType,
       batchTable: batchTable,
     });
   }
