@@ -21,6 +21,17 @@ import ModelUtility from "./ModelUtility.js";
 /**
  * Represents the contents of a glTF or glb tile in a {@link https://github.com/CesiumGS/3d-tiles/tree/master/specification|3D Tiles} tileset using the {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_content_gltf/0.0.0|3DTILES_content_gltf} extension.
  * <p>
+ * Has limited support for the {@link https://github.com/CesiumGS/glTF/tree/master/extensions/2.0/Vendor/EXT_feature_metadata/1.0.0|EXT_feature_metadata Extension} with the following caveats:
+ * </p>
+ * <ul>
+ *    <li>Only works with glb models with a single buffer</li>
+ *    <li>Does not work with schemaUri</li>
+ *    <li>Does not work with multiple feature tables</li>
+ *    <li>Only works with _FEATURE_ID_0</li>
+ *    <li>Does not support feature ID textures</li>
+ *    <li>Does not support feature textures</li>
+ * </ul>
+ * <p>
  * Implements the {@link Cesium3DTileContent} interface.
  * </p>
  *
@@ -36,6 +47,10 @@ function InnerGltf3DTileContent(tileset, tile, resource, gltf) {
   this._model = undefined;
   this._batchTable = undefined;
   this._features = undefined;
+
+  this._classificationType = tileset.vectorClassificationOnly
+    ? undefined
+    : tileset.classificationType;
 
   // Populate from gltf when available
   this._batchIdAttributeName = undefined;
@@ -123,7 +138,7 @@ Object.defineProperties(InnerGltf3DTileContent.prototype, {
 function getVertexShaderCallback(content) {
   return function (vs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -148,7 +163,7 @@ function getVertexShaderCallback(content) {
 function getFragmentShaderCallback(content) {
   return function (fs, programId) {
     var batchTable = content._batchTable;
-    var handleTranslucent = !defined(content._tileset.classificationType);
+    var handleTranslucent = !defined(content._classificationType);
 
     var gltf = content._model.gltf;
     if (defined(gltf)) {
@@ -158,7 +173,8 @@ function getFragmentShaderCallback(content) {
     }
     var callback = batchTable.getFragmentShaderCallback(
       handleTranslucent,
-      content._diffuseAttributeOrUniformName[programId]
+      content._diffuseAttributeOrUniformName[programId],
+      false
     );
     return defined(callback) ? callback(fs) : fs;
   };
@@ -205,6 +221,27 @@ function getComponentDatatype(type) {
   }
 }
 
+function getComponentType(componentDatatype) {
+  switch (componentDatatype) {
+    case ComponentDatatype.BYTE:
+      return "BYTE";
+    case ComponentDatatype.UNSIGNED_BYTE:
+      return "UNSIGNED_BYTE";
+    case ComponentDatatype.SHORT:
+      return "SHORT";
+    case ComponentDatatype.UNSIGNED_SHORT:
+      return "UNSIGNED_SHORT";
+    case ComponentDatatype.INT:
+      return "INT";
+    case ComponentDatatype.UNSIGNED_INT:
+      return "UNSIGNED_INT";
+    case ComponentDatatype.FLOAT:
+      return "FLOAT";
+    case ComponentDatatype.DOUBLE:
+      return "DOUBLE";
+  }
+}
+
 function createBatchTable(content, gltf, colorChangedCallback) {
   if (
     hasExtension(gltf, "EXT_feature_metadata") &&
@@ -226,8 +263,8 @@ function createBatchTable(content, gltf, colorChangedCallback) {
           var primitive = primitives[j];
           if (defined(primitive.attributes._FEATURE_ID_0)) {
             var featureMetadata = primitive.extensions.EXT_feature_metadata;
-            var featureIdAttribute = featureMetadata.featureIdAttributes[0];
-            featureTableId = featureIdAttribute.featureTable;
+            featureTableId =
+              featureMetadata.featureIdAttributes[0].featureTable;
           }
         }
       }
@@ -262,62 +299,64 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     var featureTables = metadata.featureTables;
     var featureTable = featureTables[featureTableId];
 
-    if (defined(featureTable.class)) {
-      var count = featureTable.count;
-      var batchTableJson = {};
-      var batchTableBinary;
-      var classProperties = featureTable.class.properties;
-      for (var propertyId in classProperties) {
-        if (classProperties.hasOwnProperty(propertyId)) {
-          var property = featureTable.properties[propertyId];
-          var classProperty = classProperties[propertyId];
-          var type = classProperty.type;
-          var valueType = classProperty.valueType;
-          var batchTableBinaryType;
-          if (type === MetadataType.ARRAY) {
-            var componentCount = classProperty.componentCount;
-            if (componentCount === 2) {
-              batchTableBinaryType = "VEC2";
-            } else if (componentCount === 3) {
-              batchTableBinaryType = "VEC3";
-            } else if (componentCount === 4) {
-              batchTableBinaryType = "VEC4";
-            }
-          } else {
-            batchTableBinaryType = "SCALAR";
-          }
+    if (!defined(featureTable.class)) {
+      return;
+    }
 
-          var componentDatatype = getComponentDatatype(valueType);
-
-          if (
-            defined(componentDatatype) &&
-            defined(batchTableBinaryType) &&
-            defined(property) // May be undefined if the property is optional
-          ) {
-            var typedArray = property._values.typedArray; // TODO: avoid private member access
-            batchTableJson[propertyId] = {
-              byteOffset: typedArray.byteOffset,
-              componentType: ComponentDatatype.getName(componentDatatype),
-              type: batchTableBinaryType,
-            };
-            batchTableBinary = new Uint8Array(buffer.buffer);
-          } else {
-            var values = new Array(count);
-            for (i = 0; i < count; ++i) {
-              values[i] = featureTable.getProperty(i, propertyId);
-            }
-            batchTableJson[propertyId] = values;
+    var count = featureTable.count;
+    var batchTableJson = {};
+    var batchTableBinary;
+    var classProperties = featureTable.class.properties;
+    for (var propertyId in classProperties) {
+      if (classProperties.hasOwnProperty(propertyId)) {
+        var property = featureTable.properties[propertyId];
+        var classProperty = classProperties[propertyId];
+        var type = classProperty.type;
+        var valueType = classProperty.valueType;
+        var batchTableBinaryType;
+        if (type === MetadataType.ARRAY) {
+          var componentCount = classProperty.componentCount;
+          if (componentCount === 2) {
+            batchTableBinaryType = "VEC2";
+          } else if (componentCount === 3) {
+            batchTableBinaryType = "VEC3";
+          } else if (componentCount === 4) {
+            batchTableBinaryType = "VEC4";
           }
+        } else {
+          batchTableBinaryType = "SCALAR";
+        }
+
+        var componentDatatype = getComponentDatatype(valueType);
+
+        if (
+          defined(componentDatatype) &&
+          defined(batchTableBinaryType) &&
+          defined(property) // May be undefined if the property is optional
+        ) {
+          var typedArray = property._values.typedArray;
+          batchTableJson[propertyId] = {
+            byteOffset: typedArray.byteOffset,
+            componentType: getComponentType(componentDatatype),
+            type: batchTableBinaryType,
+          };
+          batchTableBinary = new Uint8Array(buffer.buffer);
+        } else {
+          var values = new Array(count);
+          for (i = 0; i < count; ++i) {
+            values[i] = featureTable.getProperty(i, propertyId);
+          }
+          batchTableJson[propertyId] = values;
         }
       }
-      return new Cesium3DTileBatchTable(
-        content,
-        count,
-        batchTableJson,
-        batchTableBinary,
-        colorChangedCallback
-      );
     }
+    return new Cesium3DTileBatchTable(
+      content,
+      count,
+      batchTableJson,
+      batchTableBinary,
+      colorChangedCallback
+    );
   }
 }
 
@@ -331,17 +370,10 @@ function initialize(content, gltf) {
   }
 
   var colorChangedCallback;
-  if (defined(tileset.classificationType)) {
+  if (defined(content._classificationType)) {
     colorChangedCallback = createColorChangedCallback(content);
   }
 
-  // TODO: many caveats right now
-  // * Only works with glb models with a single buffer
-  // * Does not work with schemaUri
-  // * Does not work with multiple feature tables
-  // * Only works with _FEATURE_ID_0
-  // * Does not support feature ID textures
-  // * Does not support feature textures
   var batchTable = createBatchTable(content, gltf, colorChangedCallback);
 
   if (!defined(batchTable)) {
@@ -361,7 +393,7 @@ function initialize(content, gltf) {
     primitive: tileset,
   };
 
-  if (!defined(tileset.classificationType)) {
+  if (!defined(content._classificationType)) {
     // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
     // The pick shader still needs to be patched.
     content._model = new Model({
@@ -413,7 +445,7 @@ function initialize(content, gltf) {
       ),
       uniformMapLoaded: batchTable.getUniformMapCallback(),
       pickIdLoaded: getPickIdCallback(content),
-      classificationType: tileset._classificationType,
+      classificationType: content._classificationType,
       batchTable: batchTable,
     });
   }
@@ -478,30 +510,34 @@ InnerGltf3DTileContent.prototype.applyStyle = function (style) {
 InnerGltf3DTileContent.prototype.update = function (tileset, frameState) {
   var commandStart = frameState.commandList.length;
 
+  var model = this._model;
+  var tile = this._tile;
+  var batchTable = this._batchTable;
+
   // In the PROCESSING state we may be calling update() to move forward
   // the content's resource loading.  In the READY state, it will
   // actually generate commands.
-  this._batchTable.update(tileset, frameState);
+  batchTable.update(tileset, frameState);
 
-  this._model.modelMatrix = this._tile.computedTransform;
-  this._model.shadows = this._tileset.shadows;
-  this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
-  this._model.lightColor = this._tileset.lightColor;
-  this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
-  this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
-  this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
-  this._model.backFaceCulling = this._tileset.backFaceCulling;
-  this._model.debugWireframe = this._tileset.debugWireframe;
+  model.modelMatrix = tile.computedTransform;
+  model.shadows = tileset.shadows;
+  model.imageBasedLightingFactor = tileset.imageBasedLightingFactor;
+  model.lightColor = tileset.lightColor;
+  model.luminanceAtZenith = tileset.luminanceAtZenith;
+  model.sphericalHarmonicCoefficients = tileset.sphericalHarmonicCoefficients;
+  model.specularEnvironmentMaps = tileset.specularEnvironmentMaps;
+  model.backFaceCulling = tileset.backFaceCulling;
+  model.debugWireframe = tileset.debugWireframe;
 
   // Update clipping planes
-  var tilesetClippingPlanes = this._tileset.clippingPlanes;
-  this._model.referenceMatrix = this._tileset.clippingPlanesOriginMatrix;
-  if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
+  var tilesetClippingPlanes = tileset.clippingPlanes;
+  model.referenceMatrix = tileset.clippingPlanesOriginMatrix;
+  if (defined(tilesetClippingPlanes) && tile.clippingPlanesDirty) {
     // Dereference the clipping planes from the model if they are irrelevant.
     // Link/Dereference directly to avoid ownership checks.
     // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-    this._model._clippingPlanes =
-      tilesetClippingPlanes.enabled && this._tile._isClipped
+    model._clippingPlanes =
+      tilesetClippingPlanes.enabled && tile._isClipped
         ? tilesetClippingPlanes
         : undefined;
   }
@@ -510,22 +546,22 @@ InnerGltf3DTileContent.prototype.update = function (tileset, frameState) {
   // ClippingPlaneCollection that gives this tile the same clipping status, update the model to use the new ClippingPlaneCollection.
   if (
     defined(tilesetClippingPlanes) &&
-    defined(this._model._clippingPlanes) &&
-    this._model._clippingPlanes !== tilesetClippingPlanes
+    defined(model._clippingPlanes) &&
+    model._clippingPlanes !== tilesetClippingPlanes
   ) {
-    this._model._clippingPlanes = tilesetClippingPlanes;
+    model._clippingPlanes = tilesetClippingPlanes;
   }
 
-  this._model.update(frameState);
+  model.update(frameState);
 
   // If any commands were pushed, add derived commands
   var commandEnd = frameState.commandList.length;
   if (
     commandStart < commandEnd &&
     (frameState.passes.render || frameState.passes.pick) &&
-    !defined(tileset.classificationType)
+    !defined(this._classificationType)
   ) {
-    this._batchTable.addDerivedCommands(frameState, commandStart);
+    batchTable.addDerivedCommands(frameState, commandStart);
   }
 };
 
