@@ -11,7 +11,6 @@ import {
   Matrix3,
   Matrix4,
   Multiple3DTileContent,
-  RequestScheduler,
   Resource,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
@@ -606,19 +605,15 @@ describe("Scene/Implicit3DTileContent", function () {
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var originalRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
-
     beforeAll(function () {
       scene = createScene();
       // One item in each data set is always located in the center, so point the camera there
       var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
       scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
-      originalRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
     });
 
     afterAll(function () {
       scene.destroyForSpecs();
-      RequestScheduler.maximumRequestsPerServer = originalRequestsPerServer;
     });
 
     afterEach(function () {
@@ -626,8 +621,6 @@ describe("Scene/Implicit3DTileContent", function () {
     });
 
     it("a single content is transcoded as a regular tile", function () {
-      RequestScheduler.maximumRequestsPerServer = 10;
-
       return Cesium3DTilesTester.loadTileset(
         scene,
         implicitMultipleContentsUrl

@@ -646,9 +646,6 @@ describe("Scene/ImplicitSubtree", function () {
       boundingVolume: {
         region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
       },
-      content: {
-        uri: "https://example.com/{level}/{x}/{y}.b3dm",
-      },
       extensions: {
         "3DTILES_implicit_tiling": {
           subdivisionScheme: "QUADTREE",

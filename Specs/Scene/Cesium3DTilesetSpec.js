@@ -5168,9 +5168,6 @@ describe(
       });
 
       it("renders implicit tileset with multiple contents", function () {
-        var oldMaximumRequestsPerServer =
-          RequestScheduler.maximumRequestsPerServer;
-        RequestScheduler.maximumRequestsPerServer = 10;
         return Cesium3DTilesTester.loadTileset(
           scene,
           implicitMultipleContentsUrl
@@ -5180,7 +5177,6 @@ describe(
           expect(statistics.visited).toEqual(6);
           // root content + 2 contents per child tile
           expect(statistics.numberOfCommands).toEqual(9);
-          RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
         });
       });
     });
