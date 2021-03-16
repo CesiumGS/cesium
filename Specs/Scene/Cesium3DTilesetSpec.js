@@ -4887,7 +4887,7 @@ describe(
 
     describe("3DTILES_multiple_contents", function () {
       var multipleContentsUrl =
-        "Data/Cesium3DTiles/MultipleContent/MultipleContent/tileset.json";
+        "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
       var implicitMultipleContentsUrl =
         "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
 
@@ -5020,7 +5020,7 @@ describe(
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(0);
-                expect(statistics.numberOfTilesWithContentReady).toBe(2);
+                expect(statistics.numberOfTilesWithContentReady).toBe(1);
               }
             );
           }

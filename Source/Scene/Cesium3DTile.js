@@ -957,7 +957,12 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.updateExpiration = function () {
-  if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
+  if (
+    defined(this.expireDate) &&
+    this.contentReady &&
+    !this.hasEmptyContent &&
+    !this.hasMultipleContents
+  ) {
     var now = JulianDate.now(scratchJulianDate);
     if (JulianDate.lessThan(this.expireDate, now)) {
       this._contentState = Cesium3DTileContentState.EXPIRED;
@@ -1016,7 +1021,12 @@ Cesium3DTile.prototype.requestContent = function () {
 /**
  * The <code>3DTILES_multiple_contents</code> extension allows multiple
  * {@link Cesium3DTileContent} within a single tile. Due to differences
- * in request scheduling, this is handled separately
+ * in request scheduling, this is handled separately.
+ * <p>
+ * This implementation of <code>3DTILES_multiple_contents</code> does not
+ * support tile expiry like requestSingleContent does. If this changes,
+ * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
+ * </p>
  *
  * @private
  */
@@ -1024,7 +1034,6 @@ function requestMultipleContents(tile) {
   var multipleContents = tile._content;
   var tileset = tile._tileset;
 
-  var firstTime = !defined(multipleContents.contentsFetchedPromise);
   var backloggedRequestCount = multipleContents.requestInnerContents();
   if (backloggedRequestCount > 0) {
     return backloggedRequestCount;
@@ -1032,17 +1041,16 @@ function requestMultipleContents(tile) {
 
   tile._contentState = Cesium3DTileContentState.LOADING;
 
-  if (!firstTime) {
-    return 0;
-  }
-
-  var expired = tile.contentExpired;
-
   // These promise chains must only be initialized once
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
   multipleContents.contentsFetchedPromise
     .then(function () {
+      if (tile._contentState !== Cesium3DTileContentState.LOADING) {
+        // tile was canceled, short circuit.
+        return;
+      }
+
       if (tile.isDestroyed()) {
         multipleContentFailed(
           tile,
@@ -1050,10 +1058,6 @@ function requestMultipleContents(tile) {
           "Tile was unloaded while content was loading"
         );
         return;
-      }
-
-      if (expired) {
-        tile.expireDate = undefined;
       }
 
       tile._contentState = Cesium3DTileContentState.PROCESSING;
@@ -1068,7 +1072,6 @@ function requestMultipleContents(tile) {
           );
           return;
         }
-        updateExpireDate(tile);
 
         // Refresh style for expired content
         tile._selectedFrame = 0;
@@ -1759,7 +1762,8 @@ function updateContent(tile, tileset, frameState) {
   var content = tile._content;
   var expiredContent = tile._expiredContent;
 
-  if (defined(expiredContent)) {
+  // expired content is not supported for 3DTILES_multiple_contents
+  if (!tile.hasMultipleContents && defined(expiredContent)) {
     if (!tile.contentReady) {
       // Render the expired content while the content loads
       expiredContent.update(tileset, frameState);
