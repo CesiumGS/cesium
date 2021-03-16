@@ -394,21 +394,20 @@ function deriveChildTile(
   if (contentJsons.length === 1) {
     tileJson.content = contentJsons[0];
   } else if (contentJsons.length > 1) {
-    var multipleContentExtension = {
+    tileJson.extensions = {
       "3DTILES_multiple_contents": {
         content: contentJsons,
       },
     };
-    var existingExtensions = implicitTileset.tileHeader.extensions;
-    tileJson.extensions = combine(multipleContentExtension, existingExtensions);
   }
 
+  var deep = true;
   var childTile = makeTile(
     implicitContent,
     implicitTileset.baseResource,
     // combine() is used to pass through any additional properties the
     // user specified such as extras or extensions
-    combine(tileJson, implicitTileset.tileHeader),
+    combine(tileJson, implicitTileset.tileHeader, deep),
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;
