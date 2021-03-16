@@ -3456,7 +3456,9 @@ describe(
 
     it("propagates tile transform down the tree", function () {
       var b3dmCommands = 1;
-      var i3dmCommands = scene.context.instancedArrays ? 1 : 25; // When instancing is not supported there is one command per instance
+      // when instancing is supported, there is a single draw command,
+      // else each instance is a separate command.
+      var i3dmCommands = scene.context.instancedArrays ? 1 : 25;
       var totalCommands = b3dmCommands + i3dmCommands;
       return Cesium3DTilesTester.loadTileset(
         scene,
@@ -5158,11 +5160,16 @@ describe(
       });
 
       it("renders tileset with multiple contents", function () {
+        var b3dmCommands = 1;
+        // when instancing is supported, there is a single draw command,
+        // else,each instance is a separate command.
+        var i3dmCommands = scene.context.instancedArrays ? 1 : 25;
+        var totalCommands = b3dmCommands + i3dmCommands;
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
             var statistics = tileset._statistics;
             expect(statistics.visited).toEqual(1);
-            expect(statistics.numberOfCommands).toEqual(2);
+            expect(statistics.numberOfCommands).toEqual(totalCommands);
           }
         );
       });
