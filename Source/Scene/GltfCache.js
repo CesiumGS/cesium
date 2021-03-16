@@ -1,229 +1,217 @@
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import GltfBufferResource from "./GltfBufferResource.js";
+import GltfBufferCacheResource from "./GltfBufferCacheResource.js";
 import GltfCacheKey from "./GltfCacheKey.js";
-import GltfResource from "./GltfResource.js";
-import GltfVertexBufferResource from "./GltfVertexBufferResource.js";
+import GltfCacheResource from "./GltfCacheResource.js";
+import GltfVertexBufferCacheResource from "./GltfVertexBufferCacheResource.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
- * Cache for glTF resources shared across models.
+ * Functions for caching resources shared across glTF models.
  *
- * @alias GltfCache
- * @constructor
+ * @namespace GltfCache
  *
  * @private
  */
-function GltfCache() {
-  this._cacheEntries = {};
-}
+function GltfCache() {}
 
-function CacheEntry(options) {
-  this.referenceCount = 1;
-  this.resource = options.resource;
-  this.keepResident = options.keepResident;
-}
+/**
+ * Loads a glTF from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
+ *
+ * @returns {GltfCacheResource} The glTF cache resource.
+ */
+GltfCache.loadGltf = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var keepResident = defaultValue(options.keepResident, false);
 
-function get(cache, cacheKey) {
-  var cacheEntries = cache._cacheEntries;
-  var cacheEntry = cacheEntries[cacheKey];
-  if (defined(cacheEntry)) {
-    ++cacheEntry.referenceCount;
-    return cacheEntry.resource;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  var cacheKey = GltfCacheKey.getGltfCacheKey({
+    gltfResource: gltfResource,
+  });
+
+  var gltfCacheResource = ResourceCache.get(cacheKey);
+  if (defined(gltfCacheResource)) {
+    return gltfCacheResource;
   }
-}
 
-function load(cache, options) {
-  var resource = options.resource;
-  var keepResident = options.keepResident;
-  var cacheKey = resource.cacheKey;
-
-  var cacheEntry = new CacheEntry({
-    resource: resource,
+  gltfCacheResource = new GltfCacheResource({
+    gltfCache: GltfCache,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
     keepResident: keepResident,
   });
 
-  var cacheEntries = cache._cacheEntries;
-  cacheEntries[cacheKey] = cacheEntry;
-
-  resource.load(cache);
-
-  return resource.promise.otherwise(function () {
-    delete cacheEntries[cacheKey];
-  });
-}
-
-function unload(cache, resource) {
-  var cacheKey = resource.cacheKey;
-
-  var cacheEntries = cache._cacheEntries;
-  var cacheEntry = cacheEntries[cacheKey];
-  --cacheEntry.referenceCount;
-
-  if (cacheEntry.referenceCount === 0 && !cacheEntry.keepResident) {
-    if (defined(resource.unload)) {
-      resource.unload();
-    }
-    delete cacheEntries[cacheKey];
-  }
-}
-
-/**
- * Load a glTF from the cache. If the glTF is already in the cache its
- * reference count is incremented.
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource} options.gltfResource The glTF resource.
- * @param {Boolean} options.keepResident Whether the buffer should stay in the cache indefinitely.
- *
- * @returns {GltfResource} The glTF resource.
- *
- * @private
- */
-GltfCache.prototype.loadGltf = function (options) {
-  var cacheKey = GltfCacheKey.getGltfCacheKey({
-    gltfResource: options.gltfResource,
+  ResourceCache.load({
+    resource: gltfCacheResource,
+    keepResident: keepResident,
   });
 
-  var gltfResource = get(this, cacheKey);
-  if (defined(gltfResource)) {
-    return gltfResource;
-  }
-
-  gltfResource = new GltfResource({
-    gltfResource: options.gltfResource,
-  });
-
-  load(this, {
-    resource: gltfResource,
-    keepResident: options.keepResident,
-  });
-
-  return gltfResource;
+  return gltfCacheResource;
 };
 
 /**
- * Unload a glTF from the cache. If the reference count drops to zero the
- * glTF will be unloaded.
+ * Unloads a glTF from the cache.
  *
- * @param {GltfResource} gltfResource The glTF resource.
- *
- * @private
+ * @param {GltfCacheResource} gltfCacheResource The glTF cache resource.
  */
-GltfCache.prototype.unloadGltf = function (gltfResource) {
-  unload(this, gltfResource);
+GltfCache.unloadGltf = function (gltfCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("gltfCacheResource", gltfCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(gltfCacheResource);
 };
 
 /**
- * Load a buffer from the cache. If the buffer is already in the cache its
- * reference count is incremented. Otherwise, a new buffer is created.
+ * Loads a buffer from the cache.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.buffer The glTF buffer.
  * @param {Number} options.bufferId The buffer ID.
- * @param {Resource} options.gltfResource The glTF resource.
- * @param {Resource} options.baseResource The base resource that paths in the glTF JSON are relative to.
- * @param {Boolean} options.keepResident Whether the buffer should stay in the cache indefinitely.
- * @param {Resource} [options.typedArray] The typed array of the buffer when the buffer is embedded in the glTF.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.keepResident=false] Whether the buffer should stay in the cache indefinitely.
+ * @param {Uint8Array} [options.typedArray] A typed array containing buffer data. Only defined for buffers embedded in the glTF.
  *
- * @returns {GltfBufferResource} The buffer resource.
- *
- * @private
+ * @returns {GltfBufferCacheResource} The buffer cache resource.
  */
-GltfCache.prototype.loadBuffer = function (options) {
+GltfCache.loadBuffer = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var buffer = options.buffer;
+  var bufferId = options.bufferId;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var keepResident = defaultValue(options.keepResident, false);
+  var typedArray = options.typedArray;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.buffer", buffer);
+  Check.typeOf.number("options.bufferId", bufferId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
   var cacheKey = GltfCacheKey.getBufferCacheKey({
-    buffer: options.buffer,
-    bufferId: options.bufferId,
-    gltfResource: options.gltfResource,
-    baseResource: options.baseResource,
+    buffer: buffer,
+    bufferId: bufferId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
   });
 
-  var bufferResource = get(this, cacheKey);
-  if (defined(bufferResource)) {
-    return bufferResource;
+  var bufferCacheResource = ResourceCache.get(cacheKey);
+  if (defined(bufferCacheResource)) {
+    return bufferCacheResource;
   }
 
-  bufferResource = new GltfBufferResource({
-    buffer: options.buffer,
-    baseResource: options.basesResource,
+  bufferCacheResource = new GltfBufferCacheResource({
+    buffer: buffer,
+    baseResource: baseResource,
     cacheKey: cacheKey,
-    typedArray: options.typedArray,
+    typedArray: typedArray,
   });
 
-  load(this, {
-    resource: bufferResource,
-    keepResident: options.keepResident,
+  ResourceCache.load({
+    resource: bufferCacheResource,
+    keepResident: keepResident,
   });
 
-  return bufferResource;
+  return bufferCacheResource;
 };
 
 /**
- * Unload a buffer from the cache. If the reference count drops to zero the
- * buffer will be unloaded.
+ * Unloads a buffer from the cache.
  *
- * @param {GltfBufferResource} bufferResource The buffer resource.
- *
- * @private
+ * @param {GltfBufferCacheResource} bufferCacheResource The buffer cache resource.
  */
-GltfCache.prototype.unloadBuffer = function (bufferResource) {
-  unload(this, bufferResource);
+GltfCache.prototype.unloadBuffer = function (bufferCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("bufferCacheResource", bufferCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(bufferCacheResource);
 };
 
 /**
- * Load a vertex buffer from the cache. If the vertex buffer is already in the
- * cache its reference count is incremented. Otherwise, a new vertex buffer is
- * created.
+ * Load a vertex buffer from the cache.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.bufferViewId The bufferView ID corresponding to the vertex buffer.
- * @param {Resource} options.gltfResource The glTF resource.
- * @param {Resource} options.baseResource The base resource that paths in the glTF JSON are relative to.
- * @param {Boolean} options.asynchronous Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
- * @returns {GltfVertexBufferResource} The vertex buffer resource.
- *
- * @private
+ * @returns {GltfVertexBufferCacheResource} The vertex buffer cache resource.
  */
 GltfCache.prototype.loadVertexBuffer = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var bufferViewId = options.bufferViewId;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var asynchronous = defaultValue(options.asynchronous, true);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.bufferViewId", bufferViewId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
   var cacheKey = GltfCacheKey.getVertexBufferCacheKey({
-    gltf: options.gltf,
-    bufferViewId: options.bufferViewId,
-    gltfResource: options.gltfResource,
-    baseResource: options.baseResource,
+    gltf: gltf,
+    bufferViewId: bufferViewId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
   });
 
-  var vertexBufferResource = get(this, cacheKey);
-  if (defined(vertexBufferResource)) {
-    return vertexBufferResource;
+  var vertexBufferCacheResource = ResourceCache.get(cacheKey);
+  if (defined(vertexBufferCacheResource)) {
+    return vertexBufferCacheResource;
   }
 
-  vertexBufferResource = new GltfVertexBufferResource({
-    gltf: options.gltf,
-    bufferViewId: options.bufferViewId,
-    gltfResource: options.gltfResource,
-    baseResource: options.baseResource,
-    asynchronous: options.asynchronous,
+  vertexBufferCacheResource = new GltfVertexBufferCacheResource({
+    gltfCache: GltfCache,
+    gltf: gltf,
+    bufferViewId: bufferViewId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
     cacheKey: cacheKey,
+    asynchronous: asynchronous,
   });
 
-  load(this, {
-    resource: vertexBufferResource,
+  ResourceCache.load({
+    resource: vertexBufferCacheResource,
     keepResident: false,
   });
 
-  return vertexBufferResource;
+  return vertexBufferCacheResource;
 };
 
 /**
- * Unload a vertex buffer from the cache. If the reference count drops to zero
- * the vertex buffer will be unloaded.
+ * Unload a vertex buffer from the cache.
  *
- * @param {GltfVertexBufferResource} vertexBufferResource The vertex buffer resource.
- *
- * @private
+ * @param {GltfVertexBufferCacheResource} vertexBufferCacheResource The vertex buffer cache resource.
  */
-GltfCache.prototype.unloadVertexBuffer = function (vertexBufferResource) {
-  unload(this, vertexBufferResource);
+GltfCache.prototype.unloadVertexBuffer = function (vertexBufferCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("vertexBufferCacheResource", vertexBufferCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(vertexBufferCacheResource);
 };
 
 export default GltfCache;

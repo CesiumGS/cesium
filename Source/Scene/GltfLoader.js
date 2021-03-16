@@ -1,14 +1,13 @@
-import Check from "../Core/Check.js";
+import Check from "./Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
+import destroyObject from "../Core/destroyObject.js";
+import FeatureDetection from "../Core/FeatureDetection.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
-import when from "../ThirdParty/when.js";
+import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
 import GltfCache from "./GltfCache.js";
-
-var cache = new GltfCache();
+import GltfLoadResources from "./GltfLoadResources.js";
 
 var GltfLoaderState = {
   UNLOADED: 0,
@@ -28,10 +27,10 @@ var defaultAccept =
  * Loads a glTF model.
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource|String} options.uri The uri to the .gltf file.
+ * @param {Resource|String} options.uri The uri to the glTF file.
  * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
- * @param {Boolean} [options.keepResident=false] Whether the glTF JSON should stay in the cache indefinitely.
+ * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
  *
  * @alias GltfLoader
  * @constructor
@@ -45,15 +44,16 @@ function GltfLoader(options) {
   var asynchronous = defaultValue(options.asynchronous, true);
   var keepResident = defaultValue(options.keepResident, false);
 
-  // Create resource for the glTF file
+  //>>includeStart('debug', pragmas.debug);
+  Check.defined("options.uri", uri);
+  //>>includeEnd('debug');
+
   var gltfResource = Resource.createIfNeeded(uri);
 
-  // Add Accept header if we need it
   if (!defined(gltfResource.headers.Accept)) {
     gltfResource.headers.Accept = defaultAccept;
   }
 
-  // Set up baseResource to get dependent files
   var baseResource = defined(basePath)
     ? Resource.createIfNeeded(basePath)
     : gltfResource.clone();
@@ -64,8 +64,8 @@ function GltfLoader(options) {
   this._asynchronous = asynchronous;
   this._keepResident = keepResident;
   this._gltf = undefined;
-  this._vertexBuffersToLoad = [];
-  this._indexBuffersToLoad = [];
+  this._loadResources = new GltfLoadResources();
+  this._gltfCacheResource = undefined;
   this._error = undefined;
   this._state = GltfLoaderState.UNLOADED;
 }
@@ -77,7 +77,6 @@ Object.defineProperties(GltfLoader.prototype, {
    * @memberof GltfLoader.prototype
    * @type {Boolean}
    * @readonly
-   * @private
    */
   ready: {
     get: function () {
@@ -90,7 +89,6 @@ Object.defineProperties(GltfLoader.prototype, {
    * @memberof GltfLoader.prototype
    * @type {Error}
    * @readonly
-   * @private
    */
   error: {
     get: function () {
@@ -99,7 +97,76 @@ Object.defineProperties(GltfLoader.prototype, {
   },
 });
 
-function loadVertexBuffers(loader, cache, gltf) {
+GltfLoader.prototype.update = function (model, frameState) {
+  if (!FeatureDetection.supportsWebP.initialized) {
+    FeatureDetection.supportsWebP.initialize();
+    return;
+  }
+  var supportsWebP = FeatureDetection.supportsWebP();
+
+  if (this._state === GltfLoaderState.UNLOADED) {
+    loadGltf(this, model);
+    this._state = GltfLoaderState.LOADING;
+  }
+
+  if (this._state === GltfLoaderState.PROCESSING) {
+    this._loadResources.update(frameState);
+  }
+};
+
+function handleModelDestroyed(loader, model) {
+  if (model.isDestroyed()) {
+    unload(loader);
+    loader._state = GltfLoaderState.FAILED;
+    return true;
+  }
+  return false;
+}
+
+function loadGltf(loader, model) {
+  var gltfCacheResource = GltfCache.loadGltf({
+    gltfResource: loader._gltfResource,
+    baseResource: loader._baseResource,
+    keepResident: loader._keepResident,
+  });
+
+  this._gltfCacheResource = gltfCacheResource;
+
+  gltfCacheResource.promise
+    .then(function () {
+      if (handleModelDestroyed(loader, model)) {
+        return;
+      }
+
+      var gltf = gltfCacheResource.gltf;
+
+      loader._gltf = gltf;
+      loader._state = GltfLoaderState.PROCESSING;
+
+      var vertexBuffers = loadVertexBuffers(loader, gltf);
+      var indexBuffers = loadIndexBuffers(loader, gltf);
+
+      return loader._loadResources
+        .load({
+          vertexBuffers: vertexBuffers,
+          indexBuffers: indexBuffers,
+        })
+        .then(function () {
+          if (handleModelDestroyed(loader, model)) {
+            return;
+          }
+          createModel(loader, model);
+          loader._state = GltfLoaderState.READY;
+        });
+    })
+    .otherwise(function (error) {
+      unload(loader);
+      loader._error = error;
+      loader._state = GltfLoaderState.FAILED;
+    });
+}
+
+function loadVertexBuffers(loader, gltf) {
   var bufferViewIds = {};
   ForEach.mesh(gltf, function (mesh) {
     ForEach.meshPrimitive(mesh, function (primitive) {
@@ -158,10 +225,10 @@ function loadVertexBuffers(loader, cache, gltf) {
     });
   }
 
-  var vertexBuffersToLoad = {};
+  var vertexBuffers = {};
   for (var bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
-      vertexBuffersToLoad[bufferViewId] = cache.loadVertexBuffer({
+      vertexBuffers[bufferViewId] = GltfCache.loadVertexBuffer({
         gltf: gltf,
         bufferViewId: bufferViewId,
         gltfResource: loader._gltfResource,
@@ -170,77 +237,14 @@ function loadVertexBuffers(loader, cache, gltf) {
       });
     }
   }
-  return vertexBuffersToLoad;
+  return vertexBuffers;
 }
-
-function handleModelDestroyed(loader, model) {
-  if (model.isDestroyed()) {
-    cache.release(loader._gltfCacheKey);
-    loader._state = GltfLoaderState.FAILED;
-    return true;
-  }
-  return false;
-}
-
-function loadGltf(loader, model) {
-  var gltfResource = cache
-    .loadGltf({
-      gltfResource: loader._gltfResource,
-      keepResident: loader._keepResident,
-    });
-
-  return gltfResource.promise.then(function() {
-    var gltf = gltfResource.
-  });
-
-    .then(function (gltf) {
-      if (handleModelDestroyed(loader, model)) {
-        return;
-      }
-
-      var loadResources = new GltfLoadResources(loader._asynchronous);
-
-      var vertexBuffersToLoad = loadVertexBuffers(loader, cache, gltf);
-      var indexBuffersToLoad = loadIndexBuffers(loader, cache, gltf);
-      var loadResources = getLoadResources(loader);
-
-      loader._gltf = gltf;
-      loader._state = GltfLoaderState.PROCESSING;
-
-      return loadResources.readyPromise.then(function () {
-        loader._state = GltfLoaderState.READY;
-      });
-    })
-    .otherwise(function (error) {
-      loader._error = error;
-      loader._state = GltfLoaderState.FAILED;
-    });
-}
-
-GltfLoader.prototype.update = function (model, frameState) {
-  if (!FeatureDetection.supportsWebP.initialized) {
-    FeatureDetection.supportsWebP.initialize();
-    return;
-  }
-  var supportsWebP = FeatureDetection.supportsWebP();
-
-  if (this._state === GltfLoaderState.UNLOADED) {
-    loadGltf(this, model);
-    this._state = GltfLoaderState.LOADING;
-  }
-
-  if (this._state === GltfLoaderState.PROCESSING) {
-    processGltf(this, model, frameState);
-  }
-};
 
 function unload(loader) {
-  cache.unload(loader._gltfResource);
-
-  var loadResources = loader._loadResources;
-  loadResources.vertexBufferResources.forEach(function (vertexBufferResource) {
-    cache.unloadVertexBuffer(vertexBufferResource);
-  });
+  if (defined(loader._gltfCacheResource)) {
+    GltfCache.unloadGltf(loader._gltfCacheResource);
+  }
+  loader._loadResources.unload();
 }
 
 GltfLoader.prototype.isDestroyed = function () {
