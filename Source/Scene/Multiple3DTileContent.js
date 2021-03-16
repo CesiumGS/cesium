@@ -372,14 +372,6 @@ function requestInnerContent(
     serverKey: serverKey,
   });
 
-  var expired = tile.contentExpired;
-  if (expired) {
-    // Append a query parameter of the tile expiration date to prevent caching
-    contentResource.setQueryParameters({
-      expired: tile.expireDate.toString(),
-    });
-  }
-
   return contentResource
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
@@ -436,7 +428,11 @@ function createInnerContents(multipleContents) {
     })
     .then(function (contents) {
       if (!defined(contents)) {
-        // tile was canceled.
+        // request was canceled. resolve the promise (Cesium3DTile will
+        // detect that the the content was canceled), then discard the promise
+        // so a new one can be created
+        multipleContents._contentsFetchedPromise.resolve();
+        multipleContents._contentsFetchedPromise = undefined;
         return;
       }
 

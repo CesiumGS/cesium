@@ -5002,7 +5002,7 @@ describe(
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(0);
-                expect(statistics.numberOfTilesWithContentReady).toBe(2);
+                expect(statistics.numberOfTilesWithContentReady).toBe(1);
               }
             );
           }
