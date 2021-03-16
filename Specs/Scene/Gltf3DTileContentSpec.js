@@ -16,7 +16,6 @@ describe(
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var gltfContentUrl = "./Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
     var glbContentUrl = "./Data/Cesium3DTiles/GltfContent/glb/tileset.json";
 
     function setCamera(longitude, latitude) {
@@ -41,16 +40,12 @@ describe(
       scene.primitives.removeAll();
     });
 
-    it("resolves readyPromise", function () {
-      return Cesium3DTilesTester.resolvesReadyPromise(scene, gltfContentUrl);
-    });
+    function getInnerContent(content) {
+      return content.innerContents[0];
+    }
 
-    it("renders glTF content", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
-        function (tileset) {
-          Cesium3DTilesTester.expectRender(scene, tileset);
-        }
-      );
+    it("resolves readyPromise", function () {
+      return Cesium3DTilesTester.resolvesReadyPromise(scene, glbContentUrl);
     });
 
     it("renders glb content", function () {
@@ -62,7 +57,7 @@ describe(
     });
 
     it("picks", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           var content = tileset.root.content;
           tileset.show = false;
@@ -71,16 +66,16 @@ describe(
           expect(scene).toPickAndCall(function (result) {
             expect(result).toBeDefined();
             expect(result.primitive).toBe(tileset);
-            expect(result.content).toBe(content);
+            expect(result.content).toBe(getInnerContent(content));
           });
         }
       );
     });
 
     it("gets memory usage", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
-          var content = tileset.root.content;
+          var content = getInnerContent(tileset.root.content);
 
           // 10 buildings, 36 ushort indices and 24 vertices per building, 6 float components (position, normal) per vertex.
           // 10 * (24 * (6 * 4) + (36 * 2)) = 6480
@@ -93,10 +88,10 @@ describe(
     });
 
     it("links model to tileset clipping planes based on bounding volume clipping", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           var tile = tileset.root;
-          var content = tile.content;
+          var content = getInnerContent(tile.content);
           var model = content._model;
           var passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
@@ -123,10 +118,10 @@ describe(
     });
 
     it("links model to tileset clipping planes if tileset clipping planes are reassigned", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           var tile = tileset.root;
-          var model = tile.content._model;
+          var model = getInnerContent(tile.content)._model;
           var passOptions = Cesium3DTilePass.getPassOptions(
             Cesium3DTilePass.RENDER
           );
@@ -159,7 +154,7 @@ describe(
     it("rebuilds Model shaders when clipping planes change", function () {
       spyOn(Model, "_getClippingFunction").and.callThrough();
 
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
           var tile = tileset.root;
           var passOptions = Cesium3DTilePass.getPassOptions(
@@ -179,7 +174,7 @@ describe(
     });
 
     it("destroys", function () {
-      return Cesium3DTilesTester.tileDestroys(scene, gltfContentUrl);
+      return Cesium3DTilesTester.tileDestroys(scene, glbContentUrl);
     });
   },
   "WebGL"

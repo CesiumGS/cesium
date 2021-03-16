@@ -104,7 +104,7 @@ describe(
     var instancedAnimationUrl =
       "Data/Cesium3DTiles/Instanced/InstancedAnimated/tileset.json";
 
-    var gltfContentUrl = "Data/Cesium3DTiles/GltfContent/glTF/tileset.json";
+    var glbContentUrl = "Data/Cesium3DTiles/GltfContent/glb/tileset.json";
 
     // 1 tile where each feature is a different source color
     var colorsUrl = "Data/Cesium3DTiles/Batched/BatchedColors/tileset.json";
@@ -228,7 +228,7 @@ describe(
       setZoom(5.0);
     }
 
-    function viewGltfContent() {
+    function viewGlbContent() {
       setZoom(100.0);
     }
 
@@ -1931,9 +1931,9 @@ describe(
       return checkDebugColorizeTiles(pointCloudUrl);
     });
 
-    it("debugColorizeTiles for glTF", function () {
-      viewGltfContent();
-      return checkDebugColorizeTiles(gltfContentUrl);
+    it("debugColorizeTiles for glb", function () {
+      viewGlbContent();
+      return checkDebugColorizeTiles(glbContentUrl);
     });
 
     it("debugWireframe", function () {
@@ -2547,7 +2547,7 @@ describe(
       return testBackFaceCulling(withoutBatchTableUrl, setViewOptions);
     });
 
-    it("renders glTF tileset when back face culling is disabled", function () {
+    it("renders glb tileset when back face culling is disabled", function () {
       var setViewOptions = {
         destination: new Cartesian3(
           1215012.6853779217,
@@ -2562,7 +2562,7 @@ describe(
         endTransform: Matrix4.IDENTITY,
       };
 
-      return testBackFaceCulling(gltfContentUrl, setViewOptions);
+      return testBackFaceCulling(glbContentUrl, setViewOptions);
     });
 
     it("renders i3dm tileset when back face culling is disabled", function () {
@@ -2641,10 +2641,10 @@ describe(
       );
     });
 
-    it("applies show style to a tileset with glTF content", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+    it("applies show style to a tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
-          viewGltfContent();
+          viewGlbContent();
           var hideStyle = new Cesium3DTileStyle({ show: "false" });
           tileset.style = hideStyle;
           expect(tileset.style).toBe(hideStyle);
@@ -2720,10 +2720,10 @@ describe(
       );
     });
 
-    it("applies color style to tileset with glTF content", function () {
-      return Cesium3DTilesTester.loadTileset(scene, gltfContentUrl).then(
+    it("applies color style to tileset with glb content", function () {
+      return Cesium3DTilesTester.loadTileset(scene, glbContentUrl).then(
         function (tileset) {
-          viewGltfContent();
+          viewGlbContent();
           expectColorStyle(tileset);
         }
       );
