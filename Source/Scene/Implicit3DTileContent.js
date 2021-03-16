@@ -43,14 +43,23 @@ export default function Implicit3DTileContent(
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
   //>>includeEnd('debug');
 
-  this._implicitTileset = tile.implicitTileset;
-  this._implicitCoordinates = tile.implicitCoordinates;
+  var implicitTileset = tile.implicitTileset;
+  var implicitCoordinates = tile.implicitCoordinates;
+
+  this._implicitTileset = implicitTileset;
+  this._implicitCoordinates = implicitCoordinates;
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
+
+  var templateValues = implicitCoordinates.getTemplateValues();
+  var subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource({
+    templateValues: templateValues,
+  });
+  this._url = subtreeResource.getUrlComponent(true);
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -118,12 +127,7 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
 
   url: {
     get: function () {
-      var resource = this._implicitTileset.subtreeUriTemplate;
-      var templateValues = this._implicitCoordinates.getTemplateValues();
-      var derivedResource = resource.getDerivedResource({
-        templateValues: templateValues,
-      });
-      return derivedResource.getUrlComponent(true);
+      return this._url;
     },
   },
 
@@ -362,9 +366,8 @@ function deriveChildTile(
     if (!subtree.contentIsAvailable(childBitIndex, i)) {
       continue;
     }
-    var childContentUri = implicitTileset.contentUriTemplates[
-      i
-    ].getDerivedResource({
+    var childContentTemplate = implicitTileset.contentUriTemplates[i];
+    var childContentUri = childContentTemplate.getDerivedResource({
       templateValues: implicitCoordinates.getTemplateValues(),
     }).url;
     var contentJson = {

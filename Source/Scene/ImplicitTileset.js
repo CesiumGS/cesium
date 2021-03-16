@@ -103,7 +103,7 @@ export default function ImplicitTileset(baseResource, tileJson) {
   /**
    * Store a copy of the content headers, so properties such as
    * <code>extras</code> or <code>extensions</code> are preserved when
-   * {@link Cesium3DTiles} are created for each tile.
+   * {@link Cesium3DTile}s are created for each tile.
    * <p>
    * This is an array to support <code>3DTILES_multiple_contents</code>
    * </p>
@@ -225,13 +225,7 @@ function makeTileHeaderTemplate(tileJson) {
 
   // if there are no other extensions, remove the extensions property to
   // keep each tile simple
-  var removeExtensions = true;
-  for (var key in template.extensions) {
-    if (template.extensions.hasOwnProperty(key)) {
-      removeExtensions = false;
-    }
-  }
-  if (removeExtensions) {
+  if (Object.keys(template.extensions).length === 0) {
     delete template.extensions;
   }
 

@@ -155,7 +155,7 @@ function initialize(subtree, subtreeView, implicitTileset) {
 
   // content availability is either in the subtree JSON or the multiple
   // contents extension. Either way, put the results in this new array
-  // consistent processing later
+  // for consistent processing later
   subtreeJson.contentAvailabilityHeaders = [];
   if (has3DTilesExtension(subtreeJson, "3DTILES_multiple_contents")) {
     subtreeJson.contentAvailabilityHeaders =
