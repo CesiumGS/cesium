@@ -2021,7 +2021,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
       continue;
     } else if (outOfView) {
       // RequestScheduler will take care of cancelling it
-      tile._request.cancel();
+      tile.cancelRequests();
       ++removeCount;
       continue;
     }

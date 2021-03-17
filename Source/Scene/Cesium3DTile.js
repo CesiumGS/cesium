@@ -1247,6 +1247,20 @@ function makeContent(tile, arrayBuffer) {
 }
 
 /**
+ * Cancel requests for the tile's contents. This is called when the tile
+ * goes out of view.
+ *
+ * @private
+ */
+Cesium3DTile.prototype.cancelRequests = function () {
+  if (this.hasMultipleContents) {
+    this._content.cancelRequests();
+  } else {
+    this._request.cancel();
+  }
+};
+
+/**
  * Unloads the tile's content.
  *
  * @private
