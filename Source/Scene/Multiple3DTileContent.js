@@ -346,7 +346,7 @@ function canScheduleAllRequests(serverKeys) {
       return false;
     }
   }
-  return true;
+  return RequestScheduler.heapHasOpenSlots(serverKeys.length);
 }
 
 function requestInnerContent(
