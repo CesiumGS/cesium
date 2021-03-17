@@ -445,7 +445,10 @@ function createInnerContents(multipleContents) {
 
       multipleContents._contents = contents.filter(defined);
       awaitReadyPromises(multipleContents);
-      multipleContents._contentsFetchedPromise.resolve();
+
+      if (defined(multipleContents._contentsFetchedPromise)) {
+        multipleContents._contentsFetchedPromise.resolve();
+      }
     })
     .otherwise(function (error) {
       if (defined(multipleContents._contentsFetchedPromise)) {
