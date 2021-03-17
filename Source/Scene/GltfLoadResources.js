@@ -15,6 +15,7 @@ import GltfCache from "./GltfCache.js";
 function GltfLoadResources() {
   this._vertexBuffers = defaultValue.EMPTY_OBJECT;
   this._indexBuffers = defaultValue.EMPTY_OBJECT;
+  this._textures = defaultValue.EMPTY_OBJECT;
   this._promise = undefined;
 }
 
@@ -47,6 +48,7 @@ Object.defineProperties(GltfLoadResources.prototype, {
  * @param {Object} [options] Object with the following properties:
  * @param {GltfVertexBufferCacheResource[]} [options.vertexBuffers] Vertex buffers to load.
  * @param {GltfIndexBufferCacheResource[]} [options.indexBuffers] Index buffers to load.
+ * @param {GltfTextureCacheResource[]} [options.textures] Textures to load.
  *
  * @returns {Promise} A promise that resolves once all the resources are loaded.
  */
@@ -60,9 +62,11 @@ GltfLoadResources.prototype.load = function (options) {
     options.indexBuffers,
     defaultValue.EMPTY_OBJECT
   );
+  var textures = defaultValue(options.textures, defaultValue.EMPTY_OBJECT);
 
   this._vertexBuffers = vertexBuffers;
   this._indexBuffers = indexBuffers;
+  this._textures = textures;
 
   var promises = [];
   for (var vertexBufferId in vertexBuffers) {
@@ -73,8 +77,14 @@ GltfLoadResources.prototype.load = function (options) {
   }
   for (var indexBufferId in indexBuffers) {
     if (indexBuffers.hasOwnProperty(indexBufferId)) {
-      var indexBuffer = vertexBuffers[indexBufferId];
+      var indexBuffer = indexBuffers[indexBufferId];
       promises.push(indexBuffer.promise);
+    }
+  }
+  for (var textureId in textures) {
+    if (textures.hasOwnProperty(textureId)) {
+      var texture = textures[textureId];
+      promises.push(texture.promise);
     }
   }
 
@@ -87,6 +97,7 @@ GltfLoadResources.prototype.load = function (options) {
 GltfLoadResources.prototype.unload = function () {
   var vertexBuffers = this._vertexBuffers;
   var indexBuffers = this._indexBuffers;
+  var textures = this._textures;
 
   for (var vertexBufferId in vertexBuffers) {
     if (vertexBuffers.hasOwnProperty(vertexBufferId)) {
@@ -96,8 +107,14 @@ GltfLoadResources.prototype.unload = function () {
   }
   for (var indexBufferId in indexBuffers) {
     if (indexBuffers.hasOwnProperty(indexBufferId)) {
-      var indexBuffer = vertexBuffers[indexBufferId];
+      var indexBuffer = indexBuffers[indexBufferId];
       GltfCache.unloadIndexBuffer(indexBuffer);
+    }
+  }
+  for (var textureId in textures) {
+    if (textures.hasOwnProperty(textureId)) {
+      var texture = textures[textureId];
+      GltfCache.unloadTexture(texture);
     }
   }
 };
@@ -114,6 +131,7 @@ GltfLoadResources.prototype.update = function (frameState) {
 
   var vertexBuffers = this._vertexBuffers;
   var indexBuffers = this._indexBuffers;
+  var textures = this._textures;
 
   for (var vertexBufferId in vertexBuffers) {
     if (vertexBuffers.hasOwnProperty(vertexBufferId)) {
@@ -123,8 +141,14 @@ GltfLoadResources.prototype.update = function (frameState) {
   }
   for (var indexBufferId in indexBuffers) {
     if (indexBuffers.hasOwnProperty(indexBufferId)) {
-      var indexBuffer = vertexBuffers[indexBufferId];
+      var indexBuffer = indexBuffers[indexBufferId];
       indexBuffer.update(frameState);
+    }
+  }
+  for (var textureId in textures) {
+    if (textures.hasOwnProperty(textureId)) {
+      var texture = textures[textureId];
+      texture.update(frameState);
     }
   }
 };

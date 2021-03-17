@@ -4,7 +4,9 @@ import defined from "../Core/defined.js";
 import GltfBufferCacheResource from "./GltfBufferCacheResource.js";
 import GltfCacheKey from "./GltfCacheKey.js";
 import GltfCacheResource from "./GltfCacheResource.js";
+import GltfImageCacheResource from "./GltfImageCacheResource.js";
 import GltfIndexBufferCacheResource from "./GltfIndexBufferCacheResource.js";
+import GltfTextureCacheResource from "./GltfTextureCacheResource.js";
 import GltfVertexBufferCacheResource from "./GltfVertexBufferCacheResource.js";
 import ResourceCache from "./ResourceCache.js";
 
@@ -137,7 +139,7 @@ GltfCache.loadBuffer = function (options) {
  *
  * @param {GltfBufferCacheResource} bufferCacheResource The buffer cache resource.
  */
-GltfCache.prototype.unloadBuffer = function (bufferCacheResource) {
+GltfCache.unloadBuffer = function (bufferCacheResource) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("bufferCacheResource", bufferCacheResource);
   //>>includeEnd('debug');
@@ -157,7 +159,7 @@ GltfCache.prototype.unloadBuffer = function (bufferCacheResource) {
  *
  * @returns {GltfVertexBufferCacheResource} The vertex buffer cache resource.
  */
-GltfCache.prototype.loadVertexBuffer = function (options) {
+GltfCache.loadVertexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
@@ -207,7 +209,7 @@ GltfCache.prototype.loadVertexBuffer = function (options) {
  *
  * @param {GltfVertexBufferCacheResource} vertexBufferCacheResource The vertex buffer cache resource.
  */
-GltfCache.prototype.unloadVertexBuffer = function (vertexBufferCacheResource) {
+GltfCache.unloadVertexBuffer = function (vertexBufferCacheResource) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("vertexBufferCacheResource", vertexBufferCacheResource);
   //>>includeEnd('debug');
@@ -227,7 +229,7 @@ GltfCache.prototype.unloadVertexBuffer = function (vertexBufferCacheResource) {
  *
  * @returns {GltfIndexBufferCacheResource} The index buffer cache resource.
  */
-GltfCache.prototype.loadIndexBuffer = function (options) {
+GltfCache.loadIndexBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var accessorId = options.accessorId;
@@ -277,12 +279,186 @@ GltfCache.prototype.loadIndexBuffer = function (options) {
  *
  * @param {GltfIndexBufferCacheResource} indexBufferCacheResource The index buffer cache resource.
  */
-GltfCache.prototype.unloadIndexBuffer = function (indexBufferCacheResource) {
+GltfCache.unloadIndexBuffer = function (indexBufferCacheResource) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("indexBufferCacheResource", indexBufferCacheResource);
   //>>includeEnd('debug');
 
   ResourceCache.unload(indexBufferCacheResource);
+};
+
+/**
+ * Load an image from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Number} options.imageId The image ID.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Object.<String, Boolean>} options.supportedImageFormats The supported image formats.
+ * @param {Boolean} options.supportedImageFormats.webp Whether the browser supports WebP images.
+ * @param {Boolean} options.supportedImageFormats.s3tc Whether the browser supports s3tc compressed images.
+ * @param {Boolean} options.supportedImageFormats.pvrtc Whether the browser supports pvrtc compressed images.
+ * @param {Boolean} options.supportedImageFormats.etc1 Whether the browser supports etc1 compressed images.
+ *
+ * @returns {GltfImageCacheResource} The image cache resource.
+ */
+GltfCache.loadImage = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var imageId = options.imageId;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var supportedImageFormats = defaultValue(
+    options.supportedImageFormats,
+    defaultValue.EMPTY_OBJECT
+  );
+  var supportsWebP = supportedImageFormats.webp;
+  var supportsS3tc = supportedImageFormats.s3tc;
+  var supportsPvrtc = supportedImageFormats.pvrtc;
+  var supportsEtc1 = supportedImageFormats.etc1;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.imageId", imageId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.boolean("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.boolean("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.boolean("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.boolean("options.supportedImageFormats.etc1", supportsEtc1);
+  //>>includeEnd('debug');
+
+  var cacheKey = GltfCacheKey.getImageCacheKey({
+    gltf: gltf,
+    imageId: imageId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  var imageCacheResource = ResourceCache.get(cacheKey);
+  if (defined(imageCacheResource)) {
+    return imageCacheResource;
+  }
+
+  imageCacheResource = new GltfImageCacheResource({
+    gltfCache: GltfCache,
+    gltf: gltf,
+    imageId: imageId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    supportedImageFormats: supportedImageFormats,
+    cacheKey: cacheKey,
+  });
+
+  ResourceCache.load({
+    resource: imageCacheResource,
+    keepResident: false,
+  });
+
+  return imageCacheResource;
+};
+
+/**
+ * Unload an image from the cache.
+ *
+ * @param {GltfImageCacheResource} imageCacheResource The image cache resource.
+ */
+GltfCache.unloadImage = function (imageCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("imageCacheResource", imageCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(imageCacheResource);
+};
+
+/**
+ * Load a texture from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Object} options.textureInfo The texture info object.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Object.<String, Boolean>} options.supportedImageFormats The supported image formats.
+ * @param {Boolean} options.supportedImageFormats.webp Whether the browser supports WebP images.
+ * @param {Boolean} options.supportedImageFormats.s3tc Whether the browser supports s3tc compressed images.
+ * @param {Boolean} options.supportedImageFormats.pvrtc Whether the browser supports pvrtc compressed images.
+ * @param {Boolean} options.supportedImageFormats.etc1 Whether the browser supports etc1 compressed images.
+ * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ *
+ * @returns {GltfTextureCacheResource} The texture cache resource.
+ */
+GltfCache.loadTexture = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var textureInfo = options.textureInfo;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var supportedImageFormats = defaultValue(
+    options.supportedImageFormats,
+    defaultValue.EMPTY_OBJECT
+  );
+  var supportsWebP = supportedImageFormats.webp;
+  var supportsS3tc = supportedImageFormats.s3tc;
+  var supportsPvrtc = supportedImageFormats.pvrtc;
+  var supportsEtc1 = supportedImageFormats.etc1;
+  var asynchronous = defaultValue(options.asynchronous, true);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.textureInfo", textureInfo);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.boolean("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.boolean("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.boolean("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.boolean("options.supportedImageFormats.etc1", supportsEtc1);
+  //>>includeEnd('debug');
+
+  var cacheKey = GltfCacheKey.getTextureCacheKey({
+    gltf: gltf,
+    textureInfo: textureInfo,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    supportedImageFormats: supportedImageFormats,
+  });
+
+  var textureCacheResource = ResourceCache.get(cacheKey);
+  if (defined(textureCacheResource)) {
+    return textureCacheResource;
+  }
+
+  textureCacheResource = new GltfTextureCacheResource({
+    gltfCache: GltfCache,
+    gltf: gltf,
+    textureInfo: textureInfo,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+    supportedImageFormats: supportedImageFormats,
+    asynchronous: asynchronous,
+  });
+
+  ResourceCache.load({
+    resource: textureCacheResource,
+    keepResident: false,
+  });
+
+  return textureCacheResource;
+};
+
+/**
+ * Unload a texture from the cache.
+ *
+ * @param {GltfTextureCacheResource} textureCacheResource The texture cache resource.
+ */
+GltfCache.unloadTexture = function (textureCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("textureCacheResource", textureCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(textureCacheResource);
 };
 
 export default GltfCache;

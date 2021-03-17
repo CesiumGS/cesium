@@ -1,9 +1,9 @@
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
+import CacheResourceState from "./CacheResourceState.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
  * A glTF buffer cache resource.
@@ -40,7 +40,8 @@ function GltfBufferCacheResource(options) {
   this._baseResource = baseResource;
   this._cacheKey = cacheKey;
   this._typedArray = typedArray;
-  this._promise = undefined;
+  this._state = CacheResourceState.UNLOADED;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfBufferCacheResource.prototype, {
@@ -49,19 +50,12 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
    *
    * @memberof GltfBufferCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfBufferCacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
-      return this._promise;
+      return this._promise.promise;
     },
   },
   /**
@@ -84,16 +78,9 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
    *
    * @type {Uint8Array}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   typedArray: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._typedArray)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
       return this._typedArray;
     },
   },
@@ -103,31 +90,51 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
  * Loads the resource.
  */
 GltfBufferCacheResource.prototype.load = function () {
-  var baseResource = this._baseResource;
-  var buffer = this._buffer;
-
-  var that = this;
-  if (defined(buffer.uri)) {
-    // External buffer
-    var resource = baseResource.getDerivedResource({
-      url: buffer.uri,
-    });
-    this._promise = resource
-      .fetchArrayBuffer()
-      .then(function (arrayBuffer) {
-        that._typedArray = new Uint8Array(arrayBuffer);
-      })
-      .otherwise(function (error) {
-        var message = "Failed to load external buffer: " + buffer.uri;
-        if (defined(error)) {
-          message += "\n" + error.message;
-        }
-        throw new RuntimeError(message);
-      });
+  if (defined(this._typedArray)) {
+    this._promise.resolve(this);
   } else {
-    // Embedded buffer
-    this._promise = when.resolve();
+    loadExternalBuffer(this);
   }
+};
+
+function loadExternalBuffer(bufferCacheResource) {
+  var baseResource = bufferCacheResource._baseResource;
+  var buffer = bufferCacheResource._buffer;
+  var resource = baseResource.getDerivedResource({
+    url: buffer.uri,
+  });
+  bufferCacheResource._state = CacheResourceState.LOADING;
+  resource
+    .fetchArrayBuffer()
+    .then(function (arrayBuffer) {
+      if (bufferCacheResource._state === CacheResourceState.UNLOADED) {
+        return;
+      }
+
+      bufferCacheResource._typedArray = new Uint8Array(arrayBuffer);
+      bufferCacheResource._state = CacheResourceState.READY;
+      bufferCacheResource._promise.resolve(bufferCacheResource);
+    })
+    .otherwise(function (error) {
+      unload(bufferCacheResource);
+      bufferCacheResource._state = CacheResourceState.FAILED;
+      var errorMessage = "Failed to load external buffer: " + buffer.uri;
+      bufferCacheResource._promise.reject(
+        GltfLoaderUtil.getError(error, errorMessage)
+      );
+    });
+}
+
+function unload(bufferCacheResource) {
+  bufferCacheResource._typedArray = undefined;
+}
+
+/**
+ * Unloads the resource.
+ */
+GltfBufferCacheResource.prototype.unload = function () {
+  unload(this);
+  this._state = CacheResourceState.UNLOADED;
 };
 
 export default GltfBufferCacheResource;

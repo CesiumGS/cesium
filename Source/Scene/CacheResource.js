@@ -17,14 +17,12 @@ function CacheResource() {}
 
 Object.defineProperties(CacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof CacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<CacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     // eslint-disable-next-line getter-return

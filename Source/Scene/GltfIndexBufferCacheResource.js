@@ -2,11 +2,11 @@ import Check from "./Check.js";
 import IndexDatatype from "./IndexDatatype.js";
 import defaultValue from "./defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
+import CacheResourceState from "./CacheResourceState.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 
 /**
@@ -69,10 +69,11 @@ function GltfIndexBufferCacheResource(options) {
   this._indexDatatype = indexDatatype;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
+  this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._indexBuffer = undefined;
-  this._indexBufferPromise = undefined;
-  this._promise = undefined;
+  this._state = CacheResourceState.UNLOADED;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfIndexBufferCacheResource.prototype, {
@@ -81,19 +82,12 @@ Object.defineProperties(GltfIndexBufferCacheResource.prototype, {
    *
    * @memberof GltfIndexBufferCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfIndexBufferCacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
-      return this._promise;
+      return this._promise.promise;
     },
   },
   /**
@@ -109,26 +103,44 @@ Object.defineProperties(GltfIndexBufferCacheResource.prototype, {
       return this._cacheKey;
     },
   },
+  /**
+   * The index buffer.
+   *
+   * @memberof GltfIndexBufferCacheResource.prototype
+   *
+   * @type {Buffer}
+   * @readonly
+   */
+  indexBuffer: {
+    get: function () {
+      return this._indexBuffer;
+    },
+  },
 });
 
 /**
  * Loads the resource.
  */
 GltfIndexBufferCacheResource.prototype.load = function () {
-  var gltfCache = this._gltfCache;
-  var bufferCacheResource = gltfCache.loadBuffer({
-    buffer: this._buffer,
-    bufferId: this._bufferId,
-    gltfResource: this._gltfResource,
-    baseResource: this._baseResource,
-    keepResident: false,
-  });
-
   var that = this;
 
-  this._promise = bufferCacheResource.promise
+  var bufferCacheResource = that._gltfCache.loadBuffer({
+    buffer: that._buffer,
+    bufferId: that._bufferId,
+    gltfResource: that._gltfResource,
+    baseResource: that._baseResource,
+    keepResident: false,
+  });
+  that._bufferCacheResource = bufferCacheResource;
+  that._state = CacheResourceState.LOADING;
+
+  bufferCacheResource.promise
     .then(function () {
-      // Got buffer from the cache
+      if (that._state === CacheResourceState.UNLOADED) {
+        return;
+      }
+      // Loaded buffer view from the cache.
+      // Now wait for the GPU buffer to be created in the update loop.
       var uint8Array = bufferCacheResource.typedArray;
       var arrayBuffer = uint8Array.buffer;
       var byteOffset = uint8Array.byteOffset + that._byteOffset;
@@ -145,38 +157,39 @@ GltfIndexBufferCacheResource.prototype.load = function () {
       }
 
       that._typedArray = typedArray;
-
-      // Now wait for the GPU buffer to be created in the update loop
-      that._indexBufferPromise = when.defer();
-
-      // Unload the buffer when either
-      // * The index buffer is created and the data is now on the GPU (resolves)
-      // * The resource is unloaded from the cache before the index buffer is created (rejects)
-      return that._indexBufferPromise.promise.always(function () {
-        gltfCache.unloadBuffer(bufferCacheResource);
-      });
     })
     .otherwise(function (error) {
-      var message = "Failed to load index buffer";
-      if (defined(error)) {
-        message += "\n" + error.message;
-      }
-      throw new RuntimeError(message);
+      unload(that);
+      that._state = CacheResourceState.FAILED;
+      var errorMessage = "Failed to load index buffer";
+      that._promise.reject(GltfLoaderUtil.getError(error, errorMessage));
     });
 };
+
+function unload(indexBufferCacheResource) {
+  if (defined(indexBufferCacheResource._indexBuffer)) {
+    // Destroy the GPU resources
+    indexBufferCacheResource._indexBuffer.destroy();
+  }
+
+  if (defined(indexBufferCacheResource._bufferCacheResource)) {
+    // Unload the buffer resource from the cache
+    indexBufferCacheResource._gltfCache.unloadBuffer(
+      indexBufferCacheResource._bufferCacheResource
+    );
+  }
+
+  indexBufferCacheResource._bufferCacheResource = undefined;
+  indexBufferCacheResource._typedArray = undefined;
+  indexBufferCacheResource._indexBuffer = undefined;
+}
 
 /**
  * Unloads the resource.
  */
 GltfIndexBufferCacheResource.prototype.unload = function () {
-  if (defined(this._indexBuffer)) {
-    // Destroy the GPU resources
-    this._indexBuffer.destroy();
-    this._indexBuffer = undefined;
-  } else if (defined(this._indexBufferPromise)) {
-    // Reject the index buffer promise, which unloads the buffer
-    this._indexBufferPromise.reject();
-  }
+  unload(this);
+  this._state = CacheResourceState.UNLOADED;
 };
 
 function CreateIndexBufferJob() {
@@ -252,7 +265,10 @@ GltfIndexBufferCacheResource.prototype.update = function (frameState) {
     indexBuffer = createIndexBuffer(this._typedArray, frameState.context);
   }
 
+  this._gltfCache.unloadBuffer(this._bufferCacheResource);
+  this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._indexBuffer = indexBuffer;
-  this._indexBufferPromise.resolve();
+  this._state = CacheResourceState.READY;
+  this._promise.resolve(this);
 };

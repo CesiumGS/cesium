@@ -1,15 +1,15 @@
 import Check from "./Check.js";
 import defaultValue from "./defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
+import CacheResourceState from "./CacheResourceState.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 
 /**
- * A vertex buffer cache resource.
+ * A glTF vertex buffer cache resource.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
@@ -61,10 +61,11 @@ function GltfVertexBufferCacheResource(options) {
   this._byteLength = bufferView.byteLength;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
+  this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._vertexBuffer = undefined;
-  this._vertexBufferPromise = undefined;
-  this._promise = undefined;
+  this._state = CacheResourceState.UNLOADED;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
@@ -73,19 +74,12 @@ Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
    *
    * @memberof GltfVertexBufferCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfVertexBufferCacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
-      return this._promise;
+      return this._promise.promise;
     },
   },
   /**
@@ -101,62 +95,82 @@ Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
       return this._cacheKey;
     },
   },
+  /**
+   * The vertex buffer.
+   *
+   * @memberof GltfVertexBufferCacheResource.prototype
+   *
+   * @type {Buffer}
+   * @readonly
+   */
+  vertexBuffer: {
+    get: function () {
+      return this._vertexBuffer;
+    },
+  },
 });
 
 /**
  * Loads the resource.
  */
 GltfVertexBufferCacheResource.prototype.load = function () {
-  var gltfCache = this._gltfCache;
-  var bufferCacheResource = gltfCache.loadBuffer({
+  var that = this;
+
+  var bufferCacheResource = this._gltfCache.loadBuffer({
     buffer: this._buffer,
     bufferId: this._bufferId,
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     keepResident: false,
   });
+  this._bufferCacheResource = bufferCacheResource;
+  this._state = CacheResourceState.LOADING;
 
-  var that = this;
-
-  this._promise = bufferCacheResource.promise
+  bufferCacheResource.promise
     .then(function () {
-      // Got buffer from the cache
+      if (that._state === CacheResourceState.UNLOADED) {
+        return;
+      }
+      // Loaded buffer view from the cache.
+      // Now wait for the GPU buffer to be created in the update loop.
       that._typedArray = new Uint8Array(
         bufferCacheResource.typedArray.buffer,
         bufferCacheResource.typedArray.byteOffset + that._byteOffset,
         that._byteLength
       );
-      // Now wait for the GPU buffer to be created in the update loop
-      that._vertexBufferPromise = when.defer();
-
-      // Unload the buffer when either
-      // * The vertex buffer is created and the data is now on the GPU (resolves)
-      // * The resource is unloaded from the cache before the vertex buffer is created (rejects)
-      return that._vertexBufferPromise.promise.always(function () {
-        gltfCache.unloadBuffer(bufferCacheResource);
-      });
     })
     .otherwise(function (error) {
-      var message = "Failed to load vertex buffer";
-      if (defined(error)) {
-        message += "\n" + error.message;
-      }
-      throw new RuntimeError(message);
+      unload(that);
+      that._state = CacheResourceState.FAILED;
+      var errorMessage = "Failed to load vertex buffer";
+      that._promise.reject(GltfLoaderUtil.getError(error, errorMessage));
     });
 };
+
+function unload(vertexBufferCacheResource) {
+  if (defined(vertexBufferCacheResource._vertexBuffer)) {
+    // Destroy the GPU resources
+    vertexBufferCacheResource._vertexBuffer.destroy();
+  }
+
+  if (defined(vertexBufferCacheResource._bufferCacheResource)) {
+    // Unload the buffer resource from the cache
+    vertexBufferCacheResource._gltfCache.unloadBuffer(
+      vertexBufferCacheResource._bufferCacheResource
+    );
+  }
+
+  vertexBufferCacheResource._bufferCacheResource = undefined;
+  vertexBufferCacheResource._typedArray = undefined;
+  vertexBufferCacheResource._vertexBuffer = undefined;
+}
 
 /**
  * Unloads the resource.
  */
 GltfVertexBufferCacheResource.prototype.unload = function () {
-  if (defined(this._vertexBuffer)) {
-    // Destroy the GPU resources
-    this._vertexBuffer.destroy();
-    this._vertexBuffer = undefined;
-  } else if (defined(this._vertexBufferPromise)) {
-    // Reject the vertex buffer promise, which unloads the buffer
-    this._vertexBufferPromise.reject();
-  }
+  unload(this);
+  this._state = CacheResourceState.UNLOADED;
 };
 
 function CreateVertexBufferJob() {
@@ -221,7 +235,10 @@ GltfVertexBufferCacheResource.prototype.update = function (frameState) {
     vertexBuffer = createVertexBuffer(this._typedArray, frameState.context);
   }
 
+  this._gltfCache.unloadBuffer(this._bufferCacheResource);
+  this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._vertexBuffer = vertexBuffer;
-  this._vertexBufferPromise.resolve();
+  this._state = CacheResourceState.READY;
+  this._promise.resolve(this);
 };

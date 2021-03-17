@@ -25,12 +25,6 @@ Model.prototype.update = function (frameState) {
     return;
   }
 
-  if (!FeatureDetection.supportsWebP.initialized) {
-    FeatureDetection.supportsWebP.initialize();
-    return;
-  }
-  var supportsWebP = FeatureDetection.supportsWebP();
-
   var context = frameState.context;
   this._defaultTexture = context.defaultTexture;
 

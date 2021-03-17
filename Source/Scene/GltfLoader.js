@@ -5,9 +5,11 @@ import destroyObject from "../Core/destroyObject.js";
 import FeatureDetection from "../Core/FeatureDetection.js";
 import Resource from "../Core/Resource.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
+import forEachTextureInMaterial from "../ThirdParty/GltfPipeline/forEachTextureInMaterial.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
 import GltfCache from "./GltfCache.js";
 import GltfLoadResources from "./GltfLoadResources.js";
+import GltfCacheKey from "./GltfCacheKey.js";
 
 var GltfLoaderState = {
   UNLOADED: 0,
@@ -102,10 +104,9 @@ GltfLoader.prototype.update = function (model, frameState) {
     FeatureDetection.supportsWebP.initialize();
     return;
   }
-  var supportsWebP = FeatureDetection.supportsWebP();
 
   if (this._state === GltfLoaderState.UNLOADED) {
-    loadGltf(this, model);
+    loadGltf(this, model, frameState);
     this._state = GltfLoaderState.LOADING;
   }
 
@@ -123,7 +124,14 @@ function handleModelDestroyed(loader, model) {
   return false;
 }
 
-function loadGltf(loader, model) {
+function loadGltf(loader, model, frameState) {
+  var supportedImageFormats = {
+    webp: FeatureDetection.supportsWebP(),
+    s3tc: frameState.context.s3tc,
+    pvrtc: frameState.context.pvrtc,
+    etc1: frameState.context.etc1,
+  };
+
   var gltfCacheResource = GltfCache.loadGltf({
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
@@ -145,17 +153,19 @@ function loadGltf(loader, model) {
 
       var vertexBuffers = loadVertexBuffers(loader, gltf);
       var indexBuffers = loadIndexBuffers(loader, gltf);
+      var textures = loadTextures(loader, gltf, supportedImageFormats);
 
       return loader._loadResources
         .load({
           vertexBuffers: vertexBuffers,
           indexBuffers: indexBuffers,
+          textures: textures,
         })
         .then(function () {
           if (handleModelDestroyed(loader, model)) {
             return;
           }
-          createModel(loader, model);
+          //createModel(loader, model); TODO
           loader._state = GltfLoaderState.READY;
         });
     })
@@ -253,7 +263,7 @@ function loadIndexBuffers(loader, gltf) {
       }
       if (!defined(dracoAttributes) && defined(primitive.indices)) {
         // Ignore accessors that may contain uncompressed fallback data since we only care about the compressed data
-        accessorIds.push(primitive.indices);
+        accessorIds[primitive.indices] = true;
       }
     });
   });
@@ -271,6 +281,102 @@ function loadIndexBuffers(loader, gltf) {
     }
   }
   return indexBuffers;
+}
+
+var EMPTY_ARRAY = [];
+
+function getSceneNodes(gltf) {
+  var nodes;
+  if (defined(gltf.scenes) && defined(gltf.scene)) {
+    nodes = gltf.scenes[gltf.scene].nodes;
+  }
+  return defaultValue(defaultValue(nodes, gltf.nodes), EMPTY_ARRAY);
+}
+
+function getTextureInfoKey(gltf, textureInfo) {
+  var samplerKey = GltfCacheKey.getSamplerCacheKey({
+    gltf: gltf,
+    textureInfo: textureInfo,
+  });
+  return textureInfo.index + "-" + samplerKey;
+}
+
+function loadTextures(loader, gltf, supportedImageFormats) {
+  var textureInfo;
+  var textureInfoKey;
+
+  var textureInfoObjects = {};
+
+  var nodes = getSceneNodes(gltf);
+  var nodesLength = nodes.length;
+  for (var i = 0; i < nodesLength; ++i) {
+    var node = nodes[i];
+    var meshId = node.mesh;
+    if (defined(meshId)) {
+      var mesh = gltf.meshes[meshId];
+      ForEach.meshPrimitive(mesh, function (primitive) {
+        var materialId = primitive.material;
+        if (defined(materialId)) {
+          var material = gltf.materials[materialId];
+          forEachTextureInMaterial(material, function (textureId, textureInfo) {
+            var textureInfoKey = getTextureInfoKey(gltf, textureInfo);
+            textureInfoObjects[textureInfoKey] = textureInfo;
+          });
+        }
+        var extensions = primitive.extensions;
+        if (defined(extensions) && defined(extensions.EXT_feature_metadata)) {
+          var extension = extensions.EXT_feature_metadata;
+          var featureIdTextures = extension.featureIdTextures;
+          if (defined(featureIdTextures)) {
+            var featureIdTexturesLength = featureIdTextures.length;
+            for (var i = 0; i < featureIdTexturesLength; ++i) {
+              var featureIdTexture = featureIdTextures[i];
+              var textureInfo = featureIdTexture.featureIds.texture;
+              var textureInfoKey = getTextureInfoKey(gltf, textureInfo);
+              textureInfoObjects[textureInfoKey] = textureInfo;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  if (hasExtension(gltf, "EXT_feature_metadata")) {
+    var extension = gltf.extensions.EXT_feature_metadata;
+    var featureTextures = extension.featureTextures;
+    for (var featureTextureId in featureTextures) {
+      if (featureTextures.hasOwnProperty(featureTextureId)) {
+        var featureTexture = featureTextures[featureTextureId];
+        var properties = featureTexture.properties;
+        if (defined(properties)) {
+          for (var propertyId in properties) {
+            if (properties.hasOwnProperty(propertyId)) {
+              var property = properties[propertyId];
+              textureInfo = property.texture;
+              textureInfoKey = getTextureInfoKey(gltf, textureInfo);
+              textureInfoObjects[textureInfoKey] = textureInfo;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  var textures = {};
+  for (textureInfoKey in textureInfoObjects) {
+    if (textureInfoObjects.hasOwnProperty(textureInfoKey)) {
+      textureInfo = textureInfoObjects[textureInfoKey];
+      textures[textureInfoKey] = GltfCache.loadTexture({
+        gltf: gltf,
+        textureInfo: textureInfo,
+        gltfResource: loader._gltfResource,
+        baseResource: loader._baseResource,
+        supportedImageFormats: supportedImageFormats,
+        asynchronous: loader._asynchronous,
+      });
+    }
+  }
+  return textures;
 }
 
 function unload(loader) {
