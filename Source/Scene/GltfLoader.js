@@ -240,6 +240,39 @@ function loadVertexBuffers(loader, gltf) {
   return vertexBuffers;
 }
 
+function loadIndexBuffers(loader, gltf) {
+  var accessorIds = {};
+  ForEach.mesh(gltf, function (mesh) {
+    ForEach.meshPrimitive(mesh, function (primitive) {
+      var dracoAttributes = defaultValue.EMPTY_OBJECT;
+      if (
+        defined(primitive.extensions) &&
+        defined(primitive.extensions.KHR_draco_mesh_compression)
+      ) {
+        dracoAttributes = primitive.extensions.KHR_draco_mesh_compression;
+      }
+      if (!defined(dracoAttributes) && defined(primitive.indices)) {
+        // Ignore accessors that may contain uncompressed fallback data since we only care about the compressed data
+        accessorIds.push(primitive.indices);
+      }
+    });
+  });
+
+  var indexBuffers = {};
+  for (var accessorId in accessorIds) {
+    if (accessorIds.hasOwnProperty(accessorId)) {
+      accessorIds[accessorId] = GltfCache.loadIndexBuffer({
+        gltf: gltf,
+        accessorId: accessorId,
+        gltfResource: loader._gltfResource,
+        baseResource: loader._baseResource,
+        asynchronous: loader._asynchronous,
+      });
+    }
+  }
+  return indexBuffers;
+}
+
 function unload(loader) {
   if (defined(loader._gltfCacheResource)) {
     GltfCache.unloadGltf(loader._gltfCacheResource);

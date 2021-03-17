@@ -4,6 +4,7 @@ import defined from "../Core/defined.js";
 import GltfBufferCacheResource from "./GltfBufferCacheResource.js";
 import GltfCacheKey from "./GltfCacheKey.js";
 import GltfCacheResource from "./GltfCacheResource.js";
+import GltfIndexBufferCacheResource from "./GltfIndexBufferCacheResource.js";
 import GltfVertexBufferCacheResource from "./GltfVertexBufferCacheResource.js";
 import ResourceCache from "./ResourceCache.js";
 
@@ -212,6 +213,76 @@ GltfCache.prototype.unloadVertexBuffer = function (vertexBufferCacheResource) {
   //>>includeEnd('debug');
 
   ResourceCache.unload(vertexBufferCacheResource);
+};
+
+/**
+ * Load an index buffer from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ *
+ * @returns {GltfIndexBufferCacheResource} The index buffer cache resource.
+ */
+GltfCache.prototype.loadIndexBuffer = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var accessorId = options.accessorId;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var asynchronous = defaultValue(options.asynchronous, true);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.accessorId", accessorId);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  var cacheKey = GltfCacheKey.getIndexBufferCacheKey({
+    gltf: gltf,
+    accessorId: accessorId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  var indexBufferCacheResource = ResourceCache.get(cacheKey);
+  if (defined(indexBufferCacheResource)) {
+    return indexBufferCacheResource;
+  }
+
+  indexBufferCacheResource = new GltfIndexBufferCacheResource({
+    gltfCache: GltfCache,
+    gltf: gltf,
+    accessorId: accessorId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+    asynchronous: asynchronous,
+  });
+
+  ResourceCache.load({
+    resource: indexBufferCacheResource,
+    keepResident: false,
+  });
+
+  return indexBufferCacheResource;
+};
+
+/**
+ * Unload an index buffer from the cache.
+ *
+ * @param {GltfIndexBufferCacheResource} indexBufferCacheResource The index buffer cache resource.
+ */
+GltfCache.prototype.unloadIndexBuffer = function (indexBufferCacheResource) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("indexBufferCacheResource", indexBufferCacheResource);
+  //>>includeEnd('debug');
+
+  ResourceCache.unload(indexBufferCacheResource);
 };
 
 export default GltfCache;
