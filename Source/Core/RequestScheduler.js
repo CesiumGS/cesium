@@ -164,13 +164,21 @@ function updatePriority(request) {
  */
 RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
   desiredRequests = defaultValue(desiredRequests, 1);
+
   var maxRequests = defaultValue(
     RequestScheduler.requestsByServer[serverKey],
     RequestScheduler.maximumRequestsPerServer
   );
-  return (
-    numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests
-  );
+  var hasOpenSlotsServer =
+    numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
+
+  return hasOpenSlotsServer;
+};
+
+RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
+  var hasOpenSlotsHeap =
+    requestHeap.length + desiredRequests <= priorityHeapLength;
+  return hasOpenSlotsHeap;
 };
 
 function issueRequest(request) {

@@ -346,7 +346,7 @@ function canScheduleAllRequests(serverKeys) {
       return false;
     }
   }
-  return true;
+  return RequestScheduler.heapHasOpenSlots(serverKeys.length);
 }
 
 function requestInnerContent(
@@ -355,7 +355,9 @@ function requestInnerContent(
   originalCancelCount,
   originalContentState
 ) {
-  var contentResource = multipleContents._innerContentResources[index];
+  // it is important to clone here. The fetchArrayBuffer() below here uses
+  // throttling, but other uses of the resources do not.
+  var contentResource = multipleContents._innerContentResources[index].clone();
   var tile = multipleContents.tile;
 
   // Always create a new request. If the tile gets canceled, this
