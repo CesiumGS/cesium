@@ -49,6 +49,7 @@ export default function Multiple3DTileContent(
 
   var contentCount = this._innerContentHeaders.length;
   this._arrayFetchPromises = new Array(contentCount);
+  this._requests = new Array(contentCount);
 
   this._innerContentResources = new Array(contentCount);
   this._serverKeys = new Array(contentCount);
@@ -366,13 +367,15 @@ function requestInnerContent(
     return tile._priority;
   };
   var serverKey = multipleContents._serverKeys[index];
-  contentResource.request = new Request({
+  var request = new Request({
     throttle: true,
     throttleByServer: true,
     type: RequestType.TILES3D,
     priorityFunction: priorityFunction,
     serverKey: serverKey,
   });
+  contentResource.request = request;
+  multipleContents._requests[index] = request;
 
   return contentResource
     .fetchArrayBuffer()
@@ -513,6 +516,21 @@ function handleInnerContentFailed(multipleContents, index, error) {
     console.log("Error: " + message);
   }
 }
+
+/**
+ * Cancel all requests for inner contents. This is called by the tile
+ * when a tile goes out of view.
+ *
+ * @private
+ */
+Multiple3DTileContent.prototype.cancelRequests = function () {
+  for (var i = 0; i < this._requests.length; i++) {
+    var request = this._requests[i];
+    if (defined(request)) {
+      request.cancel();
+    }
+  }
+};
 
 /**
  * Part of the {@link Cesium3DTileContent} interface.  <code>Multiple3DTileContent</code>
