@@ -203,19 +203,11 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   baseResource = Resource.createIfNeeded(baseResource);
 
   if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
-    var extensionHeader = header.extensions["3DTILES_multiple_contents"];
-
     hasMultipleContents = true;
-    contentResource = baseResource.clone();
     contentState = Cesium3DTileContentState.UNLOADED;
     // Each content may have its own URI, but they all need to be resolved
     // relative to the tileset, so the base resource is used.
-    content = new Multiple3DTileContent(
-      tileset,
-      this,
-      contentResource,
-      extensionHeader
-    );
+    contentResource = baseResource.clone();
   } else if (defined(contentHeader)) {
     var contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
@@ -1033,6 +1025,19 @@ Cesium3DTile.prototype.requestContent = function () {
 function requestMultipleContents(tile) {
   var multipleContents = tile._content;
   var tileset = tile._tileset;
+
+  if (!defined(multipleContents)) {
+    // Create the content object immediately, it will handle scheduling
+    // requests for inner contents.
+    var extensionHeader = tile._header.extensions["3DTILES_multiple_contents"];
+    multipleContents = new Multiple3DTileContent(
+      tileset,
+      tile,
+      tile._contentResource.clone(),
+      extensionHeader
+    );
+    tile._content = multipleContents;
+  }
 
   var backloggedRequestCount = multipleContents.requestInnerContents();
   if (backloggedRequestCount > 0) {
