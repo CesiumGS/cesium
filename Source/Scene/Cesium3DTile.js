@@ -1102,6 +1102,8 @@ function multipleContentFailed(tile, tileset, error) {
 }
 
 function requestSingleContent(tile) {
+  // it is important to clone here. The fetchArrayBuffer() below uses
+  // throttling, but other uses of the resources do not.
   var resource = tile._contentResource.clone();
   var expired = tile.contentExpired;
   if (expired) {
