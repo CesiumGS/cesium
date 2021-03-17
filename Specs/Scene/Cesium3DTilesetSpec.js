@@ -4974,15 +4974,10 @@ describe(
             expect(statistics.numberOfTilesWithContentReady).toBe(0);
 
             var multipleContents = tileset.root.content;
-            multipleContents._innerContentResources.forEach(function (
-              resource
-            ) {
-              resource.request.cancel();
-            });
+            multipleContents.cancelRequests();
 
             tileset.root.contentReadyToProcessPromise
               .then(function () {
-                expect(multipleContents._cancelCount).toBe(1);
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
                 expect(statistics.numberOfPendingRequests).toBe(0);
                 expect(statistics.numberOfTilesProcessing).toBe(1);
@@ -4992,9 +4987,6 @@ describe(
 
             return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
               function () {
-                // the content should be canceled once
-                expect(multipleContents._cancelCount).toBe(1);
-
                 // Resetting content should be handled gracefully; it should
                 // not trigger the tileFailed event
                 expect(callCount).toBe(0);
