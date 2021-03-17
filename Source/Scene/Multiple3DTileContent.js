@@ -436,8 +436,10 @@ function createInnerContents(multipleContents) {
         // request was canceled. resolve the promise (Cesium3DTile will
         // detect that the the content was canceled), then discard the promise
         // so a new one can be created
-        multipleContents._contentsFetchedPromise.resolve();
-        multipleContents._contentsFetchedPromise = undefined;
+        if (defined(multipleContents._contentsFetchedPromise)) {
+          multipleContents._contentsFetchedPromise.resolve();
+          multipleContents._contentsFetchedPromise = undefined;
+        }
         return;
       }
 
@@ -446,7 +448,9 @@ function createInnerContents(multipleContents) {
       multipleContents._contentsFetchedPromise.resolve();
     })
     .otherwise(function (error) {
-      multipleContents._contentsFetchedPromise.reject(error);
+      if (defined(multipleContents._contentsFetchedPromise)) {
+        multipleContents._contentsFetchedPromise.reject(error);
+      }
     });
 }
 
