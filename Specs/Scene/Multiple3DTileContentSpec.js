@@ -18,7 +18,7 @@ describe("Scene/Multiple3DTileContent", function () {
   // using 3DTILES_multiple_contents
   var centerLongitude = -1.31968;
   var centerLatitude = 0.698874;
-  var multipleContentUrl =
+  var multipleContentsUrl =
     "./Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
 
   var tilesetResource = new Resource({ url: "http://example.com" });
@@ -47,11 +47,22 @@ describe("Scene/Multiple3DTileContent", function () {
 
   var originalRequestsPerServer;
 
+  function setZoom(distance) {
+    var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+    scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, distance));
+  }
+
+  function viewAllTiles() {
+    setZoom(26.0);
+  }
+
+  function viewNothing() {
+    setZoom(200.0);
+  }
+
   beforeAll(function () {
     scene = createScene();
     // One item in each data set is always located in the center, so point the camera there
-    var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-    scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
     originalRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
   });
 
@@ -61,6 +72,7 @@ describe("Scene/Multiple3DTileContent", function () {
 
   beforeEach(function () {
     RequestScheduler.maximumRequestsPerServer = originalRequestsPerServer;
+    viewAllTiles();
   });
 
   afterEach(function () {
@@ -217,11 +229,11 @@ describe("Scene/Multiple3DTileContent", function () {
   });
 
   it("resolves readyPromise", function () {
-    return Cesium3DTilesTester.resolvesReadyPromise(scene, multipleContentUrl);
+    return Cesium3DTilesTester.resolvesReadyPromise(scene, multipleContentsUrl);
   });
 
   it("renders multiple contents", function () {
-    return Cesium3DTilesTester.loadTileset(scene, multipleContentUrl).then(
+    return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
       expectRenderMultipleContents
     );
   });
@@ -240,12 +252,32 @@ describe("Scene/Multiple3DTileContent", function () {
         return tilesetJson;
       });
     });
-    return Cesium3DTilesTester.loadTileset(scene, multipleContentUrl).then(
+    return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
       expectRenderMultipleContents
     );
   });
 
+  it("cancelRequests cancels in-flight requests", function () {
+    viewNothing();
+    return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+      function (tileset) {
+        viewAllTiles();
+        scene.renderForSpecs();
+
+        var multipleContents = tileset.root.content;
+        multipleContents.cancelRequests();
+
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(
+          function () {
+            // the content should be canceled once in total
+            expect(multipleContents._cancelCount).toBe(1);
+          }
+        );
+      }
+    );
+  });
+
   it("destroys", function () {
-    return Cesium3DTilesTester.tileDestroys(scene, multipleContentUrl);
+    return Cesium3DTilesTester.tileDestroys(scene, multipleContentsUrl);
   });
 });
