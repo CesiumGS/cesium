@@ -2,6 +2,7 @@ import {
   ImplicitSubtree,
   ImplicitTileset,
   Resource,
+  ResourceCache,
   when,
 } from "../../Source/Cesium.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
@@ -50,13 +51,24 @@ describe("Scene/ImplicitSubtree", function () {
     }
   }
 
+  // used for spying on ResourceCache.load()
+  function fakeLoad(arrayBuffer) {
+    return function (options) {
+      var fakeCacheResource = {
+        typedArray: arrayBuffer,
+      };
+      options.resource._promise = { promise: when.resolve(fakeCacheResource) };
+    };
+  }
+
   var tilesetResource = new Resource({
     url: "https://example.com/tileset.json",
   });
   var subtreeResource = new Resource({
     url: "https://example.com/test.subtree",
   });
-  var implicitQuadtree = new ImplicitTileset(tilesetResource, {
+  var mockTileset = {};
+  var implicitQuadtree = new ImplicitTileset(mockTileset, tilesetResource, {
     geometricError: 500,
     refine: "ADD",
     boundingVolume: {
@@ -76,7 +88,7 @@ describe("Scene/ImplicitSubtree", function () {
       },
     },
   });
-  var implicitOctree = new ImplicitTileset(tilesetResource, {
+  var implicitOctree = new ImplicitTileset(mockTileset, tilesetResource, {
     geometricError: 500,
     refine: "REPLACE",
     boundingVolume: {
@@ -163,10 +175,9 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
@@ -263,10 +274,9 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,
@@ -310,10 +320,9 @@ describe("Scene/ImplicitSubtree", function () {
       subtreeDescription
     );
 
-    var fetchExternal = spyOn(
-      Resource.prototype,
-      "fetchArrayBuffer"
-    ).and.returnValue(when.resolve(results.externalBuffer));
+    var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+      fakeLoad(results.externalBuffer)
+    );
     var subtree = new ImplicitSubtree(
       subtreeResource,
       results.subtreeBuffer,

@@ -52,7 +52,11 @@ describe("Scene/Implicit3DTileContent", function () {
       year: "2021",
     },
   };
-  var implicitTileset = new ImplicitTileset(tilesetResource, tileJson);
+  var implicitTileset = new ImplicitTileset(
+    mockTileset,
+    tilesetResource,
+    tileJson
+  );
 
   var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
     tileAvailability: {

@@ -39,6 +39,7 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
+import MetadataSchema from "./MetadataSchema.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import SceneMode from "./SceneMode.js";
@@ -920,6 +921,10 @@ function Cesium3DTileset(options) {
    */
   this.examineVectorLinesFunction = undefined;
 
+  // TODO: There will be other metadata properties
+  // TODO: which is nicer: tileset._metadataSchema or tileset.metadata.schema?
+  this._metadataSchema = undefined;
+
   var that = this;
   var resource;
   when(options.url)
@@ -955,6 +960,8 @@ function Cesium3DTileset(options) {
       that._extensions = tilesetJson.extensions;
       that._gltfUpAxis = gltfUpAxis;
       that._extras = tilesetJson.extras;
+
+      processExtensions(that, tilesetJson);
 
       var extras = asset.extras;
       if (
@@ -1795,7 +1802,11 @@ Cesium3DTileset.prototype.loadTileset = function (
  */
 function makeTile(tileset, baseResource, tileHeader, parentTile) {
   if (has3DTilesExtension(tileHeader, "3DTILES_implicit_tiling")) {
-    var implicitTileset = new ImplicitTileset(baseResource, tileHeader);
+    var implicitTileset = new ImplicitTileset(
+      tileset,
+      baseResource,
+      tileHeader
+    );
     var rootCoordinates = new ImplicitTileCoordinates({
       subdivisionScheme: implicitTileset.subdivisionScheme,
       level: 0,
@@ -1831,6 +1842,20 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   }
 
   return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
+}
+
+function processExtensions(tileset, tilesetJson) {
+  if (has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+    // TODO: cache this
+    // TODO: Handle schema URI
+    tileset._metadataSchema = new MetadataSchema({
+      schema: tilesetJson.schema,
+    });
+
+    // TODO: Handle tileset metadata
+    // TODO: Handle group metadata
+    // TODO: handle statistics
+  }
 }
 
 var scratchPositionNormal = new Cartesian3();

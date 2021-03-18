@@ -5,12 +5,11 @@ import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import BufferCacheResource from "./BufferCacheResource.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
+import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
+import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
 import when from "../ThirdParty/when.js";
-import has3DTilesExtension from "./has3DTilesExtension.js";
-import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
-import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
 /**
  * An object representing a single subtree in an implicit tileset
@@ -24,6 +23,7 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
  * @alias ImplicitSubtree
  * @constructor
  *
+ * @param {Cesium3DTileset} tileset The tileset this subtree belongs to. Used for accessing metadata properties
  * @param {Resource} resource The resource for this subtree. This is used for fetching external buffers as needed.
  * @param {Uint8Array} subtreeView The contents of a subtree binary in a Uint8Array.
  * @param {ImplicitTileset} implicitTileset The implicit tileset. This includes information about the size of subtrees
@@ -472,6 +472,7 @@ function requestExternalBuffer(bufferHeader, baseResource) {
   if (!defined(cacheResource)) {
     cacheResource = new BufferCacheResource({
       cacheKey: cacheKey,
+      resource: resource,
     });
 
     ResourceCache.load({
@@ -595,15 +596,23 @@ function parseAvailabilityBitstream(
  *
  * @param {ImplicitSubtree} subtree The subtree
  * @param {Object} metadataExtension The JSON for the 3DTILES_metadata extension
+ * @param {ImplicitTileset} implicitTileset The implicit tileset this subtree belongs to.
  * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
  * @private
  */
-function parseMetadataTable(subtree, metadataExtension, bufferViewsU8) {
+function parseMetadataTable(
+  subtree,
+  metadataExtension,
+  implicitTileset,
+  bufferViewsU8
+) {
   var tileCount = subtree._tileAvailability.availableCount;
+  var metadataClassName = metadataExtension.class;
+  var metadataSchema = implicitTileset.tileset._metadataSchema;
+  var metadataClass = metadataSchema.classes[metadataClassName];
 
-  // TODO: need to access the tileset to get the schema.
   subtree._metadataTable = new MetadataTable({
-    class: undefined,
+    class: metadataClass,
     count: tileCount,
     properties: metadataExtension.properties,
     bufferViews: bufferViewsU8,
