@@ -2,6 +2,8 @@ import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
+import MetadataTable from "./MetadataTable.js";
 import when from "../ThirdParty/when.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
@@ -10,6 +12,11 @@ import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 /**
  * An object representing a single subtree in an implicit tileset
  * including availability.
+ * <p>
+ * Subtrees handle tile metadata from the <code>3DTILES_metadata</code> extension
+ * </p>
+ *
+ * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_metadata/1.0.0#implicit-tile-metadata|Implicit Tile Metadata in the 3DTILES_metadata specification}
  *
  * @alias ImplicitSubtree
  * @constructor
@@ -32,6 +39,11 @@ export default function ImplicitSubtree(
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
   this._readyPromise = when.defer();
+
+  // Metadata table if 3DTILES_metadata is used
+  this._metadataTable = undefined;
+  // Map of availability bit index to entity ID
+  this._jumpBuffer = undefined;
 
   initialize(this, subtreeView, implicitTileset);
 }
@@ -147,6 +159,11 @@ function initialize(subtree, subtreeView, implicitTileset) {
   var subtreeJson = chunks.json;
   subtree._subtreeJson = subtreeJson;
 
+  var metadataExtension;
+  if (has3DTilesExtension(chunks.json, "3DTILES_metadata")) {
+    metadataExtension = chunks.json.extension["3DTILES_metadata"];
+  }
+
   // if no contentAvailability is specified, no tile in the subtree has
   // content
   var defaultContentAvailability = {
@@ -175,11 +192,25 @@ function initialize(subtree, subtreeView, implicitTileset) {
   // Buffers and buffer views are inactive until explicitly marked active.
   // This way we can avoid fetching buffers that will not be used.
   markActiveBufferViews(subtreeJson, bufferViewHeaders);
+  if (defined(metadataExtension)) {
+    markActiveMetadataBufferViews(metadataExtension, bufferViewHeaders);
+  }
 
   requestActiveBuffers(subtree, bufferHeaders, chunks.binary)
     .then(function (buffersU8) {
       var bufferViewsU8 = parseActiveBufferViews(bufferViewHeaders, buffersU8);
       parseAvailability(subtree, subtreeJson, implicitTileset, bufferViewsU8);
+
+      if (defined(metadataExtension)) {
+        parseMetadataTable(
+          subtree,
+          metadataExtension,
+          implicitTileset,
+          bufferViewsU8
+        );
+        makeJumpBuffer(subtree);
+      }
+
       subtree._readyPromise.resolve(subtree);
     })
     .otherwise(function (error) {
@@ -312,7 +343,9 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  * <li>The child subtree availability bitstream (if a bufferView is defined)</li>
  * </ul>
  *
+ * <p>
  * This function modifies the buffer view headers' isActive flags in place.
+ * </p>
  *
  * @param {Object[]} subtreeJson The JSON chunk from the subtree
  * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
@@ -341,6 +374,41 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
     header = bufferViewHeaders[childSubtreeAvailabilityHeader.bufferView];
     header.isActive = true;
     header.bufferHeader.isActive = true;
+  }
+}
+
+/**
+ * For <code>3DTILES_metadata</code>, look over the tile metadata buffers
+ * <p>
+ * This always loads all of the metadata immediately. Future iterations may
+ * allow filtering this to avoid downloading unneeded buffers.
+ * </p>
+ * @param {Object} metadataExtension the 3DTILES_metadata extension
+ * @param {BufferViewHeader[]} bufferViewHeaders The preprocessed buffer view headers
+ * @private
+ */
+function markActiveMetadataBufferViews(metadataExtension, bufferViewHeaders) {
+  var properties = metadataExtension.properties;
+  var header;
+  for (var key in properties) {
+    if (properties.hasOwnProperty(key)) {
+      var metadataHeader = properties[key];
+      header = bufferViewHeaders[metadataHeader.bufferView];
+      header.isActive = true;
+      header.bufferHeader.isActive = true;
+
+      if (defined(metadataHeader.stringOffsetBufferView)) {
+        header = bufferViewHeaders[metadataHeader.stringOffsetBufferView];
+        header.isActive = true;
+        header.bufferHeader.isActive = true;
+      }
+
+      if (defined(metadataHeader.arrayOffsetBufferView)) {
+        header = bufferViewHeaders[metadataHeader.arrayOffsetBufferView];
+        header.isActive = true;
+        header.bufferHeader.isActive = true;
+      }
+    }
   }
 }
 
@@ -495,4 +563,45 @@ function parseAvailabilityBitstream(
     lengthBits: lengthBits,
     availableCount: availabilityJson.availableCount,
   });
+}
+
+/**
+ * Parse the 3DTILES_metadata table, storing a {@link MetadataTable} in the
+ * subtree.
+ *
+ * @param {ImplicitSubtree} subtree The subtree
+ * @param {Object} metadataExtension The JSON for the 3DTILES_metadata extension
+ * @param {Object} bufferViewsU8 A dictionary of bufferView index to its Uint8Array contents.
+ * @private
+ */
+function parseMetadataTable(subtree, metadataExtension, bufferViewsU8) {
+  var tileCount = subtree._tileAvailability.availableCount;
+
+  // TODO: need to access the tileset to get the schema.
+  subtree._metadataTable = new MetadataTable({
+    class: undefined,
+    count: tileCount,
+    properties: metadataExtension.properties,
+    bufferViews: bufferViewsU8,
+  });
+}
+
+/**
+ * Make a jump buffer, i.e. a map of tile bit index to the metadata entity ID.
+ * This is stored in the subtree.
+ *
+ * @param {ImplicitSubtree} subtree The subtree
+ * @private
+ */
+function makeJumpBuffer(subtree) {
+  var tileAvailability = subtree._tileAvailability;
+  var entityId = 0;
+  var jumpBuffer = {};
+  for (var i = 0; i < tileAvailability.lengthBits; i++) {
+    if (tileAvailability.getBit(i)) {
+      jumpBuffer[i] = entityId;
+      entityId++;
+    }
+  }
+  subtree._jumpBuffer = jumpBuffer;
 }

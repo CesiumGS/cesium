@@ -48,6 +48,11 @@ export default function ImplicitAvailabilityBitstream(options) {
 }
 
 Object.defineProperties(ImplicitAvailabilityBitstream.prototype, {
+  lengthBits: {
+    get: function () {
+      return this._lengthBits;
+    },
+  },
   availableCount: {
     get: function () {
       return this._availableCount;
