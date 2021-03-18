@@ -1,6 +1,6 @@
-import Check from "./Check.js";
-import CesiumMath from "./Math.js";
-import defaultValue from "./defaultValue.js";
+import Check from "../Core/Check.js";
+import CesiumMath from "../Core/Math.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import Texture from "../Renderer/Texture.js";
@@ -9,6 +9,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 import CacheResourceState from "./CacheResourceState.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
  * A texture cache resource.
@@ -165,7 +166,7 @@ GltfTextureCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load texture";
-      that._promise.reject(GltfLoaderUtil.getError(error, errorMessage));
+      that._promise.reject(ResourceCache.getError(error, errorMessage));
     });
 };
 

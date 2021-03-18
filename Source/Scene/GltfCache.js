@@ -1,7 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import GltfBufferCacheResource from "./GltfBufferCacheResource.js";
+import BufferCacheResource from "./BufferCacheResource.js";
 import GltfCacheKey from "./GltfCacheKey.js";
 import GltfCacheResource from "./GltfCacheResource.js";
 import GltfImageCacheResource from "./GltfImageCacheResource.js";
@@ -89,7 +89,7 @@ GltfCache.unloadGltf = function (gltfCacheResource) {
  * @param {Boolean} [options.keepResident=false] Whether the buffer should stay in the cache indefinitely.
  * @param {Uint8Array} [options.typedArray] A typed array containing buffer data. Only defined for buffers embedded in the glTF.
  *
- * @returns {GltfBufferCacheResource} The buffer cache resource.
+ * @returns {BufferCacheResource} The buffer cache resource.
  */
 GltfCache.loadBuffer = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -119,10 +119,18 @@ GltfCache.loadBuffer = function (options) {
     return bufferCacheResource;
   }
 
-  bufferCacheResource = new GltfBufferCacheResource({
+  var resource;
+  if (defined(buffer.uri)) {
+    resource = baseResource.getDerivedResource({
+      url: buffer.uri,
+    });
+  }
+
+  bufferCacheResource = new BufferCacheResource({
     buffer: buffer,
     baseResource: baseResource,
     cacheKey: cacheKey,
+    resource: resource,
     typedArray: typedArray,
   });
 
@@ -137,7 +145,7 @@ GltfCache.loadBuffer = function (options) {
 /**
  * Unloads a buffer from the cache.
  *
- * @param {GltfBufferCacheResource} bufferCacheResource The buffer cache resource.
+ * @param {BufferCacheResource} bufferCacheResource The buffer cache resource.
  */
 GltfCache.unloadBuffer = function (bufferCacheResource) {
   //>>includeStart('debug', pragmas.debug);

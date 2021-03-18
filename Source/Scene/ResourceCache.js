@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * Resource cache shared across 3D Tiles and glTF.
@@ -93,6 +94,16 @@ ResourceCache.unload = function (resource) {
     }
     delete ResourceCache.cacheEntries[cacheKey];
   }
+};
+
+/**
+ * TODO: doc
+ */
+ResourceCache.getError = function (error, errorMessage) {
+  if (defined(error)) {
+    errorMessage += "\n" + error.message;
+  }
+  return new RuntimeError(errorMessage);
 };
 
 export default ResourceCache;

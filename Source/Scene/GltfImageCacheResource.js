@@ -1,5 +1,5 @@
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
@@ -7,7 +7,7 @@ import loadKTX from "../Core/loadKTX.js";
 import RuntimeError from "./RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
  * An image cache resource.
@@ -221,7 +221,7 @@ function loadFromBuffer(imageCacheResource) {
       imageCacheResource._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load embedded image";
       imageCacheResource._promise.reject(
-        GltfLoaderUtil.getError(error, errorMessage)
+        ResourceCache.getError(error, errorMessage)
       );
     });
 }
@@ -248,7 +248,7 @@ function loadFromUri(imageCacheResource) {
       imageCacheResource._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load image:" + uri;
       imageCacheResource._promise.reject(
-        GltfLoaderUtil.getError(error, errorMessage)
+        ResourceCache.getError(error, errorMessage)
       );
     });
 }

@@ -1,7 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined";
-import RuntimeError from "../Core/RuntimeError.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
@@ -131,14 +130,4 @@ GltfLoaderUtil.createSampler = function (options) {
     minificationFilter: minFilter,
     magnificationFilter: magFilter,
   });
-};
-
-/**
- * TODO: doc
- */
-GltfLoaderUtil.getError = function (error, errorMessage) {
-  if (defined(error)) {
-    errorMessage += "\n" + error.message;
-  }
-  return new RuntimeError(errorMessage);
 };

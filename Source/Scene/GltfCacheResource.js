@@ -1,5 +1,5 @@
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";

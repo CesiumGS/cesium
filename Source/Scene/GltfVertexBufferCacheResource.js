@@ -1,12 +1,12 @@
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF vertex buffer cache resource.
@@ -143,7 +143,7 @@ GltfVertexBufferCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load vertex buffer";
-      that._promise.reject(GltfLoaderUtil.getError(error, errorMessage));
+      that._promise.reject(ResourceCache.getError(error, errorMessage));
     });
 };
 

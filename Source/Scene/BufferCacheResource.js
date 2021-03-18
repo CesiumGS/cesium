@@ -1,56 +1,61 @@
-import Check from "./Check.js";
-import defaultValue from "./defaultValue.js";
+import Check from "../Core/Check.js";
+import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
-import GltfLoaderUtil from "./GltfLoaderUtil.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
- * A glTF buffer cache resource.
+ * A buffer cache resource.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
  *
- * @alias GltfBufferCacheResource
+ * @alias BufferCacheResource
  * @constructor
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.buffer The glTF buffer.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {String} options.cacheKey The cache key.
- * @param {Uint8Array} [options.typedArray] A typed array containing buffer data. Only defined for buffers embedded in the glTF.
+ * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer.
+ * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
+ *
+ * @exception {DeveloperError} One of options.resource or options.typedArray must be defined.
  *
  * @private
  */
-function GltfBufferCacheResource(options) {
+function BufferCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var buffer = options.buffer;
-  var baseResource = options.baseResource;
   var cacheKey = options.cacheKey;
+  var resource = options.resource;
   var typedArray = options.typedArray;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.buffer", buffer);
-  Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.string("options.cacheKey", cacheKey);
+  var hasResource = defined(resource);
+  var hasTypedArray = defined(typedArray);
+  if ((hasResource && hasTypedArray) || (!hasResource && !hasTypedArray)) {
+    throw new DeveloperError(
+      "One of options.resource and options.typedArray must be defined"
+    );
+  }
   //>>includeEnd('debug');
 
-  this._buffer = buffer;
-  this._baseResource = baseResource;
   this._cacheKey = cacheKey;
+  this._resource = resource;
   this._typedArray = typedArray;
   this._state = CacheResourceState.UNLOADED;
   this._promise = when.defer();
 }
 
-Object.defineProperties(GltfBufferCacheResource.prototype, {
+Object.defineProperties(BufferCacheResource.prototype, {
   /**
    * A promise that resolves when the resource is ready.
    *
-   * @memberof GltfBufferCacheResource.prototype
+   * @memberof BufferCacheResource.prototype
    *
-   * @type {Promise.<GltfBufferCacheResource>}
+   * @type {Promise.<BufferCacheResource>}
    * @readonly
    */
   promise: {
@@ -61,7 +66,7 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof GltfBufferCacheResource.prototype
+   * @memberof BufferCacheResource.prototype
    *
    * @type {String}
    * @readonly
@@ -74,7 +79,7 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
   /**
    * The typed array containing buffer data.
    *
-   * @memberof GltfBufferCacheResource.prototype
+   * @memberof BufferCacheResource.prototype
    *
    * @type {Uint8Array}
    * @readonly
@@ -89,7 +94,7 @@ Object.defineProperties(GltfBufferCacheResource.prototype, {
 /**
  * Loads the resource.
  */
-GltfBufferCacheResource.prototype.load = function () {
+BufferCacheResource.prototype.load = function () {
   if (defined(this._typedArray)) {
     this._promise.resolve(this);
   } else {
@@ -98,11 +103,7 @@ GltfBufferCacheResource.prototype.load = function () {
 };
 
 function loadExternalBuffer(bufferCacheResource) {
-  var baseResource = bufferCacheResource._baseResource;
-  var buffer = bufferCacheResource._buffer;
-  var resource = baseResource.getDerivedResource({
-    url: buffer.uri,
-  });
+  var resource = bufferCacheResource._resource;
   bufferCacheResource._state = CacheResourceState.LOADING;
   resource
     .fetchArrayBuffer()
@@ -118,9 +119,9 @@ function loadExternalBuffer(bufferCacheResource) {
     .otherwise(function (error) {
       unload(bufferCacheResource);
       bufferCacheResource._state = CacheResourceState.FAILED;
-      var errorMessage = "Failed to load external buffer: " + buffer.uri;
+      var errorMessage = "Failed to load external buffer: " + resource.url;
       bufferCacheResource._promise.reject(
-        GltfLoaderUtil.getError(error, errorMessage)
+        ResourceCache.getError(error, errorMessage)
       );
     });
 }
@@ -132,9 +133,9 @@ function unload(bufferCacheResource) {
 /**
  * Unloads the resource.
  */
-GltfBufferCacheResource.prototype.unload = function () {
+BufferCacheResource.prototype.unload = function () {
   unload(this);
   this._state = CacheResourceState.UNLOADED;
 };
 
-export default GltfBufferCacheResource;
+export default BufferCacheResource;
