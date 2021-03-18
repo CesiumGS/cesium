@@ -1,9 +1,12 @@
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
+import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
+import BufferCacheResource from "./BufferCacheResource.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import MetadataTable from "./MetadataTable.js";
+import ResourceCache from "./ResourceCache.js";
 import when from "../ThirdParty/when.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
@@ -438,12 +441,7 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
     if (!bufferHeader.isActive) {
       promises.push(when.resolve(undefined));
     } else if (bufferHeader.isExternal) {
-      var resource = subtree._resource.getDerivedResource({
-        url: bufferHeader.uri,
-      });
-      var promise = resource.fetchArrayBuffer().then(function (arrayBuffer) {
-        return new Uint8Array(arrayBuffer);
-      });
+      var promise = requestExternalBuffer(bufferHeader, subtree._resource);
       promises.push(promise);
     } else {
       promises.push(when.resolve(internalBuffer));
@@ -458,6 +456,32 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
       }
     }
     return buffersU8;
+  });
+}
+
+function requestExternalBuffer(bufferHeader, baseResource) {
+  // TODO: this should be replaced with a real cache key once
+  // changes are available in the model-loading branch.
+  var resource = baseResource.getDerivedResource({
+    url: bufferHeader.uri,
+  });
+  var cacheKey = "buffer-" + getAbsoluteUri(resource.url);
+  // -------
+
+  var cacheResource = ResourceCache.get(cacheKey);
+  if (!defined(cacheResource)) {
+    cacheResource = new BufferCacheResource({
+      cacheKey: cacheKey,
+    });
+
+    ResourceCache.load({
+      resource: cacheResource,
+      keepResident: false,
+    });
+  }
+
+  return cacheResource.promise.then(function (resource) {
+    return resource.typedArray;
   });
 }
 
