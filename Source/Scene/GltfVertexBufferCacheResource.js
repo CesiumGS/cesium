@@ -29,7 +29,7 @@ import ResourceCache from "./ResourceCache.js";
  *
  * @private
  */
-function GltfVertexBufferCacheResource(options) {
+export default function GltfVertexBufferCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfCache = options.gltfCache;
   var gltf = options.gltf;

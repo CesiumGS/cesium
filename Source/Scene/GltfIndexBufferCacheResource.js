@@ -30,7 +30,7 @@ import ResourceCache from "./ResourceCache.js";
  *
  * @private
  */
-function GltfIndexBufferCacheResource(options) {
+export default function GltfIndexBufferCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfCache = options.gltfCache;
   var gltf = options.gltf;

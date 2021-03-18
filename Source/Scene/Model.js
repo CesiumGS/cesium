@@ -13,7 +13,7 @@ var ModelState = {
   FAILED: 3,
 };
 
-function Model(options) {
+export default function Model(options) {
   this._loader = options.loader;
   this._state = ModelState.UNLOADED;
   this._readyPromise = when.defer();

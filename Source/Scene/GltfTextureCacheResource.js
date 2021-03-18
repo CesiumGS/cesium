@@ -37,7 +37,7 @@ import ResourceCache from "./ResourceCache.js";
  *
  * @private
  */
-function GltfTextureCacheResource(options) {
+export default function GltfTextureCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfCache = options.gltfCache;
   var gltf = options.gltf;

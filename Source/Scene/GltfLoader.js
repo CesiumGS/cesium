@@ -39,7 +39,7 @@ var defaultAccept =
  *
  * @private
  */
-function GltfLoader(options) {
+export default function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var uri = options.uri;
   var basePath = options.basePath;

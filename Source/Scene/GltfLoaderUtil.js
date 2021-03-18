@@ -1,6 +1,6 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined";
+import defined from "../Core/defined.js";
 import Sampler from "../Renderer/Sampler.js";
 import TextureMagnificationFilter from "../Renderer/TextureMagnificationFilter.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
@@ -13,7 +13,7 @@ import TextureWrap from "../Renderer/TextureWrap.js";
  *
  * @private
  */
-function GltfLoaderUtil() {}
+export default function GltfLoaderUtil() {}
 
 /**
  * Get the image ID referenced by a texture.

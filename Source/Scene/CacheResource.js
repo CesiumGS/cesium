@@ -13,7 +13,7 @@ import DeveloperError from "../Core/DeveloperError.js";
  *
  * @private
  */
-function CacheResource() {}
+export default function CacheResource() {}
 
 Object.defineProperties(CacheResource.prototype, {
   /**

@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import loadCRN from "../Core/loadCRN.js";
 import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX from "../Core/loadKTX.js";
-import RuntimeError from "./RuntimeError.js";
+import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
 import ResourceCache from "./ResourceCache.js";
@@ -34,7 +34,7 @@ import ResourceCache from "./ResourceCache.js";
  *
  * @private
  */
-function GltfImageCacheResource(options) {
+export default function GltfImageCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfCache = options.gltfCache;
   var gltf = options.gltf;

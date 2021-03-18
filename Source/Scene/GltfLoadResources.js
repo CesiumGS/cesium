@@ -12,7 +12,7 @@ import GltfCache from "./GltfCache.js";
  *
  * @private
  */
-function GltfLoadResources() {
+export default function GltfLoadResources() {
   this._vertexBuffers = defaultValue.EMPTY_OBJECT;
   this._indexBuffers = defaultValue.EMPTY_OBJECT;
   this._textures = defaultValue.EMPTY_OBJECT;
