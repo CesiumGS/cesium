@@ -94,8 +94,8 @@ import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
  * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
  * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
  * @param {Boolean} [options.backFaceCulling=true] Whether to cull back-facing geometry. When true, back face culling is determined by the glTF material's doubleSided property; when false, back face culling is disabled.
+ * @param {Boolean} [options.vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
- * @param {Object} [options.pickPrimitive] The primitive to be rendered during the pick pass instead of the tileset.
  * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
  * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
  * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -277,6 +277,11 @@ function Cesium3DTileset(options) {
   this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
   this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
   this._clippingPlanesOriginMatrixDirty = true;
+
+  this._vectorClassificationOnly = defaultValue(
+    options.vectorClassificationOnly,
+    false
+  );
 
   /**
    * Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
@@ -567,6 +572,9 @@ function Cesium3DTileset(options) {
    * <li><code>url</code>: the url of the failed tile.</li>
    * <li><code>message</code>: the error message.</li>
    * </ul>
+   * <p>
+   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * </p>
    *
    * @type {Event}
    * @default new Event()
@@ -767,13 +775,6 @@ function Cesium3DTileset(options) {
   this.backFaceCulling = defaultValue(options.backFaceCulling, true);
 
   /**
-   * The primitive to be rendered during the pick pass instead of the tileset.
-   *
-   * @type {Object}
-   */
-  this.pickPrimitive = options.pickPrimitive;
-
-  /**
    * This property is for debugging only; it is not optimized for production use.
    * <p>
    * Determines if only the tiles from last frame should be used for rendering.  This
@@ -909,6 +910,15 @@ function Cesium3DTileset(options) {
    * @default false
    */
   this.debugShowUrl = defaultValue(options.debugShowUrl, false);
+
+  /**
+   * Function for examining vector lines as they are being streamed.
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Function}
+   */
+  this.examineVectorLinesFunction = undefined;
 
   var that = this;
   var resource;
@@ -1666,6 +1676,22 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       Cartesian2.clone(value, this._imageBasedLightingFactor);
     },
   },
+
+  /**
+   * Indicates that only the tileset's vector tiles should be used for classification.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {Boolean}
+   * @default false
+   */
+  vectorClassificationOnly: {
+    get: function () {
+      return this._vectorClassificationOnly;
+    },
+  },
 });
 
 /**
@@ -1789,7 +1815,15 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
         uri: contentUri,
       },
     };
-    var tileJson = combine(contentJson, tileHeader);
+
+    var deepCopy = true;
+    var tileJson = combine(contentJson, tileHeader, deepCopy);
+
+    // The placeholder tile does not have any extensions. If there are any
+    // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+    // copy them to the transcoded tiles.
+    delete tileJson.extensions;
+
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
     tile.implicitTileset = implicitTileset;
     tile.implicitCoordinates = rootCoordinates;
@@ -1911,10 +1945,10 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requested = tile.requestContent();
+  var attemptedRequests = tile.requestContent();
 
-  if (!requested) {
-    ++statistics.numberOfAttemptedRequests;
+  if (attemptedRequests > 0) {
+    statistics.numberOfAttemptedRequests += attemptedRequests;
     return;
   }
 
@@ -1927,7 +1961,6 @@ function requestContent(tileset, tile) {
     }
   }
 
-  ++statistics.numberOfPendingRequests;
   tileset._requestedTilesInFlight.push(tile);
 
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -2011,7 +2044,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
       continue;
     } else if (outOfView) {
       // RequestScheduler will take care of cancelling it
-      tile._request.cancel();
+      tile.cancelRequests();
       ++removeCount;
       continue;
     }
@@ -2039,7 +2072,6 @@ function addToProcessingQueue(tileset, tile) {
   return function () {
     tileset._processingQueue.push(tile);
 
-    --tileset._statistics.numberOfPendingRequests;
     ++tileset._statistics.numberOfTilesProcessing;
   };
 }
@@ -2186,8 +2218,17 @@ function addTileDebugLabel(tile, tileset, position) {
   }
 
   if (tileset.debugShowUrl) {
-    labelString += "\nUrl: " + tile._header.content.uri;
-    attributes++;
+    if (tile.hasMultipleContents) {
+      labelString += "\nUrls:";
+      var urls = tile.content.innerContentUrls;
+      for (var i = 0; i < urls.length; i++) {
+        labelString += "\n- " + urls[i];
+      }
+      attributes += urls.length;
+    } else {
+      labelString += "\nUrl: " + tile._header.content.uri;
+      attributes++;
+    }
   }
 
   var newLabel = {
@@ -2601,17 +2642,13 @@ Cesium3DTileset.prototype.updateForPass = function (
   var passStatistics = this._statisticsPerPass[pass];
 
   if (this.show || ignoreCommands) {
-    if (frameState.passes.pick && defined(this.pickPrimitive)) {
-      this.pickPrimitive.update(frameState);
-    } else {
-      this._pass = pass;
-      tilesetPassState.ready = update(
-        this,
-        frameState,
-        passStatistics,
-        passOptions
-      );
-    }
+    this._pass = pass;
+    tilesetPassState.ready = update(
+      this,
+      frameState,
+      passStatistics,
+      passOptions
+    );
   }
 
   if (ignoreCommands) {

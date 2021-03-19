@@ -1,5 +1,6 @@
 import Cartesian3 from "../Core/Cartesian3.js";
 import Check from "../Core/Check.js";
+import combine from "../Core/combine.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
@@ -42,14 +43,23 @@ export default function Implicit3DTileContent(
   Check.defined("tile.implicitCoordinates", tile.implicitCoordinates);
   //>>includeEnd('debug');
 
-  this._implicitTileset = tile.implicitTileset;
-  this._implicitCoordinates = tile.implicitCoordinates;
+  var implicitTileset = tile.implicitTileset;
+  var implicitCoordinates = tile.implicitCoordinates;
+
+  this._implicitTileset = implicitTileset;
+  this._implicitCoordinates = implicitCoordinates;
   this._tileset = tileset;
   this._tile = tile;
   this._resource = resource;
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
+
+  var templateValues = implicitCoordinates.getTemplateValues();
+  var subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource({
+    templateValues: templateValues,
+  });
+  this._url = subtreeResource.getUrlComponent(true);
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -117,7 +127,7 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
 
   url: {
     get: function () {
-      return this._resource.getUrlComponent(true);
+      return this._url;
     },
   },
 
@@ -351,16 +361,21 @@ function deriveChildTile(
     );
   }
 
-  var contentJson;
-  if (subtree.contentIsAvailable(childBitIndex)) {
-    var childContentUri = implicitTileset.contentUriTemplate.getDerivedResource(
-      {
-        templateValues: implicitCoordinates.getTemplateValues(),
-      }
-    ).url;
-    contentJson = {
+  var contentJsons = [];
+  for (var i = 0; i < implicitTileset.contentCount; i++) {
+    if (!subtree.contentIsAvailable(childBitIndex, i)) {
+      continue;
+    }
+    var childContentTemplate = implicitTileset.contentUriTemplates[i];
+    var childContentUri = childContentTemplate.getDerivedResource({
+      templateValues: implicitCoordinates.getTemplateValues(),
+    }).url;
+    var contentJson = {
       uri: childContentUri,
     };
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    contentJsons.push(combine(contentJson, implicitTileset.contentHeaders[i]));
   }
 
   var boundingVolume = deriveBoundingVolume(
@@ -374,13 +389,25 @@ function deriveChildTile(
     boundingVolume: boundingVolume,
     geometricError: childGeometricError,
     refine: implicitTileset.refine,
-    content: contentJson,
   };
 
+  if (contentJsons.length === 1) {
+    tileJson.content = contentJsons[0];
+  } else if (contentJsons.length > 1) {
+    tileJson.extensions = {
+      "3DTILES_multiple_contents": {
+        content: contentJsons,
+      },
+    };
+  }
+
+  var deep = true;
   var childTile = makeTile(
     implicitContent,
     implicitTileset.baseResource,
-    tileJson,
+    // combine() is used to pass through any additional properties the
+    // user specified such as extras or extensions
+    combine(tileJson, implicitTileset.tileHeader, deep),
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;

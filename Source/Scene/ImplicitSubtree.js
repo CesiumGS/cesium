@@ -1,7 +1,9 @@
 import defaultValue from "../Core/defaultValue.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import when from "../ThirdParty/when.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 
@@ -24,9 +26,8 @@ export default function ImplicitSubtree(
 ) {
   this._resource = resource;
   this._subtreeJson = undefined;
-  this._bufferViews = undefined;
   this._tileAvailability = undefined;
-  this._contentAvailability = undefined;
+  this._contentAvailabilityBitstreams = [];
   this._childSubtreeAvailability = undefined;
   this._subdivisionScheme = implicitTileset.subdivisionScheme;
   this._branchingFactor = implicitTileset.branchingFactor;
@@ -66,11 +67,22 @@ ImplicitSubtree.prototype.tileIsAvailable = function (index) {
  * Check if a specific tile's content is available
  *
  * @param {Number} index the index of the desired tile
+ * @param {Number} [contentIndex=0] the index of the desired content when the <code>3DTILES_multiple_contents</code> extension is used.
  * @returns {Boolean} the value of the i-th bit
  * @private
  */
-ImplicitSubtree.prototype.contentIsAvailable = function (index) {
-  return this._contentAvailability.getBit(index);
+ImplicitSubtree.prototype.contentIsAvailable = function (index, contentIndex) {
+  contentIndex = defaultValue(contentIndex, 0);
+  //>>includeStart('debug', pragmas.debug);
+  if (
+    contentIndex < 0 ||
+    contentIndex >= this._contentAvailabilityBitstreams.length
+  ) {
+    throw new DeveloperError("contentIndex out of bounds.");
+  }
+  //>>includeEnd('debug');
+
+  return this._contentAvailabilityBitstreams[contentIndex].getBit(index);
 };
 
 /**
@@ -133,16 +145,26 @@ ImplicitSubtree.prototype.getParentMortonIndex = function (mortonIndex) {
 function initialize(subtree, subtreeView, implicitTileset) {
   var chunks = parseSubtreeChunks(subtreeView);
   var subtreeJson = chunks.json;
+  subtree._subtreeJson = subtreeJson;
 
   // if no contentAvailability is specified, no tile in the subtree has
   // content
   var defaultContentAvailability = {
     constant: 0,
   };
-  subtreeJson.contentAvailability = defaultValue(
-    subtreeJson.contentAvailability,
-    defaultContentAvailability
-  );
+
+  // content availability is either in the subtree JSON or the multiple
+  // contents extension. Either way, put the results in this new array
+  // for consistent processing later
+  subtreeJson.contentAvailabilityHeaders = [];
+  if (has3DTilesExtension(subtreeJson, "3DTILES_multiple_contents")) {
+    subtreeJson.contentAvailabilityHeaders =
+      subtreeJson.extensions["3DTILES_multiple_contents"].contentAvailability;
+  } else {
+    subtreeJson.contentAvailabilityHeaders.push(
+      defaultValue(subtreeJson.contentAvailability, defaultContentAvailability)
+    );
+  }
 
   var bufferHeaders = preprocessBuffers(subtreeJson.buffers);
   var bufferViewHeaders = preprocessBufferViews(
@@ -233,11 +255,12 @@ function parseSubtreeChunks(subtreeView) {
  * isExternal and isActive fields for easier parsing later. This modifies
  * the objects in place.
  *
- * @param {Object[]} bufferHeaders The JSON from subtreeJson.buffers.
+ * @param {Object[]} [bufferHeaders=[]] The JSON from subtreeJson.buffers.
  * @returns {BufferHeader[]} The same array of headers with additional fields.
  * @private
  */
 function preprocessBuffers(bufferHeaders) {
+  bufferHeaders = defined(bufferHeaders) ? bufferHeaders : [];
   for (var i = 0; i < bufferHeaders.length; i++) {
     var bufferHeader = bufferHeaders[i];
     bufferHeader.isExternal = defined(bufferHeader.uri);
@@ -264,12 +287,13 @@ function preprocessBuffers(bufferHeaders) {
  * Iterate the list of buffer views from the subtree JSON and add the
  * isActive flag. Also save a reference to the bufferHeader
  *
- * @param {Object[]} bufferViewHeaders The JSON from subtree.bufferViews
+ * @param {Object[]} [bufferViewHeaders=[]] The JSON from subtree.bufferViews
  * @param {BufferHeader[]} bufferHeaders The preprocessed buffer headers
  * @returns {BufferViewHeader[]} The same array of bufferView headers with additional fields
  * @private
  */
 function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
+  bufferViewHeaders = defined(bufferViewHeaders) ? bufferViewHeaders : [];
   for (var i = 0; i < bufferViewHeaders.length; i++) {
     var bufferViewHeader = bufferViewHeaders[i];
     var bufferHeader = bufferHeaders[bufferViewHeader.buffer];
@@ -284,7 +308,7 @@ function preprocessBufferViews(bufferViewHeaders, bufferHeaders) {
  *
  * <ul>
  * <li>The tile availability bitstream (if a bufferView is defined)</li>
- * <li>The content availability bitstream (if a bufferView is defined)</li>
+ * <li>The content availability bitstream(s) (if a bufferView is defined)</li>
  * <li>The child subtree availability bitstream (if a bufferView is defined)</li>
  * </ul>
  *
@@ -303,11 +327,13 @@ function markActiveBufferViews(subtreeJson, bufferViewHeaders) {
     header.bufferHeader.isActive = true;
   }
 
-  var contentAvailabilityHeader = subtreeJson.contentAvailability;
-  if (defined(contentAvailabilityHeader.bufferView)) {
-    header = bufferViewHeaders[contentAvailabilityHeader.bufferView];
-    header.isActive = true;
-    header.bufferHeader.isActive = true;
+  var contentAvailabilityHeaders = subtreeJson.contentAvailabilityHeaders;
+  for (var i = 0; i < contentAvailabilityHeaders.length; i++) {
+    if (defined(contentAvailabilityHeaders[i].bufferView)) {
+      header = bufferViewHeaders[contentAvailabilityHeaders[i].bufferView];
+      header.isActive = true;
+      header.bufferHeader.isActive = true;
+    }
   }
 
   var childSubtreeAvailabilityHeader = subtreeJson.childSubtreeAvailability;
@@ -421,12 +447,16 @@ function parseAvailability(
     tileAvailabilityBits
   );
 
-  subtree._contentAvailability = parseAvailabilityBitstream(
-    subtreeJson.contentAvailability,
-    bufferViewsU8,
-    // content availability has the same length as tile availability.
-    tileAvailabilityBits
-  );
+  for (var i = 0; i < subtreeJson.contentAvailabilityHeaders.length; i++) {
+    var bitstream = parseAvailabilityBitstream(
+      subtreeJson.contentAvailabilityHeaders[i],
+      bufferViewsU8,
+      // content availability has the same length as tile availability.
+      tileAvailabilityBits
+    );
+    subtree._contentAvailabilityBitstreams.push(bitstream);
+  }
+
   subtree._childSubtreeAvailability = parseAvailabilityBitstream(
     subtreeJson.childSubtreeAvailability,
     bufferViewsU8,

@@ -155,13 +155,31 @@ function updatePriority(request) {
   }
 }
 
-function serverHasOpenSlots(serverKey) {
+/**
+ * Check if there are open slots for a particular server key. If desiredRequests is greater than 1, this checks if the queue has room for scheduling multiple requests.
+ * @param {String} serverKey The server key returned by {@link RequestScheduler.getServerKey}.
+ * @param {Number} [desiredRequests=1] How many requests the caller plans to request
+ * @return {Boolean} True if there are enough open slots for <code>desiredRequests</code> more requests.
+ * @private
+ */
+RequestScheduler.serverHasOpenSlots = function (serverKey, desiredRequests) {
+  desiredRequests = defaultValue(desiredRequests, 1);
+
   var maxRequests = defaultValue(
     RequestScheduler.requestsByServer[serverKey],
     RequestScheduler.maximumRequestsPerServer
   );
-  return numberOfActiveRequestsByServer[serverKey] < maxRequests;
-}
+  var hasOpenSlotsServer =
+    numberOfActiveRequestsByServer[serverKey] + desiredRequests <= maxRequests;
+
+  return hasOpenSlotsServer;
+};
+
+RequestScheduler.heapHasOpenSlots = function (desiredRequests) {
+  var hasOpenSlotsHeap =
+    requestHeap.length + desiredRequests <= priorityHeapLength;
+  return hasOpenSlotsHeap;
+};
 
 function issueRequest(request) {
   if (request.state === RequestState.UNISSUED) {
@@ -295,7 +313,10 @@ RequestScheduler.update = function () {
       continue;
     }
 
-    if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+    if (
+      request.throttleByServer &&
+      !RequestScheduler.serverHasOpenSlots(request.serverKey)
+    ) {
       // Open slots are available, but the request is throttled by its server. Cancel and try again later.
       cancelRequest(request);
       continue;
@@ -368,7 +389,7 @@ RequestScheduler.request = function (request) {
   if (
     RequestScheduler.throttleRequests &&
     request.throttleByServer &&
-    !serverHasOpenSlots(request.serverKey)
+    !RequestScheduler.serverHasOpenSlots(request.serverKey)
   ) {
     // Server is saturated. Try again later.
     return undefined;

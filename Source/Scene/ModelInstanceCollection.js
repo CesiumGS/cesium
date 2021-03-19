@@ -455,7 +455,8 @@ function getFragmentShaderCallback(collection) {
       );
       fs = batchTable.getFragmentShaderCallback(
         true,
-        diffuseAttributeOrUniformName
+        diffuseAttributeOrUniformName,
+        false
       )(fs);
     } else {
       fs = "varying vec4 v_pickColor;\n" + fs;
@@ -536,7 +537,8 @@ function getFragmentShaderNonInstancedCallback(collection) {
       );
       fs = batchTable.getFragmentShaderCallback(
         true,
-        diffuseAttributeOrUniformName
+        diffuseAttributeOrUniformName,
+        false
       )(fs);
     } else {
       fs = "uniform vec4 czm_pickColor;\n" + fs;

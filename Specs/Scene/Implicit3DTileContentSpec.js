@@ -1,16 +1,22 @@
 import {
+  Batched3DModel3DTileContent,
   Cartesian3,
   Cesium3DTile,
   Cesium3DTileRefine,
+  Cesium3DTileset,
+  HeadingPitchRange,
   Implicit3DTileContent,
   ImplicitTileCoordinates,
   ImplicitTileset,
   Matrix3,
   Matrix4,
+  Multiple3DTileContent,
   Resource,
 } from "../../Source/Cesium.js";
 import CesiumMath from "../../Source/Core/Math.js";
 import ImplicitTilingTester from "../ImplicitTilingTester.js";
+import Cesium3DTilesTester from "../Cesium3DTilesTester.js";
+import createScene from "../createScene.js";
 
 describe("Scene/Implicit3DTileContent", function () {
   var tilesetResource = new Resource({
@@ -28,6 +34,9 @@ describe("Scene/Implicit3DTileContent", function () {
     },
     content: {
       uri: "https://example.com/{level}/{x}/{y}.b3dm",
+      extras: {
+        author: "Cesium",
+      },
     },
     extensions: {
       "3DTILES_implicit_tiling": {
@@ -39,6 +48,9 @@ describe("Scene/Implicit3DTileContent", function () {
         },
       },
     },
+    extras: {
+      year: "2021",
+    },
   };
   var implicitTileset = new ImplicitTileset(tilesetResource, tileJson);
 
@@ -48,11 +60,13 @@ describe("Scene/Implicit3DTileContent", function () {
       bitLength: 5,
       isInternal: true,
     },
-    contentAvailability: {
-      descriptor: "01010",
-      bitLength: 5,
-      isInternal: true,
-    },
+    contentAvailability: [
+      {
+        descriptor: "01010",
+        bitLength: 5,
+        isInternal: true,
+      },
+    ],
     childSubtreeAvailability: {
       descriptor: "1111000011110000",
       bitLength: 16,
@@ -157,6 +171,39 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
+  it("returns default values for most Cesium3DTileContent properties", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+
+    expect(content.featurePropertiesDirty).toBe(false);
+    expect(content.featuresLength).toBe(0);
+    expect(content.pointsLength).toBe(0);
+    expect(content.trianglesLength).toBe(0);
+    expect(content.geometryByteLength).toBe(0);
+    expect(content.texturesByteLength).toBe(0);
+    expect(content.batchTableByteLength).toBe(0);
+    expect(content.innerContents).not.toBeDefined();
+    expect(content.tileset).toBe(mockTileset);
+    expect(content.tile).toBe(mockPlaceholderTile);
+    expect(content.batchTable).not.toBeDefined();
+  });
+
+  it("url returns the subtree url", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    expect(content.url).toBe("https://example.com/0/0/0.subtree");
+  });
+
   it("templates content URIs for each tile with content", function () {
     var content = new Implicit3DTileContent(
       mockTileset,
@@ -172,7 +219,7 @@ describe("Scene/Implicit3DTileContent", function () {
         [1, 0, 1],
       ];
       var contentAvailability = [false, true, true];
-      var templateUri = implicitTileset.contentUriTemplate;
+      var templateUri = implicitTileset.contentUriTemplates[0];
       var subtreeRootTile = mockPlaceholderTile.children[0];
       var tiles = [];
       gatherTilesPreorder(subtreeRootTile, 0, 1, tiles);
@@ -404,6 +451,19 @@ describe("Scene/Implicit3DTileContent", function () {
     });
   });
 
+  it("preserves tile extras", function () {
+    var content = new Implicit3DTileContent(
+      mockTileset,
+      mockPlaceholderTile,
+      tilesetResource,
+      quadtreeBuffer,
+      0
+    );
+    return content.readyPromise.then(function () {
+      expect(mockPlaceholderTile.children[0].extras).toEqual(tileJson.extras);
+    });
+  });
+
   describe("_deriveBoundingBox", function () {
     var deriveBoundingBox = Implicit3DTileContent._deriveBoundingBox;
     var simpleBoundingBox = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1];
@@ -531,6 +591,132 @@ describe("Scene/Implicit3DTileContent", function () {
 
       var result = deriveBoundingRegion(tile, 1, 1, 0);
       expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON9);
+    });
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    var implicitMultipleContentsUrl =
+      "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
+
+    var scene;
+
+    // This scene is the same as Composite/Composite, just rephrased
+    // using 3DTILES_multiple_contents
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
+
+    beforeAll(function () {
+      scene = createScene();
+      // One item in each data set is always located in the center, so point the camera there
+      var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 26.0));
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      scene.primitives.removeAll();
+    });
+
+    it("a single content is transcoded as a regular tile", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        implicitMultipleContentsUrl
+      ).then(function (tileset) {
+        // The root tile of this tileset only has one available content
+        var transcodedRoot = tileset.root.children[0];
+        var transcodedRootHeader = transcodedRoot._header;
+        expect(transcodedRoot.content).toBeInstanceOf(
+          Batched3DModel3DTileContent
+        );
+        expect(transcodedRootHeader.content).toEqual({
+          uri: "ground/0/0/0.b3dm",
+        });
+        expect(transcodedRootHeader.extensions).not.toBeDefined();
+      });
+    });
+
+    it("multiple contents are transcoded to a tile with a 3DTILES_multiple_contents extension", function () {
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        implicitMultipleContentsUrl
+      ).then(function (tileset) {
+        var childTiles = tileset.root.children[0].children;
+        for (var i = 0; i < childTiles.length; i++) {
+          var childTile = childTiles[i];
+          var content = childTile.content;
+          expect(content).toBeInstanceOf(Multiple3DTileContent);
+
+          var childTileHeader = childTile._header;
+          expect(childTileHeader.content).not.toBeDefined();
+        }
+      });
+    });
+
+    it("passes extensions through correctly", function () {
+      var originalLoadJson = Cesium3DTileset.loadJson;
+      var metadataExtension = {
+        group: "buildings",
+      };
+      var otherExtension = {
+        someKey: "someValue",
+      };
+
+      spyOn(Cesium3DTileset, "loadJson").and.callFake(function (tilesetUrl) {
+        return originalLoadJson(tilesetUrl).then(function (tilesetJson) {
+          var multiContent =
+            tilesetJson.root.extensions["3DTILES_multiple_contents"];
+          multiContent.content.forEach(function (content) {
+            content.extensions = {
+              "3DTILES_metadata": metadataExtension,
+            };
+          });
+
+          tilesetJson.root.extensions["3DTILES_extension"] = otherExtension;
+          return tilesetJson;
+        });
+      });
+
+      return Cesium3DTilesTester.loadTileset(
+        scene,
+        implicitMultipleContentsUrl
+      ).then(function (tileset) {
+        // the placeholder tile does not have any extensions.
+        var placeholderTile = tileset.root;
+        var placeholderHeader = placeholderTile._header;
+        expect(placeholderHeader.extensions).not.toBeDefined();
+        expect(placeholderHeader.content.extensions).not.toBeDefined();
+
+        var transcodedRoot = placeholderTile.children[0];
+        var transcodedRootHeader = transcodedRoot._header;
+        expect(transcodedRootHeader.extensions).toEqual({
+          "3DTILES_extension": otherExtension,
+        });
+        expect(transcodedRootHeader.content.extensions).toEqual({
+          "3DTILES_metadata": metadataExtension,
+        });
+
+        var childTiles = transcodedRoot.children;
+        for (var i = 0; i < childTiles.length; i++) {
+          var childTile = childTiles[i];
+
+          var childTileHeader = childTile._header;
+          expect(childTileHeader.extensions["3DTILES_extension"]).toEqual(
+            otherExtension
+          );
+
+          var innerContentHeaders =
+            childTileHeader.extensions["3DTILES_multiple_contents"].content;
+
+          innerContentHeaders.forEach(function (header) {
+            expect(header.extensions).toEqual({
+              "3DTILES_metadata": metadataExtension,
+            });
+          });
+        }
+      });
     });
   });
 });
