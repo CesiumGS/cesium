@@ -1045,10 +1045,9 @@ function requestMultipleContents(tile) {
   }
 
   tile._contentState = Cesium3DTileContentState.LOADING;
-
-  // These promise chains must only be initialized once
   tile._contentReadyToProcessPromise = when.defer();
   tile._contentReadyPromise = when.defer();
+
   multipleContents.contentsFetchedPromise
     .then(function () {
       if (tile._contentState !== Cesium3DTileContentState.LOADING) {
