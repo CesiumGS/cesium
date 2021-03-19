@@ -8,8 +8,6 @@ import defined from "../Core/defined.js";
 import deprecationWarning from "../Core/deprecationWarning.js";
 import destroyObject from "../Core/destroyObject.js";
 import Ellipsoid from "../Core/Ellipsoid.js";
-import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
-import getMagic from "../Core/getMagic.js";
 import Intersect from "../Core/Intersect.js";
 import JulianDate from "../Core/JulianDate.js";
 import CesiumMath from "../Core/Math.js";
@@ -27,10 +25,14 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
 import Cesium3DTileContentState from "./Cesium3DTileContentState.js";
+import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import has3DTilesExtension from "./has3DTilesExtension.js";
+import Multiple3DTileContent from "./Multiple3DTileContent.js";
+import preprocess3DTileContent from "./preprocess3DTileContent.js";
 import SceneMode from "./SceneMode.js";
 import TileBoundingRegion from "./TileBoundingRegion.js";
 import TileBoundingSphere from "./TileBoundingSphere.js";
@@ -192,14 +194,21 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this.parent = parent;
 
   var content;
-  var hasEmptyContent;
+  var hasEmptyContent = false;
+  var hasMultipleContents = false;
   var contentState;
   var contentResource;
   var serverKey;
 
   baseResource = Resource.createIfNeeded(baseResource);
 
-  if (defined(contentHeader)) {
+  if (has3DTilesExtension(header, "3DTILES_multiple_contents")) {
+    hasMultipleContents = true;
+    contentState = Cesium3DTileContentState.UNLOADED;
+    // Each content may have its own URI, but they all need to be resolved
+    // relative to the tileset, so the base resource is used.
+    contentResource = baseResource.clone();
+  } else if (defined(contentHeader)) {
     var contentHeaderUri = contentHeader.uri;
     if (defined(contentHeader.url)) {
       Cesium3DTile._deprecationWarning(
@@ -208,10 +217,10 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
       );
       contentHeaderUri = contentHeader.url;
     }
-    hasEmptyContent = false;
     contentState = Cesium3DTileContentState.UNLOADED;
     contentResource = baseResource.getDerivedResource({
       url: contentHeaderUri,
+      preserveQueryParameters: true,
     });
     serverKey = RequestScheduler.getServerKey(
       contentResource.getUrlComponent()
@@ -266,6 +275,19 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    * @private
    */
   this.hasImplicitContent = false;
+
+  /**
+   * When <code>true</code>, the tile has multiple contents via the
+   * <code>3DTILES_multiple_contents</code> extension.
+   *
+   * @see {@link https://github.com/CesiumGS/3d-tiles/tree/3d-tiles-next/extensions/3DTILES_multiple_contents/0.0.0|3DTILES_multiple_contents extension}
+   *
+   * @type {Boolean}
+   * @readonly
+   *
+   * @private
+   */
+  this.hasMultipleContents = hasMultipleContents;
 
   /**
    * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
@@ -927,7 +949,12 @@ Cesium3DTile.prototype.updateVisibility = function (frameState) {
  * @private
  */
 Cesium3DTile.prototype.updateExpiration = function () {
-  if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
+  if (
+    defined(this.expireDate) &&
+    this.contentReady &&
+    !this.hasEmptyContent &&
+    !this.hasMultipleContents
+  ) {
     var now = JulianDate.now(scratchJulianDate);
     if (JulianDate.lessThan(this.expireDate, now)) {
       this._contentState = Cesium3DTileContentState.EXPIRED;
@@ -955,37 +982,10 @@ function updateExpireDate(tile) {
   }
 }
 
-function getContentFailedFunction(tile, tileset) {
-  return function (error) {
-    if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
-      --tileset.statistics.numberOfTilesProcessing;
-    } else {
-      --tileset.statistics.numberOfPendingRequests;
-    }
-    tile._contentState = Cesium3DTileContentState.FAILED;
-    tile._contentReadyPromise.reject(error);
-    tile._contentReadyToProcessPromise.reject(error);
-  };
-}
-
 function createPriorityFunction(tile) {
   return function () {
     return tile._priority;
   };
-}
-
-function getJsonContent(arrayBuffer, byteOffset) {
-  byteOffset = defaultValue(byteOffset, 0);
-  var uint8Array = new Uint8Array(arrayBuffer);
-  var json;
-
-  try {
-    json = getJsonFromTypedArray(uint8Array);
-  } catch (error) {
-    throw new RuntimeError("Invalid tile content.");
-  }
-
-  return json;
 }
 
 /**
@@ -994,22 +994,126 @@ function getJsonContent(arrayBuffer, byteOffset) {
  * The request may not be made if the Cesium Request Scheduler can't prioritize it.
  * </p>
  *
+ * @return {Number} The number of requests that were attempted but not scheduled.
  * @private
  */
 Cesium3DTile.prototype.requestContent = function () {
-  var that = this;
-  var tileset = this._tileset;
-
+  // empty contents don't require any HTTP requests
   if (this.hasEmptyContent) {
-    return false;
+    return 0;
   }
 
-  var resource = this._contentResource.clone();
-  var expired = this.contentExpired;
+  if (this.hasMultipleContents) {
+    return requestMultipleContents(this);
+  }
+
+  return requestSingleContent(this);
+};
+
+/**
+ * The <code>3DTILES_multiple_contents</code> extension allows multiple
+ * {@link Cesium3DTileContent} within a single tile. Due to differences
+ * in request scheduling, this is handled separately.
+ * <p>
+ * This implementation of <code>3DTILES_multiple_contents</code> does not
+ * support tile expiry like requestSingleContent does. If this changes,
+ * note that the resource.setQueryParameters() details must go inside {@link Multiple3DTileContent} since that is per-request.
+ * </p>
+ *
+ * @private
+ */
+function requestMultipleContents(tile) {
+  var multipleContents = tile._content;
+  var tileset = tile._tileset;
+
+  if (!defined(multipleContents)) {
+    // Create the content object immediately, it will handle scheduling
+    // requests for inner contents.
+    var extensionHeader = tile._header.extensions["3DTILES_multiple_contents"];
+    multipleContents = new Multiple3DTileContent(
+      tileset,
+      tile,
+      tile._contentResource.clone(),
+      extensionHeader
+    );
+    tile._content = multipleContents;
+  }
+
+  var backloggedRequestCount = multipleContents.requestInnerContents();
+  if (backloggedRequestCount > 0) {
+    return backloggedRequestCount;
+  }
+
+  tile._contentState = Cesium3DTileContentState.LOADING;
+  tile._contentReadyToProcessPromise = when.defer();
+  tile._contentReadyPromise = when.defer();
+
+  multipleContents.contentsFetchedPromise
+    .then(function () {
+      if (tile._contentState !== Cesium3DTileContentState.LOADING) {
+        // tile was canceled, short circuit.
+        return;
+      }
+
+      if (tile.isDestroyed()) {
+        multipleContentFailed(
+          tile,
+          tileset,
+          "Tile was unloaded while content was loading"
+        );
+        return;
+      }
+
+      tile._contentState = Cesium3DTileContentState.PROCESSING;
+      tile._contentReadyToProcessPromise.resolve(multipleContents);
+
+      return multipleContents.readyPromise.then(function (content) {
+        if (tile.isDestroyed()) {
+          multipleContentFailed(
+            tile,
+            tileset,
+            "Tile was unloaded while content was processing"
+          );
+          return;
+        }
+
+        // Refresh style for expired content
+        tile._selectedFrame = 0;
+        tile.lastStyleTime = 0.0;
+
+        JulianDate.now(tile._loadTimestamp);
+        tile._contentState = Cesium3DTileContentState.READY;
+        tile._contentReadyPromise.resolve(content);
+      });
+    })
+    .otherwise(function (error) {
+      multipleContentFailed(tile, tileset, error);
+    });
+
+  return 0;
+}
+
+function multipleContentFailed(tile, tileset, error) {
+  // note: The Multiple3DTileContent handles decrementing the number of pending
+  // requests if the state is LOADING.
+  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+    --tileset.statistics.numberOfTilesProcessing;
+  }
+
+  tile._contentState = Cesium3DTileContentState.FAILED;
+  tile._contentReadyPromise.reject(error);
+  tile._contentReadyToProcessPromise.reject(error);
+}
+
+function requestSingleContent(tile) {
+  // it is important to clone here. The fetchArrayBuffer() below uses
+  // throttling, but other uses of the resources do not.
+  var resource = tile._contentResource.clone();
+  var expired = tile.contentExpired;
   if (expired) {
     // Append a query parameter of the tile expiration date to prevent caching
     resource.setQueryParameters({
-      expired: this.expireDate.toString(),
+      expired: tile.expireDate.toString(),
     });
   }
 
@@ -1017,127 +1121,147 @@ Cesium3DTile.prototype.requestContent = function () {
     throttle: true,
     throttleByServer: true,
     type: RequestType.TILES3D,
-    priorityFunction: createPriorityFunction(this),
-    serverKey: this._serverKey,
+    priorityFunction: createPriorityFunction(tile),
+    serverKey: tile._serverKey,
   });
 
-  this._request = request;
+  tile._request = request;
   resource.request = request;
 
   var promise = resource.fetchArrayBuffer();
-
   if (!defined(promise)) {
-    return false;
+    return 1;
   }
 
-  var contentState = this._contentState;
-  this._contentState = Cesium3DTileContentState.LOADING;
-  this._contentReadyToProcessPromise = when.defer();
-  this._contentReadyPromise = when.defer();
+  var previousState = tile._contentState;
+  var tileset = tile._tileset;
+  tile._contentState = Cesium3DTileContentState.LOADING;
+  tile._contentReadyToProcessPromise = when.defer();
+  tile._contentReadyPromise = when.defer();
+  ++tileset.statistics.numberOfPendingRequests;
 
-  var contentFailedFunction = getContentFailedFunction(this, tileset);
   promise
     .then(function (arrayBuffer) {
-      if (that.isDestroyed()) {
+      if (tile.isDestroyed()) {
         // Tile is unloaded before the content finishes loading
-        contentFailedFunction();
+        singleContentFailed(tile, tileset);
         return;
       }
-      var uint8Array = new Uint8Array(arrayBuffer);
-      var magic = getMagic(uint8Array);
 
-      var contentIdentifer = magic;
-      if (magic === "glTF") {
-        contentIdentifer = "glb";
-      }
-
-      var contentFactory = Cesium3DTileContentFactory[contentIdentifer];
-      var content;
-
-      // Vector and Geometry tile rendering do not support the skip LOD optimization.
-      tileset._disableSkipLevelOfDetail =
-        tileset._disableSkipLevelOfDetail ||
-        contentIdentifer === "vctr" ||
-        contentIdentifer === "geom";
-
-      if (defined(contentFactory)) {
-        content = contentFactory(
-          tileset,
-          that,
-          that._contentResource,
-          arrayBuffer,
-          0
-        );
-      } else {
-        var json = getJsonContent(arrayBuffer, 0);
-        if (defined(json.geometricError)) {
-          // Most likely a tileset JSON
-          content = Cesium3DTileContentFactory.json(
-            tileset,
-            that,
-            that._contentResource,
-            json
-          );
-          that.hasTilesetContent = true;
-        } else if (defined(json.asset)) {
-          // Most likely a glTF. Tileset JSON also has an "asset" property
-          // so this check needs to happen second
-          content = Cesium3DTileContentFactory.gltf(
-            tileset,
-            that,
-            that._contentResource,
-            json
-          );
-        }
-      }
-
-      if (!defined(content)) {
-        throw new RuntimeError("Invalid tile content.");
-      }
-
-      // Implicit tiling subtree files use the content factory, but we need
-      // to mark them as implicit
-      if (contentIdentifer === "subt") {
-        that.hasImplicitContent = true;
-      }
+      var content = makeContent(tile, arrayBuffer);
 
       if (expired) {
-        that.expireDate = undefined;
+        tile.expireDate = undefined;
       }
 
-      that._content = content;
-      that._contentState = Cesium3DTileContentState.PROCESSING;
-      that._contentReadyToProcessPromise.resolve(content);
+      tile._content = content;
+      tile._contentState = Cesium3DTileContentState.PROCESSING;
+      tile._contentReadyToProcessPromise.resolve(content);
+      --tileset.statistics.numberOfPendingRequests;
 
       return content.readyPromise.then(function (content) {
-        if (that.isDestroyed()) {
+        if (tile.isDestroyed()) {
           // Tile is unloaded before the content finishes processing
-          contentFailedFunction();
+          singleContentFailed(tile, tileset);
           return;
         }
-        updateExpireDate(that);
+        updateExpireDate(tile);
 
         // Refresh style for expired content
-        that._selectedFrame = 0;
-        that.lastStyleTime = 0.0;
+        tile._selectedFrame = 0;
+        tile.lastStyleTime = 0.0;
 
-        JulianDate.now(that._loadTimestamp);
-        that._contentState = Cesium3DTileContentState.READY;
-        that._contentReadyPromise.resolve(content);
+        JulianDate.now(tile._loadTimestamp);
+        tile._contentState = Cesium3DTileContentState.READY;
+        tile._contentReadyPromise.resolve(content);
       });
     })
     .otherwise(function (error) {
       if (request.state === RequestState.CANCELLED) {
         // Cancelled due to low priority - try again later.
-        that._contentState = contentState;
+        tile._contentState = previousState;
         --tileset.statistics.numberOfPendingRequests;
         ++tileset.statistics.numberOfAttemptedRequests;
         return;
       }
-      contentFailedFunction(error);
+      singleContentFailed(tile, tileset, error);
     });
 
-  return true;
+  return 0;
+}
+
+function singleContentFailed(tile, tileset, error) {
+  if (tile._contentState === Cesium3DTileContentState.PROCESSING) {
+    --tileset.statistics.numberOfTilesProcessing;
+  } else {
+    --tileset.statistics.numberOfPendingRequests;
+  }
+  tile._contentState = Cesium3DTileContentState.FAILED;
+  tile._contentReadyPromise.reject(error);
+  tile._contentReadyToProcessPromise.reject(error);
+}
+
+/**
+ * Given a downloaded content payload, construct a {@link Cesium3DTileContent}.
+ * <p>
+ * This is only used for single contents.
+ * </p>
+ *
+ * @param {Cesium3DTile} tile The tile
+ * @param {ArrayBuffer} arrayBuffer The downloaded payload containing data for the content
+ * @return {Cesium3DTileContent} A content object
+ * @private
+ */
+function makeContent(tile, arrayBuffer) {
+  var preprocessed = preprocess3DTileContent(arrayBuffer);
+
+  // Vector and Geometry tile rendering do not support the skip LOD optimization.
+  var tileset = tile._tileset;
+  tileset._disableSkipLevelOfDetail =
+    tileset._disableSkipLevelOfDetail ||
+    preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
+    preprocessed.contentType === Cesium3DTileContentType.VECTOR;
+
+  if (preprocessed.contentType === Cesium3DTileContentType.IMPLICIT_SUBTREE) {
+    tile.hasImplicitContent = true;
+  }
+
+  if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
+    tile.hasTilesetContent = true;
+  }
+
+  var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
+  if (defined(preprocessed.binaryPayload)) {
+    return contentFactory(
+      tileset,
+      tile,
+      tile._contentResource,
+      preprocessed.binaryPayload.buffer,
+      0
+    );
+  }
+
+  // JSON formats
+  return contentFactory(
+    tileset,
+    tile,
+    tile._contentResource,
+    preprocessed.jsonPayload
+  );
+}
+
+/**
+ * Cancel requests for the tile's contents. This is called when the tile
+ * goes out of view.
+ *
+ * @private
+ */
+Cesium3DTile.prototype.cancelRequests = function () {
+  if (this.hasMultipleContents) {
+    this._content.cancelRequests();
+  } else {
+    this._request.cancel();
+  }
 };
 
 /**
@@ -1658,7 +1782,8 @@ function updateContent(tile, tileset, frameState) {
   var content = tile._content;
   var expiredContent = tile._expiredContent;
 
-  if (defined(expiredContent)) {
+  // expired content is not supported for 3DTILES_multiple_contents
+  if (!tile.hasMultipleContents && defined(expiredContent)) {
     if (!tile.contentReady) {
       // Render the expired content while the content loads
       expiredContent.update(tileset, frameState);

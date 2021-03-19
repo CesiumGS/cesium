@@ -53,7 +53,7 @@ var Cesium3DTileContentFactory = {
       Cesium3DTileContentFactory
     );
   },
-  json: function (tileset, tile, resource, json) {
+  externalTileset: function (tileset, tile, resource, json) {
     return new Tileset3DTileContent(tileset, tile, resource, json);
   },
   geom: function (tileset, tile, resource, arrayBuffer, byteOffset) {

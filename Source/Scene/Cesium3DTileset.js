@@ -572,6 +572,9 @@ function Cesium3DTileset(options) {
    * <li><code>url</code>: the url of the failed tile.</li>
    * <li><code>message</code>: the error message.</li>
    * </ul>
+   * <p>
+   * If the <code>3DTILES_multiple_contents</code> extension is used, this event is raised once per inner content with errors.
+   * </p>
    *
    * @type {Event}
    * @default new Event()
@@ -1934,10 +1937,10 @@ function requestContent(tileset, tile) {
 
   var statistics = tileset._statistics;
   var expired = tile.contentExpired;
-  var requested = tile.requestContent();
+  var attemptedRequests = tile.requestContent();
 
-  if (!requested) {
-    ++statistics.numberOfAttemptedRequests;
+  if (attemptedRequests > 0) {
+    statistics.numberOfAttemptedRequests += attemptedRequests;
     return;
   }
 
@@ -1950,7 +1953,6 @@ function requestContent(tileset, tile) {
     }
   }
 
-  ++statistics.numberOfPendingRequests;
   tileset._requestedTilesInFlight.push(tile);
 
   tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -2034,7 +2036,7 @@ function cancelOutOfViewRequests(tileset, frameState) {
       continue;
     } else if (outOfView) {
       // RequestScheduler will take care of cancelling it
-      tile._request.cancel();
+      tile.cancelRequests();
       ++removeCount;
       continue;
     }
@@ -2062,7 +2064,6 @@ function addToProcessingQueue(tileset, tile) {
   return function () {
     tileset._processingQueue.push(tile);
 
-    --tileset._statistics.numberOfPendingRequests;
     ++tileset._statistics.numberOfTilesProcessing;
   };
 }
@@ -2209,8 +2210,17 @@ function addTileDebugLabel(tile, tileset, position) {
   }
 
   if (tileset.debugShowUrl) {
-    labelString += "\nUrl: " + tile._header.content.uri;
-    attributes++;
+    if (tile.hasMultipleContents) {
+      labelString += "\nUrls:";
+      var urls = tile.content.innerContentUrls;
+      for (var i = 0; i < urls.length; i++) {
+        labelString += "\n- " + urls[i];
+      }
+      attributes += urls.length;
+    } else {
+      labelString += "\nUrl: " + tile._header.content.uri;
+      attributes++;
+    }
   }
 
   var newLabel = {
