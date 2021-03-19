@@ -7,6 +7,15 @@ describe("Scene/ImplicitAvailabilityBitstream", function () {
     }).toThrowDeveloperError();
   });
 
+  it("throws on mismatched bitLength and bitstream.length", function () {
+    expect(function () {
+      return new ImplicitAvailabilityBitstream({
+        lengthBits: 17,
+        bitstream: new Uint8Array([0xff, 0x02]),
+      });
+    }).toThrowRuntimeError();
+  });
+
   it("reads bits from constant", function () {
     var length = 21;
     var bitstream = new ImplicitAvailabilityBitstream({

@@ -29,10 +29,15 @@ describe("Scene/ImplicitSubtree", function () {
     }
   }
 
-  function expectContentAvailability(subtree, availability) {
-    var expectedAvailability = availabilityToBooleanArray(availability);
-    for (var i = 0; i < availability.lengthBits; i++) {
-      expect(subtree.contentIsAvailable(i)).toEqual(expectedAvailability[i]);
+  function expectContentAvailability(subtree, availabilityArray) {
+    for (var i = 0; i < availabilityArray.length; i++) {
+      var availability = availabilityArray[i];
+      var expectedAvailability = availabilityToBooleanArray(availability);
+      for (var j = 0; j < availability.lengthBits; j++) {
+        expect(subtree.contentIsAvailable(j, i)).toEqual(
+          expectedAvailability[j]
+        );
+      }
     }
   }
 
@@ -99,11 +104,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -139,11 +146,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -185,11 +194,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -234,12 +245,14 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        shareBuffer: true,
-        descriptor: "11010",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          shareBuffer: true,
+          descriptor: "11010",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -280,11 +293,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: false,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: false,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: false,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -316,11 +331,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "11000",
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "11000",
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: "1111000010100000",
         lengthBits: 16,
@@ -395,11 +412,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 5,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: 1,
-        lengthBits: 5,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 0,
         lengthBits: 16,
@@ -428,6 +447,72 @@ describe("Scene/ImplicitSubtree", function () {
     });
   });
 
+  it("computes level offset", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree
+    );
+
+    expect(subtree.getLevelOffset(2)).toEqual(9);
+  });
+
+  it("computes parent Morton index", function () {
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: "110101111",
+        lengthBits: 9,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 1,
+        lengthBits: 64,
+        isInternal: true,
+      },
+    };
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitOctree
+    );
+
+    // 341 = 0b101010101
+    //  42 = 0b101010
+    expect(subtree.getParentMortonIndex(341)).toBe(42);
+  });
+
   it("availability works for octrees", function () {
     var subtreeDescription = {
       tileAvailability: {
@@ -435,11 +520,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: "110101011",
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: "110101011",
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 1,
         lengthBits: 64,
@@ -475,11 +562,13 @@ describe("Scene/ImplicitSubtree", function () {
         lengthBits: 9,
         isInternal: true,
       },
-      contentAvailability: {
-        descriptor: 0,
-        lengthBits: 9,
-        isInternal: true,
-      },
+      contentAvailability: [
+        {
+          descriptor: 0,
+          lengthBits: 9,
+          isInternal: true,
+        },
+      ],
       childSubtreeAvailability: {
         descriptor: 0,
         lengthBits: 64,
@@ -507,6 +596,164 @@ describe("Scene/ImplicitSubtree", function () {
         subtree,
         subtreeDescription.childSubtreeAvailability
       );
+    });
+  });
+
+  it("rejects ready promise on error", function () {
+    var error = new Error("simulated error");
+    spyOn(when, "all").and.returnValue(when.reject(error));
+    var subtreeDescription = {
+      tileAvailability: {
+        descriptor: 1,
+        lengthBits: 5,
+        isInternal: true,
+      },
+      contentAvailability: [
+        {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+      ],
+      childSubtreeAvailability: {
+        descriptor: 0,
+        lengthBits: 16,
+        isInternal: true,
+      },
+    };
+
+    var results = ImplicitTilingTester.generateSubtreeBuffers(
+      subtreeDescription
+    );
+    var subtree = new ImplicitSubtree(
+      subtreeResource,
+      results.subtreeBuffer,
+      implicitQuadtree
+    );
+    return subtree.readyPromise
+      .then(function () {
+        fail();
+      })
+      .otherwise(function (error) {
+        expect(error).toEqual(error);
+      });
+  });
+
+  describe("3DTILES_multiple_contents", function () {
+    var multipleContentsQuadtree = new ImplicitTileset(tilesetResource, {
+      geometricError: 500,
+      refine: "ADD",
+      boundingVolume: {
+        region: [0, 0, Math.PI / 24, Math.PI / 24, 0, 1000.0],
+      },
+      extensions: {
+        "3DTILES_implicit_tiling": {
+          subdivisionScheme: "QUADTREE",
+          subtreeLevels: 2,
+          maximumLevel: 1,
+          subtrees: {
+            uri: "https://example.com/{level}/{x}/{y}.subtree",
+          },
+        },
+        "3DTILES_multiple_contents": {
+          content: [
+            {
+              uri: "https://example.com/{level}/{x}/{y}.b3dm",
+            },
+            {
+              uri: "https://example.com/{level}/{x}/{y}.pnts",
+            },
+          ],
+        },
+      },
+    });
+
+    it("contentIsAvailable throws for out-of-bounds contentIndex", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: true,
+          },
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: true,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+      };
+
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        multipleContentsQuadtree
+      );
+      var outOfBounds = 100;
+      return subtree.readyPromise.then(function () {
+        expect(function () {
+          subtree.contentIsAvailable(0, outOfBounds);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("contentIsAvailable works for multiple contents", function () {
+      var subtreeDescription = {
+        tileAvailability: {
+          descriptor: 1,
+          lengthBits: 5,
+          isInternal: true,
+        },
+        contentAvailability: [
+          {
+            descriptor: 1,
+            lengthBits: 5,
+            isInternal: false,
+          },
+          {
+            descriptor: "10011",
+            lengthBits: 5,
+            isInternal: false,
+          },
+        ],
+        childSubtreeAvailability: {
+          descriptor: 0,
+          lengthBits: 16,
+          isInternal: true,
+        },
+      };
+      var results = ImplicitTilingTester.generateSubtreeBuffers(
+        subtreeDescription
+      );
+      var fetchExternal = spyOn(
+        Resource.prototype,
+        "fetchArrayBuffer"
+      ).and.returnValue(when.resolve(results.externalBuffer));
+      var subtree = new ImplicitSubtree(
+        subtreeResource,
+        results.subtreeBuffer,
+        multipleContentsQuadtree
+      );
+      return subtree.readyPromise.then(function () {
+        expect(fetchExternal.calls.count()).toEqual(1);
+        expectContentAvailability(
+          subtree,
+          subtreeDescription.contentAvailability
+        );
+      });
     });
   });
 });

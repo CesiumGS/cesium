@@ -157,14 +157,6 @@ describe(
     var pointCloudBatchedUrl =
       "Data/Cesium3DTiles/PointCloud/PointCloudBatched/tileset.json";
 
-    var multipleContentsUrl =
-      "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
-
-    var implicitRootUrl =
-      "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
-    var implicitChildUrl =
-      "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
-
     function endsWith(string, suffix) {
       var slicePoint = string.length - suffix.length;
       return string.slice(slicePoint) === suffix;
@@ -3441,7 +3433,9 @@ describe(
 
     it("propagates tile transform down the tree", function () {
       var b3dmCommands = 1;
-      var i3dmCommands = scene.context.instancedArrays ? 1 : 25; // When instancing is not supported there is one command per instance
+      // when instancing is supported, there is a single draw command,
+      // else each instance is a separate command.
+      var i3dmCommands = scene.context.instancedArrays ? 1 : 25;
       var totalCommands = b3dmCommands + i3dmCommands;
       return Cesium3DTilesTester.loadTileset(
         scene,
@@ -4807,49 +4801,75 @@ describe(
       );
     });
 
-    it("detects and initializes an implicit tileset in root tile", function () {
-      viewNothing();
-      return Cesium3DTilesTester.loadTileset(scene, implicitRootUrl).then(
-        function (tileset) {
-          var implicitTile = tileset.root;
-          expect(
-            endsWith(
-              implicitTile._contentResource.url,
-              "subtrees/0/0/0/0.subtree"
-            )
-          ).toEqual(true);
-          expect(implicitTile.implicitTileset).toBeDefined();
-          expect(implicitTile.implicitCoordinates).toBeDefined();
-          expect(implicitTile.implicitCoordinates.level).toEqual(0);
-          expect(implicitTile.implicitCoordinates.x).toEqual(0);
-          expect(implicitTile.implicitCoordinates.y).toEqual(0);
-          expect(implicitTile.implicitCoordinates.z).toEqual(0);
-        }
-      );
-    });
+    describe("3DTILES_implicit_tiling", function () {
+      var implicitTilesetUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitTileset/tileset.json";
+      var implicitRootUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitRootTile/tileset.json";
+      var implicitChildUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitChildTile/tileset.json";
 
-    it("detects and initializes an implicit tileset in child tile", function () {
-      viewNothing();
-      return Cesium3DTilesTester.loadTileset(scene, implicitChildUrl).then(
-        function (tileset) {
-          var parentTile = tileset.root;
-          var implicitTile = parentTile.children[0];
-          expect(
-            endsWith(
-              implicitTile._contentResource.url,
-              "subtrees/0/0/0.subtree"
-            )
-          ).toEqual(true);
-          expect(implicitTile.implicitTileset).toBeDefined();
-          expect(implicitTile.implicitCoordinates).toBeDefined();
-          expect(implicitTile.implicitCoordinates.level).toEqual(0);
-          expect(implicitTile.implicitCoordinates.x).toEqual(0);
-          expect(implicitTile.implicitCoordinates.y).toEqual(0);
-        }
-      );
+      it("renders tileset", function () {
+        return Cesium3DTilesTester.loadTileset(scene, implicitTilesetUrl).then(
+          function (tileset) {
+            var statistics = tileset._statistics;
+            // root + implicit placeholder + 4 child tiles
+            expect(statistics.visited).toEqual(6);
+            // the implicit placeholder tile is not rendered
+            expect(statistics.numberOfCommands).toEqual(5);
+          }
+        );
+      });
+
+      it("detects and initializes an implicit tileset in root tile", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, implicitRootUrl).then(
+          function (tileset) {
+            var implicitTile = tileset.root;
+            expect(
+              endsWith(
+                implicitTile._contentResource.url,
+                "subtrees/0/0/0/0.subtree"
+              )
+            ).toEqual(true);
+            expect(implicitTile.implicitTileset).toBeDefined();
+            expect(implicitTile.implicitCoordinates).toBeDefined();
+            expect(implicitTile.implicitCoordinates.level).toEqual(0);
+            expect(implicitTile.implicitCoordinates.x).toEqual(0);
+            expect(implicitTile.implicitCoordinates.y).toEqual(0);
+            expect(implicitTile.implicitCoordinates.z).toEqual(0);
+          }
+        );
+      });
+
+      it("detects and initializes an implicit tileset in child tile", function () {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, implicitChildUrl).then(
+          function (tileset) {
+            var parentTile = tileset.root;
+            var implicitTile = parentTile.children[0];
+            expect(
+              endsWith(
+                implicitTile._contentResource.url,
+                "subtrees/0/0/0.subtree"
+              )
+            ).toEqual(true);
+            expect(implicitTile.implicitTileset).toBeDefined();
+            expect(implicitTile.implicitCoordinates).toBeDefined();
+            expect(implicitTile.implicitCoordinates.level).toEqual(0);
+            expect(implicitTile.implicitCoordinates.x).toEqual(0);
+            expect(implicitTile.implicitCoordinates.y).toEqual(0);
+          }
+        );
+      });
     });
 
     describe("3DTILES_multiple_contents", function () {
+      var multipleContentsUrl =
+        "Data/Cesium3DTiles/MultipleContents/MultipleContents/tileset.json";
+      var implicitMultipleContentsUrl =
+        "Data/Cesium3DTiles/Implicit/ImplicitMultipleContents/tileset.json";
+
       it("request statistics are updated correctly on success", function () {
         return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
           function (tileset) {
@@ -5106,6 +5126,34 @@ describe(
             expect(tileset._tileDebugLabels).not.toBeDefined();
           }
         );
+      });
+
+      it("renders tileset with multiple contents", function () {
+        var b3dmCommands = 1;
+        // when instancing is supported, there is a single draw command,
+        // else,each instance is a separate command.
+        var i3dmCommands = scene.context.instancedArrays ? 1 : 25;
+        var totalCommands = b3dmCommands + i3dmCommands;
+        return Cesium3DTilesTester.loadTileset(scene, multipleContentsUrl).then(
+          function (tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.visited).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(totalCommands);
+          }
+        );
+      });
+
+      it("renders implicit tileset with multiple contents", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          implicitMultipleContentsUrl
+        ).then(function (tileset) {
+          var statistics = tileset._statistics;
+          // implicit placeholder + transcoded root + 4 child tiles
+          expect(statistics.visited).toEqual(6);
+          // root content + 2 contents per child tile
+          expect(statistics.numberOfCommands).toEqual(9);
+        });
       });
     });
   },

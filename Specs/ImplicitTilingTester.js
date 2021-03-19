@@ -96,74 +96,140 @@ ImplicitTilingTester.generateSubtreeBuffers = function (
 };
 
 function makeBufferViews(subtreeDescription, subtreeJson) {
-  var parsedAvailability = [
-    // NOTE: The code below assumes tile availability is
-    // listed before content availability.
-    parseAvailability("tileAvailability", subtreeDescription.tileAvailability),
-    parseAvailability(
-      "childSubtreeAvailability",
+  // Content availability is optional.
+  var hasContent = defined(subtreeDescription.contentAvailability);
+
+  // pass 1: parse availability -------------------------------------------
+  var parsedAvailability = {
+    tileAvailability: parseAvailability(subtreeDescription.tileAvailability),
+    childSubtreeAvailability: parseAvailability(
       subtreeDescription.childSubtreeAvailability
     ),
-  ];
+  };
 
-  if (defined(subtreeDescription.contentAvailability)) {
-    parsedAvailability.push(
-      parseAvailability(
-        "contentAvailability",
-        subtreeDescription.contentAvailability
-      )
+  if (hasContent) {
+    parsedAvailability.contentAvailability = subtreeDescription.contentAvailability.map(
+      parseAvailability
     );
   }
 
-  // Some additional buffer in the subtree file (e.g. for metadata)
-  // Technically this will add an extraneous key 'other' to the
-  // subtree JSON, but that will be ignored by ImplicitSubtree
+  // to simulate additional buffer views for metadata or other purposes.
   if (defined(subtreeDescription.other)) {
-    parsedAvailability.push(
-      parseAvailability("other", subtreeDescription.other)
-    );
+    parsedAvailability.other = parseAvailability(subtreeDescription.other);
   }
 
+  // pass 2: create buffer view JSON and gather typed arrays ------------------
   var bufferViewsU8 = {
     internal: [],
     external: [],
+    count: 0,
   };
-  var bufferViewCount = 0;
-  for (var i = 0; i < parsedAvailability.length; i++) {
-    var parsed = parsedAvailability[i];
-    if (parsed.name === "contentAvailability" && parsed.shareBuffer) {
-      subtreeJson.contentAvailability = {
-        bufferView: subtreeJson.tileAvailability.bufferView,
-      };
-    } else if (defined(parsed.constant)) {
-      subtreeJson[parsed.name] = {
-        constant: parsed.constant,
+
+  var bufferViewJsonArray = [];
+  gatherBufferViews(
+    bufferViewsU8,
+    bufferViewJsonArray,
+    parsedAvailability.tileAvailability
+  );
+  if (hasContent) {
+    parsedAvailability.contentAvailability.forEach(function (
+      contentAvailability
+    ) {
+      gatherBufferViews(
+        bufferViewsU8,
+        bufferViewJsonArray,
+        contentAvailability
+      );
+    });
+  }
+  gatherBufferViews(
+    bufferViewsU8,
+    bufferViewJsonArray,
+    parsedAvailability.childSubtreeAvailability
+  );
+
+  // to simulate additional buffer views for metadata or other purposes.
+  if (defined(parsedAvailability.other)) {
+    gatherBufferViews(
+      bufferViewsU8,
+      bufferViewJsonArray,
+      parsedAvailability.other
+    );
+  }
+
+  if (bufferViewJsonArray.length > 0) {
+    subtreeJson.bufferViews = bufferViewJsonArray;
+  }
+
+  // pass 3: update the subtree availability JSON -----------------------------
+  subtreeJson.tileAvailability =
+    parsedAvailability.tileAvailability.availabilityJson;
+  subtreeJson.childSubtreeAvailability =
+    parsedAvailability.childSubtreeAvailability.availabilityJson;
+
+  if (hasContent) {
+    var contentAvailabilityArray = parsedAvailability.contentAvailability;
+    if (contentAvailabilityArray.length > 1) {
+      subtreeJson.extensions = {
+        "3DTILES_multiple_contents": {
+          contentAvailability: contentAvailabilityArray.map(function (x) {
+            return x.availabilityJson;
+          }),
+        },
       };
     } else {
-      var bufferViewId = bufferViewCount;
-      bufferViewCount++;
-
-      var bufferViewJson = {
-        buffer: undefined,
-        byteOffset: undefined,
-        byteLength: parsed.byteLength,
-      };
-      subtreeJson.bufferViews.push(bufferViewJson);
-      subtreeJson[parsed.name] = {
-        bufferView: bufferViewId,
-      };
-
-      var location = parsed.isInternal ? "internal" : "external";
-      bufferViewsU8[location].push({
-        bufferView: parsed.bitstream,
-        // save a reference to the object so we can update the offsets and
-        // lengths later.
-        json: bufferViewJson,
-      });
+      subtreeJson.contentAvailability =
+        contentAvailabilityArray[0].availabilityJson;
     }
   }
 
   return bufferViewsU8;
+}
+
+function gatherBufferViews(
+  bufferViewsU8,
+  bufferViewJsonArray,
+  parsedBitstream
+) {
+  if (defined(parsedBitstream.constant)) {
+    parsedBitstream.availabilityJson = {
+      constant: parsedBitstream.constant,
+    };
+  } else if (defined(parsedBitstream.shareBuffer)) {
+    // simplifying assumptions:
+    // 1. shareBuffer is only used for content availability
+    // 2. tileAvailability is stored in the first bufferView so it has index 0
+    parsedBitstream.availabilityJson = {
+      bufferView: 0,
+    };
+  } else {
+    var bufferViewId = bufferViewsU8.count;
+    bufferViewsU8.count++;
+
+    var bufferViewJson = {
+      buffer: undefined,
+      byteOffset: undefined,
+      byteLength: parsedBitstream.byteLength,
+    };
+    bufferViewJsonArray.push(bufferViewJson);
+
+    parsedBitstream.availabilityJson = {
+      bufferView: bufferViewId,
+    };
+
+    var bufferView = {
+      bufferView: parsedBitstream.bitstream,
+      // save a reference to the object so we can update the offsets and
+      // lengths later.
+      json: bufferViewJson,
+    };
+
+    if (parsedBitstream.isInternal) {
+      bufferViewsU8.internal.push(bufferView);
+    } else {
+      bufferViewsU8.external.push(bufferView);
+    }
+  }
 }
 
 function makeSubtreeHeader(jsonByteLength, binaryByteLength) {
@@ -206,11 +272,13 @@ function makeJsonChunk(json) {
   return buffer;
 }
 
-function parseAvailability(name, availability) {
+function parseAvailability(availability) {
   var parsed = parseAvailabilityDescriptor(availability.descriptor);
-  parsed.name = name;
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
+
+  // this will be populated by gatherBufferViews()
+  parsed.availabilityJson = undefined;
 
   return parsed;
 }

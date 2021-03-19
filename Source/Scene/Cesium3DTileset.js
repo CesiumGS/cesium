@@ -1815,7 +1815,15 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
         uri: contentUri,
       },
     };
-    var tileJson = combine(contentJson, tileHeader);
+
+    var deepCopy = true;
+    var tileJson = combine(contentJson, tileHeader, deepCopy);
+
+    // The placeholder tile does not have any extensions. If there are any
+    // extensions beyond 3DTILES_implicit_tiling, Implicit3DTileContent will
+    // copy them to the transcoded tiles.
+    delete tileJson.extensions;
+
     var tile = new Cesium3DTile(tileset, baseResource, tileJson, parentTile);
     tile.implicitTileset = implicitTileset;
     tile.implicitCoordinates = rootCoordinates;
