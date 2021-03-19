@@ -24,6 +24,8 @@ ResourceCache.cacheEntries = {};
 
 /**
  * TODO: doc
+ *
+ * @private
  */
 function CacheEntry(options) {
   this.referenceCount = 1;
