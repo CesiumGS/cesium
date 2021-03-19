@@ -275,6 +275,9 @@ Batch.prototype.updateShows = function (primitive) {
     var updater = showsUpdated[i];
     var entity = updater.entity;
     var instance = this.geometry.get(updater.id);
+    if (!defined(instance) || !defined(instance.id)) {
+      continue;
+    }
 
     var attributes = this.attributes.get(instance.id.id);
     if (!defined(attributes)) {
