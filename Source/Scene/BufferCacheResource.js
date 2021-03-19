@@ -5,6 +5,7 @@ import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
 import ResourceCache from "./ResourceCache.js";
+
 /**
  * A buffer cache resource.
  * <p>
@@ -16,11 +17,11 @@ import ResourceCache from "./ResourceCache.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {String} options.cacheKey The cache key.
+ * @param {String} options.cacheKey The cache key of the resource.
  * @param {Resource} [options.resource] The {@link Resource} pointing to the external buffer.
  * @param {Uint8Array} [options.typedArray] The typed array containing the embedded buffer contents.
  *
- * @exception {DeveloperError} One of options.resource or options.typedArray must be defined.
+ * @exception {DeveloperError} One of options.resource and options.typedArray must be defined.
  *
  * @private
  */
@@ -34,7 +35,7 @@ function BufferCacheResource(options) {
   Check.typeOf.string("options.cacheKey", cacheKey);
   var hasResource = defined(resource);
   var hasTypedArray = defined(typedArray);
-  if ((hasResource && hasTypedArray) || (!hasResource && !hasTypedArray)) {
+  if (hasResource === hasTypedArray) {
     throw new DeveloperError(
       "One of options.resource and options.typedArray must be defined."
     );
@@ -50,7 +51,7 @@ function BufferCacheResource(options) {
 
 Object.defineProperties(BufferCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof BufferCacheResource.prototype
    *
@@ -108,9 +109,9 @@ function loadExternalBuffer(bufferCacheResource) {
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
       if (bufferCacheResource._state === CacheResourceState.UNLOADED) {
+        unload(bufferCacheResource);
         return;
       }
-
       bufferCacheResource._typedArray = new Uint8Array(arrayBuffer);
       bufferCacheResource._state = CacheResourceState.READY;
       bufferCacheResource._promise.resolve(bufferCacheResource);

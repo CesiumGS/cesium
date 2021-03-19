@@ -31,8 +31,8 @@ var defaultAccept =
  * @param {Object} options Object with the following properties:
  * @param {Resource|String} options.uri The uri to the glTF file.
  * @param {Resource|String} [options.basePath] The base path that paths in the glTF JSON are relative to.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
+ * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
  * @alias GltfLoader
  * @constructor
@@ -43,8 +43,8 @@ export default function GltfLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var uri = options.uri;
   var basePath = options.basePath;
-  var asynchronous = defaultValue(options.asynchronous, true);
   var keepResident = defaultValue(options.keepResident, false);
+  var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.defined("options.uri", uri);
@@ -63,11 +63,11 @@ export default function GltfLoader(options) {
   this._uri = uri;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
-  this._asynchronous = asynchronous;
   this._keepResident = keepResident;
+  this._asynchronous = asynchronous;
   this._gltf = undefined;
-  this._loadResources = new GltfLoadResources();
-  this._resourceCacheResource = undefined;
+  this._loadResources = undefined;
+  this._gltfCacheResource = undefined;
   this._error = undefined;
   this._state = GltfLoaderState.UNLOADED;
 }
@@ -99,6 +99,9 @@ Object.defineProperties(GltfLoader.prototype, {
   },
 });
 
+/**
+ * TODO: doc
+ */
 GltfLoader.prototype.update = function (model, frameState) {
   if (!FeatureDetection.supportsWebP.initialized) {
     FeatureDetection.supportsWebP.initialize();
@@ -118,7 +121,7 @@ GltfLoader.prototype.update = function (model, frameState) {
 function handleModelDestroyed(loader, model) {
   if (model.isDestroyed()) {
     unload(loader);
-    loader._state = GltfLoaderState.FAILED;
+    loader._state = GltfLoaderState.UNLOADED;
     return true;
   }
   return false;
@@ -138,7 +141,7 @@ function loadGltf(loader, model, frameState) {
     keepResident: loader._keepResident,
   });
 
-  this._resourceCacheResource = gltfCacheResource;
+  loader._gltfCacheResource = gltfCacheResource;
 
   gltfCacheResource.promise
     .then(function () {
@@ -155,19 +158,21 @@ function loadGltf(loader, model, frameState) {
       var indexBuffers = loadIndexBuffers(loader, gltf);
       var textures = loadTextures(loader, gltf, supportedImageFormats);
 
-      return loader._loadResources
-        .load({
-          vertexBuffers: vertexBuffers,
-          indexBuffers: indexBuffers,
-          textures: textures,
-        })
-        .then(function () {
-          if (handleModelDestroyed(loader, model)) {
-            return;
-          }
-          //createModel(loader, model); TODO
-          loader._state = GltfLoaderState.READY;
-        });
+      var loadResources = new GltfLoadResources({
+        vertexBuffers: vertexBuffers,
+        indexBuffers: indexBuffers,
+        textures: textures,
+      });
+
+      loadResources.load();
+
+      return loadResources.promise.then(function () {
+        if (handleModelDestroyed(loader, model)) {
+          return;
+        }
+        //createModel(loader, model); TODO
+        loader._state = GltfLoaderState.READY;
+      });
     })
     .otherwise(function (error) {
       unload(loader);
@@ -243,6 +248,7 @@ function loadVertexBuffers(loader, gltf) {
         bufferViewId: bufferViewId,
         gltfResource: loader._gltfResource,
         baseResource: loader._baseResource,
+        keepResident: false,
         asynchronous: loader._asynchronous,
       });
     }
@@ -263,7 +269,12 @@ function loadIndexBuffers(loader, gltf) {
       }
       if (!defined(dracoAttributes) && defined(primitive.indices)) {
         // Ignore accessors that may contain uncompressed fallback data since we only care about the compressed data
-        accessorIds[primitive.indices] = true;
+        var accessorId = primitive.indices;
+        var accessor = gltf.accessors[accessorId];
+        var bufferViewId = accessor.bufferView;
+        if (defined(bufferViewId)) {
+          accessorIds[accessorId] = true;
+        }
       }
     });
   });
@@ -276,6 +287,7 @@ function loadIndexBuffers(loader, gltf) {
         accessorId: accessorId,
         gltfResource: loader._gltfResource,
         baseResource: loader._baseResource,
+        keepResident: false,
         asynchronous: loader._asynchronous,
       });
     }
@@ -283,7 +295,7 @@ function loadIndexBuffers(loader, gltf) {
   return indexBuffers;
 }
 
-var EMPTY_ARRAY = [];
+var EMPTY_ARRAY = Object.freeze([]);
 
 function getSceneNodes(gltf) {
   var nodes;
@@ -372,6 +384,7 @@ function loadTextures(loader, gltf, supportedImageFormats) {
         gltfResource: loader._gltfResource,
         baseResource: loader._baseResource,
         supportedImageFormats: supportedImageFormats,
+        keepResident: false,
         asynchronous: loader._asynchronous,
       });
     }
@@ -380,16 +393,24 @@ function loadTextures(loader, gltf, supportedImageFormats) {
 }
 
 function unload(loader) {
-  if (defined(loader._resourceCacheResource)) {
-    ResourceCache.unloadGltf(loader._resourceCacheResource);
+  if (defined(loader._gltfCacheResource)) {
+    ResourceCache.unload(loader._gltfCacheResource);
   }
-  loader._loadResources.unload();
+  if (defined(loader._loadResources)) {
+    loader._loadResources.unload();
+  }
 }
 
+/**
+ * TODO: doc
+ */
 GltfLoader.prototype.isDestroyed = function () {
   return false;
 };
 
+/**
+ * TODO: doc
+ */
 GltfLoader.prototype.destroy = function () {
   unload(this);
   return destroyObject(this);

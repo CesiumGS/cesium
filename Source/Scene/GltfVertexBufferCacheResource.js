@@ -70,7 +70,7 @@ export default function GltfVertexBufferCacheResource(options) {
 
 Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof GltfVertexBufferCacheResource.prototype
    *
@@ -111,18 +111,19 @@ Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
 });
 
 function getBufferCacheResource(vertexBufferCacheResource) {
+  var resourceCache = vertexBufferCacheResource._resourceCache;
   var buffer = vertexBufferCacheResource._buffer;
   if (defined(buffer.uri)) {
     var baseResource = vertexBufferCacheResource._baseResource;
     var resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
-    return ResourceCache.loadExternalBuffer({
+    return resourceCache.loadExternalBuffer({
       resource: resource,
       keepResident: false,
     });
   }
-  return ResourceCache.loadEmbeddedBuffer({
+  return resourceCache.loadEmbeddedBuffer({
     parentResource: vertexBufferCacheResource._gltfResource,
     bufferId: vertexBufferCacheResource._bufferId,
     keepResident: false,
@@ -141,6 +142,7 @@ GltfVertexBufferCacheResource.prototype.load = function () {
   bufferCacheResource.promise
     .then(function () {
       if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
         return;
       }
       // Loaded buffer view from the cache.
@@ -166,8 +168,8 @@ function unload(vertexBufferCacheResource) {
   }
 
   if (defined(vertexBufferCacheResource._bufferCacheResource)) {
-    // Unload the buffer resource from the cache
-    vertexBufferCacheResource._resourceCache.unloadBuffer(
+    // Unload the buffer cache resource
+    vertexBufferCacheResource._resourceCache.unload(
       vertexBufferCacheResource._bufferCacheResource
     );
   }
@@ -202,8 +204,8 @@ CreateVertexBufferJob.prototype.execute = function () {
 
 function createVertexBuffer(typedArray, context) {
   var vertexBuffer = Buffer.createVertexBuffer({
-    context: context,
     typedArray: typedArray,
+    context: context,
     usage: BufferUsage.STATIC_DRAW,
   });
   vertexBuffer.vertexArrayDestroyable = false;
@@ -219,7 +221,7 @@ var scratchVertexBufferJob = new CreateVertexBufferJob();
  */
 GltfVertexBufferCacheResource.prototype.update = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
+  Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
   if (defined(this._vertexBuffer)) {
@@ -247,7 +249,7 @@ GltfVertexBufferCacheResource.prototype.update = function (frameState) {
     vertexBuffer = createVertexBuffer(this._typedArray, frameState.context);
   }
 
-  this._resourceCache.unloadBuffer(this._bufferCacheResource);
+  this._resourceCache.unload(this._bufferCacheResource);
   this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._vertexBuffer = vertexBuffer;

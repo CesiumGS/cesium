@@ -2,17 +2,17 @@ import Check from "../Core/Check.js";
 import CesiumMath from "../Core/Math.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
+import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
 import ResourceCache from "./ResourceCache.js";
 
 /**
- * A texture cache resource.
+ * A glTF texture cache resource.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
@@ -24,7 +24,7 @@ import ResourceCache from "./ResourceCache.js";
  * @param {Object} options Object with the following properties:
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.textureInfo The texture info object.
+ * @param {Object} options.textureInfo The texture info object.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Object.<String, Boolean>} options.supportedImageFormats The supported image formats.
@@ -69,44 +69,42 @@ export default function GltfTextureCacheResource(options) {
   //>>includeEnd('debug');
 
   var textureId = textureInfo.index;
-  var texture = gltf.textures[textureId];
-  var imageId = texture.source; // TODO: imageId is not always defined
+  var imageId = GltfLoaderUtil.getImageIdFromTexture({
+    gltf: gltf,
+    textureId: textureId,
+    supportedImageFormats: supportedImageFormats,
+  });
+
+  // TODO: imageId is not always defined
 
   this._resourceCache = resourceCache;
   this._gltf = gltf;
   this._textureInfo = textureInfo;
-  this._imageId = imageId;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._supportedImageFormats = supportedImageFormats;
+  this._imageId = imageId;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._imageCacheResource = undefined;
   this._image = undefined;
   this._texture = undefined;
   this._state = CacheResourceState.UNLOADED;
-  this._promise = undefined;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfTextureCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof GltfTextureCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfTextureCacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
-      return this._promise;
+      return this._promise.promise;
     },
   },
   /**
@@ -141,25 +139,26 @@ Object.defineProperties(GltfTextureCacheResource.prototype, {
  * Loads the resource.
  */
 GltfTextureCacheResource.prototype.load = function () {
+  var that = this;
   var imageCacheResource = this._resourceCache.loadImage({
     gltf: this._gltf,
     imageId: this._imageId,
     gltfResource: this._gltfResource,
     baseResource: this._baseResource,
     supportedImageFormats: this._supportedImageFormats,
+    keepResident: false,
   });
   this._imageCacheResource = imageCacheResource;
   this._state = CacheResourceState.LOADING;
 
-  var that = this;
-
   imageCacheResource.promise
     .then(function () {
       if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
         return;
       }
       // Loaded image from the cache.
-      // Now wait for the GPU buffer to be created in the update loop.
+      // Now wait for the GPU texture to be created in the update loop.
       that._image = imageCacheResource.image;
     })
     .otherwise(function (error) {
@@ -177,14 +176,14 @@ function unload(textureCacheResource) {
   }
 
   if (defined(textureCacheResource._imageCacheResource)) {
-    // Unload the image resource from the cache
-    textureCacheResource._resourceCache.unloadImage(
+    // Unload the image cache resource
+    textureCacheResource._resourceCache.unload(
       textureCacheResource._imageCacheResource
     );
   }
 
-  textureCacheResource._gltf = undefined;
   textureCacheResource._imageCacheResource = undefined;
+  textureCacheResource._gltf = undefined;
   textureCacheResource._image = undefined;
   textureCacheResource._texture = undefined;
 }
@@ -202,6 +201,7 @@ function CreateTextureJob() {
   this.textureInfo = undefined;
   this.image = undefined;
   this.context = undefined;
+  this.texture = undefined;
 }
 
 CreateTextureJob.prototype.set = function (gltf, textureInfo, image, context) {
@@ -212,7 +212,7 @@ CreateTextureJob.prototype.set = function (gltf, textureInfo, image, context) {
 };
 
 CreateTextureJob.prototype.execute = function () {
-  this.image = createTexture(
+  this.texture = createTexture(
     this.gltf,
     this.textureInfo,
     this.image,
@@ -318,7 +318,7 @@ var scratchTextureJob = new CreateTextureJob();
  */
 GltfTextureCacheResource.prototype.update = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
+  Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
   if (defined(this._texture)) {
@@ -356,9 +356,9 @@ GltfTextureCacheResource.prototype.update = function (frameState) {
     );
   }
 
-  this._gltf = undefined;
-  this._resourceCache.unloadImage(this._imageCacheResource);
+  this._resourceCache.unload(this._imageCacheResource);
   this._imageCacheResource = undefined;
+  this._gltf = undefined;
   this._image = undefined;
   this._texture = texture;
   this._state = CacheResourceState.READY;

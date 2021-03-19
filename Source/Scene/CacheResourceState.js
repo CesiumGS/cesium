@@ -1,4 +1,6 @@
 /**
+ * TODO: doc
+ *
  * @private
  */
 var CacheResourceState = {

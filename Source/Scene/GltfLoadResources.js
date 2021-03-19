@@ -1,22 +1,39 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
-import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import ResourceCache from "./ResourceCache.js";
 
 /**
  * Manages glTF load resources.
  *
+ * @alias GltfLoadResources
+ * @constructor
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {GltfVertexBufferCacheResource[]} options.vertexBuffers Vertex buffers to load.
+ * @param {GltfIndexBufferCacheResource[]} options.indexBuffers Index buffers to load.
+ * @param {GltfTextureCacheResource[]} options.textures Textures to load.
+ *
  * @see GltfLoader
  *
  * @private
  */
-export default function GltfLoadResources() {
-  this._vertexBuffers = defaultValue.EMPTY_OBJECT;
-  this._indexBuffers = defaultValue.EMPTY_OBJECT;
-  this._textures = defaultValue.EMPTY_OBJECT;
-  this._promise = undefined;
+export default function GltfLoadResources(options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var vertexBuffers = options.vertexBuffers;
+  var indexBuffers = options.indexBuffers;
+  var textures = options.textures;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.vertexBuffers", vertexBuffers);
+  Check.typeOf.object("options.indexBuffers", indexBuffers);
+  Check.typeOf.object("options.textures", textures);
+  //>>includeEnd('debug');
+
+  this._vertexBuffers = vertexBuffers;
+  this._indexBuffers = indexBuffers;
+  this._textures = textures;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfLoadResources.prototype, {
@@ -25,18 +42,11 @@ Object.defineProperties(GltfLoadResources.prototype, {
    *
    * @memberof GltfLoadResources.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfLoadResources>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resources are not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resources are not loaded");
-      }
-      //>>includeEnd('debug');
       return this._promise;
     },
   },
@@ -44,29 +54,11 @@ Object.defineProperties(GltfLoadResources.prototype, {
 
 /**
  * Load resources.
- *
- * @param {Object} [options] Object with the following properties:
- * @param {GltfVertexBufferCacheResource[]} [options.vertexBuffers] Vertex buffers to load.
- * @param {GltfIndexBufferCacheResource[]} [options.indexBuffers] Index buffers to load.
- * @param {GltfTextureCacheResource[]} [options.textures] Textures to load.
- *
- * @returns {Promise} A promise that resolves once all the resources are loaded.
  */
-GltfLoadResources.prototype.load = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var vertexBuffers = defaultValue(
-    options.vertexBuffers,
-    defaultValue.EMPTY_OBJECT
-  );
-  var indexBuffers = defaultValue(
-    options.indexBuffers,
-    defaultValue.EMPTY_OBJECT
-  );
-  var textures = defaultValue(options.textures, defaultValue.EMPTY_OBJECT);
-
-  this._vertexBuffers = vertexBuffers;
-  this._indexBuffers = indexBuffers;
-  this._textures = textures;
+GltfLoadResources.prototype.load = function () {
+  var vertexBuffers = this._vertexBuffers;
+  var indexBuffers = this._indexBuffers;
+  var textures = this._textures;
 
   var promises = [];
   for (var vertexBufferId in vertexBuffers) {
@@ -88,7 +80,16 @@ GltfLoadResources.prototype.load = function (options) {
     }
   }
 
-  return when.all(promises);
+  var that = this;
+
+  when
+    .all(promises)
+    .then(function () {
+      that._promise.resolve(that);
+    })
+    .otherwise(function (error) {
+      that._promise.reject(error);
+    });
 };
 
 /**
@@ -102,19 +103,19 @@ GltfLoadResources.prototype.unload = function () {
   for (var vertexBufferId in vertexBuffers) {
     if (vertexBuffers.hasOwnProperty(vertexBufferId)) {
       var vertexBuffer = vertexBuffers[vertexBufferId];
-      ResourceCache.unloadVertexBuffer(vertexBuffer);
+      ResourceCache.unload(vertexBuffer);
     }
   }
   for (var indexBufferId in indexBuffers) {
     if (indexBuffers.hasOwnProperty(indexBufferId)) {
       var indexBuffer = indexBuffers[indexBufferId];
-      ResourceCache.unloadIndexBuffer(indexBuffer);
+      ResourceCache.unload(indexBuffer);
     }
   }
   for (var textureId in textures) {
     if (textures.hasOwnProperty(textureId)) {
       var texture = textures[textureId];
-      ResourceCache.unloadTexture(texture);
+      ResourceCache.unload(texture);
     }
   }
 };
@@ -126,7 +127,7 @@ GltfLoadResources.prototype.unload = function () {
  */
 GltfLoadResources.prototype.update = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
+  Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
   var vertexBuffers = this._vertexBuffers;

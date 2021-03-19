@@ -10,7 +10,7 @@ import CacheResourceState from "./CacheResourceState.js";
 import ResourceCache from "./ResourceCache.js";
 
 /**
- * An image cache resource.
+ * A glTF image cache resource.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
@@ -127,7 +127,6 @@ export default function GltfImageCacheResource(options) {
   this._uri = uri;
   this._cacheKey = cacheKey;
   this._bufferCacheResource = undefined;
-  this._typedArray = undefined;
   this._image = undefined;
   this._state = CacheResourceState.UNLOADED;
   this._promise = when.defer();
@@ -135,11 +134,11 @@ export default function GltfImageCacheResource(options) {
 
 Object.defineProperties(GltfImageCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof GltfImageCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfImageCacheResource>}
    * @readonly
    */
   promise: {
@@ -165,7 +164,7 @@ Object.defineProperties(GltfImageCacheResource.prototype, {
    *
    * @memberof GltfImageCacheResource.prototype
    *
-   * @type {CompressedTextureBuffer|Image|ImageBitmap}
+   * @type {Image|ImageBitmap|CompressedTextureBuffer}
    * @readonly
    */
   image: {
@@ -187,18 +186,19 @@ GltfImageCacheResource.prototype.load = function () {
 };
 
 function getBufferCacheResource(imageCacheResource) {
+  var resourceCache = imageCacheResource._resourceCache;
   var buffer = imageCacheResource._buffer;
   if (defined(buffer.uri)) {
     var baseResource = imageCacheResource._baseResource;
     var resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
-    return ResourceCache.loadExternalBuffer({
+    return resourceCache.loadExternalBuffer({
       resource: resource,
       keepResident: false,
     });
   }
-  return ResourceCache.loadEmbeddedBuffer({
+  return resourceCache.loadEmbeddedBuffer({
     parentResource: imageCacheResource._gltfResource,
     bufferId: imageCacheResource._bufferId,
     keepResident: false,
@@ -213,17 +213,17 @@ function loadFromBuffer(imageCacheResource) {
   bufferCacheResource.promise
     .then(function () {
       if (imageCacheResource._state === CacheResourceState.UNLOADED) {
+        unload(imageCacheResource);
         return;
       }
       var typedArray = bufferCacheResource.typedArray;
-      imageCacheResource._typedArray = typedArray;
       return loadImageFromBufferTypedArray(typedArray).then(function (image) {
         if (imageCacheResource._state === CacheResourceState.UNLOADED) {
+          unload(imageCacheResource);
           return;
         }
-        imageCacheResource._resourceCache.unloadBuffer(bufferCacheResource);
+        imageCacheResource._resourceCache.unload(bufferCacheResource);
         imageCacheResource._bufferCacheResource = undefined;
-        imageCacheResource._typedArray = undefined;
         imageCacheResource._image = image;
         imageCacheResource._state = CacheResourceState.READY;
         imageCacheResource._promise.resolve(imageCacheResource);
@@ -245,11 +245,11 @@ function loadFromUri(imageCacheResource) {
   var resource = baseResource.getDerivedResource({
     url: uri,
   });
-
   imageCacheResource._state = CacheResourceState.LOADING;
   loadImageFromUri(resource)
     .then(function (image) {
       if (imageCacheResource._state === CacheResourceState.UNLOADED) {
+        unload(imageCacheResource);
         return;
       }
       imageCacheResource._uri = undefined; // Free in case the uri is a data uri
@@ -310,7 +310,7 @@ function loadImageFromBufferTypedArray(typedArray) {
     // Resolves to a CompressedTextureBuffer
     return loadCRN(typedArray);
   }
-  // Resolves to an ImageBitmap or Image
+  // Resolves to an Image or ImageBitmap
   return loadImageFromTypedArray({
     uint8Array: typedArray,
     format: mimeType,
@@ -337,14 +337,13 @@ function loadImageFromUri(resource) {
 function unload(imageCacheResource) {
   if (defined(imageCacheResource._bufferCacheResource)) {
     // Unload the buffer resource from the cache
-    imageCacheResource._resourceCache.unloadBuffer(
+    imageCacheResource._resourceCache.unload(
       imageCacheResource._bufferCacheResource
     );
   }
 
   imageCacheResource._uri = undefined; // Free in case the uri is a data uri
   imageCacheResource._bufferCacheResource = undefined;
-  imageCacheResource._typedArray = undefined;
   imageCacheResource._image = undefined;
 }
 

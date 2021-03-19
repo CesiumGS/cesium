@@ -1,12 +1,10 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
-import DeveloperError from "../Core/DeveloperError.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import getMagic from "../Core/getMagic.js";
 import isDataUri from "../Core/isDataUri.js";
 import Resource from "../Core/Resource.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import addDefaults from "../ThirdParty/GltfPipeline/addDefaults.js";
 import addPipelineExtras from "../ThirdParty/GltfPipeline/addPipelineExtras.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
@@ -14,6 +12,8 @@ import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
 import removePipelineExtras from "../ThirdParty/GltfPipeline/removePipelineExtras.js";
 import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
 import when from "../ThirdParty/when.js";
+import CacheResourceState from "./CacheResourceState.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF cache resource.
@@ -29,7 +29,7 @@ import when from "../ThirdParty/when.js";
  * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
- * @param {String} options.cacheKey The cache key.
+ * @param {String} options.cacheKey The cache key of the resource.
  * @param {Boolean} [options.keepResident=false] Whether the glTF JSON and embedded buffers should stay in the cache indefinitely.
  *
  * @private
@@ -54,30 +54,24 @@ function GltfCacheResource(options) {
   this._baseResource = baseResource;
   this._cacheKey = cacheKey;
   this._keepResident = keepResident;
-  this._promise = undefined;
   this._gltf = undefined;
   this._bufferCacheResources = [];
+  this._state = CacheResourceState.UNLOADED;
+  this._promise = when.defer();
 }
 
 Object.defineProperties(GltfCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof GltfCacheResource.prototype
    *
-   * @type {Promise}
+   * @type {Promise.<GltfCacheResource>}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   promise: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._promise)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
-      return this._promise;
+      return this._promise.promise;
     },
   },
   /**
@@ -100,16 +94,9 @@ Object.defineProperties(GltfCacheResource.prototype, {
    *
    * @type {Object}
    * @readonly
-   *
-   * @exception {DeveloperError} The resource is not loaded.
    */
   gltf: {
     get: function () {
-      //>>includeStart('debug', pragmas.debug);
-      if (!defined(this._gltf)) {
-        throw new DeveloperError("The resource is not loaded");
-      }
-      //>>includeEnd('debug');
       return this._gltf;
     },
   },
@@ -120,23 +107,42 @@ Object.defineProperties(GltfCacheResource.prototype, {
  */
 GltfCacheResource.prototype.load = function () {
   var that = this;
-  this._promise = this._gltfResource
+  this._state = CacheResourceState.LOADING;
+  this._gltfResource
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
+      if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
+        return;
+      }
       var typedArray = new Uint8Array(arrayBuffer);
       return processGltf(that, typedArray);
     })
     .then(function (gltf) {
+      if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
+        return;
+      }
       that._gltf = gltf;
+      that._state = CacheResourceState.READY;
+      that._promise.resolve(that);
     })
     .otherwise(function (error) {
-      var message = "Failed to load glTF: " + that._gltfResource.url;
-      if (defined(error)) {
-        message += "\n" + error.message;
-      }
-      throw new RuntimeError(message);
+      unload(that);
+      that._state = CacheResourceState.FAILED;
+      var errorMessage = "Failed to load glTF: " + that._gltfResource.url;
+      that._promise.reject(ResourceCache.getError(error, errorMessage));
     });
 };
+
+function unload(gltfCacheResource) {
+  gltfCacheResource._gltf = undefined;
+  var bufferCacheResources = gltfCacheResource._bufferCacheResources;
+  bufferCacheResources.forEach(function (bufferCacheResource) {
+    gltfCacheResource._resourceCache.unload(bufferCacheResource);
+  });
+  gltfCacheResource._bufferCacheResource = [];
+}
 
 /**
  * Unloads the resource.
@@ -144,10 +150,8 @@ GltfCacheResource.prototype.load = function () {
 GltfCacheResource.prototype.unload = function () {
   // TODO: only want to unload buffers that are in the GPU cache.
   // TODO: want to avoid double reference counting buffers
-  var that = this;
-  this._bufferCacheResources.forEach(function (bufferCacheResource) {
-    that._resourceCache.unloadBuffer(bufferCacheResource);
-  });
+  unload(this);
+  this._state = CacheResourceState.UNLOADED;
 };
 
 function containsGltfMagic(typedArray) {
@@ -163,7 +167,7 @@ function upgradeVersion(gltfCacheResource, gltf) {
   // Load all buffers into memory. updateVersion will read and in some cases modify
   // the buffer data, which it accesses from buffer.extras._pipeline.source
   var promises = [];
-  ForEach.buffer(gltf, function (buffer, bufferId) {
+  ForEach.buffer(gltf, function (buffer) {
     if (!defined(buffer.extras._pipeline.source) && defined(buffer.uri)) {
       var resource = gltfCacheResource._baseResource.getDerivedResource({
         url: buffer.uri,
@@ -205,16 +209,16 @@ function decodeDataUris(gltf) {
   return when.all(promises);
 }
 
-function storeEmbeddedBuffers(gltfCacheResource, gltf) {
+function loadEmbeddedBuffers(gltfCacheResource, gltf) {
   var promises = [];
   ForEach.buffer(gltf, function (buffer, bufferId) {
     var source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
       var resourceCache = gltfCacheResource._resourceCache;
-      var bufferCacheResource = resourceCache.storeBuffer({
-        typedArray: source,
+      var bufferCacheResource = resourceCache.loadEmbeddedBuffer({
         parentResource: gltfCacheResource._gltfResource,
-        id: bufferId,
+        bufferId: bufferId,
+        typedArray: source,
         keepResident: gltfCacheResource._keepResident,
       });
 
@@ -238,7 +242,7 @@ function processGltf(gltfCacheResource, typedArray) {
   return decodeDataUris(gltf).then(function () {
     return upgradeVersion(gltfCacheResource, gltf).then(function () {
       addDefaults(gltf);
-      return storeEmbeddedBuffers(gltfCacheResource, gltf).then(function () {
+      return loadEmbeddedBuffers(gltfCacheResource, gltf).then(function () {
         removePipelineExtras(gltf);
         return gltf;
       });

@@ -15,14 +15,14 @@ import ResourceCache from "./ResourceCache.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the JSON file.
- * @param {String} options.cacheKey The cache key.
+ * @param {String} options.cacheKey The cache key of the resource.
  *
  * @private
  */
 function JsonCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var cacheKey = options.cacheKey;
   var resource = options.resource;
+  var cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.resource", resource);
@@ -31,13 +31,14 @@ function JsonCacheResource(options) {
 
   this._resource = resource;
   this._cacheKey = cacheKey;
+  this._json = undefined;
   this._state = CacheResourceState.UNLOADED;
   this._promise = when.defer();
 }
 
 Object.defineProperties(JsonCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof JsonCacheResource.prototype
    *
@@ -87,6 +88,7 @@ JsonCacheResource.prototype.load = function () {
     .fetchJson()
     .then(function (json) {
       if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
         return;
       }
       that._json = json;

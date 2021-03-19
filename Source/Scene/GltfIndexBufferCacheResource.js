@@ -10,7 +10,7 @@ import JobType from "./JobType.js";
 import ResourceCache from "./ResourceCache.js";
 
 /**
- * An index buffer cache resource.
+ * A glTF index buffer cache resource.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
@@ -55,7 +55,6 @@ export default function GltfIndexBufferCacheResource(options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
   var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-
   var count = accessor.count;
   var indexDatatype = accessor.componentType;
 
@@ -78,7 +77,7 @@ export default function GltfIndexBufferCacheResource(options) {
 
 Object.defineProperties(GltfIndexBufferCacheResource.prototype, {
   /**
-   * A promise that resolves when the resource is ready.
+   * A promise that resolves to the resource when the resource is ready.
    *
    * @memberof GltfIndexBufferCacheResource.prototype
    *
@@ -119,18 +118,19 @@ Object.defineProperties(GltfIndexBufferCacheResource.prototype, {
 });
 
 function getBufferCacheResource(indexBufferCacheResource) {
+  var resourceCache = indexBufferCacheResource._resourceCache;
   var buffer = indexBufferCacheResource._buffer;
   if (defined(buffer.uri)) {
     var baseResource = indexBufferCacheResource._baseResource;
     var resource = baseResource.getDerivedResource({
       url: buffer.uri,
     });
-    return ResourceCache.loadExternalBuffer({
+    return resourceCache.loadExternalBuffer({
       resource: resource,
       keepResident: false,
     });
   }
-  return ResourceCache.loadEmbeddedBuffer({
+  return resourceCache.loadEmbeddedBuffer({
     parentResource: indexBufferCacheResource._gltfResource,
     bufferId: indexBufferCacheResource._bufferId,
     keepResident: false,
@@ -143,12 +143,13 @@ function getBufferCacheResource(indexBufferCacheResource) {
 GltfIndexBufferCacheResource.prototype.load = function () {
   var that = this;
   var bufferCacheResource = getBufferCacheResource(this);
-  that._bufferCacheResource = bufferCacheResource;
-  that._state = CacheResourceState.LOADING;
+  this._bufferCacheResource = bufferCacheResource;
+  this._state = CacheResourceState.LOADING;
 
   bufferCacheResource.promise
     .then(function () {
       if (that._state === CacheResourceState.UNLOADED) {
+        unload(that);
         return;
       }
       // Loaded buffer view from the cache.
@@ -185,8 +186,8 @@ function unload(indexBufferCacheResource) {
   }
 
   if (defined(indexBufferCacheResource._bufferCacheResource)) {
-    // Unload the buffer resource from the cache
-    indexBufferCacheResource._resourceCache.unloadBuffer(
+    // Unload the buffer cache resource
+    indexBufferCacheResource._resourceCache.unload(
       indexBufferCacheResource._bufferCacheResource
     );
   }
@@ -231,8 +232,8 @@ CreateIndexBufferJob.prototype.execute = function () {
 
 function createIndexBuffer(typedArray, indexDatatype, context) {
   var indexBuffer = Buffer.createIndexBuffer({
-    context: context,
     typedArray: typedArray,
+    context: context,
     usage: BufferUsage.STATIC_DRAW,
     indexDatatype: indexDatatype,
   });
@@ -249,7 +250,7 @@ var scratchIndexBufferJob = new CreateIndexBufferJob();
  */
 GltfIndexBufferCacheResource.prototype.update = function (frameState) {
   //>>includeStart('debug', pragmas.debug);
-  Check.defined("frameState", frameState);
+  Check.typeOf.object("frameState", frameState);
   //>>includeEnd('debug');
 
   if (defined(this._indexBuffer)) {
@@ -277,7 +278,7 @@ GltfIndexBufferCacheResource.prototype.update = function (frameState) {
     indexBuffer = createIndexBuffer(this._typedArray, frameState.context);
   }
 
-  this._resourceCache.unloadBuffer(this._bufferCacheResource);
+  this._resourceCache.unload(this._bufferCacheResource);
   this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._indexBuffer = indexBuffer;

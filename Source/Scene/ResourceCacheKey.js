@@ -31,13 +31,28 @@ function getAccessorCacheKey(accessor, bufferView) {
   return byteOffset + "-" + componentType + "-" + type + "-" + count;
 }
 
+function getBufferCacheKey(buffer, bufferId, gltfResource, baseResource) {
+  if (defined(buffer.uri)) {
+    var resource = baseResource.getDerivedResource({
+      url: buffer.uri,
+    });
+    return ResourceCacheKey.getExternalBufferCacheKey({
+      resource: resource,
+    });
+  }
+  return ResourceCacheKey.getEmbeddedBufferCacheKey({
+    parentResource: gltfResource,
+    bufferId: bufferId,
+  });
+}
+
 /**
  * Gets the JSON cache key.
  *
  * @param {Object} options Object with the following properties:
  * @param {Resource} options.resource The {@link Resource} pointing to the JSON file.
  *
- * @returns {String} The glTF cache key.
+ * @returns {String} The JSON cache key.
  */
 ResourceCacheKey.getJsonCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -140,12 +155,12 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
-    buffer: buffer,
-    bufferId: bufferId,
-    gltfResource: gltfResource,
-    baseResource: baseResource,
-  });
+  var bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource
+  );
 
   var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
@@ -183,12 +198,12 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
-    buffer: buffer,
-    bufferId: bufferId,
-    gltfResource: gltfResource,
-    baseResource: baseResource,
-  });
+  var bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource
+  );
 
   var accessorCacheKey = getAccessorCacheKey(accessor, bufferView);
 
@@ -227,12 +242,12 @@ ResourceCacheKey.getDracoVertexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
-    buffer: buffer,
-    bufferId: bufferId,
-    gltfResource: gltfResource,
-    baseResource: baseResource,
-  });
+  var bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource
+  );
 
   var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
@@ -286,12 +301,12 @@ ResourceCacheKey.getImageCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
-    buffer: buffer,
-    bufferId: bufferId,
-    gltfResource: gltfResource,
-    baseResource: baseResource,
-  });
+  var bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource
+  );
 
   var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 

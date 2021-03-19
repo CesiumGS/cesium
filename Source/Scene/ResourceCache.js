@@ -22,9 +22,12 @@ function ResourceCache() {}
 
 ResourceCache.cacheEntries = {};
 
+/**
+ * TODO: doc
+ */
 function CacheEntry(options) {
   this.referenceCount = 1;
-  this.resource = options.resource;
+  this.cacheResource = options.cacheResource;
   this.keepResident = options.keepResident;
 }
 
@@ -32,9 +35,9 @@ function CacheEntry(options) {
  * Gets a resource from the cache. If the resource exists its reference count is
  * incremented. Otherwise, if no resource exists, undefined is returned.
  *
- * @param {String} cacheKey The cache key.
+ * @param {String} cacheKey The cache key of the resource.
  *
- * @returns {CacheResource|undefined} The resource.
+ * @returns {CacheResource|undefined} The cache resource.
  */
 ResourceCache.get = function (cacheKey) {
   //>>includeStart('debug', pragmas.debug);
@@ -44,37 +47,37 @@ ResourceCache.get = function (cacheKey) {
   var cacheEntry = ResourceCache.cacheEntries[cacheKey];
   if (defined(cacheEntry)) {
     ++cacheEntry.referenceCount;
-    return cacheEntry.resource;
+    return cacheEntry.cacheResource;
   }
   return undefined;
 };
 
 /**
- * Loads a resource and adds it to the cache.
+ * Loads a cache resource and adds it to the cache.
  *
  * @param {Object} options Object with the following properties:
- * @param {CacheResource} options.resource The resource.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
+ * @param {CacheResource} options.cacheResource The cache resource.
+ * @param {Boolean} [options.keepResident=false] Whether the cache resource should stay in the cache indefinitely.
  */
 ResourceCache.load = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resource = options.resource;
+  var cacheResource = options.cacheResource;
   var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resource", resource);
+  Check.typeOf.object("options.cacheResource", cacheResource);
   //>>includeEnd('debug');
 
-  var cacheKey = resource.cacheKey;
+  var cacheKey = cacheResource.cacheKey;
 
   ResourceCache.cacheEntries[cacheKey] = new CacheEntry({
-    resource: resource,
+    cacheResource: cacheResource,
     keepResident: keepResident,
   });
 
-  resource.load();
+  cacheResource.load();
 
-  resource.promise.otherwise(function () {
+  cacheResource.promise.otherwise(function () {
     // If the resource fails to load remove it from the cache
     delete ResourceCache.cacheEntries[cacheKey];
   });
@@ -84,21 +87,21 @@ ResourceCache.load = function (options) {
  * Unloads a resource from the cache. When the reference count hits zero the
  * resource's unload function is called.
  *
- * @param {CacheResource} resource The resource.
+ * @param {CacheResource} cacheResource The cache resource.
  */
-ResourceCache.unload = function (resource) {
+ResourceCache.unload = function (cacheResource) {
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("resource", resource);
+  Check.typeOf.object("cacheResource", cacheResource);
   //>>includeEnd('debug');
 
-  var cacheKey = resource.cacheKey;
+  var cacheKey = cacheResource.cacheKey;
 
   var cacheEntry = ResourceCache.cacheEntries[cacheKey];
   --cacheEntry.referenceCount;
 
   if (cacheEntry.referenceCount === 0 && !cacheEntry.keepResident) {
-    if (defined(resource.unload)) {
-      resource.unload();
+    if (defined(cacheResource.unload)) {
+      cacheResource.unload();
     }
     delete ResourceCache.cacheEntries[cacheKey];
   }
@@ -147,7 +150,7 @@ ResourceCache.loadJson = function (options) {
   });
 
   ResourceCache.load({
-    resource: jsonCacheResource,
+    cacheResource: jsonCacheResource,
     keepResident: keepResident,
   });
 
@@ -193,7 +196,7 @@ ResourceCache.loadGltf = function (options) {
   });
 
   ResourceCache.load({
-    resource: gltfCacheResource,
+    cacheResource: gltfCacheResource,
     keepResident: keepResident,
   });
 
@@ -239,7 +242,7 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
   });
 
   ResourceCache.load({
-    resource: bufferCacheResource,
+    cacheResource: bufferCacheResource,
     keepResident: keepResident,
   });
 
@@ -279,7 +282,7 @@ ResourceCache.loadExternalBuffer = function (options) {
   });
 
   ResourceCache.load({
-    resource: bufferCacheResource,
+    cacheResource: bufferCacheResource,
     keepResident: keepResident,
   });
 
@@ -338,7 +341,7 @@ ResourceCache.loadVertexBuffer = function (options) {
   });
 
   ResourceCache.load({
-    resource: vertexBufferCacheResource,
+    cacheResource: vertexBufferCacheResource,
     keepResident: keepResident,
   });
 
@@ -397,7 +400,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   });
 
   ResourceCache.load({
-    resource: indexBufferCacheResource,
+    cacheResource: indexBufferCacheResource,
     keepResident: keepResident,
   });
 
@@ -471,7 +474,7 @@ ResourceCache.loadImage = function (options) {
   });
 
   ResourceCache.load({
-    resource: imageCacheResource,
+    cacheResource: imageCacheResource,
     keepResident: keepResident,
   });
 
@@ -543,13 +546,13 @@ ResourceCache.loadTexture = function (options) {
     textureInfo: textureInfo,
     gltfResource: gltfResource,
     baseResource: baseResource,
-    cacheKey: cacheKey,
     supportedImageFormats: supportedImageFormats,
+    cacheKey: cacheKey,
     asynchronous: asynchronous,
   });
 
   ResourceCache.load({
-    resource: textureCacheResource,
+    cacheResource: textureCacheResource,
     keepResident: keepResident,
   });
 
