@@ -7,21 +7,14 @@ import GltfLoaderUtil from "./GltfLoaderUtil.js";
 /**
  * Gets cache keys for {@link GltfCacheResource}.
  *
- * @namespace GltfCacheKey
+ * @namespace ResourceCacheKey
  *
  * @private
  */
-var GltfCacheKey = {};
+var ResourceCacheKey = {};
 
-function getExternalResourceCacheKey(baseResource, uri) {
-  var resource = baseResource.getDerivedResource({
-    url: uri,
-  });
+function getExternalResourceCacheKey(resource) {
   return getAbsoluteUri(resource.url);
-}
-
-function getEmbeddedBufferCacheKey(gltfCacheKey, bufferId) {
-  return gltfCacheKey + "-buffer-" + bufferId;
 }
 
 function getBufferViewCacheKey(bufferView) {
@@ -39,6 +32,25 @@ function getAccessorCacheKey(accessor, bufferView) {
 }
 
 /**
+ * Gets the JSON cache key.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Resource} options.resource The {@link Resource} pointing to the JSON file.
+ *
+ * @returns {String} The glTF cache key.
+ */
+ResourceCacheKey.getJsonCacheKey = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var resource = options.resource;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.resource", resource);
+  //>>includeEnd('debug');
+
+  return getExternalResourceCacheKey(resource);
+};
+
+/**
  * Gets the glTF cache key.
  *
  * @param {Object} options Object with the following properties:
@@ -46,7 +58,7 @@ function getAccessorCacheKey(accessor, bufferView) {
  *
  * @returns {String} The glTF cache key.
  */
-GltfCacheKey.getGltfCacheKey = function (options) {
+ResourceCacheKey.getGltfCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltfResource = options.gltfResource;
 
@@ -54,41 +66,49 @@ GltfCacheKey.getGltfCacheKey = function (options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   //>>includeEnd('debug');
 
-  return getAbsoluteUri(gltfResource.url);
+  return getExternalResourceCacheKey(gltfResource);
 };
 
 /**
- * Gets the buffer cache key.
+ * Gets the external buffer cache key.
  *
  * @param {Object} options Object with the following properties:
- * @param {Object} options.buffer The glTF buffer.
- * @param {Number} options.bufferId The buffer ID.
- * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
- * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Resource} options.resource The {@link Resource} pointing to the external buffer.
  *
- * @returns {String} The buffer cache key.
+ * @returns {String} The external buffer cache key.
  */
-GltfCacheKey.getBufferCacheKey = function (options) {
+ResourceCacheKey.getExternalBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var buffer = options.buffer;
-  var bufferId = options.bufferId;
-  var gltfResource = options.gltfResource;
-  var baseResource = options.baseResource;
+  var resource = options.resource;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.buffer", buffer);
-  Check.typeOf.number("options.bufferId", bufferId);
-  Check.typeOf.object("options.gltfResource", gltfResource);
-  Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.object("options.resource", resource);
   //>>includeEnd('debug');
 
-  if (defined(buffer.uri)) {
-    return getExternalResourceCacheKey(baseResource, buffer.uri);
-  }
-  var gltfCacheKey = GltfCacheKey.getGltfCacheKey({
-    gltfResource: gltfResource,
-  });
-  return getEmbeddedBufferCacheKey(gltfCacheKey, bufferId);
+  return getExternalResourceCacheKey(resource);
+};
+
+/**
+ * Gets the embedded buffer cache key.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Resource} options.parentResource The {@link Resource} containing the embedded buffer.
+ * @param {Number} options.bufferId A unique identifier of the embedded buffer within the parent resource.
+ *
+ * @returns {String} The embedded buffer cache key.
+ */
+ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var parentResource = options.parentResource;
+  var bufferId = options.bufferId;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.parentResource", parentResource);
+  Check.typeOf.number("options.bufferId", bufferId);
+  //>>includeEnd('debug');
+
+  var parentCacheKey = getExternalResourceCacheKey(parentResource);
+  return parentCacheKey + "-buffer-" + bufferId;
 };
 
 /**
@@ -102,7 +122,7 @@ GltfCacheKey.getBufferCacheKey = function (options) {
  *
  * @returns {String} The vertex buffer cache key.
  */
-GltfCacheKey.getVertexBufferCacheKey = function (options) {
+ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
@@ -120,7 +140,7 @@ GltfCacheKey.getVertexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = GltfCacheKey.getBufferCacheKey({
+  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
     buffer: buffer,
     bufferId: bufferId,
     gltfResource: gltfResource,
@@ -143,7 +163,7 @@ GltfCacheKey.getVertexBufferCacheKey = function (options) {
  *
  * @returns {String} The index buffer cache key.
  */
-GltfCacheKey.getIndexBufferCacheKey = function (options) {
+ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var accessorId = options.accessorId;
@@ -163,7 +183,7 @@ GltfCacheKey.getIndexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = GltfCacheKey.getBufferCacheKey({
+  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
     buffer: buffer,
     bufferId: bufferId,
     gltfResource: gltfResource,
@@ -187,7 +207,7 @@ GltfCacheKey.getIndexBufferCacheKey = function (options) {
  *
  * @returns {String} The Draco vertex buffer cache key.
  */
-GltfCacheKey.getDracoVertexBufferCacheKey = function (options) {
+ResourceCacheKey.getDracoVertexBufferCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
@@ -207,7 +227,7 @@ GltfCacheKey.getDracoVertexBufferCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = GltfCacheKey.getBufferCacheKey({
+  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
     buffer: buffer,
     bufferId: bufferId,
     gltfResource: gltfResource,
@@ -238,7 +258,7 @@ GltfCacheKey.getDracoVertexBufferCacheKey = function (options) {
  *
  * @returns {String} The image cache key.
  */
-GltfCacheKey.getImageCacheKey = function (options) {
+ResourceCacheKey.getImageCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var imageId = options.imageId;
@@ -255,7 +275,10 @@ GltfCacheKey.getImageCacheKey = function (options) {
   var image = gltf.images[imageId];
 
   if (defined(image.uri)) {
-    return getExternalResourceCacheKey(baseResource, image.uri);
+    var resource = baseResource.getDerivedResource({
+      url: image.uri,
+    });
+    return getExternalResourceCacheKey(resource);
   }
 
   var bufferViewId = image.bufferView;
@@ -263,7 +286,7 @@ GltfCacheKey.getImageCacheKey = function (options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  var bufferCacheKey = GltfCacheKey.getBufferCacheKey({
+  var bufferCacheKey = ResourceCacheKey.getBufferCacheKey({
     buffer: buffer,
     bufferId: bufferId,
     gltfResource: gltfResource,
@@ -284,7 +307,7 @@ GltfCacheKey.getImageCacheKey = function (options) {
  *
  * @returns {String} The sampler cache key.
  */
-GltfCacheKey.getSamplerCacheKey = function (options) {
+ResourceCacheKey.getSamplerCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var textureInfo = options.textureInfo;
@@ -326,7 +349,7 @@ GltfCacheKey.getSamplerCacheKey = function (options) {
  *
  * @returns {String} The texture cache key.
  */
-GltfCacheKey.getTextureCacheKey = function (options) {
+ResourceCacheKey.getTextureCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var textureInfo = options.textureInfo;
@@ -362,7 +385,7 @@ GltfCacheKey.getTextureCacheKey = function (options) {
 
   // TODO: imageId may not be defined
 
-  var imageCacheKey = GltfCacheKey.getImageCacheKey({
+  var imageCacheKey = ResourceCacheKey.getImageCacheKey({
     gltf: gltf,
     imageId: imageId,
     gltfResource: gltfResource,
@@ -372,7 +395,7 @@ GltfCacheKey.getTextureCacheKey = function (options) {
   // Include the sampler cache key in the texture cache key since textures and
   // samplers are coupled in WebGL 1. When upgrading to WebGL 2 consider
   // removing the sampleCacheKey here and in GltfLoader#getTextureInfoKey
-  var samplerCacheKey = GltfCacheKey.getSamplerCacheKey({
+  var samplerCacheKey = ResourceCacheKey.getSamplerCacheKey({
     gltf: gltf,
     textureInfo: textureInfo,
   });
@@ -380,4 +403,4 @@ GltfCacheKey.getTextureCacheKey = function (options) {
   return imageCacheKey + "-texture-" + samplerCacheKey;
 };
 
-export default GltfCacheKey;
+export default ResourceCacheKey;

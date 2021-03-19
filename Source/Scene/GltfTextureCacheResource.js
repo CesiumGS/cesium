@@ -22,7 +22,7 @@ import ResourceCache from "./ResourceCache.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {GltfCache} options.gltfCache The {@link GltfCache} (to avoid circular dependencies).
+ * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.textureInfo The texture info object.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
@@ -39,7 +39,7 @@ import ResourceCache from "./ResourceCache.js";
  */
 export default function GltfTextureCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltfCache = options.gltfCache;
+  var resourceCache = options.resourceCache;
   var gltf = options.gltf;
   var textureInfo = options.textureInfo;
   var gltfResource = options.gltfResource;
@@ -56,7 +56,7 @@ export default function GltfTextureCacheResource(options) {
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfCache", gltfCache);
+  Check.typeOf.object("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.textureInfo", textureInfo);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -72,7 +72,7 @@ export default function GltfTextureCacheResource(options) {
   var texture = gltf.textures[textureId];
   var imageId = texture.source; // TODO: imageId is not always defined
 
-  this._gltfCache = gltfCache;
+  this._resourceCache = resourceCache;
   this._gltf = gltf;
   this._textureInfo = textureInfo;
   this._imageId = imageId;
@@ -141,7 +141,7 @@ Object.defineProperties(GltfTextureCacheResource.prototype, {
  * Loads the resource.
  */
 GltfTextureCacheResource.prototype.load = function () {
-  var imageCacheResource = this._gltfCache.loadImage({
+  var imageCacheResource = this._resourceCache.loadImage({
     gltf: this._gltf,
     imageId: this._imageId,
     gltfResource: this._gltfResource,
@@ -178,7 +178,7 @@ function unload(textureCacheResource) {
 
   if (defined(textureCacheResource._imageCacheResource)) {
     // Unload the image resource from the cache
-    textureCacheResource._gltfCache.unloadImage(
+    textureCacheResource._resourceCache.unloadImage(
       textureCacheResource._imageCacheResource
     );
   }
@@ -357,7 +357,7 @@ GltfTextureCacheResource.prototype.update = function (frameState) {
   }
 
   this._gltf = undefined;
-  this._gltfCache.unloadImage(this._imageCacheResource);
+  this._resourceCache.unloadImage(this._imageCacheResource);
   this._imageCacheResource = undefined;
   this._image = undefined;
   this._texture = texture;

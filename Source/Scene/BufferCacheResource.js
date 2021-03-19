@@ -5,7 +5,6 @@ import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
 import ResourceCache from "./ResourceCache.js";
-
 /**
  * A buffer cache resource.
  * <p>
@@ -37,7 +36,7 @@ function BufferCacheResource(options) {
   var hasTypedArray = defined(typedArray);
   if ((hasResource && hasTypedArray) || (!hasResource && !hasTypedArray)) {
     throw new DeveloperError(
-      "One of options.resource and options.typedArray must be defined"
+      "One of options.resource and options.typedArray must be defined."
     );
   }
   //>>includeEnd('debug');

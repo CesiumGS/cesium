@@ -7,9 +7,9 @@ import Resource from "../Core/Resource.js";
 import ForEach from "../ThirdParty/GltfPipeline/ForEach.js";
 import forEachTextureInMaterial from "../ThirdParty/GltfPipeline/forEachTextureInMaterial.js";
 import hasExtension from "../ThirdParty/GltfPipeline/hasExtension.js";
-import GltfCache from "./GltfCache.js";
+import ResourceCache from "./ResourceCache.js";
 import GltfLoadResources from "./GltfLoadResources.js";
-import GltfCacheKey from "./GltfCacheKey.js";
+import ResourceCacheKey from "./ResourceCacheKey.js";
 
 var GltfLoaderState = {
   UNLOADED: 0,
@@ -67,7 +67,7 @@ export default function GltfLoader(options) {
   this._keepResident = keepResident;
   this._gltf = undefined;
   this._loadResources = new GltfLoadResources();
-  this._gltfCacheResource = undefined;
+  this._resourceCacheResource = undefined;
   this._error = undefined;
   this._state = GltfLoaderState.UNLOADED;
 }
@@ -132,13 +132,13 @@ function loadGltf(loader, model, frameState) {
     etc1: frameState.context.etc1,
   };
 
-  var gltfCacheResource = GltfCache.loadGltf({
+  var gltfCacheResource = ResourceCache.loadGltf({
     gltfResource: loader._gltfResource,
     baseResource: loader._baseResource,
     keepResident: loader._keepResident,
   });
 
-  this._gltfCacheResource = gltfCacheResource;
+  this._resourceCacheResource = gltfCacheResource;
 
   gltfCacheResource.promise
     .then(function () {
@@ -238,7 +238,7 @@ function loadVertexBuffers(loader, gltf) {
   var vertexBuffers = {};
   for (var bufferViewId in bufferViewIds) {
     if (bufferViewIds.hasOwnProperty(bufferViewId)) {
-      vertexBuffers[bufferViewId] = GltfCache.loadVertexBuffer({
+      vertexBuffers[bufferViewId] = ResourceCache.loadVertexBuffer({
         gltf: gltf,
         bufferViewId: bufferViewId,
         gltfResource: loader._gltfResource,
@@ -271,7 +271,7 @@ function loadIndexBuffers(loader, gltf) {
   var indexBuffers = {};
   for (var accessorId in accessorIds) {
     if (accessorIds.hasOwnProperty(accessorId)) {
-      accessorIds[accessorId] = GltfCache.loadIndexBuffer({
+      accessorIds[accessorId] = ResourceCache.loadIndexBuffer({
         gltf: gltf,
         accessorId: accessorId,
         gltfResource: loader._gltfResource,
@@ -294,7 +294,7 @@ function getSceneNodes(gltf) {
 }
 
 function getTextureInfoKey(gltf, textureInfo) {
-  var samplerKey = GltfCacheKey.getSamplerCacheKey({
+  var samplerKey = ResourceCacheKey.getSamplerCacheKey({
     gltf: gltf,
     textureInfo: textureInfo,
   });
@@ -366,7 +366,7 @@ function loadTextures(loader, gltf, supportedImageFormats) {
   for (textureInfoKey in textureInfoObjects) {
     if (textureInfoObjects.hasOwnProperty(textureInfoKey)) {
       textureInfo = textureInfoObjects[textureInfoKey];
-      textures[textureInfoKey] = GltfCache.loadTexture({
+      textures[textureInfoKey] = ResourceCache.loadTexture({
         gltf: gltf,
         textureInfo: textureInfo,
         gltfResource: loader._gltfResource,
@@ -380,8 +380,8 @@ function loadTextures(loader, gltf, supportedImageFormats) {
 }
 
 function unload(loader) {
-  if (defined(loader._gltfCacheResource)) {
-    GltfCache.unloadGltf(loader._gltfCacheResource);
+  if (defined(loader._resourceCacheResource)) {
+    ResourceCache.unloadGltf(loader._resourceCacheResource);
   }
   loader._loadResources.unload();
 }

@@ -19,7 +19,7 @@ import ResourceCache from "./ResourceCache.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {GltfCache} options.gltfCache The {@link GltfCache} (to avoid circular dependencies).
+ * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.bufferViewId The bufferView ID corresponding to the vertex buffer.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
@@ -31,7 +31,7 @@ import ResourceCache from "./ResourceCache.js";
  */
 export default function GltfVertexBufferCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltfCache = options.gltfCache;
+  var resourceCache = options.resourceCache;
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
   var gltfResource = options.gltfResource;
@@ -40,7 +40,7 @@ export default function GltfVertexBufferCacheResource(options) {
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfCache", gltfCache);
+  Check.typeOf.object("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.bufferViewId", bufferViewId);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -52,7 +52,7 @@ export default function GltfVertexBufferCacheResource(options) {
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
 
-  this._gltfCache = gltfCache;
+  this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._buffer = buffer;
@@ -110,19 +110,31 @@ Object.defineProperties(GltfVertexBufferCacheResource.prototype, {
   },
 });
 
+function getBufferCacheResource(vertexBufferCacheResource) {
+  var buffer = vertexBufferCacheResource._buffer;
+  if (defined(buffer.uri)) {
+    var baseResource = vertexBufferCacheResource._baseResource;
+    var resource = baseResource.getDerivedResource({
+      url: buffer.uri,
+    });
+    return ResourceCache.loadExternalBuffer({
+      resource: resource,
+      keepResident: false,
+    });
+  }
+  return ResourceCache.loadEmbeddedBuffer({
+    parentResource: vertexBufferCacheResource._gltfResource,
+    bufferId: vertexBufferCacheResource._bufferId,
+    keepResident: false,
+  });
+}
+
 /**
  * Loads the resource.
  */
 GltfVertexBufferCacheResource.prototype.load = function () {
   var that = this;
-
-  var bufferCacheResource = this._gltfCache.loadBuffer({
-    buffer: this._buffer,
-    bufferId: this._bufferId,
-    gltfResource: this._gltfResource,
-    baseResource: this._baseResource,
-    keepResident: false,
-  });
+  var bufferCacheResource = getBufferCacheResource(this);
   this._bufferCacheResource = bufferCacheResource;
   this._state = CacheResourceState.LOADING;
 
@@ -155,7 +167,7 @@ function unload(vertexBufferCacheResource) {
 
   if (defined(vertexBufferCacheResource._bufferCacheResource)) {
     // Unload the buffer resource from the cache
-    vertexBufferCacheResource._gltfCache.unloadBuffer(
+    vertexBufferCacheResource._resourceCache.unloadBuffer(
       vertexBufferCacheResource._bufferCacheResource
     );
   }
@@ -235,7 +247,7 @@ GltfVertexBufferCacheResource.prototype.update = function (frameState) {
     vertexBuffer = createVertexBuffer(this._typedArray, frameState.context);
   }
 
-  this._gltfCache.unloadBuffer(this._bufferCacheResource);
+  this._resourceCache.unloadBuffer(this._bufferCacheResource);
   this._bufferCacheResource = undefined;
   this._typedArray = undefined;
   this._vertexBuffer = vertexBuffer;

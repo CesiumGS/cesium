@@ -3,7 +3,7 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
-import GltfCache from "./GltfCache.js";
+import ResourceCache from "./ResourceCache.js";
 
 /**
  * Manages glTF load resources.
@@ -102,19 +102,19 @@ GltfLoadResources.prototype.unload = function () {
   for (var vertexBufferId in vertexBuffers) {
     if (vertexBuffers.hasOwnProperty(vertexBufferId)) {
       var vertexBuffer = vertexBuffers[vertexBufferId];
-      GltfCache.unloadVertexBuffer(vertexBuffer);
+      ResourceCache.unloadVertexBuffer(vertexBuffer);
     }
   }
   for (var indexBufferId in indexBuffers) {
     if (indexBuffers.hasOwnProperty(indexBufferId)) {
       var indexBuffer = indexBuffers[indexBufferId];
-      GltfCache.unloadIndexBuffer(indexBuffer);
+      ResourceCache.unloadIndexBuffer(indexBuffer);
     }
   }
   for (var textureId in textures) {
     if (textures.hasOwnProperty(textureId)) {
       var texture = textures[textureId];
-      GltfCache.unloadTexture(texture);
+      ResourceCache.unloadTexture(texture);
     }
   }
 };

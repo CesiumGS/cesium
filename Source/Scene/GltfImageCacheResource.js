@@ -20,7 +20,7 @@ import ResourceCache from "./ResourceCache.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {GltfCache} options.gltfCache The {@link GltfCache} (to avoid circular dependencies).
+ * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Object} options.gltf The glTF JSON.
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
@@ -36,7 +36,7 @@ import ResourceCache from "./ResourceCache.js";
  */
 export default function GltfImageCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltfCache = options.gltfCache;
+  var resourceCache = options.resourceCache;
   var gltf = options.gltf;
   var imageId = options.imageId;
   var gltfResource = options.gltfResource;
@@ -52,7 +52,7 @@ export default function GltfImageCacheResource(options) {
   var cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfCache", gltfCache);
+  Check.typeOf.object("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
@@ -117,7 +117,7 @@ export default function GltfImageCacheResource(options) {
     byteLength = bufferView.byteLength;
   }
 
-  this._gltfCache = gltfCache;
+  this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._buffer = buffer;
@@ -186,14 +186,27 @@ GltfImageCacheResource.prototype.load = function () {
   }
 };
 
-function loadFromBuffer(imageCacheResource) {
-  var bufferCacheResource = imageCacheResource._gltfCache.loadBuffer({
-    buffer: imageCacheResource._buffer,
+function getBufferCacheResource(imageCacheResource) {
+  var buffer = imageCacheResource._buffer;
+  if (defined(buffer.uri)) {
+    var baseResource = imageCacheResource._baseResource;
+    var resource = baseResource.getDerivedResource({
+      url: buffer.uri,
+    });
+    return ResourceCache.loadExternalBuffer({
+      resource: resource,
+      keepResident: false,
+    });
+  }
+  return ResourceCache.loadEmbeddedBuffer({
+    parentResource: imageCacheResource._gltfResource,
     bufferId: imageCacheResource._bufferId,
-    gltfResource: imageCacheResource._gltfResource,
-    baseResource: imageCacheResource._baseResource,
     keepResident: false,
   });
+}
+
+function loadFromBuffer(imageCacheResource) {
+  var bufferCacheResource = getBufferCacheResource(imageCacheResource);
   imageCacheResource._bufferCacheResource = bufferCacheResource;
   imageCacheResource._state = CacheResourceState.LOADING;
 
@@ -208,7 +221,7 @@ function loadFromBuffer(imageCacheResource) {
         if (imageCacheResource._state === CacheResourceState.UNLOADED) {
           return;
         }
-        imageCacheResource._gltfCache.unloadBuffer(bufferCacheResource);
+        imageCacheResource._resourceCache.unloadBuffer(bufferCacheResource);
         imageCacheResource._bufferCacheResource = undefined;
         imageCacheResource._typedArray = undefined;
         imageCacheResource._image = image;
@@ -324,7 +337,7 @@ function loadImageFromUri(resource) {
 function unload(imageCacheResource) {
   if (defined(imageCacheResource._bufferCacheResource)) {
     // Unload the buffer resource from the cache
-    imageCacheResource._gltfCache.unloadBuffer(
+    imageCacheResource._resourceCache.unloadBuffer(
       imageCacheResource._bufferCacheResource
     );
   }

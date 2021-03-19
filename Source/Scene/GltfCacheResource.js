@@ -26,7 +26,7 @@ import when from "../ThirdParty/when.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {GltfCache} options.gltfCache The {@link GltfCache} (to avoid circular dependencies).
+ * @param {ResourceCache} options.resourceCache The {@link ResourceCache} (to avoid circular dependencies).
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {String} options.cacheKey The cache key.
@@ -36,20 +36,20 @@ import when from "../ThirdParty/when.js";
  */
 function GltfCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var gltfCache = options.gltfCache;
+  var resourceCache = options.resourceCache;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var cacheKey = options.cacheKey;
   var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.gltfCache", gltfCache);
+  Check.typeOf.object("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.string("options.cacheKey", cacheKey);
   //>>includeEnd('debug');
 
-  this._gltfCache = gltfCache;
+  this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._cacheKey = cacheKey;
@@ -146,7 +146,7 @@ GltfCacheResource.prototype.unload = function () {
   // TODO: want to avoid double reference counting buffers
   var that = this;
   this._bufferCacheResources.forEach(function (bufferCacheResource) {
-    that._gltfCache.unloadBuffer(bufferCacheResource);
+    that._resourceCache.unloadBuffer(bufferCacheResource);
   });
 };
 
@@ -165,11 +165,12 @@ function upgradeVersion(gltfCacheResource, gltf) {
   var promises = [];
   ForEach.buffer(gltf, function (buffer, bufferId) {
     if (!defined(buffer.extras._pipeline.source) && defined(buffer.uri)) {
-      var bufferCacheResource = gltfCacheResource._gltfCache.loadBuffer({
-        buffer: buffer,
-        bufferId: bufferId,
-        gltfResource: gltfCacheResource._gltfResource,
-        baseResource: gltfCacheResource._baseResource,
+      var resource = gltfCacheResource._baseResource.getDerivedResource({
+        url: buffer.uri,
+      });
+      var resourceCache = gltfCacheResource._resourceCache;
+      var bufferCacheResource = resourceCache.loadExternalBuffer({
+        resource: resource,
         keepResident: false, // External buffers don't need to stay resident
       });
 
@@ -204,22 +205,20 @@ function decodeDataUris(gltf) {
   return when.all(promises);
 }
 
-function cacheEmbeddedBuffers(gltfCacheResource, gltf) {
+function storeEmbeddedBuffers(gltfCacheResource, gltf) {
   var promises = [];
   ForEach.buffer(gltf, function (buffer, bufferId) {
     var source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
-      var bufferCacheResource = gltfCacheResource._gltfCache.loadBuffer({
-        buffer: buffer,
-        bufferId: bufferId,
-        gltfResource: gltfCacheResource._gltfResource,
-        baseResource: gltfCacheResource._baseResource,
-        keepResident: gltfCacheResource._keepResident,
+      var resourceCache = gltfCacheResource._resourceCache;
+      var bufferCacheResource = resourceCache.storeBuffer({
         typedArray: source,
+        parentResource: gltfCacheResource._gltfResource,
+        id: bufferId,
+        keepResident: gltfCacheResource._keepResident,
       });
 
       gltfCacheResource._bufferCacheResources.push(bufferCacheResource);
-
       promises.push(bufferCacheResource.promise);
     }
   });
@@ -239,7 +238,7 @@ function processGltf(gltfCacheResource, typedArray) {
   return decodeDataUris(gltf).then(function () {
     return upgradeVersion(gltfCacheResource, gltf).then(function () {
       addDefaults(gltf);
-      return cacheEmbeddedBuffers(gltfCacheResource, gltf).then(function () {
+      return storeEmbeddedBuffers(gltfCacheResource, gltf).then(function () {
         removePipelineExtras(gltf);
         return gltf;
       });
