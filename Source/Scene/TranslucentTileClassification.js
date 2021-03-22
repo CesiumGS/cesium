@@ -487,7 +487,7 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
   }
 
   passState.framebuffer = this._drawClassificationFBO;
-  if (this._frustumsDrawn > 1) {
+  if (this._frustumsDrawn >= 1) {
     this._clearColorCommand.execute(context, passState);
   }
 
