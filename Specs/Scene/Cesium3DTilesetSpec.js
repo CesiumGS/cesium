@@ -5156,6 +5156,16 @@ describe(
         });
       });
     });
+
+    describe("3DTILES_metadata", function () {
+      it("loads embedded metadata schema", function () {
+        fail();
+      });
+
+      it("caches external schemas", function () {
+        fail();
+      });
+    });
   },
   "WebGL"
 );

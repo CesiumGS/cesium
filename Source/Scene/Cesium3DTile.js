@@ -385,6 +385,16 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
    */
   this.implicitCoordinates = undefined;
 
+  /**
+   * For implicit tiling, each transcoded tile will retain a reference to
+   * the {@link ImplicitSubtree}
+   *
+   * @type {ImplicitSubtree}
+   *
+   * @private
+   */
+  this.implicitSubtree = undefined;
+
   // Members that are updated every frame for tree traversal and rendering optimizations:
   this._distanceToCamera = 0.0;
   this._centerZDepth = 0.0;

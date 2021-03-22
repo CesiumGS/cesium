@@ -411,7 +411,7 @@ function deriveChildTile(
     parentTile
   );
   childTile.implicitCoordinates = implicitCoordinates;
-  childTile.subtree = subtree;
+  childTile.implicitSubtree = subtree;
   return childTile;
 }
 

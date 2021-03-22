@@ -1,7 +1,6 @@
 import defaultValue from "../Core/defaultValue.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import defined from "../Core/defined.js";
-import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import getJsonFromTypedArray from "../Core/getJsonFromTypedArray.js";
 import BufferCacheResource from "./BufferCacheResource.js";
 import has3DTilesExtension from "./has3DTilesExtension.js";
@@ -9,6 +8,7 @@ import ImplicitAvailabilityBitstream from "./ImplicitAvailabilityBitstream.js";
 import ImplicitSubdivisionScheme from "./ImplicitSubdivisionScheme.js";
 import MetadataTable from "./MetadataTable.js";
 import ResourceCache from "./ResourceCache.js";
+import ResourceCacheKey from "./ResourceCacheKey.js";
 import when from "../ThirdParty/when.js";
 
 /**
@@ -63,6 +63,12 @@ Object.defineProperties(ImplicitSubtree.prototype, {
   readyPromise: {
     get: function () {
       return this._readyPromise.promise;
+    },
+  },
+
+  metadataTable: {
+    get: function () {
+      return this._metadataTable;
     },
   },
 });
@@ -460,19 +466,18 @@ function requestActiveBuffers(subtree, bufferHeaders, internalBuffer) {
 }
 
 function requestExternalBuffer(bufferHeader, baseResource) {
-  // TODO: this should be replaced with a real cache key once
-  // changes are available in the model-loading branch.
-  var resource = baseResource.getDerivedResource({
+  var bufferResource = baseResource.getDerivedResource({
     url: bufferHeader.uri,
   });
-  var cacheKey = "buffer-" + getAbsoluteUri(resource.url);
-  // -------
+  var cacheKey = ResourceCacheKey.getExternalBufferCacheKey({
+    resource: bufferResource,
+  });
 
   var cacheResource = ResourceCache.get(cacheKey);
   if (!defined(cacheResource)) {
     cacheResource = new BufferCacheResource({
       cacheKey: cacheKey,
-      resource: resource,
+      resource: bufferResource,
     });
 
     ResourceCache.load({
