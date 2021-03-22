@@ -336,6 +336,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
     var count = featureTable.count;
     var batchTableJson = {};
     var batchTableBinary;
+    var batchTableBinaryType;
     var classProperties = featureTable.class.properties;
     for (var propertyId in classProperties) {
       if (classProperties.hasOwnProperty(propertyId)) {
@@ -343,7 +344,7 @@ function createBatchTable(content, gltf, colorChangedCallback) {
         var classProperty = classProperties[propertyId];
         var type = classProperty.type;
         var valueType = classProperty.valueType;
-        var batchTableBinaryType;
+        batchTableBinaryType = undefined;
         if (type === MetadataType.ARRAY) {
           var componentCount = classProperty.componentCount;
           if (componentCount === 2) {
@@ -362,7 +363,8 @@ function createBatchTable(content, gltf, colorChangedCallback) {
         if (
           defined(componentDatatype) &&
           defined(batchTableBinaryType) &&
-          defined(property) // May be undefined if the property is optional
+          defined(property) && // May be undefined if the property is optional
+          !defined(property.enumType)
         ) {
           var typedArray = property._values.typedArray;
           batchTableJson[propertyId] = {
