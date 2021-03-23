@@ -15,7 +15,7 @@ import MetadataSchema from "./MetadataSchema.js";
  * Implements the {@link CacheResource} interface.
  * </p>
  *
- * @alias SchemaCacheResource
+ * @alias MetadataSchemaCacheResource
  * @constructor
  * @augments CacheResource
  *
@@ -26,7 +26,7 @@ import MetadataSchema from "./MetadataSchema.js";
  *
  * @private
  */
-function SchemaCacheResource(options) {
+function MetadataSchemaCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var resource = options.resource;
   var cacheKey = options.cacheKey;
@@ -51,13 +51,13 @@ function SchemaCacheResource(options) {
   this._promise = when.defer();
 }
 
-Object.defineProperties(SchemaCacheResource.prototype, {
+Object.defineProperties(MetadataSchemaCacheResource.prototype, {
   /**
    * A promise that resolves to the resource when the resource is ready.
    *
-   * @memberof SchemaCacheResource.prototype
+   * @memberof MetadataSchemaCacheResource.prototype
    *
-   * @type {Promise.<SchemaCacheResource>}
+   * @type {Promise.<MetadataSchemaCacheResource>}
    * @readonly
    */
   promise: {
@@ -68,7 +68,7 @@ Object.defineProperties(SchemaCacheResource.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof SchemaCacheResource.prototype
+   * @memberof MetadataSchemaCacheResource.prototype
    *
    * @type {String}
    * @readonly
@@ -81,7 +81,7 @@ Object.defineProperties(SchemaCacheResource.prototype, {
   /**
    * The metadata schema object
    *
-   * @memberof SchemaCacheResource.prototype
+   * @memberof MetadataSchemaCacheResource.prototype
    *
    * @type {Object}
    * @readonly
@@ -96,7 +96,7 @@ Object.defineProperties(SchemaCacheResource.prototype, {
 /**
  * Loads the resource.
  */
-SchemaCacheResource.prototype.load = function () {
+MetadataSchemaCacheResource.prototype.load = function () {
   if (defined(this._schema)) {
     this._promise.resolve(this);
     return;
@@ -130,9 +130,9 @@ function unload(schemaCacheResource) {
 /**
  * Unloads the resource.
  */
-SchemaCacheResource.prototype.unload = function () {
+MetadataSchemaCacheResource.prototype.unload = function () {
   unload(this);
   this._state = CacheResourceState.UNLOADED;
 };
 
-export default SchemaCacheResource;
+export default MetadataSchemaCacheResource;

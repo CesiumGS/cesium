@@ -2,11 +2,11 @@ import {
   CacheResourceState,
   Resource,
   ResourceCacheKey,
-  SchemaCacheResource,
+  MetadataSchemaCacheResource,
   when,
 } from "../../Source/Cesium.js";
 
-describe("Scene/SchemaCacheResource", function () {
+describe("Scene/MetadataSchemaCacheResource", function () {
   var schemaJson = {
     classes: {
       tree: {
@@ -41,7 +41,7 @@ describe("Scene/SchemaCacheResource", function () {
 
   it("throws for undefined cacheKey", function () {
     expect(function () {
-      return new SchemaCacheResource({
+      return new MetadataSchemaCacheResource({
         schema: schemaJson,
       });
     }).toThrowDeveloperError();
@@ -49,13 +49,13 @@ describe("Scene/SchemaCacheResource", function () {
 
   it("throws if neither options.resource nor options.schema are defined", function () {
     expect(function () {
-      return new SchemaCacheResource({});
+      return new MetadataSchemaCacheResource({});
     }).toThrowDeveloperError();
   });
 
   it("throws if both options.resource and options.schema are defined", function () {
     expect(function () {
-      return new SchemaCacheResource({
+      return new MetadataSchemaCacheResource({
         resource: resource,
         schema: schemaJson,
         cacheKey: "fakeKey",
@@ -67,7 +67,7 @@ describe("Scene/SchemaCacheResource", function () {
     var cacheKey = ResourceCacheKey.getSchemaCacheKey({
       resource: resource,
     });
-    var cacheResource = new SchemaCacheResource({
+    var cacheResource = new MetadataSchemaCacheResource({
       resource: resource,
       cacheKey: cacheKey,
     });
@@ -89,7 +89,7 @@ describe("Scene/SchemaCacheResource", function () {
     var cacheKey = ResourceCacheKey.getSchemaCacheKey({
       schema: schemaJson,
     });
-    var cacheResource = new SchemaCacheResource({
+    var cacheResource = new MetadataSchemaCacheResource({
       schema: schemaJson,
       cacheKey: cacheKey,
     });
@@ -113,7 +113,7 @@ describe("Scene/SchemaCacheResource", function () {
     var cacheKey = ResourceCacheKey.getSchemaCacheKey({
       resource: resource,
     });
-    var cacheResource = new SchemaCacheResource({
+    var cacheResource = new MetadataSchemaCacheResource({
       resource: resource,
       cacheKey: cacheKey,
     });
@@ -143,7 +143,7 @@ describe("Scene/SchemaCacheResource", function () {
     var cacheKey = ResourceCacheKey.getSchemaCacheKey({
       resource: resource,
     });
-    var cacheResource = new SchemaCacheResource({
+    var cacheResource = new MetadataSchemaCacheResource({
       resource: resource,
       cacheKey: cacheKey,
     });
@@ -167,7 +167,7 @@ describe("Scene/SchemaCacheResource", function () {
     var cacheKey = ResourceCacheKey.getSchemaCacheKey({
       resource: resource,
     });
-    var cacheResource = new SchemaCacheResource({
+    var cacheResource = new MetadataSchemaCacheResource({
       resource: resource,
       cacheKey: cacheKey,
     });
