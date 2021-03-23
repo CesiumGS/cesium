@@ -66,6 +66,27 @@ ResourceCacheKey.getJsonCacheKey = function (options) {
   return getExternalResourceCacheKey(resource);
 };
 
+ResourceCacheKey.getSchemaCacheKey = function (options) {
+  var schema = options.schema;
+  var resource = options.resource;
+
+  //>>includeStart('debug', pragmas.debug);
+  var hasSchema = defined(schema);
+  var hasResource = defined(resource);
+  if (hasSchema === hasResource) {
+    throw new DeveloperError(
+      "One of options.resource and options.schema must be defined."
+    );
+  }
+  //>>includeEnd('debug');
+
+  if (defined(options.schema)) {
+    return JSON.stringify(options.schema);
+  }
+
+  return getExternalResourceCacheKey(options.resource);
+};
+
 /**
  * Gets the glTF cache key.
  *
