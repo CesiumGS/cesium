@@ -2,8 +2,8 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF Draco cache resource.
@@ -139,7 +139,7 @@ function handleError(dracoCacheResource, error) {
   unload(dracoCacheResource);
   dracoCacheResource._state = CacheResourceState.FAILED;
   var errorMessage = "Failed to load Draco";
-  error = ResourceCache.getError(error, errorMessage);
+  error = CacheResource.getError(error, errorMessage);
   dracoCacheResource._promise.reject(error);
 }
 

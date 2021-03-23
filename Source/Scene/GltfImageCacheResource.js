@@ -6,8 +6,8 @@ import loadImageFromTypedArray from "../Core/loadImageFromTypedArray.js";
 import loadKTX from "../Core/loadKTX.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF image cache resource.
@@ -170,6 +170,14 @@ GltfImageCacheResource.prototype.load = function () {
   }
 };
 
+function handleError(imageCacheResource, error, errorMessage) {
+  unload(imageCacheResource);
+  imageCacheResource._state = CacheResourceState.FAILED;
+  imageCacheResource._promise.reject(
+    CacheResource.getError(error, errorMessage)
+  );
+}
+
 function loadFromBufferView(imageCacheResource) {
   var resourceCache = imageCacheResource._resourceCache;
   var bufferViewCacheResource = resourceCache.loadBufferView({
@@ -201,12 +209,7 @@ function loadFromBufferView(imageCacheResource) {
       });
     })
     .otherwise(function (error) {
-      unload(imageCacheResource);
-      imageCacheResource._state = CacheResourceState.FAILED;
-      var errorMessage = "Failed to load embedded image";
-      imageCacheResource._promise.reject(
-        ResourceCache.getError(error, errorMessage)
-      );
+      handleError(imageCacheResource, error, "Failed to load embedded image");
     });
 }
 
@@ -229,11 +232,7 @@ function loadFromUri(imageCacheResource) {
       imageCacheResource._promise.resolve(imageCacheResource);
     })
     .otherwise(function (error) {
-      imageCacheResource._state = CacheResourceState.FAILED;
-      var errorMessage = "Failed to load image:" + uri;
-      imageCacheResource._promise.reject(
-        ResourceCache.getError(error, errorMessage)
-      );
+      handleError(imageCacheResource, error, "Failed to load image:" + uri);
     });
 }
 

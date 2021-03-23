@@ -1,4 +1,6 @@
+import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
+import RuntimeError from "../Core/RuntimeError.js";
 
 /**
  * A cache resource.
@@ -67,4 +69,14 @@ CacheResource.prototype.unload = function () {
  */
 CacheResource.prototype.update = function (frameState) {
   DeveloperError.throwInstantiationError();
+};
+
+/**
+ * TODO: doc
+ */
+CacheResource.getError = function (error, errorMessage) {
+  if (defined(error)) {
+    errorMessage += "\n" + error.message;
+  }
+  return new RuntimeError(errorMessage);
 };

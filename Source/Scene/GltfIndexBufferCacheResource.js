@@ -5,9 +5,9 @@ import IndexDatatype from "../Core/IndexDatatype.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
 import JobType from "./JobType.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF index buffer cache resource.
@@ -214,7 +214,7 @@ function handleError(indexBufferCacheResource, error) {
   unload(indexBufferCacheResource);
   indexBufferCacheResource._state = CacheResourceState.FAILED;
   var errorMessage = "Failed to load index buffer";
-  error = ResourceCache.getError(error, errorMessage);
+  error = CacheResource.getError(error, errorMessage);
   indexBufferCacheResource._promise.reject(error);
 }
 

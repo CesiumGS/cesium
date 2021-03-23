@@ -2,6 +2,7 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
 import MetadataSchema from "./MetadataSchema.js";
 import MetadataTable from "./MetadataTable.js";
@@ -251,7 +252,7 @@ MetadataGltfExtension.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load feature metadata";
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 

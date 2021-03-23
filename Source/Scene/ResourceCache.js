@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
-import RuntimeError from "../Core/RuntimeError.js";
 import BufferCacheResource from "./BufferCacheResource.js";
 import GltfCacheResource from "./GltfCacheResource.js";
 import GltfBufferViewCacheResource from "./GltfBufferViewCacheResource.js";
@@ -114,16 +113,6 @@ ResourceCache.unload = function (cacheResource) {
     }
     delete ResourceCache.cacheEntries[cacheKey];
   }
-};
-
-/**
- * TODO: doc
- */
-ResourceCache.getError = function (error, errorMessage) {
-  if (defined(error)) {
-    errorMessage += "\n" + error.message;
-  }
-  return new RuntimeError(errorMessage);
 };
 
 /**

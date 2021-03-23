@@ -2,8 +2,8 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF buffer view cache resource.
@@ -134,7 +134,7 @@ GltfBufferViewCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load buffer view";
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 

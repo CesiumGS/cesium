@@ -6,10 +6,10 @@ import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF texture cache resource.
@@ -165,7 +165,7 @@ GltfTextureCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load texture";
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 

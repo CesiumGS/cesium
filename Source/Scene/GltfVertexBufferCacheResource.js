@@ -5,9 +5,9 @@ import DeveloperError from "../Core/DeveloperError.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
 import JobType from "./JobType.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF vertex buffer cache resource.
@@ -205,7 +205,7 @@ function handleError(vertexBufferCacheResource, error) {
   unload(vertexBufferCacheResource);
   vertexBufferCacheResource._state = CacheResourceState.FAILED;
   var errorMessage = "Failed to load vertex buffer";
-  error = ResourceCache.getError(error, errorMessage);
+  error = CacheResource.getError(error, errorMessage);
   vertexBufferCacheResource._promise.reject(error);
 }
 
