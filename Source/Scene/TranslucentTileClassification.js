@@ -487,7 +487,7 @@ TranslucentTileClassification.prototype.executeClassificationCommands = function
   }
 
   passState.framebuffer = this._drawClassificationFBO;
-  if (this._frustumsDrawn >= 1) {
+  if (this._frustumsDrawn > 1) {
     this._clearColorCommand.execute(context, passState);
   }
 
@@ -527,18 +527,19 @@ TranslucentTileClassification.prototype.execute = function (scene, passState) {
     ? this._compositeCommand.derivedCommands.pick
     : this._compositeCommand;
   command.execute(scene.context, passState);
+
+  var framebuffer = passState.framebuffer;
+
+  passState.framebuffer = this._drawClassificationFBO;
+  this._clearColorCommand.execute(scene._context, passState);
+
+  passState.framebuffer = framebuffer;
 };
 
 TranslucentTileClassification.prototype.clear = function (context, passState) {
   if (!this._hasTranslucentDepth) {
     return;
   }
-  var framebuffer = passState.framebuffer;
-
-  passState.framebuffer = this._drawClassificationFBO;
-  this._clearColorCommand.execute(context, passState);
-
-  passState.framebuffer = framebuffer;
 
   if (this._frustumsDrawn > 1) {
     passState.framebuffer = this._accumulationFBO;
