@@ -86,7 +86,7 @@ import defined from '../../Core/defined.js'
                     return ForEach.meshPrimitiveTargetAttribute(target, function(accessorId, attributeSemantic) {
                         if (attributeSemantic.indexOf(semantic) === 0 && !defined(visited[accessorId])) {
                             visited[accessorId] = true;
-                            var value = handler(accessorId);
+                            var value = handler(accessorId, semantic);
 
                             if (defined(value)) {
                                 return value;

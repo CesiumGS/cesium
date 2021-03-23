@@ -6,10 +6,10 @@ import Texture from "../Renderer/Texture.js";
 import TextureMinificationFilter from "../Renderer/TextureMinificationFilter.js";
 import TextureWrap from "../Renderer/TextureWrap.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 import JobType from "./JobType.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF texture cache resource.
@@ -80,10 +80,10 @@ export default function GltfTextureCacheResource(options) {
   this._resourceCache = resourceCache;
   this._gltf = gltf;
   this._textureInfo = textureInfo;
+  this._imageId = imageId;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
   this._supportedImageFormats = supportedImageFormats;
-  this._imageId = imageId;
   this._cacheKey = cacheKey;
   this._asynchronous = asynchronous;
   this._imageCacheResource = undefined;
@@ -165,7 +165,7 @@ GltfTextureCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load texture";
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 
@@ -177,15 +177,14 @@ function unload(textureCacheResource) {
 
   if (defined(textureCacheResource._imageCacheResource)) {
     // Unload the image cache resource
-    textureCacheResource._resourceCache.unload(
-      textureCacheResource._imageCacheResource
-    );
+    var resourceCache = textureCacheResource._resourceCache;
+    resourceCache.unload(textureCacheResource._imageCacheResource);
   }
 
   textureCacheResource._imageCacheResource = undefined;
-  textureCacheResource._gltf = undefined;
   textureCacheResource._image = undefined;
   textureCacheResource._texture = undefined;
+  textureCacheResource._gltf = undefined;
 }
 
 /**
@@ -356,10 +355,7 @@ GltfTextureCacheResource.prototype.update = function (frameState) {
     );
   }
 
-  this._resourceCache.unload(this._imageCacheResource);
-  this._imageCacheResource = undefined;
-  this._gltf = undefined;
-  this._image = undefined;
+  unload(this);
   this._texture = texture;
   this._state = CacheResourceState.READY;
   this._promise.resolve(this);

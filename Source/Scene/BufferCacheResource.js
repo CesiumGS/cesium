@@ -3,8 +3,8 @@ import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A buffer cache resource.
@@ -112,6 +112,7 @@ function loadExternalBuffer(bufferCacheResource) {
         unload(bufferCacheResource);
         return;
       }
+      unload(bufferCacheResource);
       bufferCacheResource._typedArray = new Uint8Array(arrayBuffer);
       bufferCacheResource._state = CacheResourceState.READY;
       bufferCacheResource._promise.resolve(bufferCacheResource);
@@ -121,7 +122,7 @@ function loadExternalBuffer(bufferCacheResource) {
       bufferCacheResource._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load external buffer: " + resource.url;
       bufferCacheResource._promise.reject(
-        ResourceCache.getError(error, errorMessage)
+        CacheResource.getError(error, errorMessage)
       );
     });
 }

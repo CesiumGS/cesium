@@ -12,8 +12,8 @@ import parseGlb from "../ThirdParty/GltfPipeline/parseGlb.js";
 import removePipelineExtras from "../ThirdParty/GltfPipeline/removePipelineExtras.js";
 import updateVersion from "../ThirdParty/GltfPipeline/updateVersion.js";
 import when from "../ThirdParty/when.js";
+import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
 
 /**
  * A glTF cache resource.
@@ -123,6 +123,7 @@ GltfCacheResource.prototype.load = function () {
         unload(that);
         return;
       }
+      unload(that);
       that._gltf = gltf;
       that._state = CacheResourceState.READY;
       that._promise.resolve(that);
@@ -131,7 +132,7 @@ GltfCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load glTF: " + that._gltfResource.url;
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 
