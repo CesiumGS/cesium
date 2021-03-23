@@ -112,6 +112,7 @@ function loadExternalBuffer(bufferCacheResource) {
         unload(bufferCacheResource);
         return;
       }
+      unload(bufferCacheResource);
       bufferCacheResource._typedArray = new Uint8Array(arrayBuffer);
       bufferCacheResource._state = CacheResourceState.READY;
       bufferCacheResource._promise.resolve(bufferCacheResource);

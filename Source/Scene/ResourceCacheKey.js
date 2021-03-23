@@ -1,6 +1,7 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import getAbsoluteUri from "../Core/getAbsoluteUri.js";
 import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
@@ -127,7 +128,7 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
 };
 
 /**
- * Gets the vertex buffer cache key.
+ * Gets the buffer view cache key.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
@@ -135,9 +136,9 @@ ResourceCacheKey.getEmbeddedBufferCacheKey = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
- * @returns {String} The vertex buffer cache key.
+ * @returns {String} The buffer view cache key.
  */
-ResourceCacheKey.getVertexBufferCacheKey = function (options) {
+ResourceCacheKey.getBufferViewCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
@@ -150,6 +151,86 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
+
+  var bufferView = gltf.bufferViews[bufferViewId];
+  var bufferId = bufferView.buffer;
+  var buffer = gltf.buffers[bufferId];
+
+  var bufferCacheKey = getBufferCacheKey(
+    buffer,
+    bufferId,
+    gltfResource,
+    baseResource
+  );
+
+  var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
+
+  var cacheKey = bufferCacheKey + "-buffer-view-" + bufferViewCacheKey;
+
+  return cacheKey;
+};
+
+/**
+ * Gets the vertex buffer cache key.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {Object} [options.draco] The Draco extension object.
+ * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
+ *
+ * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
+ *
+ * @returns {String} The vertex buffer cache key.
+ */
+ResourceCacheKey.getVertexBufferCacheKey = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var bufferViewId = options.bufferViewId;
+  var draco = options.draco;
+  var dracoAttributeSemantic = options.dracoAttributeSemantic;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+
+  var hasBufferViewId = defined(bufferViewId);
+  var hasDraco = defined(draco);
+  var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
+
+  if (hasBufferViewId === hasDraco) {
+    throw new DeveloperError(
+      "One of options.bufferViewId and options.draco must be defined."
+    );
+  }
+
+  if (hasDraco && !hasDracoAttributeSemantic) {
+    throw new DeveloperError(
+      "When options.draco is defined options.dracoAttributeSemantic must also be defined."
+    );
+  }
+
+  if (hasDraco) {
+    Check.typeOf.object(draco);
+    Check.typeOf.string(dracoAttributeSemantic);
+  }
+  //>>includeEnd('debug');
+
+  if (defined(draco)) {
+    var dracoCacheKey = ResourceCacheKey.getDracoCacheKey({
+      gltf: gltf,
+      draco: draco,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+    return dracoCacheKey + "-vertex-buffer-" + dracoAttributeSemantic;
+  }
 
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
@@ -175,6 +256,7 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Object} [options.draco] The Draco extension object.
  *
  * @returns {String} The index buffer cache key.
  */
@@ -184,6 +266,7 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   var accessorId = options.accessorId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
+  var draco = options.draco;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -191,6 +274,16 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
+
+  if (defined(draco)) {
+    var dracoCacheKey = ResourceCacheKey.getDracoCacheKey({
+      gltf: gltf,
+      draco: draco,
+      gltfResource: gltfResource,
+      baseResource: baseResource,
+    });
+    return dracoCacheKey + "-index-buffer";
+  }
 
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
@@ -211,33 +304,31 @@ ResourceCacheKey.getIndexBufferCacheKey = function (options) {
 };
 
 /**
- * Gets the Draco vertex buffer cache key.
+ * Gets the Draco cache key.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
- * @param {Number} options.bufferViewId The bufferView ID corresponding to the Draco buffer.
- * @param {Number} options.dracoAttributeId The Draco attribute ID.
+ * @param {Object} options.draco The Draco extension object.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  *
- * @returns {String} The Draco vertex buffer cache key.
+ * @returns {String} The Draco cache key.
  */
-ResourceCacheKey.getDracoVertexBufferCacheKey = function (options) {
+ResourceCacheKey.getDracoCacheKey = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
-  var bufferViewId = options.bufferViewId;
-  var dracoAttributeId = options.dracoAttributeId;
+  var draco = options.draco;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
-  Check.typeOf.number("options.bufferViewId", bufferViewId);
-  Check.typeOf.number("options.dracoAttributeId", dracoAttributeId);
+  Check.typeOf.object("options.draco", draco);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
+  var bufferViewId = draco.bufferView;
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];
@@ -251,15 +342,7 @@ ResourceCacheKey.getDracoVertexBufferCacheKey = function (options) {
 
   var bufferViewCacheKey = getBufferViewCacheKey(bufferView);
 
-  var dracoCacheKey = dracoAttributeId;
-
-  return (
-    bufferCacheKey +
-    "-draco-vertex-buffer-" +
-    bufferViewCacheKey +
-    "-" +
-    dracoCacheKey
-  );
+  return bufferCacheKey + "-draco-" + bufferViewCacheKey;
 };
 
 /**

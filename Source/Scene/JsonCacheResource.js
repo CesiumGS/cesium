@@ -91,6 +91,7 @@ JsonCacheResource.prototype.load = function () {
         unload(that);
         return;
       }
+      unload(that);
       that._json = json;
       that._state = CacheResourceState.READY;
       that._promise.resolve(that);

@@ -123,6 +123,7 @@ GltfCacheResource.prototype.load = function () {
         unload(that);
         return;
       }
+      unload(that);
       that._gltf = gltf;
       that._state = CacheResourceState.READY;
       that._promise.resolve(that);

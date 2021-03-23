@@ -1,9 +1,12 @@
 import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
 import BufferCacheResource from "./BufferCacheResource.js";
 import GltfCacheResource from "./GltfCacheResource.js";
+import GltfBufferViewCacheResource from "./GltfBufferViewCacheResource.js";
+import GltfDracoCacheResource from "./GltfDracoCacheResource.js";
 import GltfImageCacheResource from "./GltfImageCacheResource.js";
 import GltfIndexBufferCacheResource from "./GltfIndexBufferCacheResource.js";
 import GltfTextureCacheResource from "./GltfTextureCacheResource.js";
@@ -99,6 +102,10 @@ ResourceCache.unload = function (cacheResource) {
   var cacheKey = cacheResource.cacheKey;
 
   var cacheEntry = ResourceCache.cacheEntries[cacheKey];
+  if (!defined(cacheEntry)) {
+    return;
+  }
+
   --cacheEntry.referenceCount;
 
   if (cacheEntry.referenceCount === 0 && !cacheEntry.keepResident) {
@@ -292,7 +299,7 @@ ResourceCache.loadExternalBuffer = function (options) {
 };
 
 /**
- * Loads a glTF vertex buffer from the cache.
+ * Loads a glTF buffer view from the cache.
  *
  * @param {Object} options Object with the following properties:
  * @param {Object} options.gltf The glTF JSON.
@@ -300,18 +307,16 @@ ResourceCache.loadExternalBuffer = function (options) {
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
- * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
- * @returns {GltfVertexBufferCacheResource} The vertex buffer cache resource.
+ * @returns {GltfBufferViewCacheResource} The buffer view cache resource.
  */
-ResourceCache.loadVertexBuffer = function (options) {
+ResourceCache.loadBufferView = function (options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var gltf = options.gltf;
   var bufferViewId = options.bufferViewId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
   var keepResident = defaultValue(options.keepResident, false);
-  var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
@@ -320,11 +325,154 @@ ResourceCache.loadVertexBuffer = function (options) {
   Check.typeOf.object("options.baseResource", baseResource);
   //>>includeEnd('debug');
 
-  var cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+  var cacheKey = ResourceCacheKey.getBufferViewCacheKey({
     gltf: gltf,
     bufferViewId: bufferViewId,
     gltfResource: gltfResource,
     baseResource: baseResource,
+  });
+
+  var bufferViewCacheResource = ResourceCache.get(cacheKey);
+  if (defined(bufferViewCacheResource)) {
+    return bufferViewCacheResource;
+  }
+
+  bufferViewCacheResource = new GltfBufferViewCacheResource({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    bufferViewId: bufferViewId,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+  });
+
+  ResourceCache.load({
+    cacheResource: bufferViewCacheResource,
+    keepResident: keepResident,
+  });
+
+  return bufferViewCacheResource;
+};
+
+/**
+ * Loads Draco data from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Object} options.draco The Draco extension object.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
+ *
+ * @returns {GltfDracoCacheResource} The Draco cache resource.
+ */
+ResourceCache.loadDraco = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var draco = options.draco;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var keepResident = defaultValue(options.keepResident, false);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.draco", draco);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+  //>>includeEnd('debug');
+
+  var cacheKey = ResourceCacheKey.getDracoCacheKey({
+    gltf: gltf,
+    draco: draco,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+  });
+
+  var dracoCacheResource = ResourceCache.get(cacheKey);
+  if (defined(dracoCacheResource)) {
+    return dracoCacheResource;
+  }
+
+  dracoCacheResource = new GltfDracoCacheResource({
+    resourceCache: ResourceCache,
+    gltf: gltf,
+    draco: draco,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    cacheKey: cacheKey,
+  });
+
+  ResourceCache.load({
+    cacheResource: dracoCacheResource,
+    keepResident: keepResident,
+  });
+
+  return dracoCacheResource;
+};
+
+/**
+ * Loads a glTF vertex buffer from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
+ * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Number} [options.bufferViewId] The bufferView ID corresponding to the vertex buffer.
+ * @param {Object} [options.draco] The Draco extension object.
+ * @param {String} [options.dracoAttributeSemantic] The Draco attribute semantic, e.g. POSITION or NORMAL.
+ * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
+ * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
+ *
+ * @exception {DeveloperError} One of options.bufferViewId and options.draco must be defined.
+ * @exception {DeveloperError} When options.draco is defined options.dracoAttributeSemantic must also be defined.
+ *
+ * @returns {GltfVertexBufferCacheResource} The vertex buffer cache resource.
+ */
+ResourceCache.loadVertexBuffer = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var gltfResource = options.gltfResource;
+  var baseResource = options.baseResource;
+  var bufferViewId = options.bufferViewId;
+  var draco = options.draco;
+  var dracoAttributeSemantic = options.dracoAttributeSemantic;
+  var keepResident = defaultValue(options.keepResident, false);
+  var asynchronous = defaultValue(options.asynchronous, true);
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.object("options.gltfResource", gltfResource);
+  Check.typeOf.object("options.baseResource", baseResource);
+
+  var hasBufferViewId = defined(bufferViewId);
+  var hasDraco = defined(draco);
+  var hasDracoAttributeSemantic = defined(dracoAttributeSemantic);
+
+  if (hasBufferViewId === hasDraco) {
+    throw new DeveloperError(
+      "One of options.bufferViewId and options.draco must be defined."
+    );
+  }
+
+  if (hasDraco && !hasDracoAttributeSemantic) {
+    throw new DeveloperError(
+      "When options.draco is defined options.dracoAttributeSemantic must also be defined."
+    );
+  }
+
+  if (hasDraco) {
+    Check.typeOf.object(draco);
+    Check.typeOf.string(dracoAttributeSemantic);
+  }
+  //>>includeEnd('debug');
+
+  var cacheKey = ResourceCacheKey.getVertexBufferCacheKey({
+    gltf: gltf,
+    gltfResource: gltfResource,
+    baseResource: baseResource,
+    bufferViewId: bufferViewId,
+    draco: draco,
+    dracoAttributeSemantic: dracoAttributeSemantic,
   });
 
   var vertexBufferCacheResource = ResourceCache.get(cacheKey);
@@ -335,10 +483,12 @@ ResourceCache.loadVertexBuffer = function (options) {
   vertexBufferCacheResource = new GltfVertexBufferCacheResource({
     resourceCache: ResourceCache,
     gltf: gltf,
-    bufferViewId: bufferViewId,
     gltfResource: gltfResource,
     baseResource: baseResource,
     cacheKey: cacheKey,
+    bufferViewId: bufferViewId,
+    draco: draco,
+    dracoAttributeSemantic: dracoAttributeSemantic,
     asynchronous: asynchronous,
   });
 
@@ -358,6 +508,7 @@ ResourceCache.loadVertexBuffer = function (options) {
  * @param {Number} options.accessorId The accessor ID corresponding to the index buffer.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Object} [options.draco] The Draco extension object.
  * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
  * @param {Boolean} [options.asynchronous=true] Determines if WebGL resource creation will be spread out over several frames or block until all WebGL resources are created.
  *
@@ -369,6 +520,7 @@ ResourceCache.loadIndexBuffer = function (options) {
   var accessorId = options.accessorId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
+  var draco = options.draco;
   var keepResident = defaultValue(options.keepResident, false);
   var asynchronous = defaultValue(options.asynchronous, true);
 
@@ -384,6 +536,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     accessorId: accessorId,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    draco: draco,
   });
 
   var indexBufferCacheResource = ResourceCache.get(cacheKey);
@@ -398,6 +551,7 @@ ResourceCache.loadIndexBuffer = function (options) {
     gltfResource: gltfResource,
     baseResource: baseResource,
     cacheKey: cacheKey,
+    draco: draco,
     asynchronous: asynchronous,
   });
 

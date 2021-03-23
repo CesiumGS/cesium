@@ -104,29 +104,14 @@ export default function GltfImageCacheResource(options) {
     }
   }
 
-  var buffer;
-  var bufferId;
-  var byteOffset;
-  var byteLength;
-
-  if (defined(bufferViewId)) {
-    var bufferView = gltf.bufferViews[bufferViewId];
-    bufferId = bufferView.buffer;
-    buffer = gltf.buffers[bufferId];
-    byteOffset = bufferView.byteOffset;
-    byteLength = bufferView.byteLength;
-  }
-
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
   this._baseResource = baseResource;
-  this._buffer = buffer;
-  this._bufferId = bufferId;
-  this._byteOffset = byteOffset;
-  this._byteLength = byteLength;
+  this._gltf = gltf;
+  this._bufferViewId = bufferViewId;
   this._uri = uri;
   this._cacheKey = cacheKey;
-  this._bufferCacheResource = undefined;
+  this._bufferViewCacheResource = undefined;
   this._image = undefined;
   this._state = CacheResourceState.UNLOADED;
   this._promise = when.defer();
@@ -178,52 +163,38 @@ Object.defineProperties(GltfImageCacheResource.prototype, {
  * Loads the resource.
  */
 GltfImageCacheResource.prototype.load = function () {
-  if (defined(this._buffer)) {
-    loadFromBuffer(this);
+  if (defined(this._bufferViewId)) {
+    loadFromBufferView(this);
   } else {
     loadFromUri(this);
   }
 };
 
-function getBufferCacheResource(imageCacheResource) {
+function loadFromBufferView(imageCacheResource) {
   var resourceCache = imageCacheResource._resourceCache;
-  var buffer = imageCacheResource._buffer;
-  if (defined(buffer.uri)) {
-    var baseResource = imageCacheResource._baseResource;
-    var resource = baseResource.getDerivedResource({
-      url: buffer.uri,
-    });
-    return resourceCache.loadExternalBuffer({
-      resource: resource,
-      keepResident: false,
-    });
-  }
-  return resourceCache.loadEmbeddedBuffer({
-    parentResource: imageCacheResource._gltfResource,
-    bufferId: imageCacheResource._bufferId,
+  var bufferViewCacheResource = resourceCache.loadBufferView({
+    gltf: imageCacheResource._gltf,
+    bufferViewId: imageCacheResource._bufferViewId,
+    gltfResource: imageCacheResource._gltfResource,
+    baseResource: imageCacheResource._baseResource,
     keepResident: false,
   });
-}
-
-function loadFromBuffer(imageCacheResource) {
-  var bufferCacheResource = getBufferCacheResource(imageCacheResource);
-  imageCacheResource._bufferCacheResource = bufferCacheResource;
+  imageCacheResource._bufferViewCacheResource = bufferViewCacheResource;
   imageCacheResource._state = CacheResourceState.LOADING;
 
-  bufferCacheResource.promise
+  bufferViewCacheResource.promise
     .then(function () {
       if (imageCacheResource._state === CacheResourceState.UNLOADED) {
         unload(imageCacheResource);
         return;
       }
-      var typedArray = bufferCacheResource.typedArray;
+      var typedArray = bufferViewCacheResource.typedArray;
       return loadImageFromBufferTypedArray(typedArray).then(function (image) {
         if (imageCacheResource._state === CacheResourceState.UNLOADED) {
           unload(imageCacheResource);
           return;
         }
-        imageCacheResource._resourceCache.unload(bufferCacheResource);
-        imageCacheResource._bufferCacheResource = undefined;
+        unload(imageCacheResource);
         imageCacheResource._image = image;
         imageCacheResource._state = CacheResourceState.READY;
         imageCacheResource._promise.resolve(imageCacheResource);
@@ -252,7 +223,7 @@ function loadFromUri(imageCacheResource) {
         unload(imageCacheResource);
         return;
       }
-      imageCacheResource._uri = undefined; // Free in case the uri is a data uri
+      unload(imageCacheResource);
       imageCacheResource._image = image;
       imageCacheResource._state = CacheResourceState.READY;
       imageCacheResource._promise.resolve(imageCacheResource);
@@ -335,16 +306,16 @@ function loadImageFromUri(resource) {
 }
 
 function unload(imageCacheResource) {
-  if (defined(imageCacheResource._bufferCacheResource)) {
+  if (defined(imageCacheResource._bufferViewCacheResource)) {
     // Unload the buffer resource from the cache
-    imageCacheResource._resourceCache.unload(
-      imageCacheResource._bufferCacheResource
-    );
+    var resourceCache = imageCacheResource._resourceCache;
+    resourceCache.unload(imageCacheResource._bufferViewCacheResource);
   }
 
+  imageCacheResource._bufferViewCacheResource = undefined;
   imageCacheResource._uri = undefined; // Free in case the uri is a data uri
-  imageCacheResource._bufferCacheResource = undefined;
   imageCacheResource._image = undefined;
+  imageCacheResource._gltf = undefined;
 }
 
 /**
