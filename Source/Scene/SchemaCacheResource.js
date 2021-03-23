@@ -4,7 +4,7 @@ import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import when from "../ThirdParty/when.js";
 import CacheResourceState from "./CacheResourceState.js";
-import ResourceCache from "./ResourceCache.js";
+import CacheResource from "./CacheResource.js";
 import MetadataSchema from "./MetadataSchema.js";
 
 /**
@@ -119,7 +119,7 @@ SchemaCacheResource.prototype.load = function () {
       unload(that);
       that._state = CacheResourceState.FAILED;
       var errorMessage = "Failed to load JSON: " + that._resource.url;
-      that._promise.reject(ResourceCache.getError(error, errorMessage));
+      that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };
 
