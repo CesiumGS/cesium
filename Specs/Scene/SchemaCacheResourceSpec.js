@@ -1,4 +1,5 @@
 import {
+  CacheResourceState,
   Resource,
   ResourceCacheKey,
   SchemaCacheResource,
@@ -94,6 +95,8 @@ describe("Scene/SchemaCacheResource", function () {
     });
     cacheResource.load();
 
+    expect(cacheResource.cacheKey).toBe(cacheKey);
+
     return cacheResource.promise.then(function (cacheResource) {
       var schema = cacheResource.schema;
       expect(schema).toBeDefined();
@@ -114,6 +117,8 @@ describe("Scene/SchemaCacheResource", function () {
       resource: resource,
       cacheKey: cacheKey,
     });
+
+    expect(cacheResource.cacheKey).toBe(cacheKey);
 
     var fetchJson = spyOn(Resource.prototype, "fetchJson").and.returnValue(
       when.resolve(schemaJson)
@@ -156,5 +161,27 @@ describe("Scene/SchemaCacheResource", function () {
       cacheResource.unload();
       expect(cacheResource.schema).not.toBeDefined();
     });
+  });
+
+  it("handles unload before load finishes", function () {
+    var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      resource: resource,
+    });
+    var cacheResource = new SchemaCacheResource({
+      resource: resource,
+      cacheKey: cacheKey,
+    });
+
+    expect(cacheResource.schema).not.toBeDefined();
+
+    var deferred = when.defer();
+    spyOn(Resource.prototype, "fetchJson").and.returnValue(deferred);
+
+    cacheResource.load();
+    cacheResource.unload();
+    deferred.resolve(schemaJson);
+
+    expect(cacheResource.schema).not.toBeDefined();
+    expect(cacheResource._state).toBe(CacheResourceState.UNLOADED);
   });
 });
