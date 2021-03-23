@@ -1,5 +1,6 @@
 import { defined, defaultValue } from "../Source/Cesium.js";
 import concatTypedArrays from "./concatTypedArrays.js";
+import MetadataTester from "./MetadataTester.js";
 
 /**
  * Class to generate implicit subtrees for implicit tiling unit tests
@@ -156,7 +157,6 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
       parsedAvailability.other
     );
   }
-
   if (bufferViewJsonArray.length > 0) {
     subtreeJson.bufferViews = bufferViewJsonArray;
   }
@@ -183,6 +183,13 @@ function makeBufferViews(subtreeDescription, subtreeJson) {
     }
   }
 
+  // pass 4: add metadata buffer views --------------------------------------
+  if (defined(subtreeDescription.metadata)) {
+    addMetadata(bufferViewsU8, subtreeJson, subtreeDescription.metadata);
+  }
+
+  // wrap up ----------------------------------------------------------------
+
   return bufferViewsU8;
 }
 
@@ -194,6 +201,7 @@ function gatherBufferViews(
   if (defined(parsedBitstream.constant)) {
     parsedBitstream.availabilityJson = {
       constant: parsedBitstream.constant,
+      availableCount: parsedBitstream.availableCount,
     };
   } else if (defined(parsedBitstream.shareBuffer)) {
     // simplifying assumptions:
@@ -201,6 +209,7 @@ function gatherBufferViews(
     // 2. tileAvailability is stored in the first bufferView so it has index 0
     parsedBitstream.availabilityJson = {
       bufferView: 0,
+      availableCount: parsedBitstream.availableCount,
     };
   } else {
     var bufferViewId = bufferViewsU8.count;
@@ -215,6 +224,7 @@ function gatherBufferViews(
 
     parsedBitstream.availabilityJson = {
       bufferView: bufferViewId,
+      availableCount: parsedBitstream.availableCount,
     };
 
     var bufferView = {
@@ -277,6 +287,11 @@ function parseAvailability(availability) {
   parsed.isInternal = availability.isInternal;
   parsed.shareBuffer = availability.shareBuffer;
 
+  if (defined(parsed.constant)) {
+    // Only set available count to the number of bits if the constant is 1
+    parsed.availableCount = parsed.constant * availability.lengthBits;
+  }
+
   // this will be populated by gatherBufferViews()
   parsed.availabilityJson = undefined;
 
@@ -301,9 +316,11 @@ function parseAvailabilityDescriptor(descriptor) {
     byteLengthWithPadding += 8 - (byteLengthWithPadding % 8);
   }
 
+  var availableCount = 0;
   var bitstream = new Uint8Array(byteLength);
   for (var i = 0; i < bits.length; i++) {
     var bit = bits[i];
+    availableCount += bit;
     var byte = i >> 3;
     var bitIndex = i % 8;
     bitstream[byte] |= bit << bitIndex;
@@ -313,7 +330,80 @@ function parseAvailabilityDescriptor(descriptor) {
     byteLength: byteLength,
     byteLengthWithPadding: byteLengthWithPadding,
     bitstream: bitstream,
+    availableCount: availableCount,
   };
+}
+
+function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
+  var featureTableResults = MetadataTester.createFeatureTables(
+    metadataOptions.featureTables
+  );
+
+  var metadataBufferViewsU8 = featureTableResults.bufferViews;
+
+  // This tester assumes a feature table called "tiles"
+  var tileTable = featureTableResults.featureTables.tiles;
+  var tileTableProperties = tileTable.properties;
+
+  var firstMetadataIndex = bufferViewsU8.count;
+  var bufferViewArray = metadataOptions.isInternal
+    ? bufferViewsU8.internal
+    : bufferViewsU8.external;
+
+  if (!defined(subtreeJson.bufferViews)) {
+    subtreeJson.bufferViews = [];
+  }
+  var bufferViewJsonArray = subtreeJson.bufferViews;
+
+  var properties = {};
+  for (var key in tileTableProperties) {
+    if (tileTableProperties.hasOwnProperty(key)) {
+      var oldIndex = tileTableProperties[key].bufferView;
+      var bufferViewU8 = metadataBufferViewsU8[oldIndex];
+
+      var newIndex = firstMetadataIndex + oldIndex;
+
+      var bufferViewJson = {
+        buffer: undefined,
+        byteOffset: undefined,
+        byteLength: bufferViewU8.byteLength,
+      };
+      bufferViewJsonArray.push(bufferViewJson);
+
+      var paddedBufferView = padUint8Array(bufferViewU8);
+      var bufferView = {
+        bufferView: paddedBufferView,
+        // save a reference to the object so we can update the offsets and
+        // lengths later.
+        json: bufferViewJson,
+      };
+      bufferViewArray.push(bufferView);
+
+      properties[key] = {
+        bufferView: newIndex,
+      };
+    }
+  }
+
+  if (!defined(subtreeJson.extensions)) {
+    subtreeJson.extensions = {};
+  }
+
+  subtreeJson.extensions["3DTILES_metadata"] = {
+    class: tileTable.class,
+    properties: properties,
+  };
+}
+
+function padUint8Array(array) {
+  // if already aligned to 8 bytes, we're done.
+  if (array.length % 8 === 0) {
+    return array;
+  }
+
+  var paddingLength = 8 - (array.length % 8);
+  var padding = new Uint8Array(paddingLength);
+  return concatTypedArrays([array, padding]);
 }
 
 function makeBuffers(bufferViewsU8, subtreeJson) {

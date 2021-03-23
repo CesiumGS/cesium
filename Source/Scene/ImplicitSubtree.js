@@ -169,8 +169,8 @@ function initialize(subtree, subtreeView, implicitTileset) {
   subtree._subtreeJson = subtreeJson;
 
   var metadataExtension;
-  if (has3DTilesExtension(chunks.json, "3DTILES_metadata")) {
-    metadataExtension = chunks.json.extension["3DTILES_metadata"];
+  if (has3DTilesExtension(subtreeJson, "3DTILES_metadata")) {
+    metadataExtension = subtreeJson.extensions["3DTILES_metadata"];
   }
 
   // if no contentAvailability is specified, no tile in the subtree has
@@ -481,7 +481,7 @@ function requestExternalBuffer(bufferHeader, baseResource) {
     });
 
     ResourceCache.load({
-      resource: cacheResource,
+      cacheResource: cacheResource,
       keepResident: false,
     });
   }

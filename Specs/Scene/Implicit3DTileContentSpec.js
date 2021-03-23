@@ -61,19 +61,19 @@ describe("Scene/Implicit3DTileContent", function () {
   var quadtreeBuffer = ImplicitTilingTester.generateSubtreeBuffers({
     tileAvailability: {
       descriptor: "11010",
-      bitLength: 5,
+      lengthBits: 5,
       isInternal: true,
     },
     contentAvailability: [
       {
         descriptor: "01010",
-        bitLength: 5,
+        lengthBits: 5,
         isInternal: true,
       },
     ],
     childSubtreeAvailability: {
       descriptor: "1111000011110000",
-      bitLength: 16,
+      lengthBits: 16,
       isInternal: true,
     },
   }).subtreeBuffer;

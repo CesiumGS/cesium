@@ -1,6 +1,7 @@
 import {
   ImplicitSubtree,
   ImplicitTileset,
+  MetadataSchema,
   Resource,
   ResourceCache,
   when,
@@ -57,7 +58,9 @@ describe("Scene/ImplicitSubtree", function () {
       var fakeCacheResource = {
         typedArray: arrayBuffer,
       };
-      options.resource._promise = { promise: when.resolve(fakeCacheResource) };
+      options.cacheResource._promise = {
+        promise: when.resolve(fakeCacheResource),
+      };
     };
   }
 
@@ -68,7 +71,8 @@ describe("Scene/ImplicitSubtree", function () {
     url: "https://example.com/test.subtree",
   });
   var mockTileset = {};
-  var implicitQuadtree = new ImplicitTileset(mockTileset, tilesetResource, {
+
+  var implicitQuadtreeJson = {
     geometricError: 500,
     refine: "ADD",
     boundingVolume: {
@@ -87,7 +91,13 @@ describe("Scene/ImplicitSubtree", function () {
         },
       },
     },
-  });
+  };
+  var implicitQuadtree = new ImplicitTileset(
+    mockTileset,
+    tilesetResource,
+    implicitQuadtreeJson
+  );
+
   var implicitOctree = new ImplicitTileset(mockTileset, tilesetResource, {
     geometricError: 500,
     refine: "REPLACE",
@@ -174,7 +184,6 @@ describe("Scene/ImplicitSubtree", function () {
     var results = ImplicitTilingTester.generateSubtreeBuffers(
       subtreeDescription
     );
-
     var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
       fakeLoad(results.externalBuffer)
     );
@@ -767,6 +776,58 @@ describe("Scene/ImplicitSubtree", function () {
   });
 
   describe("3DTILES_metadata", function () {
+    var schema = {
+      classes: {
+        tile: {
+          class: "tile",
+          properties: {
+            highlightColor: {
+              type: "ARRAY",
+              componentType: "UINT8",
+              componentCount: 3,
+            },
+            buildingCount: {
+              type: "UINT16",
+            },
+          },
+        },
+      },
+    };
+
+    var highlightColors = [
+      [255, 0, 0],
+      [0, 255, 0],
+      [0, 0, 255],
+      [255, 255, 0],
+      [255, 0, 255],
+    ];
+    var buildingCounts = [100, 800, 500, 350, 200];
+
+    var tileTableDescription = {
+      class: "tile",
+      properties: {
+        highlightColor: highlightColors,
+        buildingCount: buildingCounts,
+      },
+    };
+
+    var featureTablesDescription = {
+      schema: schema,
+      featureTables: {
+        tiles: tileTableDescription,
+      },
+    };
+
+    var mockTilesetWithMetadata = {
+      _metadataSchema: new MetadataSchema(schema),
+    };
+
+    var metadataQuadtree = new ImplicitTileset(
+      mockTilesetWithMetadata,
+      tilesetResource,
+      implicitQuadtreeJson
+    );
+
     it("creates a metadata table from internal metadata", function () {
       var subtreeDescription = {
         tileAvailability: {
@@ -786,20 +847,39 @@ describe("Scene/ImplicitSubtree", function () {
           lengthBits: 16,
           isInternal: true,
         },
+        metadata: {
+          isInternal: true,
+          featureTables: featureTablesDescription,
+        },
       };
 
       var results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
       );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
       var subtree = new ImplicitSubtree(
         subtreeResource,
         results.subtreeBuffer,
-        implicitQuadtree
+        metadataQuadtree
       );
 
       return subtree.readyPromise.then(function () {
-        expect(subtree.metadataTable).toBeDefined();
-        fail("what else to check?");
+        expect(fetchExternal).not.toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
       });
     });
 
@@ -822,20 +902,38 @@ describe("Scene/ImplicitSubtree", function () {
           lengthBits: 16,
           isInternal: true,
         },
+        metadata: {
+          isInternal: false,
+          featureTables: featureTablesDescription,
+        },
       };
 
       var results = ImplicitTilingTester.generateSubtreeBuffers(
         subtreeDescription
       );
+      var fetchExternal = spyOn(ResourceCache, "load").and.callFake(
+        fakeLoad(results.externalBuffer)
+      );
       var subtree = new ImplicitSubtree(
         subtreeResource,
         results.subtreeBuffer,
-        implicitQuadtree
+        metadataQuadtree
       );
-
       return subtree.readyPromise.then(function () {
-        expect(subtree.metadataTable).toBeDefined();
-        fail("what else to check?");
+        expect(fetchExternal).toHaveBeenCalled();
+
+        var metadataTable = subtree.metadataTable;
+        expect(metadataTable).toBeDefined();
+        expect(metadataTable.count).toBe(5);
+
+        for (var i = 0; i < buildingCounts.length; i++) {
+          expect(metadataTable.getProperty(i, "highlightColor")).toEqual(
+            highlightColors[i]
+          );
+          expect(metadataTable.getProperty(i, "buildingCount")).toBe(
+            buildingCounts[i]
+          );
+        }
       });
     });
   });
