@@ -95,6 +95,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
 
     var metadata = new Metadata3DTilesExtension({
       extension: extension,
+      schema: new MetadataSchema(schema),
     });
 
     var cityClass = metadata.schema.classes.city;
@@ -129,7 +130,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
 
     var metadata = new Metadata3DTilesExtension({
       extension: extension,
-      externalSchema: new MetadataSchema(schema),
+      schema: new MetadataSchema(schema),
     });
 
     var cityClass = metadata.schema.classes.city;

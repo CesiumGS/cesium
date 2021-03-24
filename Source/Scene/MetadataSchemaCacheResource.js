@@ -46,7 +46,6 @@ function MetadataSchemaCacheResource(options) {
   this._schema = defined(schema) ? new MetadataSchema(schema) : undefined;
   this._resource = resource;
   this._cacheKey = cacheKey;
-  this._schema = schema;
   this._state = CacheResourceState.UNLOADED;
   this._promise = when.defer();
 }

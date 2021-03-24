@@ -2,7 +2,6 @@ import Check from "../Core/Check.js";
 import defaultValue from "../Core/defaultValue.js";
 import defined from "../Core/defined.js";
 import MetadataGroup from "./MetadataGroup.js";
-import MetadataSchema from "./MetadataSchema.js";
 import MetadataTileset from "./MetadataTileset.js";
 
 /**
@@ -13,7 +12,7 @@ import MetadataTileset from "./MetadataTileset.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.extension The extension JSON object.
- * @param {MetadataSchema} [options.externalSchema] The schema pointed to from schemaUri.
+ * @param {MetadataSchema} [options.schema] The parsed schema.
  *
  * @alias Metadata3DTilesExtension
  * @constructor
@@ -23,20 +22,15 @@ import MetadataTileset from "./MetadataTileset.js";
 function Metadata3DTilesExtension(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var extension = options.extension;
-  var externalSchema = options.externalSchema;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.extension", extension);
   //>>includeEnd('debug');
 
-  // The calling code is responsible for fetching the external schema JSON
-  // pointed at by the schemaUri property. This keeps metadata parsing
-  // synchronous and allows the calling code to maintain a schema cache.
-  var schema = externalSchema;
-
-  if (defined(extension.schema)) {
-    schema = new MetadataSchema(extension.schema);
-  }
+  // The calling code is responsible for parsing the schema and placing it
+  // in the schema cache via ResourceCache and MetadataSchemaCacheResource.
+  // This keeps metadata parsing synchronous.
+  var schema = options.schema;
 
   var groups = {};
   for (var groupId in extension.groups) {
