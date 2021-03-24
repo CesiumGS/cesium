@@ -929,6 +929,7 @@ function Cesium3DTileset(options) {
    * a {@link Metadata3DTilesExtension} object to access metadata.
    *
    * @type {Metadata3DTilesExtension}
+   * @private
    */
   this.metadata = undefined;
 
