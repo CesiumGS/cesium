@@ -18,11 +18,21 @@ export default function ImplicitTilingTester() {}
  */
 
 /**
+ * A description of 3DTILES_metadata properties stored in the subtree.
+ * @typedef {Object} MetadataDescription
+ * @property {Boolean} isInternal True if the metadata should be stored in the subtree file, false if the metadata should be stored in an external buffer.
+ * @property {Object} featureTables Options to pass into {@link MetadataTester.createFeatureTables} to create the feature table buffer views.
+ * @private
+ */
+
+/**
  * A JSON description of a subtree file for easier generation
  * @typedef {Object} SubtreeDescription
  * @property {AvailabilityDescription} tileAvailability A description of the tile availability bitstream to generate
  * @property {AvailabilityDescription} contentAvailability A description of the content availability bitstream to generate
  * @property {AvailabilityDescription} childSubtreeAvailability A description of the child subtree availability bitstream to generate
+ * @property {AvailabilityDescription} other A description of another bitstream. This is not used for availability, but rather to simulate extra buffer views.
+ * @property {MetadataDescription} [metadata] For testing 3DTILES_metadata, additional options can be passed in here.
  * @private
  */
 
