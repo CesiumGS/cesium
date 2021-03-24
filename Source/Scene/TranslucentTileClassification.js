@@ -528,27 +528,35 @@ TranslucentTileClassification.prototype.execute = function (scene, passState) {
     : this._compositeCommand;
   command.execute(scene.context, passState);
 
-  var framebuffer = passState.framebuffer;
-
-  passState.framebuffer = this._drawClassificationFBO;
-  this._clearColorCommand.execute(scene._context, passState);
-
-  passState.framebuffer = framebuffer;
+  clear(this, scene, passState);
 };
 
-TranslucentTileClassification.prototype.clear = function (context, passState) {
-  if (!this._hasTranslucentDepth) {
+function clear(translucentTileClassification, scene, passState) {
+  if (!translucentTileClassification._hasTranslucentDepth) {
     return;
   }
 
-  if (this._frustumsDrawn > 1) {
-    passState.framebuffer = this._accumulationFBO;
-    this._clearColorCommand.execute(context, passState);
+  var framebuffer = passState.framebuffer;
+
+  passState.framebuffer = translucentTileClassification._drawClassificationFBO;
+  translucentTileClassification._clearColorCommand.execute(
+    scene._context,
+    passState
+  );
+
+  passState.framebuffer = framebuffer;
+
+  if (translucentTileClassification._frustumsDrawn > 1) {
+    passState.framebuffer = translucentTileClassification._accumulationFBO;
+    translucentTileClassification._clearColorCommand.execute(
+      scene._context,
+      passState
+    );
   }
 
-  this._hasTranslucentDepth = false;
-  this._frustumsDrawn = 0;
-};
+  translucentTileClassification._hasTranslucentDepth = false;
+  translucentTileClassification._frustumsDrawn = 0;
+}
 
 TranslucentTileClassification.prototype.isSupported = function () {
   return this._supported;

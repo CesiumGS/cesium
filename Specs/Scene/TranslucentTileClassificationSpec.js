@@ -730,7 +730,7 @@ describe(
 
       spyOn(translucentTileClassification._clearColorCommand, "execute");
 
-      translucentTileClassification.clear(context, passState);
+      translucentTileClassification.execute(scene, passState);
 
       expect(
         translucentTileClassification._clearColorCommand.execute

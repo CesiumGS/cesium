@@ -3461,13 +3461,6 @@ function updateAndClearFramebuffers(scene, passState, clearColor) {
     environmentState.useOIT = oit.isSupported();
   }
 
-  if (
-    useGlobeDepthFramebuffer &&
-    view.translucentTileClassification.isSupported()
-  ) {
-    view.translucentTileClassification.clear(context, passState);
-  }
-
   var postProcess = scene.postProcessStages;
   var usePostProcess = (environmentState.usePostProcess =
     !picking &&
