@@ -704,4 +704,21 @@ ResourceCache.loadTexture = function (options) {
   return textureCacheResource;
 };
 
+/**
+ * Unload everything from the cache. This is used for unit testing.
+ * @private
+ */
+ResourceCache.clearForSpecs = function () {
+  var cacheEntries = ResourceCache.cacheEntries;
+  for (var key in cacheEntries) {
+    if (cacheEntries.hasOwnProperty(key)) {
+      var cacheEntry = cacheEntries[key];
+      if (defined(cacheEntry) && defined(cacheEntry.unload)) {
+        cacheEntry.unload();
+      }
+      delete cacheEntries[key];
+    }
+  }
+};
+
 export default ResourceCache;
