@@ -17,6 +17,7 @@ import { PrimitiveType } from "../../Source/Cesium.js";
 import { Ray } from "../../Source/Cesium.js";
 import { RequestScheduler } from "../../Source/Cesium.js";
 import { Resource } from "../../Source/Cesium.js";
+import { ResourceCache } from "../../Source/Cesium.js";
 import { Transforms } from "../../Source/Cesium.js";
 import { ClearCommand } from "../../Source/Cesium.js";
 import { ContextLimits } from "../../Source/Cesium.js";
@@ -5158,8 +5159,71 @@ describe(
     });
 
     describe("3DTILES_metadata", function () {
-      it("loads embedded metadata schema", function () {
-        fail();
+      var tilesetMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
+      var tilesetWithExternalSchemaUrl =
+        "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+
+      var tilesetProperties = {
+        author: "Cesium",
+        date: "2021-03-23",
+        centerCartographic: [
+          -1.3196816996258511,
+          0.6988767486400521,
+          45.78600543644279,
+        ],
+        tileCount: 5,
+      };
+
+      beforeEach(function () {
+        ResourceCache.clearForSpecs();
+      });
+
+      it("loads tileset metadata", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            var metadata = tileset.metadata;
+            expect(metadata).toBeDefined();
+
+            var tilesetMetadata = metadata.tileset;
+            expect(tilesetMetadata).toBeDefined();
+
+            expect(tilesetMetadata.name).toBe("Sample Tileset");
+            expect(tilesetMetadata.class.id).toBe("tileset");
+            expect(tilesetMetadata.properties).toEqual(tilesetProperties);
+          }
+        );
+      });
+
+      it("loads metadata with embedded schema", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            var metadata = tileset.metadata;
+            expect(metadata).toBeDefined();
+
+            var schema = metadata.schema;
+            expect(schema).toBeDefined();
+
+            var classes = schema.classes;
+            expect(classes.tileset).toBeDefined();
+          }
+        );
+      });
+
+      it("loads metadata with external schema", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithExternalSchemaUrl
+        ).then(function (tileset) {
+          var metadata = tileset.metadata;
+          expect(metadata).toBeDefined();
+
+          var schema = metadata.schema;
+          expect(schema).toBeDefined();
+
+          var classes = schema.classes;
+          expect(classes.tileset).toBeDefined();
+        });
       });
 
       it("caches external schemas", function () {

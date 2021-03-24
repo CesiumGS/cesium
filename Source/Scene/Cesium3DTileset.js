@@ -39,9 +39,12 @@ import has3DTilesExtension from "./has3DTilesExtension.js";
 import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
-import MetadataSchema from "./MetadataSchema.js";
+import Metadata3DTilesExtension from "./Metadata3DTilesExtension.js";
+import MetadataSchemaCacheResource from "./MetadataSchemaCacheResource.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
+import ResourceCache from "./ResourceCache.js";
+import ResourceCacheKey from "./ResourceCacheKey.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import StencilConstants from "./StencilConstants.js";
@@ -921,9 +924,13 @@ function Cesium3DTileset(options) {
    */
   this.examineVectorLinesFunction = undefined;
 
-  // TODO: There will be other metadata properties
-  // TODO: which is nicer: tileset._metadataSchema or tileset.metadata.schema?
-  this._metadataSchema = undefined;
+  /**
+   * If the 3DTILES_metadata extension is used, this stores
+   * a {@link Metadata3DTilesExtension} object to access metadata.
+   *
+   * @type {Metadata3DTilesExtension}
+   */
+  this.metadata = undefined;
 
   var that = this;
   var resource;
@@ -960,8 +967,6 @@ function Cesium3DTileset(options) {
       that._extensions = tilesetJson.extensions;
       that._gltfUpAxis = gltfUpAxis;
       that._extras = tilesetJson.extras;
-
-      processExtensions(that, tilesetJson);
 
       var extras = asset.extras;
       if (
@@ -1007,7 +1012,10 @@ function Cesium3DTileset(options) {
       that._clippingPlanesOriginMatrix = Matrix4.clone(
         that._initialClippingPlanesOriginMatrix
       );
-      that._readyPromise.resolve(that);
+
+      return processMetadataExtension(that, tilesetJson).then(function () {
+        that._readyPromise.resolve(that);
+      });
     })
     .otherwise(function (error) {
       that._readyPromise.reject(error);
@@ -1844,18 +1852,59 @@ function makeTile(tileset, baseResource, tileHeader, parentTile) {
   return new Cesium3DTile(tileset, baseResource, tileHeader, parentTile);
 }
 
-function processExtensions(tileset, tilesetJson) {
-  if (has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
-    // TODO: cache this
-    // TODO: Handle schema URI
-    tileset._metadataSchema = new MetadataSchema({
-      schema: tilesetJson.schema,
+function processMetadataExtension(tileset, tilesetJson) {
+  if (!has3DTilesExtension(tilesetJson, "3DTILES_metadata")) {
+    return when.resolve();
+  }
+
+  var extension = tilesetJson.extensions["3DTILES_metadata"];
+
+  var cacheKey;
+  var cacheResource;
+  if (defined(extension.schemaUri)) {
+    var resource = tileset._resource.getDerivedResource({
+      url: extension.schemaUri,
+      preserveQueryParameters: true,
+    });
+    cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      resource: resource,
     });
 
-    // TODO: Handle tileset metadata
-    // TODO: Handle group metadata
-    // TODO: handle statistics
+    cacheResource = ResourceCache.get(cacheKey);
+    if (!defined(cacheResource)) {
+      cacheResource = new MetadataSchemaCacheResource({
+        resource: resource,
+        cacheKey: cacheKey,
+      });
+
+      ResourceCache.load({
+        cacheResource: cacheResource,
+      });
+    }
+  } else {
+    cacheKey = ResourceCacheKey.getSchemaCacheKey({
+      schema: extension.schema,
+    });
+
+    cacheResource = ResourceCache.get(cacheKey);
+    if (!defined(cacheResource)) {
+      cacheResource = new MetadataSchemaCacheResource({
+        schema: extension.schema,
+        cacheKey: cacheKey,
+      });
+
+      ResourceCache.load({
+        cacheResource: cacheResource,
+      });
+    }
   }
+
+  return cacheResource.promise.then(function (cacheResource) {
+    tileset.metadata = new Metadata3DTilesExtension({
+      schema: cacheResource.schema,
+      extension: extension,
+    });
+  });
 }
 
 var scratchPositionNormal = new Cartesian3();
