@@ -66,6 +66,14 @@ Object.defineProperties(ImplicitSubtree.prototype, {
     },
   },
 
+  /**
+   * When the 3DTILES_metadata extension is used, this property stores
+   * a {@link MetadataTable} instance
+   *
+   * @type {MetadataTable}
+   * @readonly
+   * @private
+   */
   metadataTable: {
     get: function () {
       return this._metadataTable;
@@ -613,7 +621,7 @@ function parseMetadataTable(
 ) {
   var tileCount = subtree._tileAvailability.availableCount;
   var metadataClassName = metadataExtension.class;
-  var metadataSchema = implicitTileset.tileset._metadataSchema;
+  var metadataSchema = implicitTileset.tileset.metadata.schema;
   var metadataClass = metadataSchema.classes[metadataClassName];
 
   subtree._metadataTable = new MetadataTable({

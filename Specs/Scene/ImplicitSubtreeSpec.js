@@ -819,7 +819,9 @@ describe("Scene/ImplicitSubtree", function () {
     };
 
     var mockTilesetWithMetadata = {
-      _metadataSchema: new MetadataSchema(schema),
+      metadata: {
+        schema: new MetadataSchema(schema),
+      },
     };
 
     var metadataQuadtree = new ImplicitTileset(
