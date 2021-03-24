@@ -339,52 +339,69 @@ function addMetadata(bufferViewsU8, subtreeJson, metadataOptions) {
     metadataOptions.featureTables
   );
 
-  var metadataBufferViewsU8 = featureTableResults.bufferViews;
-
-  // This tester assumes a feature table called "tiles"
-  var tileTable = featureTableResults.featureTables.tiles;
-  var tileTableProperties = tileTable.properties;
-
-  var firstMetadataIndex = bufferViewsU8.count;
-  var bufferViewArray = metadataOptions.isInternal
-    ? bufferViewsU8.internal
-    : bufferViewsU8.external;
-
+  // Add bufferViews to the list -----------------------------------
   if (!defined(subtreeJson.bufferViews)) {
     subtreeJson.bufferViews = [];
   }
   var bufferViewJsonArray = subtreeJson.bufferViews;
 
+  var bufferViewArray = metadataOptions.isInternal
+    ? bufferViewsU8.internal
+    : bufferViewsU8.external;
+
+  var metadataBufferViewsU8 = featureTableResults.bufferViews;
+  var metadataBufferViewCount = Object.keys(metadataBufferViewsU8).length;
+  for (var i = 0; i < metadataBufferViewCount; i++) {
+    var bufferViewU8 = metadataBufferViewsU8[i];
+
+    var bufferViewJson = {
+      buffer: undefined,
+      byteOffset: undefined,
+      byteLength: bufferViewU8.byteLength,
+    };
+    bufferViewJsonArray.push(bufferViewJson);
+
+    var paddedBufferView = padUint8Array(bufferViewU8);
+    var bufferView = {
+      bufferView: paddedBufferView,
+      // save a reference to the object so we can update the offsets and
+      // lengths later.
+      json: bufferViewJson,
+    };
+    bufferViewArray.push(bufferView);
+  }
+
+  // Renumber buffer views ----------------------------------------------
+  // This tester assumes a feature table called "tiles"
+  var tileTable = featureTableResults.featureTables.tiles;
+  var tileTableProperties = tileTable.properties;
+
+  var firstMetadataIndex = bufferViewsU8.count;
+
   var properties = {};
   for (var key in tileTableProperties) {
     if (tileTableProperties.hasOwnProperty(key)) {
-      var oldIndex = tileTableProperties[key].bufferView;
-      var bufferViewU8 = metadataBufferViewsU8[oldIndex];
+      var property = tileTableProperties[key];
 
-      var newIndex = firstMetadataIndex + oldIndex;
-
-      var bufferViewJson = {
-        buffer: undefined,
-        byteOffset: undefined,
-        byteLength: bufferViewU8.byteLength,
+      var propertyJson = {
+        bufferView: property.bufferView + firstMetadataIndex,
       };
-      bufferViewJsonArray.push(bufferViewJson);
 
-      var paddedBufferView = padUint8Array(bufferViewU8);
-      var bufferView = {
-        bufferView: paddedBufferView,
-        // save a reference to the object so we can update the offsets and
-        // lengths later.
-        json: bufferViewJson,
-      };
-      bufferViewArray.push(bufferView);
+      if (defined(property.stringOffsetBufferView)) {
+        propertyJson.stringOffsetBufferView =
+          property.stringOffsetBufferView + firstMetadataIndex;
+      }
 
-      properties[key] = {
-        bufferView: newIndex,
-      };
+      if (defined(property.arrayOffsetBufferView)) {
+        propertyJson.arrayOffsetBufferView =
+          property.arrayOffsetBufferView + firstMetadataIndex;
+      }
+
+      properties[key] = propertyJson;
     }
   }
 
+  // Store results in subtree JSON -----------------------------------------
   if (!defined(subtreeJson.extensions)) {
     subtreeJson.extensions = {};
   }
