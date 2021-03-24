@@ -711,7 +711,7 @@ describe(
       var postClassifyPixels = readPixels(drawClassificationFBO);
       expect(postClassifyPixels).not.toEqual(preClassifyPixels);
 
-      translucentTileClassification.clear(context, passState);
+      translucentTileClassification.execute(scene, passState);
 
       var postClearPixels = readPixels(drawClassificationFBO);
       expect(postClearPixels).not.toEqual(postClassifyPixels);
@@ -730,7 +730,7 @@ describe(
 
       spyOn(translucentTileClassification._clearColorCommand, "execute");
 
-      translucentTileClassification.clear(context, passState);
+      translucentTileClassification.execute(scene, passState);
 
       expect(
         translucentTileClassification._clearColorCommand.execute
