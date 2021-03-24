@@ -5163,6 +5163,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
       var tilesetWithExternalSchemaUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+      var tilesetWithImplicitTileMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
 
       var tilesetProperties = {
         author: "Cesium",
@@ -5225,17 +5227,13 @@ describe(
           expect(classes.tileset).toBeDefined();
         });
       });
-    });
 
-    describe("implicit + metadata", function () {
-      var tilesetWithImplicitTileMetadata =
-        "Data/Cesium3DTiles/Metadata/ImplicitTileMetadata/tileset.json";
       it("loads implicit tileset with tile metadata", function () {
         // this tileset is similar to other implicit tilesets, though
         // one tile was removed
         return Cesium3DTilesTester.loadTileset(
           scene,
-          tilesetWithImplicitTileMetadata
+          tilesetWithImplicitTileMetadataUrl
         ).then(function (tileset) {
           var placeholderTile = tileset.root;
 
