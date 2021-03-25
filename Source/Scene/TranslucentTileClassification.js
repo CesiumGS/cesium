@@ -587,7 +587,7 @@ TranslucentTileClassification.prototype.destroy = function () {
 function getDerivedCommand(command, scene, context) {
   var derivedCommands = command.derivedCommands;
   var depthForClassification = derivedCommands.depthForClassification;
-  if (!defined(depthForClassification)) {
+  if (!defined(depthForClassification) || command.dirty) {
     depthForClassification = derivedCommands.depthForClassification = DerivedCommand.createDepthOnlyDerivedCommand(
       scene,
       command,
