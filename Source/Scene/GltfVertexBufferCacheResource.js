@@ -48,7 +48,7 @@ export default function GltfVertexBufferCacheResource(options) {
   var asynchronous = defaultValue(options.asynchronous, true);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resourceCache", resourceCache);
+  Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);

@@ -20,7 +20,7 @@ function VertexAttribute() {
   this.count = undefined;
   this.type = undefined;
   this.vertexBuffer = undefined;
-  this.vertexBufferCacheResource = undefined;
+  this.cacheResource = undefined;
 }
 
 function Indices() {
@@ -28,7 +28,7 @@ function Indices() {
   this.indexDatatype = undefined;
   this.count = undefined;
   this.indexBuffer = undefined;
-  this.indexBufferCacheResource = undefined;
+  this.cacheResource = undefined;
 }
 
 function FeatureIdAttribute() {
@@ -69,7 +69,7 @@ function Mesh() {
 }
 
 function Instances() {
-  this.vertexAttributes = [];
+  this.attributes = [];
   this.featureIdAttributes = [];
 }
 
@@ -77,6 +77,11 @@ function Node() {
   this.children = [];
   this.mesh = undefined;
   this.instances = undefined;
+}
+
+function Texture() {
+  this.texture = undefined;
+  this.cacheResource = undefined;
 }
 
 function Material() {
@@ -110,6 +115,7 @@ ModelRuntime.Primitive = Primitive;
 ModelRuntime.Mesh = Mesh;
 ModelRuntime.Instances = Instances;
 ModelRuntime.Node = Node;
+ModelRuntime.Texture = Texture;
 ModelRuntime.Material = Material;
 
 export default ModelRuntime;

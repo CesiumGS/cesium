@@ -18,6 +18,7 @@ var Primitive = ModelRuntime.Primitive;
 var Mesh = ModelRuntime.Mesh;
 var Instances = ModelRuntime.Instances;
 var Node = ModelRuntime.Node;
+var Texture = ModelRuntime.Texture;
 var Material = ModelRuntime.Material;
 
 var GltfLoaderState = {
@@ -73,7 +74,6 @@ export default function GltfLoader(options) {
   this._baseResource = baseResource;
   this._keepResident = keepResident;
   this._asynchronous = asynchronous;
-  this._gltf = undefined; // TODO: delete?
   this._gltfCacheResource = undefined;
   this._modelRuntime = undefined;
   this._error = undefined;
@@ -122,18 +122,12 @@ GltfLoader.prototype.update = function (model, frameState) {
   }
 
   if (this._state === GltfLoaderState.PROCESSING) {
-    update(this, frameState);
+    var ready = update(this, frameState);
+    if (ready) {
+      this._state = GltfLoaderState.READY;
+    }
   }
 };
-
-function handleModelDestroyed(loader, model) {
-  if (model.isDestroyed()) {
-    unload(loader);
-    loader._state = GltfLoaderState.UNLOADED;
-    return true;
-  }
-  return false;
-}
 
 function load(loader, model, frameState) {
   var supportedImageFormats = {
@@ -153,29 +147,22 @@ function load(loader, model, frameState) {
 
   gltfCacheResource.promise
     .then(function () {
-      if (handleModelDestroyed(loader, model)) {
+      if (model.isDestroyed()) {
+        unload(loader);
+        loader._state = GltfLoaderState.UNLOADED;
         return;
       }
 
       var gltf = gltfCacheResource.gltf;
+      var modelRuntime = parse(loader, gltf, supportedImageFormats);
 
-      loader._gltf = gltf;
       loader._state = GltfLoaderState.PROCESSING;
-
-      // TODO: need to get ModelRuntime and the promise
-      var promise = process(loader, gltf, supportedImageFormats);
-
-      return promise.then(function () {
-        if (handleModelDestroyed(loader, model)) {
-          return;
-        }
-        loader._state = GltfLoaderState.READY;
-      });
+      loader._modelRuntime = modelRuntime;
     })
     .otherwise(function (error) {
       unload(loader);
-      loader._error = error;
       loader._state = GltfLoaderState.FAILED;
+      loader._error = error;
     });
 }
 
@@ -209,7 +196,9 @@ function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
     semantic,
     draco
   );
-  var constantValue = defined(vertexBufferCacheResource) ? undefined : 0; // Accessor values default to 0
+
+  // Accessors default to all zeros when there is no buffer view
+  var constantValue = defined(vertexBufferCacheResource) ? undefined : 0;
 
   var accessor = gltf.accessors[accessorId];
   var bufferViewId = accessor.bufferView;
@@ -223,7 +212,7 @@ function loadVertexAttribute(loader, gltf, accessorId, semantic, draco) {
   vertexAttribute.normalized = accessor.normalized;
   vertexAttribute.count = accessor.count;
   vertexAttribute.type = accessor.type;
-  vertexAttribute.vertexBufferCacheResource = vertexBufferCacheResource;
+  vertexAttribute.cacheResource = vertexBufferCacheResource;
 
   return vertexAttribute;
 }
@@ -254,7 +243,9 @@ function loadIndices(loader, gltf, accessorId, draco) {
     accessorId,
     draco
   );
-  var constantValue = defined(indexBufferCacheResource) ? undefined : 0; // Accessor values default to 0
+
+  // Accessors default to all zeros when there is no buffer view
+  var constantValue = defined(indexBufferCacheResource) ? undefined : 0;
 
   var accessor = gltf.accessors[accessorId];
 
@@ -262,13 +253,13 @@ function loadIndices(loader, gltf, accessorId, draco) {
   indices.constantValue = constantValue;
   indices.indexDatatype = accessor.componentType;
   indices.count = accessor.count;
-  indices.indexBufferCacheResource = indexBufferCacheResource;
+  indices.cacheResource = indexBufferCacheResource;
 
   return indices;
 }
 
 function loadTexture(loader, gltf, textureInfo, supportedImageFormats) {
-  return ResourceCache.loadTexture({
+  var textureCacheResource = ResourceCache.loadTexture({
     gltf: gltf,
     textureInfo: textureInfo,
     gltfResource: loader._gltfResource,
@@ -277,6 +268,11 @@ function loadTexture(loader, gltf, textureInfo, supportedImageFormats) {
     keepResident: false,
     asynchronous: loader._asynchronous,
   });
+
+  var texture = new Texture();
+  texture.cacheResource = textureCacheResource;
+
+  return texture;
 }
 
 function loadMaterial(loader, gltf, gltfMaterial, supportedImageFormats) {
@@ -586,20 +582,12 @@ function getSceneNodeIds(gltf) {
   return nodes;
 }
 
-function process(loader, gltf, supportedImageFormats) {
-  var promises = [];
-
+function parse(loader, gltf, supportedImageFormats) {
   var model = new ModelRuntime();
 
   var nodeIds = getSceneNodeIds(gltf);
 
-  model.nodes = loadNodes(
-    loader,
-    gltf,
-    nodeIds,
-    supportedImageFormats,
-    promises
-  );
+  model.nodes = loadNodes(loader, gltf, nodeIds, supportedImageFormats);
 
   var extensions = defaultValue(gltf.extensions, defaultValue.EMPTY_OBJECT);
   var featureMetadataExtension = extensions.EXT_feature_metadata;
@@ -611,25 +599,137 @@ function process(loader, gltf, supportedImageFormats) {
       featureMetadata: featureMetadataExtension,
     });
     featureMetadata.load();
-    promises.push(featureMetadata.promise);
+    model.featureMetadata = featureMetadata;
   }
 
   return model;
 }
 
-function update(loader) {
-  // TODO
+function updateVertexAttribute(attribute) {
+  attribute.cacheResource.update();
+  attribute.vertexBuffer = attribute.cacheResource.vertexBuffer;
+  return defined(attribute.vertexBuffer);
+}
+
+function updateIndices(indices) {
+  indices.cacheResource.update();
+  indices.indexBuffer = indices.cacheResource.indexBuffer;
+  return defined(indices.indexBuffer);
+}
+
+function updateTexture(texture) {
+  texture.cacheResource.update();
+  texture.texture = texture.cacheResource.texture;
+  return defined(texture.texture);
+}
+
+function updateFeatureMetadata(featureMetadata) {
+  // TODO: eventually there will be feature textures that need to be updated
+  return defined(featureMetadata.featureTables);
+}
+
+function updateNode(loader, node, frameState) {
+  var i;
+  var j;
+  var k;
+
+  var ready = true;
+
+  var mesh = node.mesh;
+  if (defined(mesh)) {
+    var primitives = mesh.primitives;
+    var primitivesLength = primitives.length;
+    for (i = 0; i < primitivesLength; ++i) {
+      var primitive = primitives[i];
+      var vertexAttributes = primitive.vertexAttributes;
+      var vertexAttributesLength = vertexAttributes.length;
+      for (j = 0; j < vertexAttributesLength; ++j) {
+        var vertexAttribute = vertexAttributes[j];
+        ready = updateVertexAttribute(vertexAttribute) && ready;
+      }
+      var morphTargets = primitive.morphTargets;
+      var morphTargetsLength = morphTargets.length;
+      for (j = 0; j < morphTargetsLength; ++j) {
+        var morphTarget = morphTargets[j];
+        var morphVertexAttributes = morphTarget.vertexAttributes;
+        var morphVertexAttributesLength = morphVertexAttributes.length;
+        for (k = 0; k < morphVertexAttributesLength; ++k) {
+          var morphVertexAttribute = morphVertexAttributes[k];
+          ready = updateVertexAttribute(morphVertexAttribute) && ready;
+        }
+      }
+      var indices = primitive.indices;
+      if (defined(indices)) {
+        ready = updateIndices(indices) && ready;
+      }
+      var material = primitive.material;
+      if (defined(material)) {
+        if (defined(material.baseColorTexture)) {
+          ready = updateTexture(material.baseColorTexture) && ready;
+        }
+        if (defined(material.metallicRoughnessTexture)) {
+          ready = updateTexture(material.metallicRoughnessTexture) && ready;
+        }
+        if (defined(material.diffuseTexture)) {
+          ready = updateTexture(material.diffuseTexture) && ready;
+        }
+        if (defined(material.specularGlossinessTexture)) {
+          ready = updateTexture(material.specularGlossinessTexture) && ready;
+        }
+        if (defined(material.emissiveTexture)) {
+          ready = updateTexture(material.emissiveTexture) && ready;
+        }
+        if (defined(material.normalTexture)) {
+          ready = updateTexture(material.normalTexture) && ready;
+        }
+        if (defined(material.occlusionTexture)) {
+          ready = updateTexture(material.occlusionTexture) && ready;
+        }
+      }
+    }
+  }
+
+  var instances = node.instances;
+  if (defined(instances)) {
+    var instanceAttributes = instances.instanceAttributes;
+    var instanceAttributesLength = instanceAttributes.length;
+    for (i = 0; i < instanceAttributesLength; ++i) {
+      var instanceAttribute = instanceAttributes[i];
+      ready = updateVertexAttribute(instanceAttribute) && ready;
+    }
+  }
+
+  // Recurse over children
+  var childrenLength = node.children.length;
+  for (i = 0; i < childrenLength; ++i) {
+    var child = node.children[i];
+    ready = updateNode(loader, child, frameState) && ready;
+  }
+
+  return ready;
+}
+
+function update(loader, frameState) {
+  var ready = true;
+  var model = loader._modelRuntime;
+  var nodes = model.nodes;
+  var nodesLength = nodes.length;
+  for (var i = 0; i < nodesLength; ++i) {
+    ready = updateNode(loader, nodes[i], frameState) && ready;
+  }
+
+  var featureMetadata = model.featureMetadata;
+  if (defined(featureMetadata)) {
+    ready = updateFeatureMetadata(featureMetadata) && ready;
+  }
+
+  return ready;
 }
 
 function unload(loader) {
   if (defined(loader._gltfCacheResource)) {
     ResourceCache.unload(loader._gltfCacheResource);
   }
-  if (defined(loader._loadResources)) {
-    loader._loadResources.unload();
-  }
-
-  loader._gltf = undefined;
 }
 
 /**

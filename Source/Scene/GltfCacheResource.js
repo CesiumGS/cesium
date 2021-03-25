@@ -43,7 +43,7 @@ function GltfCacheResource(options) {
   var keepResident = defaultValue(options.keepResident, false);
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resourceCache", resourceCache);
+  Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
   Check.typeOf.string("options.cacheKey", cacheKey);

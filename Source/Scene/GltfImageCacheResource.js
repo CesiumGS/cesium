@@ -52,7 +52,7 @@ export default function GltfImageCacheResource(options) {
   var cacheKey = options.cacheKey;
 
   //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resourceCache", resourceCache);
+  Check.typeOf.func("options.resourceCache", resourceCache);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
