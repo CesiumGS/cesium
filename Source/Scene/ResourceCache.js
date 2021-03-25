@@ -221,7 +221,7 @@ ResourceCache.loadEmbeddedBuffer = function (options) {
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.parentResource", parentResource);
-  Check.typeOf.object("options.bufferId", bufferId);
+  Check.typeOf.number("options.bufferId", bufferId);
   //>>includeEnd('debug');
 
   var cacheKey = ResourceCacheKey.getEmbeddedBufferCacheKey({
