@@ -47,25 +47,6 @@ function getBufferCacheKey(buffer, bufferId, gltfResource, baseResource) {
   });
 }
 
-/**
- * Gets the JSON cache key.
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource} options.resource The {@link Resource} pointing to the JSON file.
- *
- * @returns {String} The JSON cache key.
- */
-ResourceCacheKey.getJsonCacheKey = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resource = options.resource;
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resource", resource);
-  //>>includeEnd('debug');
-
-  return getExternalResourceCacheKey(resource);
-};
-
 ResourceCacheKey.getSchemaCacheKey = function (options) {
   var schema = options.schema;
   var resource = options.resource;

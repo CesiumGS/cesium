@@ -10,7 +10,6 @@ import GltfImageCacheResource from "./GltfImageCacheResource.js";
 import GltfIndexBufferCacheResource from "./GltfIndexBufferCacheResource.js";
 import GltfTextureCacheResource from "./GltfTextureCacheResource.js";
 import GltfVertexBufferCacheResource from "./GltfVertexBufferCacheResource.js";
-import JsonCacheResource from "./JsonCacheResource.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
 
 /**
@@ -113,46 +112,6 @@ ResourceCache.unload = function (cacheResource) {
     }
     delete ResourceCache.cacheEntries[cacheKey];
   }
-};
-
-/**
- * Loads a JSON from the cache.
- *
- * @param {Object} options Object with the following properties:
- * @param {Resource} options.resource The {@link Resource} pointing to the JSON file.
- * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
- *
- * @returns {JsonCacheResource} The JSON cache resource.
- */
-ResourceCache.loadJson = function (options) {
-  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-  var resource = options.resource;
-  var keepResident = defaultValue(options.keepResident, false);
-
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.resource", resource);
-  //>>includeEnd('debug');
-
-  var cacheKey = ResourceCacheKey.getJsonCacheKey({
-    resource: resource,
-  });
-
-  var jsonCacheResource = ResourceCache.get(cacheKey);
-  if (defined(jsonCacheResource)) {
-    return jsonCacheResource;
-  }
-
-  jsonCacheResource = new JsonCacheResource({
-    resource: resource,
-    cacheKey: cacheKey,
-  });
-
-  ResourceCache.load({
-    cacheResource: jsonCacheResource,
-    keepResident: keepResident,
-  });
-
-  return jsonCacheResource;
 };
 
 /**
