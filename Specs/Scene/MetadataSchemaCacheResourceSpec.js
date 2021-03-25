@@ -73,7 +73,9 @@ describe("Scene/MetadataSchemaCacheResource", function () {
     });
 
     var error = new Error("404 Not Found");
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(when.reject(error));
+    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(
+      when.reject(error)
+    );
     cacheResource.load();
 
     return cacheResource.promise
