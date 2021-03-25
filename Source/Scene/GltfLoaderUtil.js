@@ -49,10 +49,10 @@ GltfLoaderUtil.getImageIdFromTexture = function (options) {
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.textureId", textureId);
-  Check.typeOf.boolean("options.supportedImageFormats.webp", supportsWebP);
-  Check.typeOf.boolean("options.supportedImageFormats.s3tc", supportsS3tc);
-  Check.typeOf.boolean("options.supportedImageFormats.pvrtc", supportsPvrtc);
-  Check.typeOf.boolean("options.supportedImageFormats.etc1", supportsEtc1);
+  Check.typeOf.bool("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.bool("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.bool("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.bool("options.supportedImageFormats.etc1", supportsEtc1);
   //>>includeEnd('debug');
 
   var texture = gltf.textures[textureId];

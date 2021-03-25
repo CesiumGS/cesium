@@ -71,8 +71,11 @@ export default function GltfVertexBufferCacheResource(options) {
   }
 
   if (hasDraco) {
-    Check.typeOf.object(draco);
-    Check.typeOf.string(dracoAttributeSemantic);
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.string(
+      "options.dracoAttributeSemantic",
+      dracoAttributeSemantic
+    );
   }
   //>>includeEnd('debug');
 

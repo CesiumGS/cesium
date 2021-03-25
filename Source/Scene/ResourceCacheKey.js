@@ -219,8 +219,11 @@ ResourceCacheKey.getVertexBufferCacheKey = function (options) {
   }
 
   if (hasDraco) {
-    Check.typeOf.object(draco);
-    Check.typeOf.string(dracoAttributeSemantic);
+    Check.typeOf.object("options.draco", draco);
+    Check.typeOf.string(
+      "options.dracoAttributeSemantic",
+      dracoAttributeSemantic
+    );
   }
   //>>includeEnd('debug');
 
@@ -423,6 +426,7 @@ ResourceCacheKey.getSamplerCacheKey = function (options) {
   });
 
   return (
+    "sampler-" +
     sampler.wrapS +
     "-" +
     sampler.wrapT +
@@ -469,10 +473,10 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
   Check.typeOf.object("options.textureInfo", textureInfo);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.boolean("options.supportedImageFormats.webp", supportsWebP);
-  Check.typeOf.boolean("options.supportedImageFormats.s3tc", supportsS3tc);
-  Check.typeOf.boolean("options.supportedImageFormats.pvrtc", supportsPvrtc);
-  Check.typeOf.boolean("options.supportedImageFormats.etc1", supportsEtc1);
+  Check.typeOf.bool("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.bool("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.bool("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.bool("options.supportedImageFormats.etc1", supportsEtc1);
   //>>includeEnd('debug');
 
   var textureId = textureInfo.index;
