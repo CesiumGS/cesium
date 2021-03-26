@@ -5163,6 +5163,8 @@ describe(
         "Data/Cesium3DTiles/Metadata/TilesetMetadata/tileset.json";
       var tilesetWithExternalSchemaUrl =
         "Data/Cesium3DTiles/Metadata/ExternalSchema/tileset.json";
+      var tilesetWithGroupMetadataUrl =
+        "Data/Cesium3DTiles/Metadata/GroupMetadata/tileset.json";
 
       var tilesetProperties = {
         author: "Cesium",
@@ -5245,6 +5247,22 @@ describe(
             );
           }
         );
+      });
+
+      it("getGroup gets group metadata", function () {
+        return Cesium3DTilesTester.loadTileset(
+          scene,
+          tilesetWithGroupMetadataUrl
+        ).then(function (tileset) {
+          var metadataGroup = tileset.getGroup("commercialDistrict");
+          expect(metadataGroup).toBeDefined();
+
+          metadataGroup = tileset.getGroup("residentialDistrict");
+          expect(metadataGroup).toBeDefined();
+
+          metadataGroup = tileset.getGroup("port");
+          expect(metadataGroup).not.toBeDefined();
+        });
       });
 
       it("loads metadata with embedded schema", function () {

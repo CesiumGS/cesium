@@ -2819,6 +2819,21 @@ Cesium3DTileset.prototype.getSchema = function () {
 };
 
 /**
+ * Get group metadata from the <code>3DTILES_metadata</code> extension
+ * if present.
+ *
+ * @param {String} groupId The case-sensitive ID of the group.
+ * @returns {MetadataGroup} The group metadata object or <code>undefined</code> if the group does not exist.
+ */
+Cesium3DTileset.prototype.getGroup = function (groupId) {
+  var metadata = this._metadataExtension;
+  if (!defined(metadata)) {
+    return undefined;
+  }
+  return metadata.groups[groupId];
+};
+
+/**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
  * If this object was destroyed, it should not be used; calling any function other than
