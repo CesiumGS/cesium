@@ -640,7 +640,8 @@ async function deployCesiumRelease(s3, errors) {
   let release;
   try {
     // Deploy any new releases
-    const response = await request({
+    const getRequest = await Promise.promisify(request.get);
+    const response = await getRequest({
       method: "GET",
       uri: "https://api.github.com/repos/CesiumGS/cesium/releases/latest",
       json: true,
@@ -651,10 +652,12 @@ async function deployCesiumRelease(s3, errors) {
         "User-Agent": "cesium.com-build",
       },
     });
+    const body = response.body;
+
     release = {
-      tag: response.tag_name,
-      name: response.name,
-      url: response.assets[0].browser_download_url,
+      tag: body.tag_name,
+      name: body.name,
+      url: body.assets[0].browser_download_url,
     };
 
     await s3
