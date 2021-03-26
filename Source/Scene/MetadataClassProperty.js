@@ -141,6 +141,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
    * @memberof MetadataClassProperty.prototype
    * @type {MetadataType}
    * @readonly
+   *
+   * @private
    */
   valueType: {
     get: function () {
@@ -272,6 +274,8 @@ Object.defineProperties(MetadataClassProperty.prototype, {
  *
  * @param {*} value The integer value or array of integer values.
  * @returns {*} The normalized value or array of normalized values.
+ *
+ * @private
  */
 MetadataClassProperty.prototype.normalize = function (value) {
   return normalize(this, value, MetadataType.normalize);
@@ -283,6 +287,8 @@ MetadataClassProperty.prototype.normalize = function (value) {
  *
  * @param {*} value The normalized value or array of normalized values.
  * @returns {*} The integer value or array of integer values.
+ *
+ * @private
  */
 MetadataClassProperty.prototype.unnormalize = function (value) {
   return normalize(this, value, MetadataType.unnormalize);

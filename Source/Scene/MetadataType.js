@@ -35,6 +35,8 @@ var MetadataType = {
  * @returns {Number|BigInt} The minimum value.
  *
  * @exception {DeveloperError} type must be a numeric type
+ *
+ * @private
  */
 MetadataType.getMinimum = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -85,6 +87,8 @@ MetadataType.getMinimum = function (type) {
  * @returns {Number|BigInt} The maximum value.
  *
  * @exception {DeveloperError} type must be a numeric type
+ *
+ * @private
  */
 MetadataType.getMaximum = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -131,6 +135,8 @@ MetadataType.getMaximum = function (type) {
  *
  * @param {MetadataType} type The type.
  * @returns {Boolean} Whether the type is a numeric type.
+ *
+ * @private
  */
 MetadataType.isNumericType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -159,6 +165,8 @@ MetadataType.isNumericType = function (type) {
  *
  * @param {MetadataType} type The type.
  * @returns {Boolean} Whether the type is an integer type.
+ *
+ * @private
  */
 MetadataType.isIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -185,6 +193,8 @@ MetadataType.isIntegerType = function (type) {
  *
  * @param {MetadataType} type The type.
  * @returns {Boolean} Whether the type is an unsigned integer type.
+ *
+ * @private
  */
 MetadataType.isUnsignedIntegerType = function (type) {
   //>>includeStart('debug', pragmas.debug);
@@ -217,6 +227,8 @@ MetadataType.isUnsignedIntegerType = function (type) {
  *
  * @exception {DeveloperError} value must be a number or a BigInt
  * @exception {DeveloperError} type must be an integer type
+ *
+ * @private
  */
 MetadataType.normalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);
@@ -248,6 +260,8 @@ MetadataType.normalize = function (value, type) {
  * @returns {Number|BigInt} The integer value.
  *
  * @exception {DeveloperError} type must be an integer type
+ *
+ * @private
  */
 MetadataType.unnormalize = function (value, type) {
   //>>includeStart('debug', pragmas.debug);

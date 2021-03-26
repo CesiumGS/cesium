@@ -67,6 +67,8 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {Object.<Number, String>}
    * @readonly
+   *
+   * @private
    */
   namesByValue: {
     get: function () {
@@ -80,6 +82,8 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {Object.<String, Number>}
    * @readonly
+   *
+   * @private
    */
   valuesByName: {
     get: function () {
@@ -93,6 +97,8 @@ Object.defineProperties(MetadataEnum.prototype, {
    * @memberof MetadataEnum.prototype
    * @type {MetadataType}
    * @readonly
+   *
+   * @private
    */
   valueType: {
     get: function () {

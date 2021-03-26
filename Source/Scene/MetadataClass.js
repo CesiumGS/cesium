@@ -69,6 +69,8 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object.<String, MetadataClassProperty>}
    * @readonly
+   *
+   * @private
    */
   propertiesBySemantic: {
     get: function () {
