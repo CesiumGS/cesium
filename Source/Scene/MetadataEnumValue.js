@@ -7,8 +7,6 @@ import Check from "../Core/Check.js";
  *
  * @alias MetadataEnumValue
  * @constructor
- *
- * @private
  */
 function MetadataEnumValue(value) {
   //>>includeStart('debug', pragmas.debug);
@@ -29,7 +27,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @memberof MetadataEnumValue.prototype
    * @type {Number}
    * @readonly
-   * @private
    */
   value: {
     get: function () {
@@ -43,7 +40,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @memberof MetadataEnumValue.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -57,7 +53,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @memberof MetadataEnumValue.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -71,7 +66,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @memberof MetadataEnumValue.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -85,7 +79,6 @@ Object.defineProperties(MetadataEnumValue.prototype, {
    * @memberof MetadataEnumValue.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

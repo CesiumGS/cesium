@@ -13,8 +13,6 @@ import MetadataClassProperty from "./MetadataClassProperty.js";
  *
  * @alias MetadataClass
  * @constructor
- *
- * @private
  */
 function MetadataClass(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -58,7 +56,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object.<String, MetadataClassProperty>}
    * @readonly
-   * @private
    */
   properties: {
     get: function () {
@@ -72,6 +69,7 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object.<String, MetadataClassProperty>}
    * @readonly
+   *
    * @private
    */
   propertiesBySemantic: {
@@ -86,7 +84,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   id: {
     get: function () {
@@ -100,7 +97,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -114,7 +110,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -128,7 +123,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -142,7 +136,6 @@ Object.defineProperties(MetadataClass.prototype, {
    * @memberof MetadataClass.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {
