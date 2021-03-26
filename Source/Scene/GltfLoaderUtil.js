@@ -16,6 +16,88 @@ import TextureWrap from "../Renderer/TextureWrap.js";
 export default function GltfLoaderUtil() {}
 
 /**
+ * Get the uri or buffer view for an image.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} options.gltf The glTF JSON.
+ * @param {Number} options.imageId The image ID.
+ * @param {Object.<String, Boolean>} options.supportedImageFormats The supported image formats.
+ * @param {Boolean} options.supportedImageFormats.webp Whether the browser supports WebP images.
+ * @param {Boolean} options.supportedImageFormats.s3tc Whether the browser supports s3tc compressed images.
+ * @param {Boolean} options.supportedImageFormats.pvrtc Whether the browser supports pvrtc compressed images.
+ * @param {Boolean} options.supportedImageFormats.etc1 Whether the browser supports etc1 compressed images.
+ *
+ * @returns {Object} An object containing a <code>uri</code> and <code>bufferView</code> property.
+ */
+GltfLoaderUtil.getImageUriOrBufferView = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var gltf = options.gltf;
+  var imageId = options.imageId;
+  var supportedImageFormats = defaultValue(
+    options.supportedImageFormats,
+    defaultValue.EMPTY_OBJECT
+  );
+  var supportsWebP = supportedImageFormats.webp;
+  var supportsS3tc = supportedImageFormats.s3tc;
+  var supportsPvrtc = supportedImageFormats.pvrtc;
+  var supportsEtc1 = supportedImageFormats.etc1;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.gltf", gltf);
+  Check.typeOf.number("options.imageId", imageId);
+  Check.typeOf.bool("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.bool("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.bool("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.bool("options.supportedImageFormats.etc1", supportsEtc1);
+  //>>includeEnd('debug');
+
+  var image = gltf.images[imageId];
+  var extras = image.extras;
+
+  var bufferViewId = image.bufferView;
+  var uri = image.uri;
+
+  // First check for a compressed texture
+  if (defined(extras) && defined(extras.compressedImage3DTiles)) {
+    var crunch = extras.compressedImage3DTiles.crunch;
+    var s3tc = extras.compressedImage3DTiles.s3tc;
+    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
+    var etc1 = extras.compressedImage3DTiles.etc1;
+
+    if (supportsS3tc && defined(crunch)) {
+      if (defined(crunch.bufferView)) {
+        bufferViewId = crunch.bufferView;
+      } else {
+        uri = crunch.uri;
+      }
+    } else if (supportsS3tc && defined(s3tc)) {
+      if (defined(s3tc.bufferView)) {
+        bufferViewId = s3tc.bufferView;
+      } else {
+        uri = s3tc.uri;
+      }
+    } else if (supportsPvrtc && defined(pvrtc)) {
+      if (defined(pvrtc.bufferView)) {
+        bufferViewId = pvrtc.bufferView;
+      } else {
+        uri = pvrtc.uri;
+      }
+    } else if (supportsEtc1 && defined(etc1)) {
+      if (defined(etc1.bufferView)) {
+        bufferViewId = etc1.bufferView;
+      } else {
+        uri = etc1.uri;
+      }
+    }
+  }
+
+  return {
+    bufferViewId: bufferViewId,
+    uri: uri,
+  };
+};
+
+/**
  * Get the image ID referenced by a texture.
  * <p>
  * When the texture has the EXT_texture_webp extension and the browser supports

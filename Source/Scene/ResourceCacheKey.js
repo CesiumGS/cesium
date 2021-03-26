@@ -369,6 +369,11 @@ ResourceCacheKey.getDracoCacheKey = function (options) {
  * @param {Number} options.imageId The image ID.
  * @param {Resource} options.gltfResource The {@link Resource} pointing to the glTF file.
  * @param {Resource} options.baseResource The {@link Resource} that paths in the glTF JSON are relative to.
+ * @param {Object.<String, Boolean>} options.supportedImageFormats The supported image formats.
+ * @param {Boolean} options.supportedImageFormats.webp Whether the browser supports WebP images.
+ * @param {Boolean} options.supportedImageFormats.s3tc Whether the browser supports s3tc compressed images.
+ * @param {Boolean} options.supportedImageFormats.pvrtc Whether the browser supports pvrtc compressed images.
+ * @param {Boolean} options.supportedImageFormats.etc1 Whether the browser supports etc1 compressed images.
  *
  * @returns {String} The image cache key.
  */
@@ -378,24 +383,42 @@ ResourceCacheKey.getImageCacheKey = function (options) {
   var imageId = options.imageId;
   var gltfResource = options.gltfResource;
   var baseResource = options.baseResource;
+  var supportedImageFormats = defaultValue(
+    options.supportedImageFormats,
+    defaultValue.EMPTY_OBJECT
+  );
+  var supportsWebP = supportedImageFormats.webp;
+  var supportsS3tc = supportedImageFormats.s3tc;
+  var supportsPvrtc = supportedImageFormats.pvrtc;
+  var supportsEtc1 = supportedImageFormats.etc1;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.object("options.gltf", gltf);
   Check.typeOf.number("options.imageId", imageId);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
+  Check.typeOf.bool("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.bool("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.bool("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.bool("options.supportedImageFormats.etc1", supportsEtc1);
   //>>includeEnd('debug');
 
-  var image = gltf.images[imageId];
+  var results = GltfLoaderUtil.getImageUriOrBufferView({
+    gltf: gltf,
+    imageId: imageId,
+    supportedImageFormats: supportedImageFormats,
+  });
 
-  if (defined(image.uri)) {
+  var uri = results.uri;
+  var bufferViewId = results.bufferViewId;
+
+  if (defined(uri)) {
     var resource = baseResource.getDerivedResource({
-      url: image.uri,
+      url: uri,
     });
     return getExternalResourceCacheKey(resource);
   }
 
-  var bufferViewId = image.bufferView;
   var bufferView = gltf.bufferViews[bufferViewId];
   var bufferId = bufferView.buffer;
   var buffer = gltf.buffers[bufferId];

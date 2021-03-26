@@ -8,6 +8,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import CacheResource from "./CacheResource.js";
 import CacheResourceState from "./CacheResourceState.js";
+import GltfLoaderUtil from "./GltfLoaderUtil.js";
 
 /**
  * A glTF image cache resource.
@@ -64,45 +65,14 @@ export default function GltfImageCacheResource(options) {
   Check.typeOf.string("options.cacheKey", cacheKey);
   //>>includeEnd('debug');
 
-  var image = gltf.images[imageId];
-  var extras = image.extras;
+  var results = GltfLoaderUtil.getImageUriOrBufferView({
+    gltf: gltf,
+    imageId: imageId,
+    supportedImageFormats: supportedImageFormats,
+  });
 
-  var bufferViewId = image.bufferView;
-  var uri = image.uri;
-
-  // First check for a compressed texture
-  if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-    var crunch = extras.compressedImage3DTiles.crunch;
-    var s3tc = extras.compressedImage3DTiles.s3tc;
-    var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-    var etc1 = extras.compressedImage3DTiles.etc1;
-
-    if (supportsS3tc && defined(crunch)) {
-      if (defined(crunch.bufferView)) {
-        bufferViewId = crunch.bufferView;
-      } else {
-        uri = crunch.uri;
-      }
-    } else if (supportsS3tc && defined(s3tc)) {
-      if (defined(s3tc.bufferView)) {
-        bufferViewId = s3tc.bufferView;
-      } else {
-        uri = s3tc.uri;
-      }
-    } else if (supportsPvrtc && defined(pvrtc)) {
-      if (defined(pvrtc.bufferView)) {
-        bufferViewId = pvrtc.bufferView;
-      } else {
-        uri = pvrtc.uri;
-      }
-    } else if (supportsEtc1 && defined(etc1)) {
-      if (defined(etc1.bufferView)) {
-        bufferViewId = etc1.bufferView;
-      } else {
-        uri = etc1.uri;
-      }
-    }
-  }
+  var uri = results.uri;
+  var bufferViewId = results.bufferViewId;
 
   this._resourceCache = resourceCache;
   this._gltfResource = gltfResource;
