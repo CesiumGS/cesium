@@ -5182,15 +5182,67 @@ describe(
       it("loads tileset metadata", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            var metadata = tileset.metadata;
-            expect(metadata).toBeDefined();
+            expect(tileset.hasProperty("author")).toBe(true);
+          }
+        );
+      });
 
-            var tilesetMetadata = metadata.tileset;
-            expect(tilesetMetadata).toBeDefined();
+      it("hasProperty checks if properties exist", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            expect(tileset.hasProperty("name")).toBe(false);
+            expect(tileset.hasProperty("author")).toBe(true);
+            expect(tileset.hasProperty("date")).toBe(true);
+            expect(tileset.hasProperty("centerCartographic")).toBe(true);
+            expect(tileset.hasProperty("tileCount")).toBe(true);
+          }
+        );
+      });
 
-            expect(tilesetMetadata.name).toBe("Sample Tileset");
-            expect(tilesetMetadata.class.id).toBe("tileset");
-            expect(tilesetMetadata.properties).toEqual(tilesetProperties);
+      it("getPropertyIds gets a list of valid tileset properties", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            var properties = [];
+            properties = tileset.getPropertyIds(properties);
+            properties.sort();
+            expect(properties).toEqual([
+              "author",
+              "centerCartographic",
+              "date",
+              "tileCount",
+            ]);
+          }
+        );
+      });
+
+      it("getProperty gets property values", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            expect(tileset.getProperty("name")).not.toBeDefined();
+            expect(tileset.getProperty("author")).toBe(
+              tilesetProperties.author
+            );
+            expect(tileset.getProperty("date")).toBe(tilesetProperties.date);
+            expect(tileset.getProperty("centerCartographic")).toEqual(
+              tilesetProperties.centerCartographic
+            );
+            expect(tileset.getProperty("tileCount")).toBe(
+              tilesetProperties.tileCount
+            );
+          }
+        );
+      });
+
+      it("getPropertyBySemantic gets property values", function () {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
+          function (tileset) {
+            expect(tileset.getPropertyBySemantic("NAME")).not.toBeDefined();
+            expect(tileset.getPropertyBySemantic("AUTHOR")).toBe(
+              tilesetProperties.author
+            );
+            expect(tileset.getPropertyBySemantic("DATE_ISO_8601")).toBe(
+              tilesetProperties.date
+            );
           }
         );
       });
@@ -5198,10 +5250,7 @@ describe(
       it("loads metadata with embedded schema", function () {
         return Cesium3DTilesTester.loadTileset(scene, tilesetMetadataUrl).then(
           function (tileset) {
-            var metadata = tileset.metadata;
-            expect(metadata).toBeDefined();
-
-            var schema = metadata.schema;
+            var schema = tileset.getSchema();
             expect(schema).toBeDefined();
 
             var classes = schema.classes;
@@ -5215,10 +5264,7 @@ describe(
           scene,
           tilesetWithExternalSchemaUrl
         ).then(function (tileset) {
-          var metadata = tileset.metadata;
-          expect(metadata).toBeDefined();
-
-          var schema = metadata.schema;
+          var schema = tileset.getSchema();
           expect(schema).toBeDefined();
 
           var classes = schema.classes;
