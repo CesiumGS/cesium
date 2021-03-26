@@ -1854,24 +1854,24 @@ function processMetadataExtension(tileset, tilesetJson) {
 
   var extension = tilesetJson.extensions["3DTILES_metadata"];
 
-  var cacheResource;
+  var schemaLoader;
   if (defined(extension.schemaUri)) {
     var resource = tileset._resource.getDerivedResource({
       url: extension.schemaUri,
       preserveQueryParameters: true,
     });
-    cacheResource = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
   } else {
-    cacheResource = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.loadSchema({
       schema: extension.schema,
     });
   }
 
-  return cacheResource.promise.then(function (cacheResource) {
+  return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Metadata3DTilesExtension({
-      schema: cacheResource.schema,
+      schema: schemaLoader.schema,
       extension: extension,
     });
   });

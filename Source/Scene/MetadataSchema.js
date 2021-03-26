@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
 
@@ -16,23 +17,27 @@ function MetadataSchema(schema) {
   //>>includeEnd('debug');
 
   var enums = {};
-  for (var enumId in schema.enums) {
-    if (schema.enums.hasOwnProperty(enumId)) {
-      enums[enumId] = new MetadataEnum({
-        id: enumId,
-        enum: schema.enums[enumId],
-      });
+  if (defined(schema.enums)) {
+    for (var enumId in schema.enums) {
+      if (schema.enums.hasOwnProperty(enumId)) {
+        enums[enumId] = new MetadataEnum({
+          id: enumId,
+          enum: schema.enums[enumId],
+        });
+      }
     }
   }
 
   var classes = {};
-  for (var classId in schema.classes) {
-    if (schema.classes.hasOwnProperty(classId)) {
-      classes[classId] = new MetadataClass({
-        id: classId,
-        class: schema.classes[classId],
-        enums: enums,
-      });
+  if (defined(schema.classes)) {
+    for (var classId in schema.classes) {
+      if (schema.classes.hasOwnProperty(classId)) {
+        classes[classId] = new MetadataClass({
+          id: classId,
+          class: schema.classes[classId],
+          enums: enums,
+        });
+      }
     }
   }
 
