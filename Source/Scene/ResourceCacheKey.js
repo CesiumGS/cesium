@@ -528,6 +528,7 @@ ResourceCacheKey.getTextureCacheKey = function (options) {
     imageId: imageId,
     gltfResource: gltfResource,
     baseResource: baseResource,
+    supportedImageFormats: supportedImageFormats,
   });
 
   // Include the sampler cache key in the texture cache key since textures and

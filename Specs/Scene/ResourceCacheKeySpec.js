@@ -224,6 +224,12 @@ describe("ResourceCacheKey", function () {
       imageId: imageId,
       gltfResource: gltfResource,
       baseResource: parentResource,
+      supportedImageFormats: {
+        webp: true,
+        s3tc: false,
+        pvrtc: false,
+        etc1: true,
+      },
     });
 
     expect(cacheKey).toEqual(imagesBufferUri + "-image-0-65536");
