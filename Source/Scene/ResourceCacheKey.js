@@ -67,7 +67,7 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   var hasResource = defined(resource);
   if (hasSchema === hasResource) {
     throw new DeveloperError(
-      "One of options.resource and options.schema must be defined."
+      "One of options.schema and options.resource must be defined."
     );
   }
   //>>includeEnd('debug');
