@@ -11,6 +11,7 @@ import GltfIndexBufferCacheResource from "./GltfIndexBufferCacheResource.js";
 import GltfTextureCacheResource from "./GltfTextureCacheResource.js";
 import GltfVertexBufferCacheResource from "./GltfVertexBufferCacheResource.js";
 import ResourceCacheKey from "./ResourceCacheKey.js";
+import MetadataSchemaCacheResource from "./MetadataSchemaCacheResource.js";
 
 /**
  * Resource cache shared across 3D Tiles and glTF.
@@ -112,6 +113,58 @@ ResourceCache.unload = function (cacheResource) {
     }
     delete ResourceCache.cacheEntries[cacheKey];
   }
+};
+
+/**
+ * Loads a schema from the cache.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+ * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
+ * @param {Boolean} [options.keepResident=false] Whether the resource should stay in the cache indefinitely.
+ *
+ * @returns {MetadataSchemaCacheResource} The schema cache resource.
+ *
+ * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ */
+ResourceCache.loadSchema = function (options) {
+  options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var schema = options.schema;
+  var resource = options.resource;
+  var keepResident = defaultValue(options.keepResident, false);
+
+  //>>includeStart('debug', pragmas.debug);
+  var hasSchema = defined(schema);
+  var hasResource = defined(resource);
+  if (hasSchema === hasResource) {
+    throw new DeveloperError(
+      "One of options.resource and options.schema must be defined."
+    );
+  }
+  //>>includeEnd('debug');
+
+  var cacheKey = ResourceCacheKey.getSchemaCacheKey({
+    schema: schema,
+    resource: resource,
+  });
+
+  var schemaCacheResource = ResourceCache.get(cacheKey);
+  if (defined(schemaCacheResource)) {
+    return schemaCacheResource;
+  }
+
+  schemaCacheResource = new MetadataSchemaCacheResource({
+    schema: schema,
+    resource: resource,
+    cacheKey: cacheKey,
+  });
+
+  ResourceCache.load({
+    cacheResource: schemaCacheResource,
+    keepResident: keepResident,
+  });
+
+  return schemaCacheResource;
 };
 
 /**

@@ -9,8 +9,8 @@ import MetadataSchema from "./MetadataSchema.js";
 
 /**
  * A cache resource for {@link MetadataSchema} objects, as these may be shared
- * between different objects that support the <code>3DTILES_metadata</code>
- * extension.
+ * between different objects that support the <code>3DTILES_metadata</code> and
+ * <code>EXT_feature_metadata</code> extensions.
  * <p>
  * Implements the {@link CacheResource} interface.
  * </p>
@@ -20,23 +20,25 @@ import MetadataSchema from "./MetadataSchema.js";
  * @augments CacheResource
  *
  * @param {Object} options Object with the following properties:
- * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema
- * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource
+ * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+ * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
  * @param {String} options.cacheKey The cache key of the resource.
+ *
+ * @exception {DeveloperError} One of options.schema and options.resource must be defined.
  *
  * @private
  */
 function MetadataSchemaCacheResource(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+  var schema = options.schema;
   var resource = options.resource;
   var cacheKey = options.cacheKey;
-  var schema = options.schema;
 
   //>>includeStart('debug', pragmas.debug);
   Check.typeOf.string("options.cacheKey", cacheKey);
-  var hasResource = defined(resource);
   var hasSchema = defined(schema);
-  if (hasResource === hasSchema) {
+  var hasResource = defined(resource);
+  if (hasSchema === hasResource) {
     throw new DeveloperError(
       "One of options.resource and options.schema must be defined."
     );
@@ -117,7 +119,7 @@ MetadataSchemaCacheResource.prototype.load = function () {
     .otherwise(function (error) {
       unload(that);
       that._state = CacheResourceState.FAILED;
-      var errorMessage = "Failed to load JSON: " + that._resource.url;
+      var errorMessage = "Failed to load schema: " + that._resource.url;
       that._promise.reject(CacheResource.getError(error, errorMessage));
     });
 };

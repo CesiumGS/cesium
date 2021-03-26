@@ -47,6 +47,17 @@ function getBufferCacheKey(buffer, bufferId, gltfResource, baseResource) {
   });
 }
 
+/**
+ * Gets the schema cache key.
+ *
+ * @param {Object} options Object with the following properties:
+ * @param {Object} [options.schema] An object that explicitly defines a schema JSON. Mutually exclusive with options.resource.
+ * @param {Resource} [options.resource] The {@link Resource} pointing to the schema JSON. Mutually exclusive with options.schema.
+ *
+ * @returns {String} The schema cache key.
+ *
+ * @exception {DeveloperError} One of options.schema and options.resource must be defined.
+ */
 ResourceCacheKey.getSchemaCacheKey = function (options) {
   var schema = options.schema;
   var resource = options.resource;
@@ -61,11 +72,11 @@ ResourceCacheKey.getSchemaCacheKey = function (options) {
   }
   //>>includeEnd('debug');
 
-  if (defined(options.schema)) {
-    return JSON.stringify(options.schema);
+  if (defined(schema)) {
+    return JSON.stringify(schema);
   }
 
-  return getExternalResourceCacheKey(options.resource);
+  return getExternalResourceCacheKey(resource);
 };
 
 /**
