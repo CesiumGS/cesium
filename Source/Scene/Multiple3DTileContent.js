@@ -1,5 +1,6 @@
 import defined from "../Core/defined.js";
 import destroyObject from "../Core/destroyObject.js";
+import DeveloperError from "../Core/DeveloperError.js";
 import Request from "../Core/Request.js";
 import RequestScheduler from "../Core/RequestScheduler.js";
 import RequestState from "../Core/RequestState.js";
@@ -8,6 +9,7 @@ import RuntimeError from "../Core/RuntimeError.js";
 import when from "../ThirdParty/when.js";
 import Cesium3DTileContentType from "./Cesium3DTileContentType.js";
 import Cesium3DTileContentFactory from "./Cesium3DTileContentFactory.js";
+import findMetadataGroup from "./findMetadataGroup.js";
 import preprocess3DTileContent from "./preprocess3DTileContent.js";
 
 /**
@@ -212,10 +214,28 @@ Object.defineProperties(Multiple3DTileContent.prototype, {
    * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
    * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a specific inner content.
    * @memberof Multiple3DTileContent.prototype
+   * @private
    */
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Multiple3DTileContent</code>
+   * always returns <code>undefined</code>.  Instead call <code>metadataGroup</code> for a specific inner content.
+   * @memberof Multiple3DTileContent.prototype
+   * @private
+   */
+  metadataGroup: {
+    get: function () {
+      return undefined;
+    },
+    set: function () {
+      throw new DeveloperError(
+        "Multiple3DTileContent cannot have a metadata group."
+      );
     },
   },
 
@@ -421,10 +441,8 @@ function createInnerContents(multipleContents) {
           return undefined;
         }
 
-        var resource = multipleContents._innerContentResources[i];
-
         try {
-          return createInnerContent(multipleContents, resource, arrayBuffer);
+          return createInnerContent(multipleContents, arrayBuffer, i);
         } catch (error) {
           handleInnerContentFailed(multipleContents, i, error);
           return undefined;
@@ -457,7 +475,7 @@ function createInnerContents(multipleContents) {
     });
 }
 
-function createInnerContent(multipleContents, resource, arrayBuffer) {
+function createInnerContent(multipleContents, arrayBuffer, index) {
   var preprocessed = preprocess3DTileContent(arrayBuffer);
 
   if (preprocessed.contentType === Cesium3DTileContentType.EXTERNAL_TILESET) {
@@ -471,11 +489,14 @@ function createInnerContent(multipleContents, resource, arrayBuffer) {
     preprocessed.contentType === Cesium3DTileContentType.GEOMETRY ||
     preprocessed.contentType === Cesium3DTileContentType.VECTOR;
 
+  var tileset = multipleContents._tileset;
+  var resource = multipleContents._innerContentResources[index];
+
   var content;
   var contentFactory = Cesium3DTileContentFactory[preprocessed.contentType];
   if (defined(preprocessed.binaryPayload)) {
     content = contentFactory(
-      multipleContents._tileset,
+      tileset,
       multipleContents._tile,
       resource,
       preprocessed.binaryPayload.buffer,
@@ -484,13 +505,15 @@ function createInnerContent(multipleContents, resource, arrayBuffer) {
   } else {
     // JSON formats
     content = contentFactory(
-      multipleContents._tileset,
+      tileset,
       multipleContents._tile,
       resource,
       preprocessed.jsonPayload
     );
   }
 
+  var contentHeader = multipleContents._innerContentHeaders[index];
+  content.groupMetadata = findMetadataGroup(tileset, contentHeader);
   return content;
 }
 

@@ -53,6 +53,7 @@ function Instanced3DModel3DTileContent(
   this._features = undefined;
 
   this.featurePropertiesDirty = false;
+  this._metadataGroup = undefined;
 
   initialize(this, arrayBuffer, byteOffset);
 }
@@ -142,6 +143,15 @@ Object.defineProperties(Instanced3DModel3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  metadataGroup: {
+    get: function () {
+      return this._metadataGroup;
+    },
+    set: function (value) {
+      this._metadataGroup = value;
     },
   },
 });

@@ -31,6 +31,7 @@ function Composite3DTileContent(
   this._resource = resource;
   this._contents = [];
   this._readyPromise = when.defer();
+  this._metadataGroup = undefined;
 
   initialize(this, arrayBuffer, byteOffset, factory);
 }
@@ -161,6 +162,25 @@ Object.defineProperties(Composite3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  /**
+   * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+   * both stores the metadata group and propagates the metadata group to all of its children.
+   * @memberof Composite3DTileContent.prototype
+   */
+  metadataGroup: {
+    get: function () {
+      return this._metadataGroup;
+    },
+    set: function (value) {
+      this._metadataGroup = value;
+      var contents = this._contents;
+      var length = contents.length;
+      for (var i = 0; i < length; ++i) {
+        contents[i].metadataGroup = value;
+      }
     },
   },
 });

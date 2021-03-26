@@ -57,6 +57,7 @@ function Gltf3DTileContent(tileset, tile, resource, gltf) {
   this._diffuseAttributeOrUniformName = {};
 
   this.featurePropertiesDirty = false;
+  this._metadataGroup = undefined;
 
   initialize(this, gltf);
 }
@@ -131,6 +132,15 @@ Object.defineProperties(Gltf3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return this._batchTable;
+    },
+  },
+
+  metadataGroup: {
+    get: function () {
+      return this._metadataGroup;
+    },
+    set: function (value) {
+      this._metadataGroup = value;
     },
   },
 });

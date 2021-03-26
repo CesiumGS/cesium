@@ -54,6 +54,7 @@ export default function Implicit3DTileContent(
   this._readyPromise = when.defer();
 
   this.featurePropertiesDirty = false;
+  this._metadataGroup = undefined;
 
   var templateValues = implicitCoordinates.getTemplateValues();
   var subtreeResource = implicitTileset.subtreeUriTemplate.getDerivedResource({
@@ -134,6 +135,15 @@ Object.defineProperties(Implicit3DTileContent.prototype, {
   batchTable: {
     get: function () {
       return undefined;
+    },
+  },
+
+  metadataGroup: {
+    get: function () {
+      return this._metadataGroup;
+    },
+    set: function (value) {
+      this._metadataGroup = value;
     },
   },
 });
