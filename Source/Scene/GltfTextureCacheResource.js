@@ -61,10 +61,10 @@ export default function GltfTextureCacheResource(options) {
   Check.typeOf.object("options.textureInfo", textureInfo);
   Check.typeOf.object("options.gltfResource", gltfResource);
   Check.typeOf.object("options.baseResource", baseResource);
-  Check.typeOf.boolean("options.supportedImageFormats.webp", supportsWebP);
-  Check.typeOf.boolean("options.supportedImageFormats.s3tc", supportsS3tc);
-  Check.typeOf.boolean("options.supportedImageFormats.pvrtc", supportsPvrtc);
-  Check.typeOf.boolean("options.supportedImageFormats.etc1", supportsEtc1);
+  Check.typeOf.bool("options.supportedImageFormats.webp", supportsWebP);
+  Check.typeOf.bool("options.supportedImageFormats.s3tc", supportsS3tc);
+  Check.typeOf.bool("options.supportedImageFormats.pvrtc", supportsPvrtc);
+  Check.typeOf.bool("options.supportedImageFormats.etc1", supportsEtc1);
   Check.typeOf.string("options.cacheKey", cacheKey);
   //>>includeEnd('debug');
 

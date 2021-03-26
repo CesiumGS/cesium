@@ -139,12 +139,9 @@ describe("Scene/BufferCacheResource", function () {
 
     expect(cacheResource.typedArray).not.toBeDefined();
 
-    var deferred = when.defer();
-    spyOn(Resource.prototype, "fetchArrayBuffer").and.returnValue(deferred);
-
     cacheResource.load();
+    expect(cacheResource._state).toBe(CacheResourceState.LOADING);
     cacheResource.unload();
-    deferred.resolve(buffer);
 
     expect(cacheResource.typedArray).not.toBeDefined();
     expect(cacheResource._state).toBe(CacheResourceState.UNLOADED);
