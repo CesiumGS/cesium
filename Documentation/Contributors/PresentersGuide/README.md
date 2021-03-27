@@ -1,6 +1,6 @@
 # Presenter's Guide
 
-The Cesium team gives a lot of [talks](http://cesiumjs.org/publications.html). Here's some tips, based on our experience, for delivering a great talk.
+The Cesium team gives a lot of [talks](http://cesium.com/docs/presentations/). Here's some tips, based on our experience, for delivering a great talk.
 
 - [Invest Time Preparing](#invest-time-preparing)
 - [Know the Audience](#know-the-audience)
