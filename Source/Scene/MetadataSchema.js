@@ -1,4 +1,5 @@
 import Check from "../Core/Check.js";
+import defined from "../Core/defined.js";
 import MetadataClass from "./MetadataClass.js";
 import MetadataEnum from "./MetadataEnum.js";
 
@@ -9,8 +10,6 @@ import MetadataEnum from "./MetadataEnum.js";
  *
  * @alias MetadataSchema
  * @constructor
- *
- * @private
  */
 function MetadataSchema(schema) {
   //>>includeStart('debug', pragmas.debug);
@@ -18,23 +17,27 @@ function MetadataSchema(schema) {
   //>>includeEnd('debug');
 
   var enums = {};
-  for (var enumId in schema.enums) {
-    if (schema.enums.hasOwnProperty(enumId)) {
-      enums[enumId] = new MetadataEnum({
-        id: enumId,
-        enum: schema.enums[enumId],
-      });
+  if (defined(schema.enums)) {
+    for (var enumId in schema.enums) {
+      if (schema.enums.hasOwnProperty(enumId)) {
+        enums[enumId] = new MetadataEnum({
+          id: enumId,
+          enum: schema.enums[enumId],
+        });
+      }
     }
   }
 
   var classes = {};
-  for (var classId in schema.classes) {
-    if (schema.classes.hasOwnProperty(classId)) {
-      classes[classId] = new MetadataClass({
-        id: classId,
-        class: schema.classes[classId],
-        enums: enums,
-      });
+  if (defined(schema.classes)) {
+    for (var classId in schema.classes) {
+      if (schema.classes.hasOwnProperty(classId)) {
+        classes[classId] = new MetadataClass({
+          id: classId,
+          class: schema.classes[classId],
+          enums: enums,
+        });
+      }
     }
   }
 
@@ -54,7 +57,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataClass>}
    * @readonly
-   * @private
    */
   classes: {
     get: function () {
@@ -68,7 +70,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object.<String, MetadataEnum>}
    * @readonly
-   * @private
    */
   enums: {
     get: function () {
@@ -82,7 +83,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   name: {
     get: function () {
@@ -96,7 +96,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   description: {
     get: function () {
@@ -110,7 +109,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {String}
    * @readonly
-   * @private
    */
   version: {
     get: function () {
@@ -124,7 +122,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {*}
    * @readonly
-   * @private
    */
   extras: {
     get: function () {
@@ -138,7 +135,6 @@ Object.defineProperties(MetadataSchema.prototype, {
    * @memberof MetadataSchema.prototype
    * @type {Object}
    * @readonly
-   * @private
    */
   extensions: {
     get: function () {

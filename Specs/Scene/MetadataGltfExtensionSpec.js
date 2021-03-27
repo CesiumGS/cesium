@@ -1,8 +1,7 @@
 import { MetadataGltfExtension } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
-// TODO
-xdescribe("Scene/MetadataGltfExtension", function () {
+describe("Scene/MetadataGltfExtension", function () {
   it("creates glTF metadata with default values", function () {
     var metadata = new MetadataGltfExtension({
       extension: {},

@@ -1,3 +1,4 @@
+import Check from "../Core/Check.js";
 import defined from "../Core/defined.js";
 import DeveloperError from "../Core/DeveloperError.js";
 import RuntimeError from "../Core/RuntimeError.js";
@@ -8,22 +9,22 @@ import RuntimeError from "../Core/RuntimeError.js";
  * This type describes an interface and is not intended to be instantiated directly.
  * </p>
  *
- * @alias CacheResource
+ * @alias ResourceLoader
  * @constructor
  *
  * @see ResourceCache
  *
  * @private
  */
-export default function CacheResource() {}
+export default function ResourceLoader() {}
 
-Object.defineProperties(CacheResource.prototype, {
+Object.defineProperties(ResourceLoader.prototype, {
   /**
    * A promise that resolves to the resource when the resource is ready.
    *
-   * @memberof CacheResource.prototype
+   * @memberof ResourceLoader.prototype
    *
-   * @type {Promise.<CacheResource>}
+   * @type {Promise.<ResourceLoader>}
    * @readonly
    */
   promise: {
@@ -35,7 +36,7 @@ Object.defineProperties(CacheResource.prototype, {
   /**
    * The cache key of the resource.
    *
-   * @memberof CacheResource.prototype
+   * @memberof ResourceLoader.prototype
    *
    * @type {String}
    * @readonly
@@ -51,14 +52,14 @@ Object.defineProperties(CacheResource.prototype, {
 /**
  * Loads the resource.
  */
-CacheResource.prototype.load = function () {
+ResourceLoader.prototype.load = function () {
   DeveloperError.throwInstantiationError();
 };
 
 /**
  * Unloads the resource. Does not need to be defined for all implementations of this interface.
  */
-CacheResource.prototype.unload = function () {
+ResourceLoader.prototype.unload = function () {
   DeveloperError.throwInstantiationError();
 };
 
@@ -67,14 +68,23 @@ CacheResource.prototype.unload = function () {
  *
  * @param {FrameState} frameState The frame state.
  */
-CacheResource.prototype.update = function (frameState) {
+ResourceLoader.prototype.update = function (frameState) {
   DeveloperError.throwInstantiationError();
 };
 
 /**
- * TODO: doc
+ * Constructs a {@link RuntimeError} from an errorMessage and an error.
+ *
+ * @param {String} errorMessage The error message.
+ * @param {Error} [error] The error.
+ *
+ * @returns {RuntimeError} The runtime error.
  */
-CacheResource.getError = function (error, errorMessage) {
+ResourceLoader.getError = function (errorMessage, error) {
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.string("errorMessage", errorMessage);
+  //>>includeEnd('debug');
+
   if (defined(error)) {
     errorMessage += "\n" + error.message;
   }

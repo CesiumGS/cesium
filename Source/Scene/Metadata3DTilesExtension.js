@@ -12,7 +12,7 @@ import MetadataTileset from "./MetadataTileset.js";
  *
  * @param {Object} options Object with the following properties:
  * @param {String} options.extension The extension JSON object.
- * @param {MetadataSchema} [options.schema] The parsed schema.
+ * @param {MetadataSchema} options.schema The parsed schema.
  *
  * @alias Metadata3DTilesExtension
  * @constructor
@@ -23,14 +23,14 @@ function Metadata3DTilesExtension(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var extension = options.extension;
 
-  //>>includeStart('debug', pragmas.debug);
-  Check.typeOf.object("options.extension", extension);
-  //>>includeEnd('debug');
-
-  // The calling code is responsible for parsing the schema and placing it
-  // in the schema cache via ResourceCache and MetadataSchemaCacheResource.
+  // The calling code is responsible for loading the schema.
   // This keeps metadata parsing synchronous.
   var schema = options.schema;
+
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("options.extension", extension);
+  Check.typeOf.object("options.schema", schema);
+  //>>includeEnd('debug');
 
   var groups = {};
   for (var groupId in extension.groups) {

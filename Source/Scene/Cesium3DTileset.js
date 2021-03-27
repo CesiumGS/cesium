@@ -40,11 +40,9 @@ import ImplicitTileset from "./ImplicitTileset.js";
 import ImplicitTileCoordinates from "./ImplicitTileCoordinates.js";
 import LabelCollection from "./LabelCollection.js";
 import Metadata3DTilesExtension from "./Metadata3DTilesExtension.js";
-import MetadataSchemaCacheResource from "./MetadataSchemaCacheResource.js";
 import PointCloudEyeDomeLighting from "./PointCloudEyeDomeLighting.js";
 import PointCloudShading from "./PointCloudShading.js";
 import ResourceCache from "./ResourceCache.js";
-import ResourceCacheKey from "./ResourceCacheKey.js";
 import SceneMode from "./SceneMode.js";
 import ShadowMode from "./ShadowMode.js";
 import StencilConstants from "./StencilConstants.js";
@@ -1860,49 +1858,24 @@ function processMetadataExtension(tileset, tilesetJson) {
 
   var extension = tilesetJson.extensions["3DTILES_metadata"];
 
-  var cacheKey;
-  var cacheResource;
+  var schemaLoader;
   if (defined(extension.schemaUri)) {
     var resource = tileset._resource.getDerivedResource({
       url: extension.schemaUri,
       preserveQueryParameters: true,
     });
-    cacheKey = ResourceCacheKey.getSchemaCacheKey({
+    schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
-
-    cacheResource = ResourceCache.get(cacheKey);
-    if (!defined(cacheResource)) {
-      cacheResource = new MetadataSchemaCacheResource({
-        resource: resource,
-        cacheKey: cacheKey,
-      });
-
-      ResourceCache.load({
-        cacheResource: cacheResource,
-      });
-    }
   } else {
-    cacheKey = ResourceCacheKey.getSchemaCacheKey({
+    schemaLoader = ResourceCache.loadSchema({
       schema: extension.schema,
     });
-
-    cacheResource = ResourceCache.get(cacheKey);
-    if (!defined(cacheResource)) {
-      cacheResource = new MetadataSchemaCacheResource({
-        schema: extension.schema,
-        cacheKey: cacheKey,
-      });
-
-      ResourceCache.load({
-        cacheResource: cacheResource,
-      });
-    }
   }
 
-  return cacheResource.promise.then(function (cacheResource) {
+  return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Metadata3DTilesExtension({
-      schema: cacheResource.schema,
+      schema: schemaLoader.schema,
       extension: extension,
     });
   });
