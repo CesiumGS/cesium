@@ -708,7 +708,7 @@ function uploadObject(s3, key, contents, quiet) {
       Bucket: bucketName,
       Key: key,
       Body: contents,
-      ContentType: mime.lookup(key) || undefined,
+      ContentType: mime.getType(key) || undefined,
       CacheControl: "public, max-age=1800",
     })
     .promise();
