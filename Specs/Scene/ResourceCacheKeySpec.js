@@ -64,7 +64,7 @@ describe("ResourceCacheKey", function () {
       bufferId: bufferId,
     });
 
-    expect(cacheKey).toEqual("embedded-buffer:" + parentUri + "-buffer-0");
+    expect(cacheKey).toEqual("embedded-buffer:" + parentUri + "-buffer-id-0");
   });
 
   it("getEmbeddedBufferCacheKey throws if parentResource is undefined", function () {
