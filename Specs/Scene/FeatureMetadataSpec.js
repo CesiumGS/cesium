@@ -1,19 +1,7 @@
-import { MetadataGltfExtension } from "../../Source/Cesium.js";
+import { FeatureMetadata, MetadataSchema } from "../../Source/Cesium.js";
 import MetadataTester from "../MetadataTester.js";
 
-describe("Scene/MetadataGltfExtension", function () {
-  it("creates glTF metadata with default values", function () {
-    var metadata = new MetadataGltfExtension({
-      extension: {},
-    });
-
-    expect(metadata.schema).toBeUndefined();
-    expect(metadata.featureTables).toEqual({});
-    expect(metadata.statistics).toBeUndefined();
-    expect(metadata.extras).toBeUndefined();
-    expect(metadata.extensions).toBeUndefined();
-  });
-
+describe("Scene/FeatureMetadata", function () {
   var schema = {
     classes: {
       building: {
@@ -36,7 +24,20 @@ describe("Scene/MetadataGltfExtension", function () {
     },
   };
 
-  it("creates glTF metadata", function () {
+  it("creates feature metadata with default values", function () {
+    var metadata = new FeatureMetadata({
+      extension: {},
+      schema: new MetadataSchema(schema),
+    });
+
+    expect(metadata.schema).toBeDefined();
+    expect(metadata.featureTables).toEqual({});
+    expect(metadata.statistics).toBeUndefined();
+    expect(metadata.extras).toBeUndefined();
+    expect(metadata.extensions).toBeUndefined();
+  });
+
+  it("creates feature metadata", function () {
     var statistics = {
       classes: {
         tree: {
@@ -86,8 +87,9 @@ describe("Scene/MetadataGltfExtension", function () {
       extensions: extensions,
     };
 
-    var metadata = new MetadataGltfExtension({
+    var metadata = new FeatureMetadata({
       extension: extension,
+      schema: new MetadataSchema(schema),
       bufferViews: featureTableResults.bufferViews,
     });
 
