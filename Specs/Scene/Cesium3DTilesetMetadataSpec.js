@@ -129,8 +129,20 @@ describe("Scene/Cesium3DTilesetMetadata", function () {
   });
 
   it("constructor throws without extension", function () {
+    var schema = new MetadataSchema(schemaJson);
+
     expect(function () {
-      return new Cesium3DTilesetMetadata();
+      return new Cesium3DTilesetMetadata({
+        schema: schema,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("constructor throws without schema", function () {
+    expect(function () {
+      return new Cesium3DTilesetMetadata({
+        extension: {},
+      });
     }).toThrowDeveloperError();
   });
 });
