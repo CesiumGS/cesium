@@ -33,14 +33,16 @@ function Metadata3DTilesExtension(options) {
   //>>includeEnd('debug');
 
   var groups = {};
-  for (var groupId in extension.groups) {
-    if (extension.groups.hasOwnProperty(groupId)) {
-      var group = extension.groups[groupId];
-      groups[groupId] = new MetadataGroup({
-        id: groupId,
-        group: extension.groups[groupId],
-        class: schema.classes[group.class],
-      });
+  if (defined(extension.groups)) {
+    for (var groupId in extension.groups) {
+      if (extension.groups.hasOwnProperty(groupId)) {
+        var group = extension.groups[groupId];
+        groups[groupId] = new MetadataGroup({
+          id: groupId,
+          group: extension.groups[groupId],
+          class: schema.classes[group.class],
+        });
+      }
     }
   }
 
