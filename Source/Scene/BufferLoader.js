@@ -25,7 +25,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function BufferLoader(options) {
+export default function BufferLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var typedArray = options.typedArray;
   var resource = options.resource;
@@ -107,16 +107,13 @@ function loadExternalBuffer(bufferLoader) {
     .fetchArrayBuffer()
     .then(function (arrayBuffer) {
       if (bufferLoader._state === ResourceLoaderState.DESTROYED) {
-        unload(bufferLoader);
         return;
       }
-      unload(bufferLoader);
       bufferLoader._typedArray = new Uint8Array(arrayBuffer);
       bufferLoader._state = ResourceLoaderState.READY;
       bufferLoader._promise.resolve(bufferLoader);
     })
     .otherwise(function (error) {
-      unload(bufferLoader);
       bufferLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load external buffer: " + resource.url;
       bufferLoader._promise.reject(
@@ -125,9 +122,6 @@ function loadExternalBuffer(bufferLoader) {
     });
 }
 
-function unload(bufferLoader) {
-  bufferLoader._typedArray = undefined;
-}
 /**
  * Returns true if this object was destroyed; otherwise, false.
  * <br /><br />
@@ -157,10 +151,8 @@ BufferLoader.prototype.isDestroyed = function () {
  * @see BufferLoader#isDestroyed
  */
 BufferLoader.prototype.destroy = function () {
-  unload(this);
+  this._typedArray = undefined;
   this._state = ResourceLoaderState.DESTROYED;
 
   return destroyObject(this);
 };
-
-export default BufferLoader;

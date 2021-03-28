@@ -26,7 +26,7 @@ import ResourceLoaderState from "./ResourceLoaderState.js";
  *
  * @private
  */
-function MetadataSchemaLoader(options) {
+export default function MetadataSchemaLoader(options) {
   options = defaultValue(options, defaultValue.EMPTY_OBJECT);
   var schema = options.schema;
   var resource = options.resource;
@@ -108,26 +108,19 @@ function loadExternalSchema(schemaLoader) {
     .fetchJson()
     .then(function (json) {
       if (schemaLoader._state === ResourceLoaderState.DESTROYED) {
-        unload(schemaLoader);
         return;
       }
-      unload(schemaLoader);
       schemaLoader._schema = new MetadataSchema(json);
       schemaLoader._state = ResourceLoaderState.READY;
       schemaLoader._promise.resolve(schemaLoader);
     })
     .otherwise(function (error) {
-      unload(schemaLoader);
       schemaLoader._state = ResourceLoaderState.FAILED;
       var errorMessage = "Failed to load schema: " + resource.url;
       schemaLoader._promise.reject(
         ResourceLoader.getError(errorMessage, error)
       );
     });
-}
-
-function unload(schemaLoader) {
-  schemaLoader._schema = undefined;
 }
 
 /**
@@ -159,10 +152,8 @@ MetadataSchemaLoader.prototype.isDestroyed = function () {
  * @see SchemaLoader#isDestroyed
  */
 MetadataSchemaLoader.prototype.destroy = function () {
-  unload(this);
+  this._schema = undefined;
   this._state = ResourceLoaderState.DESTROYED;
 
   return destroyObject(this);
 };
-
-export default MetadataSchemaLoader;
