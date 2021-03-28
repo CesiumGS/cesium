@@ -52,40 +52,6 @@ describe("ResourceCache", function () {
     });
   });
 
-  it("removes resource from cache if load fails", function () {
-    var deferredPromise = when.defer();
-    spyOn(Resource.prototype, "fetchJson").and.returnValue(
-      deferredPromise.promise
-    );
-
-    var cacheKey = ResourceCacheKey.getSchemaCacheKey({
-      resource: schemaResource,
-    });
-    var resourceLoader = new MetadataSchemaLoader({
-      resource: schemaResource,
-      cacheKey: cacheKey,
-    });
-
-    ResourceCache.load({
-      resourceLoader: resourceLoader,
-    });
-
-    var cacheEntry = ResourceCache.cacheEntries[cacheKey];
-    expect(cacheEntry.referenceCount).toBe(1);
-    expect(cacheEntry.resourceLoader).toBe(resourceLoader);
-    expect(cacheEntry.keepResident).toBe(false);
-
-    deferredPromise.reject("Error");
-
-    return resourceLoader.promise
-      .then(function () {
-        fail();
-      })
-      .otherwise(function (error) {
-        expect(ResourceCache.cacheEntries[cacheKey]).toBeUndefined();
-      });
-  });
-
   it("load throws if resourceLoader is undefined", function () {
     expect(function () {
       ResourceCache.load({});

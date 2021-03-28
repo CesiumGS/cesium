@@ -931,6 +931,8 @@ function Cesium3DTileset(options) {
    */
   this.metadata = undefined;
 
+  this._schemaLoader = undefined;
+
   var that = this;
   var resource;
   when(options.url)
@@ -1869,6 +1871,8 @@ function processMetadataExtension(tileset, tilesetJson) {
     });
   }
 
+  tileset._schemaLoader = schemaLoader;
+
   return schemaLoader.promise.then(function (schemaLoader) {
     tileset.metadata = new Metadata3DTilesExtension({
       schema: schemaLoader.schema,
@@ -2751,6 +2755,10 @@ Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
+  if (defined(this._schemaLoader)) {
+    ResourceCache.unload(this._schemaLoader);
+  }
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {

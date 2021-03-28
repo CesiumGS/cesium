@@ -91,11 +91,6 @@ ResourceCache.load = function (options) {
   });
 
   resourceLoader.load();
-
-  resourceLoader.promise.otherwise(function () {
-    // If the resource fails to load remove it from the cache
-    delete ResourceCache.cacheEntries[cacheKey];
-  });
 };
 
 /**
