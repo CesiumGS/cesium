@@ -4,20 +4,7 @@ import {
 } from "../../Source/Cesium.js";
 
 describe("Scene/Metadata3DTilesExtension", function () {
-  it("creates 3D Tiles metadata with default values", function () {
-    var metadata = new Metadata3DTilesExtension({
-      extension: {},
-    });
-
-    expect(metadata.schema).toBeUndefined();
-    expect(metadata.groups).toEqual({});
-    expect(metadata.tileset).toBeUndefined();
-    expect(metadata.statistics).toBeUndefined();
-    expect(metadata.extras).toBeUndefined();
-    expect(metadata.extensions).toBeUndefined();
-  });
-
-  var schema = {
+  var schemaJson = {
     classes: {
       city: {
         properties: {
@@ -43,6 +30,22 @@ describe("Scene/Metadata3DTilesExtension", function () {
     },
   };
 
+  it("creates 3D Tiles metadata with default values", function () {
+    var schema = new MetadataSchema(schemaJson);
+
+    var metadata = new Metadata3DTilesExtension({
+      extension: {},
+      schema: schema,
+    });
+
+    expect(metadata.schema).toBe(schema);
+    expect(metadata.groups).toEqual({});
+    expect(metadata.tileset).toBeUndefined();
+    expect(metadata.statistics).toBeUndefined();
+    expect(metadata.extras).toBeUndefined();
+    expect(metadata.extensions).toBeUndefined();
+  });
+
   it("creates 3D Tiles metadata", function () {
     var statistics = {
       classes: {
@@ -67,7 +70,7 @@ describe("Scene/Metadata3DTilesExtension", function () {
     };
 
     var extension = {
-      schema: schema,
+      schema: schemaJson,
       groups: {
         neighborhoodA: {
           class: "neighborhood",
@@ -93,8 +96,11 @@ describe("Scene/Metadata3DTilesExtension", function () {
       extensions: extensions,
     };
 
+    var schema = new MetadataSchema(schemaJson);
+
     var metadata = new Metadata3DTilesExtension({
       extension: extension,
+      schema: schema,
     });
 
     var cityClass = metadata.schema.classes.city;
@@ -120,25 +126,6 @@ describe("Scene/Metadata3DTilesExtension", function () {
     expect(metadata.statistics).toBe(statistics);
     expect(metadata.extras).toBe(extras);
     expect(metadata.extensions).toBe(extensions);
-  });
-
-  it("creates 3D Tiles metadata with external schema", function () {
-    var extension = {
-      schemaUri: "schema.json",
-    };
-
-    var metadata = new Metadata3DTilesExtension({
-      extension: extension,
-      externalSchema: new MetadataSchema(schema),
-    });
-
-    var cityClass = metadata.schema.classes.city;
-    var neighborhoodClass = metadata.schema.classes.neighborhood;
-    var treeClass = metadata.schema.classes.tree;
-
-    expect(cityClass.id).toBe("city");
-    expect(neighborhoodClass.id).toBe("neighborhood");
-    expect(treeClass.id).toBe("tree");
   });
 
   it("constructor throws without extension", function () {
