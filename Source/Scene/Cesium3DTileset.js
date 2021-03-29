@@ -931,6 +931,8 @@ function Cesium3DTileset(options) {
    */
   this._metadataExtension = undefined;
 
+  this._schemaLoader = undefined;
+
   var that = this;
   var resource;
   when(options.url)
@@ -1854,24 +1856,25 @@ function processMetadataExtension(tileset, tilesetJson) {
 
   var extension = tilesetJson.extensions["3DTILES_metadata"];
 
-  var cacheResource;
+  var schemaLoader;
   if (defined(extension.schemaUri)) {
     var resource = tileset._resource.getDerivedResource({
       url: extension.schemaUri,
       preserveQueryParameters: true,
     });
-    cacheResource = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.loadSchema({
       resource: resource,
     });
   } else {
-    cacheResource = ResourceCache.loadSchema({
+    schemaLoader = ResourceCache.loadSchema({
       schema: extension.schema,
     });
   }
+  tileset._schemaLoader = schemaLoader;
 
-  return cacheResource.promise.then(function (cacheResource) {
+  return schemaLoader.promise.then(function (schemaLoader) {
     tileset._metadataExtension = new Metadata3DTilesExtension({
-      schema: cacheResource.schema,
+      schema: schemaLoader.schema,
       extension: extension,
     });
   });
@@ -2851,6 +2854,10 @@ Cesium3DTileset.prototype.destroy = function () {
   this._tileDebugLabels =
     this._tileDebugLabels && this._tileDebugLabels.destroy();
   this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
+
+  if (defined(this._schemaLoader)) {
+    ResourceCache.unload(this._schemaLoader);
+  }
 
   // Traverse the tree and destroy all tiles
   if (defined(this._root)) {
